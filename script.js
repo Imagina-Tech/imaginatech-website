@@ -22,6 +22,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 'event_label': 'whatsapp_contact',
                 'transport_type': 'beacon'
             });
+            
+            // Envia evento para Meta Pixel
+            fbq('track', 'Contact');  // Evento padrão para contato
+            
+            // ou você pode usar um evento customizado:
+            // fbq('trackCustom', 'WhatsAppClick', {
+            //     button_type: 'contact',
+            //     service: 'whatsapp'
+            // });
         });
     }
 });
