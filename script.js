@@ -11,5 +11,17 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
-});
 
+    // Tracking eventos
+    const whatsappButton = document.querySelector('.whatsapp');
+    if (whatsappButton) {
+        whatsappButton.addEventListener('click', function() {
+            // Envia evento para Google Analytics/Google Ads
+            gtag('event', 'whatsapp_click', {
+                'event_category': 'engagement',
+                'event_label': 'whatsapp_contact',
+                'transport_type': 'beacon'
+            });
+        });
+    }
+});
