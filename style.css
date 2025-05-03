@@ -1,0 +1,206 @@
+/* Basic Reset & Body Styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Bitter', sans-serif;
+    color: #fff; /* Default text color */
+    background: linear-gradient(0deg, rgb(42, 110, 167), rgb(87, 212, 202));
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align container to the top */
+    padding-top: 40px; /* Add some padding at the top */
+}
+
+/* Container */
+.container {
+    max-width: 680px;
+    width: 90%;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    margin-bottom: 30px;
+}
+
+.logo {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    margin: 0 auto 15px auto; /* Center logo horizontally */
+    display: block; /* Needed for margin auto to work */
+    border: 2px solid rgba(255, 255, 255, 0.8); /* Slightly transparent white border */
+}
+
+h1 {
+    font-size: 1.4em; /* Slightly smaller */
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+header p {
+    font-size: 0.95em; /* Slightly smaller */
+    margin-bottom: 25px;
+    padding: 0 10px; /* Add some horizontal padding */
+}
+
+/* Link Buttons */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Slightly increase gap */
+}
+
+.link-button {
+    display: flex; /* Use flexbox for icon alignment */
+    align-items: center; /* Vertically center icon and text */
+    justify-content: center; /* Horizontally center content */
+    color: #fff;
+    text-decoration: none;
+    padding: 14px 20px; /* Adjust padding */
+    border-radius: 8px; /* Less rounded corners */
+    font-weight: 600;
+    transition: transform 0.1s ease, background-color 0.2s ease;
+    position: relative;
+    text-align: center;
+    width: 100%; /* Make buttons full width */
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+.link-button i {
+    margin-right: 12px; /* Adjust space */
+    font-size: 1.2em; /* Adjust icon size */
+    width: 20px; /* Give icon fixed width for alignment */
+    text-align: center;
+}
+
+/* Specific Button Styles (Refined Colors) */
+.whatsapp,
+.instagram,
+.services-button {
+    background-color: #30314b; /* Solid dark blue/purple */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Adjust border transparency */
+}
+
+.link-button:hover {
+    background-color: #414263; /* Slightly lighter on hover */
+    transform: scale(1.02); /* Add slight scale on hover */
+}
+
+.link-button:active {
+    transform: scale(0.98); /* Simple click animation */
+    background-color: #25263a; /* Slightly darker on click */
+}
+
+.services-button {
+     cursor: pointer;
+}
+
+/* Services Section */
+.services-section {
+    margin-top: 0; /* Remove extra margin */
+}
+
+.services-content {
+    background-color: rgba(0, 0, 0, 0.15); /* Slightly darker background */
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 5px; /* Add small gap */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: left;
+}
+
+.services-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.services-content li {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* Footer (Placeholder) */
+footer {
+    margin-top: 40px;
+    font-size: 0.8em;
+}
+
+/* Add FontAwesome or SVG icons later for WhatsApp/Instagram */
+
+
+
+/* Media Queries for Responsiveness */
+@media (max-width: 600px) {
+    body, html {
+        padding-top: 20px; /* Reduce top padding */
+    }
+
+    .container {
+        width: 95%; /* Slightly wider container on small screens */
+        padding: 15px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 10px;
+    }
+
+    h1 {
+        font-size: 1.2em;
+    }
+
+    header p {
+        font-size: 0.9em;
+        margin-bottom: 20px;
+    }
+
+    main {
+        gap: 12px; /* Reduce gap between buttons */
+    }
+
+    .link-button {
+        padding: 12px 15px; /* Adjust button padding */
+        font-size: 0.95em;
+    }
+
+    .link-button i {
+        font-size: 1.1em;
+        margin-right: 10px;
+    }
+
+    .services-content {
+        padding: 15px;
+    }
+
+    .services-content li {
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 400px) {
+    h1 {
+        font-size: 1.1em;
+    }
+
+    header p {
+        font-size: 0.85em;
+    }
+
+    .link-button {
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+
+    .link-button i {
+        font-size: 1em;
+        margin-right: 8px;
+    }
+}
+
