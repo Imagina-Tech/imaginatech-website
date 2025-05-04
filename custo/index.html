@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/custo/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora de Custo - ImaginaTech</title>
+    <script type="module" crossorigin src="/custo/assets/index-BRlCvFl1.js"></script>
+    <link rel="stylesheet" crossorigin href="/custo/assets/index-BhQ21BM6.css">
+    <style>
+      /* Esconde o conteúdo principal inicialmente */
+      #root { display: none; }
+      body { font-family: sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+      .password-prompt { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+      .password-prompt input { padding: 8px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+      .password-prompt button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+      .password-prompt button:hover { background-color: #0056b3; }
+      .error-message { color: red; margin-top: 10px; font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+
+    <!-- 
+    ██╗     ███████╗███████╗ ██████╗ ███████╗███████╗███████╗
+    ██║     ██╔════╝██╔════╝██╔════╝ ██╔════╝██╔════╝██╔════╝
+    ██║     ███████╗███████╗██║  ███╗███████╗███████╗███████╗
+    ██║     ╚════██║╚════██║██║   ██║╚════██║╚════██║╚════██║
+    ███████╗███████║███████║╚██████╔╝███████║███████║███████║
+    ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝
+
+    E AÍ, HACKERMAN? ACHOU QUE IA SER FÁCIL, NÉ? 😉 
+    A SENHA ESTÁ LOGO ABAIXO, MAS NÃO CONTA PRA NINGUÉM! 
+    (Só que não... ou será que sim?) 
+    -->
+
+    <!-- Div para o prompt de senha -->
+    <div id="password-prompt-container" class="password-prompt">
+      <h2>Acesso Restrito</h2>
+      <p>Por favor, insira a senha para acessar a calculadora:</p>
+      <input type="password" id="password-input" placeholder="Senha" />
+      <br/>
+      <button onclick="checkPassword()">Entrar</button>
+      <p id="error-message" class="error-message" style="display: none;">Senha incorreta!</p>
+    </div>
+
+    <!-- Conteúdo principal da aplicação React (inicialmente oculto) -->
+    <div id="root"></div>
+
+    <script>
+      function checkPassword() {
+        const correctPassword = "imagina2234"; // <-- Olha a senha aqui, Sr. Hacker! Mas shhh... 🤫
+        const enteredPassword = document.getElementById("password-input").value;
+        const rootElement = document.getElementById("root");
+        const promptContainer = document.getElementById("password-prompt-container");
+        const errorMessage = document.getElementById("error-message");
+
+        if (enteredPassword === correctPassword) {
+          // Senha correta: esconde o prompt e mostra o conteúdo
+          promptContainer.style.display = "none";
+          rootElement.style.display = "block";
+          // Remove o estilo do body que centralizava o prompt
+          document.body.style.display = "";
+          document.body.style.justifyContent = "";
+          document.body.style.alignItems = "";
+          document.body.style.minHeight = "";
+          document.body.style.backgroundColor = ""; // Ou defina a cor de fundo desejada para a app
+        } else {
+          // Senha incorreta: mostra mensagem de erro
+          errorMessage.style.display = "block";
+        }
+      }
+
+      // Opcional: permitir pressionar Enter no campo de senha
+      document.getElementById("password-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+          event.preventDefault(); // Impede o comportamento padrão do Enter (se houver)
+          checkPassword();
+        }
+      });
+    </script>
+  </body>
+</html>
+
