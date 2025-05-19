@@ -1,0 +1,783 @@
+/* Basic Reset & Global Styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+    color: #333;
+    background: linear-gradient(0deg, rgb(35, 90, 140), rgb(70, 180, 170));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+}
+
+*, *:before, *:after {
+    box-sizing: border-box;
+}
+
+.page-container {
+    width: 100%;
+    max-width: 1200px; /* Increased max-width for better spacing */
+    margin: 0 auto;
+}
+
+/* Modern Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logo-title-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.header-title {
+    font-family: 'Bitter', sans-serif;
+    font-size: 1.6em;
+    color: #fff;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* Calculator Wrapper */
+.calculator-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    width: 100%;
+    overflow: hidden; 
+}
+
+.form-column {
+    flex: 1; /* Adjusted flex for better balance */
+    min-width: 320px; /* Slightly reduced min-width */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Slightly reduced gap */
+    background-color: #ffffff;
+    padding: 25px; /* Slightly reduced padding */
+    border-radius: 10px 0 0 10px;
+    color: #333;
+}
+
+.results-column {
+    flex: 1.2; /* Increased flex for wider results column */
+    min-width: 400px; /* Increased min-width for better readability */
+    background-color: rgba(0, 0, 0, 0.35);
+    padding: 25px;
+    border-radius: 0 10px 10px 0;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+/* New container for side-by-side results and client quote */
+.results-and-quote-container {
+    display: flex;
+    flex-direction: column; /* Stack vertically by default */
+    gap: 20px;
+    width: 100%;
+}
+
+.results-box {
+    background-color: rgba(0,0,0,0.15); /* Subtle background for each box */
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Form Sections and Input Fields */
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+
+/* New row layout for time and pieces */
+.form-section-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.time-section {
+    flex: 2;
+}
+
+.pieces-section {
+    flex: 1;
+    align-self: flex-end; /* Align with bottom of time section */
+}
+
+.form-section label {
+    font-weight: 700;
+    font-size: 0.85em; /* Increased font size for better readability */
+    color: #555;
+}
+
+.input-field, select#printer-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid #d0d0d0;
+    background-color: #f9f9f9;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9em; /* Increased font size for better readability */
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    -webkit-appearance: none; /* Remove default styling on iOS */
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Melhorar a aparência dos inputs numéricos em dispositivos móveis */
+input[type=number] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  opacity: 1; /* Show spinners for better usability */
+  height: 30px; /* Aumentar área de toque */
+}
+
+.input-field.small-input {
+    max-width: 120px; /* Max width for smaller inputs */
+}
+
+/* New Time Input Styles */
+.time-input-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.time-input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.time-input {
+    width: 70px;
+    text-align: center;
+    font-size: 1em;
+    padding: 8px;
+}
+
+.time-label {
+    font-size: 0.85em;
+    color: #666;
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid #d0d0d0;
+    background-color: #f9f9f9;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9em;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 44px; /* Aumentar área de toque para mobile */
+}
+
+/* Ajuste para aumentar o espaçamento entre o número e a seta */
+.custom-dropdown-button .dropdown-value {
+    margin-right: 10px; /* Espaçamento entre o número e a seta */
+}
+
+.custom-dropdown-button i {
+    margin-left: 8px; /* Espaçamento adicional para a seta */
+}
+
+.custom-dropdown-button:hover {
+    border-color: #aaa;
+}
+
+.custom-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    display: none;
+}
+
+.custom-dropdown-list.show {
+    display: block;
+}
+
+.custom-dropdown-option {
+    padding: 12px; /* Aumentar área de toque */
+    cursor: pointer;
+    min-height: 44px; /* Garantir área de toque mínima para mobile */
+    display: flex;
+    align-items: center;
+}
+
+.custom-dropdown-option:hover {
+    background-color: #f0f0f0;
+}
+
+/* Parameters Grid Layout */
+.params-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns by default */
+    gap: 15px;
+    width: 100%;
+}
+
+.inline-fields {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.inline-fields > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.input-field::placeholder {
+    color: #999;
+}
+
+.input-field:focus, select#printer-select:focus {
+    outline: none;
+    border-color: #007bff;
+    background-color: #fff;
+    box-shadow: 0 0 0 0.15rem rgba(0,123,255,.2);
+}
+
+select#printer-select option {
+    background-color: #fff;
+    color: #333;
+    padding: 10px; /* Aumentar área de toque */
+    min-height: 44px; /* Garantir área de toque mínima */
+}
+
+.form-divider {
+    border: 0;
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 12px 0;
+}
+
+.form-section-group {
+    margin-top: 8px;
+}
+
+.custom-params-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.custom-params-header h3 {
+    margin: 0;
+    font-size: 1.1em; /* Increased for better visibility */
+    color: #333;
+    font-family: 'Bitter', sans-serif;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px; /* Smaller switch */
+    height: 22px;
+    min-width: 44px; /* Garantir área de toque mínima */
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; /* Smaller handle */
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #28a745;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #28a745;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px); /* Adjusted for smaller switch */
+}
+
+.slider.round {
+    border-radius: 22px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.custom-fields-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+    overflow: hidden;
+    max-height: 1000px; 
+}
+
+.custom-fields-container.disabled {
+    opacity: 0;
+    max-height: 0; 
+    pointer-events: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Correção para o botão de orçamento para cliente quando ativado */
+#client-quote-fields.custom-fields-container {
+    opacity: 1;
+    max-height: 1000px;
+    pointer-events: auto;
+    margin-top: 15px;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#client-quote-fields.custom-fields-container.disabled {
+    opacity: 0;
+    max-height: 0; 
+    pointer-events: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.custom-fields-container.disabled input {
+    background-color: #e9ecef;
+}
+
+/* Results Section */
+#results-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3em; /* Increased for better visibility */
+    border-bottom: 1px solid rgba(255,255,255,0.4);
+    padding-bottom: 10px;
+    color: #fff;
+    font-family: 'Bitter', sans-serif;
+}
+
+#results-output {
+    flex-grow: 1;
+    width: 100%; /* Garantir que ocupe toda a largura disponível */
+}
+
+#results-output p {
+    margin: 10px 0; /* Increased margin for better spacing */
+    font-size: 1em; /* Increased for better readability */
+    line-height: 1.5;
+    color: #e8e8e8;
+    width: 100%; /* Garantir que o texto ocupe toda a largura */
+    word-wrap: break-word; /* Garantir quebra de palavras adequada */
+}
+
+#results-output strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+#results-output hr {
+    border: 0;
+    height: 1px;
+    background-color: rgba(255,255,255,0.25);
+    margin: 15px 0; /* Increased margin */
+}
+
+/* Client Quote Section Specific Styles */
+#client-quote-section-wrapper .custom-params-header h3 {
+    color: #fff; /* White title for client quote header */
+    font-size: 1.3em; /* Increased for better visibility */
+}
+
+#client-quote-fields label {
+    color: #e0e0e0; 
+    font-size: 0.85em; /* Increased for better readability */
+}
+
+#client-quote-fields .input-field {
+    background-color: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 0.9em; /* Increased for better readability */
+}
+
+#client-quote-fields .input-field::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+#client-quote-fields .input-field:focus {
+    background-color: rgba(255,255,255,0.2);
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.15rem rgba(0,123,255,.3);
+}
+
+#client-quote-output-container {
+    margin-top: 15px; /* Increased margin */
+    background-color: #fff; 
+    color: #333; 
+    padding: 15px; /* Increased padding */
+    border-radius: 5px; 
+    font-size: 0.9em; /* Increased for better readability */
+    line-height: 1.5;
+    white-space: pre-wrap; 
+    position: relative;
+    min-height: 150px; /* Increased height */
+    word-wrap: break-word; /* Ensure text wraps properly */
+}
+
+#copy-client-quote-button {
+    position: absolute; 
+    top: 10px; 
+    right: 10px; 
+    background: #007bff; 
+    color: white; 
+    border: none; 
+    padding: 10px 12px; /* Aumentar área de toque */
+    border-radius: 4px; 
+    cursor: pointer;
+    min-width: 44px; /* Garantir área de toque mínima */
+    min-height: 44px; /* Garantir área de toque mínima */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#copy-client-quote-button i {
+    font-size: 1em; /* Increased size */
+}
+
+/* Footer */
+footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.8em; /* Increased for better readability */
+    color: rgba(255,255,255,0.75);
+    text-align: center;
+    width: 100%;
+}
+
+footer a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px; /* Aumentar área de toque */
+    display: inline-block;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 851px) { /* Apply side-by-side for larger screens */
+    .results-and-quote-container {
+        display: flex;
+        flex-direction: row; /* Side-by-side */
+        gap: 20px;
+    }
+    .results-box {
+        flex: 1; /* Distribute space equally */
+        min-width: 0; /* Allow shrinking */
+    }
+    #client-quote-section-wrapper {
+        margin-top: 0; /* Remove top margin when side-by-side */
+    }
+}
+
+@media (max-width: 1100px) {
+    .params-grid {
+        grid-template-columns: 1fr; /* Single column on medium screens */
+    }
+}
+
+@media (max-width: 850px) {
+    .calculator-wrapper {
+        flex-direction: column;
+    }
+    .form-column {
+        border-radius: 10px;
+        padding: 20px;
+        min-width: 100%; /* Garantir que ocupe toda a largura */
+    }
+    .results-column {
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 0;
+        min-width: 100%; /* Garantir que ocupe toda a largura */
+    }
+    .app-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+    }
+    .results-and-quote-container { /* Stack on smaller screens */
+        flex-direction: column;
+    }
+    #client-quote-section-wrapper {
+        margin-top: 20px; /* Add margin back when stacked */
+    }
+    .time-input-container {
+        flex-direction: row; /* Keep horizontal on medium screens */
+    }
+}
+
+@media (max-width: 600px) {
+    .form-section-row {
+        flex-direction: column; /* Stack on smaller screens */
+        gap: 10px;
+    }
+    
+    .pieces-section {
+        align-self: flex-start; /* Reset alignment */
+    }
+    
+    .custom-params-header {
+        flex-wrap: wrap; /* Permitir quebra em telas muito pequenas */
+        gap: 10px;
+    }
+    
+    .custom-params-header h3 {
+        width: 100%; /* Ocupar toda a largura em telas pequenas */
+        margin-bottom: 5px;
+    }
+    
+    /* Aumentar tamanho dos controles para melhor toque */
+    .input-field, select#printer-select, .custom-dropdown-button {
+        min-height: 44px; /* Garantir área de toque mínima */
+        font-size: 16px; /* Evitar zoom automático em iOS */
+    }
+    
+    /* Melhorar espaçamento em telas pequenas */
+    .form-section {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) { 
+    body, html {
+        padding: 8px;
+    }
+    .form-column, .results-column, .results-box {
+        padding: 15px;
+    }
+    .header-logo {
+        width: 35px;
+        height: 35px;
+    }
+    .header-title {
+        font-size: 1.2em;
+    }
+    .input-field, select#printer-select {
+        font-size: 16px; /* Evitar zoom automático em iOS */
+        padding: 12px; /* Aumentar área de toque */
+    }
+    .time-input-container {
+        flex-direction: column; /* Stack on very small screens */
+        align-items: flex-start;
+        width: 100%;
+    }
+    .time-input-group {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .time-input {
+        width: 100%; /* Ocupar toda a largura disponível */
+    }
+    #results-section h2 {
+        font-size: 1.2em;
+    }
+    #results-output p {
+        font-size: 0.95em;
+    }
+    
+    /* Ajustes específicos para iPhone SE e dispositivos muito pequenos */
+    .custom-dropdown-button, .custom-dropdown-option {
+        padding: 12px 10px;
+    }
+    
+    .switch {
+        margin-left: auto; /* Alinhar à direita */
+    }
+    
+    #copy-client-quote-button {
+        top: 5px;
+        right: 5px;
+    }
+}
+
+/* Ajustes específicos para dispositivos com tela sensível ao toque */
+@media (hover: none) {
+    /* Aumentar áreas de toque */
+    .input-field, select#printer-select, .custom-dropdown-button, 
+    .custom-dropdown-option, button, .switch, a {
+        cursor: pointer;
+    }
+    
+    /* Melhorar feedback visual ao tocar */
+    .input-field:active, select#printer-select:active, 
+    .custom-dropdown-button:active, button:active {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+}
+
+/* Ajustes para orientação paisagem em dispositivos móveis */
+@media (max-width: 850px) and (orientation: landscape) {
+    .calculator-wrapper {
+        flex-direction: column;
+    }
+    
+    .time-input-container {
+        flex-direction: row; /* Manter horizontal em paisagem */
+    }
+    
+    .form-section-row {
+        flex-direction: row; /* Manter horizontal em paisagem */
+    }
+    
+    /* Reduzir margens e paddings para aproveitar melhor o espaço horizontal */
+    .form-column, .results-column {
+        padding: 15px;
+    }
+    
+    .results-box {
+        padding: 15px;
+    }
+}
+
+/* Ajustes para telas muito grandes */
+@media (min-width: 1400px) {
+    .page-container {
+        max-width: 1400px;
+    }
+    
+    body, html {
+        font-size: 18px; /* Aumentar fonte base para telas grandes */
+    }
+}
+
+/* Ajustes para dispositivos com tela de alta densidade (retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .header-logo {
+        border-width: 1px; /* Reduzir borda para evitar que pareça muito grossa */
+    }
+}
+
+/* Ajustes para modo escuro do sistema */
+@media (prefers-color-scheme: dark) {
+    .form-column {
+        background-color: #222;
+        color: #e0e0e0;
+    }
+    
+    .form-section label {
+        color: #ccc;
+    }
+    
+    .input-field, select#printer-select, .custom-dropdown-button {
+        background-color: #333;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+    
+    .input-field::placeholder {
+        color: #888;
+    }
+    
+    .custom-dropdown-list {
+        background-color: #333;
+        border-color: #555;
+    }
+    
+    .custom-dropdown-option {
+        color: #e0e0e0;
+    }
+    
+    .custom-dropdown-option:hover {
+        background-color: #444;
+    }
+    
+    #client-quote-output-container {
+        background-color: #222;
+        color: #e0e0e0;
+    }
+}
