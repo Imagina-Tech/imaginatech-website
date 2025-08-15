@@ -3,8 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags Principais -->
+    <title>ImaginaTech - Impressão 3D Personalizada | Presentes e Peças Sob Medida</title>
+    <meta name="description" content="ImaginaTech - Especialistas em impressão 3D. Criamos presentes personalizados, esculturas, bonecos, peças industriais e de reposição. Entregamos para todo o Brasil.">
+    <meta name="keywords" content="impressão 3d, impressão 3d personalizada, presentes personalizados, esculturas 3d, peças sob medida, ABS, PLA, resina, modelagem 3d, imaginatech">
+    <meta name="author" content="ImaginaTech">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Favicon - IMPORTANTE: Você precisa criar e adicionar estes arquivos -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- Open Graph Meta Tags (para redes sociais) -->
+    <meta property="og:title" content="ImaginaTech - Impressão 3D Personalizada">
+    <meta property="og:description" content="Especialistas em impressão 3D. Criamos presentes personalizados, esculturas e peças sob medida.">
+    <meta property="og:image" content="https://imaginatech.com.br/imaginatech_logo.jpeg">
+    <meta property="og:url" content="https://imaginatech.com.br">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="ImaginaTech">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ImaginaTech - Impressão 3D Personalizada">
+    <meta name="twitter:description" content="Especialistas em impressão 3D. Criamos presentes personalizados, esculturas e peças sob medida.">
+    <meta name="twitter:image" content="https://imaginatech.com.br/imaginatech_logo.jpeg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://imaginatech.com.br">
+    
+    <!-- Schema.org Markup para SEO Local -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "ImaginaTech - Impressão 3D",
+        "description": "Especialistas em impressão 3D personalizada. Presentes, esculturas, peças industriais e de reposição.",
+        "url": "https://imaginatech.com.br",
+        "telephone": "+55-21-96897-2539",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "BR"
+        },
+        "image": "https://imaginatech.com.br/imaginatech_logo.jpeg",
+        "priceRange": "$$",
+        "sameAs": [
+            "https://www.instagram.com/imaginatech3d/",
+            "https://wa.me/5521968972539"
+        ]
+    }
+    </script>
+    
+    <!-- Verificações de domínio -->
     <meta name="facebook-domain-verification" content="2k032skuiidqnp9sdwv6t2q25fhgl7" />
-    <title>ImaginaTech - Impressão 3D | Instagram | Linktree</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17037169805"></script>
@@ -33,50 +87,48 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
     
-    <link rel="stylesheet" href="style.css">
+    <!-- Estilos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <img src="imaginatech_logo.jpeg" alt="Logo ImaginaTech" class="logo">
+            <img src="imaginatech_logo.jpeg" alt="Logo ImaginaTech - Impressão 3D" class="logo">
             <h1>ImaginaTech - Impressão 3D</h1>
-            <p>Fazemos seu design artístico/peça sob medida. 📦 Entregamos para todo o Brasil</p>
-            <div class="social-icons">
-                <!-- Icons will be added via CSS or potentially inline SVG later -->
-            </div>
+            <p>Fazemos seu design artístico e peças sob medida. 📦 Entregamos para todo o Brasil</p>
         </header>
 
         <main>
-            <a href="https://wa.me/5521968972539?text=Ol%C3%A1,%20gostaria%20de%20um%20Or%C3%A7amento/Servi%C3%A7o!" target="_blank" class="link-button whatsapp">
+            <a href="https://wa.me/5521968972539?text=Olá,%20gostaria%20de%20um%20Orçamento/Serviço!" target="_blank" rel="noopener noreferrer" class="link-button whatsapp">
                 <i class="fa-brands fa-whatsapp"></i> Contate-nos via WhatsApp
             </a>
-            <a href="https://www.instagram.com/imaginatech3d/" target="_blank" class="link-button instagram">
+            <a href="https://www.instagram.com/imaginatech3d/" target="_blank" rel="noopener noreferrer" class="link-button instagram">
                 <i class="fa-brands fa-instagram"></i> Contate-nos via Instagram
             </a>
 
             <div class="services-section">
-                <button id="services-toggle" class="link-button services-button">
+                <button id="services-toggle" class="link-button services-button" aria-expanded="false" aria-controls="services-content">
                     Nossos Serviços
                 </button>
                 <div id="services-content" class="services-content" style="display: none;">
                     <ul>
-                        <li>Impressão de Presentes, Esculturas, Bonecos, Objetos Industriais.</li>
-                        <li>Impressão 3D em ABS, RESINA, PLA, etc.</li>
-                        <li>Impressão de peças de reparo/reforço/reposição.</li>
-                        <li>Confecção de plaquetas em aço para presentes.</li>
-                        <li>Serviços de modelagem 3D;...</li>
-                        <li>Entre outros...</li>
+                        <li>Impressão de Presentes, Esculturas, Bonecos, Objetos Industriais</li>
+                        <li>Impressão 3D em ABS, RESINA, PLA e outros materiais</li>
+                        <li>Impressão de peças de reparo, reforço e reposição</li>
+                        <li>Confecção de plaquetas em aço para presentes</li>
+                        <li>Serviços de modelagem 3D personalizada</li>
+                        <li>Entre outros serviços especializados</li>
                     </ul>
                 </div>
             </div>
         </main>
 
         <footer>
-            <!-- Linktree logo/link could be added here if needed for exact replication -->
+            <p>&copy; 2024 ImaginaTech - Todos os direitos reservados</p>
         </footer>
     </div>
 
