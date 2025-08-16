@@ -1,234 +1,56 @@
-/* =========================
-   Base & Tema Luxo
-========================= */
-:root{
-  --bg:#0b0b0d;
-  --bg-2:#121216;
-  --card:rgba(255,255,255,.06);
-  --card-2:rgba(255,255,255,.03);
-  --text:#ececf2;
-  --muted:#b8b8c8;
-  --accent:#d4af37;      /* ouro */
-  --accent-2:#b38728;    /* ouro profundo */
-  --accent-3:#f6e49b;    /* reflexo */
-  --success:#22c55e;     /* WhatsApp vibe */
-  --ig:#e1306c;          /* Instagram vibe */
-  --radius:18px;
-  --blur:14px;
-  --shadow:0 10px 30px rgba(0,0,0,.45);
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaginaTech - Impressão 3D | Instagram | Linktree</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/assets/imaginatech_logo.jpeg" alt="Logo ImaginaTech" class="logo">
+            <h1>ImaginaTech - Impressão 3D</h1>
+            <p>Fazemos seu design artístico/peça sob medida. 📦 Entregamos para todo o Brasil</p>
+            <div class="social-icons">
+                <!-- Icons will be added via CSS or potentially inline SVG later -->
+            </div>
+        </header>
 
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  color:var(--text);
-  background:
-    radial-gradient(1200px 800px at 10% 10%, #1b1b20 0%, transparent 60%),
-    radial-gradient(1200px 800px at 90% 0%, #15151a 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  -webkit-font-smoothing:antialiased;  text-rendering:optimizeLegibility;
-}
+        <main>
+            <a href="https://wa.me/5521968972539?text=Ol%C3%A1,%20gostaria%20de%20um%20Or%C3%A7amento/Servi%C3%A7o!" target="_blank" class="link-button whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> Contate-nos via WhatsApp
+            </a>
+            <a href="https://www.instagram.com/imaginatech3d/" target="_blank" class="link-button instagram">
+                <i class="fa-brands fa-instagram"></i> Contate-nos via Instagram
+            </a>
 
-/* Tipografia */
-h1,h2,h3,h4{font-family:"Bitter", serif; margin:0 0 .6rem}
-p{margin:0 0 1rem; color:var(--muted); line-height:1.6}
+            <div class="services-section">
+                <button id="services-toggle" class="link-button services-button">
+                    Nossos Serviços
+                </button>
+                <div id="services-content" class="services-content" style="display: none;">
+                    <ul>
+                        <li>Impressão de Presentes, Esculturas, Bonecos, Objetos Industriais.</li>
+                        <li>Impressão 3D em ABS, RESINA, PLA, etc.</li>
+                        <li>Impressão de peças de reparo/reforço/reposição.</li>
+                        <li>Confecção de plaquetas em aço para presentes.</li>
+                        <li>Serviços de modelagem 3D;...</li>
+                        <li>Entre outros...</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
 
-/* Acessibilidade */
-.skip-link{
-  position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;
-}
-.skip-link:focus{
-  left:1rem; top:1rem; width:auto; height:auto; padding:.6rem 1rem;
-  background:var(--card); border:1px solid var(--accent); border-radius:12px;
-}
+        <footer>
+            <!-- Linktree logo/link could be added here if needed for exact replication -->
+        </footer>
+    </div>
 
-/* Progresso do scroll */
-#scroll-progress{
-  position:fixed; top:0; left:0; height:3px; width:var(--progress, 0%);
-  background: linear-gradient(90deg, var(--accent), var(--accent-3));
-  z-index:9999; box-shadow:0 0 14px rgba(212,175,55,.6);
-  transition:width .15s linear;
-}
-
-/* Fundo com orbes */
-.bg-effects .orb{
-  position:fixed; inset:auto; width:32vmax; height:32vmax; border-radius:50%;
-  filter: blur(40px); opacity:.18; z-index:-1;
-  background: radial-gradient(circle at 30% 30%, var(--accent-3), transparent 60%);
-  animation: floaty 16s ease-in-out infinite alternate;
-}
-.bg-effects .orb-1{ bottom:-8vmax; left:-6vmax; }
-.bg-effects .orb-2{ top:-10vmax; right:-12vmax; animation-duration:18s }
-.bg-effects .orb-3{ top:40%; left:60%; width:26vmax; height:26vmax; animation-duration:22s; opacity:.12 }
-@keyframes floaty{ to { transform: translate3d(4vmax, -2vmax, 0) scale(1.04); } }
-
-/* Containers */
-.container{ width:min(1200px, 92vw); margin:0 auto; }
-.glass{
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:var(--radius);
-  box-shadow: var(--shadow);
-  backdrop-filter:saturate(110%) blur(var(--blur));
-}
-
-/* Topbar */
-.site-header{ margin:18px auto; padding:12px; }
-.topbar{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.75rem 1rem; border-radius:calc(var(--radius) - 6px);
-}
-.brand{ display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text); font-weight:700; letter-spacing:.3px }
-.logo{ width:40px; height:40px; border-radius:10px; object-fit:cover; }
-.nav-actions{ display:flex; gap:.8rem; list-style:none; padding:0; margin:0; }
-.ghost-link{
-  color:var(--muted); text-decoration:none; padding:.5rem .8rem; border-radius:999px;
-  border:1px solid transparent;
-}
-.ghost-link:hover{ color:var(--text); border-color:rgba(255,255,255,.16); background:var(--card-2) }
-
-/* Hero */
-.hero{ padding: clamp(2.5rem, 6vw, 5rem) clamp(1rem, 3vw, 2rem); text-align:center; }
-.title{
-  font-size: clamp(1.8rem, 4.4vw, 3.4rem);
-  line-height:1.1;
-  background:linear-gradient(180deg, #fff, #ece7d0, var(--accent-3));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  text-shadow: 0 0 16px rgba(212,175,55,.08);
-}
-.subtitle{ font-size: clamp(1rem, 2.2vw, 1.25rem) }
-
-.usp-badges{
-  margin:1.2rem auto 0; padding:0; list-style:none; display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center;
-}
-.usp-badges li{
-  background:var(--card); border:1px solid rgba(255,255,255,.1); color:#e9e9f1;
-  padding:.5rem .8rem; border-radius:999px; font-size:.9rem;
-  backdrop-filter: blur(8px);
-}
-
-/* Botões principais (mantidos) */
-.link-button{
-  display:inline-flex; align-items:center; gap:.6rem;
-  text-decoration:none; font-weight:600; line-height:1;
-  padding: .95rem 1.15rem; border-radius:14px;
-  border:1px solid rgba(255,255,255,.14);
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  color:#fff; position:relative; overflow:hidden; transition: transform .2s ease, border-color .2s ease, background .2s ease;
-}
-.link-button:hover{ transform: translateY(-2px); border-color: rgba(255,255,255,.24) }
-.link-button i{ font-size:1.1rem }
-
-.btn-3d{
-  box-shadow: 0 10px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
-}
-.whatsapp{ background: linear-gradient(180deg, rgba(34,197,94,.25), rgba(34,197,94,.08)); }
-.instagram{ background: linear-gradient(180deg, rgba(225,48,108,.25), rgba(225,48,108,.08)); }
-
-.cta-row{ display:flex; gap:.8rem; justify-content:center; flex-wrap:wrap; margin-top:1.2rem }
-
-/* Seções */
-.section{ padding: clamp(2rem, 6vw, 3.2rem) 1rem; }
-.section-title{
-  display:inline-block; margin-bottom:1.2rem; padding:.45rem .9rem;
-  border-radius:999px; border:1px solid rgba(255,255,255,.14);
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
-}
-
-/* Serviços (mantidos + visuais) */
-.services-button{
-  display:inline-flex; align-items:center; gap:.7rem; margin:.5rem 0 1rem; cursor:pointer;
-}
-.services-button .label{ font-weight:700 }
-.services-button .chevron{
-  width:12px; height:12px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform: rotate(45deg); transition: transform .3s ease;
-}
-.services-button[aria-expanded="true"] .chevron{ transform: rotate(-135deg) }
-
-.services-content{
-  overflow:hidden; max-height:0; transition:max-height .45s cubic-bezier(.2,.65,.2,1);
-}
-.services-grid{
-  list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:.9rem;
-}
-.service-card{
-  padding:1rem; background:var(--card); border:1px solid rgba(255,255,255,.12);
-  border-radius:14px; display:flex; gap:.7rem; align-items:flex-start;
-}
-.service-card i{ margin-top:.15rem; color:var(--accent) }
-
-/* Chips */
-.chips{ display:flex; flex-wrap:wrap; gap:.6rem; }
-.chip{
-  padding:.55rem .9rem; border-radius:999px; background:var(--card);
-  border:1px solid rgba(255,255,255,.12);
-}
-
-/* Steps */
-.steps{
-  list-style:none; display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
-  gap:1rem; margin:0; padding:0;
-}
-.steps li{
-  padding:1rem; background:var(--card); border:1px solid rgba(255,255,255,.12);
-  border-radius:14px; position:relative;
-}
-.steps i{ color:var(--accent); font-size:1.2rem }
-
-/* Footer */
-.site-footer{ margin:2rem auto; padding:1.2rem 1rem; }
-.footer-grid{ display:grid; grid-template-columns:1.2fr .8fr; gap:1rem; }
-.footer-grid h4{ margin-bottom:.4rem }
-.copy{ text-align:center; margin-top:.6rem; color:var(--muted) }
-
-/* Dock flutuante */
-.float-dock{
-  position:fixed; right:20px; bottom:20px; display:flex; flex-direction:column; gap:.6rem;
-  z-index:9998;
-}
-.float-btn{
-  width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
-  border:1px solid rgba(255,255,255,.18); background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  box-shadow: var(--shadow); cursor:pointer; transition: transform .2s ease, box-shadow .2s ease;
-  position:relative; overflow:hidden; color:#fff;
-}
-.float-btn:hover{ transform: translateY(-3px) }
-.fab-whatsapp{ background:linear-gradient(180deg, rgba(34,197,94,.25), rgba(34,197,94,.08)) }
-.fab-instagram{ background:linear-gradient(180deg, rgba(225,48,108,.25), rgba(225,48,108,.08)) }
-.fab-top{ background:linear-gradient(180deg, rgba(212,175,55,.25), rgba(212,175,55,.08)) }
-#toTop{ opacity:0; pointer-events:none; }
-#toTop.show{ opacity:1; pointer-events:auto; }
-
-/* Microinterações: ripple */
-.link-button .ripple, .float-btn .ripple{
-  position:absolute; transform:translate(-50%,-50%); border-radius:50%;
-  animation:ripple .6s ease-out; background:rgba(255,255,255,.35); pointer-events:none;
-}
-@keyframes ripple{ from{ width:0; height:0; opacity:.45 } to{ width:260px; height:260px; opacity:0 } }
-
-/* Aparição suave ao rolar */
-.reveal{ opacity:0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease }
-.reveal.is-inview{ opacity:1; transform:none }
-
-/* Foco visível */
-:focus-visible{ outline:2px solid var(--accent-3); outline-offset:3px; border-radius:10px }
-
-/* Scrollbar (suave) */
-*::-webkit-scrollbar{ height:10px; width:10px }
-*::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius:999px }
-*::-webkit-scrollbar-track{ background:transparent }
-
-/* Responsividade */
-@media (max-width: 760px){
-  .footer-grid{ grid-template-columns:1fr }
-}
-
-/* Movimento reduzido */
-@media (prefers-reduced-motion: reduce){
-  .reveal, .link-button, .float-btn{ transition:none !important }
-  .bg-effects .orb{ animation:none }
-  html{ scroll-behavior:auto }
-}
+    <script src="script.js"></script>
+</body>
+</html>
