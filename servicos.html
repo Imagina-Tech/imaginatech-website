@@ -40,7 +40,7 @@
             color: #fff;
             min-height: 100vh;
             position: relative;
-            overflow-x: hidden; /* Previne scroll horizontal */
+            overflow-x: hidden;
         }
 
         /* Animated Background */
@@ -133,7 +133,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
-            flex-wrap: wrap; /* Permite quebra de linha no mobile */
+            flex-wrap: wrap;
         }
 
         .user-info {
@@ -492,22 +492,25 @@
         }
 
         .service-status {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         .status-badge {
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 25px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
-            flex: 1;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .status-badge.active {
@@ -677,10 +680,29 @@
             display: block;
         }
 
+        /* Pickup Fields */
+        .pickup-fields {
+            display: none;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .pickup-fields.active {
+            display: block;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
+        }
+
+        h5 {
+            margin: 0;
+            padding: 0;
         }
 
         /* Delivery Info Modal */
@@ -728,6 +750,23 @@
             color: var(--neon-green);
             font-size: 1.2rem;
             font-weight: 700;
+        }
+
+        .whatsapp-link {
+            color: var(--neon-green);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-link:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
         }
 
         /* Empty State */
@@ -813,7 +852,6 @@
                 justify-content: center;
             }
 
-            /* Corrige o botão de novo serviço no mobile */
             #newServiceBtn {
                 width: 100%;
                 justify-content: center;
@@ -828,14 +866,6 @@
             .btn-filter {
                 width: 100%;
                 justify-content: center;
-            }
-
-            .service-status {
-                flex-wrap: wrap;
-            }
-
-            .status-badge {
-                flex: 1 1 45%;
             }
 
             .view-mode-banner {
@@ -902,13 +932,11 @@
                     <span id="statusText">Conectado</span>
                 </div>
                 
-                <!-- User Info (Hidden by default) -->
                 <div class="user-info" id="userInfo" style="display: none;">
                     <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
                     <span class="user-name" id="userName"></span>
                 </div>
                 
-                <!-- Login/Logout Button -->
                 <button class="btn btn-google" id="loginBtn" onclick="signInWithGoogle()">
                     <i class="fab fa-google"></i>
                     Fazer Login
@@ -919,7 +947,6 @@
                     Sair
                 </button>
                 
-                <!-- New Service Button (Hidden for non-auth users) -->
                 <button class="btn btn-primary" id="newServiceBtn" style="display: none;" onclick="openAddModal()">
                     <i class="fas fa-plus"></i>
                     Novo Serviço
@@ -930,7 +957,7 @@
 
     <!-- Main Content -->
     <div class="container">
-        <!-- View Mode Banner (Shows for non-authenticated users) -->
+        <!-- View Mode Banner -->
         <div class="view-mode-banner" id="viewModeBanner">
             <div class="view-mode-text">
                 <i class="fas fa-eye"></i>
@@ -969,7 +996,7 @@
         <!-- Filter Bar -->
         <div class="filter-bar">
             <button class="btn btn-filter active" onclick="filterServices('todos')">
-                <i class="fas fa-list"></i> Todos
+                <i class="fas fa-list"></i> Em Andamento
             </button>
             <button class="btn btn-filter" onclick="filterServices('pendente')">
                 <i class="fas fa-clock"></i> Pendentes
@@ -1079,29 +1106,99 @@
                     <div class="form-group">
                         <label class="form-label">WhatsApp para contato*</label>
                         <input type="text" class="form-input" id="pickupWhatsapp" 
-                               placeholder="(21) 99999-9999" maxlength="15" onkeyup="formatWhatsApp(this)">
+                               placeholder="(21) 99999-9999" maxlength="15">
                     </div>
                 </div>
 
                 <!-- Campos adicionais para Sedex -->
                 <div class="delivery-fields" id="deliveryFields">
                     <h4 style="margin-bottom: 15px; color: var(--neon-purple);">
-                        <i class="fas fa-map-marker-alt"></i> Informações de Entrega
+                        <i class="fas fa-box"></i> 📦 Dados para entrega 📦
                     </h4>
                     
+                    <div class="form-group">
+                        <label class="form-label">Nome completo*</label>
+                        <input type="text" class="form-input" id="fullName" 
+                               placeholder="Nome completo do destinatário">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CPF ou CNPJ*</label>
+                            <input type="text" class="form-input" id="cpfCnpj" 
+                                   placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone*</label>
+                            <input type="text" class="form-input" id="telefone" 
+                                   placeholder="(21) 99999-9999" maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">E-mail*</label>
+                        <input type="email" class="form-input" id="email" 
+                               placeholder="email@exemplo.com">
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Valor da Venda (R$)*</label>
                         <input type="number" class="form-input" id="saleValue" step="0.01" 
                                placeholder="Ex: 150.00">
                     </div>
 
+                    <h5 style="margin: 25px 0 15px; color: var(--neon-blue); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                        <i class="fas fa-map-marker-alt"></i> Endereço de entrega completo
+                    </h5>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">CEP*</label>
                             <input type="text" class="form-input" id="cep" 
-                                   placeholder="00000-000" maxlength="9" onblur="searchCEP()">
+                                   placeholder="00000-000" maxlength="9">
                         </div>
                         <div class="form-group">
+                            <label class="form-label">UF*</label>
+                            <select class="form-select" id="estado">
+                                <option value="">Selecione</option>
+                                <option value="AC">AC</option>
+                                <option value="AL">AL</option>
+                                <option value="AP">AP</option>
+                                <option value="AM">AM</option>
+                                <option value="BA">BA</option>
+                                <option value="CE">CE</option>
+                                <option value="DF">DF</option>
+                                <option value="ES">ES</option>
+                                <option value="GO">GO</option>
+                                <option value="MA">MA</option>
+                                <option value="MT">MT</option>
+                                <option value="MS">MS</option>
+                                <option value="MG">MG</option>
+                                <option value="PA">PA</option>
+                                <option value="PB">PB</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="PI">PI</option>
+                                <option value="RJ">RJ</option>
+                                <option value="RN">RN</option>
+                                <option value="RS">RS</option>
+                                <option value="RO">RO</option>
+                                <option value="RR">RR</option>
+                                <option value="SC">SC</option>
+                                <option value="SP">SP</option>
+                                <option value="SE">SE</option>
+                                <option value="TO">TO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label">Rua*</label>
+                            <input type="text" class="form-input" id="rua" 
+                                   placeholder="Nome da rua">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
                             <label class="form-label">Número*</label>
                             <input type="text" class="form-input" id="numero" 
                                    placeholder="123">
@@ -1109,9 +1206,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Rua*</label>
-                        <input type="text" class="form-input" id="rua" 
-                               placeholder="Nome da rua">
+                        <label class="form-label">Bairro*</label>
+                        <input type="text" class="form-input" id="bairro" 
+                               placeholder="Nome do bairro">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cidade*</label>
+                        <input type="text" class="form-input" id="cidade" 
+                               placeholder="Nome da cidade">
                     </div>
 
                     <div class="form-group">
@@ -1120,51 +1223,10 @@
                                placeholder="Apto, Bloco, etc. (opcional)">
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Bairro*</label>
-                            <input type="text" class="form-input" id="bairro" 
-                                   placeholder="Nome do bairro">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cidade*</label>
-                            <input type="text" class="form-input" id="cidade" 
-                                   placeholder="Nome da cidade">
-                        </div>
-                    </div>
-
                     <div class="form-group">
-                        <label class="form-label">Estado*</label>
-                        <select class="form-select" id="estado">
-                            <option value="">Selecione</option>
-                            <option value="AC">Acre</option>
-                            <option value="AL">Alagoas</option>
-                            <option value="AP">Amapá</option>
-                            <option value="AM">Amazonas</option>
-                            <option value="BA">Bahia</option>
-                            <option value="CE">Ceará</option>
-                            <option value="DF">Distrito Federal</option>
-                            <option value="ES">Espírito Santo</option>
-                            <option value="GO">Goiás</option>
-                            <option value="MA">Maranhão</option>
-                            <option value="MT">Mato Grosso</option>
-                            <option value="MS">Mato Grosso do Sul</option>
-                            <option value="MG">Minas Gerais</option>
-                            <option value="PA">Pará</option>
-                            <option value="PB">Paraíba</option>
-                            <option value="PR">Paraná</option>
-                            <option value="PE">Pernambuco</option>
-                            <option value="PI">Piauí</option>
-                            <option value="RJ">Rio de Janeiro</option>
-                            <option value="RN">Rio Grande do Norte</option>
-                            <option value="RS">Rio Grande do Sul</option>
-                            <option value="RO">Rondônia</option>
-                            <option value="RR">Roraima</option>
-                            <option value="SC">Santa Catarina</option>
-                            <option value="SP">São Paulo</option>
-                            <option value="SE">Sergipe</option>
-                            <option value="TO">Tocantins</option>
-                        </select>
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-textarea" id="observacoes" rows="3"
+                                  placeholder="Informações adicionais sobre a entrega"></textarea>
                     </div>
                 </div>
 
@@ -1216,9 +1278,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <script>
-        // ============================
-        // CONFIGURAÇÃO DO FIREBASE - SUAS CONFIGURAÇÕES REAIS
-        // ============================
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
             authDomain: "imaginatech-servicos.firebaseapp.com",
@@ -1228,9 +1288,7 @@
             appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
         };
 
-        // ============================
-        // EMAILS AUTORIZADOS - SEUS EMAILS REAIS
-        // ============================
+        // Authorized Emails
         const AUTHORIZED_EMAILS = [
             "3d3printers@gmail.com",
             "igor.butter@gmail.com"
@@ -1289,15 +1347,10 @@
 
         // Update UI for Authenticated User
         function updateUIForUser(user) {
-            // Hide view mode banner
             document.getElementById('viewModeBanner').style.display = 'none';
-            
-            // Show user info
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'User');
             document.getElementById('userName').textContent = user.displayName || user.email;
-            
-            // Update buttons
             document.getElementById('loginBtn').style.display = 'none';
             document.getElementById('logoutBtn').style.display = 'block';
             
@@ -1311,26 +1364,18 @@
                 document.getElementById('emptyText').textContent = 'Nenhum serviço cadastrado no momento';
             }
             
-            // Re-render services to enable buttons
             renderServices();
         }
 
         // Update UI for Guest
         function updateUIForGuest() {
-            // Show view mode banner
             document.getElementById('viewModeBanner').style.display = 'flex';
-            
-            // Hide user info
             document.getElementById('userInfo').style.display = 'none';
-            
-            // Update buttons
             document.getElementById('loginBtn').style.display = 'block';
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('newServiceBtn').style.display = 'none';
             document.getElementById('emptyAddBtn').style.display = 'none';
             document.getElementById('emptyText').textContent = 'Faça login para visualizar os serviços';
-            
-            // Re-render services to disable buttons
             renderServices();
         }
 
@@ -1354,11 +1399,27 @@
         // Toggle Delivery Fields
         function toggleDeliveryFields() {
             const method = document.getElementById('deliveryMethod').value;
-            const fields = document.getElementById('deliveryFields');
+            const deliveryFields = document.getElementById('deliveryFields');
+            const pickupFields = document.getElementById('pickupFields');
+            
+            // Hide all fields first
+            deliveryFields.classList.remove('active');
+            pickupFields.classList.remove('active');
+            
+            // Reset required attributes
+            const deliveryInputs = deliveryFields.querySelectorAll('input, select, textarea');
+            const pickupInputs = pickupFields.querySelectorAll('input');
+            
+            deliveryInputs.forEach(input => input.required = false);
+            pickupInputs.forEach(input => input.required = false);
             
             if (method === 'sedex') {
-                fields.classList.add('active');
-                // Torna os campos obrigatórios
+                deliveryFields.classList.add('active');
+                // Set required fields for Sedex
+                document.getElementById('fullName').required = true;
+                document.getElementById('cpfCnpj').required = true;
+                document.getElementById('telefone').required = true;
+                document.getElementById('email').required = true;
                 document.getElementById('saleValue').required = true;
                 document.getElementById('cep').required = true;
                 document.getElementById('numero').required = true;
@@ -1366,24 +1427,74 @@
                 document.getElementById('bairro').required = true;
                 document.getElementById('cidade').required = true;
                 document.getElementById('estado').required = true;
-            } else {
-                fields.classList.remove('active');
-                // Remove obrigatoriedade
-                document.getElementById('saleValue').required = false;
-                document.getElementById('cep').required = false;
-                document.getElementById('numero').required = false;
-                document.getElementById('rua').required = false;
-                document.getElementById('bairro').required = false;
-                document.getElementById('cidade').required = false;
-                document.getElementById('estado').required = false;
+            } else if (method === 'retirada') {
+                pickupFields.classList.add('active');
+                // Set required fields for pickup
+                document.getElementById('pickupName').required = true;
+                document.getElementById('pickupWhatsapp').required = true;
             }
+        }
+
+        // Format WhatsApp number
+        function formatWhatsApp(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    value = `(${value}`;
+                } else if (value.length <= 7) {
+                    value = `(${value.slice(0,2)}) ${value.slice(2)}`;
+                } else if (value.length <= 11) {
+                    value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
+                }
+            }
+            input.value = value;
+        }
+
+        // Format CPF/CNPJ
+        function formatCpfCnpj(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                // CPF
+                if (value.length > 9) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                } else if (value.length > 6) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+                } else if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{3})/, '$1.$2');
+                }
+            } else {
+                // CNPJ
+                if (value.length > 12) {
+                    value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                } else if (value.length > 8) {
+                    value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4');
+                } else if (value.length > 5) {
+                    value = value.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+                } else if (value.length > 2) {
+                    value = value.replace(/(\d{2})(\d{3})/, '$1.$2');
+                }
+            }
+            input.value = value;
+        }
+
+        // Format CEP
+        function formatCEP(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.slice(0, 5) + '-' + value.slice(5, 8);
+            }
+            input.value = value;
         }
 
         // Search CEP
         async function searchCEP() {
-            const cep = document.getElementById('cep').value.replace(/\D/g, '');
+            const cepInput = document.getElementById('cep');
+            const cep = cepInput.value.replace(/\D/g, '');
+            
             if (cep.length === 8) {
                 try {
+                    cepInput.style.opacity = '0.5';
+                    
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                     const data = await response.json();
                     
@@ -1392,21 +1503,15 @@
                         document.getElementById('bairro').value = data.bairro || '';
                         document.getElementById('cidade').value = data.localidade || '';
                         document.getElementById('estado').value = data.uf || '';
+                        document.getElementById('numero').focus();
                     }
                 } catch (error) {
-                    console.error('Error fetching CEP:', error);
+                    console.error('Erro ao buscar CEP:', error);
+                } finally {
+                    cepInput.style.opacity = '1';
                 }
             }
         }
-
-        // Format CEP
-        document.getElementById('cep')?.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 5) {
-                value = value.slice(0, 5) + '-' + value.slice(5, 8);
-            }
-            e.target.value = value;
-        });
 
         // Show Delivery Info
         function showDeliveryInfo(id) {
@@ -1423,7 +1528,6 @@
             
             let html = '';
             
-            // Método de entrega
             const deliveryMethods = {
                 'retirada': 'Retirada no Local',
                 'sedex': 'Sedex',
@@ -1443,10 +1547,66 @@
                 </div>
             `;
             
-            // Se for Sedex, mostra endereço e valor
+            // For Retirada
+            if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+                const pickup = service.pickupInfo;
+                const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
+                const whatsappLink = `https://wa.me/55${whatsappNumber}`;
+                
+                html += `
+                    <div class="info-section">
+                        <h3 class="info-title">
+                            <i class="fas fa-user-check"></i> Informações para Retirada
+                        </h3>
+                        <div class="info-item">
+                            <span class="info-label">Nome</span>
+                            <span class="info-value">${pickup.name || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">WhatsApp</span>
+                            <span class="info-value">
+                                <a href="${whatsappLink}" target="_blank" class="whatsapp-link">
+                                    <i class="fab fa-whatsapp"></i> ${pickup.whatsapp}
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // For Sedex
             if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
                 const addr = service.deliveryAddress;
+                const whatsappNumber = addr.telefone ? addr.telefone.replace(/\D/g, '') : '';
+                const whatsappLink = whatsappNumber ? `https://wa.me/55${whatsappNumber}` : '#';
+                
                 html += `
+                    <div class="info-section">
+                        <h3 class="info-title">
+                            <i class="fas fa-user"></i> Dados do Destinatário
+                        </h3>
+                        <div class="info-item">
+                            <span class="info-label">Nome</span>
+                            <span class="info-value">${addr.fullName || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">CPF/CNPJ</span>
+                            <span class="info-value">${addr.cpfCnpj || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">E-mail</span>
+                            <span class="info-value">${addr.email || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Telefone</span>
+                            <span class="info-value">
+                                ${addr.telefone ? `<a href="${whatsappLink}" target="_blank" class="whatsapp-link">
+                                    <i class="fab fa-whatsapp"></i> ${addr.telefone}
+                                </a>` : '-'}
+                            </span>
+                        </div>
+                    </div>
+                    
                     <div class="info-section">
                         <h3 class="info-title">
                             <i class="fas fa-map-marker-alt"></i> Endereço de Entrega
@@ -1470,9 +1630,15 @@
                             <span class="info-value">${addr.bairro || '-'}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Cidade/Estado</span>
+                            <span class="info-label">Cidade/UF</span>
                             <span class="info-value">${addr.cidade || '-'}/${addr.estado || '-'}</span>
                         </div>
+                        ${addr.observacoes ? `
+                            <div class="info-item">
+                                <span class="info-label">Observações</span>
+                                <span class="info-value">${addr.observacoes}</span>
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <div class="info-section">
@@ -1487,7 +1653,7 @@
                 `;
             }
             
-            // Informações do serviço
+            // Service info
             html += `
                 <div class="info-section">
                     <h3 class="info-title">
@@ -1507,6 +1673,32 @@
                     </div>
                 </div>
             `;
+            
+            // WhatsApp button
+            let whatsappContactNumber = '';
+            let whatsappContactName = '';
+            
+            if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+                whatsappContactNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
+                whatsappContactName = service.pickupInfo.name;
+            } else if (service.deliveryMethod === 'sedex' && service.deliveryAddress && service.deliveryAddress.telefone) {
+                whatsappContactNumber = service.deliveryAddress.telefone.replace(/\D/g, '');
+                whatsappContactName = service.deliveryAddress.fullName;
+            }
+            
+            if (whatsappContactNumber) {
+                const message = encodeURIComponent(`Olá ${whatsappContactName}! Sobre o serviço: ${service.name}`);
+                html += `
+                    <div style="margin-top: 20px; text-align: center;">
+                        <a href="https://wa.me/55${whatsappContactNumber}?text=${message}" 
+                           target="_blank" 
+                           class="btn btn-primary" 
+                           style="background: linear-gradient(135deg, #25D366, #128C7E); width: 100%; justify-content: center;">
+                            <i class="fab fa-whatsapp"></i> Enviar mensagem no WhatsApp
+                        </a>
+                    </div>
+                `;
+            }
             
             content.innerHTML = html;
             modal.classList.add('active');
@@ -1586,6 +1778,7 @@
             document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('serviceStatus').value = 'pendente';
             document.getElementById('deliveryFields').classList.remove('active');
+            document.getElementById('pickupFields').classList.remove('active');
             document.getElementById('serviceModal').classList.add('active');
         }
 
@@ -1613,10 +1806,20 @@
             document.getElementById('serviceStatus').value = service.status;
             document.getElementById('deliveryMethod').value = service.deliveryMethod || '';
             
-            // Se tiver endereço de entrega
+            toggleDeliveryFields();
+            
+            if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+                const pickup = service.pickupInfo;
+                document.getElementById('pickupName').value = pickup.name || '';
+                document.getElementById('pickupWhatsapp').value = pickup.whatsapp || '';
+            }
+            
             if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-                toggleDeliveryFields();
                 const addr = service.deliveryAddress;
+                document.getElementById('fullName').value = addr.fullName || '';
+                document.getElementById('cpfCnpj').value = addr.cpfCnpj || '';
+                document.getElementById('email').value = addr.email || '';
+                document.getElementById('telefone').value = addr.telefone || '';
                 document.getElementById('saleValue').value = service.saleValue || '';
                 document.getElementById('cep').value = addr.cep || '';
                 document.getElementById('numero').value = addr.numero || '';
@@ -1625,6 +1828,7 @@
                 document.getElementById('bairro').value = addr.bairro || '';
                 document.getElementById('cidade').value = addr.cidade || '';
                 document.getElementById('estado').value = addr.estado || '';
+                document.getElementById('observacoes').value = addr.observacoes || '';
             }
             
             document.getElementById('serviceModal').classList.add('active');
@@ -1635,6 +1839,7 @@
             document.getElementById('serviceModal').classList.remove('active');
             document.getElementById('serviceForm').reset();
             document.getElementById('deliveryFields').classList.remove('active');
+            document.getElementById('pickupFields').classList.remove('active');
             editingServiceId = null;
         }
 
@@ -1663,17 +1868,28 @@
                 updatedBy: currentUser.email
             };
             
-            // Se for Sedex, adiciona os campos de endereço
+            if (deliveryMethod === 'retirada') {
+                service.pickupInfo = {
+                    name: document.getElementById('pickupName').value,
+                    whatsapp: document.getElementById('pickupWhatsapp').value
+                };
+            }
+            
             if (deliveryMethod === 'sedex') {
                 service.saleValue = document.getElementById('saleValue').value;
                 service.deliveryAddress = {
+                    fullName: document.getElementById('fullName').value,
+                    cpfCnpj: document.getElementById('cpfCnpj').value,
+                    email: document.getElementById('email').value,
+                    telefone: document.getElementById('telefone').value,
                     cep: document.getElementById('cep').value,
                     numero: document.getElementById('numero').value,
                     rua: document.getElementById('rua').value,
                     complemento: document.getElementById('complemento').value,
                     bairro: document.getElementById('bairro').value,
                     cidade: document.getElementById('cidade').value,
-                    estado: document.getElementById('estado').value
+                    estado: document.getElementById('estado').value,
+                    observacoes: document.getElementById('observacoes').value
                 };
             }
 
@@ -1751,7 +1967,7 @@
         // Update Statistics
         function updateStats() {
             const stats = {
-                total: services.length,
+                total: services.filter(s => s.status !== 'entregue').length,
                 pendente: services.filter(s => s.status === 'pendente').length,
                 producao: services.filter(s => s.status === 'producao').length,
                 concluido: services.filter(s => s.status === 'concluido').length,
@@ -1771,7 +1987,11 @@
             const emptyState = document.getElementById('emptyState');
             
             let filteredServices = services;
-            if (currentFilter !== 'todos') {
+            
+            // Filter: "todos" doesn't show delivered
+            if (currentFilter === 'todos') {
+                filteredServices = services.filter(s => s.status !== 'entregue');
+            } else if (currentFilter !== 'todos') {
                 filteredServices = services.filter(s => s.status === currentFilter);
             }
 
@@ -1801,11 +2021,7 @@
                                      'var(--secondary-blue)';
                     
                     const disabledClass = !isAuthorized ? 'disabled' : '';
-                    const onclickStatus = isAuthorized ? `onclick="updateStatus('${service.id}', 'STATUS')"` : '';
-                    const onclickEdit = isAuthorized ? `onclick="openEditModal('${service.id}')"` : '';
-                    const onclickDelete = isAuthorized ? `onclick="deleteService('${service.id}')"` : '';
                     
-                    // Ícones para métodos de entrega
                     const deliveryIcons = {
                         'retirada': 'fa-store',
                         'sedex': 'fa-mail-bulk',
@@ -1889,11 +2105,11 @@
                                             <i class="fas fa-info-circle"></i> Info. Entrega
                                         </button>
                                     ` : ''}
-                                    <button class="btn btn-filter btn-action" ${onclickEdit}>
+                                    <button class="btn btn-filter btn-action" onclick="openEditModal('${service.id}')">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
                                     <button class="btn btn-filter btn-action" style="border-color: var(--neon-red); color: var(--neon-red);" 
-                                            ${onclickDelete}>
+                                            onclick="deleteService('${service.id}')">
                                         <i class="fas fa-trash"></i> Excluir
                                     </button>
                                 </div>
@@ -1926,10 +2142,32 @@
             }
         }
 
-        // Initialize on load
+        // Initialize event listeners
         window.addEventListener('DOMContentLoaded', () => {
             createParticles();
             loadServices();
+            
+            // Add format listeners
+            const cepInput = document.getElementById('cep');
+            if (cepInput) {
+                cepInput.addEventListener('keyup', function() { formatCEP(this); });
+                cepInput.addEventListener('blur', searchCEP);
+            }
+            
+            const pickupWhatsapp = document.getElementById('pickupWhatsapp');
+            if (pickupWhatsapp) {
+                pickupWhatsapp.addEventListener('keyup', function() { formatWhatsApp(this); });
+            }
+            
+            const telefone = document.getElementById('telefone');
+            if (telefone) {
+                telefone.addEventListener('keyup', function() { formatWhatsApp(this); });
+            }
+            
+            const cpfCnpj = document.getElementById('cpfCnpj');
+            if (cpfCnpj) {
+                cpfCnpj.addEventListener('keyup', function() { formatCpfCnpj(this); });
+            }
         });
     </script>
 </body>
