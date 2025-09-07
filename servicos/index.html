@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Serviços - ImaginaTech</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Acompanhe seu pedido de impressão 3D em tempo real. ImaginaTech - Tecnologia e Inovação.">
+    <meta name="keywords" content="acompanhamento pedido, impressão 3d, status pedido, imaginatech">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Conectando ao servidor...</div>
+        </div>
+    </div>
+
+    <!-- Background Effects -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-logo">
+            <h1>ImaginaTech</h1>
+            <p>Portal de Serviços</p>
+        </div>
+        
+        <div class="welcome-options">
+            <div class="welcome-card client-card" onclick="openClientLogin()">
+                <div class="welcome-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="welcome-title">Acompanhar Pedido</h2>
+                <p class="welcome-description">Sou cliente e quero acompanhar meu pedido</p>
+            </div>
+            
+            <div class="welcome-card production-card" onclick="openProductionLogin()">
+                <div class="welcome-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h2 class="welcome-title">Módulo Produção</h2>
+                <p class="welcome-description">Acesso exclusivo para gerenciamento</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Login Modal -->
+    <div class="client-login-modal" id="clientLoginModal">
+        <div class="client-login-content">
+            <div class="client-login-header">
+                <h2 class="client-login-title">Acompanhar Pedido</h2>
+                <p class="client-login-subtitle">Faça login e insira o código do seu pedido</p>
+            </div>
+            
+            <div id="clientLoginStep">
+                <button class="btn btn-google" onclick="clientGoogleLogin()" style="width: 100%; justify-content: center;">
+                    <i class="fab fa-google"></i>
+                    <span>Continuar com Google</span>
+                </button>
+            </div>
+            
+            <div id="clientCodeStep" style="display: none;">
+                <div class="code-input-group">
+                    <label class="form-label">Código do Pedido (5 caracteres)</label>
+                    <input type="text" 
+                           class="code-input" 
+                           id="orderCode" 
+                           placeholder="XXXXX"
+                           maxlength="5">
+                    <div class="attempts-warning" id="attemptsWarning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="attemptsText"></span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-success" onclick="verifyOrderCode()" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-search"></i>
+                    <span>Buscar Pedido</span>
+                </button>
+            </div>
+            
+            <button class="btn btn-back" onclick="closeClientLogin()" style="width: 100%; margin-top: 20px; justify-content: center;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation Bar (for client view) -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="../imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
+                <span class="logo-text">ImaginaTech</span>
+                <span class="nav-divider">|</span>
+                <span class="nav-subtitle">Acompanhamento de Pedido</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-logout" onclick="exitToWelcome()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="btn-text">Sair</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Client View -->
+    <div class="client-view" id="clientView">
+        <div class="client-header">
+            <h2 class="client-welcome">Olá, <span id="clientName">Cliente</span>!</h2>
+            <p class="client-info">Acompanhe o status do seu pedido em tempo real</p>
+        </div>
+        
+        <div id="clientOrderCard">
+            <!-- Order card will be inserted here -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <button class="btn btn-primary" onclick="exitToWelcome()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar ao Início</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Header (for production) -->
+    <header class="header" id="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="/" style="text-decoration: none;">
+                    <span class="logo-text">ImaginaTech</span>
+                </a>
+                <span class="nav-divider">|</span>
+                <span class="nav-subtitle">Painel de Serviços</span>
+            </div>
+            <div class="header-actions">
+                <div class="connection-status" id="connectionStatus" title="Status da conexão">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Conectado</span>
+                </div>
+                
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                
+                <button class="btn btn-logout" id="logoutBtn" onclick="signOut()" title="Sair">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="btn-text">Sair</span>
+                </button>
+                
+                <button class="btn btn-primary" id="newServiceBtn" onclick="openAddModal()" title="Novo serviço">
+                    <i class="fas fa-plus"></i>
+                    <span class="btn-text">Novo Serviço</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content (Production) -->
+    <div class="container" id="mainContainer">
+        <!-- Stats Cards - CLICKABLE FILTERS -->
+        <div class="stats-grid">
+            <div class="stat-card active" onclick="filterServices('todos')" id="filter-todos">
+                <div class="stat-number" id="stat-total">0</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
+            <div class="stat-card" onclick="filterServices('pendente')" id="filter-pendente">
+                <div class="stat-number" id="stat-pending" style="color: var(--neon-yellow);">0</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-card" onclick="filterServices('producao')" id="filter-producao">
+                <div class="stat-number" id="stat-production" style="color: var(--neon-blue);">0</div>
+                <div class="stat-label">Em Produção</div>
+            </div>
+            <div class="stat-card" onclick="filterServices('concluido')" id="filter-concluido">
+                <div class="stat-number" id="stat-completed" style="color: var(--neon-green);">0</div>
+                <div class="stat-label">Concluídos</div>
+            </div>
+            <div class="stat-card" onclick="filterServices('entregue')" id="filter-entregue">
+                <div class="stat-number" id="stat-delivered" style="color: var(--secondary-blue);">0</div>
+                <div class="stat-label">Entregues</div>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="services-grid" id="servicesGrid">
+            <!-- Services will be loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">
+                <i class="fas fa-cube"></i>
+            </div>
+            <h2 class="empty-title">Nenhum serviço encontrado</h2>
+            <p class="empty-text">Adicione um novo serviço para começar</p>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i>
+                <span>Adicionar Primeiro Serviço</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Add/Edit Service Modal -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Novo Serviço</h2>
+                <button class="btn-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="serviceForm" onsubmit="saveService(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome do Serviço*</label>
+                    <input type="text" class="form-input" id="serviceNameInput" required 
+                           placeholder="Ex: Miniatura personalizada">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cliente*</label>
+                    <input type="text" class="form-input" id="clientNameInput" required 
+                           placeholder="Nome do cliente">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descrição do Serviço</label>
+                    <textarea class="form-textarea" id="serviceDescription" 
+                              placeholder="Detalhes sobre o serviço, especificações, material, cores, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Material</label>
+                    <select class="form-select" id="serviceMaterial">
+                        <option value="">Selecione o material</option>
+                        <option value="PLA">PLA</option>
+                        <option value="ABS">ABS</option>
+                        <option value="Resina">Resina</option>
+                        <option value="PETG">PETG</option>
+                        <option value="TPU">TPU</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prioridade*</label>
+                    <select class="form-select" id="servicePriority" required>
+                        <option value="baixa">Baixa</option>
+                        <option value="media" selected>Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Método de Entrega*</label>
+                    <select class="form-select" id="deliveryMethod" required onchange="toggleDeliveryFields()">
+                        <option value="">Selecione o método</option>
+                        <option value="retirada">Retirada</option>
+                        <option value="sedex">Sedex</option>
+                        <option value="uber">Uber Flash</option>
+                        <option value="definir">A definir</option>
+                    </select>
+                </div>
+
+                <!-- Campos adicionais para Retirada -->
+                <div class="pickup-fields" id="pickupFields">
+                    <h4 style="margin-bottom: 15px; color: var(--neon-green);">
+                        <i class="fas fa-store"></i> Informações para Retirada
+                    </h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nome de quem vai retirar*</label>
+                        <input type="text" class="form-input" id="pickupName" 
+                               placeholder="Nome completo da pessoa">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">WhatsApp para contato*</label>
+                        <input type="text" class="form-input" id="pickupWhatsapp" 
+                               placeholder="(21) 99999-9999" maxlength="15">
+                    </div>
+                </div>
+
+                <!-- Campos adicionais para Sedex -->
+                <div class="delivery-fields" id="deliveryFields">
+                    <h4 style="margin-bottom: 15px; color: var(--neon-purple);">
+                        <i class="fas fa-box"></i> 📦 Dados para entrega 📦
+                    </h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nome completo*</label>
+                        <input type="text" class="form-input" id="fullName" 
+                               placeholder="Nome completo do destinatário">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CPF ou CNPJ*</label>
+                            <input type="text" class="form-input" id="cpfCnpj" 
+                                   placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone*</label>
+                            <input type="text" class="form-input" id="telefone" 
+                                   placeholder="(21) 99999-9999" maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">E-mail*</label>
+                        <input type="email" class="form-input" id="email" 
+                               placeholder="email@exemplo.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Valor da Venda (R$)*</label>
+                        <input type="number" class="form-input" id="saleValue" step="0.01" 
+                               placeholder="Ex: 150.00">
+                    </div>
+
+                    <h5 style="margin: 25px 0 15px; color: var(--neon-blue); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                        <i class="fas fa-map-marker-alt"></i> Endereço de entrega completo
+                    </h5>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CEP*</label>
+                            <input type="text" class="form-input" id="cep" 
+                                   placeholder="00000-000" maxlength="9">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">UF*</label>
+                            <select class="form-select" id="estado">
+                                <option value="">Selecione</option>
+                                <option value="AC">AC</option>
+                                <option value="AL">AL</option>
+                                <option value="AP">AP</option>
+                                <option value="AM">AM</option>
+                                <option value="BA">BA</option>
+                                <option value="CE">CE</option>
+                                <option value="DF">DF</option>
+                                <option value="ES">ES</option>
+                                <option value="GO">GO</option>
+                                <option value="MA">MA</option>
+                                <option value="MT">MT</option>
+                                <option value="MS">MS</option>
+                                <option value="MG">MG</option>
+                                <option value="PA">PA</option>
+                                <option value="PB">PB</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="PI">PI</option>
+                                <option value="RJ">RJ</option>
+                                <option value="RN">RN</option>
+                                <option value="RS">RS</option>
+                                <option value="RO">RO</option>
+                                <option value="RR">RR</option>
+                                <option value="SC">SC</option>
+                                <option value="SP">SP</option>
+                                <option value="SE">SE</option>
+                                <option value="TO">TO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label">Rua*</label>
+                            <input type="text" class="form-input" id="rua" 
+                                   placeholder="Nome da rua">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Número*</label>
+                            <input type="text" class="form-input" id="numero" 
+                                   placeholder="123">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bairro*</label>
+                        <input type="text" class="form-input" id="bairro" 
+                               placeholder="Nome do bairro">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cidade*</label>
+                        <input type="text" class="form-input" id="cidade" 
+                               placeholder="Nome da cidade">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Complemento</label>
+                        <input type="text" class="form-input" id="complemento" 
+                               placeholder="Apto, Bloco, etc. (opcional)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-textarea" id="observacoes" rows="3"
+                                  placeholder="Informações adicionais sobre a entrega"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data de Entrada*</label>
+                    <input type="date" class="form-input" id="startDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prazo de Entrega*</label>
+                    <input type="date" class="form-input" id="dueDate" required>
+                </div>
+
+                <!-- Order Code Display (shown after saving) -->
+                <div class="order-code-display" id="orderCodeDisplay" style="display: none;">
+                    <div class="order-code-label">Código do Pedido para o Cliente:</div>
+                    <div class="order-code-value" id="orderCodeValue">XXXXX</div>
+                    <div class="order-code-info">
+                        <i class="fas fa-info-circle"></i>
+                        Envie este código ao cliente para acompanhamento
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button type="button" class="btn btn-back" style="flex: 1;" onclick="closeModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        <i class="fas fa-save"></i>
+                        <span id="saveButtonText">Salvar Serviço</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delivery Info Modal -->
+    <div class="modal" id="deliveryInfoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-truck"></i> Informações de Entrega
+                </h2>
+                <button class="btn-close" onclick="closeDeliveryModal()">&times;</button>
+            </div>
+            
+            <div id="deliveryInfoContent">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Scripts -->
+    <script src="scripts.js"></script>
+</body>
+</html>
