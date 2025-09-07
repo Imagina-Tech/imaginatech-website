@@ -1,7 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL DE SERVIÇOS
 // Sistema de Gerenciamento com Firebase
-// Versão Corrigida - Bugs de Autenticação e Notificações
+// Versão Corrigida - Modais Customizados para Confirmações
 // ===========================
 
 // Firebase Configuration
@@ -49,6 +49,7 @@ let clientAttempts = 0;
 let clientUser = null;
 let currentOrderCode = null;
 let orderListener = null; // Store listener reference
+let pendingStatusUpdate = null; // Store pending status update info
 
 // ===========================
 // UTILITY FUNCTIONS
@@ -156,6 +157,108 @@ function daysRemaining(dueDate) {
     const due = new Date(dueDate);
     const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
     return diff;
+}
+
+// ===========================
+// CONFIRMATION MODAL FUNCTIONS
+// ===========================
+
+// Show SEDEX Confirmation Modal
+function showSedexConfirmation(serviceId) {
+    pendingStatusUpdate = { id: serviceId, status: 'concluido' };
+    document.getElementById('sedexConfirmModal').classList.add('active');
+}
+
+// Close SEDEX Confirmation Modal
+function closeSedexConfirm() {
+    document.getElementById('sedexConfirmModal').classList.remove('active');
+    pendingStatusUpdate = null;
+}
+
+// Confirm SEDEX Completion
+async function confirmSedexCompletion() {
+    if (!pendingStatusUpdate) return;
+    
+    closeSedexConfirm();
+    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    pendingStatusUpdate = null;
+}
+
+// Show RETIRADA Confirmation Modal
+function showRetiradaConfirmation(serviceId) {
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    pendingStatusUpdate = { 
+        id: serviceId, 
+        status: 'concluido',
+        service: service 
+    };
+    
+    // Update client name in modal
+    const clientName = service.pickupInfo?.name || service.client || 'Cliente';
+    document.getElementById('retiradaClientName').textContent = clientName;
+    
+    document.getElementById('retiradaConfirmModal').classList.add('active');
+}
+
+// Close RETIRADA Confirmation Modal
+function closeRetiradaConfirm() {
+    document.getElementById('retiradaConfirmModal').classList.remove('active');
+    pendingStatusUpdate = null;
+}
+
+// Confirm RETIRADA Without WhatsApp
+async function confirmRetiradaWithoutWhatsapp() {
+    if (!pendingStatusUpdate) return;
+    
+    closeRetiradaConfirm();
+    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    pendingStatusUpdate = null;
+}
+
+// Confirm RETIRADA With WhatsApp
+async function confirmRetiradaWithWhatsapp() {
+    if (!pendingStatusUpdate) return;
+    
+    const service = pendingStatusUpdate.service;
+    
+    if (service && service.pickupInfo && service.pickupInfo.whatsapp) {
+        const whatsappNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
+        const message = encodeURIComponent(
+            'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
+            'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
+            'podemos combinar horário e local?'
+        );
+        const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
+        window.open(whatsappLink, '_blank');
+    }
+    
+    closeRetiradaConfirm();
+    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    pendingStatusUpdate = null;
+}
+
+// Execute Status Update (separated logic)
+async function executeStatusUpdate(id, status) {
+    try {
+        const updates = { 
+            status: status,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.email
+        };
+        
+        if (status === 'entregue') {
+            updates.deliveredDate = new Date().toISOString();
+        }
+        
+        await db.collection('services').doc(id).update(updates);
+        showToast('Status atualizado!', 'success');
+        
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Erro ao atualizar status', 'error');
+    }
 }
 
 // ===========================
@@ -990,7 +1093,7 @@ async function saveService(event) {
     }
 }
 
-// Update Service Status - MODIFICADO COM CONFIRMAÇÕES ESPECIAIS
+// Update Service Status - MODIFICADO COM MODAIS CUSTOMIZADOS
 async function updateStatus(id, status) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para atualizar status', 'error');
@@ -1000,56 +1103,22 @@ async function updateStatus(id, status) {
     const service = services.find(s => s.id === id);
     if (!service) return;
     
-    // MODIFICAÇÃO 3 e 4: Confirmações especiais para SEDEX e RETIRADA
+    // MODIFICAÇÃO: Usar modais customizados ao invés de confirm()
     if (status === 'concluido') {
         if (service.deliveryMethod === 'sedex') {
-            // Confirmação para SEDEX
-            const confirmSedex = confirm(
-                '⚠️ ATENÇÃO - PEDIDO SEDEX\n\n' +
-                'Marque concluído apenas se o pedido já estiver:\n' +
-                '✓ Embalado corretamente\n' +
-                '✓ Com a etiqueta dos Correios\n\n' +
-                'Confirmar conclusão?'
-            );
-            
-            if (!confirmSedex) return;
+            // Mostrar modal customizado para SEDEX
+            showSedexConfirmation(id);
+            return; // Aguardar confirmação do modal
             
         } else if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-            // Confirmação para RETIRADA com WhatsApp
-            const confirmRetirada = confirm('Serviço concluído!\n\nDeseja notificar o cliente via WhatsApp?');
-            
-            if (confirmRetirada) {
-                const whatsappNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
-                // MODIFICAÇÃO 5: Nova mensagem do WhatsApp
-                const message = encodeURIComponent(
-                    'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
-                    'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
-                    'podemos combinar horário e local?'
-                );
-                const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
-                window.open(whatsappLink, '_blank');
-            }
+            // Mostrar modal customizado para RETIRADA
+            showRetiradaConfirmation(id);
+            return; // Aguardar confirmação do modal
         }
     }
     
-    try {
-        const updates = { 
-            status: status,
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.email
-        };
-        
-        if (status === 'entregue') {
-            updates.deliveredDate = new Date().toISOString();
-        }
-        
-        await db.collection('services').doc(id).update(updates);
-        showToast('Status atualizado!', 'success');
-        
-    } catch (error) {
-        console.error('Error updating status:', error);
-        showToast('Erro ao atualizar status', 'error');
-    }
+    // Para outros casos, executar diretamente
+    await executeStatusUpdate(id, status);
 }
 
 // Delete Service
@@ -1103,7 +1172,7 @@ function showDeliveryInfo(id) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        // MODIFICAÇÃO 5: Nova mensagem no link do WhatsApp
+        // MODIFICAÇÃO: Nova mensagem no link do WhatsApp
         const message = encodeURIComponent(
             'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
             'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
