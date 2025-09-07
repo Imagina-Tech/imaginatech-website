@@ -20,6 +20,19 @@ const AUTHORIZED_EMAILS = [
     "igor.butter@gmail.com"
 ];
 
+// Color Options Configuration
+const COLOR_OPTIONS = [
+    { value: 'preto', label: 'Preto' },
+    { value: 'branco', label: 'Branco' },
+    { value: 'vermelho', label: 'Vermelho' },
+    { value: 'azul', label: 'Azul' },
+    { value: 'verde', label: 'Verde' },
+    { value: 'amarelo', label: 'Amarelo' },
+    { value: 'laranja', label: 'Laranja' },
+    { value: 'roxo', label: 'Roxo' },
+    { value: 'outros', label: 'Outros' }
+];
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -452,10 +465,11 @@ function showClientOrder(serviceId, service) {
                 </div>
             ` : ''}
             
-            ${service.description || service.material ? `
+            ${service.description || service.material || service.color ? `
                 <div class="service-details">
                     ${service.description ? `<p><strong>Descrição:</strong> ${service.description}</p>` : ''}
                     ${service.material ? `<p><strong>Material:</strong> ${service.material}</p>` : ''}
+                    ${service.color ? `<p><strong>Cor:</strong> ${service.color === 'outros' ? 'Outras cores' : service.color.charAt(0).toUpperCase() + service.color.slice(1)}</p>` : ''}
                 </div>
             ` : ''}
             
@@ -783,6 +797,7 @@ function openEditModal(id) {
     document.getElementById('clientNameInput').value = service.client;
     document.getElementById('serviceDescription').value = service.description || '';
     document.getElementById('serviceMaterial').value = service.material || '';
+    document.getElementById('serviceColor').value = service.color || '';
     document.getElementById('servicePriority').value = service.priority;
     document.getElementById('startDate').value = service.startDate;
     document.getElementById('dueDate').value = service.dueDate;
@@ -869,6 +884,7 @@ async function saveService(event) {
         client: clientName,
         description: document.getElementById('serviceDescription').value,
         material: document.getElementById('serviceMaterial').value,
+        color: document.getElementById('serviceColor').value,
         priority: document.getElementById('servicePriority').value,
         startDate: document.getElementById('startDate').value,
         dueDate: document.getElementById('dueDate').value,
@@ -974,11 +990,46 @@ async function saveService(event) {
     }
 }
 
-// Update Service Status
+// Update Service Status - MODIFICADO COM CONFIRMAÇÕES ESPECIAIS
 async function updateStatus(id, status) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para atualizar status', 'error');
         return;
+    }
+    
+    const service = services.find(s => s.id === id);
+    if (!service) return;
+    
+    // MODIFICAÇÃO 3 e 4: Confirmações especiais para SEDEX e RETIRADA
+    if (status === 'concluido') {
+        if (service.deliveryMethod === 'sedex') {
+            // Confirmação para SEDEX
+            const confirmSedex = confirm(
+                '⚠️ ATENÇÃO - PEDIDO SEDEX\n\n' +
+                'Marque concluído apenas se o pedido já estiver:\n' +
+                '✓ Embalado corretamente\n' +
+                '✓ Com a etiqueta dos Correios\n\n' +
+                'Confirmar conclusão?'
+            );
+            
+            if (!confirmSedex) return;
+            
+        } else if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+            // Confirmação para RETIRADA com WhatsApp
+            const confirmRetirada = confirm('Serviço concluído!\n\nDeseja notificar o cliente via WhatsApp?');
+            
+            if (confirmRetirada) {
+                const whatsappNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
+                // MODIFICAÇÃO 5: Nova mensagem do WhatsApp
+                const message = encodeURIComponent(
+                    'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
+                    'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
+                    'podemos combinar horário e local?'
+                );
+                const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
+                window.open(whatsappLink, '_blank');
+            }
+        }
     }
     
     try {
@@ -1052,7 +1103,13 @@ function showDeliveryInfo(id) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        const whatsappLink = `https://wa.me/55${whatsappNumber}`;
+        // MODIFICAÇÃO 5: Nova mensagem no link do WhatsApp
+        const message = encodeURIComponent(
+            'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
+            'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
+            'podemos combinar horário e local?'
+        );
+        const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
         
         html += `
             <div class="info-section">
@@ -1249,7 +1306,7 @@ function updateStats() {
     document.getElementById('stat-delivered').textContent = stats.entregue;
 }
 
-// Render Services
+// Render Services - MODIFICADO COM DESTAQUE NO MÉTODO DE ENTREGA
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
@@ -1311,6 +1368,14 @@ function renderServices() {
                         </span>
                     </div>
                     
+                    <!-- MODIFICAÇÃO 2: Método de entrega em destaque -->
+                    ${service.deliveryMethod ? `
+                        <div class="delivery-badge-prominent">
+                            <i class="fas ${deliveryIcons[service.deliveryMethod] || 'fa-truck'}"></i>
+                            <span>${deliveryLabels[service.deliveryMethod] || 'Não informado'}</span>
+                        </div>
+                    ` : ''}
+                    
                     <h3 class="service-title">${service.name}</h3>
                     
                     <div class="service-client">
@@ -1318,17 +1383,11 @@ function renderServices() {
                         ${service.client}
                     </div>
                     
-                    ${service.deliveryMethod ? `
-                        <div class="delivery-badge">
-                            <i class="fas ${deliveryIcons[service.deliveryMethod] || 'fa-truck'}"></i>
-                            ${deliveryLabels[service.deliveryMethod] || 'Não informado'}
-                        </div>
-                    ` : ''}
-                    
-                    ${service.description || service.material ? `
+                    ${service.description || service.material || service.color ? `
                         <div class="service-details">
                             ${service.description ? `<p><strong>Descrição:</strong> ${service.description}</p>` : ''}
                             ${service.material ? `<p><strong>Material:</strong> ${service.material}</p>` : ''}
+                            ${service.color ? `<p><strong>Cor:</strong> ${service.color === 'outros' ? 'Outras cores' : service.color.charAt(0).toUpperCase() + service.color.slice(1)}</p>` : ''}
                         </div>
                     ` : ''}
                     
