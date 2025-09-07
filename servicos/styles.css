@@ -1033,6 +1033,40 @@ body {
     margin-bottom: 15px;
 }
 
+/* MODIFICAÇÃO 2: Badge de Entrega Destacado */
+.delivery-badge-prominent {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--neon-purple), #B845FF);
+    border: 2px solid var(--neon-purple);
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(153, 69, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse-delivery 2s infinite;
+}
+
+@keyframes pulse-delivery {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(153, 69, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 30px rgba(153, 69, 255, 0.6);
+    }
+}
+
+.delivery-badge-prominent i {
+    font-size: 1.2rem;
+}
+
 .service-details {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
