@@ -97,7 +97,7 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* Welcome Screen - Tela Inicial FIXED FOR MOBILE */
+        /* Welcome Screen */
         .welcome-screen {
             position: fixed;
             top: 0;
@@ -593,7 +593,7 @@
             display: block;
         }
 
-        /* Stats Cards - NOW CLICKABLE FILTERS */
+        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1715,13 +1715,13 @@
             <form id="serviceForm" onsubmit="saveService(event)">
                 <div class="form-group">
                     <label class="form-label">Nome do Serviço*</label>
-                    <input type="text" class="form-input" id="serviceName" required 
+                    <input type="text" class="form-input" id="serviceNameInput" required 
                            placeholder="Ex: Miniatura personalizada">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Cliente*</label>
-                    <input type="text" class="form-input" id="clientName" required 
+                    <input type="text" class="form-input" id="clientNameInput" required 
                            placeholder="Nome do cliente">
                 </div>
 
@@ -2786,8 +2786,8 @@
 
             document.getElementById('modalTitle').textContent = 'Editar Serviço';
             document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
-            document.getElementById('serviceName').value = service.name;
-            document.getElementById('clientName').value = service.client;
+            document.getElementById('serviceNameInput').value = service.name;
+            document.getElementById('clientNameInput').value = service.client;
             document.getElementById('serviceDescription').value = service.description || '';
             document.getElementById('serviceMaterial').value = service.material || '';
             document.getElementById('servicePriority').value = service.priority;
@@ -2839,7 +2839,7 @@
             editingServiceId = null;
         }
 
-        // Save Service - FIXED
+        // Save Service - CORRECTED
         async function saveService(event) {
             event.preventDefault();
             
@@ -2848,11 +2848,20 @@
                 return;
             }
             
+            // Get values with correct IDs
+            const serviceName = document.getElementById('serviceNameInput').value;
+            const clientName = document.getElementById('clientNameInput').value;
+            
+            if (!serviceName || !clientName) {
+                showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+            
             const deliveryMethod = document.getElementById('deliveryMethod').value;
             
             const service = {
-                name: document.getElementById('serviceName').value,
-                client: document.getElementById('clientName').value,
+                name: serviceName,
+                client: clientName,
                 description: document.getElementById('serviceDescription').value,
                 material: document.getElementById('serviceMaterial').value,
                 priority: document.getElementById('servicePriority').value,
@@ -2869,7 +2878,7 @@
             // Save client data if sedex
             if (deliveryMethod === 'sedex') {
                 const clientEmail = document.getElementById('email').value;
-                const clientName = document.getElementById('fullName').value;
+                const clientNameDelivery = document.getElementById('fullName').value;
                 const telefone = document.getElementById('telefone').value;
                 
                 // Save integrated client data
@@ -2877,7 +2886,7 @@
                     try {
                         await db.collection('marketing_contacts').doc(clientEmail).set({
                             email: clientEmail,
-                            name: clientName,
+                            name: clientNameDelivery,
                             phone: telefone,
                             cpfCnpj: document.getElementById('cpfCnpj').value,
                             address: {
@@ -2900,7 +2909,7 @@
                 
                 service.saleValue = document.getElementById('saleValue').value;
                 service.deliveryAddress = {
-                    fullName: clientName,
+                    fullName: clientNameDelivery,
                     cpfCnpj: document.getElementById('cpfCnpj').value,
                     email: clientEmail,
                     telefone: telefone,
@@ -3003,7 +3012,7 @@
             }
         }
 
-        // Filter Services - NEW WITH STAT CARDS
+        // Filter Services
         function filterServices(filter) {
             currentFilter = filter;
             
