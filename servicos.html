@@ -2697,10 +2697,14 @@
                 });
                 services.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
-                if (currentView === 'production') {
-                    renderServices();
-                    updateStats();
-                }
+                // Assign codes to services without codes
+                assignMissingCodes().then(() => {
+                    if (currentView === 'production') {
+                        renderServices();
+                        updateStats();
+                    }
+                });
+                
                 updateConnectionStatus(true);
             }, (error) => {
                 console.error('Real-time update error:', error);
