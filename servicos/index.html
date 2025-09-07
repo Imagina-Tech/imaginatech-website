@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- CORREÇÃO: Caminho absoluto para o CSS -->
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="/servicos/styles.css">
     
     <!-- CSS de emergência inline caso o arquivo externo falhe -->
@@ -171,6 +171,12 @@
                     <span class="btn-text">Sair</span>
                 </button>
             </div>
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
@@ -222,6 +228,33 @@
                 <button class="btn btn-primary" id="newServiceBtn" onclick="openAddModal()" title="Novo serviço">
                     <i class="fas fa-plus"></i>
                     <span class="btn-text">Novo Serviço</span>
+                </button>
+            </div>
+            <!-- Mobile Menu Toggle for Production -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggleProd" onclick="toggleMobileMenuProd()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <!-- Mobile Menu Dropdown -->
+        <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
+            <div class="mobile-menu-content">
+                <div class="mobile-user-info">
+                    <img class="user-avatar" id="mobileUserAvatar" src="" alt="Avatar">
+                    <span class="user-name" id="mobileUserName"></span>
+                </div>
+                <div class="mobile-connection-status" id="mobileConnectionStatus">
+                    <span class="status-dot"></span>
+                    <span id="mobileStatusText">Conectado</span>
+                </div>
+                <button class="btn btn-primary mobile-btn" onclick="openAddModal(); closeMobileMenu();">
+                    <i class="fas fa-plus"></i>
+                    <span>Novo Serviço</span>
+                </button>
+                <button class="btn btn-logout mobile-btn" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
                 </button>
             </div>
         </div>
@@ -281,6 +314,29 @@
             </div>
             
             <form id="serviceForm" onsubmit="saveService(event)">
+                <!-- Order Code Field (Editable) -->
+                <div class="form-group">
+                    <label class="form-label">Código do Pedido (5 caracteres)</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" 
+                               class="form-input" 
+                               id="serviceOrderCode" 
+                               placeholder="Deixe vazio para gerar automaticamente"
+                               maxlength="5"
+                               style="flex: 1;">
+                        <button type="button" 
+                                class="btn btn-primary" 
+                                onclick="generateNewCode()"
+                                style="padding: 12px 20px;">
+                            <i class="fas fa-sync"></i>
+                            <span>Gerar</span>
+                        </button>
+                    </div>
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">
+                        Use apenas letras e números. Ex: AB123
+                    </small>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Nome do Serviço*</label>
                     <input type="text" class="form-input" id="serviceNameInput" required 
@@ -525,7 +581,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- CORREÇÃO: Caminho absoluto para o JavaScript -->
+    <!-- JavaScript Principal -->
     <script src="/servicos/scripts.js"></script>
     
     <!-- Script de verificação de erros -->
