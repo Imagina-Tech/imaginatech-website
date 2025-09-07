@@ -97,7 +97,7 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* Welcome Screen - Tela Inicial */
+        /* Welcome Screen - Tela Inicial FIXED FOR MOBILE */
         .welcome-screen {
             position: fixed;
             top: 0;
@@ -110,7 +110,9 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
+            padding: 20px;
             transition: opacity 0.5s ease, transform 0.5s ease;
+            overflow-y: auto;
         }
 
         .welcome-screen.hidden {
@@ -120,8 +122,9 @@
         }
 
         .welcome-logo {
-            margin-bottom: 60px;
+            margin-bottom: 30px;
             animation: pulse-glow 2s infinite;
+            text-align: center;
         }
 
         @keyframes pulse-glow {
@@ -135,36 +138,39 @@
 
         .welcome-logo h1 {
             font-family: 'Orbitron', monospace;
-            font-size: 4rem;
+            font-size: clamp(2.5rem, 7vw, 4rem);
             font-weight: 900;
             background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
-            letter-spacing: 5px;
+            letter-spacing: 3px;
             margin-bottom: 10px;
         }
 
         .welcome-logo p {
-            text-align: center;
             color: rgba(255, 255, 255, 0.6);
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
         }
 
         .welcome-options {
             display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .welcome-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             border: 2px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 40px 30px;
-            width: 280px;
+            border-radius: 20px;
+            padding: 25px 15px;
+            flex: 1;
+            min-width: 140px;
+            max-width: 280px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -180,7 +186,7 @@
             right: -2px;
             bottom: -2px;
             background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
-            border-radius: 30px;
+            border-radius: 20px;
             opacity: 0;
             z-index: -1;
             transition: opacity 0.3s ease;
@@ -191,7 +197,7 @@
         }
 
         .welcome-card:hover {
-            transform: translateY(-10px) scale(1.05);
+            transform: translateY(-5px) scale(1.02);
             background: rgba(255, 255, 255, 0.08);
         }
 
@@ -208,8 +214,8 @@
         }
 
         .welcome-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
+            font-size: clamp(2rem, 5vw, 2.5rem);
+            margin-bottom: 12px;
             display: inline-block;
         }
 
@@ -222,16 +228,16 @@
         }
 
         .welcome-title {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             font-family: 'Orbitron', monospace;
         }
 
         .welcome-description {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.95rem;
-            line-height: 1.5;
+            font-size: clamp(0.75rem, 2vw, 0.85rem);
+            line-height: 1.3;
         }
 
         /* Client Login Modal */
@@ -247,6 +253,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .client-login-modal.active {
@@ -259,7 +266,7 @@
             border-radius: 20px;
             padding: 40px;
             max-width: 450px;
-            width: 90%;
+            width: 100%;
             text-align: center;
             position: relative;
         }
@@ -586,7 +593,7 @@
             display: block;
         }
 
-        /* Stats Cards */
+        /* Stats Cards - NOW CLICKABLE FILTERS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -602,12 +609,25 @@
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: var(--neon-blue);
             box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-card.active {
+            background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.4);
+        }
+
+        .stat-card.active .stat-number,
+        .stat-card.active .stat-label {
+            color: white !important;
         }
 
         .stat-number {
@@ -620,20 +640,6 @@
         .stat-label {
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.9rem;
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
         }
 
         /* Buttons */
@@ -682,20 +688,6 @@
         .btn-success:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
-        }
-
-        .btn-filter {
-            background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            border: 1px solid var(--glass-border);
-            padding: 8px 16px;
-            font-size: 0.9rem;
-        }
-
-        .btn-filter.active {
-            background: var(--neon-blue);
-            color: white;
-            border-color: var(--neon-blue);
         }
 
         .btn-logout {
@@ -933,6 +925,14 @@
             border-radius: 10px;
             font-size: 0.9rem;
             justify-content: center;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .btn-action.disabled {
@@ -1297,18 +1297,34 @@
         /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .welcome-logo h1 {
-                font-size: 2.5rem;
+                font-size: 2rem;
                 letter-spacing: 2px;
             }
 
+            .welcome-logo p {
+                font-size: 0.9rem;
+            }
+
             .welcome-options {
-                flex-direction: column;
-                gap: 20px;
+                flex-direction: row;
+                gap: 15px;
             }
 
             .welcome-card {
-                width: 90%;
-                max-width: 300px;
+                padding: 20px 10px;
+                min-width: 120px;
+            }
+
+            .welcome-icon {
+                font-size: 1.8rem;
+            }
+
+            .welcome-title {
+                font-size: 0.9rem;
+            }
+
+            .welcome-description {
+                font-size: 0.7rem;
             }
 
             .timeline-step {
@@ -1412,19 +1428,6 @@
                 font-size: 0.75rem;
             }
 
-            /* Filter Bar */
-            .filter-bar {
-                padding: 15px;
-                gap: 10px;
-            }
-
-            .btn-filter {
-                flex: 1;
-                min-width: 0;
-                padding: 8px;
-                font-size: 0.85rem;
-            }
-
             /* Services Grid */
             .services-grid {
                 grid-template-columns: 1fr;
@@ -1453,7 +1456,7 @@
         /* Ultra Small Mobile */
         @media (max-width: 480px) {
             .welcome-logo h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
 
             .header {
@@ -1496,14 +1499,6 @@
                 padding: 8px;
                 font-size: 0.85rem;
             }
-
-            .filter-bar {
-                flex-direction: column;
-            }
-
-            .btn-filter {
-                width: 100%;
-            }
         }
     </style>
 </head>
@@ -1538,7 +1533,7 @@
                     <i class="fas fa-user"></i>
                 </div>
                 <h2 class="welcome-title">Acompanhar Pedido</h2>
-                <p class="welcome-description">Sou cliente e quero acompanhar meu pedido em tempo real</p>
+                <p class="welcome-description">Sou cliente e quero acompanhar meu pedido</p>
             </div>
             
             <div class="welcome-card production-card" onclick="openProductionLogin()">
@@ -1546,7 +1541,7 @@
                     <i class="fas fa-cogs"></i>
                 </div>
                 <h2 class="welcome-title">Módulo Produção</h2>
-                <p class="welcome-description">Acesso exclusivo para gerenciamento de serviços</p>
+                <p class="welcome-description">Acesso exclusivo para gerenciamento</p>
             </div>
         </div>
     </div>
@@ -1666,47 +1661,28 @@
 
     <!-- Main Content (Production) -->
     <div class="container" id="mainContainer">
-        <!-- Stats Cards -->
+        <!-- Stats Cards - CLICKABLE FILTERS -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card active" onclick="filterServices('todos')" id="filter-todos">
                 <div class="stat-number" id="stat-total">0</div>
                 <div class="stat-label">Em Andamento</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterServices('pendente')" id="filter-pendente">
                 <div class="stat-number" id="stat-pending" style="color: var(--neon-yellow);">0</div>
                 <div class="stat-label">Pendentes</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterServices('producao')" id="filter-producao">
                 <div class="stat-number" id="stat-production" style="color: var(--neon-blue);">0</div>
                 <div class="stat-label">Em Produção</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterServices('concluido')" id="filter-concluido">
                 <div class="stat-number" id="stat-completed" style="color: var(--neon-green);">0</div>
                 <div class="stat-label">Concluídos</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterServices('entregue')" id="filter-entregue">
                 <div class="stat-number" id="stat-delivered" style="color: var(--secondary-blue);">0</div>
                 <div class="stat-label">Entregues</div>
             </div>
-        </div>
-
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-            <button class="btn btn-filter active" onclick="filterServices('todos')">
-                <i class="fas fa-list"></i> <span class="btn-text">Em Andamento</span>
-            </button>
-            <button class="btn btn-filter" onclick="filterServices('pendente')">
-                <i class="fas fa-clock"></i> <span class="btn-text">Pendentes</span>
-            </button>
-            <button class="btn btn-filter" onclick="filterServices('producao')">
-                <i class="fas fa-cogs"></i> <span class="btn-text">Em Produção</span>
-            </button>
-            <button class="btn btn-filter" onclick="filterServices('concluido')">
-                <i class="fas fa-check"></i> <span class="btn-text">Concluídos</span>
-            </button>
-            <button class="btn btn-filter" onclick="filterServices('entregue')">
-                <i class="fas fa-box"></i> <span class="btn-text">Entregues</span>
-            </button>
         </div>
 
         <!-- Services Grid -->
@@ -1937,7 +1913,6 @@
                     <input type="date" class="form-input" id="dueDate" required>
                 </div>
 
-                <input type="hidden" id="serviceId">
                 <input type="hidden" id="serviceStatus" value="pendente">
 
                 <!-- Order Code Display (shown after saving) -->
@@ -1951,7 +1926,7 @@
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 30px;">
-                    <button type="button" class="btn btn-filter" style="flex: 1;" onclick="closeModal()">
+                    <button type="button" class="btn btn-back" style="flex: 1;" onclick="closeModal()">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary" style="flex: 2;">
@@ -2779,7 +2754,6 @@
 
             document.getElementById('modalTitle').textContent = 'Editar Serviço';
             document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
-            document.getElementById('serviceId').value = service.id;
             document.getElementById('serviceName').value = service.name;
             document.getElementById('clientName').value = service.client;
             document.getElementById('serviceDescription').value = service.description || '';
@@ -2834,7 +2808,7 @@
             editingServiceId = null;
         }
 
-        // Save Service
+        // Save Service - FIXED
         async function saveService(event) {
             event.preventDefault();
             
@@ -2917,17 +2891,22 @@
 
             try {
                 if (editingServiceId) {
-                    // Update existing
+                    // Update existing - preserve orderCode
+                    const existingService = services.find(s => s.id === editingServiceId);
+                    if (existingService && existingService.orderCode) {
+                        service.orderCode = existingService.orderCode;
+                    }
+                    
                     await db.collection('services').doc(editingServiceId).update(service);
                     showToast('Serviço atualizado com sucesso!', 'success');
+                    closeModal();
                 } else {
                     // Create new
                     service.createdAt = new Date().toISOString();
                     service.orderCode = generateOrderCode();
-                    service.serviceId = service.orderCode; // Use same code as ID
                     service.createdBy = currentUser.email;
                     
-                    const docRef = await db.collection('services').add(service);
+                    await db.collection('services').add(service);
                     
                     // Show the order code
                     document.getElementById('orderCodeDisplay').style.display = 'block';
@@ -2939,10 +2918,7 @@
                     setTimeout(() => {
                         closeModal();
                     }, 3000);
-                    return;
                 }
-                
-                closeModal();
             } catch (error) {
                 console.error('Error saving service:', error);
                 showToast('Erro ao salvar serviço', 'error');
@@ -2970,9 +2946,6 @@
                 await db.collection('services').doc(id).update(updates);
                 showToast('Status atualizado!', 'success');
                 
-                // TODO: Send WhatsApp notification
-                // This will be implemented with Twilio API or similar
-                
             } catch (error) {
                 console.error('Error updating status:', error);
                 showToast('Erro ao atualizar status', 'error');
@@ -2997,14 +2970,15 @@
             }
         }
 
-        // Filter Services
+        // Filter Services - NEW WITH STAT CARDS
         function filterServices(filter) {
             currentFilter = filter;
             
-            document.querySelectorAll('.btn-filter').forEach(btn => {
-                btn.classList.remove('active');
+            // Update active state on stat cards
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.remove('active');
             });
-            event.target.classList.add('active');
+            document.getElementById(`filter-${filter}`).classList.add('active');
             
             renderServices();
         }
@@ -3082,7 +3056,7 @@
                     return `
                         <div class="service-card priority-${service.priority}">
                             <div class="service-header">
-                                <span class="service-id">${service.orderCode || service.serviceId || service.id}</span>
+                                <span class="service-id">${service.orderCode || service.id}</span>
                                 <span class="service-priority priority-${service.priority}">
                                     ${service.priority.toUpperCase()}
                                 </span>
@@ -3147,10 +3121,10 @@
                                         <i class="fas fa-info-circle"></i> Info
                                     </button>
                                 ` : ''}
-                                <button class="btn btn-filter btn-action" onclick="openEditModal('${service.id}')">
+                                <button class="btn btn-action" onclick="openEditModal('${service.id}')">
                                     <i class="fas fa-edit"></i> Editar
                                 </button>
-                                <button class="btn btn-filter btn-action" style="border-color: var(--neon-red); color: var(--neon-red);" 
+                                <button class="btn btn-action" style="border-color: var(--neon-red); color: var(--neon-red);" 
                                         onclick="deleteService('${service.id}')">
                                     <i class="fas fa-trash"></i> Excluir
                                 </button>
