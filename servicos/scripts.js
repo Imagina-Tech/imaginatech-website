@@ -1,7 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL DE SERVIÇOS
 // Sistema de Gerenciamento com Firebase
-// Versão Corrigida com Menu Mobile e Código Editável
+// Versão Corrigida - Bugs de Autenticação e Notificações
 // ===========================
 
 // Firebase Configuration
@@ -35,6 +35,7 @@ let currentView = 'welcome'; // welcome, client, production
 let clientAttempts = 0;
 let clientUser = null;
 let currentOrderCode = null;
+let orderListener = null; // Store listener reference
 
 // ===========================
 // UTILITY FUNCTIONS
@@ -211,7 +212,7 @@ function closeClientLogin() {
     clientAttempts = 0;
 }
 
-// Client Google Login
+// Client Google Login - FIXED: No auth restrictions for clients
 async function clientGoogleLogin() {
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -270,7 +271,7 @@ async function saveClientData(user) {
     }
 }
 
-// Verify Order Code
+// Verify Order Code - FIXED: Works for any authenticated user
 async function verifyOrderCode() {
     const code = document.getElementById('orderCode').value.toUpperCase().trim();
     
@@ -279,10 +280,15 @@ async function verifyOrderCode() {
         return;
     }
     
+    if (!clientUser) {
+        showToast('Faça login primeiro', 'error');
+        return;
+    }
+    
     clientAttempts++;
     
     try {
-        // Search for service with this code
+        // Search for service with this code - No authorization check needed
         const snapshot = await db.collection('services')
             .where('orderCode', '==', code)
             .limit(1)
@@ -293,24 +299,35 @@ async function verifyOrderCode() {
             currentOrderCode = code;
             
             // Update client's order list
-            await db.collection('clients').doc(clientUser.uid).update({
-                orders: firebase.firestore.FieldValue.arrayUnion(code),
-                lastOrderViewed: code,
-                lastOrderViewedAt: new Date().toISOString()
-            });
+            try {
+                await db.collection('clients').doc(clientUser.uid).update({
+                    orders: firebase.firestore.FieldValue.arrayUnion(code),
+                    lastOrderViewed: code,
+                    lastOrderViewedAt: new Date().toISOString()
+                });
+            } catch (updateError) {
+                console.log('Could not update client order list:', updateError);
+                // Continue anyway - this is not critical
+            }
             
             // Log order view
-            await db.collection('client_access_logs').add({
-                clientId: clientUser.uid,
-                email: clientUser.email,
-                orderCode: code,
-                timestamp: new Date().toISOString(),
-                action: 'view_order'
-            });
+            try {
+                await db.collection('client_access_logs').add({
+                    clientId: clientUser.uid,
+                    email: clientUser.email,
+                    orderCode: code,
+                    timestamp: new Date().toISOString(),
+                    action: 'view_order'
+                });
+            } catch (logError) {
+                console.log('Could not log order view:', logError);
+                // Continue anyway - this is not critical
+            }
             
             // Show client view
             showClientOrder(service.id, service.data());
             closeClientLogin();
+            showToast('Pedido encontrado!', 'success');
             
         } else {
             const remainingAttempts = 3 - clientAttempts;
@@ -335,7 +352,7 @@ async function verifyOrderCode() {
         }
     } catch (error) {
         console.error('Error verifying code:', error);
-        showToast('Erro ao verificar código', 'error');
+        showToast('Erro ao verificar código. Tente novamente.', 'error');
     }
 }
 
@@ -467,26 +484,45 @@ function showClientOrder(serviceId, service) {
     setupClientOrderListener(serviceId);
 }
 
-// Setup Real-time Updates for Client Order
+// Setup Real-time Updates for Client Order - FIXED: Removed spam notifications
 function setupClientOrderListener(serviceId) {
-    db.collection('services').doc(serviceId).onSnapshot((doc) => {
+    // Cancel previous listener if exists
+    if (orderListener) {
+        orderListener();
+        orderListener = null;
+    }
+    
+    // Setup new listener without notifications
+    orderListener = db.collection('services').doc(serviceId).onSnapshot((doc) => {
         if (doc.exists && currentView === 'client') {
             const service = doc.data();
             showClientOrder(serviceId, service);
-            showToast('Status do pedido atualizado!', 'info');
+            // REMOVED: showToast notification to prevent spam
         }
+    }, (error) => {
+        console.error('Error listening to order updates:', error);
     });
 }
 
-// Exit to Welcome Screen
+// Exit to Welcome Screen - FIXED: Proper cleanup
 function exitToWelcome() {
     currentView = 'welcome';
     currentOrderCode = null;
     
-    // Sign out client
-    if (clientUser) {
-        auth.signOut();
-        clientUser = null;
+    // Cancel order listener if exists
+    if (orderListener) {
+        orderListener();
+        orderListener = null;
+    }
+    
+    // Clear client user but keep auth for potential production login
+    clientUser = null;
+    
+    // Only sign out if not in production mode
+    if (!isAuthorized && auth.currentUser) {
+        auth.signOut().catch(error => {
+            console.log('Sign out error:', error);
+        });
     }
     
     // Hide all views
