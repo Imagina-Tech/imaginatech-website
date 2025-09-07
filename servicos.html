@@ -1389,10 +1389,12 @@
                 statusEl.classList.remove('offline');
                 statusDot.classList.remove('offline');
                 statusText.textContent = 'Conectado';
+                statusEl.setAttribute('data-tooltip', 'Conectado ao servidor');
             } else {
                 statusEl.classList.add('offline');
                 statusDot.classList.add('offline');
                 statusText.textContent = 'Offline';
+                statusEl.setAttribute('data-tooltip', 'Sem conexão');
             }
         }
 
