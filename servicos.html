@@ -332,103 +332,6 @@
             display: block;
         }
 
-        /* Order Code Input Group */
-        .order-code-input-group {
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid var(--neon-blue);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .order-code-field {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .order-code-input {
-            flex: 1;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid var(--glass-border);
-            border-radius: 10px;
-            color: white;
-            font-family: 'Orbitron', monospace;
-            font-size: 1.2rem;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            transition: all 0.3s ease;
-        }
-
-        .order-code-input:focus {
-            outline: none;
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-
-        .order-code-input.valid {
-            border-color: var(--neon-green);
-        }
-
-        .order-code-input.invalid {
-            border-color: var(--neon-red);
-        }
-
-        .btn-generate-code {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .btn-generate-code:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
-        }
-
-        .code-hint {
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.6);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .code-status {
-            margin-top: 8px;
-            font-size: 0.9rem;
-            padding: 5px 10px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .code-status.checking {
-            display: block;
-            background: rgba(255, 215, 0, 0.1);
-            color: var(--neon-yellow);
-        }
-
-        .code-status.available {
-            display: block;
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--neon-green);
-        }
-
-        .code-status.unavailable {
-            display: block;
-            background: rgba(255, 0, 85, 0.1);
-            color: var(--neon-red);
-        }
-
         /* Client View */
         .client-view {
             display: none;
@@ -1548,14 +1451,6 @@
             .client-login-content {
                 padding: 30px 20px;
             }
-
-            .order-code-field {
-                flex-direction: column;
-            }
-
-            .btn-generate-code {
-                width: 100%;
-            }
         }
 
         /* Ultra Small Mobile */
@@ -1818,29 +1713,6 @@
             </div>
             
             <form id="serviceForm" onsubmit="saveService(event)">
-                <!-- Order Code Input - NEW FIELD -->
-                <div class="order-code-input-group">
-                    <label class="form-label">
-                        <i class="fas fa-qrcode"></i> Código do Pedido 
-                        <span style="color: var(--neon-yellow); font-size: 0.85rem;">(Deixe vazio para gerar automaticamente)</span>
-                    </label>
-                    <div class="order-code-field">
-                        <input type="text" 
-                               class="order-code-input" 
-                               id="serviceOrderCode" 
-                               placeholder="XXXXX"
-                               maxlength="5">
-                        <button type="button" class="btn-generate-code" onclick="generateNewCode()">
-                            <i class="fas fa-sync"></i> Gerar Código
-                        </button>
-                    </div>
-                    <div class="code-hint">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Código de 5 caracteres (letras e números)</span>
-                    </div>
-                    <div class="code-status" id="codeStatus"></div>
-                </div>
-
                 <div class="form-group">
                     <label class="form-label">Nome do Serviço*</label>
                     <input type="text" class="form-input" id="serviceNameInput" required 
@@ -2117,7 +1989,6 @@
         let clientAttempts = 0;
         let clientUser = null;
         let currentOrderCode = null;
-        let checkCodeTimeout = null;
 
         // Generate Order Code - 5 CHARACTERS ONLY
         function generateOrderCode() {
@@ -2130,15 +2001,11 @@
         }
 
         // Check if code exists in database
-        async function isCodeUnique(code, excludeId = null) {
-            let query = db.collection('services').where('orderCode', '==', code);
-            const snapshot = await query.get();
-            
-            if (excludeId) {
-                // If editing, exclude current service from check
-                return snapshot.empty || (snapshot.size === 1 && snapshot.docs[0].id === excludeId);
-            }
-            
+        async function isCodeUnique(code) {
+            const snapshot = await db.collection('services')
+                .where('orderCode', '==', code)
+                .limit(1)
+                .get();
             return snapshot.empty;
         }
 
@@ -2158,73 +2025,6 @@
             } while (!(await isCodeUnique(code)));
             
             return code;
-        }
-
-        // Generate new code for input field
-        async function generateNewCode() {
-            try {
-                const newCode = await generateUniqueCode();
-                document.getElementById('serviceOrderCode').value = newCode;
-                validateOrderCode(); // Check the generated code
-                showToast('Código gerado: ' + newCode, 'success');
-            } catch (error) {
-                showToast('Erro ao gerar código', 'error');
-            }
-        }
-
-        // Validate Order Code (real-time)
-        async function validateOrderCode() {
-            const input = document.getElementById('serviceOrderCode');
-            const statusDiv = document.getElementById('codeStatus');
-            const code = input.value.toUpperCase().trim();
-            
-            // Clear previous timeout
-            if (checkCodeTimeout) {
-                clearTimeout(checkCodeTimeout);
-            }
-            
-            // Remove all status classes
-            input.classList.remove('valid', 'invalid');
-            statusDiv.classList.remove('checking', 'available', 'unavailable');
-            
-            if (!code) {
-                // Empty code is valid (will generate automatically)
-                statusDiv.style.display = 'none';
-                return;
-            }
-            
-            if (code.length < 5) {
-                // Still typing
-                statusDiv.style.display = 'none';
-                return;
-            }
-            
-            // Show checking status
-            statusDiv.classList.add('checking');
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando disponibilidade...';
-            
-            // Delay check to avoid too many requests
-            checkCodeTimeout = setTimeout(async () => {
-                try {
-                    const isUnique = await isCodeUnique(code, editingServiceId);
-                    
-                    if (isUnique) {
-                        input.classList.add('valid');
-                        statusDiv.classList.remove('checking');
-                        statusDiv.classList.add('available');
-                        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Código disponível';
-                    } else {
-                        input.classList.add('invalid');
-                        statusDiv.classList.remove('checking');
-                        statusDiv.classList.add('unavailable');
-                        statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Código já está em uso';
-                    }
-                } catch (error) {
-                    console.error('Error checking code:', error);
-                    statusDiv.classList.remove('checking');
-                    statusDiv.style.display = 'none';
-                }
-            }, 500);
         }
 
         // Show Toast Notification
@@ -2970,8 +2770,6 @@
             document.getElementById('deliveryFields').classList.remove('active');
             document.getElementById('pickupFields').classList.remove('active');
             document.getElementById('orderCodeDisplay').style.display = 'none';
-            document.getElementById('serviceOrderCode').value = '';
-            document.getElementById('codeStatus').style.display = 'none';
             document.getElementById('serviceModal').classList.add('active');
         }
 
@@ -2997,9 +2795,11 @@
             document.getElementById('dueDate').value = service.dueDate;
             document.getElementById('deliveryMethod').value = service.deliveryMethod || '';
             
-            // Show order code in input field
-            document.getElementById('serviceOrderCode').value = service.orderCode || '';
-            document.getElementById('codeStatus').style.display = 'none';
+            // Show order code if exists
+            if (service.orderCode) {
+                document.getElementById('orderCodeDisplay').style.display = 'block';
+                document.getElementById('orderCodeValue').textContent = service.orderCode;
+            }
             
             toggleDeliveryFields();
             
@@ -3035,28 +2835,16 @@
             document.getElementById('serviceForm').reset();
             document.getElementById('deliveryFields').classList.remove('active');
             document.getElementById('pickupFields').classList.remove('active');
-            document.getElementById('orderCodeDisplay').style.display = 'none');
-            document.getElementById('serviceOrderCode').value = '';
-            document.getElementById('codeStatus').style.display = 'none';
-            document.getElementById('serviceOrderCode').classList.remove('valid', 'invalid');
+            document.getElementById('orderCodeDisplay').style.display = 'none';
             editingServiceId = null;
         }
 
-        // Save Service - WITH CODE MANAGEMENT
+        // Save Service - CORRECTED
         async function saveService(event) {
             event.preventDefault();
             
             if (!isAuthorized) {
                 showToast('Você não tem permissão para salvar serviços', 'error');
-                return;
-            }
-            
-            // Get order code from input
-            let orderCode = document.getElementById('serviceOrderCode').value.toUpperCase().trim();
-            
-            // Check if entered code is already in use
-            if (orderCode && document.getElementById('serviceOrderCode').classList.contains('invalid')) {
-                showToast('O código informado já está em uso. Por favor, escolha outro.', 'error');
                 return;
             }
             
@@ -3145,27 +2933,19 @@
 
             try {
                 if (editingServiceId) {
-                    // Update existing - use provided code or keep existing
-                    if (orderCode) {
-                        service.orderCode = orderCode;
-                    } else {
-                        // Keep existing code if no new code provided
-                        const existingService = services.find(s => s.id === editingServiceId);
-                        if (existingService && existingService.orderCode) {
-                            service.orderCode = existingService.orderCode;
-                        } else {
-                            // Generate new code if no existing code
-                            service.orderCode = await generateUniqueCode();
-                        }
+                    // Update existing - preserve orderCode
+                    const existingService = services.find(s => s.id === editingServiceId);
+                    if (existingService && existingService.orderCode) {
+                        service.orderCode = existingService.orderCode;
                     }
                     
                     await db.collection('services').doc(editingServiceId).update(service);
                     showToast('Serviço atualizado com sucesso!', 'success');
                     closeModal();
                 } else {
-                    // Create new - use provided code or generate
+                    // Create new with unique 5-character code
                     service.createdAt = new Date().toISOString();
-                    service.orderCode = orderCode || await generateUniqueCode();
+                    service.orderCode = await generateUniqueCode();
                     service.createdBy = currentUser.email;
                     
                     await db.collection('services').add(service);
@@ -3453,15 +3233,6 @@
             if (orderCodeInput) {
                 orderCodeInput.addEventListener('input', function() {
                     this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
-                });
-            }
-            
-            // Service Order Code input - validate on typing
-            const serviceOrderCodeInput = document.getElementById('serviceOrderCode');
-            if (serviceOrderCodeInput) {
-                serviceOrderCodeInput.addEventListener('input', function() {
-                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
-                    validateOrderCode();
                 });
             }
         });
