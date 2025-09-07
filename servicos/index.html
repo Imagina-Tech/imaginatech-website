@@ -19,8 +19,56 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- CORREÇÃO: Caminho absoluto para o CSS -->
+    <link rel="stylesheet" href="/servicos/styles.css">
+    
+    <!-- CSS de emergência inline caso o arquivo externo falhe -->
+    <style>
+        /* CSS de emergência básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e1a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 212, 255, 0.2);
+            border-top-color: #00D4FF;
+            border-radius: 50%;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #00D4FF;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -112,7 +160,7 @@
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="logo-section">
-                <img src="../imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
+                <img src="/imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
                 <span class="logo-text">ImaginaTech</span>
                 <span class="nav-divider">|</span>
                 <span class="nav-subtitle">Acompanhamento de Pedido</span>
@@ -188,19 +236,19 @@
                 <div class="stat-label">Em Andamento</div>
             </div>
             <div class="stat-card" onclick="filterServices('pendente')" id="filter-pendente">
-                <div class="stat-number" id="stat-pending" style="color: var(--neon-yellow);">0</div>
+                <div class="stat-number" id="stat-pending" style="color: #FFD700;">0</div>
                 <div class="stat-label">Pendentes</div>
             </div>
             <div class="stat-card" onclick="filterServices('producao')" id="filter-producao">
-                <div class="stat-number" id="stat-production" style="color: var(--neon-blue);">0</div>
+                <div class="stat-number" id="stat-production" style="color: #00D4FF;">0</div>
                 <div class="stat-label">Em Produção</div>
             </div>
             <div class="stat-card" onclick="filterServices('concluido')" id="filter-concluido">
-                <div class="stat-number" id="stat-completed" style="color: var(--neon-green);">0</div>
+                <div class="stat-number" id="stat-completed" style="color: #00FF88;">0</div>
                 <div class="stat-label">Concluídos</div>
             </div>
             <div class="stat-card" onclick="filterServices('entregue')" id="filter-entregue">
-                <div class="stat-number" id="stat-delivered" style="color: var(--secondary-blue);">0</div>
+                <div class="stat-number" id="stat-delivered" style="color: #57D4CA;">0</div>
                 <div class="stat-label">Entregues</div>
             </div>
         </div>
@@ -286,7 +334,7 @@
 
                 <!-- Campos adicionais para Retirada -->
                 <div class="pickup-fields" id="pickupFields">
-                    <h4 style="margin-bottom: 15px; color: var(--neon-green);">
+                    <h4 style="margin-bottom: 15px; color: #00FF88;">
                         <i class="fas fa-store"></i> Informações para Retirada
                     </h4>
                     
@@ -305,7 +353,7 @@
 
                 <!-- Campos adicionais para Sedex -->
                 <div class="delivery-fields" id="deliveryFields">
-                    <h4 style="margin-bottom: 15px; color: var(--neon-purple);">
+                    <h4 style="margin-bottom: 15px; color: #9945FF;">
                         <i class="fas fa-box"></i> 📦 Dados para entrega 📦
                     </h4>
                     
@@ -340,7 +388,7 @@
                                placeholder="Ex: 150.00">
                     </div>
 
-                    <h5 style="margin: 25px 0 15px; color: var(--neon-blue); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <h5 style="margin: 25px 0 15px; color: #00D4FF; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                         <i class="fas fa-map-marker-alt"></i> Endereço de entrega completo
                     </h5>
 
@@ -477,7 +525,32 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- Scripts -->
-    <script src="scripts.js"></script>
+    <!-- CORREÇÃO: Caminho absoluto para o JavaScript -->
+    <script src="/servicos/scripts.js"></script>
+    
+    <!-- Script de verificação de erros -->
+    <script>
+        // Verificar se os arquivos carregaram
+        window.addEventListener('load', function() {
+            // Verificar se o CSS carregou
+            const styleSheets = document.styleSheets;
+            let cssLoaded = false;
+            for (let i = 0; i < styleSheets.length; i++) {
+                if (styleSheets[i].href && styleSheets[i].href.includes('styles.css')) {
+                    cssLoaded = true;
+                    break;
+                }
+            }
+            
+            if (!cssLoaded) {
+                console.error('ERRO: CSS não carregou! Verifique se o arquivo styles.css existe em /servicos/');
+            }
+            
+            // Verificar se as funções JavaScript existem
+            if (typeof openClientLogin === 'undefined') {
+                console.error('ERRO: JavaScript não carregou! Verifique se o arquivo scripts.js existe em /servicos/');
+            }
+        });
+    </script>
 </body>
 </html>
