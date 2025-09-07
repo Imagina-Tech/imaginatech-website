@@ -1,6 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL DE SERVIÇOS
 // Sistema de Gerenciamento com Firebase
+// Versão Corrigida com Menu Mobile e Código Editável
 // ===========================
 
 // Firebase Configuration
@@ -49,13 +50,41 @@ function generateOrderCode() {
     return code;
 }
 
+// Generate New Code Button Function
+async function generateNewCode() {
+    const codeInput = document.getElementById('serviceOrderCode');
+    const newCode = await generateUniqueCode();
+    codeInput.value = newCode;
+    showToast('Novo código gerado: ' + newCode, 'success');
+}
+
 // Check if code exists in database
 async function isCodeUnique(code) {
+    // Empty code is always valid (will be generated automatically)
+    if (!code) return true;
+    
     const snapshot = await db.collection('services')
         .where('orderCode', '==', code)
         .limit(1)
         .get();
+    
+    // If editing, check if the code belongs to the current service
+    if (editingServiceId && !snapshot.empty) {
+        const doc = snapshot.docs[0];
+        return doc.id === editingServiceId;
+    }
+    
     return snapshot.empty;
+}
+
+// Validate Order Code Format
+function validateOrderCode(code) {
+    // Allow empty (will generate automatically)
+    if (!code) return true;
+    
+    // Must be exactly 5 characters, alphanumeric only
+    const pattern = /^[A-Z0-9]{5}$/;
+    return pattern.test(code);
 }
 
 // Generate unique code with retry logic
@@ -113,6 +142,56 @@ function daysRemaining(dueDate) {
     const due = new Date(dueDate);
     const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
     return diff;
+}
+
+// ===========================
+// MOBILE MENU FUNCTIONS
+// ===========================
+
+// Toggle Mobile Menu for Client View
+function toggleMobileMenu() {
+    const toggle = document.getElementById('mobileMenuToggle');
+    const navbar = document.getElementById('navbar');
+    
+    toggle.classList.toggle('active');
+    navbar.classList.toggle('mobile-menu-open');
+}
+
+// Toggle Mobile Menu for Production View
+function toggleMobileMenuProd() {
+    const toggle = document.getElementById('mobileMenuToggleProd');
+    const dropdown = document.getElementById('mobileMenuDropdown');
+    
+    toggle.classList.toggle('active');
+    dropdown.classList.toggle('active');
+    
+    // Update mobile menu user info
+    if (currentUser) {
+        document.getElementById('mobileUserAvatar').src = currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
+        document.getElementById('mobileUserName').textContent = currentUser.displayName || currentUser.email;
+    }
+    
+    // Update mobile connection status
+    const isOnline = navigator.onLine;
+    const mobileStatus = document.getElementById('mobileConnectionStatus');
+    const mobileStatusText = document.getElementById('mobileStatusText');
+    
+    if (isOnline) {
+        mobileStatus.classList.remove('offline');
+        mobileStatusText.textContent = 'Conectado';
+    } else {
+        mobileStatus.classList.add('offline');
+        mobileStatusText.textContent = 'Offline';
+    }
+}
+
+// Close Mobile Menu
+function closeMobileMenu() {
+    const toggle = document.getElementById('mobileMenuToggleProd');
+    const dropdown = document.getElementById('mobileMenuDropdown');
+    
+    toggle.classList.remove('active');
+    dropdown.classList.remove('active');
 }
 
 // ===========================
@@ -418,6 +497,9 @@ function exitToWelcome() {
     
     // Show welcome screen
     document.getElementById('welcomeScreen').classList.remove('hidden');
+    
+    // Close mobile menus if open
+    closeMobileMenu();
 }
 
 // ===========================
@@ -634,11 +716,15 @@ function openAddModal() {
     document.getElementById('modalTitle').textContent = 'Novo Serviço';
     document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
     document.getElementById('serviceForm').reset();
+    document.getElementById('serviceOrderCode').value = ''; // Clear code field
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('deliveryFields').classList.remove('active');
     document.getElementById('pickupFields').classList.remove('active');
     document.getElementById('orderCodeDisplay').style.display = 'none';
     document.getElementById('serviceModal').classList.add('active');
+    
+    // Close mobile menu if open
+    closeMobileMenu();
 }
 
 // Open Edit Modal
@@ -654,6 +740,9 @@ function openEditModal(id) {
 
     document.getElementById('modalTitle').textContent = 'Editar Serviço';
     document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
+    
+    // Fill form fields including order code
+    document.getElementById('serviceOrderCode').value = service.orderCode || '';
     document.getElementById('serviceNameInput').value = service.name;
     document.getElementById('clientNameInput').value = service.client;
     document.getElementById('serviceDescription').value = service.description || '';
@@ -718,9 +807,22 @@ async function saveService(event) {
     
     const serviceName = document.getElementById('serviceNameInput').value;
     const clientName = document.getElementById('clientNameInput').value;
+    let orderCode = document.getElementById('serviceOrderCode').value.toUpperCase().trim();
     
     if (!serviceName || !clientName) {
         showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+    
+    // Validate order code format if provided
+    if (orderCode && !validateOrderCode(orderCode)) {
+        showToast('Código inválido! Use apenas 5 caracteres alfanuméricos', 'error');
+        return;
+    }
+    
+    // Check if code is unique
+    if (orderCode && !(await isCodeUnique(orderCode))) {
+        showToast('Este código já existe! Use outro código', 'error');
         return;
     }
     
@@ -800,19 +902,21 @@ async function saveService(event) {
 
     try {
         if (editingServiceId) {
-            // Update existing - preserve orderCode
-            const existingService = services.find(s => s.id === editingServiceId);
-            if (existingService && existingService.orderCode) {
-                service.orderCode = existingService.orderCode;
+            // Update existing - use provided code or keep existing
+            service.orderCode = orderCode || services.find(s => s.id === editingServiceId)?.orderCode;
+            
+            // If still no code, generate one
+            if (!service.orderCode) {
+                service.orderCode = await generateUniqueCode();
             }
             
             await db.collection('services').doc(editingServiceId).update(service);
             showToast('Serviço atualizado com sucesso!', 'success');
             closeModal();
         } else {
-            // Create new with unique 5-character code
+            // Create new - generate code if not provided
             service.createdAt = new Date().toISOString();
-            service.orderCode = await generateUniqueCode();
+            service.orderCode = orderCode || await generateUniqueCode();
             service.createdBy = currentUser.email;
             
             await db.collection('services').add(service);
@@ -1306,4 +1410,16 @@ window.addEventListener('DOMContentLoaded', () => {
             this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
         });
     }
+    
+    // Service order code input - uppercase and 5 chars max
+    const serviceOrderCodeInput = document.getElementById('serviceOrderCode');
+    if (serviceOrderCodeInput) {
+        serviceOrderCodeInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+        });
+    }
+    
+    // Monitor connection status
+    window.addEventListener('online', () => updateConnectionStatus(true));
+    window.addEventListener('offline', () => updateConnectionStatus(false));
 });
