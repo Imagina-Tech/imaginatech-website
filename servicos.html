@@ -1563,12 +1563,12 @@
             
             <div id="clientCodeStep" style="display: none;">
                 <div class="code-input-group">
-                    <label class="form-label">Código do Pedido</label>
+                    <label class="form-label">Código do Pedido (5 caracteres)</label>
                     <input type="text" 
                            class="code-input" 
                            id="orderCode" 
-                           placeholder="Digite o código"
-                           maxlength="20">
+                           placeholder="XXXXX"
+                           maxlength="5">
                     <div class="attempts-warning" id="attemptsWarning">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span id="attemptsText"></span>
@@ -1913,12 +1913,10 @@
                     <input type="date" class="form-input" id="dueDate" required>
                 </div>
 
-                <input type="hidden" id="serviceStatus" value="pendente">
-
                 <!-- Order Code Display (shown after saving) -->
                 <div class="order-code-display" id="orderCodeDisplay" style="display: none;">
                     <div class="order-code-label">Código do Pedido para o Cliente:</div>
-                    <div class="order-code-value" id="orderCodeValue">IMG2024A1B2</div>
+                    <div class="order-code-value" id="orderCodeValue">XXXXX</div>
                     <div class="order-code-info">
                         <i class="fas fa-info-circle"></i>
                         Envie este código ao cliente para acompanhamento
@@ -1992,13 +1990,40 @@
         let clientUser = null;
         let currentOrderCode = null;
 
-        // Generate Order Code
+        // Generate Order Code - 5 CHARACTERS ONLY
         function generateOrderCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = 'IMG';
-            for (let i = 0; i < 8; i++) {
+            let code = '';
+            for (let i = 0; i < 5; i++) {
                 code += chars.charAt(Math.floor(Math.random() * chars.length));
             }
+            return code;
+        }
+
+        // Check if code exists in database
+        async function isCodeUnique(code) {
+            const snapshot = await db.collection('services')
+                .where('orderCode', '==', code)
+                .limit(1)
+                .get();
+            return snapshot.empty;
+        }
+
+        // Generate unique code with retry logic
+        async function generateUniqueCode() {
+            let code;
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            do {
+                code = generateOrderCode();
+                attempts++;
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Unable to generate unique code');
+                }
+            } while (!(await isCodeUnique(code)));
+            
             return code;
         }
 
@@ -2652,7 +2677,7 @@
                     <div class="info-item">
                         <span class="info-label">Código para o cliente</span>
                         <span class="info-value" style="font-family: 'Orbitron', monospace; font-size: 1.2rem; color: var(--neon-green);">
-                            ${service.orderCode}
+                            ${service.orderCode || 'N/A'}
                         </span>
                     </div>
                 </div>
@@ -2676,7 +2701,11 @@
                     services.push({ id: doc.id, ...doc.data() });
                 });
                 
-                services.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                services.sort((a, b) => {
+                    const aDate = new Date(a.createdAt || 0);
+                    const bDate = new Date(b.createdAt || 0);
+                    return bDate - aDate;
+                });
                 
                 renderServices();
                 updateStats();
@@ -2695,16 +2724,16 @@
                 snapshot.forEach(doc => {
                     services.push({ id: doc.id, ...doc.data() });
                 });
-                services.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                
-                // Assign codes to services without codes
-                assignMissingCodes().then(() => {
-                    if (currentView === 'production') {
-                        renderServices();
-                        updateStats();
-                    }
+                services.sort((a, b) => {
+                    const aDate = new Date(a.createdAt || 0);
+                    const bDate = new Date(b.createdAt || 0);
+                    return bDate - aDate;
                 });
                 
+                if (currentView === 'production') {
+                    renderServices();
+                    updateStats();
+                }
                 updateConnectionStatus(true);
             }, (error) => {
                 console.error('Real-time update error:', error);
@@ -2738,7 +2767,6 @@
             document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
             document.getElementById('serviceForm').reset();
             document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('serviceStatus').value = 'pendente';
             document.getElementById('deliveryFields').classList.remove('active');
             document.getElementById('pickupFields').classList.remove('active');
             document.getElementById('orderCodeDisplay').style.display = 'none';
@@ -2765,7 +2793,6 @@
             document.getElementById('servicePriority').value = service.priority;
             document.getElementById('startDate').value = service.startDate;
             document.getElementById('dueDate').value = service.dueDate;
-            document.getElementById('serviceStatus').value = service.status;
             document.getElementById('deliveryMethod').value = service.deliveryMethod || '';
             
             // Show order code if exists
@@ -2831,7 +2858,9 @@
                 priority: document.getElementById('servicePriority').value,
                 startDate: document.getElementById('startDate').value,
                 dueDate: document.getElementById('dueDate').value,
-                status: document.getElementById('serviceStatus').value,
+                status: editingServiceId ? 
+                    services.find(s => s.id === editingServiceId)?.status || 'pendente' : 
+                    'pendente',
                 deliveryMethod: deliveryMethod,
                 updatedAt: new Date().toISOString(),
                 updatedBy: currentUser.email
@@ -2905,9 +2934,9 @@
                     showToast('Serviço atualizado com sucesso!', 'success');
                     closeModal();
                 } else {
-                    // Create new
+                    // Create new with unique 5-character code
                     service.createdAt = new Date().toISOString();
-                    service.orderCode = generateOrderCode();
+                    service.orderCode = await generateUniqueCode();
                     service.createdBy = currentUser.email;
                     
                     await db.collection('services').add(service);
@@ -2925,7 +2954,7 @@
                 }
             } catch (error) {
                 console.error('Error saving service:', error);
-                showToast('Erro ao salvar serviço', 'error');
+                showToast('Erro ao salvar serviço: ' + error.message, 'error');
             }
         }
 
@@ -3060,7 +3089,7 @@
                     return `
                         <div class="service-card priority-${service.priority}">
                             <div class="service-header">
-                                <span class="service-id">${service.orderCode || service.id}</span>
+                                <span class="service-id">${service.orderCode || 'SEM CÓDIGO'}</span>
                                 <span class="service-priority priority-${service.priority}">
                                     ${service.priority.toUpperCase()}
                                 </span>
@@ -3190,11 +3219,11 @@
                 cpfCnpj.addEventListener('keyup', function() { formatCpfCnpj(this); });
             }
             
-            // Order code input - uppercase
+            // Order code input - uppercase and 5 chars max
             const orderCodeInput = document.getElementById('orderCode');
             if (orderCodeInput) {
                 orderCodeInput.addEventListener('input', function() {
-                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
                 });
             }
         });
