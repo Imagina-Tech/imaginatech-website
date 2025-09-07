@@ -93,7 +93,7 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* Header */
+        /* Header Desktop */
         .header {
             background: rgba(10, 14, 26, 0.9);
             backdrop-filter: blur(20px);
@@ -110,7 +110,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 20px;
         }
 
@@ -129,11 +128,29 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .logo-divider {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .logo-subtitle {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+        }
+
         .header-actions {
             display: flex;
             gap: 15px;
             align-items: center;
-            flex-wrap: wrap;
+        }
+
+        /* Mobile controls - hidden by default */
+        .mobile-only {
+            display: none;
+        }
+
+        .desktop-only {
+            display: inline-flex;
         }
 
         .user-info {
@@ -333,6 +350,10 @@
         .btn-logout:hover {
             background: var(--neon-red);
             color: white;
+        }
+
+        .btn-text {
+            display: inline;
         }
 
         /* Services Grid */
@@ -828,62 +849,121 @@
             color: var(--neon-blue);
         }
 
-        /* Responsive */
+        /* MOBILE RESPONSIVE - CRITICAL */
         @media (max-width: 768px) {
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .modal-content {
-                padding: 20px;
+            /* Header Mobile */
+            .header {
+                padding: 10px;
             }
 
             .header-content {
-                flex-direction: column;
-                align-items: stretch;
+                gap: 10px;
+            }
+
+            .logo-section {
+                flex: 1;
+            }
+
+            .logo-text {
+                font-size: 1.2rem;
+            }
+
+            .logo-divider,
+            .logo-subtitle {
+                display: none;
             }
 
             .header-actions {
-                width: 100%;
+                gap: 5px;
+            }
+
+            /* Hide text on mobile, show only icons */
+            .btn-text {
+                display: none;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+                min-width: 36px;
                 justify-content: center;
             }
 
-            #newServiceBtn {
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
+            .btn-primary {
+                padding: 8px 12px;
             }
 
+            .btn-logout {
+                padding: 8px 12px;
+            }
+
+            .connection-status {
+                padding: 0;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .connection-status #statusText {
+                display: none;
+            }
+
+            .user-info {
+                padding: 4px;
+                background: transparent;
+                border: none;
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+            }
+
+            /* Container adjustments */
+            .container {
+                padding: 15px 10px;
+            }
+
+            /* Stats Grid */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-number {
+                font-size: 1.8rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            /* Filter Bar */
             .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
+                padding: 15px;
+                gap: 10px;
             }
 
             .btn-filter {
-                width: 100%;
-                justify-content: center;
+                flex: 1;
+                min-width: 0;
+                padding: 8px;
+                font-size: 0.85rem;
             }
 
-            .view-mode-banner {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .logo-text {
-                font-size: 1.4rem;
-            }
-
+            /* Services Grid */
             .services-grid {
+                grid-template-columns: 1fr;
                 gap: 15px;
             }
 
@@ -891,11 +971,76 @@
                 padding: 20px;
             }
 
+            /* View Mode Banner */
+            .view-mode-banner {
+                flex-direction: column;
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .view-mode-text {
+                font-size: 0.9rem;
+            }
+
+            /* Forms */
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+        }
+
+        /* Ultra Small Mobile */
+        @media (max-width: 480px) {
+            .header {
+                padding: 8px 5px;
+            }
+
+            .logo-text {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 6px 8px;
+                min-width: 32px;
+            }
+
+            .btn i {
+                font-size: 1rem;
+            }
+
+            .connection-status {
+                width: 32px;
+                height: 32px;
+            }
+
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+            }
+
+            .container {
+                padding: 10px 5px;
+            }
+
             .service-actions {
                 flex-direction: column;
             }
 
             .btn-action {
+                width: 100%;
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .btn-filter {
                 width: 100%;
             }
         }
@@ -923,11 +1068,11 @@
                 <a href="/" style="text-decoration: none;">
                     <span class="logo-text">ImaginaTech</span>
                 </a>
-                <span style="color: rgba(255,255,255,0.5); margin: 0 10px;">|</span>
-                <span style="font-size: 1.2rem; font-weight: 600;">Painel de Serviços</span>
+                <span class="logo-divider">|</span>
+                <span class="logo-subtitle">Painel de Serviços</span>
             </div>
             <div class="header-actions">
-                <div class="connection-status" id="connectionStatus">
+                <div class="connection-status" id="connectionStatus" title="Status da conexão">
                     <span class="status-dot"></span>
                     <span id="statusText">Conectado</span>
                 </div>
@@ -937,19 +1082,19 @@
                     <span class="user-name" id="userName"></span>
                 </div>
                 
-                <button class="btn btn-google" id="loginBtn" onclick="signInWithGoogle()">
+                <button class="btn btn-google" id="loginBtn" onclick="signInWithGoogle()" title="Fazer login">
                     <i class="fab fa-google"></i>
-                    Fazer Login
+                    <span class="btn-text">Fazer Login</span>
                 </button>
                 
-                <button class="btn btn-logout" id="logoutBtn" style="display: none;" onclick="signOut()">
+                <button class="btn btn-logout" id="logoutBtn" style="display: none;" onclick="signOut()" title="Sair">
                     <i class="fas fa-sign-out-alt"></i>
-                    Sair
+                    <span class="btn-text">Sair</span>
                 </button>
                 
-                <button class="btn btn-primary" id="newServiceBtn" style="display: none;" onclick="openAddModal()">
+                <button class="btn btn-primary" id="newServiceBtn" style="display: none;" onclick="openAddModal()" title="Novo serviço">
                     <i class="fas fa-plus"></i>
-                    Novo Serviço
+                    <span class="btn-text">Novo Serviço</span>
                 </button>
             </div>
         </div>
@@ -961,11 +1106,11 @@
         <div class="view-mode-banner" id="viewModeBanner">
             <div class="view-mode-text">
                 <i class="fas fa-eye"></i>
-                <span>Modo visualização - Faça login para gerenciar serviços</span>
+                <span>Modo visualização - Faça login para gerenciar</span>
             </div>
             <button class="btn btn-google" onclick="signInWithGoogle()">
                 <i class="fab fa-google"></i>
-                Login com Google
+                <span class="btn-text">Login com Google</span>
             </button>
         </div>
 
@@ -996,19 +1141,19 @@
         <!-- Filter Bar -->
         <div class="filter-bar">
             <button class="btn btn-filter active" onclick="filterServices('todos')">
-                <i class="fas fa-list"></i> Em Andamento
+                <i class="fas fa-list"></i> <span class="btn-text">Em Andamento</span>
             </button>
             <button class="btn btn-filter" onclick="filterServices('pendente')">
-                <i class="fas fa-clock"></i> Pendentes
+                <i class="fas fa-clock"></i> <span class="btn-text">Pendentes</span>
             </button>
             <button class="btn btn-filter" onclick="filterServices('producao')">
-                <i class="fas fa-cogs"></i> Em Produção
+                <i class="fas fa-cogs"></i> <span class="btn-text">Em Produção</span>
             </button>
             <button class="btn btn-filter" onclick="filterServices('concluido')">
-                <i class="fas fa-check"></i> Concluídos
+                <i class="fas fa-check"></i> <span class="btn-text">Concluídos</span>
             </button>
             <button class="btn btn-filter" onclick="filterServices('entregue')">
-                <i class="fas fa-box"></i> Entregues
+                <i class="fas fa-box"></i> <span class="btn-text">Entregues</span>
             </button>
         </div>
 
@@ -1026,7 +1171,7 @@
             <p class="empty-text" id="emptyText">Adicione um novo serviço para começar</p>
             <button class="btn btn-primary" id="emptyAddBtn" onclick="openAddModal()" style="display: none;">
                 <i class="fas fa-plus"></i>
-                Adicionar Primeiro Serviço
+                <span class="btn-text">Adicionar Primeiro Serviço</span>
             </button>
         </div>
     </div>
@@ -1389,12 +1534,12 @@
                 statusEl.classList.remove('offline');
                 statusDot.classList.remove('offline');
                 statusText.textContent = 'Conectado';
-                statusEl.setAttribute('data-tooltip', 'Conectado ao servidor');
+                statusEl.title = 'Conectado ao servidor';
             } else {
                 statusEl.classList.add('offline');
                 statusDot.classList.add('offline');
                 statusText.textContent = 'Offline';
-                statusEl.setAttribute('data-tooltip', 'Sem conexão');
+                statusEl.title = 'Sem conexão com o servidor';
             }
         }
 
