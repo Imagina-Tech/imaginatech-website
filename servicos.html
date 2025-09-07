@@ -133,6 +133,28 @@
             align-items: center;
         }
 
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
         .connection-status {
             padding: 8px 16px;
             background: rgba(0, 255, 136, 0.1);
@@ -172,6 +194,27 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px 20px;
+        }
+
+        /* View Mode Banner */
+        .view-mode-banner {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
+            border: 1px solid var(--neon-yellow);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .view-mode-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--neon-yellow);
         }
 
         /* Stats Cards */
@@ -251,6 +294,17 @@
             box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
         }
 
+        .btn-google {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
         .btn-filter {
             background: transparent;
             color: rgba(255, 255, 255, 0.7);
@@ -263,6 +317,19 @@
             background: var(--neon-blue);
             color: white;
             border-color: var(--neon-blue);
+        }
+
+        .btn-logout {
+            background: rgba(255, 0, 85, 0.2);
+            color: var(--neon-red);
+            border: 1px solid var(--neon-red);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout:hover {
+            background: var(--neon-red);
+            color: white;
         }
 
         /* Services Grid */
@@ -435,6 +502,11 @@
             border-color: var(--neon-green);
         }
 
+        .status-badge.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .service-actions {
             display: flex;
             gap: 10px;
@@ -446,6 +518,11 @@
             border-radius: 10px;
             font-size: 0.9rem;
             justify-content: center;
+        }
+
+        .btn-action.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* Modal */
@@ -554,32 +631,6 @@
             background: #1a2332;
         }
 
-        /* Password Modal */
-        .password-modal {
-            background: #1a2332;
-            border: 2px solid var(--neon-blue);
-            max-width: 400px;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .password-error {
-            color: var(--neon-red);
-            font-size: 0.9rem;
-            margin-top: 10px;
-            display: none;
-        }
-
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -675,6 +726,11 @@
             .status-badge {
                 flex: 1 1 45%;
             }
+
+            .view-mode-banner {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -708,7 +764,26 @@
                     <span class="status-dot"></span>
                     <span id="statusText">Conectado</span>
                 </div>
-                <button class="btn btn-primary" onclick="requestPassword('add')">
+                
+                <!-- User Info (Hidden by default) -->
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                
+                <!-- Login/Logout Button -->
+                <button class="btn btn-google" id="loginBtn" onclick="signInWithGoogle()">
+                    <i class="fab fa-google"></i>
+                    Fazer Login
+                </button>
+                
+                <button class="btn btn-logout" id="logoutBtn" style="display: none;" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair
+                </button>
+                
+                <!-- New Service Button (Hidden for non-auth users) -->
+                <button class="btn btn-primary" id="newServiceBtn" style="display: none;" onclick="openAddModal()">
                     <i class="fas fa-plus"></i>
                     Novo Serviço
                 </button>
@@ -718,6 +793,18 @@
 
     <!-- Main Content -->
     <div class="container">
+        <!-- View Mode Banner (Shows for non-authenticated users) -->
+        <div class="view-mode-banner" id="viewModeBanner">
+            <div class="view-mode-text">
+                <i class="fas fa-eye"></i>
+                <span>Modo visualização - Faça login para gerenciar serviços</span>
+            </div>
+            <button class="btn btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                Login com Google
+            </button>
+        </div>
+
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -772,44 +859,11 @@
                 <i class="fas fa-cube"></i>
             </div>
             <h2 class="empty-title">Nenhum serviço encontrado</h2>
-            <p class="empty-text">Adicione um novo serviço para começar</p>
-            <button class="btn btn-primary" onclick="requestPassword('add')">
+            <p class="empty-text" id="emptyText">Adicione um novo serviço para começar</p>
+            <button class="btn btn-primary" id="emptyAddBtn" onclick="openAddModal()" style="display: none;">
                 <i class="fas fa-plus"></i>
                 Adicionar Primeiro Serviço
             </button>
-        </div>
-    </div>
-
-    <!-- Password Modal -->
-    <div class="modal" id="passwordModal">
-        <div class="modal-content password-modal">
-            <div class="modal-header">
-                <h2 class="modal-title">
-                    <i class="fas fa-lock"></i> Autenticação Necessária
-                </h2>
-                <button class="btn-close" onclick="closePasswordModal()">&times;</button>
-            </div>
-            
-            <form onsubmit="checkPassword(event)">
-                <div class="form-group">
-                    <label class="form-label">Digite a senha para continuar:</label>
-                    <input type="password" class="form-input" id="passwordInput" required 
-                           placeholder="Senha de administrador" autocomplete="off">
-                    <div class="password-error" id="passwordError">
-                        <i class="fas fa-exclamation-circle"></i> Senha incorreta!
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 15px; margin-top: 20px;">
-                    <button type="button" class="btn btn-filter" style="flex: 1;" 
-                            onclick="closePasswordModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 2;">
-                        <i class="fas fa-unlock"></i> Confirmar
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -891,42 +945,129 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <script>
         // ============================
-        // CONFIGURAÇÃO DO FIREBASE
+        // CONFIGURAÇÃO DO FIREBASE - SUAS CONFIGURAÇÕES REAIS
         // ============================
-        // ATENÇÃO: Substitua estas configurações pelas suas do Firebase!
         const firebaseConfig = {
-          apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
-          authDomain: "imaginatech-servicos.firebaseapp.com",
-          projectId: "imaginatech-servicos",
-          storageBucket: "imaginatech-servicos.firebasestorage.app",
-          messagingSenderId: "321455309872",
-          appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+            apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+            authDomain: "imaginatech-servicos.firebaseapp.com",
+            projectId: "imaginatech-servicos",
+            storageBucket: "imaginatech-servicos.firebasestorage.app",
+            messagingSenderId: "321455309872",
+            appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
         };
 
         // ============================
-        // CONFIGURAÇÃO DA SENHA
+        // EMAILS AUTORIZADOS - SEUS EMAILS REAIS
         // ============================
-        // IMPORTANTE: Mude esta senha para uma senha segura!
-        const ADMIN_PASSWORD = "adminimagina10";
+        const AUTHORIZED_EMAILS = [
+            "3d3printers@gmail.com",
+            "igor.butter@gmail.com"
+        ];
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
         // Global Variables
         let services = [];
         let currentFilter = 'todos';
         let editingServiceId = null;
-        let pendingAction = null;
-        let pendingServiceId = null;
-        let isConnected = false;
+        let currentUser = null;
+        let isAuthorized = false;
+
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
+                updateUIForUser(user);
+            } else {
+                currentUser = null;
+                isAuthorized = false;
+                updateUIForGuest();
+            }
+        });
+
+        // Sign In with Google
+        async function signInWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                if (!AUTHORIZED_EMAILS.includes(user.email)) {
+                    alert(`Acesso negado!\n\nO email ${user.email} não está autorizado.\nContate o administrador para obter acesso.`);
+                    await auth.signOut();
+                }
+            } catch (error) {
+                console.error('Error signing in:', error);
+                alert('Erro ao fazer login. Tente novamente.');
+            }
+        }
+
+        // Sign Out
+        async function signOut() {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
+        }
+
+        // Update UI for Authenticated User
+        function updateUIForUser(user) {
+            // Hide view mode banner
+            document.getElementById('viewModeBanner').style.display = 'none';
+            
+            // Show user info
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'User');
+            document.getElementById('userName').textContent = user.displayName || user.email;
+            
+            // Update buttons
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'block';
+            
+            if (isAuthorized) {
+                document.getElementById('newServiceBtn').style.display = 'block';
+                document.getElementById('emptyAddBtn').style.display = 'block';
+                document.getElementById('emptyText').textContent = 'Adicione um novo serviço para começar';
+            } else {
+                document.getElementById('newServiceBtn').style.display = 'none';
+                document.getElementById('emptyAddBtn').style.display = 'none';
+                document.getElementById('emptyText').textContent = 'Nenhum serviço cadastrado no momento';
+            }
+            
+            // Re-render services to enable buttons
+            renderServices();
+        }
+
+        // Update UI for Guest
+        function updateUIForGuest() {
+            // Show view mode banner
+            document.getElementById('viewModeBanner').style.display = 'flex';
+            
+            // Hide user info
+            document.getElementById('userInfo').style.display = 'none';
+            
+            // Update buttons
+            document.getElementById('loginBtn').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('newServiceBtn').style.display = 'none';
+            document.getElementById('emptyAddBtn').style.display = 'none';
+            document.getElementById('emptyText').textContent = 'Faça login para visualizar os serviços';
+            
+            // Re-render services to disable buttons
+            renderServices();
+        }
 
         // Connection Status
         function updateConnectionStatus(connected) {
-            isConnected = connected;
             const statusEl = document.getElementById('connectionStatus');
             const statusDot = statusEl.querySelector('.status-dot');
             const statusText = document.getElementById('statusText');
@@ -942,60 +1083,6 @@
             }
         }
 
-        // Monitor connection
-        db.enableNetwork().then(() => {
-            updateConnectionStatus(true);
-        });
-
-        // Password Functions
-        function requestPassword(action, serviceId = null) {
-            pendingAction = action;
-            pendingServiceId = serviceId;
-            document.getElementById('passwordModal').classList.add('active');
-            document.getElementById('passwordInput').focus();
-            document.getElementById('passwordError').style.display = 'none';
-        }
-
-        function closePasswordModal() {
-            document.getElementById('passwordModal').classList.remove('active');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('passwordError').style.display = 'none';
-            pendingAction = null;
-            pendingServiceId = null;
-        }
-
-        function checkPassword(event) {
-            event.preventDefault();
-            const password = document.getElementById('passwordInput').value;
-            
-            if (password === ADMIN_PASSWORD) {
-                closePasswordModal();
-                
-                // Execute pending action
-                switch(pendingAction) {
-                    case 'add':
-                        openAddModal();
-                        break;
-                    case 'edit':
-                        if (pendingServiceId) openEditModal(pendingServiceId);
-                        break;
-                    case 'delete':
-                        if (pendingServiceId) confirmDelete(pendingServiceId);
-                        break;
-                    case 'status':
-                        if (pendingServiceId) {
-                            const [id, status] = pendingServiceId.split('|');
-                            updateStatus(id, status);
-                        }
-                        break;
-                }
-            } else {
-                document.getElementById('passwordError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
-            }
-        }
-
         // Load services from Firestore
         async function loadServices() {
             try {
@@ -1005,7 +1092,6 @@
                     services.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Sort by created date
                 services.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
                 renderServices();
@@ -1054,6 +1140,11 @@
 
         // Open Add Modal
         function openAddModal() {
+            if (!isAuthorized) {
+                alert('Você não tem permissão para adicionar serviços.');
+                return;
+            }
+            
             editingServiceId = null;
             document.getElementById('modalTitle').textContent = 'Novo Serviço';
             document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
@@ -1065,6 +1156,11 @@
 
         // Open Edit Modal
         function openEditModal(id) {
+            if (!isAuthorized) {
+                alert('Você não tem permissão para editar serviços.');
+                return;
+            }
+            
             editingServiceId = id;
             const service = services.find(s => s.id === id);
             if (!service) return;
@@ -1091,9 +1187,14 @@
             editingServiceId = null;
         }
 
-        // Save Service to Firestore
+        // Save Service
         async function saveService(event) {
             event.preventDefault();
+            
+            if (!isAuthorized) {
+                alert('Você não tem permissão para salvar serviços.');
+                return;
+            }
             
             const service = {
                 name: document.getElementById('serviceName').value,
@@ -1104,17 +1205,17 @@
                 startDate: document.getElementById('startDate').value,
                 dueDate: document.getElementById('dueDate').value,
                 status: document.getElementById('serviceStatus').value,
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.email
             };
 
             try {
                 if (editingServiceId) {
-                    // Update existing service
                     await db.collection('services').doc(editingServiceId).update(service);
                 } else {
-                    // Add new service
                     service.createdAt = new Date().toISOString();
                     service.serviceId = generateId();
+                    service.createdBy = currentUser.email;
                     await db.collection('services').add(service);
                 }
                 
@@ -1127,10 +1228,16 @@
 
         // Update Service Status
         async function updateStatus(id, status) {
+            if (!isAuthorized) {
+                alert('Você não tem permissão para atualizar status.');
+                return;
+            }
+            
             try {
                 const updates = { 
                     status: status,
-                    updatedAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser.email
                 };
                 
                 if (status === 'entregue') {
@@ -1144,13 +1251,13 @@
             }
         }
 
-        // Request status update with password
-        function requestStatusUpdate(id, status) {
-            requestPassword('status', `${id}|${status}`);
-        }
-
         // Delete Service
-        async function confirmDelete(id) {
+        async function deleteService(id) {
+            if (!isAuthorized) {
+                alert('Você não tem permissão para excluir serviços.');
+                return;
+            }
+            
             if (confirm('Tem certeza que deseja excluir este serviço?')) {
                 try {
                     await db.collection('services').doc(id).delete();
@@ -1165,7 +1272,6 @@
         function filterServices(filter) {
             currentFilter = filter;
             
-            // Update filter buttons
             document.querySelectorAll('.btn-filter').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -1201,7 +1307,6 @@
                 filteredServices = services.filter(s => s.status === currentFilter);
             }
 
-            // Sort by priority and due date
             filteredServices.sort((a, b) => {
                 const priorityOrder = { alta: 3, media: 2, baixa: 1 };
                 if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
@@ -1226,6 +1331,11 @@
                     const daysColor = days < 0 ? 'var(--neon-red)' : 
                                      days <= 2 ? 'var(--neon-yellow)' : 
                                      'var(--secondary-blue)';
+                    
+                    const disabledClass = !isAuthorized ? 'disabled' : '';
+                    const onclickStatus = isAuthorized ? `onclick="updateStatus('${service.id}', 'STATUS')"` : '';
+                    const onclickEdit = isAuthorized ? `onclick="openEditModal('${service.id}')"` : '';
+                    const onclickDelete = isAuthorized ? `onclick="deleteService('${service.id}')"` : '';
                     
                     return `
                         <div class="service-card priority-${service.priority}">
@@ -1264,33 +1374,35 @@
                             </div>
                             
                             <div class="service-status">
-                                <div class="status-badge ${service.status === 'pendente' ? 'active' : ''} ${service.status === 'pendente' ? '' : 'completed'}"
-                                     onclick="requestStatusUpdate('${service.id}', 'pendente')">
+                                <div class="status-badge ${service.status === 'pendente' ? 'active' : ''} ${service.status === 'pendente' ? '' : 'completed'} ${disabledClass}"
+                                     ${isAuthorized ? `onclick="updateStatus('${service.id}', 'pendente')"` : ''}>
                                     <i class="fas fa-clock"></i> Pendente
                                 </div>
-                                <div class="status-badge ${service.status === 'producao' ? 'active' : ''} ${['concluido', 'entregue'].includes(service.status) ? 'completed' : ''}"
-                                     onclick="requestStatusUpdate('${service.id}', 'producao')">
+                                <div class="status-badge ${service.status === 'producao' ? 'active' : ''} ${['concluido', 'entregue'].includes(service.status) ? 'completed' : ''} ${disabledClass}"
+                                     ${isAuthorized ? `onclick="updateStatus('${service.id}', 'producao')"` : ''}>
                                     <i class="fas fa-cogs"></i> Produção
                                 </div>
-                                <div class="status-badge ${service.status === 'concluido' ? 'active' : ''} ${service.status === 'entregue' ? 'completed' : ''}"
-                                     onclick="requestStatusUpdate('${service.id}', 'concluido')">
+                                <div class="status-badge ${service.status === 'concluido' ? 'active' : ''} ${service.status === 'entregue' ? 'completed' : ''} ${disabledClass}"
+                                     ${isAuthorized ? `onclick="updateStatus('${service.id}', 'concluido')"` : ''}>
                                     <i class="fas fa-check"></i> Concluído
                                 </div>
-                                <div class="status-badge ${service.status === 'entregue' ? 'active' : ''}"
-                                     onclick="requestStatusUpdate('${service.id}', 'entregue')">
+                                <div class="status-badge ${service.status === 'entregue' ? 'active' : ''} ${disabledClass}"
+                                     ${isAuthorized ? `onclick="updateStatus('${service.id}', 'entregue')"` : ''}>
                                     <i class="fas fa-box"></i> Entregue
                                 </div>
                             </div>
                             
-                            <div class="service-actions">
-                                <button class="btn btn-filter btn-action" onclick="requestPassword('edit', '${service.id}')">
-                                    <i class="fas fa-edit"></i> Editar
-                                </button>
-                                <button class="btn btn-filter btn-action" style="border-color: var(--neon-red); color: var(--neon-red);" 
-                                        onclick="requestPassword('delete', '${service.id}')">
-                                    <i class="fas fa-trash"></i> Excluir
-                                </button>
-                            </div>
+                            ${isAuthorized ? `
+                                <div class="service-actions">
+                                    <button class="btn btn-filter btn-action" ${onclickEdit}>
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn btn-filter btn-action" style="border-color: var(--neon-red); color: var(--neon-red);" 
+                                            ${onclickDelete}>
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }).join('');
@@ -1323,13 +1435,6 @@
         window.addEventListener('DOMContentLoaded', () => {
             createParticles();
             loadServices();
-        });
-
-        // Enter key on password field
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && document.getElementById('passwordModal').classList.contains('active')) {
-                checkPassword(e);
-            }
         });
     </script>
 </body>
