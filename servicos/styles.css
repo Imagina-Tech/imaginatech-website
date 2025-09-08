@@ -1,6 +1,6 @@
 /* ===========================
    IMAGINATECH - PAINEL DE SERVIÇOS
-   CSS Principal - Versão Corrigida com Menu Mobile
+   CSS Principal - Versão com Modais de Confirmação
    =========================== */
 
 /* Root Variables */
@@ -12,6 +12,7 @@
     --neon-green: #00FF88;
     --neon-yellow: #FFD700;
     --neon-purple: #9945FF;
+    --neon-orange: #FF6B35;
     --dark-bg: #0a0e1a;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
@@ -1236,6 +1237,224 @@ body {
 }
 
 /* ===========================
+   CONFIRMATION MODALS
+   =========================== */
+
+.confirmation-modal {
+    z-index: 10002;
+}
+
+.confirmation-content {
+    background: linear-gradient(135deg, #1a2332, #0a0e1a);
+    border: 2px solid var(--glass-border);
+    border-radius: 25px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.confirmation-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 2.5rem;
+}
+
+.confirmation-icon.warning {
+    background: rgba(255, 215, 0, 0.1);
+    border: 3px solid var(--neon-yellow);
+    color: var(--neon-yellow);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+    }
+}
+
+.confirmation-icon.success {
+    background: rgba(0, 255, 136, 0.1);
+    border: 3px solid var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+    animation: pulse-success 2s infinite;
+}
+
+@keyframes pulse-success {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+    }
+}
+
+.confirmation-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.confirmation-message {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.confirmation-message p {
+    margin-bottom: 15px;
+}
+
+.confirmation-message strong {
+    color: white;
+    font-weight: 600;
+}
+
+.checklist {
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.checklist-item i {
+    color: var(--neon-green);
+    font-size: 1.2rem;
+}
+
+.confirmation-question {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--neon-yellow);
+    margin-top: 20px;
+}
+
+.whatsapp-prompt {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.whatsapp-prompt i {
+    font-size: 2rem;
+    color: var(--neon-green);
+}
+
+.whatsapp-prompt p {
+    font-size: 1.1rem;
+    color: white;
+    margin: 0;
+}
+
+.confirmation-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.confirmation-buttons .btn {
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 2px solid var(--glass-border);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-red);
+    color: var(--neon-red);
+    transform: translateY(-2px);
+}
+
+.btn-confirm-sedex {
+    background: linear-gradient(135deg, var(--neon-yellow), #FFA500);
+    color: #0a0e1a;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+}
+
+.btn-confirm-sedex:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(255, 215, 0, 0.5);
+}
+
+.btn-skip {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-skip:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-confirm-whatsapp {
+    background: linear-gradient(135deg, var(--neon-green), #44FF44);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+}
+
+.btn-confirm-whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+}
+
+/* ===========================
    FORMS
    =========================== */
 
@@ -1602,6 +1821,29 @@ body {
     /* Modal */
     .modal-content {
         padding: 20px;
+    }
+
+    /* Confirmation Modals */
+    .confirmation-content {
+        padding: 30px 20px;
+    }
+
+    .confirmation-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .confirmation-title {
+        font-size: 1.4rem;
+    }
+
+    .confirmation-buttons {
+        flex-direction: column;
+    }
+
+    .confirmation-buttons .btn {
+        width: 100%;
     }
 }
 
