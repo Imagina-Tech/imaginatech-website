@@ -160,7 +160,7 @@ function daysRemaining(dueDate) {
 }
 
 // ===========================
-// CONFIRMATION MODAL FUNCTIONS
+// CONFIRMATION MODAL FUNCTIONS - CORRIGIDO
 // ===========================
 
 // Show SEDEX Confirmation Modal
@@ -175,12 +175,30 @@ function closeSedexConfirm() {
     pendingStatusUpdate = null;
 }
 
-// Confirm SEDEX Completion
+// Confirm SEDEX Completion - CORRIGIDO
 async function confirmSedexCompletion() {
     if (!pendingStatusUpdate) return;
     
+    const serviceId = pendingStatusUpdate.id;
+    const newStatus = pendingStatusUpdate.status;
+    
     closeSedexConfirm();
-    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    
+    // Executar atualização e aguardar conclusão
+    await executeStatusUpdate(serviceId, newStatus);
+    
+    // Atualizar lista local imediatamente
+    const serviceIndex = services.findIndex(s => s.id === serviceId);
+    if (serviceIndex !== -1) {
+        services[serviceIndex].status = newStatus;
+        services[serviceIndex].updatedAt = new Date().toISOString();
+        services[serviceIndex].updatedBy = currentUser.email;
+    }
+    
+    // Re-renderizar interface
+    renderServices();
+    updateStats();
+    
     pendingStatusUpdate = null;
 }
 
@@ -208,21 +226,42 @@ function closeRetiradaConfirm() {
     pendingStatusUpdate = null;
 }
 
-// Confirm RETIRADA Without WhatsApp
+// Confirm RETIRADA Without WhatsApp - CORRIGIDO
 async function confirmRetiradaWithoutWhatsapp() {
     if (!pendingStatusUpdate) return;
     
+    const serviceId = pendingStatusUpdate.id;
+    const newStatus = pendingStatusUpdate.status;
+    
     closeRetiradaConfirm();
-    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    
+    // Executar atualização e aguardar conclusão
+    await executeStatusUpdate(serviceId, newStatus);
+    
+    // Atualizar lista local imediatamente
+    const serviceIndex = services.findIndex(s => s.id === serviceId);
+    if (serviceIndex !== -1) {
+        services[serviceIndex].status = newStatus;
+        services[serviceIndex].updatedAt = new Date().toISOString();
+        services[serviceIndex].updatedBy = currentUser.email;
+    }
+    
+    // Re-renderizar interface
+    renderServices();
+    updateStats();
+    
     pendingStatusUpdate = null;
 }
 
-// Confirm RETIRADA With WhatsApp
+// Confirm RETIRADA With WhatsApp - CORRIGIDO
 async function confirmRetiradaWithWhatsapp() {
     if (!pendingStatusUpdate) return;
     
     const service = pendingStatusUpdate.service;
+    const serviceId = pendingStatusUpdate.id;
+    const newStatus = pendingStatusUpdate.status;
     
+    // Abrir WhatsApp se disponível
     if (service && service.pickupInfo && service.pickupInfo.whatsapp) {
         const whatsappNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
         const message = encodeURIComponent(
@@ -235,11 +274,26 @@ async function confirmRetiradaWithWhatsapp() {
     }
     
     closeRetiradaConfirm();
-    await executeStatusUpdate(pendingStatusUpdate.id, pendingStatusUpdate.status);
+    
+    // Executar atualização e aguardar conclusão
+    await executeStatusUpdate(serviceId, newStatus);
+    
+    // Atualizar lista local imediatamente
+    const serviceIndex = services.findIndex(s => s.id === serviceId);
+    if (serviceIndex !== -1) {
+        services[serviceIndex].status = newStatus;
+        services[serviceIndex].updatedAt = new Date().toISOString();
+        services[serviceIndex].updatedBy = currentUser.email;
+    }
+    
+    // Re-renderizar interface
+    renderServices();
+    updateStats();
+    
     pendingStatusUpdate = null;
 }
 
-// Execute Status Update (separated logic)
+// Execute Status Update - CORRIGIDO
 async function executeStatusUpdate(id, status) {
     try {
         const updates = { 
@@ -252,8 +306,22 @@ async function executeStatusUpdate(id, status) {
             updates.deliveredDate = new Date().toISOString();
         }
         
+        // Atualizar no Firebase
         await db.collection('services').doc(id).update(updates);
-        showToast('Status atualizado!', 'success');
+        
+        // Atualizar lista local imediatamente para resposta mais rápida
+        const serviceIndex = services.findIndex(s => s.id === id);
+        if (serviceIndex !== -1) {
+            services[serviceIndex] = { ...services[serviceIndex], ...updates };
+        }
+        
+        showToast('Status atualizado com sucesso!', 'success');
+        
+        // Re-renderizar interface
+        if (currentView === 'production') {
+            renderServices();
+            updateStats();
+        }
         
     } catch (error) {
         console.error('Error updating status:', error);
@@ -1093,7 +1161,7 @@ async function saveService(event) {
     }
 }
 
-// Update Service Status - MODIFICADO COM MODAIS CUSTOMIZADOS
+// Update Service Status - CORRIGIDO
 async function updateStatus(id, status) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para atualizar status', 'error');
@@ -1103,7 +1171,7 @@ async function updateStatus(id, status) {
     const service = services.find(s => s.id === id);
     if (!service) return;
     
-    // MODIFICAÇÃO: Usar modais customizados ao invés de confirm()
+    // Usar modais customizados para confirmação
     if (status === 'concluido') {
         if (service.deliveryMethod === 'sedex') {
             // Mostrar modal customizado para SEDEX
@@ -1119,6 +1187,18 @@ async function updateStatus(id, status) {
     
     // Para outros casos, executar diretamente
     await executeStatusUpdate(id, status);
+    
+    // Atualizar lista local imediatamente
+    const serviceIndex = services.findIndex(s => s.id === id);
+    if (serviceIndex !== -1) {
+        services[serviceIndex].status = status;
+        services[serviceIndex].updatedAt = new Date().toISOString();
+        services[serviceIndex].updatedBy = currentUser.email;
+    }
+    
+    // Re-renderizar interface
+    renderServices();
+    updateStats();
 }
 
 // Delete Service
@@ -1172,7 +1252,7 @@ function showDeliveryInfo(id) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        // MODIFICAÇÃO: Nova mensagem no link do WhatsApp
+        // Nova mensagem no link do WhatsApp
         const message = encodeURIComponent(
             'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
             'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
@@ -1375,7 +1455,7 @@ function updateStats() {
     document.getElementById('stat-delivered').textContent = stats.entregue;
 }
 
-// Render Services - MODIFICADO COM DESTAQUE NO MÉTODO DE ENTREGA
+// Render Services
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
@@ -1437,7 +1517,6 @@ function renderServices() {
                         </span>
                     </div>
                     
-                    <!-- MODIFICAÇÃO 2: Método de entrega em destaque -->
                     ${service.deliveryMethod ? `
                         <div class="delivery-badge-prominent">
                             <i class="fas ${deliveryIcons[service.deliveryMethod] || 'fa-truck'}"></i>
