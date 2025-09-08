@@ -593,6 +593,80 @@
         </div>
     </div>
 
+    <!-- SEDEX Confirmation Modal -->
+    <div class="modal confirmation-modal" id="sedexConfirmModal">
+        <div class="confirmation-content">
+            <div class="confirmation-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            
+            <h2 class="confirmation-title">
+                ⚠️ ATENÇÃO - PEDIDO SEDEX
+            </h2>
+            
+            <div class="confirmation-message">
+                <p>Marque como concluído <strong>APENAS</strong> se o pedido já estiver:</p>
+                
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Embalado corretamente</span>
+                    </div>
+                    <div class="checklist-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Com a etiqueta dos Correios</span>
+                    </div>
+                </div>
+                
+                <p class="confirmation-question">Confirmar conclusão?</p>
+            </div>
+            
+            <div class="confirmation-buttons">
+                <button class="btn btn-cancel" onclick="closeSedexConfirm()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancelar</span>
+                </button>
+                <button class="btn btn-confirm-sedex" onclick="confirmSedexCompletion()">
+                    <i class="fas fa-check"></i>
+                    <span>Sim, Confirmar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RETIRADA Confirmation Modal -->
+    <div class="modal confirmation-modal" id="retiradaConfirmModal">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            
+            <h2 class="confirmation-title">
+                ✅ Serviço Concluído!
+            </h2>
+            
+            <div class="confirmation-message">
+                <p>O pedido de <strong id="retiradaClientName">Cliente</strong> está pronto para retirada.</p>
+                
+                <div class="whatsapp-prompt">
+                    <i class="fab fa-whatsapp"></i>
+                    <p>Deseja notificar o cliente via WhatsApp?</p>
+                </div>
+            </div>
+            
+            <div class="confirmation-buttons">
+                <button class="btn btn-skip" onclick="confirmRetiradaWithoutWhatsapp()">
+                    <i class="fas fa-forward"></i>
+                    <span>Pular</span>
+                </button>
+                <button class="btn btn-confirm-whatsapp" onclick="confirmRetiradaWithWhatsapp()">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Chamar no WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
