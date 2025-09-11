@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- CSS Principal -->
+    <!-- CSS Principal CORRIGIDO -->
     <link rel="stylesheet" href="/servicos/styles.css">
     
     <!-- CSS de emergência inline caso o arquivo externo falhe -->
@@ -52,9 +52,9 @@
         }
         
         .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(0, 212, 255, 0.2);
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(0, 212, 255, 0.2);
             border-top-color: #00D4FF;
             border-radius: 50%;
             animation: spin 1s ease-in-out infinite;
@@ -66,7 +66,8 @@
         
         .loading-text {
             color: #00D4FF;
-            margin-top: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -79,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Background Effects -->
+    <!-- Background Effects OTIMIZADO -->
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
         <div class="particles" id="particles"></div>
@@ -114,7 +115,7 @@
         </div>
     </div>
 
-    <!-- Client Login Modal -->
+    <!-- Client Login Modal CORRIGIDO -->
     <div class="client-login-modal" id="clientLoginModal">
         <div class="client-login-content">
             <div class="client-login-header">
@@ -136,7 +137,8 @@
                            class="code-input" 
                            id="orderCode" 
                            placeholder="XXXXX"
-                           maxlength="5">
+                           maxlength="5"
+                           autocomplete="off">
                     <div class="attempts-warning" id="attemptsWarning">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span id="attemptsText"></span>
@@ -156,7 +158,7 @@
         </div>
     </div>
 
-    <!-- Navigation Bar (for client view) -->
+    <!-- Navigation Bar (for client view) CORRIGIDO -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="logo-section">
@@ -188,10 +190,10 @@
         </div>
         
         <div id="clientOrderCard">
-            <!-- Order card will be inserted here -->
+            <!-- Order card will be inserted here dynamically -->
         </div>
         
-        <div style="text-align: center; margin-top: 40px;">
+        <div style="text-align: center; margin-top: 30px;">
             <button class="btn btn-primary" onclick="exitToWelcome()">
                 <i class="fas fa-arrow-left"></i>
                 <span>Voltar ao Início</span>
@@ -199,7 +201,7 @@
         </div>
     </div>
 
-    <!-- Header (for production) -->
+    <!-- Header (for production) CORRIGIDO -->
     <header class="header" id="header">
         <div class="header-content">
             <div class="logo-section">
@@ -237,7 +239,7 @@
                 <span></span>
             </button>
         </div>
-        <!-- Mobile Menu Dropdown -->
+        <!-- Mobile Menu Dropdown CORRIGIDO -->
         <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
             <div class="mobile-menu-content">
                 <div class="mobile-user-info">
@@ -260,7 +262,7 @@
         </div>
     </header>
 
-    <!-- Main Content (Production) -->
+    <!-- Main Content (Production) OTIMIZADO -->
     <div class="container" id="mainContainer">
         <!-- Stats Cards - CLICKABLE FILTERS -->
         <div class="stats-grid">
@@ -288,7 +290,7 @@
 
         <!-- Services Grid -->
         <div class="services-grid" id="servicesGrid">
-            <!-- Services will be loaded here -->
+            <!-- Services will be loaded here dynamically -->
         </div>
 
         <!-- Empty State -->
@@ -305,7 +307,7 @@
         </div>
     </div>
 
-    <!-- Add/Edit Service Modal -->
+    <!-- Add/Edit Service Modal CORRIGIDO COM VALIDAÇÕES -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -323,11 +325,12 @@
                                id="serviceOrderCode" 
                                placeholder="Deixe vazio para gerar automaticamente"
                                maxlength="5"
+                               autocomplete="off"
                                style="flex: 1;">
                         <button type="button" 
                                 class="btn btn-primary" 
                                 onclick="generateNewCode()"
-                                style="padding: 12px 20px;">
+                                style="padding: 10px 16px;">
                             <i class="fas fa-sync"></i>
                             <span>Gerar</span>
                         </button>
@@ -340,19 +343,24 @@
                 <div class="form-group">
                     <label class="form-label">Nome do Serviço*</label>
                     <input type="text" class="form-input" id="serviceNameInput" required 
-                           placeholder="Ex: Miniatura personalizada">
+                           placeholder="Ex: Miniatura personalizada"
+                           minlength="3"
+                           maxlength="100">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Cliente*</label>
                     <input type="text" class="form-input" id="clientNameInput" required 
-                           placeholder="Nome do cliente">
+                           placeholder="Nome do cliente"
+                           minlength="3"
+                           maxlength="100">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Descrição do Serviço</label>
                     <textarea class="form-textarea" id="serviceDescription" 
-                              placeholder="Detalhes sobre o serviço, especificações, material, cores, etc."></textarea>
+                              placeholder="Detalhes sobre o serviço, especificações, material, cores, etc."
+                              maxlength="500"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -368,7 +376,6 @@
                     </select>
                 </div>
 
-                <!-- MODIFICAÇÃO 1: Campo de Cor adicionado após Material -->
                 <div class="form-group">
                     <label class="form-label">Cor do Material</label>
                     <select class="form-select" id="serviceColor">
@@ -407,61 +414,72 @@
 
                 <!-- Campos adicionais para Retirada -->
                 <div class="pickup-fields" id="pickupFields">
-                    <h4 style="margin-bottom: 15px; color: #00FF88;">
+                    <h4 style="margin-bottom: 12px; color: #00FF88; font-size: 0.95rem;">
                         <i class="fas fa-store"></i> Informações para Retirada
                     </h4>
                     
                     <div class="form-group">
                         <label class="form-label">Nome de quem vai retirar*</label>
                         <input type="text" class="form-input" id="pickupName" 
-                               placeholder="Nome completo da pessoa">
+                               placeholder="Nome completo da pessoa"
+                               minlength="3"
+                               maxlength="100">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">WhatsApp para contato*</label>
                         <input type="text" class="form-input" id="pickupWhatsapp" 
-                               placeholder="(21) 99999-9999" maxlength="15">
+                               placeholder="(21) 99999-9999" 
+                               maxlength="15">
                     </div>
                 </div>
 
-                <!-- Campos adicionais para Sedex -->
+                <!-- Campos adicionais para Sedex VALIDADOS -->
                 <div class="delivery-fields" id="deliveryFields">
-                    <h4 style="margin-bottom: 15px; color: #9945FF;">
+                    <h4 style="margin-bottom: 12px; color: #9945FF; font-size: 0.95rem;">
                         <i class="fas fa-box"></i> 📦 Dados para entrega 📦
                     </h4>
                     
                     <div class="form-group">
                         <label class="form-label">Nome completo*</label>
                         <input type="text" class="form-input" id="fullName" 
-                               placeholder="Nome completo do destinatário">
+                               placeholder="Nome completo do destinatário"
+                               minlength="3"
+                               maxlength="100">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">CPF ou CNPJ*</label>
                             <input type="text" class="form-input" id="cpfCnpj" 
-                                   placeholder="000.000.000-00">
+                                   placeholder="000.000.000-00"
+                                   maxlength="18">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone*</label>
                             <input type="text" class="form-input" id="telefone" 
-                                   placeholder="(21) 99999-9999" maxlength="15">
+                                   placeholder="(21) 99999-9999" 
+                                   maxlength="15">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">E-mail*</label>
                         <input type="email" class="form-input" id="email" 
-                               placeholder="email@exemplo.com">
+                               placeholder="email@exemplo.com"
+                               maxlength="100">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Valor da Venda (R$)*</label>
-                        <input type="number" class="form-input" id="saleValue" step="0.01" 
+                        <input type="number" class="form-input" id="saleValue" 
+                               step="0.01" 
+                               min="0"
+                               max="99999"
                                placeholder="Ex: 150.00">
                     </div>
 
-                    <h5 style="margin: 25px 0 15px; color: #00D4FF; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <h5 style="margin: 20px 0 12px; color: #00D4FF; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; font-size: 0.9rem;">
                         <i class="fas fa-map-marker-alt"></i> Endereço de entrega completo
                     </h5>
 
@@ -469,7 +487,8 @@
                         <div class="form-group">
                             <label class="form-label">CEP*</label>
                             <input type="text" class="form-input" id="cep" 
-                                   placeholder="00000-000" maxlength="9">
+                                   placeholder="00000-000" 
+                                   maxlength="9">
                         </div>
                         <div class="form-group">
                             <label class="form-label">UF*</label>
@@ -510,37 +529,43 @@
                         <div class="form-group" style="flex: 2;">
                             <label class="form-label">Rua*</label>
                             <input type="text" class="form-input" id="rua" 
-                                   placeholder="Nome da rua">
+                                   placeholder="Nome da rua"
+                                   maxlength="100">
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label class="form-label">Número*</label>
                             <input type="text" class="form-input" id="numero" 
-                                   placeholder="123">
+                                   placeholder="123"
+                                   maxlength="10">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Bairro*</label>
                         <input type="text" class="form-input" id="bairro" 
-                               placeholder="Nome do bairro">
+                               placeholder="Nome do bairro"
+                               maxlength="50">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Cidade*</label>
                         <input type="text" class="form-input" id="cidade" 
-                               placeholder="Nome da cidade">
+                               placeholder="Nome da cidade"
+                               maxlength="50">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Complemento</label>
                         <input type="text" class="form-input" id="complemento" 
-                               placeholder="Apto, Bloco, etc. (opcional)">
+                               placeholder="Apto, Bloco, etc. (opcional)"
+                               maxlength="50">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Observações</label>
                         <textarea class="form-textarea" id="observacoes" rows="3"
-                                  placeholder="Informações adicionais sobre a entrega"></textarea>
+                                  placeholder="Informações adicionais sobre a entrega"
+                                  maxlength="200"></textarea>
                     </div>
                 </div>
 
@@ -564,7 +589,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <div style="display: flex; gap: 12px; margin-top: 25px;">
                     <button type="button" class="btn btn-back" style="flex: 1;" onclick="closeModal()">
                         Cancelar
                     </button>
@@ -672,7 +697,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- JavaScript Principal -->
+    <!-- JavaScript Principal CORRIGIDO -->
     <script src="/servicos/scripts.js"></script>
     
     <!-- Script de verificação de erros -->
@@ -696,6 +721,8 @@
             // Verificar se as funções JavaScript existem
             if (typeof openClientLogin === 'undefined') {
                 console.error('ERRO: JavaScript não carregou! Verifique se o arquivo scripts.js existe em /servicos/');
+            } else {
+                console.log('✅ Sistema carregado com sucesso!');
             }
         });
     </script>
