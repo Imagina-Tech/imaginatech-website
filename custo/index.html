@@ -8,6 +8,7 @@
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sistema de orçamento para impressão 3D. ImaginaTech - Tecnologia e Inovação.">
     <meta name="keywords" content="orçamento, impressão 3d, custo, imaginatech">
+    <meta name="robots" content="noindex, nofollow">
     
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -18,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- CSS Principal -->
+    <!-- CSS Principal - Referência correta -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -38,6 +39,10 @@
                 <span class="nav-subtitle">Sistema de Orçamento</span>
             </div>
             <div class="header-actions">
+                <a href="/servicos" class="btn btn-services">
+                    <i class="fas fa-tasks"></i>
+                    <span>Painel de Serviços</span>
+                </a>
                 <a href="/" class="btn btn-back">
                     <i class="fas fa-home"></i>
                     <span>Voltar ao Site</span>
@@ -63,12 +68,12 @@
                     <div class="form-section">
                         <label class="form-label">
                             <i class="fas fa-print"></i>
-                            Impressora
+                            Impressora / Máquina
                         </label>
                         <select id="printer-select" class="form-select">
-                            <option value="">Selecione a impressora</option>
+                            <option value="">Selecione a máquina</option>
                             <optgroup label="Impressoras de Resina">
-                                <option value="SATURN_2">Saturn 2</option>
+                                <option value="SATURN_2">Saturn 2 (Resina)</option>
                             </optgroup>
                             <optgroup label="Impressoras FDM">
                                 <option value="K1">Creality K1</option>
@@ -76,17 +81,17 @@
                                 <option value="K2PLUS">Creality K2 Plus</option>
                             </optgroup>
                             <optgroup label="Corte a Laser">
-                                <option value="LASER">Máquina Laser</option>
+                                <option value="LASER">Máquina Laser CO2</option>
                             </optgroup>
                         </select>
                     </div>
 
-                    <!-- Tempo de Impressão -->
+                    <!-- Tempo de Produção -->
                     <div class="form-row">
                         <div class="form-section">
                             <label class="form-label">
                                 <i class="fas fa-clock"></i>
-                                Tempo de Impressão
+                                Tempo de Produção
                             </label>
                             <div class="time-input-container">
                                 <div class="time-input-group">
@@ -133,6 +138,15 @@
                             </label>
                             <input type="number" id="shipping-cost" class="form-input" min="0" value="0" step="0.01">
                         </div>
+                    </div>
+
+                    <!-- STL dividido em peças (para algumas máquinas) -->
+                    <div class="form-section" id="stl-pieces-section" style="display: none;">
+                        <label class="form-label">
+                            <i class="fas fa-puzzle-piece"></i>
+                            STL dividido em quantas peças?
+                        </label>
+                        <input type="number" id="stl-pieces" class="form-input" min="1" value="1">
                     </div>
 
                     <!-- Parâmetros Customizados -->
@@ -263,7 +277,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript -->
+    <!-- JavaScript - Referência correta -->
     <script src="script.js"></script>
 </body>
 </html>
