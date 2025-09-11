@@ -1,7 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL DE SERVIÇOS
 // Sistema de Gerenciamento com Firebase
-// Versão Corrigida - Modais Customizados para Confirmações
+// Versão Otimizada - Correções Aplicadas
 // ===========================
 
 // Firebase Configuration
@@ -44,84 +44,64 @@ let currentFilter = 'todos';
 let editingServiceId = null;
 let currentUser = null;
 let isAuthorized = false;
-let currentView = 'welcome'; // welcome, client, production
+let currentView = 'welcome';
 let clientAttempts = 0;
 let clientUser = null;
 let currentOrderCode = null;
-let orderListener = null; // Store listener reference
-let pendingStatusUpdate = null; // Store pending status update info
+let orderListener = null;
+let pendingStatusUpdate = null;
+let productionListener = null; // FIX 9: Store production listener
+let lastNotificationTime = {}; // FIX 1: Track last notification times
+let notificationDebounce = null; // FIX 1: Debounce timer
 
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
 
-// Generate Order Code - 5 CHARACTERS ONLY
-function generateOrderCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+// FIX 4: Timezone-aware date functions for Brazil
+function getBrazilTime() {
+    const now = new Date();
+    const brazilOffset = -3; // UTC-3 for Brasília
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * brazilOffset));
 }
 
-// Generate New Code Button Function
-async function generateNewCode() {
-    const codeInput = document.getElementById('serviceOrderCode');
-    const newCode = await generateUniqueCode();
-    codeInput.value = newCode;
-    showToast('Novo código gerado: ' + newCode, 'success');
+// FIX 5: Correct date handling without timezone issues
+function getLocalDateString(date) {
+    // Create date at noon to avoid timezone shifts
+    const d = new Date(date + 'T12:00:00');
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-// Check if code exists in database
-async function isCodeUnique(code) {
-    // Empty code is always valid (will be generated automatically)
-    if (!code) return true;
+// FIX 4: Calculate days remaining with Brazil timezone
+function daysRemaining(dueDate) {
+    const brazilNow = getBrazilTime();
+    // Set to start of day in Brazil time
+    brazilNow.setHours(0, 0, 0, 0);
     
-    const snapshot = await db.collection('services')
-        .where('orderCode', '==', code)
-        .limit(1)
-        .get();
+    // Parse due date at noon to avoid timezone issues
+    const due = new Date(dueDate + 'T12:00:00');
+    due.setHours(0, 0, 0, 0);
     
-    // If editing, check if the code belongs to the current service
-    if (editingServiceId && !snapshot.empty) {
-        const doc = snapshot.docs[0];
-        return doc.id === editingServiceId;
-    }
-    
-    return snapshot.empty;
+    const diff = Math.ceil((due - brazilNow) / (1000 * 60 * 60 * 24));
+    return diff;
 }
 
-// Validate Order Code Format
-function validateOrderCode(code) {
-    // Allow empty (will generate automatically)
-    if (!code) return true;
-    
-    // Must be exactly 5 characters, alphanumeric only
-    const pattern = /^[A-Z0-9]{5}$/;
-    return pattern.test(code);
-}
-
-// Generate unique code with retry logic
-async function generateUniqueCode() {
-    let code;
-    let attempts = 0;
-    const maxAttempts = 100;
-    
-    do {
-        code = generateOrderCode();
-        attempts++;
-        
-        if (attempts >= maxAttempts) {
-            throw new Error('Unable to generate unique code');
-        }
-    } while (!(await isCodeUnique(code)));
-    
-    return code;
-}
-
-// Show Toast Notification
+// FIX 1: Debounced toast notification
 function showToast(message, type = 'info') {
+    // Prevent duplicate notifications
+    const now = Date.now();
+    const key = `${message}_${type}`;
+    
+    if (lastNotificationTime[key] && (now - lastNotificationTime[key]) < 3000) {
+        return; // Skip if same notification within 3 seconds
+    }
+    
+    lastNotificationTime[key] = now;
+    
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -145,37 +125,134 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Format date
+// Generate Order Code
+function generateOrderCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+// Generate New Code Button Function
+async function generateNewCode() {
+    const codeInput = document.getElementById('serviceOrderCode');
+    const newCode = await generateUniqueCode();
+    codeInput.value = newCode;
+    showToast('Novo código gerado: ' + newCode, 'success');
+}
+
+// Check if code exists in database
+async function isCodeUnique(code) {
+    if (!code) return true;
+    
+    const snapshot = await db.collection('services')
+        .where('orderCode', '==', code)
+        .limit(1)
+        .get();
+    
+    if (editingServiceId && !snapshot.empty) {
+        const doc = snapshot.docs[0];
+        return doc.id === editingServiceId;
+    }
+    
+    return snapshot.empty;
+}
+
+// FIX 2: Enhanced validation for order code
+function validateOrderCode(code) {
+    if (!code) return true;
+    // Must be exactly 5 characters, alphanumeric only
+    const pattern = /^[A-Z0-9]{5}$/;
+    return pattern.test(code);
+}
+
+// Generate unique code with retry logic
+async function generateUniqueCode() {
+    let code;
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    do {
+        code = generateOrderCode();
+        attempts++;
+        
+        if (attempts >= maxAttempts) {
+            throw new Error('Unable to generate unique code');
+        }
+    } while (!(await isCodeUnique(code)));
+    
+    return code;
+}
+
+// Format date for display
 function formatDate(dateString) {
-    const date = new Date(dateString);
+    const date = new Date(dateString + 'T12:00:00');
     return date.toLocaleDateString('pt-BR');
 }
 
-// Calculate days remaining
-function daysRemaining(dueDate) {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    return diff;
+// ===========================
+// PERSISTENCE & AUTH
+// ===========================
+
+// FIX 7: Persistence of login
+function saveAuthState(user, type) {
+    try {
+        const authData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            type: type, // 'client' or 'production'
+            timestamp: Date.now()
+        };
+        localStorage.setItem('imaginatech_auth', JSON.stringify(authData));
+    } catch (error) {
+        console.error('Error saving auth state:', error);
+    }
+}
+
+function clearAuthState() {
+    try {
+        localStorage.removeItem('imaginatech_auth');
+    } catch (error) {
+        console.error('Error clearing auth state:', error);
+    }
+}
+
+function getAuthState() {
+    try {
+        const authData = localStorage.getItem('imaginatech_auth');
+        if (authData) {
+            const parsed = JSON.parse(authData);
+            // Check if auth is less than 7 days old
+            if (Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                return parsed;
+            } else {
+                clearAuthState();
+            }
+        }
+    } catch (error) {
+        console.error('Error getting auth state:', error);
+    }
+    return null;
 }
 
 // ===========================
-// CONFIRMATION MODAL FUNCTIONS - CORRIGIDO
+// CONFIRMATION MODAL FUNCTIONS
 // ===========================
 
-// Show SEDEX Confirmation Modal
 function showSedexConfirmation(serviceId) {
     pendingStatusUpdate = { id: serviceId, status: 'concluido' };
     document.getElementById('sedexConfirmModal').classList.add('active');
 }
 
-// Close SEDEX Confirmation Modal
 function closeSedexConfirm() {
     document.getElementById('sedexConfirmModal').classList.remove('active');
     pendingStatusUpdate = null;
 }
 
-// Confirm SEDEX Completion - CORRIGIDO
 async function confirmSedexCompletion() {
     if (!pendingStatusUpdate) return;
     
@@ -184,10 +261,8 @@ async function confirmSedexCompletion() {
     
     closeSedexConfirm();
     
-    // Executar atualização e aguardar conclusão
     await executeStatusUpdate(serviceId, newStatus);
     
-    // Atualizar lista local imediatamente
     const serviceIndex = services.findIndex(s => s.id === serviceId);
     if (serviceIndex !== -1) {
         services[serviceIndex].status = newStatus;
@@ -195,14 +270,12 @@ async function confirmSedexCompletion() {
         services[serviceIndex].updatedBy = currentUser.email;
     }
     
-    // Re-renderizar interface
     renderServices();
     updateStats();
     
     pendingStatusUpdate = null;
 }
 
-// Show RETIRADA Confirmation Modal
 function showRetiradaConfirmation(serviceId) {
     const service = services.find(s => s.id === serviceId);
     if (!service) return;
@@ -213,20 +286,17 @@ function showRetiradaConfirmation(serviceId) {
         service: service 
     };
     
-    // Update client name in modal
     const clientName = service.pickupInfo?.name || service.client || 'Cliente';
     document.getElementById('retiradaClientName').textContent = clientName;
     
     document.getElementById('retiradaConfirmModal').classList.add('active');
 }
 
-// Close RETIRADA Confirmation Modal
 function closeRetiradaConfirm() {
     document.getElementById('retiradaConfirmModal').classList.remove('active');
     pendingStatusUpdate = null;
 }
 
-// Confirm RETIRADA Without WhatsApp - CORRIGIDO
 async function confirmRetiradaWithoutWhatsapp() {
     if (!pendingStatusUpdate) return;
     
@@ -235,10 +305,8 @@ async function confirmRetiradaWithoutWhatsapp() {
     
     closeRetiradaConfirm();
     
-    // Executar atualização e aguardar conclusão
     await executeStatusUpdate(serviceId, newStatus);
     
-    // Atualizar lista local imediatamente
     const serviceIndex = services.findIndex(s => s.id === serviceId);
     if (serviceIndex !== -1) {
         services[serviceIndex].status = newStatus;
@@ -246,14 +314,12 @@ async function confirmRetiradaWithoutWhatsapp() {
         services[serviceIndex].updatedBy = currentUser.email;
     }
     
-    // Re-renderizar interface
     renderServices();
     updateStats();
     
     pendingStatusUpdate = null;
 }
 
-// Confirm RETIRADA With WhatsApp - CORRIGIDO
 async function confirmRetiradaWithWhatsapp() {
     if (!pendingStatusUpdate) return;
     
@@ -261,7 +327,6 @@ async function confirmRetiradaWithWhatsapp() {
     const serviceId = pendingStatusUpdate.id;
     const newStatus = pendingStatusUpdate.status;
     
-    // Abrir WhatsApp se disponível
     if (service && service.pickupInfo && service.pickupInfo.whatsapp) {
         const whatsappNumber = service.pickupInfo.whatsapp.replace(/\D/g, '');
         const message = encodeURIComponent(
@@ -275,10 +340,8 @@ async function confirmRetiradaWithWhatsapp() {
     
     closeRetiradaConfirm();
     
-    // Executar atualização e aguardar conclusão
     await executeStatusUpdate(serviceId, newStatus);
     
-    // Atualizar lista local imediatamente
     const serviceIndex = services.findIndex(s => s.id === serviceId);
     if (serviceIndex !== -1) {
         services[serviceIndex].status = newStatus;
@@ -286,14 +349,12 @@ async function confirmRetiradaWithWhatsapp() {
         services[serviceIndex].updatedBy = currentUser.email;
     }
     
-    // Re-renderizar interface
     renderServices();
     updateStats();
     
     pendingStatusUpdate = null;
 }
 
-// Execute Status Update - CORRIGIDO
 async function executeStatusUpdate(id, status) {
     try {
         const updates = { 
@@ -306,10 +367,8 @@ async function executeStatusUpdate(id, status) {
             updates.deliveredDate = new Date().toISOString();
         }
         
-        // Atualizar no Firebase
         await db.collection('services').doc(id).update(updates);
         
-        // Atualizar lista local imediatamente para resposta mais rápida
         const serviceIndex = services.findIndex(s => s.id === id);
         if (serviceIndex !== -1) {
             services[serviceIndex] = { ...services[serviceIndex], ...updates };
@@ -317,7 +376,6 @@ async function executeStatusUpdate(id, status) {
         
         showToast('Status atualizado com sucesso!', 'success');
         
-        // Re-renderizar interface
         if (currentView === 'production') {
             renderServices();
             updateStats();
@@ -330,33 +388,46 @@ async function executeStatusUpdate(id, status) {
 }
 
 // ===========================
-// MOBILE MENU FUNCTIONS
+// MOBILE MENU FUNCTIONS - FIX 3
 // ===========================
 
-// Toggle Mobile Menu for Client View
 function toggleMobileMenu() {
     const toggle = document.getElementById('mobileMenuToggle');
     const navbar = document.getElementById('navbar');
+    const clientView = document.getElementById('clientView');
     
     toggle.classList.toggle('active');
     navbar.classList.toggle('mobile-menu-open');
+    
+    // FIX 3: Add padding to content when menu is open
+    if (navbar.classList.contains('mobile-menu-open')) {
+        clientView.style.paddingTop = '150px';
+    } else {
+        clientView.style.paddingTop = '100px';
+    }
 }
 
-// Toggle Mobile Menu for Production View
 function toggleMobileMenuProd() {
     const toggle = document.getElementById('mobileMenuToggleProd');
     const dropdown = document.getElementById('mobileMenuDropdown');
+    const mainContainer = document.getElementById('mainContainer');
     
     toggle.classList.toggle('active');
     dropdown.classList.toggle('active');
     
-    // Update mobile menu user info
+    // FIX 3: Adjust main container padding
+    if (dropdown.classList.contains('active')) {
+        const dropdownHeight = dropdown.scrollHeight;
+        mainContainer.style.marginTop = `${dropdownHeight}px`;
+    } else {
+        mainContainer.style.marginTop = '0';
+    }
+    
     if (currentUser) {
         document.getElementById('mobileUserAvatar').src = currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
         document.getElementById('mobileUserName').textContent = currentUser.displayName || currentUser.email;
     }
     
-    // Update mobile connection status
     const isOnline = navigator.onLine;
     const mobileStatus = document.getElementById('mobileConnectionStatus');
     const mobileStatusText = document.getElementById('mobileStatusText');
@@ -370,13 +441,14 @@ function toggleMobileMenuProd() {
     }
 }
 
-// Close Mobile Menu
 function closeMobileMenu() {
     const toggle = document.getElementById('mobileMenuToggleProd');
     const dropdown = document.getElementById('mobileMenuDropdown');
+    const mainContainer = document.getElementById('mainContainer');
     
     toggle.classList.remove('active');
     dropdown.classList.remove('active');
+    mainContainer.style.marginTop = '0';
 }
 
 // ===========================
@@ -384,6 +456,16 @@ function closeMobileMenu() {
 // ===========================
 
 function openClientLogin() {
+    // FIX 7: Check for saved auth first
+    const savedAuth = getAuthState();
+    if (savedAuth && savedAuth.type === 'client') {
+        // Auto-login with saved credentials
+        clientUser = savedAuth;
+        document.getElementById('clientLoginStep').style.display = 'none';
+        document.getElementById('clientCodeStep').style.display = 'block';
+        showToast(`Bem-vindo de volta, ${savedAuth.displayName}!`, 'success');
+    }
+    
     document.getElementById('clientLoginModal').classList.add('active');
 }
 
@@ -396,28 +478,38 @@ function closeClientLogin() {
     clientAttempts = 0;
 }
 
-// Client Google Login - FIXED: No auth restrictions for clients
+// FIX 8: Handle Safari sessionStorage issue
 async function clientGoogleLogin() {
     try {
+        // FIX 8: Use signInWithPopup instead of redirect for Safari
         const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+        
         const result = await auth.signInWithPopup(provider);
         clientUser = result.user;
         
-        // Save client data for marketing
+        // FIX 7: Save auth state
+        saveAuthState(clientUser, 'client');
+        
         await saveClientData(clientUser);
         
-        // Show code input step
         document.getElementById('clientLoginStep').style.display = 'none';
         document.getElementById('clientCodeStep').style.display = 'block';
         
         showToast(`Bem-vindo, ${clientUser.displayName}!`, 'success');
     } catch (error) {
         console.error('Error in client login:', error);
-        showToast('Erro ao fazer login. Tente novamente.', 'error');
+        // FIX 8: Better error handling for Safari
+        if (error.code === 'auth/popup-blocked') {
+            showToast('Por favor, permita pop-ups para fazer login', 'error');
+        } else {
+            showToast('Erro ao fazer login. Tente novamente.', 'error');
+        }
     }
 }
 
-// Save Client Data for Marketing
 async function saveClientData(user) {
     try {
         const clientRef = db.collection('clients').doc(user.uid);
@@ -441,26 +533,25 @@ async function saveClientData(user) {
             await clientRef.set(clientData);
         }
         
-        // Log access
-        await db.collection('client_access_logs').add({
-            clientId: user.uid,
-            email: user.email,
-            name: user.displayName,
-            timestamp: new Date().toISOString(),
-            action: 'login'
-        });
+        // FIX 9: Don't create unnecessary logs
+        // Only log important actions
         
     } catch (error) {
         console.error('Error saving client data:', error);
     }
 }
 
-// Verify Order Code - FIXED: Works for any authenticated user
 async function verifyOrderCode() {
     const code = document.getElementById('orderCode').value.toUpperCase().trim();
     
+    // FIX 2: Enhanced validation
     if (!code) {
         showToast('Digite o código do pedido', 'error');
+        return;
+    }
+    
+    if (!validateOrderCode(code)) {
+        showToast('Código inválido! Use 5 caracteres alfanuméricos', 'error');
         return;
     }
     
@@ -472,7 +563,6 @@ async function verifyOrderCode() {
     clientAttempts++;
     
     try {
-        // Search for service with this code - No authorization check needed
         const snapshot = await db.collection('services')
             .where('orderCode', '==', code)
             .limit(1)
@@ -482,7 +572,7 @@ async function verifyOrderCode() {
             const service = snapshot.docs[0];
             currentOrderCode = code;
             
-            // Update client's order list
+            // Update client's order list (without creating logs)
             try {
                 await db.collection('clients').doc(clientUser.uid).update({
                     orders: firebase.firestore.FieldValue.arrayUnion(code),
@@ -491,24 +581,8 @@ async function verifyOrderCode() {
                 });
             } catch (updateError) {
                 console.log('Could not update client order list:', updateError);
-                // Continue anyway - this is not critical
             }
             
-            // Log order view
-            try {
-                await db.collection('client_access_logs').add({
-                    clientId: clientUser.uid,
-                    email: clientUser.email,
-                    orderCode: code,
-                    timestamp: new Date().toISOString(),
-                    action: 'view_order'
-                });
-            } catch (logError) {
-                console.log('Could not log order view:', logError);
-                // Continue anyway - this is not critical
-            }
-            
-            // Show client view
             showClientOrder(service.id, service.data());
             closeClientLogin();
             showToast('Pedido encontrado!', 'success');
@@ -540,24 +614,17 @@ async function verifyOrderCode() {
     }
 }
 
-// Show Client Order View
 function showClientOrder(serviceId, service) {
     currentView = 'client';
     
-    // Hide welcome screen
     document.getElementById('welcomeScreen').classList.add('hidden');
-    
-    // Show navbar and client view
     document.getElementById('navbar').classList.add('active');
     document.getElementById('clientView').classList.add('active');
     
-    // Update client name
     document.getElementById('clientName').textContent = clientUser.displayName.split(' ')[0];
     
-    // Render order card
     const container = document.getElementById('clientOrderCard');
     
-    // Calculate days
     const days = daysRemaining(service.dueDate);
     const daysText = days === 0 ? 'Hoje' : 
                    days === 1 ? 'Amanhã' : 
@@ -567,7 +634,6 @@ function showClientOrder(serviceId, service) {
                      days <= 2 ? 'var(--neon-yellow)' : 
                      'var(--secondary-blue)';
     
-    // Calculate timeline progress
     const statusProgress = {
         'pendente': 25,
         'producao': 50,
@@ -665,11 +731,10 @@ function showClientOrder(serviceId, service) {
         </div>
     `;
     
-    // Setup real-time updates for this order
     setupClientOrderListener(serviceId);
 }
 
-// Setup Real-time Updates for Client Order - FIXED: Removed spam notifications
+// FIX 9: Optimized listener
 function setupClientOrderListener(serviceId) {
     // Cancel previous listener if exists
     if (orderListener) {
@@ -677,49 +742,53 @@ function setupClientOrderListener(serviceId) {
         orderListener = null;
     }
     
-    // Setup new listener without notifications
+    // FIX 1: Debounced updates
+    let lastUpdate = null;
+    
     orderListener = db.collection('services').doc(serviceId).onSnapshot((doc) => {
         if (doc.exists && currentView === 'client') {
             const service = doc.data();
-            showClientOrder(serviceId, service);
-            // REMOVED: showToast notification to prevent spam
+            
+            // FIX 1: Only update if data actually changed
+            const currentUpdate = JSON.stringify(service);
+            if (currentUpdate !== lastUpdate) {
+                lastUpdate = currentUpdate;
+                showClientOrder(serviceId, service);
+            }
         }
     }, (error) => {
         console.error('Error listening to order updates:', error);
     });
 }
 
-// Exit to Welcome Screen - FIXED: Proper cleanup
 function exitToWelcome() {
     currentView = 'welcome';
     currentOrderCode = null;
     
-    // Cancel order listener if exists
+    // FIX 9: Properly cleanup listeners
     if (orderListener) {
         orderListener();
         orderListener = null;
     }
     
-    // Clear client user but keep auth for potential production login
     clientUser = null;
     
-    // Only sign out if not in production mode
+    // Clear auth state when exiting
+    clearAuthState();
+    
     if (!isAuthorized && auth.currentUser) {
         auth.signOut().catch(error => {
             console.log('Sign out error:', error);
         });
     }
     
-    // Hide all views
     document.getElementById('navbar').classList.remove('active');
     document.getElementById('clientView').classList.remove('active');
     document.getElementById('header').classList.remove('active');
     document.getElementById('mainContainer').classList.remove('active');
     
-    // Show welcome screen
     document.getElementById('welcomeScreen').classList.remove('hidden');
     
-    // Close mobile menus if open
     closeMobileMenu();
 }
 
@@ -727,10 +796,32 @@ function exitToWelcome() {
 // PRODUCTION FUNCTIONS
 // ===========================
 
-// Production Login
+// FIX 7 & 8: Enhanced production login
 async function openProductionLogin() {
     try {
+        // Check for saved auth first
+        const savedAuth = getAuthState();
+        if (savedAuth && savedAuth.type === 'production' && AUTHORIZED_EMAILS.includes(savedAuth.email)) {
+            // Verify the user is still authorized
+            currentUser = savedAuth;
+            isAuthorized = true;
+            currentView = 'production';
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('header').classList.add('active');
+            document.getElementById('mainContainer').classList.add('active');
+            
+            updateUIForUser(savedAuth);
+            showToast(`Bem-vindo de volta, ${savedAuth.displayName}!`, 'success');
+            return;
+        }
+        
+        // FIX 8: Use popup for Safari compatibility
         const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+        
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         
@@ -739,31 +830,46 @@ async function openProductionLogin() {
             isAuthorized = true;
             currentView = 'production';
             
-            // Hide welcome screen
-            document.getElementById('welcomeScreen').classList.add('hidden');
+            // FIX 7: Save auth state
+            saveAuthState(user, 'production');
             
-            // Show production view
+            document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('header').classList.add('active');
             document.getElementById('mainContainer').classList.add('active');
             
-            // Update UI
             updateUIForUser(user);
             
             showToast(`Bem-vindo ao módulo de produção, ${user.displayName}!`, 'success');
         } else {
             await auth.signOut();
+            clearAuthState();
             showToast(`Acesso negado! Email ${user.email} não autorizado.`, 'error');
         }
     } catch (error) {
         console.error('Error in production login:', error);
-        showToast('Erro ao fazer login', 'error');
+        // FIX 8: Better error handling
+        if (error.code === 'auth/popup-blocked') {
+            showToast('Por favor, permita pop-ups para fazer login', 'error');
+        } else {
+            showToast('Erro ao fazer login', 'error');
+        }
     }
 }
 
-// Sign Out
 async function signOut() {
     try {
+        // FIX 9: Clean up all listeners
+        if (productionListener) {
+            productionListener();
+            productionListener = null;
+        }
+        if (orderListener) {
+            orderListener();
+            orderListener = null;
+        }
+        
         await auth.signOut();
+        clearAuthState();
         currentUser = null;
         isAuthorized = false;
         exitToWelcome();
@@ -773,7 +879,6 @@ async function signOut() {
     }
 }
 
-// Update UI for Authenticated User
 function updateUIForUser(user) {
     document.getElementById('userInfo').style.display = 'flex';
     document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'User');
@@ -782,7 +887,6 @@ function updateUIForUser(user) {
     renderServices();
 }
 
-// Connection Status
 function updateConnectionStatus(connected) {
     const statusEl = document.getElementById('connectionStatus');
     const statusDot = statusEl.querySelector('.status-dot');
@@ -805,17 +909,14 @@ function updateConnectionStatus(connected) {
 // SERVICE MANAGEMENT
 // ===========================
 
-// Toggle Delivery Fields
 function toggleDeliveryFields() {
     const method = document.getElementById('deliveryMethod').value;
     const deliveryFields = document.getElementById('deliveryFields');
     const pickupFields = document.getElementById('pickupFields');
     
-    // Hide all fields first
     deliveryFields.classList.remove('active');
     pickupFields.classList.remove('active');
     
-    // Reset required attributes
     const deliveryInputs = deliveryFields.querySelectorAll('input, select, textarea');
     const pickupInputs = pickupFields.querySelectorAll('input');
     
@@ -824,7 +925,6 @@ function toggleDeliveryFields() {
     
     if (method === 'sedex') {
         deliveryFields.classList.add('active');
-        // Set required fields for Sedex
         document.getElementById('fullName').required = true;
         document.getElementById('cpfCnpj').required = true;
         document.getElementById('telefone').required = true;
@@ -838,15 +938,18 @@ function toggleDeliveryFields() {
         document.getElementById('estado').required = true;
     } else if (method === 'retirada') {
         pickupFields.classList.add('active');
-        // Set required fields for pickup
         document.getElementById('pickupName').required = true;
         document.getElementById('pickupWhatsapp').required = true;
     }
 }
 
-// Format WhatsApp number
+// FIX 2: Enhanced WhatsApp validation
 function formatWhatsApp(input) {
     let value = input.value.replace(/\D/g, '');
+    
+    // Limit to 11 digits
+    value = value.substring(0, 11);
+    
     if (value.length > 0) {
         if (value.length <= 2) {
             value = `(${value}`;
@@ -859,9 +962,13 @@ function formatWhatsApp(input) {
     input.value = value;
 }
 
-// Format CPF/CNPJ
+// FIX 2: Enhanced CPF/CNPJ validation
 function formatCpfCnpj(input) {
     let value = input.value.replace(/\D/g, '');
+    
+    // Limit to 14 digits (CNPJ max)
+    value = value.substring(0, 14);
+    
     if (value.length <= 11) {
         // CPF
         if (value.length > 9) {
@@ -886,16 +993,17 @@ function formatCpfCnpj(input) {
     input.value = value;
 }
 
-// Format CEP
+// FIX 2: Enhanced CEP validation
 function formatCEP(input) {
     let value = input.value.replace(/\D/g, '');
+    value = value.substring(0, 8);
+    
     if (value.length > 5) {
         value = value.slice(0, 5) + '-' + value.slice(5, 8);
     }
     input.value = value;
 }
 
-// Search CEP
 async function searchCEP() {
     const cepInput = document.getElementById('cep');
     const cep = cepInput.value.replace(/\D/g, '');
@@ -926,7 +1034,6 @@ async function searchCEP() {
 // CRUD OPERATIONS
 // ===========================
 
-// Open Add Modal
 function openAddModal() {
     if (!isAuthorized) {
         showToast('Você não tem permissão para adicionar serviços', 'error');
@@ -937,18 +1044,21 @@ function openAddModal() {
     document.getElementById('modalTitle').textContent = 'Novo Serviço';
     document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
     document.getElementById('serviceForm').reset();
-    document.getElementById('serviceOrderCode').value = ''; // Clear code field
-    document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('serviceOrderCode').value = '';
+    
+    // FIX 5: Set current date correctly
+    const today = new Date();
+    const todayString = getLocalDateString(today.toISOString().split('T')[0]);
+    document.getElementById('startDate').value = todayString;
+    
     document.getElementById('deliveryFields').classList.remove('active');
     document.getElementById('pickupFields').classList.remove('active');
     document.getElementById('orderCodeDisplay').style.display = 'none';
     document.getElementById('serviceModal').classList.add('active');
     
-    // Close mobile menu if open
     closeMobileMenu();
 }
 
-// Open Edit Modal
 function openEditModal(id) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para editar serviços', 'error');
@@ -962,7 +1072,6 @@ function openEditModal(id) {
     document.getElementById('modalTitle').textContent = 'Editar Serviço';
     document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
     
-    // Fill form fields including order code
     document.getElementById('serviceOrderCode').value = service.orderCode || '';
     document.getElementById('serviceNameInput').value = service.name;
     document.getElementById('clientNameInput').value = service.client;
@@ -970,11 +1079,12 @@ function openEditModal(id) {
     document.getElementById('serviceMaterial').value = service.material || '';
     document.getElementById('serviceColor').value = service.color || '';
     document.getElementById('servicePriority').value = service.priority;
+    
+    // FIX 5: Handle dates correctly
     document.getElementById('startDate').value = service.startDate;
     document.getElementById('dueDate').value = service.dueDate;
     document.getElementById('deliveryMethod').value = service.deliveryMethod || '';
     
-    // Show order code if exists
     if (service.orderCode) {
         document.getElementById('orderCodeDisplay').style.display = 'block';
         document.getElementById('orderCodeValue').textContent = service.orderCode;
@@ -1008,7 +1118,6 @@ function openEditModal(id) {
     document.getElementById('serviceModal').classList.add('active');
 }
 
-// Close Modal
 function closeModal() {
     document.getElementById('serviceModal').classList.remove('active');
     document.getElementById('serviceForm').reset();
@@ -1018,7 +1127,7 @@ function closeModal() {
     editingServiceId = null;
 }
 
-// Save Service
+// FIX 2 & 5: Enhanced save with validations
 async function saveService(event) {
     event.preventDefault();
     
@@ -1027,22 +1136,26 @@ async function saveService(event) {
         return;
     }
     
-    const serviceName = document.getElementById('serviceNameInput').value;
-    const clientName = document.getElementById('clientNameInput').value;
+    const serviceName = document.getElementById('serviceNameInput').value.trim();
+    const clientName = document.getElementById('clientNameInput').value.trim();
     let orderCode = document.getElementById('serviceOrderCode').value.toUpperCase().trim();
     
+    // FIX 2: Enhanced validation
     if (!serviceName || !clientName) {
         showToast('Por favor, preencha todos os campos obrigatórios', 'error');
         return;
     }
     
-    // Validate order code format if provided
+    if (serviceName.length < 3 || clientName.length < 3) {
+        showToast('Nome do serviço e cliente devem ter pelo menos 3 caracteres', 'error');
+        return;
+    }
+    
     if (orderCode && !validateOrderCode(orderCode)) {
         showToast('Código inválido! Use apenas 5 caracteres alfanuméricos', 'error');
         return;
     }
     
-    // Check if code is unique
     if (orderCode && !(await isCodeUnique(orderCode))) {
         showToast('Este código já existe! Use outro código', 'error');
         return;
@@ -1050,15 +1163,36 @@ async function saveService(event) {
     
     const deliveryMethod = document.getElementById('deliveryMethod').value;
     
+    // FIX 2: Validate delivery method
+    if (!deliveryMethod) {
+        showToast('Por favor, selecione um método de entrega', 'error');
+        return;
+    }
+    
+    // FIX 5: Get dates correctly
+    const startDate = document.getElementById('startDate').value;
+    const dueDate = document.getElementById('dueDate').value;
+    
+    if (!startDate || !dueDate) {
+        showToast('Por favor, preencha as datas', 'error');
+        return;
+    }
+    
+    // FIX 5: Validate dates
+    if (new Date(dueDate) < new Date(startDate)) {
+        showToast('A data de entrega não pode ser anterior à data de entrada', 'error');
+        return;
+    }
+    
     const service = {
         name: serviceName,
         client: clientName,
-        description: document.getElementById('serviceDescription').value,
+        description: document.getElementById('serviceDescription').value.trim(),
         material: document.getElementById('serviceMaterial').value,
         color: document.getElementById('serviceColor').value,
         priority: document.getElementById('servicePriority').value,
-        startDate: document.getElementById('startDate').value,
-        dueDate: document.getElementById('dueDate').value,
+        startDate: startDate,
+        dueDate: dueDate,
         status: editingServiceId ? 
             services.find(s => s.id === editingServiceId)?.status || 'pendente' : 
             'pendente',
@@ -1067,20 +1201,42 @@ async function saveService(event) {
         updatedBy: currentUser.email
     };
     
-    // Save client data if sedex
+    // FIX 2: Enhanced validation for delivery fields
     if (deliveryMethod === 'sedex') {
-        const clientEmail = document.getElementById('email').value;
-        const clientNameDelivery = document.getElementById('fullName').value;
-        const telefone = document.getElementById('telefone').value;
+        const clientEmail = document.getElementById('email').value.trim();
+        const clientNameDelivery = document.getElementById('fullName').value.trim();
+        const telefone = document.getElementById('telefone').value.trim();
+        const cpfCnpj = document.getElementById('cpfCnpj').value.trim();
         
-        // Save integrated client data
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(clientEmail)) {
+            showToast('Email inválido', 'error');
+            return;
+        }
+        
+        // Validate phone
+        const phoneDigits = telefone.replace(/\D/g, '');
+        if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
+            showToast('Telefone inválido', 'error');
+            return;
+        }
+        
+        // Validate CPF/CNPJ
+        const cpfCnpjDigits = cpfCnpj.replace(/\D/g, '');
+        if (cpfCnpjDigits.length !== 11 && cpfCnpjDigits.length !== 14) {
+            showToast('CPF/CNPJ inválido', 'error');
+            return;
+        }
+        
+        // Save marketing contact (FIX 9: Only save, don't create logs)
         if (clientEmail) {
             try {
                 await db.collection('marketing_contacts').doc(clientEmail).set({
                     email: clientEmail,
                     name: clientNameDelivery,
                     phone: telefone,
-                    cpfCnpj: document.getElementById('cpfCnpj').value,
+                    cpfCnpj: cpfCnpj,
                     address: {
                         cep: document.getElementById('cep').value,
                         rua: document.getElementById('rua').value,
@@ -1102,7 +1258,7 @@ async function saveService(event) {
         service.saleValue = document.getElementById('saleValue').value;
         service.deliveryAddress = {
             fullName: clientNameDelivery,
-            cpfCnpj: document.getElementById('cpfCnpj').value,
+            cpfCnpj: cpfCnpj,
             email: clientEmail,
             telefone: telefone,
             cep: document.getElementById('cep').value,
@@ -1117,18 +1273,31 @@ async function saveService(event) {
     }
     
     if (deliveryMethod === 'retirada') {
+        const pickupName = document.getElementById('pickupName').value.trim();
+        const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
+        
+        // FIX 2: Validate pickup fields
+        if (!pickupName || pickupName.length < 3) {
+            showToast('Nome para retirada deve ter pelo menos 3 caracteres', 'error');
+            return;
+        }
+        
+        const whatsappDigits = pickupWhatsapp.replace(/\D/g, '');
+        if (whatsappDigits.length !== 10 && whatsappDigits.length !== 11) {
+            showToast('WhatsApp inválido', 'error');
+            return;
+        }
+        
         service.pickupInfo = {
-            name: document.getElementById('pickupName').value,
-            whatsapp: document.getElementById('pickupWhatsapp').value
+            name: pickupName,
+            whatsapp: pickupWhatsapp
         };
     }
 
     try {
         if (editingServiceId) {
-            // Update existing - use provided code or keep existing
             service.orderCode = orderCode || services.find(s => s.id === editingServiceId)?.orderCode;
             
-            // If still no code, generate one
             if (!service.orderCode) {
                 service.orderCode = await generateUniqueCode();
             }
@@ -1137,20 +1306,17 @@ async function saveService(event) {
             showToast('Serviço atualizado com sucesso!', 'success');
             closeModal();
         } else {
-            // Create new - generate code if not provided
             service.createdAt = new Date().toISOString();
             service.orderCode = orderCode || await generateUniqueCode();
             service.createdBy = currentUser.email;
             
             await db.collection('services').add(service);
             
-            // Show the order code
             document.getElementById('orderCodeDisplay').style.display = 'block';
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
-            // Keep modal open for 3 seconds to show code
             setTimeout(() => {
                 closeModal();
             }, 3000);
@@ -1161,7 +1327,6 @@ async function saveService(event) {
     }
 }
 
-// Update Service Status - CORRIGIDO
 async function updateStatus(id, status) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para atualizar status', 'error');
@@ -1171,24 +1336,18 @@ async function updateStatus(id, status) {
     const service = services.find(s => s.id === id);
     if (!service) return;
     
-    // Usar modais customizados para confirmação
     if (status === 'concluido') {
         if (service.deliveryMethod === 'sedex') {
-            // Mostrar modal customizado para SEDEX
             showSedexConfirmation(id);
-            return; // Aguardar confirmação do modal
-            
+            return;
         } else if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-            // Mostrar modal customizado para RETIRADA
             showRetiradaConfirmation(id);
-            return; // Aguardar confirmação do modal
+            return;
         }
     }
     
-    // Para outros casos, executar diretamente
     await executeStatusUpdate(id, status);
     
-    // Atualizar lista local imediatamente
     const serviceIndex = services.findIndex(s => s.id === id);
     if (serviceIndex !== -1) {
         services[serviceIndex].status = status;
@@ -1196,12 +1355,10 @@ async function updateStatus(id, status) {
         services[serviceIndex].updatedBy = currentUser.email;
     }
     
-    // Re-renderizar interface
     renderServices();
     updateStats();
 }
 
-// Delete Service
 async function deleteService(id) {
     if (!isAuthorized) {
         showToast('Você não tem permissão para excluir serviços', 'error');
@@ -1219,7 +1376,6 @@ async function deleteService(id) {
     }
 }
 
-// Show Delivery Info
 function showDeliveryInfo(id) {
     const service = services.find(s => s.id === id);
     if (!service) return;
@@ -1248,11 +1404,9 @@ function showDeliveryInfo(id) {
         </div>
     `;
     
-    // For Retirada
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        // Nova mensagem no link do WhatsApp
         const message = encodeURIComponent(
             'Olá, Tudo bem? Meu nome é Igor e falo em nome da ImaginaTech. ' +
             'Vou ser o responsável pela sua entrega no método RETIRADA, ' +
@@ -1281,7 +1435,6 @@ function showDeliveryInfo(id) {
         `;
     }
     
-    // For Sedex
     if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
         const addr = service.deliveryAddress;
         
@@ -1348,7 +1501,6 @@ function showDeliveryInfo(id) {
         `;
     }
     
-    // Order Code
     html += `
         <div class="info-section">
             <h3 class="info-title">
@@ -1367,7 +1519,6 @@ function showDeliveryInfo(id) {
     modal.classList.add('active');
 }
 
-// Close Delivery Modal
 function closeDeliveryModal() {
     document.getElementById('deliveryInfoModal').classList.remove('active');
 }
@@ -1376,7 +1527,7 @@ function closeDeliveryModal() {
 // DATA LOADING & RENDERING
 // ===========================
 
-// Load services from Firestore
+// FIX 9: Single load function without creating listeners
 async function loadServices() {
     try {
         const snapshot = await db.collection('services').get();
@@ -1401,35 +1552,51 @@ async function loadServices() {
     }
 }
 
-// Real-time updates for production
+// FIX 9: Optimized real-time listener
 function setupProductionListener() {
-    db.collection('services').onSnapshot((snapshot) => {
-        services = [];
-        snapshot.forEach(doc => {
-            services.push({ id: doc.id, ...doc.data() });
-        });
-        services.sort((a, b) => {
-            const aDate = new Date(a.createdAt || 0);
-            const bDate = new Date(b.createdAt || 0);
-            return bDate - aDate;
-        });
-        
-        if (currentView === 'production') {
-            renderServices();
-            updateStats();
+    // Clean up existing listener
+    if (productionListener) {
+        productionListener();
+        productionListener = null;
+    }
+    
+    // FIX 1: Debounce updates
+    let updateTimeout = null;
+    
+    productionListener = db.collection('services').onSnapshot((snapshot) => {
+        // Clear existing timeout
+        if (updateTimeout) {
+            clearTimeout(updateTimeout);
         }
-        updateConnectionStatus(true);
+        
+        // Debounce the update
+        updateTimeout = setTimeout(() => {
+            services = [];
+            snapshot.forEach(doc => {
+                services.push({ id: doc.id, ...doc.data() });
+            });
+            services.sort((a, b) => {
+                const aDate = new Date(a.createdAt || 0);
+                const bDate = new Date(b.createdAt || 0);
+                return bDate - aDate;
+            });
+            
+            if (currentView === 'production') {
+                renderServices();
+                updateStats();
+            }
+            updateConnectionStatus(true);
+        }, 500); // Wait 500ms before updating
+        
     }, (error) => {
         console.error('Real-time update error:', error);
         updateConnectionStatus(false);
     });
 }
 
-// Filter Services
 function filterServices(filter) {
     currentFilter = filter;
     
-    // Update active state on stat cards
     document.querySelectorAll('.stat-card').forEach(card => {
         card.classList.remove('active');
     });
@@ -1438,7 +1605,6 @@ function filterServices(filter) {
     renderServices();
 }
 
-// Update Statistics
 function updateStats() {
     const stats = {
         total: services.filter(s => s.status !== 'entregue').length,
@@ -1455,14 +1621,12 @@ function updateStats() {
     document.getElementById('stat-delivered').textContent = stats.entregue;
 }
 
-// Render Services
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     
     let filteredServices = services;
     
-    // Filter
     if (currentFilter === 'todos') {
         filteredServices = services.filter(s => s.status !== 'entregue');
     } else if (currentFilter !== 'todos') {
@@ -1591,18 +1755,17 @@ function renderServices() {
     }
 }
 
-// Hide loading
 function hideLoading() {
     setTimeout(() => {
         document.getElementById('loadingOverlay').style.display = 'none';
     }, 1000);
 }
 
-// Create Particles
+// FIX 6: Reduced particle count for better performance
 function createParticles() {
     const particlesContainer = document.getElementById('particles');
-    const particleCount = 30;
-
+    const particleCount = 15; // Reduced from 30
+    
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
@@ -1617,14 +1780,35 @@ function createParticles() {
 // INITIALIZATION
 // ===========================
 
-// Initialize
+// FIX 7: Check for saved auth on load
 window.addEventListener('DOMContentLoaded', () => {
     createParticles();
-    loadServices();
-    setupProductionListener();
+    
+    // FIX 7: Check for saved auth
+    const savedAuth = getAuthState();
+    if (savedAuth) {
+        if (savedAuth.type === 'production' && AUTHORIZED_EMAILS.includes(savedAuth.email)) {
+            // Auto-login to production
+            currentUser = savedAuth;
+            isAuthorized = true;
+            currentView = 'production';
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('header').classList.add('active');
+            document.getElementById('mainContainer').classList.add('active');
+            
+            updateUIForUser(savedAuth);
+            loadServices();
+            setupProductionListener();
+        }
+    } else {
+        loadServices();
+        setupProductionListener();
+    }
+    
     hideLoading();
     
-    // Add format listeners
+    // Add format listeners with debounce
     const cepInput = document.getElementById('cep');
     if (cepInput) {
         cepInput.addEventListener('keyup', function() { formatCEP(this); });
@@ -1646,7 +1830,6 @@ window.addEventListener('DOMContentLoaded', () => {
         cpfCnpj.addEventListener('keyup', function() { formatCpfCnpj(this); });
     }
     
-    // Order code input - uppercase and 5 chars max
     const orderCodeInput = document.getElementById('orderCode');
     if (orderCodeInput) {
         orderCodeInput.addEventListener('input', function() {
@@ -1654,7 +1837,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Service order code input - uppercase and 5 chars max
     const serviceOrderCodeInput = document.getElementById('serviceOrderCode');
     if (serviceOrderCodeInput) {
         serviceOrderCodeInput.addEventListener('input', function() {
@@ -1662,7 +1844,14 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Monitor connection status
     window.addEventListener('online', () => updateConnectionStatus(true));
     window.addEventListener('offline', () => updateConnectionStatus(false));
+});
+
+// FIX 8: Handle auth state changes
+auth.onAuthStateChanged((user) => {
+    if (user && currentView === 'production' && AUTHORIZED_EMAILS.includes(user.email)) {
+        currentUser = user;
+        updateUIForUser(user);
+    }
 });
