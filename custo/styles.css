@@ -1,6 +1,7 @@
 /* ===========================
    IMAGINATECH - SISTEMA DE ORÇAMENTO
    CSS Principal - Design Futurista
+   Arquivo: styles.css
    =========================== */
 
 /* Root Variables */
@@ -123,6 +124,7 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 20px;
+    flex-wrap: wrap;
 }
 
 .logo-section {
@@ -205,12 +207,34 @@ body {
     border-radius: 20px;
     padding: 25px;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-card::before,
+.results-card::before,
+.client-quote-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--secondary-blue));
+}
+
+.results-card::before {
+    background: linear-gradient(90deg, var(--neon-green), #44FF44);
+}
+
+.client-quote-card::before {
+    background: linear-gradient(90deg, var(--neon-purple), #B845FF);
 }
 
 .form-card:hover,
 .results-card:hover,
 .client-quote-card:hover {
-    border-color: var(--neon-blue);
+    transform: translateY(-2px);
     box-shadow: 0 10px 40px rgba(0, 212, 255, 0.1);
 }
 
@@ -227,6 +251,10 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.results-title {
+    color: var(--neon-green);
 }
 
 /* ===========================
@@ -279,6 +307,10 @@ body {
     background: rgba(255, 255, 255, 0.08);
 }
 
+.form-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
 .form-select {
     cursor: pointer;
 }
@@ -287,6 +319,11 @@ body {
 .form-select optgroup {
     background: #1a2332;
     color: white;
+}
+
+.form-select optgroup {
+    font-weight: 600;
+    color: var(--neon-blue);
 }
 
 /* Time Input Container */
@@ -396,6 +433,8 @@ input:checked + .toggle-slider:before {
     opacity: 0.3;
     max-height: 0;
     pointer-events: none;
+    margin: 0;
+    padding: 0;
 }
 
 .params-grid {
@@ -421,6 +460,12 @@ input:checked + .toggle-slider:before {
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cost-item:hover {
+    padding-left: 10px;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .cost-item:last-child {
@@ -434,6 +479,11 @@ input:checked + .toggle-slider:before {
     gap: 8px;
 }
 
+.cost-label i {
+    color: var(--neon-blue);
+    font-size: 0.9rem;
+}
+
 .cost-value {
     font-weight: 600;
     color: var(--neon-green);
@@ -442,16 +492,26 @@ input:checked + .toggle-slider:before {
 
 .divider {
     height: 1px;
-    background: var(--glass-border);
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
     margin: 20px 0;
 }
 
 .total-section {
-    background: rgba(0, 255, 136, 0.1);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
     border: 1px solid var(--neon-green);
     border-radius: 10px;
     padding: 15px;
     margin-top: 20px;
+    animation: pulse-glow 3s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); 
+    }
+    50% { 
+        box-shadow: 0 0 40px rgba(0, 255, 136, 0.4); 
+    }
 }
 
 .total-item {
@@ -472,6 +532,7 @@ input:checked + .toggle-slider:before {
     font-weight: 700;
     color: var(--neon-green);
     font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 /* ===========================
@@ -492,6 +553,7 @@ input:checked + .toggle-slider:before {
     white-space: pre-wrap;
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.9);
+    padding-right: 50px;
 }
 
 .copy-button {
@@ -508,6 +570,8 @@ input:checked + .toggle-slider:before {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
 }
 
 .copy-button:hover {
@@ -568,6 +632,17 @@ input:checked + .toggle-slider:before {
     border-color: var(--neon-blue);
 }
 
+.btn-services {
+    background: linear-gradient(135deg, var(--neon-purple), #B845FF);
+    color: white;
+    box-shadow: 0 4px 20px rgba(153, 69, 255, 0.3);
+}
+
+.btn-services:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(153, 69, 255, 0.5);
+}
+
 /* ===========================
    FOOTER
    =========================== */
@@ -593,6 +668,7 @@ input:checked + .toggle-slider:before {
 
 .footer-links a:hover {
     color: var(--neon-green);
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 /* ===========================
@@ -658,6 +734,10 @@ input:checked + .toggle-slider:before {
         width: 100%;
         justify-content: center;
     }
+    
+    .quote-text {
+        padding-right: 0;
+    }
 }
 
 @media (max-width: 480px) {
@@ -677,6 +757,16 @@ input:checked + .toggle-slider:before {
     .btn {
         padding: 10px 20px;
         font-size: 0.9rem;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -704,31 +794,28 @@ input:checked + .toggle-slider:before {
 }
 
 /* ===========================
-   ANIMATIONS
+   PRINT STYLES
    =========================== */
 
-@keyframes pulse-glow {
-    0%, 100% { 
-        filter: drop-shadow(0 0 20px var(--neon-blue)); 
+@media print {
+    body {
+        background: white;
+        color: black;
     }
-    50% { 
-        filter: drop-shadow(0 0 40px var(--neon-blue)); 
+    
+    .cosmic-bg,
+    .header,
+    .footer,
+    .btn,
+    .toggle-switch,
+    .copy-button {
+        display: none !important;
     }
-}
-
-@keyframes slide-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    
+    .form-card,
+    .results-card,
+    .client-quote-card {
+        border: 1px solid #ccc;
+        box-shadow: none;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.form-card,
-.results-card,
-.client-quote-card {
-    animation: slide-in 0.5s ease;
 }
