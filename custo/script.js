@@ -1,6 +1,7 @@
 // ===========================
 // IMAGINATECH - SISTEMA DE ORÇAMENTO
-// JavaScript Principal - Versão Corrigida e Otimizada
+// JavaScript Principal - Versão Corrigida com Dados da Planilha
+// Arquivo: script.js
 // ===========================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -19,6 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const printQuantityInput = document.getElementById("print-quantity");
     const stlPriceInput = document.getElementById("stl-price");
     const shippingCostInput = document.getElementById("shipping-cost");
+    const stlPiecesSection = document.getElementById("stl-pieces-section");
+    const stlPiecesInput = document.getElementById("stl-pieces");
 
     // Toggle e campos customizados
     const toggleCustomParams = document.getElementById("toggle-custom-params");
@@ -44,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const clientQuoteOutput = document.getElementById("client-quote-output");
 
     // ===========================
-    // CONFIGURAÇÃO DAS IMPRESSORAS
+    // CONFIGURAÇÃO DAS IMPRESSORAS (BASEADO NA PLANILHA)
     // ===========================
     const printerDefaults = {
         "SATURN_2": {
@@ -52,14 +55,15 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "resin",
             materialUnit: "ml",
             defaults: {
-                materialPrice: 125,      // R$/litro
-                profitMargin: 230,       // %
-                failureRate: 20,         // %
-                machinePower: 400,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 2600,      // R$
-                depreciationTime: 2000,  // horas
-                consumables: 2           // R$ por impressão
+                materialPrice: 150,      // R$/litro (da planilha)
+                profitMargin: 280,       // % (da planilha)
+                failureRate: 20,         // % (da planilha)
+                machinePower: 400,       // W (da planilha)
+                kwhPrice: 1.2,           // R$/kWh (da planilha)
+                machineValue: 2600,      // R$ (da planilha)
+                depreciationTime: 2000,  // horas (da planilha)
+                consumables: 2,          // R$ - álcool + luva (da planilha)
+                stlDivision: false       // Não usa divisão de STL
             }
         },
         "K1": {
@@ -67,14 +71,16 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 126,      // R$/kg
-                profitMargin: 230,       // %
-                failureRate: 20,         // %
-                machinePower: 400,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 2600,      // R$
-                depreciationTime: 6000,  // horas
-                consumables: 0           // Não usa consumíveis extras
+                materialPrice: 75,       // R$/kg (da planilha)
+                profitMargin: 280,       // % (da planilha)
+                failureRate: 20,         // % (da planilha)
+                machinePower: 400,       // W (da planilha)
+                kwhPrice: 1.2,           // R$/kWh (da planilha)
+                machineValue: 2600,      // R$ (da planilha)
+                depreciationTime: 6000,  // horas (da planilha)
+                consumables: 0,          // Não usa consumíveis extras
+                stlDivision: true,       // Usa divisão de STL
+                stlPiecesDefault: 5      // Padrão de 5 peças (da planilha)
             }
         },
         "K1M": {
@@ -82,14 +88,16 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 64,       // R$/kg
-                profitMargin: 230,       // %
-                failureRate: 20,         // %
-                machinePower: 650,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 4600,      // R$
-                depreciationTime: 6000,  // horas
-                consumables: 0
+                materialPrice: 70,       // R$/kg (da planilha)
+                profitMargin: 280,       // % (da planilha)
+                failureRate: 20,         // % (da planilha)
+                machinePower: 650,       // W (da planilha)
+                kwhPrice: 1.2,           // R$/kWh (da planilha)
+                machineValue: 4600,      // R$ (da planilha)
+                depreciationTime: 6000,  // horas (da planilha)
+                consumables: 0,
+                stlDivision: true,       // Usa divisão de STL
+                stlPiecesDefault: 1      // Padrão de 1 peça (da planilha)
             }
         },
         "K2PLUS": {
@@ -97,29 +105,32 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 75,       // R$/kg (estimativa)
-                profitMargin: 230,       // %
-                failureRate: 15,         // % (menor por ser mais nova)
-                machinePower: 800,       // W (estimativa)
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 8000,      // R$ (estimativa)
-                depreciationTime: 7000,  // horas
-                consumables: 0
+                materialPrice: 70,       // R$/kg (da planilha)
+                profitMargin: 280,       // % (da planilha)
+                failureRate: 20,         // % (da planilha)
+                machinePower: 1200,      // W (da planilha)
+                kwhPrice: 1.2,           // R$/kWh (da planilha)
+                machineValue: 12000,     // R$ (da planilha)
+                depreciationTime: 10000, // horas (da planilha)
+                consumables: 0,
+                stlDivision: true,       // Usa divisão de STL
+                stlPiecesDefault: 1      // Padrão de 1 peça (da planilha)
             }
         },
         "LASER": {
-            name: "Máquina Laser",
+            name: "Máquina Laser CO2",
             type: "laser",
-            materialUnit: "cm²",
+            materialUnit: "minutos",  // Trabalha com minutos
             defaults: {
-                materialPrice: 0.05,     // R$/cm² (custo do material por área)
-                profitMargin: 250,       // % (maior margem)
-                failureRate: 5,          // % (muito baixa)
-                machinePower: 1500,      // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 15000,     // R$
-                depreciationTime: 10000, // horas
-                consumables: 0.5         // R$ por trabalho (manutenção laser)
+                materialPrice: 0,        // Laser não usa material dessa forma
+                profitMargin: 280,       // % (da planilha)
+                failureRate: 20,         // % (da planilha)
+                machinePower: 60,        // W (da planilha)
+                kwhPrice: 1.2,           // R$/kWh (da planilha)
+                machineValue: 2000,      // R$ (da planilha)
+                depreciationTime: 10000, // horas (da planilha)
+                consumables: 0,          // Sem consumíveis
+                stlDivision: false       // Não usa divisão de STL
             }
         }
     };
@@ -150,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
+        if (stlPiecesInput) stlPiecesInput.value = "1";
     }
 
     function updatePlaceholders() {
@@ -158,14 +170,27 @@ document.addEventListener("DOMContentLoaded", () => {
         const defaults = currentPrinter.defaults;
         
         // Atualizar unidades
-        if (materialUnitSpan) materialUnitSpan.textContent = currentPrinter.materialUnit;
+        if (materialUnitSpan) {
+            materialUnitSpan.textContent = currentPrinter.materialUnit;
+        }
+        
         if (customMaterialUnitSpan) {
             if (currentPrinter.type === 'resin') {
                 customMaterialUnitSpan.textContent = 'litro';
             } else if (currentPrinter.type === 'laser') {
-                customMaterialUnitSpan.textContent = 'cm²';
+                customMaterialUnitSpan.textContent = 'minuto';
             } else {
                 customMaterialUnitSpan.textContent = 'kg';
+            }
+        }
+
+        // Mostrar/ocultar campo de divisão de STL
+        if (stlPiecesSection) {
+            if (defaults.stlDivision) {
+                stlPiecesSection.style.display = "block";
+                if (stlPiecesInput) stlPiecesInput.value = defaults.stlPiecesDefault || 1;
+            } else {
+                stlPiecesSection.style.display = "none";
             }
         }
 
@@ -180,17 +205,26 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Mostrar/ocultar campo de consumíveis
         if (customConsumablesWrapper) {
-            if (currentPrinter.type === 'resin' || currentPrinter.type === 'laser') {
+            if (currentPrinter.type === 'resin') {
                 customConsumablesWrapper.style.display = "block";
                 if (customConsumablesInput) customConsumablesInput.placeholder = `Padrão: ${defaults.consumables}`;
             } else {
                 customConsumablesWrapper.style.display = "none";
             }
         }
+
+        // Ajustar label para máquina laser
+        if (currentPrinter.type === 'laser') {
+            document.querySelector('label[for="material-used"]').innerHTML = 
+                '<i class="fas fa-clock"></i> Tempo de Corte (minutos)';
+        } else {
+            document.querySelector('label[for="material-used"]').innerHTML = 
+                `<i class="fas fa-cube"></i> Material Utilizado (<span id="material-unit">${currentPrinter.materialUnit}</span>)`;
+        }
     }
 
     // ===========================
-    // CÁLCULO PRINCIPAL
+    // CÁLCULO PRINCIPAL (BASEADO NAS FÓRMULAS DA PLANILHA)
     // ===========================
     
     function calculateCost() {
@@ -212,16 +246,35 @@ document.addEventListener("DOMContentLoaded", () => {
         const printQuantity = getInputValue(printQuantityInput, 1);
         const stlPrice = getInputValue(stlPriceInput, 0);
         const shippingCost = getInputValue(shippingCostInput, 0);
+        const stlPieces = getInputValue(stlPiecesInput, 1);
+
+        // Para laser, o "material" é na verdade o tempo em minutos
+        let actualTimeHours = totalTimeHours;
+        if (currentPrinter.type === 'laser') {
+            actualTimeHours = materialUsed / 60; // Converter minutos para horas
+        }
 
         // Verificar se há dados suficientes
-        if (totalTimeHours === 0 && materialUsed === 0 && stlPrice === 0) {
-            resultsOutput.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Preencha pelo menos o tempo, material ou preço do STL</p>
-                </div>
-            `;
-            return;
+        if (currentPrinter.type === 'laser') {
+            if (materialUsed === 0 && stlPrice === 0) {
+                resultsOutput.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Preencha o tempo de corte em minutos</p>
+                    </div>
+                `;
+                return;
+            }
+        } else {
+            if (totalTimeHours === 0 && materialUsed === 0 && stlPrice === 0) {
+                resultsOutput.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Preencha pelo menos o tempo, material ou preço do STL</p>
+                    </div>
+                `;
+                return;
+            }
         }
 
         // Obter parâmetros (customizados ou padrão)
@@ -250,51 +303,64 @@ document.addEventListener("DOMContentLoaded", () => {
             getInputValue(customDepreciationTimeInput) : defaults.depreciationTime;
         
         let consumables = 0;
-        if (currentPrinter.type === 'resin' || currentPrinter.type === 'laser') {
+        if (currentPrinter.type === 'resin') {
             consumables = useCustom && customConsumablesInput.value !== "" ? 
                 getInputValue(customConsumablesInput) : defaults.consumables;
         }
 
         // ===========================
-        // CÁLCULOS
+        // CÁLCULOS (SEGUINDO AS FÓRMULAS DA PLANILHA)
         // ===========================
         
-        // 1. Custo de energia
-        const energyCost = (machinePower / 1000) * totalTimeHours * kwhPrice;
+        // Para laser, usar o tempo convertido
+        const timeForCalc = currentPrinter.type === 'laser' ? actualTimeHours : totalTimeHours;
         
-        // 2. Custo de depreciação
+        // 1. Custo de energia (C16 da planilha)
+        const energyCost = (machinePower / 1000) * timeForCalc * kwhPrice;
+        
+        // 2. Custo de depreciação (parte da C18)
         const depreciationCost = depreciationTime > 0 ? 
-            (machineValue / depreciationTime) * totalTimeHours : 0;
+            (machineValue / depreciationTime) * timeForCalc : 0;
         
-        // 3. Custo de material (diferente para cada tipo)
+        // 3. Custo de material
         let materialCost = 0;
         if (currentPrinter.type === 'resin') {
-            materialCost = materialUsed * materialPrice / 1000; // ml para litro
+            materialCost = (materialUsed / 1000) * materialPrice; // ml para litro
         } else if (currentPrinter.type === 'laser') {
-            materialCost = materialUsed * materialPrice; // cm² direto
+            materialCost = 0; // Laser não tem custo de material dessa forma
         } else {
             materialCost = (materialUsed / 1000) * materialPrice; // g para kg
         }
 
-        // 4. Custo base por peça
-        let baseCostPerPiece = energyCost + depreciationCost + materialCost + stlPrice;
-        if (currentPrinter.type === 'resin' || currentPrinter.type === 'laser') {
-            baseCostPerPiece += consumables;
+        // 4. STL dividido em peças (para K1, K1M, K2+)
+        let stlCostPerPiece = stlPrice;
+        if (defaults.stlDivision && stlPieces > 1) {
+            stlCostPerPiece = stlPrice / stlPieces;
+        }
+
+        // 5. Custo de produção por unidade (C18 da planilha)
+        // Fórmula: (material + energia + depreciação) * (1 + taxa_falha) + consumíveis + STL
+        let productionCostPerUnit = (materialCost + energyCost + depreciationCost) * (1 + failureRate);
+        
+        // Adicionar consumíveis para resina
+        if (currentPrinter.type === 'resin') {
+            productionCostPerUnit += consumables * printQuantity;
         }
         
-        // 5. Custo base total
-        const baseCostTotal = baseCostPerPiece * printQuantity;
+        // Adicionar STL
+        productionCostPerUnit += stlCostPerPiece;
         
-        // 6. Custo com taxa de falha
-        const costWithFailure = failureRate > 0 ? 
-            baseCostTotal / (1 - failureRate) : baseCostTotal;
+        // 6. Custo de produção do lote (C19)
+        const productionCostTotal = productionCostPerUnit * printQuantity;
         
-        // 7. Preço final com lucro
-        const finalPrice = costWithFailure * (1 + profitMargin);
+        // 7. Valor da unidade sem imposto (C21 - usando apenas lucro, sem imposto)
+        const unitPriceNoTax = productionCostPerUnit * (1 + profitMargin);
         
-        // 8. Valores unitários
-        const unitPrice = finalPrice / printQuantity;
-        const totalWithShipping = finalPrice + shippingCost;
+        // 8. Valor do lote (C23)
+        const totalPrice = unitPriceNoTax * printQuantity;
+        
+        // 9. Total com frete
+        const totalWithShipping = totalPrice + shippingCost;
 
         // ===========================
         // EXIBIR RESULTADOS
@@ -316,57 +382,59 @@ document.addEventListener("DOMContentLoaded", () => {
                     <span class="cost-value">${formatCurrency(depreciationCost)}</span>
                 </div>
                 
+                ${currentPrinter.type !== 'laser' ? `
                 <div class="cost-item">
                     <span class="cost-label">
                         <i class="fas fa-cube"></i> Material
                     </span>
                     <span class="cost-value">${formatCurrency(materialCost)}</span>
                 </div>
+                ` : ''}
                 
-                ${(currentPrinter.type === 'resin' || currentPrinter.type === 'laser') ? `
+                ${currentPrinter.type === 'resin' ? `
                 <div class="cost-item">
                     <span class="cost-label">
-                        <i class="fas fa-tools"></i> Consumíveis
+                        <i class="fas fa-tools"></i> Consumíveis (Álcool + Luva)
                     </span>
-                    <span class="cost-value">${formatCurrency(consumables)}</span>
+                    <span class="cost-value">${formatCurrency(consumables * printQuantity)}</span>
                 </div>
                 ` : ''}
                 
                 ${stlPrice > 0 ? `
                 <div class="cost-item">
                     <span class="cost-label">
-                        <i class="fas fa-file-code"></i> STL
+                        <i class="fas fa-file-code"></i> STL ${defaults.stlDivision && stlPieces > 1 ? `(÷${stlPieces})` : ''}
                     </span>
-                    <span class="cost-value">${formatCurrency(stlPrice)}</span>
+                    <span class="cost-value">${formatCurrency(stlCostPerPiece)}</span>
                 </div>
                 ` : ''}
+                
+                <div class="cost-item">
+                    <span class="cost-label">
+                        <i class="fas fa-exclamation-triangle"></i> Taxa de Falha (${(failureRate * 100).toFixed(0)}%)
+                    </span>
+                    <span class="cost-value">${formatCurrency((materialCost + energyCost + depreciationCost) * failureRate)}</span>
+                </div>
             </div>
             
             <div class="divider"></div>
             
             <div class="cost-item">
                 <span class="cost-label">
-                    <strong>Custo Base (${printQuantity} peça${printQuantity > 1 ? 's' : ''})</strong>
+                    <strong>Custo de Produção (${printQuantity} peça${printQuantity > 1 ? 's' : ''})</strong>
                 </span>
-                <span class="cost-value">${formatCurrency(baseCostTotal)}</span>
-            </div>
-            
-            <div class="cost-item">
-                <span class="cost-label">
-                    Taxa de Falha (${(failureRate * 100).toFixed(0)}%)
-                </span>
-                <span class="cost-value">${formatCurrency(costWithFailure - baseCostTotal)}</span>
+                <span class="cost-value">${formatCurrency(productionCostTotal)}</span>
             </div>
             
             <div class="total-section">
                 <div class="total-item">
                     <span class="total-label">Valor Unitário</span>
-                    <span class="total-value">${formatCurrency(unitPrice)}</span>
+                    <span class="total-value">${formatCurrency(unitPriceNoTax)}</span>
                 </div>
                 
                 <div class="total-item">
                     <span class="total-label">Valor Total (${(profitMargin * 100).toFixed(0)}% lucro)</span>
-                    <span class="total-value">${formatCurrency(finalPrice)}</span>
+                    <span class="total-value">${formatCurrency(totalPrice)}</span>
                 </div>
                 
                 ${shippingCost > 0 ? `
@@ -380,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Gerar orçamento do cliente se ativado
         if (toggleClientQuote.checked) {
-            generateClientQuote(finalPrice, shippingCost, unitPrice, printQuantity);
+            generateClientQuote(totalPrice, shippingCost, unitPriceNoTax, printQuantity);
         }
     }
 
@@ -523,7 +591,7 @@ Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
     // Inputs principais - recalcular em tempo real
     const mainInputs = [
         timeHoursInput, timeMinutesInput, materialUsedInput, 
-        printQuantityInput, stlPriceInput, shippingCostInput
+        printQuantityInput, stlPriceInput, shippingCostInput, stlPiecesInput
     ];
     
     mainInputs.forEach(input => {
@@ -607,4 +675,6 @@ Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
     `;
 
     console.log('Sistema de Orçamento ImaginaTech carregado com sucesso!');
+    console.log('Versão: 2.0 - Com dados da planilha');
+    console.log('Máquinas disponíveis: Saturn 2, K1, K1M, K2+, Laser');
 });
