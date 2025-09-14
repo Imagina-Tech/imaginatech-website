@@ -22,6 +22,10 @@
     <!-- CSS Principal -->
     <link rel="stylesheet" href="styles.css">
     
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
     <!-- html2canvas para gerar prints -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -32,195 +36,239 @@
         <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo-section">
-                <img src="/imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
-                <span class="logo-text">ImaginaTech</span>
-                <span class="nav-divider">|</span>
-                <span class="nav-subtitle">Sistema de Orçamento</span>
-            </div>
-            <div class="header-actions">
-                <a href="/servicos" class="btn btn-services">
-                    <i class="fas fa-tasks"></i>
-                    <span>Painel de Serviços</span>
-                </a>
-                <a href="/" class="btn btn-back">
-                    <i class="fas fa-home"></i>
-                    <span>Voltar ao Site</span>
-                </a>
-            </div>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Verificando autenticação...</div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Container -->
-    <div class="container">
-        <div class="calculator-wrapper">
-            <!-- Coluna do Formulário -->
-            <div class="form-column">
-                <div class="form-card">
-                    <div class="form-header">
-                        <h2 class="form-title">
-                            <i class="fas fa-calculator"></i>
-                            Dados da Impressão
-                        </h2>
-                    </div>
-
-                    <!-- Seleção de Impressora -->
-                    <div class="form-section">
-                        <label class="form-label">
-                            <i class="fas fa-print"></i>
-                            Impressora / Máquina
-                        </label>
-                        <select id="printer-select" class="form-select">
-                            <option value="">Selecione a máquina</option>
-                            <optgroup label="Impressoras de Resina">
-                                <option value="SATURN_2">Saturn 2 (Resina)</option>
-                            </optgroup>
-                            <optgroup label="Impressoras FDM">
-                                <option value="K1">Creality K1</option>
-                                <option value="K1M">Creality K1 Max</option>
-                                <option value="K2PLUS">Creality K2 Plus</option>
-                            </optgroup>
-                            <optgroup label="Corte a Laser">
-                                <option value="LASER">Máquina Laser CO2</option>
-                            </optgroup>
-                        </select>
-                    </div>
-
-                    <!-- Tempo de Produção -->
-                    <div class="form-row">
-                        <div class="form-section">
-                            <label class="form-label">
-                                <i class="fas fa-clock"></i>
-                                Tempo de Produção
-                            </label>
-                            <div class="time-input-container">
-                                <div class="time-input-group">
-                                    <input type="number" id="time-hours" class="form-input" min="0" max="999" placeholder="0">
-                                    <span class="input-suffix">horas</span>
-                                </div>
-                                <div class="time-input-group">
-                                    <input type="number" id="time-minutes" class="form-input" min="0" max="59" placeholder="0">
-                                    <span class="input-suffix">minutos</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <label class="form-label">
-                                <i class="fas fa-layer-group"></i>
-                                Quantidade
-                            </label>
-                            <input type="number" id="print-quantity" class="form-input" min="1" value="1">
-                        </div>
-                    </div>
-
-                    <!-- Material Utilizado -->
-                    <div class="form-section">
-                        <label class="form-label">
-                            <i class="fas fa-cube"></i>
-                            Material Utilizado (<span id="material-unit">g</span>)
-                        </label>
-                        <input type="number" id="material-used" class="form-input" min="0" placeholder="Quantidade de material">
-                    </div>
-
-                    <!-- Custos Adicionais -->
-                    <div class="form-row">
-                        <div class="form-section">
-                            <label class="form-label">
-                                <i class="fas fa-file-code"></i>
-                                Preço do STL (R$)
-                            </label>
-                            <input type="number" id="stl-price" class="form-input" min="0" value="0" step="0.01">
-                        </div>
-                        <div class="form-section">
-                            <label class="form-label">
-                                <i class="fas fa-truck"></i>
-                                Frete (R$)
-                            </label>
-                            <input type="number" id="shipping-cost" class="form-input" min="0" value="0" step="0.01">
-                        </div>
-                    </div>
-
-                    <!-- Parâmetros Customizados (apenas preço material e margem de lucro) -->
-                    <div class="custom-params-section">
-                        <div class="section-header">
-                            <h3 class="section-title">
-                                <i class="fas fa-sliders-h"></i>
-                                Parâmetros Personalizados
-                            </h3>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="toggle-custom-params">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-
-                        <div id="custom-params-fields" class="custom-fields disabled">
-                            <div class="params-grid">
-                                <div class="form-section">
-                                    <label class="form-label">Preço Material (R$/<span id="custom-material-unit">kg</span>)</label>
-                                    <input type="number" id="custom-material-price" class="form-input" min="0" step="0.01" disabled>
-                                </div>
-                                <div class="form-section">
-                                    <label class="form-label">Margem de Lucro (%)</label>
-                                    <input type="number" id="custom-profit-margin" class="form-input" min="0" step="1" disabled>
-                                </div>
-                                <div class="form-section" id="custom-consumables-wrapper" style="display:none;">
-                                    <label class="form-label">Consumíveis (R$)</label>
-                                    <input type="number" id="custom-consumables" class="form-input" min="0" step="0.01" disabled>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-logo">
+                <h1>ImaginaTech</h1>
+                <p>Sistema de Orçamento</p>
             </div>
-
-            <!-- Coluna de Resultados -->
-            <div class="results-column">
-                <!-- Card de Resultados do Cálculo -->
-                <div class="results-card" id="results-card-main">
-                    <div class="results-header">
-                        <h2 class="results-title">
-                            <i class="fas fa-chart-line"></i>
-                            Análise de Custos
-                        </h2>
-                    </div>
-                    <div id="results-output" class="results-content">
-                        <div class="empty-state">
-                            <i class="fas fa-calculator"></i>
-                            <p>Selecione uma impressora e preencha os dados para calcular</p>
-                        </div>
-                    </div>
+            
+            <div class="login-card">
+                <div class="login-header">
+                    <i class="fas fa-lock"></i>
+                    <h2>Acesso Restrito</h2>
+                    <p>Área exclusiva para colaboradores autorizados</p>
                 </div>
-
-                <!-- Campo Nome do Modelo e Botão Gerar Print -->
-                <div class="print-actions-card">
-                    <div class="form-section">
-                        <label class="form-label">
-                            <i class="fas fa-tag"></i>
-                            Nome do Modelo
-                        </label>
-                        <input type="text" id="model-name" class="form-input" placeholder="Digite o nome do modelo">
-                    </div>
-                    <button id="generate-print-btn" class="btn btn-print" onclick="generatePrint()">
-                        <i class="fas fa-camera"></i>
-                        Gerar em Print
-                    </button>
+                
+                <button class="btn btn-google" onclick="loginWithGoogle()">
+                    <i class="fab fa-google"></i>
+                    <span>Entrar com Google</span>
+                </button>
+                
+                <div class="login-footer">
+                    <p>Apenas emails autorizados têm acesso</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2024 ImaginaTech. Todos os direitos reservados.</p>
-        <div class="footer-links">
-            <a href="/servicos">Painel de Serviços</a>
-            <span>|</span>
-            <a href="/">Voltar ao Site</a>
+    <!-- Main App (Hidden until authenticated) -->
+    <div class="main-app" id="mainApp" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="/imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
+                    <span class="logo-text">ImaginaTech</span>
+                    <span class="nav-divider">|</span>
+                    <span class="nav-subtitle">Sistema de Orçamento</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
+                        <span class="user-name" id="userName"></span>
+                    </div>
+                    <a href="/servicos" class="btn btn-services">
+                        <i class="fas fa-tasks"></i>
+                        <span>Painel de Serviços</span>
+                    </a>
+                    <button class="btn btn-logout" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <div class="calculator-wrapper">
+                <!-- Coluna do Formulário -->
+                <div class="form-column">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h2 class="form-title">
+                                <i class="fas fa-calculator"></i>
+                                Dados da Impressão
+                            </h2>
+                        </div>
+
+                        <!-- Seleção de Impressora -->
+                        <div class="form-section">
+                            <label class="form-label">
+                                <i class="fas fa-print"></i>
+                                Impressora / Máquina
+                            </label>
+                            <select id="printer-select" class="form-select">
+                                <option value="">Selecione a máquina</option>
+                                <optgroup label="Impressoras de Resina">
+                                    <option value="SATURN_2">Saturn 2 (Resina)</option>
+                                </optgroup>
+                                <optgroup label="Impressoras FDM">
+                                    <option value="K1">Creality K1</option>
+                                    <option value="K1M">Creality K1 Max</option>
+                                    <option value="K2PLUS">Creality K2 Plus</option>
+                                </optgroup>
+                                <optgroup label="Corte a Laser">
+                                    <option value="LASER">Máquina Laser CO2</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Seleção de Material (aparece após selecionar impressora) -->
+                        <div class="form-section" id="material-selection" style="display: none;">
+                            <label class="form-label">
+                                <i class="fas fa-cube"></i>
+                                Tipo de Material
+                            </label>
+                            <div class="material-buttons" id="material-buttons">
+                                <!-- Botões serão inseridos dinamicamente via JavaScript -->
+                            </div>
+                            <div class="custom-price-field" id="custom-price-field" style="display: none; margin-top: 15px;">
+                                <label class="form-label">Preço do Material (R$/<span id="custom-unit">kg</span>)</label>
+                                <input type="number" id="custom-material-price" class="form-input" min="0" step="0.01" placeholder="Digite o preço">
+                            </div>
+                        </div>
+
+                        <!-- Tempo de Produção -->
+                        <div class="form-row">
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-clock"></i>
+                                    Tempo de Produção
+                                </label>
+                                <div class="time-input-container">
+                                    <div class="time-input-group">
+                                        <input type="number" id="time-hours" class="form-input" min="0" max="999" placeholder="0">
+                                        <span class="input-suffix">horas</span>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" id="time-minutes" class="form-input" min="0" max="59" placeholder="0">
+                                        <span class="input-suffix">minutos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    Quantidade
+                                </label>
+                                <input type="number" id="print-quantity" class="form-input" min="1" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Material Utilizado -->
+                        <div class="form-section">
+                            <label class="form-label" id="material-usage-label">
+                                <i class="fas fa-cube"></i>
+                                Material Utilizado (<span id="material-unit">g</span>)
+                            </label>
+                            <input type="number" id="material-used" class="form-input" min="0" placeholder="Quantidade de material">
+                        </div>
+
+                        <!-- Parâmetros de Cálculo (integrados ao formulário principal) -->
+                        <div class="form-row">
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-percentage"></i>
+                                    Margem de Lucro (%)
+                                </label>
+                                <input type="number" id="profit-margin" class="form-input" min="0" value="280" step="1">
+                            </div>
+                            <div class="form-section" id="consumables-field" style="display: none;">
+                                <label class="form-label">
+                                    <i class="fas fa-tools"></i>
+                                    Consumíveis (R$)
+                                </label>
+                                <input type="number" id="consumables" class="form-input" min="0" value="2" step="0.01">
+                            </div>
+                        </div>
+
+                        <!-- Custos Adicionais -->
+                        <div class="form-row">
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-file-code"></i>
+                                    Preço do STL (R$)
+                                </label>
+                                <input type="number" id="stl-price" class="form-input" min="0" value="0" step="0.01">
+                            </div>
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-truck"></i>
+                                    Frete (R$)
+                                </label>
+                                <input type="number" id="shipping-cost" class="form-input" min="0" value="0" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna de Resultados -->
+                <div class="results-column">
+                    <!-- Card de Resultados do Cálculo -->
+                    <div class="results-card" id="results-card-main">
+                        <div class="results-header">
+                            <h2 class="results-title">
+                                <i class="fas fa-chart-line"></i>
+                                Análise de Custos
+                            </h2>
+                        </div>
+                        <div id="results-output" class="results-content">
+                            <div class="empty-state">
+                                <i class="fas fa-calculator"></i>
+                                <p>Selecione uma impressora e preencha os dados para calcular</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo Nome do Modelo e Botão Gerar Print -->
+                    <div class="print-actions-card">
+                        <div class="form-section">
+                            <label class="form-label">
+                                <i class="fas fa-tag"></i>
+                                Nome do Modelo
+                            </label>
+                            <input type="text" id="model-name" class="form-input" placeholder="Digite o nome do modelo">
+                        </div>
+                        <button id="generate-print-btn" class="btn btn-print" onclick="generatePrint()">
+                            <i class="fas fa-camera"></i>
+                            Gerar em Print
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 ImaginaTech. Todos os direitos reservados.</p>
+            <div class="footer-links">
+                <a href="/servicos">Painel de Serviços</a>
+                <span>|</span>
+                <a href="/">Voltar ao Site</a>
+            </div>
+        </footer>
+    </div>
 
     <!-- JavaScript -->
     <script src="script.js"></script>
