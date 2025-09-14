@@ -1,6 +1,6 @@
 // ===========================
 // IMAGINATECH - SISTEMA DE ORÇAMENTO
-// JavaScript Principal - Versão Corrigida com Dados da Planilha
+// JavaScript Principal - Versão Simplificada
 // Arquivo: script.js
 // ===========================
 
@@ -20,34 +20,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const printQuantityInput = document.getElementById("print-quantity");
     const stlPriceInput = document.getElementById("stl-price");
     const shippingCostInput = document.getElementById("shipping-cost");
-    const stlPiecesSection = document.getElementById("stl-pieces-section");
-    const stlPiecesInput = document.getElementById("stl-pieces");
+    const modelNameInput = document.getElementById("model-name");
 
     // Toggle e campos customizados
     const toggleCustomParams = document.getElementById("toggle-custom-params");
     const customParamsFields = document.getElementById("custom-params-fields");
     const customMaterialPriceInput = document.getElementById("custom-material-price");
     const customProfitMarginInput = document.getElementById("custom-profit-margin");
-    const customFailureRateInput = document.getElementById("custom-failure-rate");
-    const customMachinePowerInput = document.getElementById("custom-machine-power");
-    const customKwhPriceInput = document.getElementById("custom-kwh-price");
-    const customMachineValueInput = document.getElementById("custom-machine-value");
-    const customDepreciationTimeInput = document.getElementById("custom-depreciation-time");
     const customConsumablesWrapper = document.getElementById("custom-consumables-wrapper");
     const customConsumablesInput = document.getElementById("custom-consumables");
 
-    // Cliente quote
-    const toggleClientQuote = document.getElementById("toggle-client-quote");
-    const clientQuoteFields = document.getElementById("client-quote-fields");
-    const clientItemNameInput = document.getElementById("client-item-name");
-    const clientMaterialNameInput = document.getElementById("client-material-name");
-    const clientShippingLocationInput = document.getElementById("client-shipping-location");
-    const clientDeliveryDeadlineInput = document.getElementById("client-delivery-deadline");
-    const clientPaintingPriceInput = document.getElementById("client-painting-price");
-    const clientQuoteOutput = document.getElementById("client-quote-output");
-
     // ===========================
-    // CONFIGURAÇÃO DAS IMPRESSORAS (BASEADO NA PLANILHA)
+    // CONFIGURAÇÃO DAS IMPRESSORAS (VALORES OCULTOS INTERNOS)
     // ===========================
     const printerDefaults = {
         "SATURN_2": {
@@ -55,15 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "resin",
             materialUnit: "ml",
             defaults: {
-                materialPrice: 150,      // R$/litro (da planilha)
-                profitMargin: 280,       // % (da planilha)
-                failureRate: 20,         // % (da planilha)
-                machinePower: 400,       // W (da planilha)
-                kwhPrice: 1.2,           // R$/kWh (da planilha)
-                machineValue: 2600,      // R$ (da planilha)
-                depreciationTime: 2000,  // horas (da planilha)
-                consumables: 2,          // R$ - álcool + luva (da planilha)
-                stlDivision: false       // Não usa divisão de STL
+                materialPrice: 150,      // R$/litro
+                profitMargin: 280,       // %
+                failureRate: 20,         // %
+                machinePower: 400,       // W
+                kwhPrice: 1.2,           // R$/kWh
+                machineValue: 2600,      // R$
+                depreciationTime: 2000,  // horas
+                consumables: 2           // R$ - álcool + luva
             }
         },
         "K1": {
@@ -71,16 +54,14 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 75,       // R$/kg (da planilha)
-                profitMargin: 280,       // % (da planilha)
-                failureRate: 20,         // % (da planilha)
-                machinePower: 400,       // W (da planilha)
-                kwhPrice: 1.2,           // R$/kWh (da planilha)
-                machineValue: 2600,      // R$ (da planilha)
-                depreciationTime: 6000,  // horas (da planilha)
-                consumables: 0,          // Não usa consumíveis extras
-                stlDivision: true,       // Usa divisão de STL
-                stlPiecesDefault: 5      // Padrão de 5 peças (da planilha)
+                materialPrice: 75,       // R$/kg
+                profitMargin: 280,       // %
+                failureRate: 20,         // %
+                machinePower: 400,       // W
+                kwhPrice: 1.2,           // R$/kWh
+                machineValue: 2600,      // R$
+                depreciationTime: 6000,  // horas
+                consumables: 0           // Não usa consumíveis extras
             }
         },
         "K1M": {
@@ -88,16 +69,14 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 70,       // R$/kg (da planilha)
-                profitMargin: 280,       // % (da planilha)
-                failureRate: 20,         // % (da planilha)
-                machinePower: 650,       // W (da planilha)
-                kwhPrice: 1.2,           // R$/kWh (da planilha)
-                machineValue: 4600,      // R$ (da planilha)
-                depreciationTime: 6000,  // horas (da planilha)
-                consumables: 0,
-                stlDivision: true,       // Usa divisão de STL
-                stlPiecesDefault: 1      // Padrão de 1 peça (da planilha)
+                materialPrice: 70,       // R$/kg
+                profitMargin: 280,       // %
+                failureRate: 20,         // %
+                machinePower: 650,       // W
+                kwhPrice: 1.2,           // R$/kWh
+                machineValue: 4600,      // R$
+                depreciationTime: 6000,  // horas
+                consumables: 0
             }
         },
         "K2PLUS": {
@@ -105,32 +84,29 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "fdm",
             materialUnit: "g",
             defaults: {
-                materialPrice: 70,       // R$/kg (da planilha)
-                profitMargin: 280,       // % (da planilha)
-                failureRate: 20,         // % (da planilha)
-                machinePower: 1200,      // W (da planilha)
-                kwhPrice: 1.2,           // R$/kWh (da planilha)
-                machineValue: 12000,     // R$ (da planilha)
-                depreciationTime: 10000, // horas (da planilha)
-                consumables: 0,
-                stlDivision: true,       // Usa divisão de STL
-                stlPiecesDefault: 1      // Padrão de 1 peça (da planilha)
+                materialPrice: 70,       // R$/kg
+                profitMargin: 280,       // %
+                failureRate: 20,         // %
+                machinePower: 1200,      // W
+                kwhPrice: 1.2,           // R$/kWh
+                machineValue: 12000,     // R$
+                depreciationTime: 10000, // horas
+                consumables: 0
             }
         },
         "LASER": {
             name: "Máquina Laser CO2",
             type: "laser",
-            materialUnit: "minutos",  // Trabalha com minutos
+            materialUnit: "minutos",
             defaults: {
                 materialPrice: 0,        // Laser não usa material dessa forma
-                profitMargin: 280,       // % (da planilha)
-                failureRate: 20,         // % (da planilha)
-                machinePower: 60,        // W (da planilha)
-                kwhPrice: 1.2,           // R$/kWh (da planilha)
-                machineValue: 2000,      // R$ (da planilha)
-                depreciationTime: 10000, // horas (da planilha)
-                consumables: 0,          // Sem consumíveis
-                stlDivision: false       // Não usa divisão de STL
+                profitMargin: 280,       // %
+                failureRate: 20,         // %
+                machinePower: 60,        // W
+                kwhPrice: 1.2,           // R$/kWh
+                machineValue: 2000,      // R$
+                depreciationTime: 10000, // horas
+                consumables: 0
             }
         }
     };
@@ -161,7 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
-        if (stlPiecesInput) stlPiecesInput.value = "1";
     }
 
     function updatePlaceholders() {
@@ -184,24 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Mostrar/ocultar campo de divisão de STL
-        if (stlPiecesSection) {
-            if (defaults.stlDivision) {
-                stlPiecesSection.style.display = "block";
-                if (stlPiecesInput) stlPiecesInput.value = defaults.stlPiecesDefault || 1;
-            } else {
-                stlPiecesSection.style.display = "none";
-            }
-        }
-
         // Atualizar placeholders
         if (customMaterialPriceInput) customMaterialPriceInput.placeholder = `Padrão: ${defaults.materialPrice}`;
         if (customProfitMarginInput) customProfitMarginInput.placeholder = `Padrão: ${defaults.profitMargin}`;
-        if (customFailureRateInput) customFailureRateInput.placeholder = `Padrão: ${defaults.failureRate}`;
-        if (customMachinePowerInput) customMachinePowerInput.placeholder = `Padrão: ${defaults.machinePower}`;
-        if (customKwhPriceInput) customKwhPriceInput.placeholder = `Padrão: ${defaults.kwhPrice}`;
-        if (customMachineValueInput) customMachineValueInput.placeholder = `Padrão: ${defaults.machineValue}`;
-        if (customDepreciationTimeInput) customDepreciationTimeInput.placeholder = `Padrão: ${defaults.depreciationTime}`;
         
         // Mostrar/ocultar campo de consumíveis
         if (customConsumablesWrapper) {
@@ -224,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ===========================
-    // CÁLCULO PRINCIPAL (BASEADO NAS FÓRMULAS DA PLANILHA)
+    // CÁLCULO PRINCIPAL
     // ===========================
     
     function calculateCost() {
@@ -246,7 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const printQuantity = getInputValue(printQuantityInput, 1);
         const stlPrice = getInputValue(stlPriceInput, 0);
         const shippingCost = getInputValue(shippingCostInput, 0);
-        const stlPieces = getInputValue(stlPiecesInput, 1);
 
         // Para laser, o "material" é na verdade o tempo em minutos
         let actualTimeHours = totalTimeHours;
@@ -287,20 +246,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const profitMargin = (useCustom && customProfitMarginInput.value !== "" ? 
             getInputValue(customProfitMarginInput) : defaults.profitMargin) / 100;
             
-        const failureRate = (useCustom && customFailureRateInput.value !== "" ? 
-            getInputValue(customFailureRateInput) : defaults.failureRate) / 100;
-            
-        const machinePower = useCustom && customMachinePowerInput.value !== "" ? 
-            getInputValue(customMachinePowerInput) : defaults.machinePower;
-            
-        const kwhPrice = useCustom && customKwhPriceInput.value !== "" ? 
-            getInputValue(customKwhPriceInput) : defaults.kwhPrice;
-            
-        const machineValue = useCustom && customMachineValueInput.value !== "" ? 
-            getInputValue(customMachineValueInput) : defaults.machineValue;
-            
-        const depreciationTime = useCustom && customDepreciationTimeInput.value !== "" ? 
-            getInputValue(customDepreciationTimeInput) : defaults.depreciationTime;
+        // Valores internos (não exibidos ao usuário)
+        const failureRate = defaults.failureRate / 100;
+        const machinePower = defaults.machinePower;
+        const kwhPrice = defaults.kwhPrice;
+        const machineValue = defaults.machineValue;
+        const depreciationTime = defaults.depreciationTime;
         
         let consumables = 0;
         if (currentPrinter.type === 'resin') {
@@ -309,16 +260,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // ===========================
-        // CÁLCULOS (SEGUINDO AS FÓRMULAS DA PLANILHA)
+        // CÁLCULOS
         // ===========================
         
         // Para laser, usar o tempo convertido
         const timeForCalc = currentPrinter.type === 'laser' ? actualTimeHours : totalTimeHours;
         
-        // 1. Custo de energia (C16 da planilha)
+        // 1. Custo de energia
         const energyCost = (machinePower / 1000) * timeForCalc * kwhPrice;
         
-        // 2. Custo de depreciação (parte da C18)
+        // 2. Custo de depreciação
         const depreciationCost = depreciationTime > 0 ? 
             (machineValue / depreciationTime) * timeForCalc : 0;
         
@@ -332,14 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
             materialCost = (materialUsed / 1000) * materialPrice; // g para kg
         }
 
-        // 4. STL dividido em peças (para K1, K1M, K2+)
-        let stlCostPerPiece = stlPrice;
-        if (defaults.stlDivision && stlPieces > 1) {
-            stlCostPerPiece = stlPrice / stlPieces;
-        }
-
-        // 5. Custo de produção por unidade (C18 da planilha)
-        // Fórmula: (material + energia + depreciação) * (1 + taxa_falha) + consumíveis + STL
+        // 4. Custo de produção por unidade
         let productionCostPerUnit = (materialCost + energyCost + depreciationCost) * (1 + failureRate);
         
         // Adicionar consumíveis para resina
@@ -347,17 +291,17 @@ document.addEventListener("DOMContentLoaded", () => {
             productionCostPerUnit += consumables * printQuantity;
         }
         
-        // Adicionar STL
-        productionCostPerUnit += stlCostPerPiece;
-        
-        // 6. Custo de produção do lote (C19)
+        // 5. Custo de produção do lote (SEM STL)
         const productionCostTotal = productionCostPerUnit * printQuantity;
         
-        // 7. Valor da unidade sem imposto (C21 - usando apenas lucro, sem imposto)
+        // 6. Valor da unidade sem imposto (com lucro)
         const unitPriceNoTax = productionCostPerUnit * (1 + profitMargin);
         
-        // 8. Valor do lote (C23)
-        const totalPrice = unitPriceNoTax * printQuantity;
+        // 7. Valor do lote (SEM STL ainda)
+        const batchPrice = unitPriceNoTax * printQuantity;
+        
+        // 8. Total com STL (STL é somado apenas uma vez ao total final)
+        const totalPrice = batchPrice + stlPrice;
         
         // 9. Total com frete
         const totalWithShipping = totalPrice + shippingCost;
@@ -403,9 +347,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${stlPrice > 0 ? `
                 <div class="cost-item">
                     <span class="cost-label">
-                        <i class="fas fa-file-code"></i> STL ${defaults.stlDivision && stlPieces > 1 ? `(÷${stlPieces})` : ''}
+                        <i class="fas fa-file-code"></i> STL
                     </span>
-                    <span class="cost-value">${formatCurrency(stlCostPerPiece)}</span>
+                    <span class="cost-value">${formatCurrency(stlPrice)}</span>
                 </div>
                 ` : ''}
                 
@@ -432,10 +376,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     <span class="total-value">${formatCurrency(unitPriceNoTax)}</span>
                 </div>
                 
+                ${printQuantity > 1 ? `
                 <div class="total-item">
-                    <span class="total-label">Valor Total (${(profitMargin * 100).toFixed(0)}% lucro)</span>
+                    <span class="total-label">Valor Total (${printQuantity} unidades)</span>
                     <span class="total-value">${formatCurrency(totalPrice)}</span>
                 </div>
+                ` : `
+                <div class="total-item">
+                    <span class="total-label">Valor Total</span>
+                    <span class="total-value">${formatCurrency(totalPrice)}</span>
+                </div>
+                `}
                 
                 ${shippingCost > 0 ? `
                 <div class="total-item">
@@ -446,96 +397,156 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        // Gerar orçamento do cliente se ativado
-        if (toggleClientQuote.checked) {
-            generateClientQuote(totalPrice, shippingCost, unitPriceNoTax, printQuantity);
-        }
+        // Armazenar valores para o print
+        window.printData = {
+            unitPrice: unitPriceNoTax,
+            totalPrice: totalPrice,
+            totalWithShipping: totalWithShipping,
+            quantity: printQuantity,
+            hasShipping: shippingCost > 0
+        };
     }
 
     // ===========================
-    // ORÇAMENTO DO CLIENTE
+    // FUNÇÃO GERAR PRINT
     // ===========================
     
-    function generateClientQuote(finalPrice, shippingCost, unitPrice, quantity) {
-        const itemName = clientItemNameInput.value.trim() || "@Nome do item";
-        const materialName = clientMaterialNameInput.value.trim() || "@Material";
-        const location = clientShippingLocationInput.value.trim() || "@local";
-        const deadline = clientDeliveryDeadlineInput.value.trim() || "@prazo";
-        const paintingPrice = getInputValue(clientPaintingPriceInput, 0);
-        const stlPrice = getInputValue(stlPriceInput, 0);
+    window.generatePrint = async function() {
+        if (!window.printData) {
+            alert('Por favor, calcule primeiro o orçamento antes de gerar o print.');
+            return;
+        }
+
+        const modelName = modelNameInput.value.trim() || 'Modelo não especificado';
         
-        const totalPiece = finalPrice + paintingPrice;
-        const totalWithShipping = totalPiece + shippingCost;
+        // Criar um container temporário para o print
+        const printContainer = document.createElement('div');
+        printContainer.className = 'print-container';
+        printContainer.style.cssText = `
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 600px;
+            background: linear-gradient(135deg, #1a2332, #0a0e1a);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        `;
+
+        const { unitPrice, totalPrice, totalWithShipping, quantity, hasShipping } = window.printData;
         
-        // Calcular desconto
-        const discountPercent = totalWithShipping <= 150 ? 10 : 5;
-        const discountValue = totalWithShipping * (discountPercent / 100);
-        const finalWithDiscount = totalWithShipping - discountValue;
-        
-        // Linha de pintura (opcional)
-        const paintingLine = paintingPrice > 0 ? 
-            `- Valor da pintura artística: ${formatCurrency(paintingPrice)}.\n` : '';
-        
-        const quoteText = `Olá! Revisamos o seu modelo para o ${itemName} e vamos transformá-lo em realidade.
-
-- ${quantity} ${itemName}.
-- Material: ${materialName}.
-- Valor da modelagem: R$0,00.
-- Valor do STL: ${formatCurrency(stlPrice)}.
-- Valor total de impressão: ${formatCurrency(finalPrice)}.
-${paintingLine}
-Valor total da peça: ${formatCurrency(totalPiece)}.
-
-- Frete para ${location}: ${shippingCost > 0 ? formatCurrency(shippingCost) : 'Grátis acima de R$500,00'}.
-- Prazo de entrega: ${deadline}.
-
-Bônus para novos clientes: compartilhe nos stories do Instagram nos marcando quando receber, avalie-nos no google e ganhe ${discountPercent}% do valor total da compra de volta no Pix! 
-Valor total com desconto: ${formatCurrency(finalWithDiscount)}.
-
-Formas de pagamento:
-- Pix (instantâneo).
-- Transferência bancária/TED.
-- Cartão de crédito via link de pagamento (opção de parcelamento com juros baixos).
-
-Durante todo o processo, enviaremos fotos e atualizações da sua impressão, assim você acompanha cada etapa.
-
-Política de produção:
-50% do valor para iniciarmos a produção.
-50% no ato da entrega.
-(emitimos nota fiscal para pj caso necessário).
-
-Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
-
-        clientQuoteOutput.innerHTML = `
-            <div class="quote-text">${quoteText.replace(/\n/g, '<br>')}</div>
-            <button class="copy-button" onclick="copyQuoteToClipboard()">
-                <i class="fas fa-copy"></i>
-                Copiar Orçamento
-            </button>
+        printContainer.innerHTML = `
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="font-family: 'Orbitron', monospace; font-size: 28px; 
+                    background: linear-gradient(135deg, #00D4FF, #57D4CA); 
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    background-clip: text; margin: 0;">
+                    ImaginaTech
+                </h1>
+                <p style="color: #00FF88; font-size: 18px; margin: 10px 0; font-weight: 600;">
+                    Orçamento Simplificado
+                </p>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); 
+                border-radius: 15px; padding: 25px; margin-bottom: 25px;">
+                <h2 style="color: #00D4FF; font-size: 20px; margin: 0 0 20px 0; 
+                    font-family: 'Orbitron', monospace;">
+                    <span style="color: #FFD700;">📦</span> ${modelName}
+                </h2>
+                
+                <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
+                    border: 2px solid #00FF88; border-radius: 10px; padding: 20px;">
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; 
+                        padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="font-size: 18px; color: white;">Valor Unitário:</span>
+                        <span style="font-size: 22px; font-weight: 700; color: #00FF88; 
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">
+                            ${formatCurrency(unitPrice)}
+                        </span>
+                    </div>
+                    
+                    ${quantity > 1 ? `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;
+                        padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="font-size: 18px; color: white;">
+                            Valor Total (${quantity} unidades):
+                        </span>
+                        <span style="font-size: 22px; font-weight: 700; color: #00FF88; 
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">
+                            ${formatCurrency(totalPrice)}
+                        </span>
+                    </div>
+                    ` : ''}
+                    
+                    ${hasShipping ? `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 18px; color: white;">Total com Frete:</span>
+                        <span style="font-size: 22px; font-weight: 700; color: #FFD700; 
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">
+                            ${formatCurrency(totalWithShipping)}
+                        </span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 25px;">
+                <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">
+                    ${new Date().toLocaleDateString('pt-BR', { 
+                        day: '2-digit', 
+                        month: 'long', 
+                        year: 'numeric' 
+                    })}
+                </p>
+                <p style="color: rgba(255, 255, 255, 0.4); font-size: 12px; margin-top: 10px;">
+                    www.imaginatech.com.br
+                </p>
+            </div>
         `;
         
-        // Salvar texto no window para a função de copiar
-        window.currentQuoteText = quoteText;
-    }
-
-    // Função global para copiar
-    window.copyQuoteToClipboard = function() {
-        if (window.currentQuoteText) {
-            navigator.clipboard.writeText(window.currentQuoteText).then(() => {
+        document.body.appendChild(printContainer);
+        
+        try {
+            // Usar html2canvas para gerar a imagem
+            const canvas = await html2canvas(printContainer, {
+                backgroundColor: null,
+                scale: 2,
+                logging: false,
+                width: 600,
+                height: printContainer.scrollHeight
+            });
+            
+            // Converter para blob e fazer download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const filename = `orcamento_${modelName.replace(/\s+/g, '_')}_${new Date().getTime()}.png`;
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                
                 // Feedback visual
-                const button = document.querySelector('.copy-button');
-                const originalHTML = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i> Copiado!';
-                button.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
+                const btn = document.getElementById('generate-print-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Print Gerado!';
+                btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
                 
                 setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                    button.style.background = '';
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
                 }, 2000);
-            }).catch(err => {
-                console.error('Erro ao copiar:', err);
-                alert('Erro ao copiar o orçamento. Tente selecionar e copiar manualmente.');
             });
+            
+        } catch (error) {
+            console.error('Erro ao gerar print:', error);
+            alert('Erro ao gerar o print. Por favor, tente novamente.');
+        } finally {
+            document.body.removeChild(printContainer);
         }
     };
 
@@ -571,27 +582,10 @@ Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
         calculateCost(); // Recalcular imediatamente
     });
 
-    // Toggle orçamento do cliente
-    toggleClientQuote.addEventListener("change", (e) => {
-        const isEnabled = e.target.checked;
-        clientQuoteFields.classList.toggle("disabled", !isEnabled);
-        
-        if (isEnabled) {
-            calculateCost(); // Recalcular para gerar o orçamento
-        } else {
-            clientQuoteOutput.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-file-alt"></i>
-                    <p>Preencha os campos para gerar o orçamento</p>
-                </div>
-            `;
-        }
-    });
-
     // Inputs principais - recalcular em tempo real
     const mainInputs = [
         timeHoursInput, timeMinutesInput, materialUsedInput, 
-        printQuantityInput, stlPriceInput, shippingCostInput, stlPiecesInput
+        printQuantityInput, stlPriceInput, shippingCostInput
     ];
     
     mainInputs.forEach(input => {
@@ -600,34 +594,16 @@ Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
         }
     });
 
-    // Inputs customizados - recalcular em tempo real (CORREÇÃO DO BUG)
+    // Inputs customizados - recalcular em tempo real
     const customInputs = [
-        customMaterialPriceInput, customProfitMarginInput, customFailureRateInput,
-        customMachinePowerInput, customKwhPriceInput, customMachineValueInput,
-        customDepreciationTimeInput, customConsumablesInput
+        customMaterialPriceInput, customProfitMarginInput, customConsumablesInput
     ];
     
     customInputs.forEach(input => {
         if (input) {
             input.addEventListener("input", () => {
                 if (toggleCustomParams.checked) {
-                    calculateCost(); // Recalcular apenas se os parâmetros customizados estiverem ativados
-                }
-            });
-        }
-    });
-
-    // Inputs do cliente
-    const clientInputs = [
-        clientItemNameInput, clientMaterialNameInput, clientShippingLocationInput,
-        clientDeliveryDeadlineInput, clientPaintingPriceInput
-    ];
-    
-    clientInputs.forEach(input => {
-        if (input) {
-            input.addEventListener("input", () => {
-                if (toggleClientQuote.checked) {
-                    calculateCost(); // Recalcular para atualizar o orçamento
+                    calculateCost();
                 }
             });
         }
@@ -666,15 +642,8 @@ Iniciaremos a produção o mais rápido possível. Confirma o pedido?`;
             <p>Selecione uma impressora e preencha os dados para calcular</p>
         </div>
     `;
-    
-    clientQuoteOutput.innerHTML = `
-        <div class="empty-state">
-            <i class="fas fa-file-alt"></i>
-            <p>Preencha os campos para gerar o orçamento</p>
-        </div>
-    `;
 
     console.log('Sistema de Orçamento ImaginaTech carregado com sucesso!');
-    console.log('Versão: 2.0 - Com dados da planilha');
+    console.log('Versão: 3.0 - Simplificada');
     console.log('Máquinas disponíveis: Saturn 2, K1, K1M, K2+, Laser');
 });
