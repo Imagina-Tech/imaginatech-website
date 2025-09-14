@@ -1,19 +1,206 @@
 // ===========================
 // IMAGINATECH - SISTEMA DE ORÇAMENTO
-// JavaScript Principal - Versão Simplificada
+// JavaScript Principal - Versão com Autenticação
 // Arquivo: script.js
 // ===========================
 
-document.addEventListener("DOMContentLoaded", () => {
-    // ===========================
-    // ELEMENTOS DO DOM
-    // ===========================
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+    authDomain: "imaginatech-servicos.firebaseapp.com",
+    projectId: "imaginatech-servicos",
+    storageBucket: "imaginatech-servicos.firebasestorage.app",
+    messagingSenderId: "321455309872",
+    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// Authorized Emails
+const AUTHORIZED_EMAILS = [
+    "3d3printers@gmail.com",
+    "igor.butter@gmail.com"
+];
+
+// Global Variables
+let currentUser = null;
+let isAuthorized = false;
+let currentPrinter = null;
+let selectedMaterial = null;
+let customMaterialPrice = null;
+
+// ===========================
+// AUTHENTICATION FUNCTIONS
+// ===========================
+
+async function loginWithGoogle() {
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        
+        if (AUTHORIZED_EMAILS.includes(user.email)) {
+            currentUser = user;
+            isAuthorized = true;
+            showMainApp();
+        } else {
+            await auth.signOut();
+            alert(`Acesso negado! O email ${user.email} não está autorizado.`);
+        }
+    } catch (error) {
+        console.error('Erro no login:', error);
+        alert('Erro ao fazer login. Tente novamente.');
+    }
+}
+
+async function logout() {
+    try {
+        await auth.signOut();
+        currentUser = null;
+        isAuthorized = false;
+        hideMainApp();
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+    }
+}
+
+function showMainApp() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    
+    // Update user info
+    if (currentUser) {
+        document.getElementById('userAvatar').src = currentUser.photoURL || 
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
+        document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
+    }
+    
+    // Initialize app
+    initializeCalculator();
+}
+
+function hideMainApp() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+}
+
+// ===========================
+// MATERIAL CONFIGURATIONS
+// ===========================
+
+const MATERIALS = {
+    fdm: [
+        { id: 'abs', name: 'ABS', price: 75 },
+        { id: 'pla', name: 'PLA', price: 120 },
+        { id: 'tpu', name: 'TPU', price: 150 },
+        { id: 'outros', name: 'Outros', price: null }
+    ],
+    resin: [
+        { id: 'resina', name: 'Resina Padrão', price: 150 }
+    ],
+    laser: [
+        { id: 'default', name: 'Sem Material', price: 0 }
+    ]
+};
+
+// ===========================
+// PRINTER CONFIGURATIONS
+// ===========================
+
+const printerDefaults = {
+    "SATURN_2": {
+        name: "Saturn 2",
+        type: "resin",
+        materialUnit: "ml",
+        defaults: {
+            materialPrice: 150,      // R$/litro
+            profitMargin: 280,       // %
+            failureRate: 20,         // %
+            machinePower: 400,       // W
+            kwhPrice: 1.2,           // R$/kWh
+            machineValue: 2600,      // R$
+            depreciationTime: 2000,  // horas
+            consumables: 2           // R$ - álcool + luva
+        }
+    },
+    "K1": {
+        name: "Creality K1",
+        type: "fdm",
+        materialUnit: "g",
+        defaults: {
+            materialPrice: 75,       // R$/kg
+            profitMargin: 280,       // %
+            failureRate: 20,         // %
+            machinePower: 400,       // W
+            kwhPrice: 1.2,           // R$/kWh
+            machineValue: 2600,      // R$
+            depreciationTime: 6000,  // horas
+            consumables: 0           // Não usa consumíveis extras
+        }
+    },
+    "K1M": {
+        name: "Creality K1 Max",
+        type: "fdm",
+        materialUnit: "g",
+        defaults: {
+            materialPrice: 70,       // R$/kg
+            profitMargin: 280,       // %
+            failureRate: 20,         // %
+            machinePower: 650,       // W
+            kwhPrice: 1.2,           // R$/kWh
+            machineValue: 4600,      // R$
+            depreciationTime: 6000,  // horas
+            consumables: 0
+        }
+    },
+    "K2PLUS": {
+        name: "Creality K2 Plus",
+        type: "fdm",
+        materialUnit: "g",
+        defaults: {
+            materialPrice: 70,       // R$/kg
+            profitMargin: 280,       // %
+            failureRate: 20,         // %
+            machinePower: 1200,      // W
+            kwhPrice: 1.2,           // R$/kWh
+            machineValue: 12000,     // R$
+            depreciationTime: 10000, // horas
+            consumables: 0
+        }
+    },
+    "LASER": {
+        name: "Máquina Laser CO2",
+        type: "laser",
+        materialUnit: "minutos",
+        defaults: {
+            materialPrice: 0,        // Laser não usa material dessa forma
+            profitMargin: 280,       // %
+            failureRate: 20,         // %
+            machinePower: 60,        // W
+            kwhPrice: 1.2,           // R$/kWh
+            machineValue: 2000,      // R$
+            depreciationTime: 10000, // horas
+            consumables: 0
+        }
+    }
+};
+
+// ===========================
+// CALCULATOR FUNCTIONS
+// ===========================
+
+function initializeCalculator() {
+    // DOM Elements
     const printerSelect = document.getElementById("printer-select");
     const resultsOutput = document.getElementById("results-output");
     const materialUnitSpan = document.getElementById("material-unit");
-    const customMaterialUnitSpan = document.getElementById("custom-material-unit");
+    const customUnitSpan = document.getElementById("custom-unit");
 
-    // Inputs principais
+    // Inputs
     const timeHoursInput = document.getElementById("time-hours");
     const timeMinutesInput = document.getElementById("time-minutes");
     const materialUsedInput = document.getElementById("material-used");
@@ -21,100 +208,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const stlPriceInput = document.getElementById("stl-price");
     const shippingCostInput = document.getElementById("shipping-cost");
     const modelNameInput = document.getElementById("model-name");
-
-    // Toggle e campos customizados
-    const toggleCustomParams = document.getElementById("toggle-custom-params");
-    const customParamsFields = document.getElementById("custom-params-fields");
+    const profitMarginInput = document.getElementById("profit-margin");
+    const consumablesInput = document.getElementById("consumables");
     const customMaterialPriceInput = document.getElementById("custom-material-price");
-    const customProfitMarginInput = document.getElementById("custom-profit-margin");
-    const customConsumablesWrapper = document.getElementById("custom-consumables-wrapper");
-    const customConsumablesInput = document.getElementById("custom-consumables");
+
+    // Material Selection
+    const materialSelection = document.getElementById("material-selection");
+    const materialButtons = document.getElementById("material-buttons");
+    const customPriceField = document.getElementById("custom-price-field");
+    const consumablesField = document.getElementById("consumables-field");
 
     // ===========================
-    // CONFIGURAÇÃO DAS IMPRESSORAS (VALORES OCULTOS INTERNOS)
-    // ===========================
-    const printerDefaults = {
-        "SATURN_2": {
-            name: "Saturn 2",
-            type: "resin",
-            materialUnit: "ml",
-            defaults: {
-                materialPrice: 150,      // R$/litro
-                profitMargin: 280,       // %
-                failureRate: 20,         // %
-                machinePower: 400,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 2600,      // R$
-                depreciationTime: 2000,  // horas
-                consumables: 2           // R$ - álcool + luva
-            }
-        },
-        "K1": {
-            name: "Creality K1",
-            type: "fdm",
-            materialUnit: "g",
-            defaults: {
-                materialPrice: 75,       // R$/kg
-                profitMargin: 280,       // %
-                failureRate: 20,         // %
-                machinePower: 400,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 2600,      // R$
-                depreciationTime: 6000,  // horas
-                consumables: 0           // Não usa consumíveis extras
-            }
-        },
-        "K1M": {
-            name: "Creality K1 Max",
-            type: "fdm",
-            materialUnit: "g",
-            defaults: {
-                materialPrice: 70,       // R$/kg
-                profitMargin: 280,       // %
-                failureRate: 20,         // %
-                machinePower: 650,       // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 4600,      // R$
-                depreciationTime: 6000,  // horas
-                consumables: 0
-            }
-        },
-        "K2PLUS": {
-            name: "Creality K2 Plus",
-            type: "fdm",
-            materialUnit: "g",
-            defaults: {
-                materialPrice: 70,       // R$/kg
-                profitMargin: 280,       // %
-                failureRate: 20,         // %
-                machinePower: 1200,      // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 12000,     // R$
-                depreciationTime: 10000, // horas
-                consumables: 0
-            }
-        },
-        "LASER": {
-            name: "Máquina Laser CO2",
-            type: "laser",
-            materialUnit: "minutos",
-            defaults: {
-                materialPrice: 0,        // Laser não usa material dessa forma
-                profitMargin: 280,       // %
-                failureRate: 20,         // %
-                machinePower: 60,        // W
-                kwhPrice: 1.2,           // R$/kWh
-                machineValue: 2000,      // R$
-                depreciationTime: 10000, // horas
-                consumables: 0
-            }
-        }
-    };
-
-    let currentPrinter = null;
-
-    // ===========================
-    // FUNÇÕES UTILITÁRIAS
+    // UTILITY FUNCTIONS
     // ===========================
     
     function getInputValue(element, defaultValue = 0) {
@@ -137,54 +242,88 @@ document.addEventListener("DOMContentLoaded", () => {
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
+        selectedMaterial = null;
+        customMaterialPrice = null;
     }
 
-    function updatePlaceholders() {
-        if (!currentPrinter) return;
+    function updateMaterialButtons() {
+        if (!currentPrinter) {
+            materialSelection.style.display = 'none';
+            return;
+        }
+
+        materialSelection.style.display = 'block';
+        materialButtons.innerHTML = '';
+
+        const materials = MATERIALS[currentPrinter.type] || [];
         
-        const defaults = currentPrinter.defaults;
-        
-        // Atualizar unidades
+        materials.forEach(material => {
+            const button = document.createElement('button');
+            button.className = 'material-btn';
+            button.textContent = material.name;
+            button.onclick = () => selectMaterial(material);
+            materialButtons.appendChild(button);
+        });
+
+        // Show/hide consumables field for resin
+        if (currentPrinter.type === 'resin') {
+            consumablesField.style.display = 'block';
+        } else {
+            consumablesField.style.display = 'none';
+        }
+
+        // Update units
         if (materialUnitSpan) {
             materialUnitSpan.textContent = currentPrinter.materialUnit;
         }
-        
-        if (customMaterialUnitSpan) {
+
+        // Update custom unit
+        if (customUnitSpan) {
             if (currentPrinter.type === 'resin') {
-                customMaterialUnitSpan.textContent = 'litro';
+                customUnitSpan.textContent = 'litro';
             } else if (currentPrinter.type === 'laser') {
-                customMaterialUnitSpan.textContent = 'minuto';
+                customUnitSpan.textContent = 'minuto';
             } else {
-                customMaterialUnitSpan.textContent = 'kg';
+                customUnitSpan.textContent = 'kg';
             }
         }
 
-        // Atualizar placeholders
-        if (customMaterialPriceInput) customMaterialPriceInput.placeholder = `Padrão: ${defaults.materialPrice}`;
-        if (customProfitMarginInput) customProfitMarginInput.placeholder = `Padrão: ${defaults.profitMargin}`;
-        
-        // Mostrar/ocultar campo de consumíveis
-        if (customConsumablesWrapper) {
-            if (currentPrinter.type === 'resin') {
-                customConsumablesWrapper.style.display = "block";
-                if (customConsumablesInput) customConsumablesInput.placeholder = `Padrão: ${defaults.consumables}`;
-            } else {
-                customConsumablesWrapper.style.display = "none";
-            }
-        }
-
-        // Ajustar label para máquina laser
+        // Adjust label for laser machine
+        const materialUsageLabel = document.getElementById('material-usage-label');
         if (currentPrinter.type === 'laser') {
-            document.querySelector('label[for="material-used"]').innerHTML = 
-                '<i class="fas fa-clock"></i> Tempo de Corte (minutos)';
+            materialUsageLabel.innerHTML = '<i class="fas fa-clock"></i> Tempo de Corte (minutos)';
+            materialSelection.style.display = 'none'; // Hide material selection for laser
         } else {
-            document.querySelector('label[for="material-used"]').innerHTML = 
-                `<i class="fas fa-cube"></i> Material Utilizado (<span id="material-unit">${currentPrinter.materialUnit}</span>)`;
+            materialUsageLabel.innerHTML = `<i class="fas fa-cube"></i> Material Utilizado (<span id="material-unit">${currentPrinter.materialUnit}</span>)`;
         }
     }
 
+    function selectMaterial(material) {
+        selectedMaterial = material;
+        
+        // Update button states
+        document.querySelectorAll('.material-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent === material.name) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Show/hide custom price field
+        if (material.id === 'outros') {
+            customPriceField.style.display = 'block';
+            customMaterialPriceInput.focus();
+        } else {
+            customPriceField.style.display = 'none';
+            customMaterialPriceInput.value = '';
+            customMaterialPrice = material.price;
+        }
+
+        calculateCost();
+    }
+
     // ===========================
-    // CÁLCULO PRINCIPAL
+    // MAIN CALCULATION
     // ===========================
     
     function calculateCost() {
@@ -198,7 +337,18 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Obter valores dos inputs
+        // Check if material is selected (except for laser)
+        if (currentPrinter.type !== 'laser' && !selectedMaterial) {
+            resultsOutput.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Selecione o tipo de material</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Get input values
         const hours = getInputValue(timeHoursInput, 0);
         const minutes = getInputValue(timeMinutesInput, 0);
         const totalTimeHours = hours + minutes / 60;
@@ -206,14 +356,35 @@ document.addEventListener("DOMContentLoaded", () => {
         const printQuantity = getInputValue(printQuantityInput, 1);
         const stlPrice = getInputValue(stlPriceInput, 0);
         const shippingCost = getInputValue(shippingCostInput, 0);
+        const profitMargin = getInputValue(profitMarginInput, 280) / 100;
+        const consumables = getInputValue(consumablesInput, 2);
 
-        // Para laser, o "material" é na verdade o tempo em minutos
-        let actualTimeHours = totalTimeHours;
-        if (currentPrinter.type === 'laser') {
-            actualTimeHours = materialUsed / 60; // Converter minutos para horas
+        // Get material price
+        let materialPrice = 0;
+        if (currentPrinter.type !== 'laser') {
+            if (selectedMaterial && selectedMaterial.id === 'outros') {
+                materialPrice = getInputValue(customMaterialPriceInput, 0);
+                if (materialPrice === 0) {
+                    resultsOutput.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Digite o preço do material personalizado</p>
+                        </div>
+                    `;
+                    return;
+                }
+            } else if (selectedMaterial) {
+                materialPrice = selectedMaterial.price;
+            }
         }
 
-        // Verificar se há dados suficientes
+        // For laser, the "material" is actually time in minutes
+        let actualTimeHours = totalTimeHours;
+        if (currentPrinter.type === 'laser') {
+            actualTimeHours = materialUsed / 60; // Convert minutes to hours
+        }
+
+        // Check if there's enough data
         if (currentPrinter.type === 'laser') {
             if (materialUsed === 0 && stlPrice === 0) {
                 resultsOutput.innerHTML = `
@@ -236,78 +407,62 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Obter parâmetros (customizados ou padrão)
-        const useCustom = toggleCustomParams.checked;
+        // Internal values (not displayed to user)
         const defaults = currentPrinter.defaults;
-        
-        const materialPrice = useCustom && customMaterialPriceInput.value !== "" ? 
-            getInputValue(customMaterialPriceInput) : defaults.materialPrice;
-            
-        const profitMargin = (useCustom && customProfitMarginInput.value !== "" ? 
-            getInputValue(customProfitMarginInput) : defaults.profitMargin) / 100;
-            
-        // Valores internos (não exibidos ao usuário)
         const failureRate = defaults.failureRate / 100;
         const machinePower = defaults.machinePower;
         const kwhPrice = defaults.kwhPrice;
         const machineValue = defaults.machineValue;
         const depreciationTime = defaults.depreciationTime;
-        
-        let consumables = 0;
-        if (currentPrinter.type === 'resin') {
-            consumables = useCustom && customConsumablesInput.value !== "" ? 
-                getInputValue(customConsumablesInput) : defaults.consumables;
-        }
 
         // ===========================
-        // CÁLCULOS
+        // CALCULATIONS
         // ===========================
         
-        // Para laser, usar o tempo convertido
         const timeForCalc = currentPrinter.type === 'laser' ? actualTimeHours : totalTimeHours;
         
-        // 1. Custo de energia
+        // 1. Energy cost
         const energyCost = (machinePower / 1000) * timeForCalc * kwhPrice;
         
-        // 2. Custo de depreciação
+        // 2. Depreciation cost
         const depreciationCost = depreciationTime > 0 ? 
             (machineValue / depreciationTime) * timeForCalc : 0;
         
-        // 3. Custo de material
+        // 3. Material cost
         let materialCost = 0;
         if (currentPrinter.type === 'resin') {
-            materialCost = (materialUsed / 1000) * materialPrice; // ml para litro
+            materialCost = (materialUsed / 1000) * materialPrice; // ml to liter
         } else if (currentPrinter.type === 'laser') {
-            materialCost = 0; // Laser não tem custo de material dessa forma
+            materialCost = 0; // Laser has no material cost
         } else {
-            materialCost = (materialUsed / 1000) * materialPrice; // g para kg
+            materialCost = (materialUsed / 1000) * materialPrice; // g to kg
         }
 
-        // 4. Custo de produção por unidade
+        // 4. Production cost per unit
         let productionCostPerUnit = (materialCost + energyCost + depreciationCost) * (1 + failureRate);
         
-        // Adicionar consumíveis para resina
+        // Add consumables for resin
         if (currentPrinter.type === 'resin') {
             productionCostPerUnit += consumables * printQuantity;
         }
         
-        // 5. Custo de produção do lote (SEM STL)
+        // 5. Batch production cost (WITHOUT STL)
         const productionCostTotal = productionCostPerUnit * printQuantity;
         
-        // 6. Valor da unidade sem imposto (com lucro)
+        // 6. Unit price without tax (with profit)
         const unitPriceNoTax = productionCostPerUnit * (1 + profitMargin);
         
-        // 7. Valor do lote (SEM STL ainda)
+        // 7. Batch price (WITHOUT STL yet)
         const batchPrice = unitPriceNoTax * printQuantity;
         
-        // 8. Total com STL (STL é somado apenas uma vez ao total final)
+        // 8. Total with STL (STL is added only once to final total)
         const totalPrice = batchPrice + stlPrice;
         
-        // 9. Total com frete
+        // 9. Total with shipping
         const totalWithShipping = totalPrice + shippingCost;
 
         // ===========================
-        // EXIBIR RESULTADOS
+        // DISPLAY RESULTS
         // ===========================
         
         resultsOutput.innerHTML = `
@@ -329,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${currentPrinter.type !== 'laser' ? `
                 <div class="cost-item">
                     <span class="cost-label">
-                        <i class="fas fa-cube"></i> Material
+                        <i class="fas fa-cube"></i> Material${selectedMaterial ? ' (' + selectedMaterial.name + ')' : ''}
                     </span>
                     <span class="cost-value">${formatCurrency(materialCost)}</span>
                 </div>
@@ -397,7 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        // Armazenar valores para o print
+        // Store values for print
         window.printData = {
             unitPrice: unitPriceNoTax,
             totalPrice: totalPrice,
@@ -408,7 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ===========================
-    // FUNÇÃO GERAR PRINT
+    // GENERATE PRINT FUNCTION
     // ===========================
     
     window.generatePrint = async function() {
@@ -419,7 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const modelName = modelNameInput.value.trim() || 'Modelo não especificado';
         
-        // Criar um container temporário para o print
+        // Create temporary container for print
         const printContainer = document.createElement('div');
         printContainer.className = 'print-container';
         printContainer.style.cssText = `
@@ -511,7 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(printContainer);
         
         try {
-            // Usar html2canvas para gerar a imagem
+            // Use html2canvas to generate image
             const canvas = await html2canvas(printContainer, {
                 backgroundColor: null,
                 scale: 2,
@@ -520,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 height: printContainer.scrollHeight
             });
             
-            // Converter para blob e fazer download
+            // Convert to blob and download
             canvas.toBlob(function(blob) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -530,7 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 a.click();
                 URL.revokeObjectURL(url);
                 
-                // Feedback visual
+                // Visual feedback
                 const btn = document.getElementById('generate-print-btn');
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> Print Gerado!';
@@ -554,38 +709,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // EVENT LISTENERS
     // ===========================
     
-    // Mudança de impressora
+    // Printer selection change
     printerSelect.addEventListener("change", (e) => {
         const selectedPrinter = e.target.value;
         if (selectedPrinter && printerDefaults[selectedPrinter]) {
             currentPrinter = printerDefaults[selectedPrinter];
             clearInputs();
-            updatePlaceholders();
+            updateMaterialButtons();
             calculateCost();
         } else {
             currentPrinter = null;
+            materialSelection.style.display = 'none';
             calculateCost();
         }
     });
 
-    // Toggle parâmetros customizados
-    toggleCustomParams.addEventListener("change", (e) => {
-        const isEnabled = e.target.checked;
-        customParamsFields.classList.toggle("disabled", !isEnabled);
-        
-        // Habilitar/desabilitar inputs
-        customParamsFields.querySelectorAll("input").forEach(input => {
-            input.disabled = !isEnabled;
-            if (!isEnabled) input.value = ''; // Limpar valores ao desabilitar
-        });
-        
-        calculateCost(); // Recalcular imediatamente
+    // Custom material price input
+    customMaterialPriceInput.addEventListener("input", () => {
+        if (selectedMaterial && selectedMaterial.id === 'outros') {
+            customMaterialPrice = getInputValue(customMaterialPriceInput, 0);
+            calculateCost();
+        }
     });
 
-    // Inputs principais - recalcular em tempo real
+    // Main inputs - recalculate in real time
     const mainInputs = [
         timeHoursInput, timeMinutesInput, materialUsedInput, 
-        printQuantityInput, stlPriceInput, shippingCostInput
+        printQuantityInput, stlPriceInput, shippingCostInput,
+        profitMarginInput, consumablesInput
     ];
     
     mainInputs.forEach(input => {
@@ -594,56 +745,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Inputs customizados - recalcular em tempo real
-    const customInputs = [
-        customMaterialPriceInput, customProfitMarginInput, customConsumablesInput
-    ];
-    
-    customInputs.forEach(input => {
-        if (input) {
-            input.addEventListener("input", () => {
-                if (toggleCustomParams.checked) {
-                    calculateCost();
-                }
-            });
-        }
-    });
-
-    // ===========================
-    // EFEITOS VISUAIS
-    // ===========================
-    
-    // Criar partículas de fundo
-    function createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        if (!particlesContainer) return;
-        
-        const particleCount = 30;
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-            particlesContainer.appendChild(particle);
-        }
-    }
-
-    // ===========================
-    // INICIALIZAÇÃO
-    // ===========================
-    
-    createParticles();
-    
-    // Estado inicial
+    // Initial state
     resultsOutput.innerHTML = `
         <div class="empty-state">
             <i class="fas fa-calculator"></i>
             <p>Selecione uma impressora e preencha os dados para calcular</p>
         </div>
     `;
+}
+
+// ===========================
+// VISUAL EFFECTS
+// ===========================
+
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    const particleCount = 30;
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+// ===========================
+// INITIALIZATION
+// ===========================
+
+document.addEventListener("DOMContentLoaded", () => {
+    createParticles();
+    
+    // Check authentication state
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    auth.onAuthStateChanged((user) => {
+        if (user && AUTHORIZED_EMAILS.includes(user.email)) {
+            currentUser = user;
+            isAuthorized = true;
+            showMainApp();
+        } else {
+            if (user) {
+                auth.signOut();
+            }
+            hideMainApp();
+        }
+    });
 
     console.log('Sistema de Orçamento ImaginaTech carregado com sucesso!');
-    console.log('Versão: 3.0 - Simplificada');
-    console.log('Máquinas disponíveis: Saturn 2, K1, K1M, K2+, Laser');
+    console.log('Versão: 4.0 - Com Autenticação e Seletor de Materiais');
 });
