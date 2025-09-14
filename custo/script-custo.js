@@ -1,8 +1,8 @@
-// ===========================
+// ==========================
 // IMAGINATECH - SISTEMA DE ORÇAMENTO
 // JavaScript Principal - Versão com Autenticação
 // Arquivo: script.js
-// ===========================
+// ==========================
 
 // Firebase Configuration
 const firebaseConfig = {
