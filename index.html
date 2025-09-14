@@ -92,8 +92,109 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
-    <!-- External Stylesheet -->
+    <!-- External Stylesheet with modifications -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Inline CSS for specific modifications -->
+    <style>
+        /* Redução do tamanho do cubo */
+        .cube-container {
+            width: 150px !important;
+            height: 150px !important;
+            margin: 40px auto !important;
+        }
+        
+        .cube-face {
+            width: 150px !important;
+            height: 150px !important;
+        }
+        
+        .cube-face:nth-child(1) { transform: translateZ(75px) !important; }
+        .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(75px) !important; }
+        .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(75px) !important; }
+        .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(75px) !important; }
+        .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(75px) !important; }
+        .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(75px) !important; }
+        
+        /* Ajuste do navbar para incluir botão */
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .btn-track-order {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00FF88, #44FF44);
+            color: #0a0e1a;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-track-order:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+        }
+        
+        /* Alinhamento com o estilo das outras páginas */
+        .navbar {
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .nav-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-track-order {
+                font-size: 0.85rem;
+                padding: 8px 16px;
+            }
+            
+            .cube-container {
+                width: 120px !important;
+                height: 120px !important;
+            }
+            
+            .cube-face {
+                width: 120px !important;
+                height: 120px !important;
+            }
+            
+            .cube-face:nth-child(1) { transform: translateZ(60px) !important; }
+            .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(60px) !important; }
+            .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(60px) !important; }
+            .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(60px) !important; }
+            .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(60px) !important; }
+            .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(60px) !important; }
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -107,12 +208,18 @@
         <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Navigation -->
+    <!-- Navigation with Track Order Button -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="logo-section">
                 <img src="imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img">
                 <span class="logo-text">ImaginaTech</span>
+            </div>
+            <div class="nav-actions">
+                <a href="/servicos" class="btn-track-order">
+                    <i class="fas fa-search"></i>
+                    Acompanhar Pedido
+                </a>
             </div>
         </div>
     </nav>
@@ -121,7 +228,7 @@
     <section class="hero">
         <div class="hero-content">
             <h1 class="glitch-text">ImaginaTech</h1>
-            <p class="hero-subtitle">O Futuro da Impressão 3D Chegou</p>
+            <p class="hero-subtitle">Crie seus modelos para produção unitária ou em escala - Atendemos desde projetos personalizados até demandas industriais</p>
             
             <div class="cube-container">
                 <div class="cube">
