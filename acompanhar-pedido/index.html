@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhar Pedido - ImaginaTech</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Acompanhe seu pedido de impressão 3D em tempo real. ImaginaTech - Transformando ideias em realidade.">
+    <meta name="keywords" content="acompanhar pedido, impressão 3d, status pedido, imaginatech, rastreamento">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Acompanhar Pedido - ImaginaTech">
+    <meta property="og:description" content="Acompanhe o status do seu pedido de impressão 3D em tempo real">
+    <meta property="og:image" content="https://imaginatech.com.br/assets/og-image.jpg">
+    <meta property="og:url" content="https://imaginatech.com.br/acompanhar-pedido">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Conectando ao servidor...</div>
+        </div>
+    </div>
+
+    <!-- Background Animado -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Header Simplificado -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-section">
+                <a href="/" class="logo-link">
+                    <h1 class="logo">ImaginaTech</h1>
+                    <span class="logo-subtitle">Impressão 3D</span>
+                </a>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="/servicos" class="nav-link">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span>Serviços</span>
+                </a>
+                <a href="https://wa.me/5511999999999" class="nav-link whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Container Principal -->
+    <main class="main-container">
+        
+        <!-- Tela de Boas-Vindas -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-card">
+                <div class="welcome-header">
+                    <div class="welcome-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <h2>Acompanhe Seu Pedido</h2>
+                    <p>Faça login para visualizar o status em tempo real</p>
+                </div>
+
+                <div class="login-section" id="loginSection">
+                    <button class="btn-google" onclick="loginWithGoogle()">
+                        <i class="fab fa-google"></i>
+                        <span>Entrar com Google</span>
+                    </button>
+                    
+                    <div class="divider">
+                        <span>Como funciona?</span>
+                    </div>
+                    
+                    <div class="info-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-text">
+                                <strong>Faça Login</strong>
+                                <p>Use sua conta Google</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-text">
+                                <strong>Digite o Código</strong>
+                                <p>Informe o código do pedido</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-text">
+                                <strong>Acompanhe</strong>
+                                <p>Veja o status em tempo real</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Código (aparece após login) -->
+                <div class="code-section hidden" id="codeSection">
+                    <div class="user-info">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Usuário</span>
+                            <button class="btn-logout" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sair
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="code-input-container">
+                        <label for="orderCode" class="code-label">
+                            <i class="fas fa-hashtag"></i>
+                            Código do Pedido
+                        </label>
+                        <div class="code-input-group">
+                            <input 
+                                type="text" 
+                                id="orderCode" 
+                                class="code-input"
+                                placeholder="Digite o código de 5 caracteres"
+                                maxlength="5"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <button class="btn-verify" onclick="verifyCode()">
+                                <i class="fas fa-search"></i>
+                                Verificar
+                            </button>
+                        </div>
+                        <div class="code-hint">
+                            <i class="fas fa-info-circle"></i>
+                            O código foi enviado por WhatsApp ou email
+                        </div>
+                        <div class="attempts-warning" id="attemptsWarning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="attemptsText"></span>
+                        </div>
+                    </div>
+
+                    <div class="my-orders-section" id="myOrdersSection">
+                        <h3 class="section-title">
+                            <i class="fas fa-history"></i>
+                            Meus Pedidos Recentes
+                        </h3>
+                        <div class="orders-list" id="ordersList">
+                            <!-- Pedidos anteriores aparecem aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Visualização do Pedido -->
+        <div class="order-view hidden" id="orderView">
+            <div class="order-container">
+                
+                <!-- Header do Pedido -->
+                <div class="order-header">
+                    <button class="btn-back" onclick="backToCode()">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar
+                    </button>
+                    
+                    <div class="order-title">
+                        <h2>Detalhes do Pedido</h2>
+                        <div class="order-code-display">
+                            <i class="fas fa-hashtag"></i>
+                            <span id="displayCode">XXXXX</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-refresh" onclick="refreshOrder()">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar
+                    </button>
+                </div>
+
+                <!-- Card Principal do Pedido -->
+                <div class="order-card" id="orderCard">
+                    <!-- Conteúdo dinâmico do pedido -->
+                </div>
+
+                <!-- Timeline do Pedido -->
+                <div class="timeline-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-clock"></i>
+                        Histórico do Pedido
+                    </h3>
+                    <div class="timeline" id="timeline">
+                        <!-- Timeline dinâmica -->
+                    </div>
+                </div>
+
+                <!-- Ações do Cliente -->
+                <div class="client-actions">
+                    <a href="https://wa.me/5511999999999" class="btn-action whatsapp" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Falar com Atendimento
+                    </a>
+                    <button class="btn-action print" onclick="printOrder()">
+                        <i class="fas fa-print"></i>
+                        Imprimir Comprovante
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirmar Ação</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Tem certeza?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-confirm" id="modalConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- JavaScript Principal -->
+    <script src="script.js"></script>
+
+    <!-- Particles Animation -->
+    <script>
+        // Criar partículas animadas
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (20 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Inicializar ao carregar
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+</body>
+</html>
