@@ -1,6 +1,6 @@
 /* ===========================
    IMAGINATECH - SISTEMA DE ORÇAMENTO
-   CSS Principal - Design Futurista
+   CSS Principal - Design Futurista Simplificado
    Arquivo: styles.css
    =========================== */
 
@@ -199,7 +199,7 @@ body {
 
 .form-card,
 .results-card,
-.client-quote-card {
+.print-actions-card {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -212,8 +212,7 @@ body {
 }
 
 .form-card::before,
-.results-card::before,
-.client-quote-card::before {
+.results-card::before {
     content: '';
     position: absolute;
     top: 0;
@@ -227,13 +226,14 @@ body {
     background: linear-gradient(90deg, var(--neon-green), #44FF44);
 }
 
-.client-quote-card::before {
-    background: linear-gradient(90deg, var(--neon-purple), #B845FF);
+.print-actions-card {
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.05), rgba(0, 212, 255, 0.05));
+    border: 1px solid var(--neon-purple);
 }
 
 .form-card:hover,
 .results-card:hover,
-.client-quote-card:hover {
+.print-actions-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 40px rgba(0, 212, 255, 0.1);
 }
@@ -536,47 +536,36 @@ input:checked + .toggle-slider:before {
 }
 
 /* ===========================
-   CLIENT QUOTE SECTION
+   PRINT BUTTON
    =========================== */
 
-.quote-output {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 20px;
-    position: relative;
-    min-height: 200px;
-}
-
-.quote-text {
-    white-space: pre-wrap;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.9);
-    padding-right: 50px;
-}
-
-.copy-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
-    color: white;
+.btn-print {
+    width: 100%;
+    padding: 15px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
     border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
+    border-radius: 50px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 10px;
     transition: all 0.3s ease;
     font-family: 'Inter', sans-serif;
-    font-weight: 600;
+    background: linear-gradient(135deg, var(--neon-purple), #B845FF);
+    color: white;
+    box-shadow: 0 4px 20px rgba(153, 69, 255, 0.3);
+    margin-top: 15px;
 }
 
-.copy-button:hover {
+.btn-print:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+    box-shadow: 0 6px 30px rgba(153, 69, 255, 0.5);
+}
+
+.btn-print i {
+    font-size: 1.2rem;
 }
 
 /* ===========================
@@ -724,19 +713,8 @@ input:checked + .toggle-slider:before {
     
     .form-card,
     .results-card,
-    .client-quote-card {
+    .print-actions-card {
         padding: 20px;
-    }
-    
-    .copy-button {
-        position: static;
-        margin-top: 15px;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .quote-text {
-        padding-right: 0;
     }
 }
 
@@ -807,14 +785,13 @@ input:checked + .toggle-slider:before {
     .header,
     .footer,
     .btn,
-    .toggle-switch,
-    .copy-button {
+    .toggle-switch {
         display: none !important;
     }
     
     .form-card,
     .results-card,
-    .client-quote-card {
+    .print-actions-card {
         border: 1px solid #ccc;
         box-shadow: none;
     }
