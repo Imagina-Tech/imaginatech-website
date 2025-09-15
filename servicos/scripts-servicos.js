@@ -1,7 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL ADMINISTRATIVO
 // Sistema de Gerenciamento com Firebase
-// Versão Corrigida com Debug Completo
+// Versão com Correção do Loading
 // ===========================
 
 console.log('🚀 Iniciando script-servicos.js...');
@@ -22,28 +22,6 @@ const AUTHORIZED_EMAILS = [
     "igor.butter@gmail.com"
 ];
 
-// Verificar se Firebase está disponível
-if (typeof firebase === 'undefined') {
-    console.error('❌ Firebase não está definido! Aguardando carregamento...');
-    // Aguardar Firebase carregar
-    let waitCount = 0;
-    const waitForFirebase = setInterval(() => {
-        waitCount++;
-        if (typeof firebase !== 'undefined') {
-            console.log('✅ Firebase carregou após espera');
-            clearInterval(waitForFirebase);
-            initializeApp();
-        } else if (waitCount > 10) {
-            console.error('❌ Firebase não carregou após 10 tentativas');
-            clearInterval(waitForFirebase);
-            alert('Erro ao carregar Firebase. Recarregue a página.');
-        }
-    }, 500);
-} else {
-    console.log('✅ Firebase já está disponível');
-    initializeApp();
-}
-
 // Variáveis globais
 let db = null;
 let auth = null;
@@ -56,22 +34,17 @@ let isAuthorized = false;
 let servicesListener = null;
 let pendingStatusUpdate = null;
 
-// Função para inicializar o app
-function initializeApp() {
-    try {
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        auth = firebase.auth();
-        
-        console.log('✅ Firebase inicializado com sucesso');
-        
-        // Configurar listeners após inicialização
-        setupEventListeners();
-        
-    } catch (error) {
-        console.error('❌ Erro ao inicializar Firebase:', error);
-        showToast('Erro ao conectar com o servidor. Recarregue a página.', 'error');
+// ===========================
+// HIDE LOADING IMMEDIATELY
+// ===========================
+function hideLoadingOverlay() {
+    console.log('🔄 Escondendo loading overlay...');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+        console.log('✅ Loading overlay escondido');
+    } else {
+        console.error('❌ Loading overlay não encontrado');
     }
 }
 
@@ -79,77 +52,67 @@ function initializeApp() {
 // INITIALIZATION
 // ===========================
 
-function setupEventListeners() {
-    console.log('🔧 Configurando event listeners...');
-    
-    // Aguardar DOM carregar
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', onDOMReady);
-    } else {
-        onDOMReady();
-    }
+// Inicializar Firebase imediatamente
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    console.log('✅ Firebase inicializado com sucesso');
+} catch (error) {
+    console.error('❌ Erro ao inicializar Firebase:', error);
+    hideLoadingOverlay();
+    alert('Erro ao conectar com o servidor. Recarregue a página.');
+}
+
+// Configurar listeners quando DOM estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onDOMReady);
+} else {
+    onDOMReady();
 }
 
 function onDOMReady() {
     console.log('📄 DOM carregado, configurando sistema...');
     
-    try {
-        // Esconder loading overlay após inicialização
-        setTimeout(() => {
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            if (loadingOverlay) {
-                loadingOverlay.classList.add('hidden');
-                console.log('✅ Loading overlay escondido');
-            }
-        }, 1000);
+    // IMPORTANTE: Esconder loading IMEDIATAMENTE após auth check
+    auth.onAuthStateChanged((user) => {
+        console.log('👤 Estado de autenticação:', user ? user.email : 'Não logado');
         
-        // Check auth state
-        if (auth) {
-            auth.onAuthStateChanged((user) => {
-                console.log('👤 Estado de autenticação mudou:', user ? user.email : 'Não logado');
-                
-                if (user) {
-                    currentUser = user;
-                    checkAuthorization(user);
-                } else {
-                    currentUser = null;
-                    isAuthorized = false;
-                    showLoginScreen();
-                }
-            });
+        // Esconder loading assim que soubermos o estado do auth
+        hideLoadingOverlay();
+        
+        if (user) {
+            currentUser = user;
+            checkAuthorization(user);
         } else {
-            console.error('❌ Auth não está inicializado');
+            currentUser = null;
+            isAuthorized = false;
+            showLoginScreen();
         }
-        
-        // Set today's date as default for new services
-        const today = new Date().toISOString().split('T')[0];
-        const startDateInput = document.getElementById('startDate');
-        const dueDateInput = document.getElementById('dueDate');
-        
-        if (startDateInput) {
-            startDateInput.value = today;
-            startDateInput.addEventListener('change', () => {
-                if (dueDateInput && dueDateInput.value < startDateInput.value) {
-                    dueDateInput.value = startDateInput.value;
-                }
-            });
-        }
-        
-        // Format phone input
-        const phoneInput = document.getElementById('clientPhone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', formatPhoneNumber);
-        }
-        
-        // Initialize connection monitoring
-        monitorConnection();
-        
-        console.log('✅ Sistema configurado com sucesso');
-        
-    } catch (error) {
-        console.error('❌ Erro na configuração inicial:', error);
-        showToast('Erro na inicialização do sistema', 'error');
+    });
+    
+    // Configurar campos de data
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById('startDate');
+    const dueDateInput = document.getElementById('dueDate');
+    
+    if (startDateInput) {
+        startDateInput.value = today;
+        startDateInput.addEventListener('change', () => {
+            if (dueDateInput && dueDateInput.value < startDateInput.value) {
+                dueDateInput.value = startDateInput.value;
+            }
+        });
     }
+    
+    // Formatação de telefone
+    const phoneInput = document.getElementById('clientPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', formatPhoneNumber);
+    }
+    
+    // Monitorar conexão
+    monitorConnection();
 }
 
 // ===========================
@@ -158,12 +121,6 @@ function onDOMReady() {
 
 async function signInWithGoogle() {
     console.log('🔐 Iniciando login com Google...');
-    
-    if (!auth) {
-        console.error('❌ Auth não está inicializado');
-        showToast('Sistema não está pronto. Aguarde e tente novamente.', 'error');
-        return;
-    }
     
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -193,10 +150,8 @@ async function signOut() {
     console.log('🔐 Fazendo logout...');
     
     try {
-        if (auth) {
-            await auth.signOut();
-            showToast('Logout realizado com sucesso!', 'info');
-        }
+        await auth.signOut();
+        showToast('Logout realizado com sucesso!', 'info');
     } catch (error) {
         console.error('❌ Erro no logout:', error);
         showToast('Erro ao fazer logout.', 'error');
@@ -226,13 +181,8 @@ function checkAuthorization(user) {
 function showLoginScreen() {
     console.log('📱 Mostrando tela de login');
     
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loginScreen = document.getElementById('loginScreen');
-    const adminDashboard = document.getElementById('adminDashboard');
-    
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-    if (loginScreen) loginScreen.classList.remove('hidden');
-    if (adminDashboard) adminDashboard.classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
     
     if (servicesListener) {
         servicesListener();
@@ -241,22 +191,14 @@ function showLoginScreen() {
 }
 
 function showAdminDashboard(user) {
-    console.log('📱 Mostrando dashboard admin para:', user.email);
+    console.log('📱 Mostrando dashboard admin');
     
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loginScreen = document.getElementById('loginScreen');
-    const adminDashboard = document.getElementById('adminDashboard');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
     
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (adminDashboard) adminDashboard.classList.remove('hidden');
-    
-    // Update user info
-    const userName = document.getElementById('userName');
-    const userPhoto = document.getElementById('userPhoto');
-    
-    if (userName) userName.textContent = user.displayName || user.email;
-    if (userPhoto) userPhoto.src = user.photoURL || '/assets/default-avatar.png';
+    // Atualizar info do usuário
+    document.getElementById('userName').textContent = user.displayName || user.email;
+    document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
 }
 
 // ===========================
@@ -266,65 +208,35 @@ function showAdminDashboard(user) {
 function startServicesListener() {
     console.log('🔄 Iniciando listener de serviços...');
     
-    if (!db) {
-        console.error('❌ Firestore não está inicializado');
-        return;
-    }
-    
     if (servicesListener) {
         servicesListener();
     }
     
-    try {
-        servicesListener = db.collection('services')
-            .orderBy('createdAt', 'desc')
-            .onSnapshot((snapshot) => {
-                services = [];
-                snapshot.forEach(doc => {
-                    services.push({ 
-                        id: doc.id, 
-                        ...doc.data() 
-                    });
+    servicesListener = db.collection('services')
+        .onSnapshot((snapshot) => {
+            services = [];
+            snapshot.forEach(doc => {
+                services.push({ 
+                    id: doc.id, 
+                    ...doc.data() 
                 });
-                
-                console.log(`✅ ${services.length} serviços carregados`);
-                updateStats();
-                renderServices();
-                
-            }, (error) => {
-                console.error('❌ Erro ao carregar serviços:', error);
-                
-                // Se for erro de permissão, tentar sem ordenação
-                if (error.code === 'permission-denied') {
-                    console.log('🔄 Tentando carregar sem ordenação...');
-                    servicesListener = db.collection('services')
-                        .onSnapshot((snapshot) => {
-                            services = [];
-                            snapshot.forEach(doc => {
-                                services.push({ 
-                                    id: doc.id, 
-                                    ...doc.data() 
-                                });
-                            });
-                            
-                            // Ordenar manualmente
-                            services.sort((a, b) => {
-                                const dateA = new Date(a.createdAt || 0);
-                                const dateB = new Date(b.createdAt || 0);
-                                return dateB - dateA;
-                            });
-                            
-                            console.log(`✅ ${services.length} serviços carregados (sem índice)`);
-                            updateStats();
-                            renderServices();
-                        });
-                } else {
-                    showToast('Erro ao carregar serviços', 'error');
-                }
             });
-    } catch (error) {
-        console.error('❌ Erro ao configurar listener:', error);
-    }
+            
+            // Ordenar manualmente se não houver índice
+            services.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+            
+            console.log(`✅ ${services.length} serviços carregados`);
+            updateStats();
+            renderServices();
+            
+        }, (error) => {
+            console.error('❌ Erro ao carregar serviços:', error);
+            showToast('Erro ao carregar serviços', 'error');
+        });
 }
 
 // ===========================
@@ -337,61 +249,47 @@ function generateOrderCode() {
     for (let i = 0; i < 5; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    console.log('🔑 Código gerado:', code);
     return code;
 }
 
 async function saveService(event) {
     event.preventDefault();
-    console.log('💾 Salvando serviço...');
     
     if (!isAuthorized) {
         showToast('Você não tem permissão para esta ação', 'error');
         return;
     }
     
-    if (!db) {
-        console.error('❌ Firestore não está inicializado');
-        showToast('Sistema não está pronto. Recarregue a página.', 'error');
-        return;
-    }
+    const service = {
+        name: document.getElementById('serviceName').value,
+        client: document.getElementById('clientName').value,
+        clientPhone: document.getElementById('clientPhone').value || null,
+        description: document.getElementById('serviceDescription').value || null,
+        material: document.getElementById('serviceMaterial').value,
+        color: document.getElementById('serviceColor').value || null,
+        priority: document.getElementById('servicePriority').value,
+        startDate: document.getElementById('startDate').value,
+        dueDate: document.getElementById('dueDate').value,
+        value: parseFloat(document.getElementById('serviceValue').value) || null,
+        observations: document.getElementById('serviceObservations').value || null,
+        status: document.getElementById('serviceStatus').value,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.email
+    };
     
     try {
-        const service = {
-            name: document.getElementById('serviceName').value,
-            client: document.getElementById('clientName').value,
-            clientPhone: document.getElementById('clientPhone').value || null,
-            description: document.getElementById('serviceDescription').value || null,
-            material: document.getElementById('serviceMaterial').value,
-            color: document.getElementById('serviceColor').value || null,
-            priority: document.getElementById('servicePriority').value,
-            startDate: document.getElementById('startDate').value,
-            dueDate: document.getElementById('dueDate').value,
-            value: parseFloat(document.getElementById('serviceValue').value) || null,
-            observations: document.getElementById('serviceObservations').value || null,
-            status: document.getElementById('serviceStatus').value,
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.email
-        };
-        
         if (editingServiceId) {
-            // Update existing service
             await db.collection('services').doc(editingServiceId).update(service);
-            console.log('✅ Serviço atualizado:', editingServiceId);
             showToast('Serviço atualizado com sucesso!', 'success');
-            
         } else {
-            // Create new service
             service.createdAt = new Date().toISOString();
             service.createdBy = currentUser.email;
             service.orderCode = generateOrderCode();
             service.serviceId = 'SRV-' + Date.now();
             
             const docRef = await db.collection('services').add(service);
-            console.log('✅ Serviço criado:', docRef.id);
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
-            // Send WhatsApp if phone provided
             if (service.clientPhone) {
                 sendWhatsAppMessage(service.clientPhone, 
                     `Olá ${service.client}! Seu pedido foi registrado com sucesso.\n\n` +
@@ -406,28 +304,22 @@ async function saveService(event) {
         closeModal();
         
     } catch (error) {
-        console.error('❌ Erro ao salvar serviço:', error);
-        showToast('Erro ao salvar serviço: ' + error.message, 'error');
+        console.error('Erro ao salvar:', error);
+        showToast('Erro ao salvar serviço', 'error');
     }
 }
 
 async function updateStatus(serviceId, newStatus) {
-    console.log('🔄 Atualizando status:', serviceId, '→', newStatus);
-    
     if (!isAuthorized) {
         showToast('Você não tem permissão para esta ação', 'error');
         return;
     }
     
     const service = services.find(s => s.id === serviceId);
-    if (!service) {
-        console.error('❌ Serviço não encontrado:', serviceId);
-        return;
-    }
+    if (!service) return;
     
     pendingStatusUpdate = { serviceId, newStatus, service };
     
-    // Show confirmation modal
     const statusMessages = {
         'pendente': 'Marcar como Pendente',
         'producao': 'Iniciar Produção',
@@ -436,37 +328,25 @@ async function updateStatus(serviceId, newStatus) {
         'entregue': 'Confirmar Entrega'
     };
     
-    const statusModalMessage = document.getElementById('statusModalMessage');
-    if (statusModalMessage) {
-        statusModalMessage.textContent = 
-            `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`;
-    }
+    document.getElementById('statusModalMessage').textContent = 
+        `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`;
     
-    // Show WhatsApp option if phone available
     const whatsappOption = document.getElementById('whatsappOption');
-    if (whatsappOption) {
-        if (service.clientPhone && (newStatus === 'producao' || newStatus === 'retirada' || newStatus === 'entregue')) {
-            whatsappOption.style.display = 'block';
-            const checkbox = document.getElementById('sendWhatsappNotification');
-            if (checkbox) checkbox.checked = true;
-        } else {
-            whatsappOption.style.display = 'none';
-        }
+    if (service.clientPhone && (newStatus === 'producao' || newStatus === 'retirada' || newStatus === 'entregue')) {
+        whatsappOption.style.display = 'block';
+        document.getElementById('sendWhatsappNotification').checked = true;
+    } else {
+        whatsappOption.style.display = 'none';
     }
     
-    const statusModal = document.getElementById('statusModal');
-    if (statusModal) {
-        statusModal.classList.add('active');
-    }
+    document.getElementById('statusModal').classList.add('active');
 }
 
 async function confirmStatusChange() {
-    console.log('✅ Confirmando mudança de status...');
-    
-    if (!pendingStatusUpdate || !db) return;
+    if (!pendingStatusUpdate) return;
     
     const { serviceId, newStatus, service } = pendingStatusUpdate;
-    const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
+    const sendWhatsapp = document.getElementById('sendWhatsappNotification').checked;
     
     try {
         const updates = {
@@ -476,7 +356,6 @@ async function confirmStatusChange() {
             lastStatusChange: new Date().toISOString()
         };
         
-        // Add specific timestamps
         if (newStatus === 'producao') {
             updates.productionStartedAt = new Date().toISOString();
         } else if (newStatus === 'concluido') {
@@ -488,11 +367,8 @@ async function confirmStatusChange() {
         }
         
         await db.collection('services').doc(serviceId).update(updates);
-        
-        console.log('✅ Status atualizado com sucesso');
         showToast('Status atualizado com sucesso!', 'success');
         
-        // Send WhatsApp notification if requested
         if (sendWhatsapp && service.clientPhone) {
             const messages = {
                 'producao': `✅ Ótima notícia! Iniciamos a produção do seu pedido:\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nAcompanhe: https://imaginatech.com.br/acompanhar-pedido`,
@@ -506,37 +382,28 @@ async function confirmStatusChange() {
         }
         
     } catch (error) {
-        console.error('❌ Erro ao atualizar status:', error);
-        showToast('Erro ao atualizar status: ' + error.message, 'error');
+        console.error('Erro ao atualizar status:', error);
+        showToast('Erro ao atualizar status', 'error');
     }
     
     closeStatusModal();
 }
 
 async function deleteService(serviceId) {
-    console.log('🗑️ Excluindo serviço:', serviceId);
-    
     if (!isAuthorized) {
         showToast('Você não tem permissão para esta ação', 'error');
         return;
     }
     
-    if (!db) {
-        console.error('❌ Firestore não está inicializado');
-        return;
-    }
-    
     const service = services.find(s => s.id === serviceId);
     
-    if (confirm(`Tem certeza que deseja excluir o serviço "${service?.name || serviceId}"?`)) {
+    if (confirm(`Tem certeza que deseja excluir o serviço "${service.name}"?`)) {
         try {
             await db.collection('services').doc(serviceId).delete();
-            console.log('✅ Serviço excluído com sucesso');
             showToast('Serviço excluído com sucesso!', 'success');
-            
         } catch (error) {
-            console.error('❌ Erro ao excluir serviço:', error);
-            showToast('Erro ao excluir serviço: ' + error.message, 'error');
+            console.error('Erro ao excluir:', error);
+            showToast('Erro ao excluir serviço', 'error');
         }
     }
 }
@@ -546,17 +413,9 @@ async function deleteService(serviceId) {
 // ===========================
 
 function renderServices() {
-    console.log('🎨 Renderizando serviços...');
-    
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     
-    if (!grid || !emptyState) {
-        console.error('❌ Elementos da UI não encontrados');
-        return;
-    }
-    
-    // Apply filters
     let filteredServices = services;
     
     if (currentFilter !== 'todos') {
@@ -571,7 +430,6 @@ function renderServices() {
         );
     }
     
-    // Sort by priority and date
     filteredServices.sort((a, b) => {
         const priorityOrder = { alta: 3, media: 2, baixa: 1 };
         if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
@@ -579,8 +437,6 @@ function renderServices() {
         }
         return new Date(a.dueDate) - new Date(b.dueDate);
     });
-    
-    console.log(`📊 Mostrando ${filteredServices.length} de ${services.length} serviços`);
     
     if (filteredServices.length === 0) {
         grid.style.display = 'none';
@@ -704,8 +560,6 @@ function renderServices() {
 }
 
 function updateStats() {
-    console.log('📊 Atualizando estatísticas...');
-    
     const stats = {
         total: services.length,
         pendente: services.filter(s => s.status === 'pendente').length,
@@ -715,15 +569,12 @@ function updateStats() {
         entregue: services.filter(s => s.status === 'entregue').length
     };
     
-    // Update DOM
-    Object.keys(stats).forEach(key => {
-        const element = document.getElementById(`stat-${key === 'total' ? 'total' : key === 'pendente' ? 'pending' : key === 'producao' ? 'production' : key === 'concluido' ? 'completed' : key === 'retirada' ? 'ready' : 'delivered'}`);
-        if (element) {
-            element.textContent = stats[key];
-        }
-    });
-    
-    console.log('📊 Estatísticas:', stats);
+    document.getElementById('stat-total').textContent = stats.total;
+    document.getElementById('stat-pending').textContent = stats.pendente;
+    document.getElementById('stat-production').textContent = stats.producao;
+    document.getElementById('stat-completed').textContent = stats.concluido;
+    document.getElementById('stat-ready').textContent = stats.retirada;
+    document.getElementById('stat-delivered').textContent = stats.entregue;
 }
 
 // ===========================
@@ -731,91 +582,51 @@ function updateStats() {
 // ===========================
 
 function openAddModal() {
-    console.log('📝 Abrindo modal para novo serviço');
-    
     editingServiceId = null;
+    document.getElementById('modalTitle').textContent = 'Novo Serviço';
+    document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
+    document.getElementById('serviceForm').reset();
     
-    const modalTitle = document.getElementById('modalTitle');
-    const saveButtonText = document.getElementById('saveButtonText');
-    const serviceForm = document.getElementById('serviceForm');
-    
-    if (modalTitle) modalTitle.textContent = 'Novo Serviço';
-    if (saveButtonText) saveButtonText.textContent = 'Salvar Serviço';
-    if (serviceForm) serviceForm.reset();
-    
-    // Set defaults
     const today = new Date().toISOString().split('T')[0];
-    const startDate = document.getElementById('startDate');
-    const dueDate = document.getElementById('dueDate');
-    const priority = document.getElementById('servicePriority');
-    const status = document.getElementById('serviceStatus');
+    document.getElementById('startDate').value = today;
+    document.getElementById('dueDate').value = today;
+    document.getElementById('servicePriority').value = 'media';
+    document.getElementById('serviceStatus').value = 'pendente';
     
-    if (startDate) startDate.value = today;
-    if (dueDate) dueDate.value = today;
-    if (priority) priority.value = 'media';
-    if (status) status.value = 'pendente';
-    
-    const modal = document.getElementById('serviceModal');
-    if (modal) modal.classList.add('active');
+    document.getElementById('serviceModal').classList.add('active');
 }
 
 function openEditModal(serviceId) {
-    console.log('📝 Abrindo modal para editar:', serviceId);
-    
     const service = services.find(s => s.id === serviceId);
-    if (!service) {
-        console.error('❌ Serviço não encontrado:', serviceId);
-        return;
-    }
+    if (!service) return;
     
     editingServiceId = serviceId;
+    document.getElementById('modalTitle').textContent = 'Editar Serviço';
+    document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
     
-    const modalTitle = document.getElementById('modalTitle');
-    const saveButtonText = document.getElementById('saveButtonText');
+    document.getElementById('serviceName').value = service.name;
+    document.getElementById('clientName').value = service.client;
+    document.getElementById('clientPhone').value = service.clientPhone || '';
+    document.getElementById('serviceDescription').value = service.description || '';
+    document.getElementById('serviceMaterial').value = service.material;
+    document.getElementById('serviceColor').value = service.color || '';
+    document.getElementById('servicePriority').value = service.priority;
+    document.getElementById('startDate').value = service.startDate;
+    document.getElementById('dueDate').value = service.dueDate;
+    document.getElementById('serviceValue').value = service.value || '';
+    document.getElementById('serviceObservations').value = service.observations || '';
+    document.getElementById('serviceStatus').value = service.status;
     
-    if (modalTitle) modalTitle.textContent = 'Editar Serviço';
-    if (saveButtonText) saveButtonText.textContent = 'Atualizar Serviço';
-    
-    // Fill form with service data
-    const fields = {
-        'serviceName': service.name,
-        'clientName': service.client,
-        'clientPhone': service.clientPhone || '',
-        'serviceDescription': service.description || '',
-        'serviceMaterial': service.material,
-        'serviceColor': service.color || '',
-        'servicePriority': service.priority,
-        'startDate': service.startDate,
-        'dueDate': service.dueDate,
-        'serviceValue': service.value || '',
-        'serviceObservations': service.observations || '',
-        'serviceStatus': service.status
-    };
-    
-    Object.keys(fields).forEach(fieldId => {
-        const element = document.getElementById(fieldId);
-        if (element) {
-            element.value = fields[fieldId];
-        }
-    });
-    
-    const modal = document.getElementById('serviceModal');
-    if (modal) modal.classList.add('active');
+    document.getElementById('serviceModal').classList.add('active');
 }
 
 function closeModal() {
-    console.log('🚪 Fechando modal');
-    
-    const modal = document.getElementById('serviceModal');
-    if (modal) modal.classList.remove('active');
+    document.getElementById('serviceModal').classList.remove('active');
     editingServiceId = null;
 }
 
 function closeStatusModal() {
-    console.log('🚪 Fechando modal de status');
-    
-    const modal = document.getElementById('statusModal');
-    if (modal) modal.classList.remove('active');
+    document.getElementById('statusModal').classList.remove('active');
     pendingStatusUpdate = null;
 }
 
@@ -824,29 +635,19 @@ function closeStatusModal() {
 // ===========================
 
 function filterServices(filter) {
-    console.log('🔍 Filtrando por:', filter);
-    
     currentFilter = filter;
     
-    // Update active button
     document.querySelectorAll('.btn-filter').forEach(btn => {
         btn.classList.remove('active');
     });
-    
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
+    event.target.classList.add('active');
     
     renderServices();
 }
 
 function searchServices() {
-    const input = document.getElementById('searchInput');
-    if (input) {
-        searchTerm = input.value;
-        console.log('🔍 Buscando:', searchTerm);
-        renderServices();
-    }
+    searchTerm = document.getElementById('searchInput').value;
+    renderServices();
 }
 
 // ===========================
@@ -929,7 +730,6 @@ function formatPhoneNumber(e) {
 // ===========================
 
 function sendWhatsAppMessage(phone, message) {
-    console.log('📱 Enviando WhatsApp para:', phone);
     const cleanPhone = phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -945,13 +745,8 @@ function contactClient(phone, clientName, orderCode) {
 // ===========================
 
 function showToast(message, type = 'info') {
-    console.log(`🔔 Toast [${type}]:`, message);
-    
     const container = document.getElementById('toastContainer');
-    if (!container) {
-        console.error('❌ Toast container não encontrado');
-        return;
-    }
+    if (!container) return;
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -985,8 +780,6 @@ function showToast(message, type = 'info') {
 // ===========================
 
 function monitorConnection() {
-    console.log('📡 Monitorando conexão...');
-    
     const updateConnectionStatus = (connected) => {
         const statusEl = document.getElementById('connectionStatus');
         const statusText = document.getElementById('statusText');
@@ -1002,35 +795,30 @@ function monitorConnection() {
         }
     };
     
-    // Monitor online/offline
     window.addEventListener('online', () => {
-        console.log('✅ Conexão restaurada');
         updateConnectionStatus(true);
         showToast('Conexão restaurada', 'success');
     });
     
     window.addEventListener('offline', () => {
-        console.log('❌ Sem conexão');
         updateConnectionStatus(false);
         showToast('Sem conexão com a internet', 'warning');
     });
 }
 
 // ===========================
-// ERROR HANDLING GLOBAL
+// ERROR HANDLING
 // ===========================
 
 window.addEventListener('error', (e) => {
-    console.error('❌ Erro global capturado:', e);
-    
-    // Evitar loop infinito de erros
+    console.error('Erro:', e);
     if (e.message && !e.message.includes('showToast')) {
         showToast('Ocorreu um erro inesperado', 'error');
     }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('❌ Promise rejeitada:', e);
+    console.error('Promise rejeitada:', e);
 });
 
-console.log('✅ script-servicos.js carregado completamente');
+console.log('✅ Sistema carregado completamente');
