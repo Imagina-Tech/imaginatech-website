@@ -19,72 +19,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- CSS Principal com caminho relativo correto -->
-    <link rel="stylesheet" href="./styles-servicos.css">
-    
-    <!-- CSS de emergência caso o arquivo externo falhe -->
-    <style>
-        /* CSS de emergência básico */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0e1a;
-            color: #fff;
-            min-height: 100vh;
-        }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 212, 255, 0.2);
-            border-top-color: #00D4FF;
-            border-radius: 50%;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .error-message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #ff0055;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            z-index: 10000;
-            display: none;
-        }
-        
-        .error-message.show {
-            display: block;
-        }
-    </style>
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="styles-servicos.css">
 </head>
 <body>
-    <!-- Error Display for Debug -->
-    <div class="error-message" id="errorMessage"></div>
-
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
@@ -100,7 +38,7 @@
     </div>
 
     <!-- Login Screen (Admin Only) -->
-    <div class="login-screen" id="loginScreen">
+    <div class="login-screen hidden" id="loginScreen">
         <div class="login-container">
             <div class="login-header">
                 <div class="login-logo">
@@ -147,7 +85,7 @@
 
                 <div class="navbar-right">
                     <div class="user-info" id="userInfo">
-                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <img id="userPhoto" class="user-photo" alt="Foto" src="/assets/default-avatar.png">
                         <div class="user-details">
                             <span class="user-name" id="userName">Carregando...</span>
                             <span class="user-role">Administrador</span>
@@ -319,7 +257,7 @@
                             <i class="fas fa-cube"></i>
                             Nome do Serviço *
                         </label>
-                        <input type="text" id="serviceName" required>
+                        <input type="text" id="serviceName" required autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -327,7 +265,7 @@
                             <i class="fas fa-user"></i>
                             Nome do Cliente *
                         </label>
-                        <input type="text" id="clientName" required>
+                        <input type="text" id="clientName" required autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -335,7 +273,7 @@
                             <i class="fas fa-phone"></i>
                             WhatsApp do Cliente
                         </label>
-                        <input type="tel" id="clientPhone" placeholder="(11) 99999-9999">
+                        <input type="tel" id="clientPhone" placeholder="(11) 99999-9999" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -414,7 +352,7 @@
                             <i class="fas fa-align-left"></i>
                             Descrição do Serviço
                         </label>
-                        <textarea id="serviceDescription" rows="3" placeholder="Detalhes sobre o serviço..."></textarea>
+                        <textarea id="serviceDescription" rows="3" placeholder="Detalhes sobre o serviço..." autocomplete="off"></textarea>
                     </div>
 
                     <div class="form-group full-width">
@@ -422,7 +360,7 @@
                             <i class="fas fa-exclamation-triangle"></i>
                             Observações
                         </label>
-                        <textarea id="serviceObservations" rows="2" placeholder="Observações importantes..."></textarea>
+                        <textarea id="serviceObservations" rows="2" placeholder="Observações importantes..." autocomplete="off"></textarea>
                     </div>
                 </div>
 
@@ -456,7 +394,7 @@
             <div class="modal-body">
                 <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
                 
-                <div class="whatsapp-option" id="whatsappOption">
+                <div class="whatsapp-option" id="whatsappOption" style="display: none;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="sendWhatsappNotification">
                         <span>Notificar cliente via WhatsApp</span>
@@ -485,76 +423,25 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- Debug Script -->
-    <script>
-        // Debug e tratamento de erros
-        window.addEventListener('error', function(e) {
-            console.error('Erro capturado:', e);
-            const errorMsg = document.getElementById('errorMessage');
-            if (errorMsg) {
-                errorMsg.textContent = `Erro: ${e.message} (Linha: ${e.lineno})`;
-                errorMsg.classList.add('show');
-                setTimeout(() => errorMsg.classList.remove('show'), 5000);
-            }
-        });
-
-        // Verificar carregamento dos arquivos
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM Carregado');
-            
-            // Verificar se o CSS carregou
-            const styles = document.styleSheets;
-            let cssFound = false;
-            for (let i = 0; i < styles.length; i++) {
-                if (styles[i].href && styles[i].href.includes('styles-servicos.css')) {
-                    cssFound = true;
-                    console.log('✅ CSS carregado com sucesso');
-                    break;
-                }
-            }
-            if (!cssFound) {
-                console.warn('⚠️ CSS pode não ter carregado completamente');
-            }
-            
-            // Verificar Firebase
-            setTimeout(() => {
-                if (typeof firebase === 'undefined') {
-                    console.error('❌ Firebase não carregou');
-                    alert('Erro ao carregar Firebase. Verifique sua conexão.');
-                } else {
-                    console.log('✅ Firebase carregado');
-                }
-            }, 1000);
-        });
-    </script>
-
-    <!-- JavaScript Principal com caminho relativo correto -->
-    <script src="./script-servicos.js"></script>
+    <!-- JavaScript Principal -->
+    <script src="script-servicos.js"></script>
     
     <!-- Particles Animation -->
     <script>
         // Create animated particles
         function createParticles() {
-            try {
-                const particlesContainer = document.getElementById('particles');
-                if (!particlesContainer) {
-                    console.warn('Container de partículas não encontrado');
-                    return;
-                }
-                
-                const particleCount = 30;
-                
-                for (let i = 0; i < particleCount; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.animationDelay = Math.random() * 20 + 's';
-                    particle.style.animationDuration = (20 + Math.random() * 10) + 's';
-                    particlesContainer.appendChild(particle);
-                }
-                console.log('✅ Partículas criadas');
-            } catch (error) {
-                console.error('Erro ao criar partículas:', error);
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+            
+            const particleCount = window.innerWidth < 768 ? 15 : 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (20 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
             }
         }
         
