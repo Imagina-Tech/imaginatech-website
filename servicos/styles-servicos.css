@@ -116,7 +116,7 @@ body {
 }
 
 /* ===========================
-   LOADING OVERLAY
+   LOADING OVERLAY - CORRIGIDO
    =========================== */
 
 .loading-overlay {
@@ -134,9 +134,9 @@ body {
     transition: opacity 0.3s ease;
 }
 
+/* CORREÇÃO PRINCIPAL - display: none garante que o overlay seja removido */
 .loading-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+    display: none !important;
 }
 
 .loading-content {
