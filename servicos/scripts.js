@@ -1,10 +1,16 @@
-// ===========================
-// IMAGINATECH - PAINEL ADMINISTRATIVO
-// Sistema de Gerenciamento com Firebase
-// Versão Corrigida
-// ===========================
+/* 
+==================================================
+ARQUIVO: scripts.js
+MÓDULO: Serviços/Produção (Painel Administrativo)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 2.0 - Enhanced
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+*/
 
-// Firebase Configuration
+// ===========================
+// FIREBASE CONFIGURATION
+// ===========================
 const firebaseConfig = {
     apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
     authDomain: "imaginatech-servicos.firebaseapp.com",
@@ -20,23 +26,23 @@ const AUTHORIZED_EMAILS = [
     "igor.butter@gmail.com"
 ];
 
-// Variáveis globais
+// ===========================
+// GLOBAL VARIABLES
+// ===========================
 let db = null;
 let auth = null;
 let services = [];
 let currentFilter = 'todos';
-let searchTerm = '';
 let editingServiceId = null;
 let currentUser = null;
 let isAuthorized = false;
 let servicesListener = null;
 let pendingStatusUpdate = null;
+let currentActiveCard = null;
 
 // ===========================
 // INITIALIZATION
 // ===========================
-
-// Inicializar Firebase
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
@@ -46,7 +52,7 @@ try {
     alert('Erro ao conectar com o servidor. Recarregue a página.');
 }
 
-// Configurar listeners quando DOM estiver pronto
+// DOM Ready Handler
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onDOMReady);
 } else {
@@ -54,7 +60,6 @@ if (document.readyState === 'loading') {
 }
 
 function onDOMReady() {
-    // Verificar se auth existe antes de usar
     if (!auth) {
         console.error('Auth não está disponível');
         hideLoadingOverlay();
@@ -80,7 +85,42 @@ function onDOMReady() {
         showLoginScreen();
     });
     
-    // Configurar campos de data
+    // Setup date fields
+    setupDateFields();
+    
+    // Setup phone formatting
+    const phoneInput = document.getElementById('clientPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', formatPhoneNumber);
+    }
+    
+    // Setup pickup phone formatting
+    const pickupPhoneInput = document.getElementById('pickupWhatsapp');
+    if (pickupPhoneInput) {
+        pickupPhoneInput.addEventListener('input', formatPhoneNumber);
+    }
+    
+    // Setup CEP formatting
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('input', formatCEP);
+    }
+    
+    // Monitor connection
+    monitorConnection();
+}
+
+// ===========================
+// UI UTILITIES
+// ===========================
+function hideLoadingOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
+function setupDateFields() {
     const today = new Date().toISOString().split('T')[0];
     const startDateInput = document.getElementById('startDate');
     const dueDateInput = document.getElementById('dueDate');
@@ -94,31 +134,14 @@ function onDOMReady() {
         });
     }
     
-    // Formatação de telefone
-    const phoneInput = document.getElementById('clientPhone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', formatPhoneNumber);
-    }
-    
-    // Monitorar conexão
-    monitorConnection();
-}
-
-// ===========================
-// UI UTILITIES
-// ===========================
-
-function hideLoadingOverlay() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
+    if (dueDateInput) {
+        dueDateInput.value = today;
     }
 }
 
 // ===========================
 // AUTHENTICATION
 // ===========================
-
 async function signInWithGoogle() {
     if (!auth) {
         showToast('Sistema não está pronto. Recarregue a página.', 'error');
@@ -178,7 +201,6 @@ function checkAuthorization(user) {
 // ===========================
 // UI MANAGEMENT
 // ===========================
-
 function showLoginScreen() {
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
@@ -199,7 +221,7 @@ function showAdminDashboard(user) {
     if (loginScreen) loginScreen.classList.add('hidden');
     if (adminDashboard) adminDashboard.classList.remove('hidden');
     
-    // Atualizar info do usuário
+    // Update user info
     const userName = document.getElementById('userName');
     const userPhoto = document.getElementById('userPhoto');
     
@@ -210,7 +232,6 @@ function showAdminDashboard(user) {
 // ===========================
 // FIREBASE LISTENERS
 // ===========================
-
 function startServicesListener() {
     if (!db) {
         console.error('Firestore não está disponível');
@@ -231,7 +252,7 @@ function startServicesListener() {
                 });
             });
             
-            // Ordenar manualmente
+            // Sort by creation date
             services.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
@@ -254,7 +275,6 @@ function startServicesListener() {
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
-
 function generateOrderCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -277,9 +297,17 @@ async function saveService(event) {
         return;
     }
     
+    const deliveryMethod = document.getElementById('deliveryMethod').value;
+    
+    if (!deliveryMethod) {
+        showToast('Por favor, selecione um método de entrega', 'error');
+        return;
+    }
+    
     const service = {
         name: document.getElementById('serviceName').value.trim(),
         client: document.getElementById('clientName').value.trim(),
+        clientEmail: document.getElementById('clientEmail').value.trim() || null,
         clientPhone: document.getElementById('clientPhone').value.trim() || null,
         description: document.getElementById('serviceDescription').value.trim() || null,
         material: document.getElementById('serviceMaterial').value,
@@ -288,16 +316,73 @@ async function saveService(event) {
         startDate: document.getElementById('startDate').value,
         dueDate: document.getElementById('dueDate').value,
         value: parseFloat(document.getElementById('serviceValue').value) || null,
+        weight: parseFloat(document.getElementById('serviceWeight').value) || null,
         observations: document.getElementById('serviceObservations').value.trim() || null,
+        deliveryMethod: deliveryMethod,
         status: document.getElementById('serviceStatus').value,
         updatedAt: new Date().toISOString(),
         updatedBy: currentUser.email
     };
     
+    // Validate dates
+    if (new Date(service.dueDate) < new Date(service.startDate)) {
+        showToast('A data de entrega não pode ser anterior à data de início', 'error');
+        return;
+    }
+    
+    // Handle delivery method specific fields
+    if (deliveryMethod === 'retirada') {
+        const pickupName = document.getElementById('pickupName').value.trim();
+        const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
+        
+        if (!pickupName || !pickupWhatsapp) {
+            showToast('Preencha todos os campos de retirada', 'error');
+            return;
+        }
+        
+        service.pickupInfo = {
+            name: pickupName,
+            whatsapp: pickupWhatsapp
+        };
+    } else if (deliveryMethod === 'sedex') {
+        const deliveryAddress = {
+            fullName: document.getElementById('fullName').value.trim(),
+            cpfCnpj: document.getElementById('cpfCnpj').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            telefone: document.getElementById('telefone').value.trim(),
+            cep: document.getElementById('cep').value.trim(),
+            estado: document.getElementById('estado').value.trim(),
+            cidade: document.getElementById('cidade').value.trim(),
+            bairro: document.getElementById('bairro').value.trim(),
+            rua: document.getElementById('rua').value.trim(),
+            numero: document.getElementById('numero').value.trim(),
+            complemento: document.getElementById('complemento').value.trim() || null
+        };
+        
+        // Validate required fields
+        const requiredFields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
+        for (const field of requiredFields) {
+            if (!deliveryAddress[field]) {
+                showToast('Preencha todos os campos obrigatórios de entrega', 'error');
+                return;
+            }
+        }
+        
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(deliveryAddress.email)) {
+            showToast('E-mail inválido', 'error');
+            return;
+        }
+        
+        service.deliveryAddress = deliveryAddress;
+    }
+    
     try {
         if (editingServiceId) {
             await db.collection('services').doc(editingServiceId).update(service);
             showToast('Serviço atualizado com sucesso!', 'success');
+            closeModal();
         } else {
             service.createdAt = new Date().toISOString();
             service.createdBy = currentUser.email;
@@ -305,19 +390,29 @@ async function saveService(event) {
             service.serviceId = 'SRV-' + Date.now();
             
             await db.collection('services').add(service);
+            
+            // Show order code
+            document.getElementById('orderCodeDisplay').style.display = 'block';
+            document.getElementById('orderCodeValue').textContent = service.orderCode;
+            
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
+            // Send WhatsApp notification if phone exists
             if (service.clientPhone) {
                 const message = `Olá ${service.client}! Seu pedido foi registrado com sucesso.\n\n` +
                     `📦 Serviço: ${service.name}\n` +
                     `🔖 Código: ${service.orderCode}\n` +
-                    `📅 Prazo: ${formatDate(service.dueDate)}\n\n` +
-                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido`;
+                    `📅 Prazo: ${formatDate(service.dueDate)}\n` +
+                    `🚚 Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\n` +
+                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
+            
+            // Clear form after 3 seconds
+            setTimeout(() => {
+                closeModal();
+            }, 3000);
         }
-        
-        closeModal();
         
     } catch (error) {
         console.error('Erro ao salvar:', error);
@@ -334,8 +429,18 @@ async function updateStatus(serviceId, newStatus) {
     const service = services.find(s => s.id === serviceId);
     if (!service) return;
     
-    // Se o status já é o mesmo, não fazer nada
+    // If status is the same, do nothing
     if (service.status === newStatus) return;
+    
+    // Special handling for SEDEX orders going to "retirada"
+    if (service.deliveryMethod === 'sedex' && newStatus === 'retirada') {
+        pendingStatusUpdate = { serviceId, newStatus, service };
+        const modal = document.getElementById('sedexConfirmModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+        return;
+    }
     
     pendingStatusUpdate = { serviceId, newStatus, service };
     
@@ -385,7 +490,7 @@ async function confirmStatusChange() {
             lastStatusChange: new Date().toISOString()
         };
         
-        // Adicionar timestamps específicos
+        // Add specific timestamps
         if (newStatus === 'producao') {
             updates.productionStartedAt = new Date().toISOString();
         } else if (newStatus === 'concluido') {
@@ -400,14 +505,24 @@ async function confirmStatusChange() {
         showToast('Status atualizado com sucesso!', 'success');
         
         if (sendWhatsapp && service.clientPhone) {
-            const messages = {
-                'producao': `✅ Ótima notícia! Iniciamos a produção do seu pedido:\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nAcompanhe: https://imaginatech.com.br/acompanhar-pedido`,
-                'retirada': `🎉 Seu pedido está PRONTO para retirada!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!`,
-                'entregue': `✅ Pedido entregue com sucesso!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nObrigado pela preferência! 😊`
-            };
+            let message = '';
             
-            if (messages[newStatus]) {
-                sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
+            if (newStatus === 'producao') {
+                message = `✅ Ótima notícia! Iniciamos a produção do seu pedido:\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nAcompanhe: https://imaginatech.com.br`;
+            } else if (newStatus === 'retirada') {
+                if (service.deliveryMethod === 'retirada') {
+                    message = `🎉 Seu pedido está PRONTO para retirada!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!`;
+                } else if (service.deliveryMethod === 'sedex') {
+                    message = `📦 Seu pedido foi postado nos Correios!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nEm breve você receberá o código de rastreamento.`;
+                } else {
+                    message = `🎉 Seu pedido está PRONTO!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}`;
+                }
+            } else if (newStatus === 'entregue') {
+                message = `✅ Pedido entregue com sucesso!\n\n📦 ${service.name}\n🔖 Código: ${service.orderCode}\n\nObrigado pela preferência! 😊`;
+            }
+            
+            if (message) {
+                sendWhatsAppMessage(service.clientPhone, message);
             }
         }
         
@@ -417,6 +532,40 @@ async function confirmStatusChange() {
     }
     
     closeStatusModal();
+}
+
+async function confirmSedexReady() {
+    if (!pendingStatusUpdate || !db) return;
+    
+    const { serviceId, service } = pendingStatusUpdate;
+    
+    try {
+        const updates = {
+            status: 'retirada',
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.email,
+            readyAt: new Date().toISOString()
+        };
+        
+        await db.collection('services').doc(serviceId).update(updates);
+        showToast('Pedido marcado como pronto para postagem!', 'success');
+        
+        // Send WhatsApp notification
+        if (service.clientPhone) {
+            const message = `📦 Seu pedido foi postado nos Correios HOJE!\n\n` +
+                `📦 ${service.name}\n` +
+                `🔖 Código: ${service.orderCode}\n\n` +
+                `Em breve você receberá o código de rastreamento.\n` +
+                `Prazo de entrega: 3-7 dias úteis`;
+            sendWhatsAppMessage(service.clientPhone, message);
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        showToast('Erro ao atualizar status', 'error');
+    }
+    
+    closeSedexConfirm();
 }
 
 async function deleteService(serviceId) {
@@ -442,7 +591,6 @@ async function deleteService(serviceId) {
 // ===========================
 // UI RENDERING
 // ===========================
-
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
@@ -451,22 +599,17 @@ function renderServices() {
     
     let filteredServices = services;
     
-    if (currentFilter !== 'todos') {
+    // Filter services based on current filter
+    if (currentFilter === 'todos') {
+        // Show all EXCEPT delivered
+        filteredServices = filteredServices.filter(s => s.status !== 'entregue');
+    } else {
         filteredServices = filteredServices.filter(s => s.status === currentFilter);
     }
     
-    if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        filteredServices = filteredServices.filter(s => 
-            (s.name && s.name.toLowerCase().includes(search)) ||
-            (s.client && s.client.toLowerCase().includes(search)) ||
-            (s.orderCode && s.orderCode.toLowerCase().includes(search))
-        );
-    }
-    
-    // Ordenar por prioridade e data
+    // Sort by priority and date
     filteredServices.sort((a, b) => {
-        const priorityOrder = { alta: 3, media: 2, baixa: 1 };
+        const priorityOrder = { urgente: 4, alta: 3, media: 2, baixa: 1 };
         const aPriority = priorityOrder[a.priority] || 0;
         const bPriority = priorityOrder[b.priority] || 0;
         
@@ -479,6 +622,15 @@ function renderServices() {
     if (filteredServices.length === 0) {
         grid.style.display = 'none';
         emptyState.style.display = 'flex';
+        
+        const emptyText = document.getElementById('emptyText');
+        if (emptyText) {
+            if (currentFilter === 'todos') {
+                emptyText.textContent = 'Nenhum serviço ativo encontrado';
+            } else {
+                emptyText.textContent = `Nenhum serviço ${getStatusLabel(currentFilter).toLowerCase()} encontrado`;
+            }
+        }
     } else {
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
@@ -488,7 +640,6 @@ function renderServices() {
             const daysText = formatDaysText(days);
             const daysColor = getDaysColor(days);
             
-            // Escapar valores para evitar problemas de HTML
             const safeName = escapeHtml(service.name || 'Sem nome');
             const safeClient = escapeHtml(service.client || 'Cliente não informado');
             const safeDescription = escapeHtml(service.description || '');
@@ -509,6 +660,13 @@ function renderServices() {
                             </button>
                         </div>
                     </div>
+                    
+                    ${service.deliveryMethod ? `
+                    <div class="delivery-badge">
+                        <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
+                        ${getDeliveryMethodName(service.deliveryMethod)}
+                    </div>
+                    ` : ''}
                     
                     <div class="service-info">
                         <div class="info-item">
@@ -545,6 +703,12 @@ function renderServices() {
                             <span>R$ ${formatMoney(service.value)}</span>
                         </div>
                         ` : ''}
+                        ${service.weight ? `
+                        <div class="info-item">
+                            <i class="fas fa-weight"></i>
+                            <span>${service.weight}g</span>
+                        </div>
+                        ` : ''}
                     </div>
                     
                     ${safeDescription ? `
@@ -577,7 +741,7 @@ function renderServices() {
                                     onclick="updateStatus('${service.id}', 'retirada')"
                                     ${service.status === 'retirada' ? 'disabled' : ''}>
                                 <i class="fas fa-box-open"></i>
-                                Retirada
+                                ${service.deliveryMethod === 'sedex' ? 'Postado' : 'Retirada'}
                             </button>
                             <button class="status-btn ${service.status === 'entregue' ? 'active' : ''}" 
                                     onclick="updateStatus('${service.id}', 'entregue')"
@@ -588,14 +752,20 @@ function renderServices() {
                         </div>
                     </div>
                     
-                    ${service.clientPhone ? `
                     <div class="service-footer">
+                        ${service.clientPhone ? `
                         <button class="btn-whatsapp" onclick="contactClient('${escapeHtml(service.clientPhone)}', '${safeName}', '${service.orderCode || 'N/A'}')">
                             <i class="fab fa-whatsapp"></i>
-                            Contatar Cliente
+                            Contatar
                         </button>
+                        ` : ''}
+                        ${service.deliveryMethod ? `
+                        <button class="btn-delivery" onclick="showDeliveryInfo('${service.id}')">
+                            <i class="fas fa-truck"></i>
+                            Ver Entrega
+                        </button>
+                        ` : ''}
                     </div>
-                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -603,8 +773,11 @@ function renderServices() {
 }
 
 function updateStats() {
+    // Calculate statistics excluding delivered for "active"
+    const activeServices = services.filter(s => s.status !== 'entregue');
+    
     const stats = {
-        total: services.length,
+        active: activeServices.length,
         pendente: services.filter(s => s.status === 'pendente').length,
         producao: services.filter(s => s.status === 'producao').length,
         concluido: services.filter(s => s.status === 'concluido').length,
@@ -613,7 +786,7 @@ function updateStats() {
     };
     
     const elements = {
-        'stat-total': stats.total,
+        'stat-active': stats.active,
         'stat-pending': stats.pendente,
         'stat-production': stats.producao,
         'stat-completed': stats.concluido,
@@ -630,30 +803,51 @@ function updateStats() {
 }
 
 // ===========================
+// FILTER MANAGEMENT
+// ===========================
+function filterServices(filter) {
+    currentFilter = filter;
+    
+    // Update active state on cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+    
+    renderServices();
+}
+
+// ===========================
 // MODAL MANAGEMENT
 // ===========================
-
 function openAddModal() {
     editingServiceId = null;
     
     const modalTitle = document.getElementById('modalTitle');
     const saveButtonText = document.getElementById('saveButtonText');
     const serviceForm = document.getElementById('serviceForm');
+    const orderCodeDisplay = document.getElementById('orderCodeDisplay');
     
     if (modalTitle) modalTitle.textContent = 'Novo Serviço';
     if (saveButtonText) saveButtonText.textContent = 'Salvar Serviço';
     if (serviceForm) serviceForm.reset();
+    if (orderCodeDisplay) orderCodeDisplay.style.display = 'none';
     
-    const today = new Date().toISOString().split('T')[0];
-    const startDate = document.getElementById('startDate');
-    const dueDate = document.getElementById('dueDate');
+    // Reset date fields
+    setupDateFields();
+    
+    // Set default values
     const priority = document.getElementById('servicePriority');
     const status = document.getElementById('serviceStatus');
     
-    if (startDate) startDate.value = today;
-    if (dueDate) dueDate.value = today;
     if (priority) priority.value = 'media';
     if (status) status.value = 'pendente';
+    
+    // Hide delivery fields
+    hideAllDeliveryFields();
     
     const modal = document.getElementById('serviceModal');
     if (modal) modal.classList.add('active');
@@ -667,14 +861,17 @@ function openEditModal(serviceId) {
     
     const modalTitle = document.getElementById('modalTitle');
     const saveButtonText = document.getElementById('saveButtonText');
+    const orderCodeDisplay = document.getElementById('orderCodeDisplay');
     
     if (modalTitle) modalTitle.textContent = 'Editar Serviço';
     if (saveButtonText) saveButtonText.textContent = 'Atualizar Serviço';
+    if (orderCodeDisplay) orderCodeDisplay.style.display = 'none';
     
-    // Preencher campos com segurança
+    // Fill form fields
     const fields = {
         'serviceName': service.name || '',
         'clientName': service.client || '',
+        'clientEmail': service.clientEmail || '',
         'clientPhone': service.clientPhone || '',
         'serviceDescription': service.description || '',
         'serviceMaterial': service.material || '',
@@ -683,14 +880,39 @@ function openEditModal(serviceId) {
         'startDate': service.startDate || '',
         'dueDate': service.dueDate || '',
         'serviceValue': service.value || '',
+        'serviceWeight': service.weight || '',
         'serviceObservations': service.observations || '',
-        'serviceStatus': service.status || 'pendente'
+        'serviceStatus': service.status || 'pendente',
+        'deliveryMethod': service.deliveryMethod || ''
     };
     
     for (const [id, value] of Object.entries(fields)) {
         const element = document.getElementById(id);
         if (element) {
             element.value = value;
+        }
+    }
+    
+    // Handle delivery method fields
+    if (service.deliveryMethod) {
+        toggleDeliveryFields();
+        
+        if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+            document.getElementById('pickupName').value = service.pickupInfo.name || '';
+            document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '';
+        } else if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+            const addr = service.deliveryAddress;
+            document.getElementById('fullName').value = addr.fullName || '';
+            document.getElementById('cpfCnpj').value = addr.cpfCnpj || '';
+            document.getElementById('email').value = addr.email || '';
+            document.getElementById('telefone').value = addr.telefone || '';
+            document.getElementById('cep').value = addr.cep || '';
+            document.getElementById('estado').value = addr.estado || '';
+            document.getElementById('cidade').value = addr.cidade || '';
+            document.getElementById('bairro').value = addr.bairro || '';
+            document.getElementById('rua').value = addr.rua || '';
+            document.getElementById('numero').value = addr.numero || '';
+            document.getElementById('complemento').value = addr.complemento || '';
         }
     }
     
@@ -710,36 +932,180 @@ function closeStatusModal() {
     pendingStatusUpdate = null;
 }
 
-// ===========================
-// FILTERS AND SEARCH
-// ===========================
-
-function filterServices(filter) {
-    currentFilter = filter;
-    
-    document.querySelectorAll('.btn-filter').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-    
-    renderServices();
+function closeSedexConfirm() {
+    const modal = document.getElementById('sedexConfirmModal');
+    if (modal) modal.classList.remove('active');
+    pendingStatusUpdate = null;
 }
 
-function searchServices() {
-    const input = document.getElementById('searchInput');
-    if (input) {
-        searchTerm = input.value.trim();
-        renderServices();
+function closeDeliveryModal() {
+    const modal = document.getElementById('deliveryInfoModal');
+    if (modal) modal.classList.remove('active');
+}
+
+// ===========================
+// DELIVERY MANAGEMENT
+// ===========================
+function toggleDeliveryFields() {
+    const deliveryMethod = document.getElementById('deliveryMethod').value;
+    const pickupFields = document.getElementById('pickupFields');
+    const deliveryFields = document.getElementById('deliveryFields');
+    
+    hideAllDeliveryFields();
+    
+    if (deliveryMethod === 'retirada') {
+        if (pickupFields) pickupFields.classList.add('active');
+    } else if (deliveryMethod === 'sedex') {
+        if (deliveryFields) deliveryFields.classList.add('active');
+    }
+}
+
+function hideAllDeliveryFields() {
+    const pickupFields = document.getElementById('pickupFields');
+    const deliveryFields = document.getElementById('deliveryFields');
+    
+    if (pickupFields) pickupFields.classList.remove('active');
+    if (deliveryFields) deliveryFields.classList.remove('active');
+}
+
+function showDeliveryInfo(serviceId) {
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    const modal = document.getElementById('deliveryInfoModal');
+    const content = document.getElementById('deliveryInfoContent');
+    
+    if (!modal || !content) return;
+    
+    let html = '';
+    
+    html += `
+        <div class="info-section">
+            <h3 class="info-title">
+                <i class="fas fa-truck"></i> Método de Entrega
+            </h3>
+            <div class="info-row">
+                <span class="info-label">Tipo</span>
+                <span class="info-value">${getDeliveryMethodName(service.deliveryMethod)}</span>
+            </div>
+        </div>
+    `;
+    
+    if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+        const pickup = service.pickupInfo;
+        const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
+        const message = encodeURIComponent(
+            `Olá ${pickup.name}! Seu pedido está pronto para retirada.\n\n` +
+            `📦 Pedido: ${service.name}\n` +
+            `🔖 Código: ${service.orderCode}\n\n` +
+            `Por favor, confirme o horário de retirada.`
+        );
+        const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
+        
+        html += `
+            <div class="info-section">
+                <h3 class="info-title">
+                    <i class="fas fa-user-check"></i> Informações para Retirada
+                </h3>
+                <div class="info-row">
+                    <span class="info-label">Nome</span>
+                    <span class="info-value">${pickup.name || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">WhatsApp</span>
+                    <span class="info-value">
+                        <a href="${whatsappLink}" target="_blank" style="color: var(--neon-green); text-decoration: none;">
+                            <i class="fab fa-whatsapp"></i> ${pickup.whatsapp}
+                        </a>
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+        const addr = service.deliveryAddress;
+        
+        html += `
+            <div class="info-section">
+                <h3 class="info-title">
+                    <i class="fas fa-user"></i> Dados do Destinatário
+                </h3>
+                <div class="info-row">
+                    <span class="info-label">Nome</span>
+                    <span class="info-value">${addr.fullName || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">CPF/CNPJ</span>
+                    <span class="info-value">${addr.cpfCnpj || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">E-mail</span>
+                    <span class="info-value">${addr.email || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Telefone</span>
+                    <span class="info-value">${addr.telefone || '-'}</span>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3 class="info-title">
+                    <i class="fas fa-map-marker-alt"></i> Endereço de Entrega
+                </h3>
+                <div class="info-row">
+                    <span class="info-label">CEP</span>
+                    <span class="info-value">${addr.cep || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Endereço</span>
+                    <span class="info-value">${addr.rua || ''}, ${addr.numero || 's/n'}</span>
+                </div>
+                ${addr.complemento ? `
+                <div class="info-row">
+                    <span class="info-label">Complemento</span>
+                    <span class="info-value">${addr.complemento}</span>
+                </div>
+                ` : ''}
+                <div class="info-row">
+                    <span class="info-label">Bairro</span>
+                    <span class="info-value">${addr.bairro || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Cidade/Estado</span>
+                    <span class="info-value">${addr.cidade || '-'} / ${addr.estado || '-'}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+    modal.classList.add('active');
+}
+
+async function buscarCEP() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    
+    if (cep.length !== 8) return;
+    
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+            document.getElementById('rua').value = data.logradouro || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.localidade || '';
+            document.getElementById('estado').value = data.uf || '';
+        }
+    } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
     }
 }
 
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
-
 function escapeHtml(text) {
     const map = {
         '&': '&amp;',
@@ -801,6 +1167,8 @@ function formatColorName(color) {
         'amarelo': 'Amarelo',
         'laranja': 'Laranja',
         'roxo': 'Roxo',
+        'cinza': 'Cinza',
+        'transparente': 'Transparente',
         'outros': 'Outras'
     };
     return colors[color] || color;
@@ -826,25 +1194,69 @@ function formatPhoneNumber(e) {
     e.target.value = value;
 }
 
+function formatCEP(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) value = value.slice(0, 8);
+    
+    if (value.length > 5) {
+        value = `${value.slice(0, 5)}-${value.slice(5)}`;
+    }
+    
+    e.target.value = value;
+}
+
+function getDeliveryMethodName(method) {
+    const methods = {
+        'retirada': 'Retirada no Local',
+        'sedex': 'Sedex/Correios',
+        'uber': 'Uber Flash',
+        'definir': 'A Definir'
+    };
+    return methods[method] || method;
+}
+
+function getDeliveryIcon(method) {
+    const icons = {
+        'retirada': 'fa-store',
+        'sedex': 'fa-shipping-fast',
+        'uber': 'fa-motorcycle',
+        'definir': 'fa-question-circle'
+    };
+    return icons[method] || 'fa-truck';
+}
+
+function getStatusLabel(status) {
+    const labels = {
+        'todos': 'Ativos',
+        'pendente': 'Pendentes',
+        'producao': 'Em Produção',
+        'concluido': 'Concluídos',
+        'retirada': 'Para Retirada',
+        'entregue': 'Entregues'
+    };
+    return labels[status] || status;
+}
+
 // ===========================
 // WHATSAPP INTEGRATION
 // ===========================
-
 function sendWhatsAppMessage(phone, message) {
     const cleanPhone = phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 }
 
-function contactClient(phone, clientName, orderCode) {
-    const message = `Olá ${clientName}! \n\nEstamos entrando em contato sobre seu pedido #${orderCode}.\n\nComo podemos ajudar?`;
+function contactClient(phone, serviceName, orderCode) {
+    const message = `Olá! \n\nEstamos entrando em contato sobre seu pedido:\n\n` +
+        `📦 Serviço: ${serviceName}\n` +
+        `🔖 Código: #${orderCode}\n\n` +
+        `Como podemos ajudar?`;
     sendWhatsAppMessage(phone, message);
 }
 
 // ===========================
 // TOAST NOTIFICATIONS
 // ===========================
-
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -879,7 +1291,6 @@ function showToast(message, type = 'info') {
 // ===========================
 // CONNECTION MONITORING
 // ===========================
-
 function monitorConnection() {
     const updateConnectionStatus = (connected) => {
         const statusEl = document.getElementById('connectionStatus');
@@ -906,14 +1317,13 @@ function monitorConnection() {
         showToast('Sem conexão com a internet', 'warning');
     });
     
-    // Verificar status inicial
+    // Check initial status
     updateConnectionStatus(navigator.onLine);
 }
 
 // ===========================
 // ERROR HANDLING
 // ===========================
-
 window.addEventListener('error', (e) => {
     console.error('Erro:', e);
 });
