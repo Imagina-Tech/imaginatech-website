@@ -1,3 +1,12 @@
+<!-- 
+==================================================
+ARQUIVO: index.html
+MÓDULO: Serviços/Produção (Painel Administrativo)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 2.0 - Enhanced
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -58,9 +67,10 @@
             </button>
 
             <div class="login-footer">
-                <a href="/acompanhar-pedido" class="client-link">
-                    <i class="fas fa-users"></i>
-                    Área do Cliente
+                <p class="footer-text">Cliente? Acompanhe seu pedido:</p>
+                <a href="https://imaginatech.com.br" class="client-link" target="_blank">
+                    <i class="fas fa-cube"></i>
+                    Portal do Cliente
                 </a>
             </div>
         </div>
@@ -114,26 +124,22 @@
                             <i class="fas fa-plus"></i>
                             Novo Serviço
                         </button>
-                        <a href="/acompanhar-pedido" target="_blank" class="btn-secondary">
-                            <i class="fas fa-external-link-alt"></i>
-                            Portal do Cliente
-                        </a>
                     </div>
                 </div>
 
-                <!-- Statistics Cards -->
+                <!-- Statistics Cards (Clickable Filters) -->
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('todos')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-list"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number" id="stat-total">0</div>
-                            <div class="stat-label">Total de Serviços</div>
+                            <div class="stat-number" id="stat-active">0</div>
+                            <div class="stat-label">Serviços Ativos</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('pendente')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
                             <i class="fas fa-clock"></i>
                         </div>
@@ -143,7 +149,7 @@
                         </div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('producao')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
                             <i class="fas fa-cogs"></i>
                         </div>
@@ -153,7 +159,7 @@
                         </div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('concluido')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
                             <i class="fas fa-check-circle"></i>
                         </div>
@@ -163,7 +169,7 @@
                         </div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('retirada')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
                             <i class="fas fa-box-open"></i>
                         </div>
@@ -173,7 +179,7 @@
                         </div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card clickable" onclick="filterServices('entregue')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #30cfd0, #330867);">
                             <i class="fas fa-handshake"></i>
                         </div>
@@ -181,41 +187,6 @@
                             <div class="stat-number" id="stat-delivered">0</div>
                             <div class="stat-label">Entregues</div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Filter Bar -->
-                <div class="filter-bar">
-                    <div class="filter-buttons">
-                        <button class="btn-filter active" onclick="filterServices('todos')">
-                            <i class="fas fa-list"></i>
-                            <span>Todos</span>
-                        </button>
-                        <button class="btn-filter" onclick="filterServices('pendente')">
-                            <i class="fas fa-clock"></i>
-                            <span>Pendentes</span>
-                        </button>
-                        <button class="btn-filter" onclick="filterServices('producao')">
-                            <i class="fas fa-cogs"></i>
-                            <span>Em Produção</span>
-                        </button>
-                        <button class="btn-filter" onclick="filterServices('concluido')">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Concluídos</span>
-                        </button>
-                        <button class="btn-filter" onclick="filterServices('retirada')">
-                            <i class="fas fa-box-open"></i>
-                            <span>Retirada</span>
-                        </button>
-                        <button class="btn-filter" onclick="filterServices('entregue')">
-                            <i class="fas fa-handshake"></i>
-                            <span>Entregues</span>
-                        </button>
-                    </div>
-                    
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar por nome, cliente ou código..." onkeyup="searchServices()">
                     </div>
                 </div>
 
@@ -252,12 +223,19 @@
             
             <form id="serviceForm" onsubmit="saveService(event)">
                 <div class="form-grid">
+                    <!-- Order Code Display (for new services) -->
+                    <div class="order-code-display" id="orderCodeDisplay" style="display: none; grid-column: 1 / -1;">
+                        <div class="order-code-label">Código do Pedido</div>
+                        <div class="order-code-value" id="orderCodeValue">-</div>
+                        <div class="order-code-info">Guarde este código para acompanhamento</div>
+                    </div>
+
                     <div class="form-group">
                         <label for="serviceName">
                             <i class="fas fa-cube"></i>
                             Nome do Serviço *
                         </label>
-                        <input type="text" id="serviceName" required autocomplete="off">
+                        <input type="text" id="serviceName" class="form-input" required autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -265,7 +243,15 @@
                             <i class="fas fa-user"></i>
                             Nome do Cliente *
                         </label>
-                        <input type="text" id="clientName" required autocomplete="off">
+                        <input type="text" id="clientName" class="form-input" required autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientEmail">
+                            <i class="fas fa-envelope"></i>
+                            E-mail do Cliente
+                        </label>
+                        <input type="email" id="clientEmail" class="form-input" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -273,7 +259,7 @@
                             <i class="fas fa-phone"></i>
                             WhatsApp do Cliente
                         </label>
-                        <input type="tel" id="clientPhone" placeholder="(11) 99999-9999" autocomplete="off">
+                        <input type="tel" id="clientPhone" class="form-input" placeholder="(11) 99999-9999" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -281,13 +267,14 @@
                             <i class="fas fa-layer-group"></i>
                             Material *
                         </label>
-                        <select id="serviceMaterial" required>
+                        <select id="serviceMaterial" class="form-select" required>
                             <option value="">Selecione o material</option>
                             <option value="PLA">PLA</option>
                             <option value="ABS">ABS</option>
                             <option value="PETG">PETG</option>
                             <option value="TPU">TPU</option>
                             <option value="Resina">Resina</option>
+                            <option value="Nylon">Nylon</option>
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
@@ -297,7 +284,7 @@
                             <i class="fas fa-palette"></i>
                             Cor
                         </label>
-                        <select id="serviceColor">
+                        <select id="serviceColor" class="form-select">
                             <option value="">Selecione a cor</option>
                             <option value="preto">Preto</option>
                             <option value="branco">Branco</option>
@@ -307,7 +294,23 @@
                             <option value="amarelo">Amarelo</option>
                             <option value="laranja">Laranja</option>
                             <option value="roxo">Roxo</option>
+                            <option value="cinza">Cinza</option>
+                            <option value="transparente">Transparente</option>
                             <option value="outros">Outras</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryMethod">
+                            <i class="fas fa-truck"></i>
+                            Método de Entrega *
+                        </label>
+                        <select id="deliveryMethod" class="form-select" required onchange="toggleDeliveryFields()">
+                            <option value="">Selecione o método</option>
+                            <option value="retirada">Retirada no Local</option>
+                            <option value="sedex">Sedex/Correios</option>
+                            <option value="uber">Uber Flash</option>
+                            <option value="definir">A Definir</option>
                         </select>
                     </div>
 
@@ -316,10 +319,11 @@
                             <i class="fas fa-flag"></i>
                             Prioridade *
                         </label>
-                        <select id="servicePriority" required>
+                        <select id="servicePriority" class="form-select" required>
                             <option value="baixa">Baixa</option>
                             <option value="media" selected>Média</option>
                             <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
                         </select>
                     </div>
 
@@ -328,7 +332,7 @@
                             <i class="fas fa-calendar-plus"></i>
                             Data de Início *
                         </label>
-                        <input type="date" id="startDate" required>
+                        <input type="date" id="startDate" class="form-input" required>
                     </div>
 
                     <div class="form-group">
@@ -336,7 +340,7 @@
                             <i class="fas fa-calendar-check"></i>
                             Prazo de Entrega *
                         </label>
-                        <input type="date" id="dueDate" required>
+                        <input type="date" id="dueDate" class="form-input" required>
                     </div>
 
                     <div class="form-group">
@@ -344,7 +348,98 @@
                             <i class="fas fa-dollar-sign"></i>
                             Valor (R$)
                         </label>
-                        <input type="number" id="serviceValue" step="0.01" min="0" placeholder="0,00">
+                        <input type="number" id="serviceValue" class="form-input" step="0.01" min="0" placeholder="0,00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceWeight">
+                            <i class="fas fa-weight"></i>
+                            Peso (gramas)
+                        </label>
+                        <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
+                    </div>
+
+                    <!-- Campos de Retirada -->
+                    <div class="pickup-fields" id="pickupFields">
+                        <h4 class="section-title">
+                            <i class="fas fa-store"></i> Informações para Retirada
+                        </h4>
+                        
+                        <div class="form-group">
+                            <label for="pickupName">Nome de quem vai retirar *</label>
+                            <input type="text" id="pickupName" class="form-input" placeholder="Nome completo">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pickupWhatsapp">WhatsApp para contato *</label>
+                            <input type="tel" id="pickupWhatsapp" class="form-input" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+
+                    <!-- Campos de Entrega (Sedex) -->
+                    <div class="delivery-fields" id="deliveryFields">
+                        <h4 class="section-title">
+                            <i class="fas fa-shipping-fast"></i> Dados para Entrega
+                        </h4>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fullName">Nome Completo *</label>
+                                <input type="text" id="fullName" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="cpfCnpj">CPF/CNPJ *</label>
+                                <input type="text" id="cpfCnpj" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail *</label>
+                                <input type="email" id="email" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone *</label>
+                                <input type="tel" id="telefone" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cep">CEP *</label>
+                                <input type="text" id="cep" class="form-input" maxlength="9" onblur="buscarCEP()">
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">Estado *</label>
+                                <input type="text" id="estado" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cidade">Cidade *</label>
+                            <input type="text" id="cidade" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bairro">Bairro *</label>
+                            <input type="text" id="bairro" class="form-input">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 3;">
+                                <label for="rua">Rua *</label>
+                                <input type="text" id="rua" class="form-input">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="numero">Número *</label>
+                                <input type="text" id="numero" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="complemento">Complemento</label>
+                            <input type="text" id="complemento" class="form-input" placeholder="Apto, Bloco, etc">
+                        </div>
                     </div>
 
                     <div class="form-group full-width">
@@ -352,7 +447,7 @@
                             <i class="fas fa-align-left"></i>
                             Descrição do Serviço
                         </label>
-                        <textarea id="serviceDescription" rows="3" placeholder="Detalhes sobre o serviço..." autocomplete="off"></textarea>
+                        <textarea id="serviceDescription" class="form-textarea" rows="3" placeholder="Detalhes sobre o serviço..." autocomplete="off"></textarea>
                     </div>
 
                     <div class="form-group full-width">
@@ -360,7 +455,7 @@
                             <i class="fas fa-exclamation-triangle"></i>
                             Observações
                         </label>
-                        <textarea id="serviceObservations" rows="2" placeholder="Observações importantes..." autocomplete="off"></textarea>
+                        <textarea id="serviceObservations" class="form-textarea" rows="2" placeholder="Observações importantes..." autocomplete="off"></textarea>
                     </div>
                 </div>
 
@@ -378,6 +473,31 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Delivery Info Modal -->
+    <div class="modal" id="deliveryInfoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-truck"></i> Informações de Entrega
+                </h2>
+                <button class="modal-close" onclick="closeDeliveryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="deliveryInfoContent" class="modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeDeliveryModal()">
+                    <i class="fas fa-check"></i>
+                    Fechar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -410,6 +530,42 @@
                 <button class="btn-confirm" onclick="confirmStatusChange()">
                     <i class="fas fa-check"></i>
                     Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEDEX Confirmation Modal -->
+    <div class="modal" id="sedexConfirmModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 class="warning-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    ATENÇÃO - PEDIDO SEDEX
+                </h2>
+            </div>
+            
+            <div class="modal-body">
+                <div class="warning-message">
+                    <p>⚠️ <strong>IMPORTANTE:</strong></p>
+                    <p>Marque como PRONTO PARA RETIRADA apenas quando:</p>
+                    <ul class="checklist">
+                        <li>✅ O pedido estiver COMPLETAMENTE embalado</li>
+                        <li>✅ A etiqueta dos Correios estiver IMPRESSA</li>
+                        <li>✅ Tudo estiver PRONTO para postagem</li>
+                    </ul>
+                    <p class="highlight-warning">Confirmar agora irá notificar que o pedido será postado HOJE!</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeSedexConfirm()">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </button>
+                <button class="btn-confirm btn-warning" onclick="confirmSedexReady()">
+                    <i class="fas fa-box"></i>
+                    Está Embalado e Pronto
                 </button>
             </div>
         </div>
