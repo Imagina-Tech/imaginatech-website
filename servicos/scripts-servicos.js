@@ -1,10 +1,8 @@
 // ===========================
 // IMAGINATECH - PAINEL ADMINISTRATIVO
 // Sistema de Gerenciamento com Firebase
-// Versão Final Corrigida
+// Versão Corrigida
 // ===========================
-
-console.log('🚀 Iniciando script-servicos.js...');
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -33,46 +31,18 @@ let currentUser = null;
 let isAuthorized = false;
 let servicesListener = null;
 let pendingStatusUpdate = null;
-let authInitialized = false;
-
-// ===========================
-// HIDE LOADING IMMEDIATELY
-// ===========================
-function hideLoadingOverlay() {
-    console.log('🔄 Escondendo loading overlay...');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-        // Usar ambos os métodos para garantir
-        loadingOverlay.classList.add('hidden');
-        loadingOverlay.style.display = 'none';
-        loadingOverlay.style.opacity = '0';
-        loadingOverlay.style.pointerEvents = 'none';
-        console.log('✅ Loading overlay escondido');
-    }
-}
 
 // ===========================
 // INITIALIZATION
 // ===========================
-
-// Timeout de segurança - remove loading após 3 segundos independentemente
-setTimeout(() => {
-    if (!authInitialized) {
-        console.warn('⚠️ Timeout de segurança - removendo loading');
-        hideLoadingOverlay();
-        showLoginScreen();
-    }
-}, 3000);
 
 // Inicializar Firebase
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     auth = firebase.auth();
-    console.log('✅ Firebase inicializado com sucesso');
 } catch (error) {
-    console.error('❌ Erro ao inicializar Firebase:', error);
-    hideLoadingOverlay();
+    console.error('Erro ao inicializar Firebase:', error);
     alert('Erro ao conectar com o servidor. Recarregue a página.');
 }
 
@@ -84,11 +54,9 @@ if (document.readyState === 'loading') {
 }
 
 function onDOMReady() {
-    console.log('📄 DOM carregado, configurando sistema...');
-    
     // Verificar se auth existe antes de usar
     if (!auth) {
-        console.error('❌ Auth não está disponível');
+        console.error('Auth não está disponível');
         hideLoadingOverlay();
         alert('Erro ao inicializar autenticação. Recarregue a página.');
         return;
@@ -96,11 +64,6 @@ function onDOMReady() {
     
     // Auth state observer
     auth.onAuthStateChanged((user) => {
-        console.log('👤 Estado de autenticação:', user ? user.email : 'Não logado');
-        
-        authInitialized = true;
-        
-        // SEMPRE esconder loading quando auth responder
         hideLoadingOverlay();
         
         if (user) {
@@ -112,7 +75,7 @@ function onDOMReady() {
             showLoginScreen();
         }
     }, (error) => {
-        console.error('❌ Erro no auth state:', error);
+        console.error('Erro no auth state:', error);
         hideLoadingOverlay();
         showLoginScreen();
     });
@@ -142,12 +105,21 @@ function onDOMReady() {
 }
 
 // ===========================
+// UI UTILITIES
+// ===========================
+
+function hideLoadingOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
+// ===========================
 // AUTHENTICATION
 // ===========================
 
 async function signInWithGoogle() {
-    console.log('🔐 Iniciando login com Google...');
-    
     if (!auth) {
         showToast('Sistema não está pronto. Recarregue a página.', 'error');
         return;
@@ -158,10 +130,7 @@ async function signInWithGoogle() {
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         
-        console.log('✅ Login realizado:', user.email);
-        
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
-            console.warn('⚠️ Email não autorizado:', user.email);
             await auth.signOut();
             showToast(`Acesso negado! O email ${user.email} não está autorizado.`, 'error');
             return;
@@ -172,7 +141,7 @@ async function signInWithGoogle() {
         showToast(`Bem-vindo, ${user.displayName}!`, 'success');
         
     } catch (error) {
-        console.error('❌ Erro no login:', error);
+        console.error('Erro no login:', error);
         if (error.code === 'auth/popup-closed-by-user') {
             showToast('Login cancelado', 'info');
         } else {
@@ -182,30 +151,24 @@ async function signInWithGoogle() {
 }
 
 async function signOut() {
-    console.log('🔐 Fazendo logout...');
-    
     try {
         if (auth) {
             await auth.signOut();
             showToast('Logout realizado com sucesso!', 'info');
         }
     } catch (error) {
-        console.error('❌ Erro no logout:', error);
+        console.error('Erro no logout:', error);
         showToast('Erro ao fazer logout.', 'error');
     }
 }
 
 function checkAuthorization(user) {
-    console.log('🔍 Verificando autorização para:', user.email);
-    
     if (AUTHORIZED_EMAILS.includes(user.email)) {
         isAuthorized = true;
-        console.log('✅ Usuário autorizado');
         showAdminDashboard(user);
         startServicesListener();
     } else {
         isAuthorized = false;
-        console.warn('⚠️ Usuário não autorizado');
         auth.signOut();
         showToast('Acesso negado! Email não autorizado.', 'error');
         showLoginScreen();
@@ -217,8 +180,6 @@ function checkAuthorization(user) {
 // ===========================
 
 function showLoginScreen() {
-    console.log('📱 Mostrando tela de login');
-    
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     
@@ -232,8 +193,6 @@ function showLoginScreen() {
 }
 
 function showAdminDashboard(user) {
-    console.log('📱 Mostrando dashboard admin');
-    
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     
@@ -253,10 +212,8 @@ function showAdminDashboard(user) {
 // ===========================
 
 function startServicesListener() {
-    console.log('🔄 Iniciando listener de serviços...');
-    
     if (!db) {
-        console.error('❌ Firestore não está disponível');
+        console.error('Firestore não está disponível');
         return;
     }
     
@@ -281,12 +238,11 @@ function startServicesListener() {
                 return dateB - dateA;
             });
             
-            console.log(`✅ ${services.length} serviços carregados`);
             updateStats();
             renderServices();
             
         }, (error) => {
-            console.error('❌ Erro ao carregar serviços:', error);
+            console.error('Erro ao carregar serviços:', error);
             if (error.code === 'permission-denied') {
                 showToast('Sem permissão para acessar serviços', 'error');
             } else {
@@ -960,14 +916,8 @@ function monitorConnection() {
 
 window.addEventListener('error', (e) => {
     console.error('Erro:', e);
-    // Evitar loop de erros
-    if (e.message && !e.message.includes('showToast') && !e.message.includes('toast')) {
-        console.error('Erro capturado:', e.message);
-    }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
     console.error('Promise rejeitada:', e.reason);
 });
-
-console.log('✅ Sistema carregado completamente');
