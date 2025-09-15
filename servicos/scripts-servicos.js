@@ -1,7 +1,7 @@
 // ===========================
 // IMAGINATECH - PAINEL ADMINISTRATIVO
 // Sistema de Gerenciamento com Firebase
-// Versão com Correção do Loading
+// Versão Final Corrigida
 // ===========================
 
 console.log('🚀 Iniciando script-servicos.js...');
@@ -33,6 +33,7 @@ let currentUser = null;
 let isAuthorized = false;
 let servicesListener = null;
 let pendingStatusUpdate = null;
+let authInitialized = false;
 
 // ===========================
 // HIDE LOADING IMMEDIATELY
@@ -41,10 +42,12 @@ function hideLoadingOverlay() {
     console.log('🔄 Escondendo loading overlay...');
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) {
+        // Usar ambos os métodos para garantir
+        loadingOverlay.classList.add('hidden');
         loadingOverlay.style.display = 'none';
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.pointerEvents = 'none';
         console.log('✅ Loading overlay escondido');
-    } else {
-        console.error('❌ Loading overlay não encontrado');
     }
 }
 
@@ -52,7 +55,16 @@ function hideLoadingOverlay() {
 // INITIALIZATION
 // ===========================
 
-// Inicializar Firebase imediatamente
+// Timeout de segurança - remove loading após 3 segundos independentemente
+setTimeout(() => {
+    if (!authInitialized) {
+        console.warn('⚠️ Timeout de segurança - removendo loading');
+        hideLoadingOverlay();
+        showLoginScreen();
+    }
+}, 3000);
+
+// Inicializar Firebase
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
@@ -74,11 +86,21 @@ if (document.readyState === 'loading') {
 function onDOMReady() {
     console.log('📄 DOM carregado, configurando sistema...');
     
-    // IMPORTANTE: Esconder loading IMEDIATAMENTE após auth check
+    // Verificar se auth existe antes de usar
+    if (!auth) {
+        console.error('❌ Auth não está disponível');
+        hideLoadingOverlay();
+        alert('Erro ao inicializar autenticação. Recarregue a página.');
+        return;
+    }
+    
+    // Auth state observer
     auth.onAuthStateChanged((user) => {
         console.log('👤 Estado de autenticação:', user ? user.email : 'Não logado');
         
-        // Esconder loading assim que soubermos o estado do auth
+        authInitialized = true;
+        
+        // SEMPRE esconder loading quando auth responder
         hideLoadingOverlay();
         
         if (user) {
@@ -89,6 +111,10 @@ function onDOMReady() {
             isAuthorized = false;
             showLoginScreen();
         }
+    }, (error) => {
+        console.error('❌ Erro no auth state:', error);
+        hideLoadingOverlay();
+        showLoginScreen();
     });
     
     // Configurar campos de data
@@ -122,6 +148,11 @@ function onDOMReady() {
 async function signInWithGoogle() {
     console.log('🔐 Iniciando login com Google...');
     
+    if (!auth) {
+        showToast('Sistema não está pronto. Recarregue a página.', 'error');
+        return;
+    }
+    
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
         const result = await auth.signInWithPopup(provider);
@@ -142,7 +173,11 @@ async function signInWithGoogle() {
         
     } catch (error) {
         console.error('❌ Erro no login:', error);
-        showToast('Erro ao fazer login. Tente novamente.', 'error');
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('Login cancelado', 'info');
+        } else {
+            showToast('Erro ao fazer login. Tente novamente.', 'error');
+        }
     }
 }
 
@@ -150,8 +185,10 @@ async function signOut() {
     console.log('🔐 Fazendo logout...');
     
     try {
-        await auth.signOut();
-        showToast('Logout realizado com sucesso!', 'info');
+        if (auth) {
+            await auth.signOut();
+            showToast('Logout realizado com sucesso!', 'info');
+        }
     } catch (error) {
         console.error('❌ Erro no logout:', error);
         showToast('Erro ao fazer logout.', 'error');
@@ -171,6 +208,7 @@ function checkAuthorization(user) {
         console.warn('⚠️ Usuário não autorizado');
         auth.signOut();
         showToast('Acesso negado! Email não autorizado.', 'error');
+        showLoginScreen();
     }
 }
 
@@ -181,8 +219,11 @@ function checkAuthorization(user) {
 function showLoginScreen() {
     console.log('📱 Mostrando tela de login');
     
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('adminDashboard').classList.add('hidden');
+    const loginScreen = document.getElementById('loginScreen');
+    const adminDashboard = document.getElementById('adminDashboard');
+    
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    if (adminDashboard) adminDashboard.classList.add('hidden');
     
     if (servicesListener) {
         servicesListener();
@@ -193,12 +234,18 @@ function showLoginScreen() {
 function showAdminDashboard(user) {
     console.log('📱 Mostrando dashboard admin');
     
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('adminDashboard').classList.remove('hidden');
+    const loginScreen = document.getElementById('loginScreen');
+    const adminDashboard = document.getElementById('adminDashboard');
+    
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (adminDashboard) adminDashboard.classList.remove('hidden');
     
     // Atualizar info do usuário
-    document.getElementById('userName').textContent = user.displayName || user.email;
-    document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+    
+    if (userName) userName.textContent = user.displayName || user.email;
+    if (userPhoto) userPhoto.src = user.photoURL || '/assets/default-avatar.png';
 }
 
 // ===========================
@@ -207,6 +254,11 @@ function showAdminDashboard(user) {
 
 function startServicesListener() {
     console.log('🔄 Iniciando listener de serviços...');
+    
+    if (!db) {
+        console.error('❌ Firestore não está disponível');
+        return;
+    }
     
     if (servicesListener) {
         servicesListener();
@@ -222,7 +274,7 @@ function startServicesListener() {
                 });
             });
             
-            // Ordenar manualmente se não houver índice
+            // Ordenar manualmente
             services.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
@@ -235,7 +287,11 @@ function startServicesListener() {
             
         }, (error) => {
             console.error('❌ Erro ao carregar serviços:', error);
-            showToast('Erro ao carregar serviços', 'error');
+            if (error.code === 'permission-denied') {
+                showToast('Sem permissão para acessar serviços', 'error');
+            } else {
+                showToast('Erro ao carregar serviços', 'error');
+            }
         });
 }
 
@@ -260,18 +316,23 @@ async function saveService(event) {
         return;
     }
     
+    if (!db || !currentUser) {
+        showToast('Sistema não está pronto. Tente novamente.', 'error');
+        return;
+    }
+    
     const service = {
-        name: document.getElementById('serviceName').value,
-        client: document.getElementById('clientName').value,
-        clientPhone: document.getElementById('clientPhone').value || null,
-        description: document.getElementById('serviceDescription').value || null,
+        name: document.getElementById('serviceName').value.trim(),
+        client: document.getElementById('clientName').value.trim(),
+        clientPhone: document.getElementById('clientPhone').value.trim() || null,
+        description: document.getElementById('serviceDescription').value.trim() || null,
         material: document.getElementById('serviceMaterial').value,
         color: document.getElementById('serviceColor').value || null,
         priority: document.getElementById('servicePriority').value,
         startDate: document.getElementById('startDate').value,
         dueDate: document.getElementById('dueDate').value,
         value: parseFloat(document.getElementById('serviceValue').value) || null,
-        observations: document.getElementById('serviceObservations').value || null,
+        observations: document.getElementById('serviceObservations').value.trim() || null,
         status: document.getElementById('serviceStatus').value,
         updatedAt: new Date().toISOString(),
         updatedBy: currentUser.email
@@ -287,17 +348,16 @@ async function saveService(event) {
             service.orderCode = generateOrderCode();
             service.serviceId = 'SRV-' + Date.now();
             
-            const docRef = await db.collection('services').add(service);
+            await db.collection('services').add(service);
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
             if (service.clientPhone) {
-                sendWhatsAppMessage(service.clientPhone, 
-                    `Olá ${service.client}! Seu pedido foi registrado com sucesso.\n\n` +
+                const message = `Olá ${service.client}! Seu pedido foi registrado com sucesso.\n\n` +
                     `📦 Serviço: ${service.name}\n` +
                     `🔖 Código: ${service.orderCode}\n` +
                     `📅 Prazo: ${formatDate(service.dueDate)}\n\n` +
-                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido`
-                );
+                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido`;
+                sendWhatsAppMessage(service.clientPhone, message);
             }
         }
         
@@ -318,6 +378,9 @@ async function updateStatus(serviceId, newStatus) {
     const service = services.find(s => s.id === serviceId);
     if (!service) return;
     
+    // Se o status já é o mesmo, não fazer nada
+    if (service.status === newStatus) return;
+    
     pendingStatusUpdate = { serviceId, newStatus, service };
     
     const statusMessages = {
@@ -328,25 +391,35 @@ async function updateStatus(serviceId, newStatus) {
         'entregue': 'Confirmar Entrega'
     };
     
-    document.getElementById('statusModalMessage').textContent = 
-        `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`;
-    
-    const whatsappOption = document.getElementById('whatsappOption');
-    if (service.clientPhone && (newStatus === 'producao' || newStatus === 'retirada' || newStatus === 'entregue')) {
-        whatsappOption.style.display = 'block';
-        document.getElementById('sendWhatsappNotification').checked = true;
-    } else {
-        whatsappOption.style.display = 'none';
+    const modalMessage = document.getElementById('statusModalMessage');
+    if (modalMessage) {
+        modalMessage.textContent = 
+            `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`;
     }
     
-    document.getElementById('statusModal').classList.add('active');
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) {
+        if (service.clientPhone && (newStatus === 'producao' || newStatus === 'retirada' || newStatus === 'entregue')) {
+            whatsappOption.style.display = 'block';
+            const checkbox = document.getElementById('sendWhatsappNotification');
+            if (checkbox) checkbox.checked = true;
+        } else {
+            whatsappOption.style.display = 'none';
+        }
+    }
+    
+    const statusModal = document.getElementById('statusModal');
+    if (statusModal) {
+        statusModal.classList.add('active');
+    }
 }
 
 async function confirmStatusChange() {
-    if (!pendingStatusUpdate) return;
+    if (!pendingStatusUpdate || !db) return;
     
     const { serviceId, newStatus, service } = pendingStatusUpdate;
-    const sendWhatsapp = document.getElementById('sendWhatsappNotification').checked;
+    const checkbox = document.getElementById('sendWhatsappNotification');
+    const sendWhatsapp = checkbox ? checkbox.checked : false;
     
     try {
         const updates = {
@@ -356,6 +429,7 @@ async function confirmStatusChange() {
             lastStatusChange: new Date().toISOString()
         };
         
+        // Adicionar timestamps específicos
         if (newStatus === 'producao') {
             updates.productionStartedAt = new Date().toISOString();
         } else if (newStatus === 'concluido') {
@@ -396,6 +470,7 @@ async function deleteService(serviceId) {
     }
     
     const service = services.find(s => s.id === serviceId);
+    if (!service) return;
     
     if (confirm(`Tem certeza que deseja excluir o serviço "${service.name}"?`)) {
         try {
@@ -416,6 +491,8 @@ function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     
+    if (!grid || !emptyState) return;
+    
     let filteredServices = services;
     
     if (currentFilter !== 'todos') {
@@ -423,19 +500,24 @@ function renderServices() {
     }
     
     if (searchTerm) {
+        const search = searchTerm.toLowerCase();
         filteredServices = filteredServices.filter(s => 
-            s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.orderCode?.toLowerCase().includes(searchTerm.toLowerCase())
+            (s.name && s.name.toLowerCase().includes(search)) ||
+            (s.client && s.client.toLowerCase().includes(search)) ||
+            (s.orderCode && s.orderCode.toLowerCase().includes(search))
         );
     }
     
+    // Ordenar por prioridade e data
     filteredServices.sort((a, b) => {
         const priorityOrder = { alta: 3, media: 2, baixa: 1 };
-        if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-            return priorityOrder[b.priority] - priorityOrder[a.priority];
+        const aPriority = priorityOrder[a.priority] || 0;
+        const bPriority = priorityOrder[b.priority] || 0;
+        
+        if (aPriority !== bPriority) {
+            return bPriority - aPriority;
         }
-        return new Date(a.dueDate) - new Date(b.dueDate);
+        return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
     });
     
     if (filteredServices.length === 0) {
@@ -450,12 +532,17 @@ function renderServices() {
             const daysText = formatDaysText(days);
             const daysColor = getDaysColor(days);
             
+            // Escapar valores para evitar problemas de HTML
+            const safeName = escapeHtml(service.name || 'Sem nome');
+            const safeClient = escapeHtml(service.client || 'Cliente não informado');
+            const safeDescription = escapeHtml(service.description || '');
+            
             return `
-                <div class="service-card priority-${service.priority}">
+                <div class="service-card priority-${service.priority || 'media'}">
                     <div class="service-header">
                         <div class="service-title">
-                            <h3>${service.name}</h3>
-                            <span class="service-code">#${service.orderCode}</span>
+                            <h3>${safeName}</h3>
+                            <span class="service-code">#${service.orderCode || 'N/A'}</span>
                         </div>
                         <div class="service-actions">
                             <button class="btn-icon" onclick="openEditModal('${service.id}')" title="Editar">
@@ -470,17 +557,17 @@ function renderServices() {
                     <div class="service-info">
                         <div class="info-item">
                             <i class="fas fa-user"></i>
-                            <span>${service.client}</span>
+                            <span>${safeClient}</span>
                         </div>
                         ${service.clientPhone ? `
                         <div class="info-item">
                             <i class="fas fa-phone"></i>
-                            <span>${service.clientPhone}</span>
+                            <span>${escapeHtml(service.clientPhone)}</span>
                         </div>
                         ` : ''}
                         <div class="info-item">
                             <i class="fas fa-layer-group"></i>
-                            <span>${service.material}</span>
+                            <span>${service.material || 'N/A'}</span>
                         </div>
                         ${service.color ? `
                         <div class="info-item">
@@ -504,9 +591,9 @@ function renderServices() {
                         ` : ''}
                     </div>
                     
-                    ${service.description ? `
+                    ${safeDescription ? `
                     <div class="service-description">
-                        <p>${service.description}</p>
+                        <p>${safeDescription}</p>
                     </div>
                     ` : ''}
                     
@@ -547,7 +634,7 @@ function renderServices() {
                     
                     ${service.clientPhone ? `
                     <div class="service-footer">
-                        <button class="btn-whatsapp" onclick="contactClient('${service.clientPhone}', '${service.client}', '${service.orderCode}')">
+                        <button class="btn-whatsapp" onclick="contactClient('${escapeHtml(service.clientPhone)}', '${safeName}', '${service.orderCode || 'N/A'}')">
                             <i class="fab fa-whatsapp"></i>
                             Contatar Cliente
                         </button>
@@ -569,12 +656,21 @@ function updateStats() {
         entregue: services.filter(s => s.status === 'entregue').length
     };
     
-    document.getElementById('stat-total').textContent = stats.total;
-    document.getElementById('stat-pending').textContent = stats.pendente;
-    document.getElementById('stat-production').textContent = stats.producao;
-    document.getElementById('stat-completed').textContent = stats.concluido;
-    document.getElementById('stat-ready').textContent = stats.retirada;
-    document.getElementById('stat-delivered').textContent = stats.entregue;
+    const elements = {
+        'stat-total': stats.total,
+        'stat-pending': stats.pendente,
+        'stat-production': stats.producao,
+        'stat-completed': stats.concluido,
+        'stat-ready': stats.retirada,
+        'stat-delivered': stats.entregue
+    };
+    
+    for (const [id, value] of Object.entries(elements)) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    }
 }
 
 // ===========================
@@ -583,17 +679,28 @@ function updateStats() {
 
 function openAddModal() {
     editingServiceId = null;
-    document.getElementById('modalTitle').textContent = 'Novo Serviço';
-    document.getElementById('saveButtonText').textContent = 'Salvar Serviço';
-    document.getElementById('serviceForm').reset();
+    
+    const modalTitle = document.getElementById('modalTitle');
+    const saveButtonText = document.getElementById('saveButtonText');
+    const serviceForm = document.getElementById('serviceForm');
+    
+    if (modalTitle) modalTitle.textContent = 'Novo Serviço';
+    if (saveButtonText) saveButtonText.textContent = 'Salvar Serviço';
+    if (serviceForm) serviceForm.reset();
     
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').value = today;
-    document.getElementById('dueDate').value = today;
-    document.getElementById('servicePriority').value = 'media';
-    document.getElementById('serviceStatus').value = 'pendente';
+    const startDate = document.getElementById('startDate');
+    const dueDate = document.getElementById('dueDate');
+    const priority = document.getElementById('servicePriority');
+    const status = document.getElementById('serviceStatus');
     
-    document.getElementById('serviceModal').classList.add('active');
+    if (startDate) startDate.value = today;
+    if (dueDate) dueDate.value = today;
+    if (priority) priority.value = 'media';
+    if (status) status.value = 'pendente';
+    
+    const modal = document.getElementById('serviceModal');
+    if (modal) modal.classList.add('active');
 }
 
 function openEditModal(serviceId) {
@@ -601,32 +708,49 @@ function openEditModal(serviceId) {
     if (!service) return;
     
     editingServiceId = serviceId;
-    document.getElementById('modalTitle').textContent = 'Editar Serviço';
-    document.getElementById('saveButtonText').textContent = 'Atualizar Serviço';
     
-    document.getElementById('serviceName').value = service.name;
-    document.getElementById('clientName').value = service.client;
-    document.getElementById('clientPhone').value = service.clientPhone || '';
-    document.getElementById('serviceDescription').value = service.description || '';
-    document.getElementById('serviceMaterial').value = service.material;
-    document.getElementById('serviceColor').value = service.color || '';
-    document.getElementById('servicePriority').value = service.priority;
-    document.getElementById('startDate').value = service.startDate;
-    document.getElementById('dueDate').value = service.dueDate;
-    document.getElementById('serviceValue').value = service.value || '';
-    document.getElementById('serviceObservations').value = service.observations || '';
-    document.getElementById('serviceStatus').value = service.status;
+    const modalTitle = document.getElementById('modalTitle');
+    const saveButtonText = document.getElementById('saveButtonText');
     
-    document.getElementById('serviceModal').classList.add('active');
+    if (modalTitle) modalTitle.textContent = 'Editar Serviço';
+    if (saveButtonText) saveButtonText.textContent = 'Atualizar Serviço';
+    
+    // Preencher campos com segurança
+    const fields = {
+        'serviceName': service.name || '',
+        'clientName': service.client || '',
+        'clientPhone': service.clientPhone || '',
+        'serviceDescription': service.description || '',
+        'serviceMaterial': service.material || '',
+        'serviceColor': service.color || '',
+        'servicePriority': service.priority || 'media',
+        'startDate': service.startDate || '',
+        'dueDate': service.dueDate || '',
+        'serviceValue': service.value || '',
+        'serviceObservations': service.observations || '',
+        'serviceStatus': service.status || 'pendente'
+    };
+    
+    for (const [id, value] of Object.entries(fields)) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.value = value;
+        }
+    }
+    
+    const modal = document.getElementById('serviceModal');
+    if (modal) modal.classList.add('active');
 }
 
 function closeModal() {
-    document.getElementById('serviceModal').classList.remove('active');
+    const modal = document.getElementById('serviceModal');
+    if (modal) modal.classList.remove('active');
     editingServiceId = null;
 }
 
 function closeStatusModal() {
-    document.getElementById('statusModal').classList.remove('active');
+    const modal = document.getElementById('statusModal');
+    if (modal) modal.classList.remove('active');
     pendingStatusUpdate = null;
 }
 
@@ -640,19 +764,36 @@ function filterServices(filter) {
     document.querySelectorAll('.btn-filter').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     
     renderServices();
 }
 
 function searchServices() {
-    searchTerm = document.getElementById('searchInput').value;
-    renderServices();
+    const input = document.getElementById('searchInput');
+    if (input) {
+        searchTerm = input.value.trim();
+        renderServices();
+    }
 }
 
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
+}
 
 function calculateDaysRemaining(dueDate) {
     if (!dueDate) return null;
@@ -686,8 +827,12 @@ function getDaysColor(days) {
 
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    } catch {
+        return dateString;
+    }
 }
 
 function formatColorName(color) {
@@ -706,7 +851,7 @@ function formatColorName(color) {
 }
 
 function formatMoney(value) {
-    if (!value) return '0,00';
+    if (!value || isNaN(value)) return '0,00';
     return value.toFixed(2).replace('.', ',');
 }
 
@@ -759,8 +904,8 @@ function showToast(message, type = 'info') {
     };
     
     toast.innerHTML = `
-        <i class="${icons[type]}"></i>
-        <span>${message}</span>
+        <i class="${icons[type] || icons.info}"></i>
+        <span>${escapeHtml(message)}</span>
     `;
     
     container.appendChild(toast);
@@ -804,6 +949,9 @@ function monitorConnection() {
         updateConnectionStatus(false);
         showToast('Sem conexão com a internet', 'warning');
     });
+    
+    // Verificar status inicial
+    updateConnectionStatus(navigator.onLine);
 }
 
 // ===========================
@@ -812,13 +960,14 @@ function monitorConnection() {
 
 window.addEventListener('error', (e) => {
     console.error('Erro:', e);
-    if (e.message && !e.message.includes('showToast')) {
-        showToast('Ocorreu um erro inesperado', 'error');
+    // Evitar loop de erros
+    if (e.message && !e.message.includes('showToast') && !e.message.includes('toast')) {
+        console.error('Erro capturado:', e.message);
     }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('Promise rejeitada:', e);
+    console.error('Promise rejeitada:', e.reason);
 });
 
 console.log('✅ Sistema carregado completamente');
