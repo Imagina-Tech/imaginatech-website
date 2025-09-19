@@ -1,9 +1,9 @@
 <!-- 
 ==================================================
-ARQUIVO: index.html
+ARQUIVO: servicos/index.html
 MÓDULO: Serviços/Produção (Painel Administrativo)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.0 - Enhanced
+VERSÃO: 2.1 - Fixed
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 -->
@@ -340,7 +340,13 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <i class="fas fa-calendar-check"></i>
                             Prazo de Entrega *
                         </label>
-                        <input type="date" id="dueDate" class="form-input" required>
+                        <div class="input-group">
+                            <input type="date" id="dueDate" class="form-input" required>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dateUndefined" onchange="toggleDateInput()">
+                                <span>Data ainda a definir</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -357,6 +363,41 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             Peso (gramas)
                         </label>
                         <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
+                    </div>
+
+                    <!-- Upload de Arquivo 3D -->
+                    <div class="form-group full-width">
+                        <label for="serviceFile">
+                            <i class="fas fa-file-upload"></i> 
+                            Arquivo do Projeto (STL, OBJ, STEP, 3MF)
+                        </label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="serviceFile" accept=".stl,.obj,.step,.stp,.3mf" onchange="handleFileSelect(event)">
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <i class="fas fa-file"></i>
+                                <span id="fileName"></span>
+                                <button type="button" class="btn-remove-file" onclick="removeFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload de Imagem de Referência -->
+                    <div class="form-group full-width">
+                        <label for="serviceImage">
+                            <i class="fas fa-image"></i>
+                            Imagem de Referência
+                        </label>
+                        <div class="image-input-wrapper">
+                            <input type="file" id="serviceImage" accept="image/*" onchange="handleImageSelect(event)">
+                            <div class="image-preview" id="imagePreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                                <button type="button" class="btn-remove-image" onclick="removeImage()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Campos de Retirada -->
@@ -459,8 +500,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- Hidden Fields para URLs -->
                 <input type="hidden" id="serviceId">
                 <input type="hidden" id="serviceStatus" value="pendente">
+                <input type="hidden" id="currentFileUrl">
+                <input type="hidden" id="currentFileName">
+                <input type="hidden" id="currentImageUrl">
 
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="closeModal()">
@@ -473,6 +518,32 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Tracking Code Modal (Código de Rastreio) -->
+    <div class="modal" id="trackingModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Código de Rastreio</h2>
+                <button class="modal-close" onclick="closeTrackingModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Digite o código de rastreio dos Correios:</p>
+                <input type="text" id="trackingCode" placeholder="Ex: BR123456789BR" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeTrackingModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn-confirm" onclick="confirmTrackingCode()">
+                    <i class="fas fa-check"></i>
+                    Confirmar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -535,42 +606,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- SEDEX Confirmation Modal -->
-    <div class="modal" id="sedexConfirmModal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h2 class="warning-title">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    ATENÇÃO - PEDIDO SEDEX
-                </h2>
-            </div>
-            
-            <div class="modal-body">
-                <div class="warning-message">
-                    <p>⚠️ <strong>IMPORTANTE:</strong></p>
-                    <p>Marque como PRONTO PARA RETIRADA apenas quando:</p>
-                    <ul class="checklist">
-                        <li>✅ O pedido estiver COMPLETAMENTE embalado</li>
-                        <li>✅ A etiqueta dos Correios estiver IMPRESSA</li>
-                        <li>✅ Tudo estiver PRONTO para postagem</li>
-                    </ul>
-                    <p class="highlight-warning">Confirmar agora irá notificar que o pedido será postado HOJE!</p>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeSedexConfirm()">
-                    <i class="fas fa-arrow-left"></i>
-                    Voltar
-                </button>
-                <button class="btn-confirm btn-warning" onclick="confirmSedexReady()">
-                    <i class="fas fa-box"></i>
-                    Está Embalado e Pronto
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -578,6 +613,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <!-- JavaScript Principal -->
     <script src="scripts.js"></script>
