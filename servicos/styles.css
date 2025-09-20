@@ -1169,7 +1169,12 @@ input[type="file"]::file-selector-button {
 .btn-warning { background: linear-gradient(135deg, var(--neon-orange), var(--neon-red)); color: white; }
 .btn-cancel:hover, .btn-save:hover, .btn-confirm:hover, .btn-warning:hover { transform: translateY(-2px); }
 
-.whatsapp-option { margin-top: 1rem; padding: 1rem; background: var(--glass-bg); border-radius: 8px; }
+.whatsapp-option, .email-option { 
+    margin-top: 1rem; 
+    padding: 1rem; 
+    background: var(--glass-bg); 
+    border-radius: 8px; 
+}
 
 /* ===========================
    TOAST NOTIFICATIONS
