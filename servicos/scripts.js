@@ -1183,10 +1183,12 @@ async function sendEmailNotification(service) {
     if (!service.clientEmail || service.clientEmail.trim() === '') return;
     
     try {
-        // Use suas IDs do EmailJS aqui
+        // IMPORTANTE: Inclui o email do cliente como destinatário
         await emailjs.send('service_vxndoi5', 'template_cwrmts1', {
+            to_email: service.clientEmail,  // Email do destinatário (CLIENTE)
             client_name: service.client,
-            order_code: service.orderCode
+            order_code: service.orderCode,
+            reply_to: '3d3printers@gmail.com'  // Email da empresa para respostas
         });
         console.log('Email enviado com sucesso para:', service.clientEmail);
         showToast('📧 Email de notificação enviado!', 'success');
