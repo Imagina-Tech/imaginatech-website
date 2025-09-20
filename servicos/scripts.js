@@ -610,9 +610,15 @@ function renderServices() {
                     ${service.imageUrl ? `<div class="service-image"><img src="${service.imageUrl}" alt="Imagem" onclick="window.open('${service.imageUrl}', '_blank')"></div>` : ''}
                     
                     ${service.deliveryMethod ? `
-                    <div class="delivery-badge">
-                        <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
-                        ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
+                    <div class="delivery-badge ${days !== null && days < 0 ? 'badge-late' : days !== null && days <= 2 ? 'badge-urgent' : ''}">
+                        <div class="delivery-info">
+                            <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
+                            ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
+                        </div>
+                        <div class="delivery-time ${days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
+                            <i class="fas fa-clock"></i>
+                            ${daysText}
+                        </div>
                     </div>` : ''}
                     
                     <div class="service-info">
@@ -621,7 +627,6 @@ function renderServices() {
                         <div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material || 'N/A'}</span></div>
                         ${service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
                         <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
-                        <div class="info-item" style="color: ${daysColor}"><i class="fas fa-clock"></i><span>${daysText}</span></div>
                         ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                         ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
                         ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Baixar"><i class="fas fa-download"></i><span>${escapeHtml(service.fileName || 'Arquivo')}</span></button></div>` : ''}
