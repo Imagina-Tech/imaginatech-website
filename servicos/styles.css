@@ -513,9 +513,9 @@ body {
 .btn-download:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0, 255, 136, 0.3); }
 
 .delivery-badge {
-    display: inline-flex;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, var(--neon-purple), rgba(153, 69, 255, 0.2));
     border: 1px solid var(--neon-purple);
@@ -523,6 +523,73 @@ body {
     font: 500 0.85rem/1 inherit;
     color: white;
     margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.delivery-badge.badge-late {
+    background: linear-gradient(135deg, var(--neon-red), rgba(255, 0, 85, 0.3));
+    border-color: var(--neon-red);
+    animation: pulseRed 2s infinite;
+}
+
+.delivery-badge.badge-urgent {
+    background: linear-gradient(135deg, var(--neon-orange), rgba(255, 107, 53, 0.3));
+    border-color: var(--neon-orange);
+    animation: pulseOrange 2s infinite;
+}
+
+@keyframes pulseRed {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 85, 0.8); }
+}
+
+@keyframes pulseOrange {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.8); }
+}
+
+.delivery-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delivery-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.delivery-time.time-late {
+    background: var(--neon-red);
+    color: white;
+    animation: blinkRed 1s infinite;
+}
+
+.delivery-time.time-urgent {
+    background: var(--neon-orange);
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+.delivery-time.time-warning {
+    background: var(--neon-yellow);
+    color: var(--dark-bg);
+}
+
+.delivery-time.time-normal {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+@keyframes blinkRed {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 .service-description {
