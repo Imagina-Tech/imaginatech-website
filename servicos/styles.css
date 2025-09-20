@@ -603,126 +603,126 @@ body {
 
 .service-status { padding-top: 1rem; border-top: 1px solid var(--glass-border); }
 
-/* Timeline Status */
+/* Timeline Status - New Layout */
 .status-timeline {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0;
+    padding: 0.75rem 0;
     position: relative;
-    width: 100%;
+    margin: 0 -0.5rem;
 }
 
-.timeline-item {
+.timeline-step {
     flex: 1;
-    display: flex;
-    align-items: center;
     position: relative;
-    justify-content: center;
-}
-
-.timeline-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    transition: all 0.3s;
-    position: relative;
-    z-index: 2;
-}
-
-.timeline-btn:disabled {
-    cursor: not-allowed;
-}
-
-.timeline-dot {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--glass-bg);
-    border: 2px solid var(--glass-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    position: relative;
-    z-index: 2;
-}
-
-.timeline-dot i {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.timeline-label {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
     text-align: center;
-    max-width: 60px;
-    line-height: 1.2;
 }
 
-.timeline-line {
+/* Linha conectora usando ::after */
+.timeline-step:not(:last-child)::after {
+    content: '';
     position: absolute;
     top: 15px;
-    left: 30px;
-    width: calc(100% - 30px);
+    left: 50%;
+    width: 100%;
     height: 2px;
     background: var(--glass-border);
     z-index: 1;
 }
 
-.timeline-item:last-child .timeline-line {
-    display: none;
+.timeline-step.completed:not(:last-child)::after {
+    background: var(--neon-green);
 }
 
-/* Active state */
-.timeline-item.active .timeline-dot {
-    background: var(--gradient-primary);
-    border-color: var(--neon-blue);
-    animation: pulse 2s infinite;
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+.step-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s;
 }
 
-.timeline-item.active .timeline-dot i {
-    color: white;
+.step-button:disabled {
+    cursor: not-allowed;
 }
 
-.timeline-item.active .timeline-label {
-    color: var(--neon-blue);
-    font-weight: 600;
+.step-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 2px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
 }
 
-/* Completed state */
-.timeline-item.completed .timeline-dot {
+.step-icon i {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.step-text {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+    max-width: 60px;
+}
+
+/* Estados */
+.timeline-step.completed .step-icon {
     background: var(--neon-green);
     border-color: var(--neon-green);
 }
 
-.timeline-item.completed .timeline-dot i {
+.timeline-step.completed .step-icon i {
     color: white;
 }
 
-.timeline-item.completed .timeline-label {
+.timeline-step.completed .step-text {
     color: var(--neon-green);
 }
 
-.timeline-item.completed + .timeline-item .timeline-line,
-.timeline-item.completed .timeline-line {
-    background: var(--neon-green);
+.timeline-step.active .step-icon {
+    background: var(--gradient-primary);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    animation: pulse 2s infinite;
 }
 
-/* Hover effects */
-.timeline-btn:hover:not(:disabled) .timeline-dot {
-    transform: scale(1.2);
+.timeline-step.active .step-icon i {
+    color: white;
+}
+
+.timeline-step.active .step-text {
+    color: var(--neon-blue);
+    font-weight: 600;
+}
+
+/* Hover */
+.step-button:hover:not(:disabled) .step-icon {
+    transform: scale(1.15);
     border-color: var(--neon-blue);
 }
 
-.timeline-btn:hover:not(:disabled) .timeline-label {
+.step-button:hover:not(:disabled) .step-text {
     color: var(--text-primary);
+}
+
+/* Remove old timeline styles */
+.timeline-item,
+.timeline-btn,
+.timeline-dot,
+.timeline-label,
+.timeline-line {
+    display: none;
 }
 
 /* Old status buttons - Remove */
@@ -1166,24 +1166,26 @@ input[type="file"]::file-selector-button {
     .form-row { grid-template-columns: 1fr; }
     
     /* Timeline mobile adjustments */
-    .timeline-dot {
+    .status-timeline {
+        padding: 0.5rem 0;
+    }
+    
+    .step-icon {
         width: 25px;
         height: 25px;
     }
     
-    .timeline-dot i {
+    .step-icon i {
         font-size: 0.65rem;
     }
     
-    .timeline-label {
+    .step-text {
         font-size: 0.55rem;
         max-width: 50px;
     }
     
-    .timeline-line {
+    .timeline-step:not(:last-child)::after {
         top: 12px;
-        left: 25px;
-        width: calc(100% - 25px);
     }
 }
 
@@ -1198,31 +1200,25 @@ input[type="file"]::file-selector-button {
     /* Timeline mobile small screens */
     .status-timeline {
         padding: 0.25rem 0;
-        overflow-x: auto;
-        min-height: 60px;
+        margin: 0;
     }
     
-    .timeline-item {
-        min-width: 55px;
-    }
-    
-    .timeline-dot {
+    .step-icon {
         width: 22px;
         height: 22px;
     }
     
-    .timeline-dot i {
+    .step-icon i {
         font-size: 0.6rem;
     }
     
-    .timeline-label {
+    .step-text {
         font-size: 0.5rem;
         max-width: 45px;
     }
     
-    .timeline-line {
+    .timeline-step:not(:last-child)::after {
         top: 11px;
-        left: 22px;
     }
 }
 
