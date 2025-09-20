@@ -5,8 +5,8 @@ MÓDULO: Serviços/Produção (Painel Administrativo)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
 VERSÃO: 2.2 - Optimized
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
-=============================================
---
+==================================================
+-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -429,6 +429,25 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="form-group full-width">
                         <label for="serviceObservations"><i class="fas fa-exclamation-triangle"></i> Observações</label>
                         <textarea id="serviceObservations" class="form-textarea" rows="2" placeholder="Observações importantes..." autocomplete="off"></textarea>
+                    </div>
+                </div>
+
+                <!-- Notification Options -->
+                <div class="notification-section" id="notificationSection" style="grid-column: 1 / -1; display: none;">
+                    <h4 class="section-title"><i class="fas fa-bell"></i> Notificações ao Cliente</h4>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div class="whatsapp-option" id="createWhatsappOption" style="display: none; margin: 0; flex: 1;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sendWhatsappOnCreate" checked>
+                                <span><i class="fab fa-whatsapp"></i> Enviar WhatsApp</span>
+                            </label>
+                        </div>
+                        <div class="email-option" id="createEmailOption" style="display: none; margin: 0; flex: 1;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sendEmailOnCreate" checked>
+                                <span><i class="fas fa-envelope"></i> Enviar Email</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
