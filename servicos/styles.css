@@ -603,6 +603,121 @@ body {
 
 .service-status { padding-top: 1rem; border-top: 1px solid var(--glass-border); }
 
+/* Timeline Status */
+.status-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    position: relative;
+}
+
+.timeline-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.timeline-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    transition: all 0.3s;
+}
+
+.timeline-btn:disabled {
+    cursor: not-allowed;
+}
+
+.timeline-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-dot i {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.timeline-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 60px;
+    line-height: 1.2;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 15px;
+    left: 30px;
+    right: 0;
+    height: 2px;
+    background: var(--glass-border);
+    z-index: 1;
+}
+
+/* Active state */
+.timeline-item.active .timeline-dot {
+    background: var(--gradient-primary);
+    border-color: var(--neon-blue);
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+}
+
+.timeline-item.active .timeline-dot i {
+    color: white;
+}
+
+.timeline-item.active .timeline-label {
+    color: var(--neon-blue);
+    font-weight: 600;
+}
+
+/* Completed state */
+.timeline-item.completed .timeline-dot {
+    background: var(--neon-green);
+    border-color: var(--neon-green);
+}
+
+.timeline-item.completed .timeline-dot i {
+    color: white;
+}
+
+.timeline-item.completed .timeline-label {
+    color: var(--neon-green);
+}
+
+.timeline-item.completed .timeline-line {
+    background: var(--neon-green);
+}
+
+/* Hover effects */
+.timeline-btn:hover:not(:disabled) .timeline-dot {
+    transform: scale(1.2);
+    border-color: var(--neon-blue);
+}
+
+.timeline-btn:hover:not(:disabled) .timeline-label {
+    color: var(--text-primary);
+}
+
+/* Old status buttons - Remove */
 .status-buttons {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -1041,6 +1156,26 @@ input[type="file"]::file-selector-button {
     .services-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
+    
+    /* Timeline mobile adjustments */
+    .timeline-dot {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .timeline-dot i {
+        font-size: 0.65rem;
+    }
+    
+    .timeline-label {
+        font-size: 0.55rem;
+        max-width: 50px;
+    }
+    
+    .timeline-line {
+        top: 12px;
+        left: 25px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1048,9 +1183,38 @@ input[type="file"]::file-selector-button {
     .login-logo h1 { font-size: 2rem; }
     .page-title { font-size: 1.25rem; }
     .stat-card { flex-direction: column; text-align: center; }
-    .status-buttons { grid-template-columns: repeat(3, 1fr); }
     .modal-content { border-radius: 0; max-height: 100vh; }
     .service-footer { flex-direction: column; }
+    
+    /* Timeline mobile small screens */
+    .status-timeline {
+        padding: 0.25rem 0;
+        overflow-x: auto;
+        min-height: 60px;
+    }
+    
+    .timeline-item {
+        min-width: 55px;
+    }
+    
+    .timeline-dot {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .timeline-dot i {
+        font-size: 0.6rem;
+    }
+    
+    .timeline-label {
+        font-size: 0.5rem;
+        max-width: 45px;
+    }
+    
+    .timeline-line {
+        top: 11px;
+        left: 22px;
+    }
 }
 
 /* ===========================
