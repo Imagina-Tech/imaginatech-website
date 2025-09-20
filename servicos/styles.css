@@ -411,10 +411,6 @@ body {
     padding: 1.5rem;
     transition: all 0.3s;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 450px;
-    max-height: 450px;
 }
 
 .service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
@@ -601,30 +597,9 @@ body {
     background: var(--glass-bg);
     border-radius: 8px;
     margin-bottom: 1rem;
-    max-height: 80px;
-    min-height: 80px;
-    overflow-y: auto;
 }
 
-.service-description::-webkit-scrollbar {
-    width: 6px;
-}
-
-.service-description::-webkit-scrollbar-track {
-    background: var(--glass-bg);
-    border-radius: 3px;
-}
-
-.service-description::-webkit-scrollbar-thumb {
-    background: var(--glass-border);
-    border-radius: 3px;
-}
-
-.service-description::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-blue);
-}
-
-.service-description p { font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); margin: 0; }
+.service-description p { font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); }
 
 .service-status { padding-top: 1rem; border-top: 1px solid var(--glass-border); }
 
@@ -692,13 +667,12 @@ body {
 
 .timeline-line {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 15px;
+    left: 30px;
     width: calc(100% - 30px);
     height: 2px;
     background: var(--glass-border);
-    z-index: 0;
-    transform: translateY(-15px);
+    z-index: 1;
 }
 
 .timeline-item:last-child .timeline-line {
@@ -1207,8 +1181,9 @@ input[type="file"]::file-selector-button {
     }
     
     .timeline-line {
+        top: 12px;
+        left: 25px;
         width: calc(100% - 25px);
-        transform: translateY(-12px);
     }
 }
 
