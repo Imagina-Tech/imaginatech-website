@@ -410,6 +410,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    align-items: stretch;
 }
 
 .service-card {
@@ -423,6 +424,9 @@ body {
     overflow: hidden;
     word-wrap: break-word;
     word-break: break-word;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
 }
 
 .service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
@@ -626,6 +630,9 @@ body {
     background: var(--glass-bg);
     border-radius: 8px;
     margin-bottom: 1rem;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 150px;
 }
 
 .service-description p { font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); }
@@ -723,7 +730,6 @@ body {
     background: var(--gradient-primary);
     border-color: var(--neon-blue);
     box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-    animation: pulse 2s infinite;
 }
 
 .timeline-step.active .step-icon i {
@@ -1226,6 +1232,12 @@ input[type="file"]::file-selector-button {
         padding: 1rem; 
         width: 100%;
         box-sizing: border-box;
+        min-height: auto;
+    }
+    
+    .service-description {
+        max-height: none;
+        flex: none;
     }
     
     .delivery-badge {
@@ -1247,6 +1259,16 @@ input[type="file"]::file-selector-button {
         max-width: 100%;
     }
     
+    .timeline-step {
+        min-width: 60px;
+    }
+    
+    .timeline-step:not(:last-child)::after {
+        top: 12px;
+        left: 55%;
+        width: 100%;
+    }
+    
     .step-icon {
         width: 25px;
         height: 25px;
@@ -1259,10 +1281,6 @@ input[type="file"]::file-selector-button {
     .step-text {
         font-size: 0.55rem;
         max-width: 50px;
-    }
-    
-    .timeline-step:not(:last-child)::after {
-        top: 12px;
     }
 }
 
@@ -1285,6 +1303,12 @@ input[type="file"]::file-selector-button {
         padding: 0.75rem;
         margin: 0;
         width: 100%;
+        min-height: auto;
+    }
+    
+    .service-description {
+        max-height: none;
+        flex: none;
     }
     
     .service-header {
@@ -1326,6 +1350,16 @@ input[type="file"]::file-selector-button {
         -webkit-overflow-scrolling: touch;
     }
     
+    .timeline-step {
+        min-width: 55px;
+    }
+    
+    .timeline-step:not(:last-child)::after {
+        top: 11px;
+        left: 55%;
+        width: 90%;
+    }
+    
     .step-icon {
         width: 22px;
         height: 22px;
@@ -1338,10 +1372,6 @@ input[type="file"]::file-selector-button {
     .step-text {
         font-size: 0.5rem;
         max-width: 45px;
-    }
-    
-    .timeline-step:not(:last-child)::after {
-        top: 11px;
     }
     
     .delivery-badge {
