@@ -388,7 +388,7 @@ async function saveService(event) {
             
             if (service.clientPhone) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
-                const message = `Olá ${service.client}! Seu pedido foi registrado.\n\n• Serviço: ${service.name}\n• Código: ${service.orderCode}\n• Prazo: ${dueDateText}\n• Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe: https://imaginatech.com.br/acompanhar-pedido/`;
+                const message = `Olá ${service.client}! 🎉\nSeu pedido foi registrado com sucesso.\n\n📦 Serviço: ${service.name}\n📌 Código: ${service.orderCode}\n📅 Prazo: ${dueDateText}\n🚚 Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\n👉 Acompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
         }
@@ -454,7 +454,7 @@ async function confirmTrackingCode() {
         showToast('Pedido marcado como postado!', 'success');
         
         if (service.clientPhone) {
-            const message = `Seu pedido foi postado!\n\n- ${service.name}\n- Código: ${service.orderCode}\n- Rastreio: ${trackingCode}\n\nRastreie: https://rastreamento.correios.com.br/app/index.php\n\nPrazo: 3-7 dias úteis`;
+            const message = `📦 Seu pedido foi postado nos Correios!\n\n📋 ${service.name}\n📌 Código: ${service.orderCode}\n🔍 Rastreio: ${trackingCode}\n\n👉 Rastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\n⏱️ Prazo estimado: 3-7 dias úteis`;
             sendWhatsAppMessage(service.clientPhone, message);
         }
     } catch (error) {
@@ -859,7 +859,7 @@ function showDeliveryInfo(serviceId) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        const message = encodeURIComponent(`Olá ${pickup.name}! Seu pedido está pronto.\n\n- Pedido: ${service.name}\n- Código: ${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
+        const message = encodeURIComponent(`Olá ${pickup.name}! 👋\n\nSeu pedido está pronto para retirada!\n\n📦 Pedido: ${service.name}\n📌 Código: ${service.orderCode}\n\n📅 Podemos confirmar o horário de retirada?`);
         
         html += `
             <div class="info-section">
@@ -988,11 +988,19 @@ const isStatusCompleted = (currentStatus, checkStatus) => {
 // ===========================
 // WHATSAPP INTEGRATION
 // ===========================
-const sendWhatsAppMessage = (phone, message) => 
-    window.open(`https://wa.me/55${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+const sendWhatsAppMessage = (phone, message) => {
+    // Remove caracteres especiais do telefone
+    const cleanPhone = phone.replace(/\D/g, '');
+    // Codifica a mensagem preservando emojis
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+};
 
-const contactClient = (phone, serviceName, orderCode) => 
-    sendWhatsAppMessage(phone, `Olá!\n\nSobre seu pedido:\n\n- Serviço: ${serviceName}\n- Código: #${orderCode}\n\nPode falar agora?`);
+const contactClient = (phone, serviceName, orderCode) => {
+    const message = `Olá! 👋\n\nSobre seu pedido:\n\n📦 Serviço: ${serviceName}\n📌 Código: #${orderCode}\n\nPode falar agora?`;
+    sendWhatsAppMessage(phone, message);
+};
 
 // ===========================
 // TOAST NOTIFICATIONS
