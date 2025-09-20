@@ -406,6 +406,19 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <label for="complemento">Complemento</label>
                             <input type="text" id="complemento" class="form-input" placeholder="Apto, Bloco, etc">
                         </div>
+                        
+                        <!-- Campo de Código de Rastreio (aparece apenas ao editar) -->
+                        <div class="form-group" id="trackingCodeField" style="display: none;">
+                            <label for="editTrackingCode">
+                                <i class="fas fa-barcode"></i> Código de Rastreio (Correios)
+                            </label>
+                            <input type="text" id="editTrackingCode" class="form-input" 
+                                   placeholder="Ex: BR123456789BR" 
+                                   style="text-transform: uppercase;">
+                            <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                                Digite o código de rastreio dos Correios para este pedido
+                            </small>
+                        </div>
                     </div>
 
                     <!-- Description & Observations -->
