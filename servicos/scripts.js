@@ -38,9 +38,12 @@ try {
     auth = firebase.auth();
     storage = firebase.storage();
     
-    // Initialize EmailJS
+    // Initialize EmailJS - MUST be done early
     if (typeof emailjs !== 'undefined') {
         emailjs.init("VIytMLn6VW-lDYhYL");
+        console.log('EmailJS initialized successfully');
+    } else {
+        console.error('EmailJS library not loaded');
     }
 } catch (error) {
     console.error('Erro ao inicializar Firebase:', error);
@@ -74,7 +77,36 @@ function onDOMReady() {
         input?.addEventListener('input', formatPhoneNumber);
     });
     document.getElementById('cep')?.addEventListener('input', formatCEP);
+    
+    // Add listeners for client fields to show/hide notification options
+    document.getElementById('clientPhone')?.addEventListener('input', updateNotificationOptions);
+    document.getElementById('clientEmail')?.addEventListener('input', updateNotificationOptions);
+    
     monitorConnection();
+}
+
+// Function to show/hide notification checkboxes based on client data
+function updateNotificationOptions() {
+    const phone = document.getElementById('clientPhone')?.value.trim();
+    const email = document.getElementById('clientEmail')?.value.trim();
+    const notificationSection = document.getElementById('notificationSection');
+    const whatsappOption = document.getElementById('createWhatsappOption');
+    const emailOption = document.getElementById('createEmailOption');
+    
+    if (!editingServiceId && (phone || email)) {
+        // Only show for new services
+        if (notificationSection) notificationSection.style.display = 'block';
+        
+        if (whatsappOption) {
+            whatsappOption.style.display = phone ? 'block' : 'none';
+        }
+        
+        if (emailOption) {
+            emailOption.style.display = email ? 'block' : 'none';
+        }
+    } else if (notificationSection) {
+        notificationSection.style.display = 'none';
+    }
 }
 
 // ===========================
@@ -431,16 +463,20 @@ async function saveService(event) {
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
-            // Send notifications to client
-            if (service.clientPhone) {
+            // Get notification preferences
+            const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;
+            const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
+            
+            // Send WhatsApp notification if phone exists and checkbox is checked
+            if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
                 const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
             
-            // Send email notification if client has email
-            if (service.clientEmail) {
-                sendEmailNotification(service);
+            // Send email notification if client has email and checkbox is checked
+            if (service.clientEmail && sendEmail) {
+                await sendEmailNotification(service);
             }
         }
         
@@ -463,7 +499,14 @@ async function saveService(event) {
             });
         }
         
-        setTimeout(closeModal, editingServiceId ? 0 : 3000);
+        // Close modal after a delay - FIXED: same delay for both create and edit
+        if (!editingServiceId) {
+            // For new services, wait to show the order code
+            setTimeout(closeModal, 3000);
+        } else {
+            // For edits, close immediately after uploads complete
+            closeModal();
+        }
     } catch (error) {
         console.error('Erro ao salvar:', error);
         showToast('Erro ao salvar serviço', 'error');
@@ -801,6 +844,10 @@ function openAddModal() {
     document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
     
+    // Hide notification section for new services
+    const notificationSection = document.getElementById('notificationSection');
+    if (notificationSection) notificationSection.style.display = 'none';
+    
     hideAllDeliveryFields();
     document.getElementById('serviceModal')?.classList.add('active');
 }
@@ -837,6 +884,10 @@ function openEditModal(serviceId) {
         const el = document.getElementById(id);
         el && (el.value = value || '');
     });
+    
+    // Hide notification section when editing
+    const notificationSection = document.getElementById('notificationSection');
+    if (notificationSection) notificationSection.style.display = 'none';
     
     // Handle dates
     const dateUndefined = document.getElementById('dateUndefined');
