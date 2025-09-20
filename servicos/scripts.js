@@ -334,6 +334,14 @@ async function saveService(event) {
         updatedBy: currentUser.email
     };
     
+    // Se for edição e método for sedex, adiciona código de rastreio se existir
+    if (editingServiceId && deliveryMethod === 'sedex') {
+        const trackingCodeInput = document.getElementById('editTrackingCode');
+        if (trackingCodeInput && trackingCodeInput.value.trim()) {
+            service.trackingCode = trackingCodeInput.value.trim().toUpperCase();
+        }
+    }
+    
     if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
         return showToast('Data de entrega não pode ser anterior à data de início', 'error');
     
@@ -754,7 +762,8 @@ function openEditModal(serviceId) {
         serviceWeight: service.weight,
         serviceObservations: service.observations,
         serviceStatus: service.status || 'pendente',
-        deliveryMethod: service.deliveryMethod
+        deliveryMethod: service.deliveryMethod,
+        trackingCode: service.trackingCode || ''  // Adiciona código de rastreio
     }).forEach(([id, value]) => {
         const el = document.getElementById(id);
         el && (el.value = value || '');
@@ -806,6 +815,16 @@ function openEditModal(serviceId) {
                 const el = document.getElementById(key);
                 el && (el.value = value || '');
             });
+            
+            // Mostra campo de código de rastreio se for sedex
+            const trackingField = document.getElementById('trackingCodeField');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+                const trackingInput = document.getElementById('trackingCode');
+                if (trackingInput && service.trackingCode) {
+                    trackingInput.value = service.trackingCode;
+                }
+            }
         }
     }
     
@@ -830,8 +849,27 @@ const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.c
 function toggleDeliveryFields() {
     const method = document.getElementById('deliveryMethod')?.value;
     hideAllDeliveryFields();
-    if (method === 'retirada') document.getElementById('pickupFields')?.classList.add('active');
-    else if (method === 'sedex') document.getElementById('deliveryFields')?.classList.add('active');
+    
+    if (method === 'retirada') {
+        document.getElementById('pickupFields')?.classList.add('active');
+    } else if (method === 'sedex') {
+        document.getElementById('deliveryFields')?.classList.add('active');
+        // Mostra campo de código de rastreio se estiver editando
+        if (editingServiceId) {
+            const trackingField = document.getElementById('trackingCodeField');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+            }
+        }
+    }
+    
+    // Oculta campo de código de rastreio se não for sedex
+    if (method !== 'sedex') {
+        const trackingField = document.getElementById('trackingCodeField');
+        if (trackingField) {
+            trackingField.style.display = 'none';
+        }
+    }
 }
 
 const hideAllDeliveryFields = () => {
