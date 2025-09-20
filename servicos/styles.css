@@ -1055,6 +1055,32 @@ input[type="file"]::file-selector-button {
 }
 .order-code-info { color: white; font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.8; }
 
+/* Tracking Code Field */
+#trackingCodeField {
+    background: rgba(153, 69, 255, 0.1);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(153, 69, 255, 0.3);
+    margin-top: 1rem;
+}
+
+#trackingCodeField label {
+    color: var(--neon-purple);
+    font-weight: 600;
+}
+
+#editTrackingCode {
+    background: var(--glass-bg);
+    border: 2px solid var(--neon-purple);
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+}
+
+#editTrackingCode:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
 /* Info Sections */
 .info-section {
     background: rgba(255, 255, 255, 0.03);
