@@ -1,6 +1,6 @@
 /* 
 ==================================================
-ARQUIVO: servicos/scripts.js
+ARQUIVO: servicos/styles.css
 MÓDULO: Serviços/Produção (Painel Administrativo)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
 VERSÃO: 2.2 - Optimized
@@ -8,1019 +8,1257 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
-// ===========================
-// FIREBASE CONFIGURATION
-// ===========================
-const firebaseConfig = {
-    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
-    authDomain: "imaginatech-servicos.firebaseapp.com",
-    projectId: "imaginatech-servicos",
-    storageBucket: "imaginatech-servicos.firebasestorage.app",
-    messagingSenderId: "321455309872",
-    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
-};
-
-const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "igor.butter@gmail.com"];
-
-// ===========================
-// GLOBAL VARIABLES
-// ===========================
-let db, auth, storage, services = [], currentFilter = 'todos', editingServiceId = null;
-let currentUser = null, isAuthorized = false, servicesListener = null;
-let pendingStatusUpdate = null, selectedFile = null, selectedImage = null;
-
-// ===========================
-// INITIALIZATION
-// ===========================
-try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    auth = firebase.auth();
-    storage = firebase.storage();
-} catch (error) {
-    console.error('Erro ao inicializar Firebase:', error);
-    alert('Erro ao conectar com o servidor. Recarregue a página.');
+/* ===========================
+   ROOT VARIABLES
+   =========================== */
+:root {
+    --primary-blue: #2A6EA7;
+    --secondary-blue: #57D4CA;
+    --neon-blue: #00D4FF;
+    --neon-red: #FF0055;
+    --neon-green: #00FF88;
+    --neon-yellow: #FFD700;
+    --neon-purple: #9945FF;
+    --neon-orange: #FF6B35;
+    --dark-bg: #0a0e1a;
+    --card-bg: #111827;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.3);
+    --gradient-primary: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
 }
 
-// DOM Ready Handler
-document.readyState === 'loading' 
-    ? document.addEventListener('DOMContentLoaded', onDOMReady)
-    : onDOMReady();
+/* ===========================
+   RESET & BASE
+   =========================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    font: 400 16px/1.6 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
 
-function onDOMReady() {
-    if (!auth) {
-        hideLoadingOverlay();
-        return alert('Erro ao inicializar autenticação. Recarregue a página.');
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--dark-bg); }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+/* ===========================
+   BACKGROUND EFFECTS
+   =========================== */
+.cosmic-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 50%, #0a0e1a 100%);
+    pointer-events: none;
+}
+
+.grid-lines {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-move 10s linear infinite;
+}
+
+@keyframes grid-move { to { transform: translate(50px, 50px); } }
+
+.particles { position: absolute; inset: 0; overflow: hidden; }
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--neon-blue);
+    border-radius: 50%;
+    opacity: 0.5;
+    animation: float 20s infinite linear;
+}
+
+@keyframes float {
+    from { transform: translateY(100vh); }
+    to { transform: translateY(-100px) translateX(100px); }
+}
+
+/* ===========================
+   LOADING OVERLAY
+   =========================== */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s;
+}
+
+.loading-overlay.hidden { display: none !important; }
+.loading-content { text-align: center; }
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(0, 212, 255, 0.2);
+    border-top-color: var(--neon-blue);
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: var(--neon-blue); font-size: 0.9rem; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+/* ===========================
+   LOGIN SCREEN
+   =========================== */
+.login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.login-screen.hidden { display: none; }
+
+.login-container {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: var(--shadow-glow);
+    animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-header { text-align: center; margin-bottom: 2rem; }
+.login-logo { margin-bottom: 2rem; }
+.login-logo h1 {
+    font: 700 2.5rem/1 'Orbitron', sans-serif;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.login-logo p { color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 3px; }
+
+.login-info {
+    padding: 1.5rem;
+    background: var(--glass-bg);
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.login-info i { font-size: 3rem; color: var(--neon-blue); margin-bottom: 1rem; }
+.login-info h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.login-info p { color: var(--text-secondary); font-size: 0.9rem; }
+
+.btn-google {
+    width: 100%;
+    padding: 1rem;
+    background: #fff;
+    color: #333;
+    border: none;
+    border-radius: 10px;
+    font: 500 1rem/1 inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s;
+    margin: 2rem 0;
+}
+
+.btn-google:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2); }
+
+.login-footer {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.footer-text { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem; }
+
+.client-link {
+    color: var(--neon-blue);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.client-link:hover { background: var(--glass-bg); transform: translateY(-2px); }
+
+/* ===========================
+   ADMIN DASHBOARD
+   =========================== */
+.admin-dashboard { min-height: 100vh; display: flex; flex-direction: column; }
+.admin-dashboard.hidden { display: none; }
+
+/* ===========================
+   NAVBAR
+   =========================== */
+.navbar {
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-left, .navbar-right { display: flex; align-items: center; gap: 1.5rem; }
+.navbar-left { gap: 2rem; }
+
+.logo-section { display: flex; flex-direction: column; }
+.logo {
+    font: 700 1.5rem/1 'Orbitron', sans-serif;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+}
+
+.logo-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-top: -5px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--glass-bg);
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.connection-status.offline .status-dot { background: var(--neon-red); animation: none; }
+
+.user-info { display: flex; align-items: center; gap: 0.75rem; }
+.user-photo { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-blue); }
+.user-details { display: flex; flex-direction: column; }
+.user-name { font-weight: 500; font-size: 0.9rem; }
+.user-role { font-size: 0.75rem; color: var(--text-secondary); }
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover { color: var(--neon-red); border-color: var(--neon-red); }
+
+/* ===========================
+   MAIN CONTENT
+   =========================== */
+.main-content { flex: 1; padding: 2rem 0; }
+.container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-title { font-size: 1.75rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+.action-buttons { display: flex; gap: 1rem; }
+
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font: 500 0.95rem/1 inherit;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.btn-primary { background: var(--gradient-primary); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+.btn-secondary { background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: var(--glass-border); }
+
+/* ===========================
+   STATISTICS GRID
+   =========================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(0, 212, 255, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.stat-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-color: var(--neon-blue);
+}
+
+.stat-card.clickable:hover::before { opacity: 1; }
+.stat-card.active { border-color: var(--neon-blue); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    z-index: 1;
+}
+
+.stat-content { flex: 1; z-index: 1; }
+.stat-number { font: 700 2rem/1 inherit; margin-bottom: 0.25rem; }
+.stat-label { color: var(--text-secondary); font-size: 0.85rem; }
+
+/* ===========================
+   SERVICES GRID
+   =========================== */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.service-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 450px;
+    max-height: 450px;
+}
+
+.service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+
+/* Priority indicators */
+.service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 15px 15px 0 0;
+}
+
+.service-card.priority-baixa::before { background: var(--neon-green); }
+.service-card.priority-media::before { background: var(--neon-yellow); }
+.service-card.priority-alta::before,
+.service-card.priority-urgente::before { background: var(--neon-red); }
+.service-card.priority-urgente::before { animation: urgentPulse 1s ease-in-out infinite; }
+
+@keyframes urgentPulse { 50% { opacity: 0.5; } }
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.service-title h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+.service-code { font: 400 0.85rem/1 'Orbitron', monospace; color: var(--neon-blue); }
+
+.service-actions { display: flex; gap: 0.5rem; }
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-icon:hover { color: var(--neon-blue); border-color: var(--neon-blue); }
+.btn-icon.btn-delete:hover { color: var(--neon-red); border-color: var(--neon-red); }
+
+.service-image {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+}
+
+.service-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.service-image:hover img { transform: scale(1.05); }
+
+.service-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--glass-bg);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.info-item i { color: var(--text-secondary); font-size: 0.75rem; }
+
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    background: linear-gradient(135deg, var(--neon-green), #00D4AA);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-download:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0, 255, 136, 0.3); }
+
+.delivery-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--neon-purple), rgba(153, 69, 255, 0.2));
+    border: 1px solid var(--neon-purple);
+    border-radius: 20px;
+    font: 500 0.85rem/1 inherit;
+    color: white;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.delivery-badge.badge-late {
+    background: linear-gradient(135deg, var(--neon-red), rgba(255, 0, 85, 0.3));
+    border-color: var(--neon-red);
+    animation: pulseRed 2s infinite;
+}
+
+.delivery-badge.badge-urgent {
+    background: linear-gradient(135deg, var(--neon-orange), rgba(255, 107, 53, 0.3));
+    border-color: var(--neon-orange);
+    animation: pulseOrange 2s infinite;
+}
+
+@keyframes pulseRed {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 85, 0.8); }
+}
+
+@keyframes pulseOrange {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.8); }
+}
+
+.delivery-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delivery-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.delivery-time.time-late {
+    background: var(--neon-red);
+    color: white;
+    animation: blinkRed 1s infinite;
+}
+
+.delivery-time.time-urgent {
+    background: var(--neon-orange);
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+.delivery-time.time-warning {
+    background: var(--neon-yellow);
+    color: var(--dark-bg);
+}
+
+.delivery-time.time-normal {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+@keyframes blinkRed {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.service-description {
+    padding: 0.75rem;
+    background: var(--glass-bg);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    max-height: 80px;
+    min-height: 80px;
+    overflow-y: auto;
+}
+
+.service-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.service-description::-webkit-scrollbar-track {
+    background: var(--glass-bg);
+    border-radius: 3px;
+}
+
+.service-description::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 3px;
+}
+
+.service-description::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);
+}
+
+.service-description p { font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); margin: 0; }
+
+.service-status { padding-top: 1rem; border-top: 1px solid var(--glass-border); }
+
+/* Timeline Status */
+.status-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    position: relative;
+    width: 100%;
+}
+
+.timeline-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: center;
+}
+
+.timeline-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-btn:disabled {
+    cursor: not-allowed;
+}
+
+.timeline-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-dot i {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.timeline-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 60px;
+    line-height: 1.2;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 30px);
+    height: 2px;
+    background: var(--glass-border);
+    z-index: 0;
+    transform: translateY(-15px);
+}
+
+.timeline-item:last-child .timeline-line {
+    display: none;
+}
+
+/* Active state */
+.timeline-item.active .timeline-dot {
+    background: var(--gradient-primary);
+    border-color: var(--neon-blue);
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+}
+
+.timeline-item.active .timeline-dot i {
+    color: white;
+}
+
+.timeline-item.active .timeline-label {
+    color: var(--neon-blue);
+    font-weight: 600;
+}
+
+/* Completed state */
+.timeline-item.completed .timeline-dot {
+    background: var(--neon-green);
+    border-color: var(--neon-green);
+}
+
+.timeline-item.completed .timeline-dot i {
+    color: white;
+}
+
+.timeline-item.completed .timeline-label {
+    color: var(--neon-green);
+}
+
+.timeline-item.completed + .timeline-item .timeline-line,
+.timeline-item.completed .timeline-line {
+    background: var(--neon-green);
+}
+
+/* Hover effects */
+.timeline-btn:hover:not(:disabled) .timeline-dot {
+    transform: scale(1.2);
+    border-color: var(--neon-blue);
+}
+
+.timeline-btn:hover:not(:disabled) .timeline-label {
+    color: var(--text-primary);
+}
+
+/* Old status buttons - Remove */
+.status-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5rem;
+}
+
+.status-btn {
+    padding: 0.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-btn:hover:not(:disabled) { background: var(--glass-border); color: var(--text-primary); }
+.status-btn.active { background: var(--gradient-primary); color: white; border-color: transparent; }
+.status-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.status-btn i { font-size: 1rem; }
+
+.service-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-whatsapp, .btn-delivery {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font: 500 0.9rem/1 inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+    color: white;
+}
+
+.btn-whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
+.btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4); }
+.btn-delivery { background: linear-gradient(135deg, var(--neon-purple), #B845FF); }
+.btn-delivery:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(153, 69, 255, 0.4); }
+
+/* ===========================
+   EMPTY STATE
+   =========================== */
+.empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-icon { font-size: 5rem; color: var(--glass-border); margin-bottom: 1.5rem; }
+.empty-state h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.empty-state p { color: var(--text-secondary); margin-bottom: 2rem; }
+
+/* ===========================
+   MODALS
+   =========================== */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.modal.active { display: flex; }
+
+.modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.modal-content.modal-small { max-width: 450px; }
+
+@keyframes modalSlideIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-header h2 { font-size: 1.5rem; }
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover { color: var(--neon-red); }
+.modal-body { padding: 1.5rem; }
+.modal-footer { display: flex; gap: 1rem; padding: 1.5rem; border-top: 1px solid var(--glass-border); }
+
+/* ===========================
+   FORMS
+   =========================== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.form-group { display: flex; flex-direction: column; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-input, .form-select, .form-textarea {
+    padding: 0.75rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font: 400 0.95rem/1.5 inherit;
+    transition: all 0.3s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    grid-column: 1 / -1;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 0.75rem; }
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+/* File & Image Upload */
+.file-input-wrapper, .image-input-wrapper { position: relative; }
+
+input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+input[type="file"]:hover { border-color: var(--neon-blue); }
+input[type="file"]::file-selector-button {
+    padding: 0.5rem 1rem;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--neon-green);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.file-info i { color: var(--neon-green); font-size: 1.25rem; }
+.file-info span { flex: 1; color: var(--text-primary); font-size: 0.9rem; }
+
+.btn-remove-file, .btn-remove-image {
+    background: transparent;
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-remove-file:hover, .btn-remove-image:hover { background: var(--neon-red); color: white; }
+
+.image-preview {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin-top: 0.5rem;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    border: 1px solid var(--neon-purple);
+}
+
+.image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.btn-remove-image { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); }
+
+/* Tracking Modal */
+#trackingModal .modal-body { padding: 2rem 1.5rem; }
+#trackingModal p { margin-bottom: 1rem; color: var(--text-secondary); }
+
+#trackingCode {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--glass-bg);
+    border: 2px solid var(--neon-purple);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font: 400 1rem/1 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+#trackingCode:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+/* Delivery Fields */
+.delivery-fields, .pickup-fields {
+    display: none;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    grid-column: 1 / -1;
+}
+
+.delivery-fields {
+    background: rgba(153, 69, 255, 0.05);
+    border: 1px solid rgba(153, 69, 255, 0.3);
+}
+
+.pickup-fields {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.delivery-fields.active, .pickup-fields.active { display: block; }
+
+.section-title {
+    font: 600 1rem/1 inherit;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delivery-fields .section-title { color: var(--neon-purple); }
+.pickup-fields .section-title { color: var(--neon-green); }
+
+.order-code-display {
+    background: linear-gradient(135deg, var(--neon-green), var(--secondary-blue));
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.order-code-label { color: white; font-size: 0.9rem; margin-bottom: 0.5rem; opacity: 0.9; }
+.order-code-value {
+    font: 700 2rem/1 'Orbitron', monospace;
+    color: white;
+    letter-spacing: 5px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+.order-code-info { color: white; font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.8; }
+
+/* Info Sections */
+.info-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-title {
+    font: 600 1.1rem/1 inherit;
+    margin-bottom: 1rem;
+    color: var(--neon-purple);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-secondary); font-size: 0.9rem; }
+.info-value { color: var(--text-primary); font-weight: 500; }
+
+/* Buttons */
+.btn-cancel, .btn-save, .btn-confirm, .btn-warning {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font: 500 1rem/1 inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+}
+
+.btn-cancel {
+    background: var(--glass-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.btn-save, .btn-confirm { background: var(--gradient-primary); color: white; flex: 1; }
+.btn-warning { background: linear-gradient(135deg, var(--neon-orange), var(--neon-red)); color: white; }
+.btn-cancel:hover, .btn-save:hover, .btn-confirm:hover, .btn-warning:hover { transform: translateY(-2px); }
+
+.whatsapp-option { margin-top: 1rem; padding: 1rem; background: var(--glass-bg); border-radius: 8px; }
+
+/* ===========================
+   TOAST NOTIFICATIONS
+   =========================== */
+.toast-container { position: fixed; top: 80px; right: 20px; z-index: 2000; }
+
+.toast {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 300px;
+    animation: slideInRight 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.toast.fade-out { animation: slideOutRight 0.3s ease; }
+@keyframes slideOutRight { to { transform: translateX(100%); opacity: 0; } }
+
+.toast i { font-size: 1.5rem; }
+.toast.success { border-color: var(--neon-green); }
+.toast.success i { color: var(--neon-green); }
+.toast.error { border-color: var(--neon-red); }
+.toast.error i { color: var(--neon-red); }
+.toast.info { border-color: var(--neon-blue); }
+.toast.info i { color: var(--neon-blue); }
+.toast.warning { border-color: var(--neon-orange); }
+.toast.warning i { color: var(--neon-orange); }
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+@media (max-width: 1200px) {
+    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .navbar-container { flex-direction: column; gap: 1rem; padding: 1rem; }
+    .navbar-left, .navbar-right { width: 100%; justify-content: space-between; }
+    .btn-text { display: none; }
+    .action-bar { flex-direction: column; gap: 1rem; align-items: stretch; }
+    .action-buttons { width: 100%; }
+    .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .services-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    
+    /* Timeline mobile adjustments */
+    .timeline-dot {
+        width: 25px;
+        height: 25px;
     }
     
-    auth.onAuthStateChanged(user => {
-        hideLoadingOverlay();
-        currentUser = user;
-        user ? checkAuthorization(user) : (isAuthorized = false, showLoginScreen());
-    }, error => {
-        console.error('Erro no auth state:', error);
-        hideLoadingOverlay();
-        showLoginScreen();
-    });
-    
-    setupDateFields();
-    ['clientPhone', 'pickupWhatsapp'].forEach(id => {
-        const input = document.getElementById(id);
-        input?.addEventListener('input', formatPhoneNumber);
-    });
-    document.getElementById('cep')?.addEventListener('input', formatCEP);
-    monitorConnection();
-}
-
-// ===========================
-// DATE UTILITIES - BRASIL
-// ===========================
-function getTodayBrazil() {
-    const now = new Date();
-    const brazilTime = new Date(now.getTime() - (now.getTimezoneOffset() + 180) * 60000);
-    brazilTime.setHours(0, 0, 0, 0);
-    return brazilTime.toISOString().split('T')[0];
-}
-
-function parseDateBrazil(dateString) {
-    if (!dateString) return null;
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
-}
-
-function calculateDaysRemaining(dueDate) {
-    if (!dueDate) return null;
-    const due = parseDateBrazil(dueDate);
-    const today = parseDateBrazil(getTodayBrazil());
-    return due && today ? Math.round((due - today) / 86400000) : null;
-}
-
-// ===========================
-// UI UTILITIES
-// ===========================
-const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
-
-function setupDateFields() {
-    const today = getTodayBrazil();
-    const startDate = document.getElementById('startDate');
-    const dueDate = document.getElementById('dueDate');
-    
-    if (startDate) {
-        startDate.value = today;
-        startDate.addEventListener('change', () => {
-            if (dueDate && dueDate.value < startDate.value) dueDate.value = startDate.value;
-        });
+    .timeline-dot i {
+        font-size: 0.65rem;
     }
-    dueDate && (dueDate.value = today);
-}
-
-function toggleDateInput() {
-    const dateInput = document.getElementById('dueDate');
-    const checkbox = document.getElementById('dateUndefined');
-    if (dateInput && checkbox) {
-        dateInput.disabled = dateInput.required = checkbox.checked;
-        dateInput.value = checkbox.checked ? '' : getTodayBrazil();
-        dateInput.required = !checkbox.checked;
+    
+    .timeline-label {
+        font-size: 0.55rem;
+        max-width: 50px;
+    }
+    
+    .timeline-line {
+        width: calc(100% - 25px);
+        transform: translateY(-12px);
     }
 }
 
-// ===========================
-// FILE HANDLING
-// ===========================
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return selectedFile = null;
+@media (max-width: 480px) {
+    .login-container { padding: 2rem 1.5rem; }
+    .login-logo h1 { font-size: 2rem; }
+    .page-title { font-size: 1.25rem; }
+    .stat-card { flex-direction: column; text-align: center; }
+    .modal-content { border-radius: 0; max-height: 100vh; }
+    .service-footer { flex-direction: column; }
     
-    const validExts = ['.stl', '.obj', '.step', '.stp', '.3mf'];
-    const isValid = validExts.some(ext => file.name.toLowerCase().endsWith(ext));
-    
-    if (!isValid || file.size > 52428800) {
-        showToast(!isValid ? 'Formato inválido. Use: STL, OBJ, STEP ou 3MF' : 'Arquivo muito grande. Máximo: 50MB', 'error');
-        event.target.value = '';
-        return selectedFile = null;
+    /* Timeline mobile small screens */
+    .status-timeline {
+        padding: 0.25rem 0;
+        overflow-x: auto;
+        min-height: 60px;
     }
     
-    selectedFile = file;
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    if (fileInfo && fileName) {
-        fileName.textContent = file.name;
-        fileInfo.style.display = 'flex';
-    }
-}
-
-function handleImageSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return selectedImage = null;
-    
-    if (!file.type.startsWith('image/') || file.size > 5242880) {
-        showToast(!file.type.startsWith('image/') ? 'Selecione uma imagem' : 'Imagem muito grande. Máximo: 5MB', 'error');
-        event.target.value = '';
-        return selectedImage = null;
+    .timeline-item {
+        min-width: 55px;
     }
     
-    selectedImage = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const preview = document.getElementById('imagePreview');
-        const img = document.getElementById('previewImg');
-        if (preview && img) {
-            img.src = e.target.result;
-            preview.style.display = 'block';
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
-const removeFile = () => {
-    selectedFile = null;
-    ['serviceFile', 'currentFileUrl', 'currentFileName'].forEach(id => {
-        const el = document.getElementById(id);
-        el && (el.value = '');
-    });
-    const fileInfo = document.getElementById('fileInfo');
-    fileInfo && (fileInfo.style.display = 'none');
-};
-
-const removeImage = () => {
-    selectedImage = null;
-    ['serviceImage', 'currentImageUrl'].forEach(id => {
-        const el = document.getElementById(id);
-        el && (el.value = '');
-    });
-    const preview = document.getElementById('imagePreview');
-    preview && (preview.style.display = 'none');
-};
-
-async function uploadFile(file, serviceId) {
-    if (!file || !storage) return null;
-    try {
-        const fileName = `${serviceId}_${Date.now()}_${file.name}`;
-        const snapshot = await storage.ref(`services/${serviceId}/${fileName}`).put(file);
-        const url = await snapshot.ref.getDownloadURL();
-        return { url, name: file.name, size: file.size, uploadedAt: new Date().toISOString() };
-    } catch (error) {
-        console.error('Erro ao fazer upload:', error);
-        showToast('Erro ao fazer upload do arquivo', 'error');
-        return null;
+    .timeline-dot {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .timeline-dot i {
+        font-size: 0.6rem;
+    }
+    
+    .timeline-label {
+        font-size: 0.5rem;
+        max-width: 45px;
+    }
+    
+    .timeline-line {
+        top: 11px;
+        left: 22px;
     }
 }
 
-function downloadFile(url, fileName) {
-    const link = Object.assign(document.createElement('a'), { href: url, download: fileName || 'arquivo', target: '_blank' });
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// ===========================
-// AUTHENTICATION
-// ===========================
-async function signInWithGoogle() {
-    if (!auth) return showToast('Sistema não está pronto. Recarregue a página.', 'error');
-    
-    try {
-        const result = await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        const user = result.user;
-        
-        if (!AUTHORIZED_EMAILS.includes(user.email)) {
-            await auth.signOut();
-            return showToast(`Acesso negado! O email ${user.email} não está autorizado.`, 'error');
-        }
-        
-        currentUser = user;
-        isAuthorized = true;
-        showToast(`Bem-vindo, ${user.displayName}!`, 'success');
-    } catch (error) {
-        console.error('Erro no login:', error);
-        showToast(error.code === 'auth/popup-closed-by-user' ? 'Login cancelado' : 'Erro ao fazer login', error.code === 'auth/popup-closed-by-user' ? 'info' : 'error');
-    }
-}
-
-const signOut = async () => {
-    try {
-        auth && await auth.signOut();
-        showToast('Logout realizado com sucesso!', 'info');
-    } catch (error) {
-        console.error('Erro no logout:', error);
-        showToast('Erro ao fazer logout.', 'error');
-    }
-};
-
-function checkAuthorization(user) {
-    if (AUTHORIZED_EMAILS.includes(user.email)) {
-        isAuthorized = true;
-        showAdminDashboard(user);
-        startServicesListener();
-    } else {
-        isAuthorized = false;
-        auth.signOut();
-        showToast('Acesso negado! Email não autorizado.', 'error');
-        showLoginScreen();
-    }
-}
-
-// ===========================
-// UI MANAGEMENT
-// ===========================
-function showLoginScreen() {
-    document.getElementById('loginScreen')?.classList.remove('hidden');
-    document.getElementById('adminDashboard')?.classList.add('hidden');
-    servicesListener?.();
-    servicesListener = null;
-}
-
-function showAdminDashboard(user) {
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('adminDashboard')?.classList.remove('hidden');
-    document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
-    document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png');
-}
-
-// ===========================
-// FIREBASE LISTENERS
-// ===========================
-function startServicesListener() {
-    if (!db) return console.error('Firestore não está disponível');
-    
-    servicesListener?.();
-    
-    servicesListener = db.collection('services').onSnapshot(snapshot => {
-        services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        updateStats();
-        renderServices();
-    }, error => {
-        console.error('Erro ao carregar serviços:', error);
-        showToast(error.code === 'permission-denied' ? 'Sem permissão para acessar serviços' : 'Erro ao carregar serviços', 'error');
-    });
-}
-
-// ===========================
-// SERVICE MANAGEMENT
-// ===========================
-const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
-
-async function saveService(event) {
-    event.preventDefault();
-    
-    if (!isAuthorized || !db || !currentUser) 
-        return showToast(!isAuthorized ? 'Sem permissão' : 'Sistema não está pronto', 'error');
-    
-    const deliveryMethod = document.getElementById('deliveryMethod').value;
-    if (!deliveryMethod) return showToast('Selecione um método de entrega', 'error');
-    
-    const dateUndefined = document.getElementById('dateUndefined');
-    const dueDateInput = document.getElementById('dueDate');
-    
-    const service = {
-        name: document.getElementById('serviceName').value.trim(),
-        client: document.getElementById('clientName').value.trim(),
-        clientEmail: document.getElementById('clientEmail').value.trim() || null,
-        clientPhone: document.getElementById('clientPhone').value.trim() || null,
-        description: document.getElementById('serviceDescription').value.trim() || null,
-        material: document.getElementById('serviceMaterial').value,
-        color: document.getElementById('serviceColor').value || null,
-        priority: document.getElementById('servicePriority').value,
-        startDate: document.getElementById('startDate').value,
-        dueDate: dateUndefined?.checked ? null : dueDateInput.value,
-        dateUndefined: dateUndefined?.checked || false,
-        value: parseFloat(document.getElementById('serviceValue').value) || null,
-        weight: parseFloat(document.getElementById('serviceWeight').value) || null,
-        observations: document.getElementById('serviceObservations').value.trim() || null,
-        deliveryMethod,
-        status: document.getElementById('serviceStatus').value,
-        updatedAt: new Date().toISOString(),
-        updatedBy: currentUser.email
-    };
-    
-    if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
-        return showToast('Data de entrega não pode ser anterior à data de início', 'error');
-    
-    // Handle delivery methods
-    if (deliveryMethod === 'retirada') {
-        const pickupName = document.getElementById('pickupName').value.trim();
-        const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
-        if (!pickupName || !pickupWhatsapp) return showToast('Preencha todos os campos de retirada', 'error');
-        service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
-    } else if (deliveryMethod === 'sedex') {
-        const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
-        const addr = Object.fromEntries(fields.map(f => [f, document.getElementById(f).value.trim()]));
-        addr.complemento = document.getElementById('complemento').value.trim() || null;
-        
-        if (fields.some(f => !addr[f])) return showToast('Preencha todos os campos obrigatórios de entrega', 'error');
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) return showToast('E-mail inválido', 'error');
-        
-        service.deliveryAddress = addr;
-    }
-    
-    try {
-        let serviceDocId = editingServiceId;
-        
-        if (editingServiceId) {
-            // Preserve existing files
-            const currentFileUrl = document.getElementById('currentFileUrl');
-            const currentFileName = document.getElementById('currentFileName');
-            const currentImageUrl = document.getElementById('currentImageUrl');
-            
-            if (currentFileUrl?.value && !selectedFile) {
-                service.fileUrl = currentFileUrl.value;
-                service.fileName = currentFileName.value;
-            }
-            if (currentImageUrl?.value && !selectedImage) service.imageUrl = currentImageUrl.value;
-            
-            await db.collection('services').doc(editingServiceId).update(service);
-            showToast('Serviço atualizado com sucesso!', 'success');
-        } else {
-            Object.assign(service, {
-                createdAt: new Date().toISOString(),
-                createdBy: currentUser.email,
-                orderCode: generateOrderCode(),
-                serviceId: 'SRV-' + Date.now()
-            });
-            
-            const docRef = await db.collection('services').add(service);
-            serviceDocId = docRef.id;
-            
-            document.getElementById('orderCodeDisplay').style.display = 'block';
-            document.getElementById('orderCodeValue').textContent = service.orderCode;
-            showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
-            
-            if (service.clientPhone) {
-                const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
-                const message = `Olá ${service.client}! Seu pedido foi registrado.\n\n🔹 Serviço: ${service.name}\n🔹 Código: ${service.orderCode}\n🔹 Prazo: ${dueDateText}\n🔹 Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe: https://imaginatech.com.br/acompanhar-pedido/`;
-                sendWhatsAppMessage(service.clientPhone, message);
-            }
-        }
-        
-        // Upload files
-        if (selectedFile && serviceDocId) {
-            const fileData = await uploadFile(selectedFile, serviceDocId);
-            fileData && await db.collection('services').doc(serviceDocId).update({
-                fileUrl: fileData.url,
-                fileName: fileData.name,
-                fileSize: fileData.size,
-                fileUploadedAt: fileData.uploadedAt
-            });
-        }
-        
-        if (selectedImage && serviceDocId) {
-            const imageData = await uploadFile(selectedImage, serviceDocId);
-            imageData && await db.collection('services').doc(serviceDocId).update({
-                imageUrl: imageData.url,
-                imageUploadedAt: imageData.uploadedAt
-            });
-        }
-        
-        setTimeout(closeModal, editingServiceId ? 0 : 3000);
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        showToast('Erro ao salvar serviço', 'error');
-    }
-}
-
-// ===========================
-// STATUS & TRACKING
-// ===========================
-function showTrackingCodeModal() {
-    const modal = document.getElementById('trackingModal');
-    modal?.classList.add('active');
-    const input = document.getElementById('trackingCode');
-    input && (input.value = '', input.focus());
-}
-
-const closeTrackingModal = () => {
-    document.getElementById('trackingModal')?.classList.remove('active');
-    pendingStatusUpdate = null;
-};
-
-async function confirmTrackingCode() {
-    const trackingInput = document.getElementById('trackingCode');
-    if (!trackingInput?.value.trim()) return showToast('Insira o código de rastreio', 'error');
-    if (!pendingStatusUpdate) return;
-    
-    const { serviceId, service } = pendingStatusUpdate;
-    const trackingCode = trackingInput.value.trim().toUpperCase();
-    
-    try {
-        await db.collection('services').doc(serviceId).update({
-            status: 'retirada',
-            trackingCode,
-            postedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.email
-        });
-        
-        showToast('Pedido marcado como postado!', 'success');
-        
-        if (service.clientPhone) {
-            const message = `📦 Seu pedido foi postado!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n🔍 Rastreio: ${trackingCode}\n\nRastreie: https://rastreamento.correios.com.br/app/index.php\n\nPrazo: 3-7 dias úteis`;
-            sendWhatsAppMessage(service.clientPhone, message);
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao atualizar status', 'error');
-    }
-    closeTrackingModal();
-}
-
-async function updateStatus(serviceId, newStatus) {
-    if (!isAuthorized) return showToast('Sem permissão', 'error');
-    
-    const service = services.find(s => s.id === serviceId);
-    if (!service || service.status === newStatus) return;
-    
-    if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
-        pendingStatusUpdate = { serviceId, newStatus, service };
-        return showTrackingCodeModal();
-    }
-    
-    pendingStatusUpdate = { serviceId, newStatus, service };
-    
-    const statusMessages = {
-        'pendente': 'Marcar como Pendente',
-        'producao': 'Iniciar Produção',
-        'concluido': 'Marcar como Concluído',
-        'retirada': service.deliveryMethod === 'sedex' ? 'Marcar como Postado' : 'Pronto para Retirada',
-        'entregue': 'Confirmar Entrega'
-    };
-    
-    document.getElementById('statusModalMessage') && 
-        (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
-    
-    const whatsappOption = document.getElementById('whatsappOption');
-    if (whatsappOption && service.clientPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
-        whatsappOption.style.display = 'block';
-        document.getElementById('sendWhatsappNotification') && (document.getElementById('sendWhatsappNotification').checked = true);
-    } else if (whatsappOption) {
-        whatsappOption.style.display = 'none';
-    }
-    
-    document.getElementById('statusModal')?.classList.add('active');
-}
-
-async function confirmStatusChange() {
-    if (!pendingStatusUpdate || !db) return;
-    
-    const { serviceId, newStatus, service } = pendingStatusUpdate;
-    const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
-    
-    try {
-        const updates = {
-            status: newStatus,
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.email,
-            lastStatusChange: new Date().toISOString(),
-            [`${newStatus}At`]: newStatus === 'producao' ? 'productionStartedAt' : 
-                              newStatus === 'concluido' ? 'completedAt' :
-                              newStatus === 'retirada' ? 'readyAt' :
-                              newStatus === 'entregue' ? 'deliveredAt' : null
-        };
-        if (updates[`${newStatus}At`]) updates[updates[`${newStatus}At`]] = new Date().toISOString();
-        delete updates[`${newStatus}At`];
-        
-        await db.collection('services').doc(serviceId).update(updates);
-        showToast('Status atualizado!', 'success');
-        
-        if (sendWhatsapp && service.clientPhone) {
-            const messages = {
-                'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                'retirada': service.deliveryMethod === 'retirada' ? 
-                    `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}` :
-                    `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}`,
-                'entregue': `✅ Entregue com sucesso!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nObrigado! 😊`
-            };
-            messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao atualizar status', 'error');
-    }
-    closeStatusModal();
-}
-
-async function deleteService(serviceId) {
-    if (!isAuthorized) return showToast('Sem permissão', 'error');
-    
-    const service = services.find(s => s.id === serviceId);
-    if (!service || !confirm(`Excluir o serviço "${service.name}"?`)) return;
-    
-    try {
-        await db.collection('services').doc(serviceId).delete();
-        showToast('Serviço excluído!', 'success');
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao excluir', 'error');
-    }
-}
-
-// ===========================
-// UI RENDERING
-// ===========================
-function renderServices() {
-    const grid = document.getElementById('servicesGrid');
-    const emptyState = document.getElementById('emptyState');
-    if (!grid || !emptyState) return;
-    
-    let filtered = currentFilter === 'todos' ? 
-        services.filter(s => s.status !== 'entregue') : 
-        services.filter(s => s.status === currentFilter);
-    
-    filtered.sort((a, b) => {
-        const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
-        const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
-        if (diff !== 0) return diff;
-        
-        if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
-        return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
-    });
-    
-    if (filtered.length === 0) {
-        grid.style.display = 'none';
-        emptyState.style.display = 'flex';
-        const emptyText = document.getElementById('emptyText');
-        emptyText && (emptyText.textContent = currentFilter === 'todos' ? 
-            'Nenhum serviço ativo encontrado' : 
-            `Nenhum serviço ${getStatusLabel(currentFilter).toLowerCase()} encontrado`);
-    } else {
-        grid.style.display = 'grid';
-        emptyState.style.display = 'none';
-        grid.innerHTML = filtered.map(service => {
-            const days = service.dateUndefined ? null : calculateDaysRemaining(service.dueDate);
-            const daysText = service.dateUndefined ? 'Data a definir' : formatDaysText(days);
-            const daysColor = service.dateUndefined ? 'var(--neon-yellow)' : getDaysColor(days);
-            
-            return `
-                <div class="service-card priority-${service.priority || 'media'}">
-                    <div class="service-header">
-                        <div class="service-title">
-                            <h3>${escapeHtml(service.name || 'Sem nome')}</h3>
-                            <span class="service-code">#${service.orderCode || 'N/A'}</span>
-                        </div>
-                        <div class="service-actions">
-                            <button class="btn-icon" onclick="openEditModal('${service.id}')" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-icon btn-delete" onclick="deleteService('${service.id}')" title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    ${service.imageUrl ? `<div class="service-image"><img src="${service.imageUrl}" alt="Imagem" onclick="window.open('${service.imageUrl}', '_blank')"></div>` : ''}
-                    
-                    ${service.deliveryMethod ? `
-                    <div class="delivery-badge ${days !== null && days < 0 ? 'badge-late' : days !== null && days <= 2 ? 'badge-urgent' : ''}">
-                        <div class="delivery-info">
-                            <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
-                            ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
-                        </div>
-                        <div class="delivery-time ${days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
-                            <i class="fas fa-clock"></i>
-                            ${daysText}
-                        </div>
-                    </div>` : ''}
-                    
-                    <div class="service-info">
-                        <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
-                        ${service.clientPhone ? `<div class="info-item"><i class="fas fa-phone"></i><span>${escapeHtml(service.clientPhone)}</span></div>` : ''}
-                        <div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material || 'N/A'}</span></div>
-                        ${service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
-                        <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
-                        ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
-                        ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
-                        ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Baixar"><i class="fas fa-download"></i><span>${escapeHtml(service.fileName || 'Arquivo')}</span></button></div>` : ''}
-                    </div>
-                    
-                    ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
-                    
-                    <div class="service-status">
-                        <div class="status-timeline">
-                            ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map((status, index) => `
-                                <div class="timeline-item ${service.status === status ? 'active' : ''} ${isStatusCompleted(service.status, status) ? 'completed' : ''}">
-                                    <button class="timeline-btn" 
-                                            onclick="updateStatus('${service.id}', '${status}')"
-                                            ${service.status === status ? 'disabled' : ''}>
-                                        <div class="timeline-dot">
-                                            <i class="fas ${getStatusIcon(status)}"></i>
-                                        </div>
-                                        <span class="timeline-label">${status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : getStatusLabel(status).replace('Em Produção', 'Produção').replace('Para Retirada', 'Retirada')}</span>
-                                    </button>
-                                    ${index < 4 ? '<div class="timeline-line"></div>' : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="service-footer">
-                        ${service.clientPhone ? `<button class="btn-whatsapp" onclick="contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
-                        ${service.deliveryMethod ? `<button class="btn-delivery" onclick="showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-}
-
-function updateStats() {
-    const stats = {
-        active: services.filter(s => s.status !== 'entregue').length,
-        pendente: services.filter(s => s.status === 'pendente').length,
-        producao: services.filter(s => s.status === 'producao').length,
-        concluido: services.filter(s => s.status === 'concluido').length,
-        retirada: services.filter(s => s.status === 'retirada').length,
-        entregue: services.filter(s => s.status === 'entregue').length
-    };
-    
-    Object.entries({
-        'stat-active': stats.active,
-        'stat-pending': stats.pendente,
-        'stat-production': stats.producao,
-        'stat-completed': stats.concluido,
-        'stat-ready': stats.retirada,
-        'stat-delivered': stats.entregue
-    }).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        el && (el.textContent = value);
-    });
-}
-
-// ===========================
-// FILTER & MODALS
-// ===========================
-function filterServices(filter) {
-    currentFilter = filter;
-    document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
-    event?.currentTarget?.classList.add('active');
-    renderServices();
-}
-
-function openAddModal() {
-    editingServiceId = selectedFile = selectedImage = null;
-    
-    document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
-    document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
-    document.getElementById('serviceForm')?.reset();
-    document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-    
-    setupDateFields();
-    ['fileInfo', 'imagePreview'].forEach(id => {
-        const el = document.getElementById(id);
-        el && (el.style.display = 'none');
-    });
-    
-    document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
-    document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
-    document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
-    
-    hideAllDeliveryFields();
-    document.getElementById('serviceModal')?.classList.add('active');
-}
-
-function openEditModal(serviceId) {
-    const service = services.find(s => s.id === serviceId);
-    if (!service) return;
-    
-    editingServiceId = serviceId;
-    selectedFile = selectedImage = null;
-    
-    document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
-    document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
-    document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-    
-    // Fill form
-    Object.entries({
-        serviceName: service.name,
-        clientName: service.client,
-        clientEmail: service.clientEmail,
-        clientPhone: service.clientPhone,
-        serviceDescription: service.description,
-        serviceMaterial: service.material,
-        serviceColor: service.color,
-        servicePriority: service.priority || 'media',
-        startDate: service.startDate,
-        dueDate: service.dueDate,
-        serviceValue: service.value,
-        serviceWeight: service.weight,
-        serviceObservations: service.observations,
-        serviceStatus: service.status || 'pendente',
-        deliveryMethod: service.deliveryMethod
-    }).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        el && (el.value = value || '');
-    });
-    
-    // Handle dates
-    const dateUndefined = document.getElementById('dateUndefined');
-    const dueDateInput = document.getElementById('dueDate');
-    if (dateUndefined) {
-        dateUndefined.checked = service.dateUndefined === true;
-        if (service.dateUndefined && dueDateInput) {
-            dueDateInput.disabled = true;
-            dueDateInput.value = '';
-        }
-    }
-    
-    // Handle files
-    if (service.fileUrl) {
-        document.getElementById('currentFileUrl') && (document.getElementById('currentFileUrl').value = service.fileUrl);
-        document.getElementById('currentFileName') && (document.getElementById('currentFileName').value = service.fileName || '');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        if (fileInfo && fileName) {
-            fileName.textContent = service.fileName || 'Arquivo anexado';
-            fileInfo.style.display = 'flex';
-        }
-    }
-    
-    if (service.imageUrl) {
-        document.getElementById('currentImageUrl') && (document.getElementById('currentImageUrl').value = service.imageUrl);
-        const preview = document.getElementById('imagePreview');
-        const img = document.getElementById('previewImg');
-        if (preview && img) {
-            img.src = service.imageUrl;
-            preview.style.display = 'block';
-        }
-    }
-    
-    // Handle delivery
-    if (service.deliveryMethod) {
-        toggleDeliveryFields();
-        
-        if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-            document.getElementById('pickupName') && (document.getElementById('pickupName').value = service.pickupInfo.name || '');
-            document.getElementById('pickupWhatsapp') && (document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '');
-        } else if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-            const addr = service.deliveryAddress;
-            Object.entries(addr).forEach(([key, value]) => {
-                const el = document.getElementById(key);
-                el && (el.value = value || '');
-            });
-        }
-    }
-    
-    document.getElementById('serviceModal')?.classList.add('active');
-}
-
-const closeModal = () => {
-    document.getElementById('serviceModal')?.classList.remove('active');
-    editingServiceId = selectedFile = selectedImage = null;
-};
-
-const closeStatusModal = () => {
-    document.getElementById('statusModal')?.classList.remove('active');
-    pendingStatusUpdate = null;
-};
-
-const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.classList.remove('active');
-
-// ===========================
-// DELIVERY MANAGEMENT
-// ===========================
-function toggleDeliveryFields() {
-    const method = document.getElementById('deliveryMethod')?.value;
-    hideAllDeliveryFields();
-    if (method === 'retirada') document.getElementById('pickupFields')?.classList.add('active');
-    else if (method === 'sedex') document.getElementById('deliveryFields')?.classList.add('active');
-}
-
-const hideAllDeliveryFields = () => {
-    ['pickupFields', 'deliveryFields'].forEach(id => 
-        document.getElementById(id)?.classList.remove('active')
-    );
-};
-
-function showDeliveryInfo(serviceId) {
-    const service = services.find(s => s.id === serviceId);
-    if (!service) return;
-    
-    const content = document.getElementById('deliveryInfoContent');
-    if (!content) return;
-    
-    let html = `
-        <div class="info-section">
-            <h3 class="info-title"><i class="fas fa-truck"></i> Método de Entrega</h3>
-            <div class="info-row">
-                <span class="info-label">Tipo</span>
-                <span class="info-value">${getDeliveryMethodName(service.deliveryMethod)}</span>
-            </div>
-        </div>`;
-    
-    if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-        const pickup = service.pickupInfo;
-        const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        const message = encodeURIComponent(`Olá ${pickup.name}! Seu pedido está pronto.\n\n🔹 Pedido: ${service.name}\n🔹 Código: ${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
-        
-        html += `
-            <div class="info-section">
-                <h3 class="info-title"><i class="fas fa-user-check"></i> Informações para Retirada</h3>
-                <div class="info-row">
-                    <span class="info-label">Nome</span>
-                    <span class="info-value">${pickup.name || '-'}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">WhatsApp</span>
-                    <span class="info-value">
-                        <a href="https://wa.me/55${whatsappNumber}?text=${message}" target="_blank" style="color: var(--neon-green);">
-                            <i class="fab fa-whatsapp"></i> ${pickup.whatsapp}
-                        </a>
-                    </span>
-                </div>
-            </div>`;
-    }
-    
-    if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-        const addr = service.deliveryAddress;
-        html += `
-            <div class="info-section">
-                <h3 class="info-title"><i class="fas fa-user"></i> Destinatário</h3>
-                <div class="info-row"><span class="info-label">Nome</span><span class="info-value">${addr.fullName || '-'}</span></div>
-                <div class="info-row"><span class="info-label">CPF/CNPJ</span><span class="info-value">${addr.cpfCnpj || '-'}</span></div>
-                <div class="info-row"><span class="info-label">E-mail</span><span class="info-value">${addr.email || '-'}</span></div>
-                <div class="info-row"><span class="info-label">Telefone</span><span class="info-value">${addr.telefone || '-'}</span></div>
-            </div>
-            
-            <div class="info-section">
-                <h3 class="info-title"><i class="fas fa-map-marker-alt"></i> Endereço</h3>
-                <div class="info-row"><span class="info-label">CEP</span><span class="info-value">${addr.cep || '-'}</span></div>
-                <div class="info-row"><span class="info-label">Endereço</span><span class="info-value">${addr.rua || ''}, ${addr.numero || 's/n'}</span></div>
-                ${addr.complemento ? `<div class="info-row"><span class="info-label">Complemento</span><span class="info-value">${addr.complemento}</span></div>` : ''}
-                <div class="info-row"><span class="info-label">Bairro</span><span class="info-value">${addr.bairro || '-'}</span></div>
-                <div class="info-row"><span class="info-label">Cidade/Estado</span><span class="info-value">${addr.cidade || '-'} / ${addr.estado || '-'}</span></div>
-            </div>`;
-    }
-    
-    content.innerHTML = html;
-    document.getElementById('deliveryInfoModal')?.classList.add('active');
-}
-
-async function buscarCEP() {
-    const cep = document.getElementById('cep')?.value.replace(/\D/g, '');
-    if (!cep || cep.length !== 8) return;
-    
-    try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-        
-        if (!data.erro) {
-            ['rua', 'bairro', 'cidade', 'estado'].forEach(field => {
-                const el = document.getElementById(field);
-                const value = field === 'rua' ? data.logradouro : 
-                              field === 'cidade' ? data.localidade : 
-                              field === 'estado' ? data.uf : data[field];
-                el && (el.value = value || '');
-            });
-        }
-    } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-    }
-}
-
-// ===========================
-// UTILITY FUNCTIONS
-// ===========================
-const escapeHtml = text => text ? text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : '';
-
-const formatDaysText = days => days === null ? 'Sem prazo' : days === 0 ? 'Entrega hoje' : days === 1 ? 'Entrega amanhã' : days < 0 ? `${Math.abs(days)} dias atrás` : `${days} dias`;
-
-const getDaysColor = days => days === null ? 'var(--text-secondary)' : days < 0 ? 'var(--neon-red)' : days === 0 ? 'var(--neon-orange)' : days <= 2 ? 'var(--neon-yellow)' : 'var(--text-secondary)';
-
-const formatDate = dateString => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
-
-const formatColorName = color => ({
-    'preto': 'Preto', 'branco': 'Branco', 'vermelho': 'Vermelho', 'azul': 'Azul',
-    'verde': 'Verde', 'amarelo': 'Amarelo', 'laranja': 'Laranja', 'roxo': 'Roxo',
-    'cinza': 'Cinza', 'transparente': 'Transparente', 'outros': 'Outras'
-}[color] || color);
-
-const formatMoney = value => (!value || isNaN(value)) ? '0,00' : value.toFixed(2).replace('.', ',');
-
-function formatPhoneNumber(e) {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 11);
-    if (value.length > 6) value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-    else if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-    else if (value.length > 0) value = `(${value}`;
-    e.target.value = value;
-}
-
-function formatCEP(e) {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 8);
-    if (value.length > 5) value = `${value.slice(0, 5)}-${value.slice(5)}`;
-    e.target.value = value;
-}
-
-const getDeliveryMethodName = method => ({
-    'retirada': 'Retirada no Local', 'sedex': 'Sedex/Correios',
-    'uber': 'Uber Flash', 'definir': 'A Definir'
-}[method] || method);
-
-const getDeliveryIcon = method => ({
-    'retirada': 'fa-store', 'sedex': 'fa-shipping-fast',
-    'uber': 'fa-motorcycle', 'definir': 'fa-question-circle'
-}[method] || 'fa-truck');
-
-const getStatusLabel = status => ({
-    'todos': 'Ativos', 'pendente': 'Pendentes', 'producao': 'Em Produção',
-    'concluido': 'Concluídos', 'retirada': 'Para Retirada', 'entregue': 'Entregues'
-}[status] || status);
-
-const getStatusIcon = status => ({
-    'pendente': 'fa-clock', 'producao': 'fa-cogs', 'concluido': 'fa-check',
-    'retirada': 'fa-box-open', 'entregue': 'fa-handshake'
-}[status] || 'fa-question');
-
-// Helper function to check if a status is completed
-const isStatusCompleted = (currentStatus, checkStatus) => {
-    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    return statusOrder.indexOf(currentStatus) > statusOrder.indexOf(checkStatus);
-};
-
-// ===========================
-// WHATSAPP INTEGRATION
-// ===========================
-const sendWhatsAppMessage = (phone, message) => 
-    window.open(`https://wa.me/55${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
-
-const contactClient = (phone, serviceName, orderCode) => 
-    sendWhatsAppMessage(phone, `Olá!\n\nSobre seu pedido:\n\n🔹 Serviço: ${serviceName}\n🔹 Código: #${orderCode}\n\nPode falar agora?`);
-
-// ===========================
-// TOAST NOTIFICATIONS
-// ===========================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
-    toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
-    
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => container.contains(toast) && container.removeChild(toast), 300);
-    }, 3000);
-}
-
-// ===========================
-// CONNECTION MONITORING
-// ===========================
-function monitorConnection() {
-    const updateStatus = connected => {
-        const statusEl = document.getElementById('connectionStatus');
-        const statusText = document.getElementById('statusText');
-        if (statusEl && statusText) {
-            connected ? statusEl.classList.remove('offline') : statusEl.classList.add('offline');
-            statusText.textContent = connected ? 'Conectado' : 'Offline';
-        }
-    };
-    
-    window.addEventListener('online', () => { updateStatus(true); showToast('Conexão restaurada', 'success'); });
-    window.addEventListener('offline', () => { updateStatus(false); showToast('Sem conexão', 'warning'); });
-    updateStatus(navigator.onLine);
-}
-
-// Error Handlers
-window.addEventListener('error', e => console.error('Erro:', e));
-window.addEventListener('unhandledrejection', e => console.error('Promise rejeitada:', e.reason));
+/* ===========================
+   UTILITIES
+   =========================== */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
