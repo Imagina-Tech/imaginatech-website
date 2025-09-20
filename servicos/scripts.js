@@ -334,11 +334,26 @@ async function saveService(event) {
         updatedBy: currentUser.email
     };
     
-    // Se for edição e método for sedex, adiciona código de rastreio se existir
-    if (editingServiceId && deliveryMethod === 'sedex') {
-        const trackingCodeInput = document.getElementById('editTrackingCode');
-        if (trackingCodeInput && trackingCodeInput.value.trim()) {
-            service.trackingCode = trackingCodeInput.value.trim().toUpperCase();
+    // Tratamento especial para código de rastreio ao editar
+    if (editingServiceId) {
+        if (deliveryMethod === 'sedex') {
+            const trackingCodeInput = document.getElementById('editTrackingCode');
+            if (trackingCodeInput) {
+                const trackingValue = trackingCodeInput.value.trim();
+                if (trackingValue) {
+                    // Se tem valor, salva/atualiza
+                    service.trackingCode = trackingValue.toUpperCase();
+                } else {
+                    // Se está vazio, marca para deletar do Firebase
+                    service.trackingCode = firebase.firestore.FieldValue.delete();
+                }
+            }
+        } else {
+            // Se não é SEDEX, remove código de rastreio se existir
+            const currentService = services.find(s => s.id === editingServiceId);
+            if (currentService && currentService.trackingCode) {
+                service.trackingCode = firebase.firestore.FieldValue.delete();
+            }
         }
     }
     
@@ -762,8 +777,7 @@ function openEditModal(serviceId) {
         serviceWeight: service.weight,
         serviceObservations: service.observations,
         serviceStatus: service.status || 'pendente',
-        deliveryMethod: service.deliveryMethod,
-        trackingCode: service.trackingCode || ''  // Adiciona código de rastreio
+        deliveryMethod: service.deliveryMethod
     }).forEach(([id, value]) => {
         const el = document.getElementById(id);
         el && (el.value = value || '');
@@ -809,20 +823,23 @@ function openEditModal(serviceId) {
         if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
             document.getElementById('pickupName') && (document.getElementById('pickupName').value = service.pickupInfo.name || '');
             document.getElementById('pickupWhatsapp') && (document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '');
-        } else if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-            const addr = service.deliveryAddress;
-            Object.entries(addr).forEach(([key, value]) => {
-                const el = document.getElementById(key);
-                el && (el.value = value || '');
-            });
+        } else if (service.deliveryMethod === 'sedex') {
+            // Preenche endereço de entrega
+            if (service.deliveryAddress) {
+                const addr = service.deliveryAddress;
+                Object.entries(addr).forEach(([key, value]) => {
+                    const el = document.getElementById(key);
+                    el && (el.value = value || '');
+                });
+            }
             
-            // Mostra campo de código de rastreio se for sedex
+            // Mostra campo de código de rastreio e preenche se existir
             const trackingField = document.getElementById('trackingCodeField');
+            const trackingInput = document.getElementById('editTrackingCode');
             if (trackingField) {
                 trackingField.style.display = 'block';
-                const trackingInput = document.getElementById('trackingCode');
-                if (trackingInput && service.trackingCode) {
-                    trackingInput.value = service.trackingCode;
+                if (trackingInput) {
+                    trackingInput.value = service.trackingCode || '';
                 }
             }
         }
@@ -834,6 +851,11 @@ function openEditModal(serviceId) {
 const closeModal = () => {
     document.getElementById('serviceModal')?.classList.remove('active');
     editingServiceId = selectedFile = selectedImage = null;
+    // Limpa e oculta campo de código de rastreio
+    const trackingField = document.getElementById('trackingCodeField');
+    const trackingInput = document.getElementById('editTrackingCode');
+    if (trackingField) trackingField.style.display = 'none';
+    if (trackingInput) trackingInput.value = '';
 };
 
 const closeStatusModal = () => {
