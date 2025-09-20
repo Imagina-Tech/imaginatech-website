@@ -635,11 +635,11 @@ async function saveService(event) {
             if (service.clientPhone) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
                 const message = `Olá ${service.client}! Seu pedido foi registrado com sucesso.\n\n` +
-                    `📦 Serviço: ${service.name}\n` +
-                    `📖 Código: ${service.orderCode}\n` +
-                    `📅 Prazo: ${dueDateText}\n` +
-                    `🚚 Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\n` +
-                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br`;
+                    `🔹 Serviço: ${service.name}\n` +
+                    `🔹 Código: ${service.orderCode}\n` +
+                    `🔹 Prazo: ${dueDateText}\n` +
+                    `🔹 Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\n` +
+                    `Acompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
         }
@@ -1364,9 +1364,9 @@ function showDeliveryInfo(serviceId) {
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
         const message = encodeURIComponent(
             `Olá ${pickup.name}! Seu pedido está pronto para retirada.\n\n` +
-            `📦 Pedido: ${service.name}\n` +
-            `📖 Código: ${service.orderCode}\n\n` +
-            `Por favor, confirme o horário de retirada.`
+            `🔹 Pedido: ${service.name}\n` +
+            `🔹 Código: ${service.orderCode}\n\n` +
+            `Por favor, podemos confirmar o horário de retirada?`
         );
         const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${message}`;
         
@@ -1602,9 +1602,9 @@ function sendWhatsAppMessage(phone, message) {
 
 function contactClient(phone, serviceName, orderCode) {
     const message = `Olá! \n\nEstamos entrando em contato sobre seu pedido:\n\n` +
-        `📦 Serviço: ${serviceName}\n` +
-        `📖 Código: #${orderCode}\n\n` +
-        `Como podemos ajudar?`;
+        `🔹 Serviço: ${serviceName}\n` +
+        `🔹 Código: #${orderCode}\n\n` +
+        `Pode falar agora?`;
     sendWhatsAppMessage(phone, message);
 }
 
