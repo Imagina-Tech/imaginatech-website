@@ -521,6 +521,15 @@ async function updateStatus(serviceId, newStatus) {
     const service = services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
+    // Debug logs para identificar o problema
+    console.log('UpdateStatus Debug:', {
+        serviceId,
+        newStatus,
+        clientEmail: service.clientEmail,
+        clientPhone: service.clientPhone,
+        service
+    });
+    
     if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
         pendingStatusUpdate = { serviceId, newStatus, service };
         return showTrackingCodeModal();
@@ -541,20 +550,39 @@ async function updateStatus(serviceId, newStatus) {
     
     // WhatsApp option
     const whatsappOption = document.getElementById('whatsappOption');
-    if (whatsappOption && service.clientPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
-        whatsappOption.style.display = 'block';
-        document.getElementById('sendWhatsappNotification') && (document.getElementById('sendWhatsappNotification').checked = true);
-    } else if (whatsappOption) {
-        whatsappOption.style.display = 'none';
+    console.log('WhatsApp Option Element:', whatsappOption);
+    console.log('Has Phone?', service.clientPhone);
+    
+    if (whatsappOption) {
+        if (service.clientPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
+            whatsappOption.style.display = 'block';
+            const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
+            if (whatsappCheckbox) whatsappCheckbox.checked = true;
+        } else {
+            whatsappOption.style.display = 'none';
+        }
     }
     
-    // Email option
+    // Email option - CORRIGIDO
     const emailOption = document.getElementById('emailOption');
-    if (emailOption && service.clientEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
-        emailOption.style.display = 'block';
-        document.getElementById('sendEmailNotification') && (document.getElementById('sendEmailNotification').checked = true);
-    } else if (emailOption) {
-        emailOption.style.display = 'none';
+    console.log('Email Option Element:', emailOption);
+    console.log('Has Email?', service.clientEmail);
+    console.log('Status included?', ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus));
+    
+    if (emailOption) {
+        // Verifica se tem email E se o status é um dos que devem enviar notificação
+        if (service.clientEmail && service.clientEmail.trim() !== '' && 
+            ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
+            console.log('Showing email option');
+            emailOption.style.display = 'block';
+            const emailCheckbox = document.getElementById('sendEmailNotification');
+            if (emailCheckbox) emailCheckbox.checked = true;
+        } else {
+            console.log('Hiding email option');
+            emailOption.style.display = 'none';
+        }
+    } else {
+        console.error('Email option element not found!');
     }
     
     document.getElementById('statusModal')?.classList.add('active');
