@@ -635,14 +635,19 @@ function renderServices() {
                     ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
                     
                     <div class="service-status">
-                        <div class="status-buttons">
-                            ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map(status => `
-                                <button class="status-btn ${service.status === status ? 'active' : ''}" 
-                                        onclick="updateStatus('${service.id}', '${status}')"
-                                        ${service.status === status ? 'disabled' : ''}>
-                                    <i class="fas ${getStatusIcon(status)}"></i>
-                                    ${status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : getStatusLabel(status)}
-                                </button>
+                        <div class="status-timeline">
+                            ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map((status, index) => `
+                                <div class="timeline-item ${service.status === status ? 'active' : ''} ${isStatusCompleted(service.status, status) ? 'completed' : ''}">
+                                    <button class="timeline-btn" 
+                                            onclick="updateStatus('${service.id}', '${status}')"
+                                            ${service.status === status ? 'disabled' : ''}>
+                                        <div class="timeline-dot">
+                                            <i class="fas ${getStatusIcon(status)}"></i>
+                                        </div>
+                                        <span class="timeline-label">${status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : getStatusLabel(status).replace('Em Produção', 'Produção').replace('Para Retirada', 'Retirada')}</span>
+                                    </button>
+                                    ${index < 4 ? '<div class="timeline-line"></div>' : ''}
+                                </div>
                             `).join('')}
                         </div>
                     </div>
@@ -963,6 +968,12 @@ const getStatusIcon = status => ({
     'pendente': 'fa-clock', 'producao': 'fa-cogs', 'concluido': 'fa-check',
     'retirada': 'fa-box-open', 'entregue': 'fa-handshake'
 }[status] || 'fa-question');
+
+// Helper function to check if a status is completed
+const isStatusCompleted = (currentStatus, checkStatus) => {
+    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+    return statusOrder.indexOf(currentStatus) > statusOrder.indexOf(checkStatus);
+};
 
 // ===========================
 // WHATSAPP INTEGRATION
