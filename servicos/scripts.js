@@ -870,6 +870,30 @@ const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.c
 // ===========================
 function toggleDeliveryFields() {
     const method = document.getElementById('deliveryMethod')?.value;
+    
+    // Se estiver editando e tem código de rastreio, não permite mudar de SEDEX
+    if (editingServiceId) {
+        const service = services.find(s => s.id === editingServiceId);
+        if (service && service.trackingCode && service.deliveryMethod === 'sedex' && method !== 'sedex') {
+            showToast('ATENÇÃO: Este pedido já foi postado! Não é possível mudar o método de entrega.', 'error');
+            // Volta para SEDEX
+            document.getElementById('deliveryMethod').value = 'sedex';
+            hideAllDeliveryFields();
+            document.getElementById('deliveryFields')?.classList.add('active');
+            
+            // Mantém campo de código de rastreio visível
+            const trackingField = document.getElementById('trackingCodeField');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+                const trackingInput = document.getElementById('editTrackingCode');
+                if (trackingInput && service.trackingCode) {
+                    trackingInput.value = service.trackingCode;
+                }
+            }
+            return;
+        }
+    }
+    
     hideAllDeliveryFields();
     
     if (method === 'retirada') {
