@@ -321,8 +321,8 @@ async function saveService(event) {
     const service = {
         name: document.getElementById('serviceName').value.trim(),
         client: document.getElementById('clientName').value.trim(),
-        clientEmail: document.getElementById('clientEmail').value.trim() || null,
-        clientPhone: document.getElementById('clientPhone').value.trim() || null,
+        clientEmail: document.getElementById('clientEmail').value.trim() || null,  // Mudança aqui
+        clientPhone: document.getElementById('clientPhone').value.trim() || null,  // Mudança aqui
         description: document.getElementById('serviceDescription').value.trim() || null,
         material: document.getElementById('serviceMaterial').value,
         color: document.getElementById('serviceColor').value || null,
@@ -521,15 +521,6 @@ async function updateStatus(serviceId, newStatus) {
     const service = services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
-    // Debug logs para identificar o problema
-    console.log('UpdateStatus Debug:', {
-        serviceId,
-        newStatus,
-        clientEmail: service.clientEmail,
-        clientPhone: service.clientPhone,
-        service
-    });
-    
     if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
         pendingStatusUpdate = { serviceId, newStatus, service };
         return showTrackingCodeModal();
@@ -550,11 +541,10 @@ async function updateStatus(serviceId, newStatus) {
     
     // WhatsApp option
     const whatsappOption = document.getElementById('whatsappOption');
-    console.log('WhatsApp Option Element:', whatsappOption);
-    console.log('Has Phone?', service.clientPhone);
-    
     if (whatsappOption) {
-        if (service.clientPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
+        // Verifica se tem telefone válido (não nulo e não vazio)
+        const hasPhone = service.clientPhone && service.clientPhone.trim() !== '';
+        if (hasPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
             whatsappOption.style.display = 'block';
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
@@ -563,26 +553,18 @@ async function updateStatus(serviceId, newStatus) {
         }
     }
     
-    // Email option - CORRIGIDO
+    // Email option - CORRIGIDO PARA TRATAR STRINGS VAZIAS
     const emailOption = document.getElementById('emailOption');
-    console.log('Email Option Element:', emailOption);
-    console.log('Has Email?', service.clientEmail);
-    console.log('Status included?', ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus));
-    
     if (emailOption) {
-        // Verifica se tem email E se o status é um dos que devem enviar notificação
-        if (service.clientEmail && service.clientEmail.trim() !== '' && 
-            ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
-            console.log('Showing email option');
+        // Verifica se tem email válido (não nulo, não undefined e não vazio)
+        const hasEmail = service.clientEmail && service.clientEmail.trim() !== '';
+        if (hasEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
             emailOption.style.display = 'block';
             const emailCheckbox = document.getElementById('sendEmailNotification');
             if (emailCheckbox) emailCheckbox.checked = true;
         } else {
-            console.log('Hiding email option');
             emailOption.style.display = 'none';
         }
-    } else {
-        console.error('Email option element not found!');
     }
     
     document.getElementById('statusModal')?.classList.add('active');
@@ -1146,7 +1128,8 @@ const isStatusCompleted = (currentStatus, checkStatus) => {
 // EMAIL NOTIFICATION
 // ===========================
 async function sendEmailNotification(service) {
-    if (!service.clientEmail) return;
+    // Verifica se tem email válido (não nulo, não undefined e não vazio)
+    if (!service.clientEmail || service.clientEmail.trim() === '') return;
     
     try {
         // Use suas IDs do EmailJS aqui
@@ -1154,10 +1137,15 @@ async function sendEmailNotification(service) {
             client_name: service.client,
             order_code: service.orderCode
         });
-        console.log('Email enviado com sucesso');
+        console.log('Email enviado com sucesso para:', service.clientEmail);
+        showToast('📧 Email de notificação enviado!', 'success');
     } catch (error) {
         console.error('Erro ao enviar email:', error);
-        // Não mostra erro para o usuário para não interromper o fluxo
+        // Mostra erro ao usuário apenas em desenvolvimento
+        // Em produção, não interrompe o fluxo
+        if (window.location.hostname === 'localhost') {
+            showToast('Erro ao enviar email', 'error');
+        }
     }
 }
 
