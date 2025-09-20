@@ -311,7 +311,7 @@ function showAdminDashboard(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('adminDashboard')?.classList.remove('hidden');
     document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
-    document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png');
+    document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff');
 }
 
 // ===========================
