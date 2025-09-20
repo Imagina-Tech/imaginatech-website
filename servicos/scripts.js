@@ -38,7 +38,7 @@ try {
     auth = firebase.auth();
     storage = firebase.storage();
     
-    // Initialize EmailJS (substitua com sua Public Key)
+    // Initialize EmailJS
     if (typeof emailjs !== 'undefined') {
         emailjs.init("VIytMLn6VW-lDYhYL");
     }
@@ -431,10 +431,16 @@ async function saveService(event) {
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
+            // Send notifications to client
             if (service.clientPhone) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
                 const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
+            }
+            
+            // Send email notification if client has email
+            if (service.clientEmail) {
+                sendEmailNotification(service);
             }
         }
         
@@ -533,6 +539,7 @@ async function updateStatus(serviceId, newStatus) {
     document.getElementById('statusModalMessage') && 
         (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
     
+    // WhatsApp option
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption && service.clientPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
         whatsappOption.style.display = 'block';
@@ -541,6 +548,7 @@ async function updateStatus(serviceId, newStatus) {
         whatsappOption.style.display = 'none';
     }
     
+    // Email option
     const emailOption = document.getElementById('emailOption');
     if (emailOption && service.clientEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
         emailOption.style.display = 'block';
@@ -557,6 +565,7 @@ async function confirmStatusChange() {
     
     const { serviceId, newStatus, service } = pendingStatusUpdate;
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
+    const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
     try {
         const updates = {
@@ -575,6 +584,7 @@ async function confirmStatusChange() {
         await db.collection('services').doc(serviceId).update(updates);
         showToast('Status atualizado!', 'success');
         
+        // Send WhatsApp notification
         if (sendWhatsapp && service.clientPhone) {
             const messages = {
                 'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
@@ -584,6 +594,11 @@ async function confirmStatusChange() {
                 'entregue': `✅ Entregue com sucesso!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nObrigado! 😊`
             };
             messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
+        }
+        
+        // Send Email notification
+        if (sendEmail && service.clientEmail) {
+            sendEmailNotification(service);
         }
     } catch (error) {
         console.error('Erro:', error);
@@ -1106,7 +1121,7 @@ async function sendEmailNotification(service) {
     if (!service.clientEmail) return;
     
     try {
-        // Substitua com seu Service ID e Template ID do EmailJS
+        // Use suas IDs do EmailJS aqui
         await emailjs.send('service_vxndoi5', 'template_cwrmts1', {
             client_name: service.client,
             order_code: service.orderCode
