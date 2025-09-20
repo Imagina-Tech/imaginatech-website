@@ -37,6 +37,11 @@ try {
     db = firebase.firestore();
     auth = firebase.auth();
     storage = firebase.storage();
+    
+    // Initialize EmailJS (substitua com sua Public Key)
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init("VIytMLn6VW-lDYhYL");
+    }
 } catch (error) {
     console.error('Erro ao inicializar Firebase:', error);
     alert('Erro ao conectar com o servidor. Recarregue a página.');
@@ -357,6 +362,23 @@ async function saveService(event) {
         }
     }
     
+    // Validação crítica: se já foi postado (SEDEX com código de rastreio), não pode mudar método
+    if (editingServiceId) {
+        const currentService = services.find(s => s.id === editingServiceId);
+        if (currentService && currentService.trackingCode && currentService.deliveryMethod === 'sedex' && 
+            (currentService.status === 'retirada' || currentService.status === 'entregue')) {
+            
+            // Se tentar mudar o método de entrega
+            if (deliveryMethod !== 'sedex') {
+                showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
+                // Restaura o formulário
+                document.getElementById('deliveryMethod').value = 'sedex';
+                toggleDeliveryFields();
+                return; // Impede o salvamento
+            }
+        }
+    }
+    
     if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
         return showToast('Data de entrega não pode ser anterior à data de início', 'error');
     
@@ -517,6 +539,14 @@ async function updateStatus(serviceId, newStatus) {
         document.getElementById('sendWhatsappNotification') && (document.getElementById('sendWhatsappNotification').checked = true);
     } else if (whatsappOption) {
         whatsappOption.style.display = 'none';
+    }
+    
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption && service.clientEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
+        emailOption.style.display = 'block';
+        document.getElementById('sendEmailNotification') && (document.getElementById('sendEmailNotification').checked = true);
+    } else if (emailOption) {
+        emailOption.style.display = 'none';
     }
     
     document.getElementById('statusModal')?.classList.add('active');
@@ -1070,8 +1100,27 @@ const isStatusCompleted = (currentStatus, checkStatus) => {
 };
 
 // ===========================
-// WHATSAPP INTEGRATION
+// EMAIL NOTIFICATION
 // ===========================
+async function sendEmailNotification(service) {
+    if (!service.clientEmail) return;
+    
+    try {
+        // Substitua com seu Service ID e Template ID do EmailJS
+        await emailjs.send('service_vxndoi5', 'template_cwrmts1', {
+            client_name: service.client,
+            order_code: service.orderCode
+        });
+        console.log('Email enviado com sucesso');
+    } catch (error) {
+        console.error('Erro ao enviar email:', error);
+        // Não mostra erro para o usuário para não interromper o fluxo
+    }
+}
+
+// ===========================
+// WHATSAPP INTEGRATION
+// =========================== 
 const sendWhatsAppMessage = (phone, message) => {
     const cleanPhone = phone.replace(/\D/g, '');
     const encodedMessage = encodeURIComponent(message);
