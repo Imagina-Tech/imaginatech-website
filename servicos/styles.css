@@ -1090,6 +1090,54 @@ input[type="file"]::file-selector-button {
 }
 .order-code-info { color: white; font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.8; }
 
+/* Notification Section */
+.notification-section {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.notification-section .section-title {
+    color: var(--neon-blue);
+    margin-bottom: 1rem;
+}
+
+.notification-section .whatsapp-option,
+.notification-section .email-option {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s;
+}
+
+.notification-section .whatsapp-option:hover,
+.notification-section .email-option:hover {
+    border-color: var(--neon-blue);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.notification-section .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.notification-section .checkbox-label i {
+    font-size: 1.2rem;
+}
+
+.notification-section .whatsapp-option i {
+    color: #25d366;
+}
+
+.notification-section .email-option i {
+    color: var(--neon-purple);
+}
+
 /* Tracking Code Field */
 #trackingCodeField {
     background: rgba(153, 69, 255, 0.1);
