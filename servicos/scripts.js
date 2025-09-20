@@ -636,19 +636,29 @@ function renderServices() {
                     
                     <div class="service-status">
                         <div class="status-timeline">
-                            ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map((status, index) => `
-                                <div class="timeline-item ${service.status === status ? 'active' : ''} ${isStatusCompleted(service.status, status) ? 'completed' : ''}">
-                                    <button class="timeline-btn" 
-                                            onclick="updateStatus('${service.id}', '${status}')"
-                                            ${service.status === status ? 'disabled' : ''}>
-                                        <div class="timeline-dot">
-                                            <i class="fas ${getStatusIcon(status)}"></i>
-                                        </div>
-                                        <span class="timeline-label">${status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : getStatusLabel(status).replace('Em Produção', 'Produção').replace('Para Retirada', 'Retirada').replace('Entregues', 'Entregue').replace('Pendentes', 'Pendente').replace('Concluídos', 'Concluído')}</span>
-                                    </button>
-                                    ${index < 4 ? '<div class="timeline-line"></div>' : ''}
-                                </div>
-                            `).join('')}
+                            ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map((status, index) => {
+                                const isActive = service.status === status;
+                                const isCompleted = isStatusCompleted(service.status, status);
+                                const label = status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : 
+                                             status === 'pendente' ? 'Pendente' :
+                                             status === 'producao' ? 'Produção' :
+                                             status === 'concluido' ? 'Concluído' :
+                                             status === 'retirada' ? 'Retirada' :
+                                             'Entregue';
+                                
+                                return `
+                                    <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
+                                        <button class="step-button" 
+                                                onclick="updateStatus('${service.id}', '${status}')"
+                                                ${isActive ? 'disabled' : ''}>
+                                            <span class="step-icon">
+                                                <i class="fas ${getStatusIcon(status)}"></i>
+                                            </span>
+                                            <span class="step-text">${label}</span>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                     
