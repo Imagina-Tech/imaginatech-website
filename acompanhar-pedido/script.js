@@ -600,7 +600,7 @@ function updateTimeline(orderData) {
 }
 
 // ===========================
-// TRACKING FUNCTIONS (CORREIOS + FIREBASE)
+// TRACKING FUNCTIONS (CORREIOS + LINK&TRACK API)
 // ===========================
 
 async function trackOrder(trackingCode) {
@@ -625,44 +625,40 @@ async function trackOrder(trackingCode) {
     `;
     
     try {
-        // Primeiro, verificar se há eventos de rastreamento salvos no Firebase
-        const orderSnapshot = await db.collection('services')
-            .where('trackingCode', '==', trackingCode)
-            .limit(1)
-            .get();
+        // API Link&Track - Funcional com credenciais de teste
+        const apiUrl = `https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${trackingCode}`;
         
-        let trackingEvents = [];
-        let hasFirebaseData = false;
+        // Usando proxy CORS para evitar problemas de CORS
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const fullUrl = proxyUrl + encodeURIComponent(apiUrl);
         
-        if (!orderSnapshot.empty) {
-            const orderData = orderSnapshot.docs[0].data();
-            
-            // Verificar se há eventos de rastreamento salvos
-            if (orderData.trackingEvents && orderData.trackingEvents.length > 0) {
-                trackingEvents = orderData.trackingEvents;
-                hasFirebaseData = true;
+        const response = await fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
             }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro na resposta da API');
         }
         
-        // Se não houver dados no Firebase, gerar eventos simulados baseados no status
-        if (!hasFirebaseData && currentOrderId) {
-            const orderDoc = await db.collection('services').doc(currentOrderId).get();
-            if (orderDoc.exists) {
-                const orderData = orderDoc.data();
-                trackingEvents = generateTrackingEvents(orderData, trackingCode);
-                
-                // Salvar eventos gerados no Firebase para futuras consultas
-                await db.collection('services').doc(currentOrderId).update({
-                    trackingEvents: trackingEvents
-                });
-            }
-        }
+        const data = await response.json();
         
-        // Renderizar eventos de rastreamento
-        if (trackingEvents && trackingEvents.length > 0) {
-            const eventos = trackingEvents.map((evento, index) => {
-                const style = getEventStyle(evento.status);
+        // Verificar se há eventos de rastreamento
+        if (data && data.eventos && data.eventos.length > 0) {
+            // Mapear eventos para o formato desejado
+            const eventos = data.eventos.map((evento, index) => {
                 const isFirst = index === 0;
+                const style = getTrackingEventStyle(evento.status);
+                
+                // Formatar data e hora
+                const dataHora = `${evento.data || ''} ${evento.hora ? 'às ' + evento.hora : ''}`.trim();
+                
+                // Formatar local
+                let local = evento.local || '';
+                if (evento.cidade) local += ` - ${evento.cidade}`;
+                if (evento.uf) local += `/${evento.uf}`;
                 
                 return `
                     <div style="
@@ -680,24 +676,46 @@ async function trackOrder(trackingCode) {
                             </div>
                             ${isFirst ? '<span style="background: var(--neon-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ÚLTIMO STATUS</span>' : ''}
                         </div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                            <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
-                            ${formatDateTime(evento.date)}
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
-                            <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
-                            ${evento.location || 'Local não informado'}
-                        </div>
-                        ${evento.details ? `
-                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
-                                ${evento.details}
+                        ${dataHora ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                                ${dataHora}
+                            </div>
+                        ` : ''}
+                        ${local ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
+                                ${local}
+                            </div>
+                        ` : ''}
+                        ${evento.subStatus && evento.subStatus.length > 0 ? `
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; padding-left: 1rem;">
+                                ${evento.subStatus.join('<br>')}
                             </div>
                         ` : ''}
                     </div>
                 `;
             }).join('');
             
+            // Informações do serviço
+            const serviceInfo = data.servico ? `
+                <div style="
+                    margin-bottom: 1rem;
+                    padding: 0.75rem;
+                    background: var(--glass-bg);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <i class="fas fa-shipping-fast" style="color: var(--neon-blue);"></i>
+                    <span style="color: var(--text-secondary);">Serviço:</span>
+                    <strong>${data.servico}</strong>
+                </div>
+            ` : '';
+            
             trackingInfo.innerHTML = `
+                ${serviceInfo}
                 <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
                     ${eventos}
                 </div>
@@ -711,18 +729,18 @@ async function trackOrder(trackingCode) {
                 ">
                     <small style="color: var(--text-secondary);">
                         <i class="fas fa-sync-alt"></i>
-                        Atualizado ${formatDateTime(new Date().toISOString())}
+                        Total de ${data.quantidade || data.eventos.length} evento(s)
                     </small>
                     <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
                        target="_blank" 
                        style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">
                         <i class="fas fa-external-link-alt"></i>
-                        Site dos Correios
+                        Ver nos Correios
                     </a>
                 </div>
             `;
-        } else {
-            // Se não houver eventos, mostrar status de aguardando
+        } else if (data && data.quantidade === 0) {
+            // Código ainda não encontrado no sistema
             trackingInfo.innerHTML = `
                 <div style="
                     padding: 1rem;
@@ -732,114 +750,103 @@ async function trackOrder(trackingCode) {
                 ">
                     <div style="color: var(--neon-yellow); margin-bottom: 0.5rem;">
                         <i class="fas fa-clock"></i>
-                        <strong>Aguardando atualização</strong>
+                        <strong>Aguardando postagem</strong>
                     </div>
-                    <p style="color: var(--text-secondary); margin: 0;">
-                        O código de rastreamento foi registrado. As informações de rastreamento 
-                        serão atualizadas em breve pelo sistema.
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0;">
+                        O código <strong>${trackingCode}</strong> ainda não foi registrado no sistema dos Correios.
+                    </p>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+                        Isso é normal se o pedido foi postado recentemente. 
+                        O rastreamento pode demorar até 24 horas para aparecer após a postagem.
                     </p>
                 </div>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <button onclick="refreshOrder()" style="
+                        padding: 0.5rem 1rem;
+                        background: var(--glass-bg);
+                        color: var(--neon-blue);
+                        border: 1px solid var(--neon-blue);
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">
+                        <i class="fas fa-redo"></i>
+                        Tentar Novamente
+                    </button>
+                </div>
             `;
+        } else {
+            throw new Error('Resposta inválida da API');
         }
         
     } catch (error) {
         console.error('Erro ao buscar rastreamento:', error);
         
-        // Em caso de erro, mostrar mensagem amigável
+        // Fallback: Usar iframe do Site Rastreio
         trackingInfo.innerHTML = `
             <div style="
                 padding: 1rem;
-                background: rgba(255, 0, 85, 0.1);
-                border: 1px solid var(--neon-red);
+                background: var(--glass-bg);
                 border-radius: 8px;
             ">
-                <div style="color: var(--neon-red); margin-bottom: 0.5rem;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <strong>Erro ao buscar rastreamento</strong>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: var(--neon-orange); margin-bottom: 0.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Usando rastreamento alternativo</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        O sistema principal está temporariamente indisponível. 
+                        Mostrando rastreamento através do Site Rastreio:
+                    </p>
                 </div>
-                <p style="color: var(--text-secondary); margin: 0;">
-                    Não foi possível carregar as informações de rastreamento no momento. 
-                    Por favor, tente novamente mais tarde.
-                </p>
+                
+                <!-- Iframe do Site Rastreio -->
+                <iframe 
+                    src="https://www.siterastreio.com.br/${trackingCode}"
+                    style="
+                        width: 100%;
+                        height: 500px;
+                        border: 1px solid var(--glass-border);
+                        border-radius: 8px;
+                        background: white;
+                    "
+                    title="Rastreamento"
+                ></iframe>
+                
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://www.siterastreio.com.br/${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Abrir em nova aba
+                    </a>
+                </div>
             </div>
         `;
     }
 }
 
-// Função para gerar eventos de rastreamento baseados no status do pedido
-function generateTrackingEvents(orderData, trackingCode) {
-    const events = [];
-    const now = new Date();
+// Função para obter estilo do evento de rastreamento
+function getTrackingEventStyle(status) {
+    if (!status) return { icon: 'fas fa-info-circle', color: 'var(--neon-blue)' };
     
-    // Sempre adicionar evento de postagem
-    if (orderData.postedAt) {
-        events.push({
-            status: 'Objeto postado',
-            date: orderData.postedAt,
-            location: 'Agência dos Correios - Rio de Janeiro/RJ',
-            details: `Código de rastreamento: ${trackingCode}`
-        });
-        
-        // Se foi postado há mais de 1 dia, adicionar evento de encaminhamento
-        const postedDate = new Date(orderData.postedAt);
-        const hoursSincePosted = (now - postedDate) / (1000 * 60 * 60);
-        
-        if (hoursSincePosted > 24) {
-            events.push({
-                status: 'Objeto encaminhado',
-                date: new Date(postedDate.getTime() + (12 * 60 * 60 * 1000)).toISOString(),
-                location: 'Centro de Distribuição - Rio de Janeiro/RJ',
-                details: 'De Agência dos Correios para Centro de Distribuição'
-            });
-        }
-        
-        if (hoursSincePosted > 48) {
-            events.push({
-                status: 'Objeto em trânsito',
-                date: new Date(postedDate.getTime() + (24 * 60 * 60 * 1000)).toISOString(),
-                location: 'Em trânsito para o destino',
-                details: 'O objeto está em deslocamento para o endereço de destino'
-            });
-        }
-        
-        if (hoursSincePosted > 72) {
-            events.push({
-                status: 'Objeto saiu para entrega',
-                date: new Date(postedDate.getTime() + (60 * 60 * 60 * 1000)).toISOString(),
-                location: 'Unidade de Distribuição - Cidade destino',
-                details: 'O objeto saiu para entrega ao destinatário'
-            });
-        }
-    }
-    
-    // Se foi entregue
-    if (orderData.status === 'entregue' && orderData.deliveredAt) {
-        events.push({
-            status: 'Objeto entregue ao destinatário',
-            date: orderData.deliveredAt,
-            location: 'Endereço do destinatário',
-            details: 'Objeto entregue com sucesso'
-        });
-    }
-    
-    // Ordenar eventos por data (mais recente primeiro)
-    events.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    return events;
-}
-
-// Função para obter estilo do evento
-function getEventStyle(status) {
     const statusLower = status.toLowerCase();
     
-    if (statusLower.includes('postado') || statusLower.includes('coletado')) {
+    // Verificar palavras-chave no status
+    if (statusLower.includes('postado') || statusLower.includes('coletado') || statusLower.includes('recebido')) {
         return { icon: 'fas fa-box', color: 'var(--neon-blue)' };
-    } else if (statusLower.includes('encaminhado') || statusLower.includes('trânsito')) {
+    } else if (statusLower.includes('encaminhado') || statusLower.includes('trânsito') || statusLower.includes('transito')) {
         return { icon: 'fas fa-truck', color: 'var(--neon-yellow)' };
-    } else if (statusLower.includes('saiu para entrega')) {
+    } else if (statusLower.includes('saiu para entrega') || statusLower.includes('em rota')) {
         return { icon: 'fas fa-shipping-fast', color: 'var(--neon-orange)' };
-    } else if (statusLower.includes('entregue')) {
+    } else if (statusLower.includes('entregue') || statusLower.includes('entrega efetuada')) {
         return { icon: 'fas fa-check-circle', color: 'var(--neon-green)' };
+    } else if (statusLower.includes('aguardando') || statusLower.includes('retirada')) {
+        return { icon: 'fas fa-clock', color: 'var(--neon-purple)' };
+    } else if (statusLower.includes('devolvido') || statusLower.includes('devolução')) {
+        return { icon: 'fas fa-undo', color: 'var(--neon-red)' };
+    } else if (statusLower.includes('fiscalização') || statusLower.includes('alfândega')) {
+        return { icon: 'fas fa-passport', color: 'var(--neon-orange)' };
     } else {
         return { icon: 'fas fa-info-circle', color: 'var(--neon-blue)' };
     }
