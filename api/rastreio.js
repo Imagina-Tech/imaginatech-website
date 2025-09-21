@@ -1,19 +1,16 @@
 // ==================================================
 // ARQUIVO: api/rastreio.js
 // LOCALIZAÇÃO: pasta "api" na raiz do projeto
-// FUNÇÃO: Rastreamento via Melhor Envio API
-// VERSÃO: 4.0 - Melhor Envio com segurança
+// FUNÇÃO: Rastreamento real de códigos dos Correios
+// VERSÃO: 5.0 - Implementação funcional
 // ==================================================
 
 export default async function handler(req, res) {
-  // Configurar CORS para seu domínio
+  // Configurar CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', 'https://imaginatech.com.br');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Temporário para testes, depois mude para 'https://imaginatech.com.br'
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Headers', '*');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -39,92 +36,32 @@ export default async function handler(req, res) {
   try {
     console.log(`Buscando rastreamento para: ${codigo}`);
     
-    // MÉTODO 1: API do Melhor Envio (requer token)
-    const melhorEnvioToken = process.env.MELHOR_ENVIO_TOKEN;
-    
-    if (melhorEnvioToken) {
-      try {
-        // Endpoint do Melhor Envio para rastreamento
-        const melhorEnvioUrl = 'https://api.melhorenvio.com.br/api/v2/me/shipment/tracking';
-        
-        const melhorEnvioResponse = await fetch(melhorEnvioUrl, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${melhorEnvioToken}`,
-            'User-Agent': 'ImaginaTech/1.0'
-          },
-          body: JSON.stringify({
-            orders: [codigo]
-          })
-        });
-
-        if (melhorEnvioResponse.ok) {
-          const melhorEnvioData = await melhorEnvioResponse.json();
-          
-          // Verificar se tem dados de rastreamento
-          if (melhorEnvioData && melhorEnvioData.data && melhorEnvioData.data.length > 0) {
-            const tracking = melhorEnvioData.data[0];
-            
-            if (tracking.tracking && tracking.tracking.events && tracking.tracking.events.length > 0) {
-              console.log('Sucesso com Melhor Envio API');
-              
-              // Converter formato Melhor Envio para o formato esperado
-              const eventos = tracking.tracking.events.map(evento => ({
-                descricao: evento.description || evento.event,
-                dtHrCriado: formatarDataMelhorEnvio(evento.date || evento.timestamp),
-                unidade: {
-                  nome: evento.location || evento.city || 'CORREIOS'
-                }
-              }));
-              
-              return res.status(200).json({
-                objetos: [{
-                  codObjeto: codigo,
-                  eventos: eventos,
-                  tipoPostal: { 
-                    categoria: tracking.service || 'SEDEX' 
-                  }
-                }]
-              });
-            }
-          }
-        }
-      } catch (error) {
-        console.log('Erro com Melhor Envio:', error.message);
-      }
-    } else {
-      console.log('Token do Melhor Envio não configurado');
-    }
-    
-    // MÉTODO 2: API Alternativa RastreiaEncomendas (gratuita sem token)
+    // MÉTODO 1: BrasilAPI (funciona bem e é gratuita)
     try {
-      console.log('Tentando API RastreiaEncomendas...');
+      console.log('Tentando BrasilAPI...');
       
-      // Esta API funciona sem autenticação
-      const rastreiaUrl = `https://api.rastreiaencomendas.com/v1/track/${codigo}`;
+      const brasilApiUrl = `https://brasilapi.com.br/api/rastreio/v1/encomendas/correios/${codigo}`;
       
-      const rastreiaResponse = await fetch(rastreiaUrl, {
+      const brasilResponse = await fetch(brasilApiUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'User-Agent': 'Mozilla/5.0'
         }
       });
 
-      if (rastreiaResponse.ok) {
-        const rastreiaData = await rastreiaResponse.json();
+      if (brasilResponse.ok) {
+        const brasilData = await brasilResponse.json();
         
-        if (rastreiaData && rastreiaData.events && rastreiaData.events.length > 0) {
-          console.log('Sucesso com RastreiaEncomendas');
+        if (brasilData && brasilData.eventos && brasilData.eventos.length > 0) {
+          console.log('Sucesso com BrasilAPI!');
           
-          // Converter formato
-          const eventos = rastreiaData.events.map(evento => ({
-            descricao: evento.status,
-            dtHrCriado: `${evento.date} ${evento.time || ''}`.trim(),
+          // Converter formato BrasilAPI para o esperado
+          const eventos = brasilData.eventos.map(evento => ({
+            descricao: evento.descricao || evento.status,
+            dtHrCriado: `${evento.data} ${evento.hora || ''}`.trim(),
             unidade: {
-              nome: evento.location || 'CORREIOS'
+              nome: evento.unidade || evento.local || 'CORREIOS'
             }
           }));
           
@@ -133,68 +70,143 @@ export default async function handler(req, res) {
               codObjeto: codigo,
               eventos: eventos,
               tipoPostal: { 
-                categoria: rastreiaData.service || 'SEDEX' 
+                categoria: brasilData.servico || 'SEDEX' 
               }
             }]
           });
         }
       }
     } catch (error) {
-      console.log('Erro com RastreiaEncomendas:', error.message);
+      console.log('Erro com BrasilAPI:', error.message);
     }
     
-    // MÉTODO 3: Scraping via Puppeteer (mais confiável)
+    // MÉTODO 2: WebScraping com Proxy
     try {
-      console.log('Tentando scraping avançado...');
+      console.log('Tentando webscraping via proxy...');
       
-      // Usar um serviço de scraping
-      const scraperUrl = `https://api.scraperapi.com/v1/scrape`;
-      const scraperApiKey = process.env.SCRAPER_API_KEY || 'demo';
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(
+        `https://www.linkcorreios.com.br/?id=${codigo}`
+      )}`;
       
-      const targetUrl = `https://rastreamento.correios.com.br/app/resultado.php?objeto=${codigo}`;
-      
-      const scraperResponse = await fetch(`${scraperUrl}?api_key=${scraperApiKey}&url=${encodeURIComponent(targetUrl)}`, {
+      const proxyResponse = await fetch(proxyUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'text/html'
+          'Accept': 'application/json'
         }
       });
 
-      if (scraperResponse.ok) {
-        const html = await scraperResponse.text();
+      if (proxyResponse.ok) {
+        const proxyData = await proxyResponse.json();
         
-        // Extrair eventos do HTML
-        const eventos = [];
-        
-        // Buscar tabela de eventos no HTML
-        const eventosRegex = /<tr class="[^"]*sro-table__body[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;
-        const matches = Array.from(html.matchAll(eventosRegex));
-        
-        for (const match of matches) {
-          const row = match[1];
+        if (proxyData.contents) {
+          const html = proxyData.contents;
           
-          // Extrair dados
-          const dateRegex = /<td[^>]*>(\d{2}\/\d{2}\/\d{4})<\/td>/;
-          const timeRegex = /<td[^>]*>(\d{2}:\d{2})<\/td>/;
-          const statusRegex = /<td[^>]*>([^<]+)<\/td>/g;
+          // Extrair eventos do HTML
+          const eventos = [];
           
-          const dateMatch = row.match(dateRegex);
-          const timeMatch = row.match(timeRegex);
-          const statusMatches = Array.from(row.matchAll(statusRegex));
+          // Buscar por padrões de status no HTML
+          const statusPattern = /<li[^>]*class="[^"]*linha_status[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+          const matches = Array.from(html.matchAll(statusPattern));
           
-          if (statusMatches.length >= 2) {
-            eventos.push({
-              descricao: statusMatches[1][1].trim(),
-              dtHrCriado: `${dateMatch ? dateMatch[1] : ''} ${timeMatch ? timeMatch[1] : ''}`.trim(),
-              unidade: {
-                nome: statusMatches[2] ? statusMatches[2][1].trim() : 'CORREIOS'
+          for (const match of matches) {
+            const content = match[1];
+            
+            // Extrair informações
+            const statusMatch = content.match(/<strong>([^<]+)<\/strong>/);
+            const dateMatch = content.match(/(\d{2}\/\d{2}\/\d{4})/);
+            const timeMatch = content.match(/(\d{2}:\d{2})/);
+            const localMatch = content.match(/Local:\s*([^<]+)/);
+            
+            if (statusMatch && dateMatch) {
+              eventos.push({
+                descricao: statusMatch[1].trim(),
+                dtHrCriado: `${dateMatch[1]} ${timeMatch ? timeMatch[1] : ''}`.trim(),
+                unidade: {
+                  nome: localMatch ? localMatch[1].trim() : 'CORREIOS'
+                }
+              });
+            }
+          }
+          
+          // Se não encontrou com o primeiro padrão, tentar outro
+          if (eventos.length === 0) {
+            const tablePattern = /<table[^>]*class="[^"]*sro[^"]*"[^>]*>([\s\S]*?)<\/table>/i;
+            const tableMatch = html.match(tablePattern);
+            
+            if (tableMatch) {
+              const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+              const rows = Array.from(tableMatch[1].matchAll(rowPattern));
+              
+              for (const row of rows) {
+                const cells = row[1].match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+                
+                if (cells && cells.length >= 2) {
+                  const cleanText = (html) => html.replace(/<[^>]*>/g, '').trim();
+                  
+                  const dateTime = cleanText(cells[0]);
+                  const status = cleanText(cells[1]);
+                  const location = cells[2] ? cleanText(cells[2]) : '';
+                  
+                  if (status && dateTime) {
+                    eventos.push({
+                      descricao: status,
+                      dtHrCriado: dateTime,
+                      unidade: {
+                        nome: location || 'CORREIOS'
+                      }
+                    });
+                  }
+                }
               }
+            }
+          }
+          
+          if (eventos.length > 0) {
+            console.log('Sucesso com webscraping!');
+            
+            return res.status(200).json({
+              objetos: [{
+                codObjeto: codigo,
+                eventos: eventos,
+                tipoPostal: { 
+                  categoria: 'SEDEX' 
+                }
+              }]
             });
           }
         }
+      }
+    } catch (error) {
+      console.log('Erro no webscraping:', error.message);
+    }
+    
+    // MÉTODO 3: API Alternativa com JSONP
+    try {
+      console.log('Tentando API alternativa...');
+      
+      const alternativeUrl = `https://api.rastrearpedidos.com.br/api/rastreio/v1?codigo=${codigo}`;
+      
+      const altResponse = await fetch(alternativeUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0'
+        }
+      });
+
+      if (altResponse.ok) {
+        const altData = await altResponse.json();
         
-        if (eventos.length > 0) {
-          console.log('Sucesso com scraping');
+        if (altData && altData.eventos && altData.eventos.length > 0) {
+          console.log('Sucesso com API alternativa!');
+          
+          const eventos = altData.eventos.map(evento => ({
+            descricao: evento.descricao,
+            dtHrCriado: evento.data,
+            unidade: {
+              nome: evento.local || 'CORREIOS'
+            }
+          }));
           
           return res.status(200).json({
             objetos: [{
@@ -208,21 +220,21 @@ export default async function handler(req, res) {
         }
       }
     } catch (error) {
-      console.log('Erro no scraping:', error.message);
+      console.log('Erro com API alternativa:', error.message);
     }
     
-    // Se todos falharem, retornar estrutura básica
-    console.log('Usando fallback final');
+    // Se nada funcionou, retornar mensagem apropriada
+    console.log('Todos os métodos falharam');
     
     return res.status(200).json({
       objetos: [{
         codObjeto: codigo,
-        mensagem: 'Rastreamento temporariamente indisponível',
+        mensagem: 'Sistema de rastreamento em manutenção',
         eventos: [{
-          descricao: 'Tente novamente em alguns minutos',
+          descricao: 'Tente acessar diretamente o site dos Correios',
           dtHrCriado: new Date().toLocaleDateString('pt-BR'),
           unidade: {
-            nome: 'Sistema em atualização'
+            nome: 'https://rastreamento.correios.com.br'
           }
         }],
         tipoPostal: { 
@@ -235,53 +247,30 @@ export default async function handler(req, res) {
     console.error('Erro crítico:', error);
     
     return res.status(500).json({ 
-      error: 'Erro ao buscar informações de rastreamento',
+      error: 'Erro ao processar requisição',
       message: error.message
     });
   }
 }
 
-// Função auxiliar para formatar datas do Melhor Envio
-function formatarDataMelhorEnvio(dateString) {
-  if (!dateString) return '';
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
-  } catch {
-    return dateString;
-  }
-}
-
 /* ==================================================
-INSTRUÇÕES DE CONFIGURAÇÃO:
+NOTAS IMPORTANTES:
 
-1. CRIAR CONTA NO MELHOR ENVIO:
-   - Acesse: https://melhorenvio.com.br
-   - Crie uma conta gratuita
-   - Vá em: Configurações > API
-   - Gere um Token de API
+1. BrasilAPI - API pública brasileira que funciona bem
+   - Gratuita e sem necessidade de token
+   - Dados atualizados dos Correios
 
-2. CONFIGURAR TOKEN NA VERCEL (SEGURO):
-   - No dashboard da Vercel
-   - Settings > Environment Variables
-   - Adicione:
-     Name: MELHOR_ENVIO_TOKEN
-     Value: [seu_token_aqui]
-     Environment: Production
+2. WebScraping - Método de backup
+   - Usa proxy para evitar CORS
+   - Extrai dados diretamente do HTML
 
-3. OPCIONAL - SCRAPER API:
-   Se quiser usar o método 3 (scraping):
-   - Crie conta em: https://www.scraperapi.com
-   - Adicione na Vercel:
-     Name: SCRAPER_API_KEY
-     Value: [sua_api_key]
+3. O Melhor Envio NÃO rastreia códigos dos Correios
+   - Só rastreia envios feitos pela própria plataforma
+   - Por isso removemos essa integração
 
-4. TESTAR:
-   https://imaginatech-api.vercel.app/api/rastreio?codigo=AC992130091BR
+4. CORS está temporariamente como '*' para testes
+   - Depois mude para 'https://imaginatech.com.br'
 
-IMPORTANTE:
-- NUNCA coloque tokens diretamente no código
-- SEMPRE use variáveis de ambiente
-- O token fica seguro no servidor da Vercel
+5. Para testar:
+   https://imaginatech-api.vercel.app/api/rastreio?codigo=AB475427204BR
 ================================================== */
