@@ -2,7 +2,7 @@
 // ARQUIVO: script.js
 // MÓDULO: Acompanhar Pedido (Portal do Cliente)
 // SISTEMA: ImaginaTech - Gestão de Impressão 3D
-// VERSÃO: 3.0 - Enhanced com Rastreamento via Proxy CORS
+// VERSÃO: 3.0 - Enhanced com Backend Próprio Vercel
 // IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // ===========================
 
@@ -599,9 +599,84 @@ function updateTimeline(orderData) {
     `).join('');
 }
 
-fetchSuccess) {
-            console.log('Todas as tentativas falharam');
-            throw new Error('Não foi possível obter dados via API');
+// ===========================
+// TRACKING FUNCTIONS (VIA BACKEND PRÓPRIO)
+// ===========================
+
+async function trackOrder(trackingCode) {
+    if (!trackingCode) return;
+    
+    const trackingInfo = document.getElementById('trackingInfo');
+    if (!trackingInfo) return;
+    
+    trackingInfo.innerHTML = `
+        <div style="text-align: center; padding: 1rem;">
+            <div class="loading-spinner" style="
+                width: 30px;
+                height: 30px;
+                border: 3px solid rgba(0, 212, 255, 0.2);
+                border-top-color: var(--neon-blue);
+                border-radius: 50%;
+                animation: spin 1s ease-in-out infinite;
+                margin: 0 auto 0.5rem;
+            "></div>
+            <p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>
+        </div>
+    `;
+    
+    try {
+        let data = null;
+        let fetchSuccess = false;
+        
+        // CONFIGURAÇÃO: URL da sua API na Vercel
+        const API_URL = 'https://imaginatech-api.vercel.app/api/rastreio';
+        
+        try {
+            console.log('Buscando rastreamento via API própria...');
+            
+            const response = await fetch(`${API_URL}?codigo=${trackingCode}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const correiosData = await response.json();
+                
+                // Processar resposta da API dos Correios
+                if (correiosData && correiosData.objetos && correiosData.objetos.length > 0) {
+                    const objeto = correiosData.objetos[0];
+                    
+                    if (objeto.eventos && objeto.eventos.length > 0) {
+                        data = {
+                            code: trackingCode,
+                            service: objeto.tipoPostal ? objeto.tipoPostal.categoria : 'SEDEX',
+                            events: objeto.eventos.map(evento => ({
+                                description: evento.descricao,
+                                date: formatCorreiosDate(evento.dtHrCriado),
+                                location: formatCorreiosLocation(evento)
+                            }))
+                        };
+                        fetchSuccess = true;
+                        console.log('Rastreamento obtido com sucesso!');
+                    } else if (objeto.mensagem) {
+                        // Objeto ainda não postado ou sem eventos
+                        throw new Error(objeto.mensagem);
+                    }
+                } else if (correiosData.error) {
+                    throw new Error(correiosData.error);
+                }
+            } else {
+                throw new Error('Erro ao conectar com o servidor');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar rastreamento:', error.message);
+            fetchSuccess = false;
+        }
+        
+        if (!fetchSuccess) {
+            throw new Error('Não foi possível obter dados de rastreamento');
         }
         
         // Processar e exibir dados
