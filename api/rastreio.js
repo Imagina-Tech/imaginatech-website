@@ -1,18 +1,19 @@
 // ==================================================
 // ARQUIVO: api/rastreio.js
 // LOCALIZAÇÃO: pasta "api" na raiz do projeto
-// FUNÇÃO: Rastreamento APENAS via Melhor Envio
-// VERSÃO: 11.0 - Melhor Envio Only
+// FUNÇÃO: Rastreamento APENAS via Melhor Envio com Debug Aprimorado
+// VERSÃO: 12.0 - Debug e Tratamento de Erros
 // ==================================================
 
 export default async function handler(req, res) {
   console.log('=== INICIANDO HANDLER DE RASTREAMENTO ===');
   console.log('Método:', req.method);
   console.log('Query params:', req.query);
+  console.log('Headers recebidos:', req.headers);
   
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Mude para 'https://imaginatech.com.br' em produção
+  res.setHeader('Access-Control-Allow-Origin', '*'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
 
@@ -33,71 +34,101 @@ export default async function handler(req, res) {
     });
   }
 
+  // Verificar token antes de fazer requisições
+  const melhorEnvioToken = process.env.MELHOR_ENVIO_TOKEN;
+  
+  if (!melhorEnvioToken) {
+    console.error('ERRO CRÍTICO: Token do Melhor Envio não está configurado!');
+    return res.status(500).json({ 
+      error: 'Configuração ausente',
+      message: 'Token do Melhor Envio não configurado. Configure MELHOR_ENVIO_TOKEN nas variáveis de ambiente da Vercel.',
+      details: 'Acesse: Vercel Dashboard > Settings > Environment Variables'
+    });
+  }
+  
+  console.log('Token encontrado, tamanho:', melhorEnvioToken.length);
+  console.log('Primeiros caracteres do token:', melhorEnvioToken.substring(0, 20) + '...');
+
   try {
     console.log('=== INICIANDO BUSCA NO MELHOR ENVIO ===');
-    
-    // Token do Melhor Envio configurado na Vercel
-    const melhorEnvioToken = process.env.MELHOR_ENVIO_TOKEN;
-    
-    if (!melhorEnvioToken) {
-      console.error('ERRO CRÍTICO: Token do Melhor Envio não está configurado!');
-      return res.status(500).json({ 
-        error: 'Token do Melhor Envio não configurado no servidor',
-        details: 'Configure MELHOR_ENVIO_TOKEN nas variáveis de ambiente da Vercel'
-      });
-    }
-    
-    console.log('Token encontrado:', melhorEnvioToken.substring(0, 10) + '...');
     
     // MÉTODO 1: Buscar via endpoint de tracking
     console.log('--- Tentando método 1: Endpoint de tracking ---');
     
     const trackingUrl = `https://api.melhorenvio.com.br/api/v2/me/shipment/tracking`;
-    console.log('URL:', trackingUrl);
+    console.log('URL de tracking:', trackingUrl);
     console.log('Enviando POST com código:', codigo);
     
-    const trackingResponse = await fetch(trackingUrl, {
-      method: 'POST',
-      headers: {
+    let trackingResponse;
+    let trackingData = null;
+    
+    try {
+      const trackingBody = JSON.stringify({
+        orders: [codigo]
+      });
+      
+      console.log('Body da requisição:', trackingBody);
+      console.log('Headers a enviar:', {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
+        'Authorization': 'Bearer ' + melhorEnvioToken.substring(0, 10) + '...',
         'User-Agent': 'ImaginaTech/1.0'
-      },
-      body: JSON.stringify({
-        orders: [codigo]
-      })
-    });
-
-    console.log('Response status:', trackingResponse.status);
-    
-    const responseText = await trackingResponse.text();
-    console.log('Response body (texto):', responseText);
-    
-    let trackingData;
-    try {
-      trackingData = JSON.parse(responseText);
-      console.log('Response parseado como JSON:', JSON.stringify(trackingData, null, 2));
-    } catch (parseError) {
-      console.error('Erro ao fazer parse do JSON:', parseError);
-      console.log('Resposta não é JSON válido');
+      });
+      
+      trackingResponse = await fetch(trackingUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${melhorEnvioToken}`,
+          'User-Agent': 'ImaginaTech/1.0'
+        },
+        body: trackingBody
+      });
+      
+      console.log('Response status do tracking:', trackingResponse.status);
+      console.log('Response headers:', trackingResponse.headers);
+      
+      const responseText = await trackingResponse.text();
+      console.log('Response body (texto):', responseText);
+      
+      if (responseText) {
+        try {
+          trackingData = JSON.parse(responseText);
+          console.log('Response parseado como JSON:', JSON.stringify(trackingData, null, 2));
+        } catch (parseError) {
+          console.error('Erro ao fazer parse do JSON:', parseError);
+          console.log('Resposta não é JSON válido');
+        }
+      }
+      
+    } catch (trackingError) {
+      console.error('ERRO no fetch de tracking:', trackingError);
+      console.error('Tipo do erro:', trackingError.constructor.name);
+      console.error('Mensagem:', trackingError.message);
+      console.error('Stack:', trackingError.stack);
+      
+      // Se falhou no fetch, pode ser problema de rede ou token
+      if (trackingError.message.includes('fetch failed')) {
+        console.log('Possível problema de rede ou autenticação');
+      }
     }
     
-    if (trackingResponse.ok && trackingData) {
+    // Processar resposta do tracking se teve sucesso
+    if (trackingResponse && trackingResponse.ok && trackingData) {
       console.log('✓ Resposta OK do endpoint de tracking');
       
-      // Verificar se tem dados
       if (Object.keys(trackingData).length > 0) {
-        console.log('Dados encontrados:', Object.keys(trackingData));
+        console.log('Dados encontrados no tracking:', Object.keys(trackingData));
         
         const tracking = trackingData[codigo] || Object.values(trackingData)[0];
-        console.log('Objeto de tracking:', JSON.stringify(tracking, null, 2));
         
         if (tracking) {
+          console.log('Objeto de tracking encontrado');
           const eventos = processarEventosMelhorEnvio(tracking);
           
           if (eventos.length > 0) {
-            console.log(`✓ ${eventos.length} eventos encontrados`);
+            console.log(`✓ ${eventos.length} eventos encontrados via tracking`);
             
             return res.status(200).json({
               objetos: [{
@@ -108,134 +139,186 @@ export default async function handler(req, res) {
                 }
               }]
             });
-          } else {
-            console.log('⚠ Nenhum evento encontrado no tracking');
           }
-        } else {
-          console.log('⚠ Objeto de tracking vazio');
         }
-      } else {
-        console.log('⚠ Resposta vazia do tracking');
       }
-    } else {
-      console.log('✗ Método 1 falhou');
     }
     
-    // MÉTODO 2: Buscar lista de envios
+    // MÉTODO 2: Buscar lista de envios (mais confiável)
     console.log('--- Tentando método 2: Buscar lista de envios ---');
     
     const searchUrl = `https://api.melhorenvio.com.br/api/v2/me/shipment/search`;
-    console.log('URL:', searchUrl);
+    console.log('URL de busca:', searchUrl);
     
-    const searchResponse = await fetch(searchUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'ImaginaTech/1.0'
-      }
-    });
+    let searchResponse;
+    let searchData = null;
     
-    console.log('Search response status:', searchResponse.status);
-    
-    if (searchResponse.ok) {
-      const searchData = await searchResponse.json();
-      console.log('Total de envios encontrados:', searchData.data?.length || 0);
+    try {
+      console.log('Fazendo GET para buscar envios...');
       
-      if (searchData.data && searchData.data.length > 0) {
-        console.log('Procurando envio com código:', codigo);
+      searchResponse = await fetch(searchUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${melhorEnvioToken}`,
+          'User-Agent': 'ImaginaTech/1.0'
+        }
+      });
+      
+      console.log('Search response status:', searchResponse.status);
+      
+      if (searchResponse.ok) {
+        const searchText = await searchResponse.text();
+        console.log('Tamanho da resposta:', searchText.length, 'caracteres');
         
-        // Procurar o envio pelo código
-        const shipment = searchData.data.find(s => {
-          const match = s.tracking === codigo || 
-                       s.protocol === codigo ||
-                       s.self_tracking === codigo ||
-                       s.id === codigo ||
-                       s.id == codigo; // Comparação não estrita para números
-          
-          if (match) {
-            console.log('✓ Envio encontrado!');
-            console.log('  - ID:', s.id);
-            console.log('  - Tracking:', s.tracking);
-            console.log('  - Protocol:', s.protocol);
-            console.log('  - Self Tracking:', s.self_tracking);
-            console.log('  - Status:', s.status);
-            console.log('  - Service:', s.service?.name);
+        if (searchText) {
+          try {
+            searchData = JSON.parse(searchText);
+            console.log('Total de envios encontrados:', searchData.data?.length || 0);
+            
+            if (searchData.data && searchData.data.length > 0) {
+              // Listar primeiros 5 envios para debug
+              console.log('Primeiros envios (para debug):');
+              searchData.data.slice(0, 5).forEach(s => {
+                console.log(`- ID: ${s.id}, Protocol: ${s.protocol}, Tracking: ${s.tracking}`);
+              });
+            }
+          } catch (parseError) {
+            console.error('Erro ao parsear resposta de busca:', parseError);
           }
-          
-          return match;
-        });
-        
-        if (shipment) {
-          console.log('Processando envio encontrado...');
-          console.log('Dados completos do envio:', JSON.stringify(shipment, null, 2));
-          
-          const eventos = [];
-          
-          // Adicionar evento de status atual
-          if (shipment.status) {
-            eventos.push({
-              descricao: traduzirStatusMelhorEnvio(shipment.status),
-              dtHrCriado: formatarDataMelhorEnvio(shipment.updated_at || shipment.created_at),
-              unidade: {
-                nome: shipment.company?.name || shipment.agency?.name || 'MELHOR ENVIO'
-              }
-            });
-          }
-          
-          // Adicionar evento de postagem
-          if (shipment.posted_at) {
-            eventos.push({
-              descricao: 'Objeto postado',
-              dtHrCriado: formatarDataMelhorEnvio(shipment.posted_at),
-              unidade: {
-                nome: shipment.agency?.name || 'CORREIOS'
-              }
-            });
-          }
-          
-          // Adicionar evento de entrega
-          if (shipment.delivered_at) {
-            eventos.push({
-              descricao: 'Objeto entregue ao destinatário',
-              dtHrCriado: formatarDataMelhorEnvio(shipment.delivered_at),
-              unidade: {
-                nome: 'Destino'
-              }
-            });
-          }
-          
-          // Ordenar eventos por data (mais recente primeiro)
-          eventos.sort((a, b) => {
-            const dateA = parseDate(a.dtHrCriado);
-            const dateB = parseDate(b.dtHrCriado);
-            return dateB - dateA;
-          });
-          
-          console.log(`✓ Retornando ${eventos.length} eventos`);
-          
-          return res.status(200).json({
-            objetos: [{
-              codObjeto: codigo,
-              eventos: eventos,
-              tipoPostal: { 
-                categoria: shipment.service?.name || 'SEDEX'
-              },
-              // Adicionar informações extras úteis
-              tracking: shipment.tracking,
-              protocol: shipment.protocol
-            }]
-          });
-        } else {
-          console.log('✗ Nenhum envio encontrado com esse código');
         }
       } else {
-        console.log('✗ Nenhum envio na conta');
+        const errorText = await searchResponse.text();
+        console.error('Erro na resposta de busca:', searchResponse.status);
+        console.error('Mensagem de erro:', errorText);
+        
+        // Verificar se é erro de autenticação
+        if (searchResponse.status === 401) {
+          return res.status(401).json({
+            error: 'Token inválido ou expirado',
+            message: 'O token do Melhor Envio está inválido ou expirou. Verifique o token nas configurações da Vercel.',
+            statusCode: 401
+          });
+        }
       }
-    } else {
-      console.log('✗ Erro ao buscar lista de envios');
-      const errorText = await searchResponse.text();
-      console.log('Erro:', errorText);
+      
+    } catch (searchError) {
+      console.error('ERRO no fetch de busca:', searchError);
+      console.error('Tipo:', searchError.constructor.name);
+      console.error('Mensagem:', searchError.message);
+    }
+    
+    // Processar dados da busca se encontrou
+    if (searchData && searchData.data && searchData.data.length > 0) {
+      console.log('Procurando envio com código:', codigo);
+      
+      // Buscar de forma mais flexível
+      const shipment = searchData.data.find(s => {
+        // Comparações case-insensitive e com trim
+        const codigoLimpo = codigo.toString().trim().toLowerCase();
+        
+        const matches = [
+          s.id?.toString().toLowerCase() === codigoLimpo,
+          s.protocol?.toLowerCase() === codigoLimpo,
+          s.self_tracking?.toLowerCase() === codigoLimpo,
+          s.tracking?.toLowerCase() === codigoLimpo,
+          // Tentar sem o prefixo ORD- se existir
+          codigoLimpo.startsWith('ord-') && s.id?.toString() === codigoLimpo.replace('ord-', ''),
+          // Tentar com ORD- se não tiver
+          !codigoLimpo.startsWith('ord-') && s.id?.toString() === 'ord-' + codigoLimpo
+        ];
+        
+        const match = matches.some(m => m === true);
+        
+        if (match) {
+          console.log('✓ Envio encontrado!');
+          console.log('  - ID:', s.id);
+          console.log('  - Protocol:', s.protocol);
+          console.log('  - Tracking:', s.tracking);
+          console.log('  - Self Tracking:', s.self_tracking);
+          console.log('  - Status:', s.status);
+          console.log('  - Service:', s.service?.name);
+        }
+        
+        return match;
+      });
+      
+      if (shipment) {
+        console.log('Processando envio encontrado...');
+        
+        const eventos = [];
+        
+        // Adicionar evento de status atual
+        if (shipment.status) {
+          eventos.push({
+            descricao: traduzirStatusMelhorEnvio(shipment.status),
+            dtHrCriado: formatarDataMelhorEnvio(shipment.updated_at || shipment.created_at),
+            unidade: {
+              nome: shipment.company?.name || shipment.agency?.name || 'MELHOR ENVIO'
+            }
+          });
+        }
+        
+        // Adicionar evento de criação
+        if (shipment.created_at && shipment.created_at !== shipment.updated_at) {
+          eventos.push({
+            descricao: 'Pedido criado',
+            dtHrCriado: formatarDataMelhorEnvio(shipment.created_at),
+            unidade: {
+              nome: 'MELHOR ENVIO'
+            }
+          });
+        }
+        
+        // Adicionar evento de postagem
+        if (shipment.posted_at) {
+          eventos.push({
+            descricao: 'Objeto postado nos Correios',
+            dtHrCriado: formatarDataMelhorEnvio(shipment.posted_at),
+            unidade: {
+              nome: shipment.agency?.name || 'CORREIOS'
+            }
+          });
+        }
+        
+        // Adicionar evento de entrega
+        if (shipment.delivered_at) {
+          eventos.push({
+            descricao: 'Objeto entregue ao destinatário',
+            dtHrCriado: formatarDataMelhorEnvio(shipment.delivered_at),
+            unidade: {
+              nome: 'Destino'
+            }
+          });
+        }
+        
+        // Ordenar eventos por data (mais recente primeiro)
+        eventos.sort((a, b) => {
+          const dateA = parseDate(a.dtHrCriado);
+          const dateB = parseDate(b.dtHrCriado);
+          return dateB - dateA;
+        });
+        
+        console.log(`✓ Retornando ${eventos.length} eventos do envio`);
+        
+        return res.status(200).json({
+          objetos: [{
+            codObjeto: codigo,
+            eventos: eventos,
+            tipoPostal: { 
+              categoria: shipment.service?.name || 'SEDEX'
+            },
+            // Informações adicionais úteis
+            info: {
+              tracking: shipment.tracking,
+              protocol: shipment.protocol,
+              status: shipment.status
+            }
+          }]
+        });
+      } else {
+        console.log('✗ Nenhum envio encontrado com o código:', codigo);
+      }
     }
     
     // Se chegou aqui, não encontrou nada
@@ -244,12 +327,12 @@ export default async function handler(req, res) {
     return res.status(200).json({
       objetos: [{
         codObjeto: codigo,
-        mensagem: 'Código não encontrado no Melhor Envio',
+        mensagem: 'Código não encontrado',
         eventos: [{
-          descricao: 'Verifique se o código está correto',
-          dtHrCriado: new Date().toLocaleDateString('pt-BR'),
+          descricao: 'Código não encontrado no sistema. Verifique se está correto ou aguarde o processamento.',
+          dtHrCriado: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
           unidade: {
-            nome: 'Sem dados de rastreamento'
+            nome: 'SISTEMA'
           }
         }],
         tipoPostal: { 
@@ -259,14 +342,17 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
-    console.error('=== ERRO CRÍTICO ===');
+    console.error('=== ERRO CRÍTICO GERAL ===');
+    console.error('Tipo:', error.constructor.name);
     console.error('Mensagem:', error.message);
     console.error('Stack:', error.stack);
     
+    // Retornar erro mais amigável
     return res.status(500).json({ 
-      error: 'Erro ao processar requisição',
-      message: error.message,
-      stack: error.stack
+      error: 'Erro interno do servidor',
+      message: 'Ocorreu um erro ao processar a requisição. Tente novamente em alguns instantes.',
+      details: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 }
@@ -338,13 +424,25 @@ function processarEventosMelhorEnvio(tracking) {
 function formatarDataMelhorEnvio(dateString) {
   if (!dateString) {
     console.log('Data vazia, usando data atual');
-    return new Date().toLocaleDateString('pt-BR');
+    return new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR');
   }
   
   try {
     const date = new Date(dateString);
-    const formatted = date.toLocaleDateString('pt-BR') + ' ' + 
-                     date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    if (isNaN(date.getTime())) {
+      console.log('Data inválida:', dateString);
+      return dateString;
+    }
+    
+    const formatted = date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    }) + ' ' + date.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
     console.log(`Data formatada: ${dateString} -> ${formatted}`);
     return formatted;
   } catch (error) {
@@ -361,14 +459,18 @@ function traduzirStatusMelhorEnvio(status) {
     'posted': 'Postado nos Correios',
     'delivered': 'Entregue ao destinatário',
     'canceled': 'Cancelado',
+    'cancelled': 'Cancelado',
     'expired': 'Expirado',
     'on_route': 'Em trânsito',
     'out_for_delivery': 'Saiu para entrega',
     'waiting': 'Aguardando coleta',
-    'returned': 'Devolvido'
+    'returned': 'Devolvido',
+    'paid': 'Pago',
+    'generated': 'Etiqueta gerada',
+    'not_generated': 'Etiqueta não gerada'
   };
   
-  const traducao = traducoes[status] || status;
+  const traducao = traducoes[status?.toLowerCase()] || status;
   console.log(`Status traduzido: ${status} -> ${traducao}`);
   return traducao;
 }
@@ -377,44 +479,57 @@ function traduzirStatusMelhorEnvio(status) {
 function parseDate(dateStr) {
   if (!dateStr) return new Date();
   
+  // Tentar parse direto primeiro
+  let date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+  
   // Formato: DD/MM/AAAA HH:MM
   const parts = dateStr.split(' ');
   if (parts[0]) {
     const dateParts = parts[0].split('/');
     if (dateParts.length === 3) {
-      const day = dateParts[0];
-      const month = dateParts[1] - 1;
-      const year = dateParts[2];
+      const day = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1;
+      const year = parseInt(dateParts[2]);
       
       let hours = 0, minutes = 0;
       if (parts[1]) {
         const timeParts = parts[1].split(':');
-        hours = timeParts[0] || 0;
-        minutes = timeParts[1] || 0;
+        hours = parseInt(timeParts[0]) || 0;
+        minutes = parseInt(timeParts[1]) || 0;
       }
       
       return new Date(year, month, day, hours, minutes);
     }
   }
   
-  return new Date(dateStr);
+  return new Date();
 }
 
 /* ==================================================
-SISTEMA SIMPLIFICADO - APENAS MELHOR ENVIO
+DIAGNÓSTICO E SOLUÇÕES:
 
-O sistema agora:
-1. Aceita apenas IDs do Melhor Envio
-2. Busca em dois endpoints do Melhor Envio
-3. Retorna eventos formatados
-4. Logs detalhados para debug
+1. VERIFIQUE O TOKEN:
+   - Acesse Vercel Dashboard
+   - Settings > Environment Variables
+   - Certifique-se que MELHOR_ENVIO_TOKEN está configurado
+   - O token deve ser válido e não expirado
 
-Para usar:
-- ID numérico: ?codigo=123456
-- Protocol: ?codigo=ME-XXXXX
-- Self tracking: ?codigo=XXXXX
+2. FORMATOS DE CÓDIGO ACEITOS:
+   - ID numérico: 123456
+   - Com prefixo: ORD-202508115509001
+   - Protocol: ME-XXXXX
+   - Tracking: XXXXX
 
-IMPORTANTE:
-- Configure MELHOR_ENVIO_TOKEN na Vercel
-- Use o ID exato do pedido no Melhor Envio
+3. LOGS DETALHADOS:
+   - Verifique os logs na Vercel (Functions > Logs)
+   - Procure por "ERRO" para identificar problemas
+   - O sistema agora registra cada etapa
+
+4. POSSÍVEIS PROBLEMAS:
+   - Token ausente ou inválido
+   - Código não existe no Melhor Envio
+   - Problema de rede temporário
 ================================================== */
