@@ -1,6 +1,9 @@
 /* ===========================
-   IMAGINATECH - ACOMPANHAR PEDIDO
-   CSS Principal - Design Responsivo
+   ARQUIVO: style.css
+   MÓDULO: Acompanhar Pedido (Portal do Cliente)
+   SISTEMA: ImaginaTech - Gestão de Impressão 3D
+   VERSÃO: 2.0 - Enhanced
+   IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
    =========================== */
 
 /* Root Variables */
@@ -277,11 +280,6 @@ body {
     font-size: 4rem;
     color: var(--neon-blue);
     margin-bottom: 1rem;
-    animation: rotate-slow 10s linear infinite;
-}
-
-@keyframes rotate-slow {
-    to { transform: rotateY(360deg); }
 }
 
 .welcome-header h2 {
@@ -888,6 +886,27 @@ body {
 .btn-action:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Button for tracking */
+.btn-tracking {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-tracking:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 15px rgba(0, 212, 255, 0.4);
 }
 
 /* ===========================
