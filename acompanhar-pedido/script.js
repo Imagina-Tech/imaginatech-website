@@ -633,6 +633,7 @@ async function trackOrder(trackingCode) {
         
         try {
             console.log('Buscando rastreamento via API própria...');
+            console.log('Código:', trackingCode);
             
             const response = await fetch(`${API_URL}?codigo=${trackingCode}`, {
                 method: 'GET',
@@ -642,32 +643,58 @@ async function trackOrder(trackingCode) {
             });
             
             if (response.ok) {
-                const correiosData = await response.json();
+                const trackingData = await response.json();
                 
-                // Processar resposta da API dos Correios
-                if (correiosData && correiosData.objetos && correiosData.objetos.length > 0) {
-                    const objeto = correiosData.objetos[0];
+                // Processar resposta da API unificada (Correios + Melhor Envio)
+                if (trackingData && trackingData.objetos && trackingData.objetos.length > 0) {
+                    const objeto = trackingData.objetos[0];
                     
                     if (objeto.eventos && objeto.eventos.length > 0) {
+                        // Adaptar formato de eventos para exibição
                         data = {
                             code: trackingCode,
                             service: objeto.tipoPostal ? objeto.tipoPostal.categoria : 'SEDEX',
-                            events: objeto.eventos.map(evento => ({
-                                description: evento.descricao,
-                                date: formatCorreiosDate(evento.dtHrCriado),
-                                location: formatCorreiosLocation(evento)
-                            }))
+                            events: objeto.eventos.map(evento => {
+                                // Criar descrição completa com cidade/UF se disponível
+                                let location = '';
+                                if (evento.unidade && evento.unidade.nome) {
+                                    location = evento.unidade.nome;
+                                }
+                                if (evento.cidade && evento.uf) {
+                                    location = location ? `${location} - ${evento.cidade}/${evento.uf}` : `${evento.cidade}/${evento.uf}`;
+                                } else if (evento.cidade) {
+                                    location = location ? `${location} - ${evento.cidade}` : evento.cidade;
+                                }
+                                
+                                // Adicionar destino se houver
+                                if (evento.destino) {
+                                    const destStr = evento.destino.local ? 
+                                        `${evento.destino.local} - ${evento.destino.cidade}/${evento.destino.uf}` :
+                                        `${evento.destino.cidade}/${evento.destino.uf}`;
+                                    location = location ? `${location} → ${destStr}` : destStr;
+                                }
+                                
+                                return {
+                                    description: evento.descricao,
+                                    date: evento.dtHrCriado,
+                                    location: location || 'Não informado'
+                                };
+                            })
                         };
                         fetchSuccess = true;
                         console.log('Rastreamento obtido com sucesso!');
+                        console.log(`${data.events.length} eventos encontrados`);
                     } else if (objeto.mensagem) {
                         // Objeto ainda não postado ou sem eventos
+                        console.log('Mensagem da API:', objeto.mensagem);
                         throw new Error(objeto.mensagem);
                     }
-                } else if (correiosData.error) {
-                    throw new Error(correiosData.error);
+                } else if (trackingData.error) {
+                    throw new Error(trackingData.error);
                 }
             } else {
+                const errorText = await response.text();
+                console.error('Resposta de erro:', errorText);
                 throw new Error('Erro ao conectar com o servidor');
             }
         } catch (error) {
