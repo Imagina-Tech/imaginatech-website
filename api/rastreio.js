@@ -1,12 +1,12 @@
 // ==================================================
 // ARQUIVO: api/rastreio.js
-// LOCALIZAÇÃO: Criar pasta "api" na raiz do projeto
-// FUNÇÃO: Serverless para buscar rastreamento dos Correios
-// VERSÃO: 3.0 - Usando API Linke Track (funcionando)
+// LOCALIZAÇÃO: pasta "api" na raiz do projeto
+// FUNÇÃO: Rastreamento via Melhor Envio API
+// VERSÃO: 4.0 - Melhor Envio com segurança
 // ==================================================
 
 export default async function handler(req, res) {
-  // Configurar CORS para permitir acesso do seu site
+  // Configurar CORS para seu domínio
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', 'https://imaginatech.com.br');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -33,18 +32,80 @@ export default async function handler(req, res) {
   const codigoRegex = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/;
   if (!codigoRegex.test(codigo)) {
     return res.status(400).json({ 
-      error: 'Formato de código inválido. Use o formato: AA123456789BR' 
+      error: 'Formato de código inválido' 
     });
   }
 
   try {
     console.log(`Buscando rastreamento para: ${codigo}`);
     
-    // MÉTODO 1: API Linke Track (funciona sem autenticação)
-    const linkeTrackUrl = `https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`;
+    // MÉTODO 1: API do Melhor Envio (requer token)
+    const melhorEnvioToken = process.env.MELHOR_ENVIO_TOKEN;
     
+    if (melhorEnvioToken) {
+      try {
+        // Endpoint do Melhor Envio para rastreamento
+        const melhorEnvioUrl = 'https://api.melhorenvio.com.br/api/v2/me/shipment/tracking';
+        
+        const melhorEnvioResponse = await fetch(melhorEnvioUrl, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${melhorEnvioToken}`,
+            'User-Agent': 'ImaginaTech/1.0'
+          },
+          body: JSON.stringify({
+            orders: [codigo]
+          })
+        });
+
+        if (melhorEnvioResponse.ok) {
+          const melhorEnvioData = await melhorEnvioResponse.json();
+          
+          // Verificar se tem dados de rastreamento
+          if (melhorEnvioData && melhorEnvioData.data && melhorEnvioData.data.length > 0) {
+            const tracking = melhorEnvioData.data[0];
+            
+            if (tracking.tracking && tracking.tracking.events && tracking.tracking.events.length > 0) {
+              console.log('Sucesso com Melhor Envio API');
+              
+              // Converter formato Melhor Envio para o formato esperado
+              const eventos = tracking.tracking.events.map(evento => ({
+                descricao: evento.description || evento.event,
+                dtHrCriado: formatarDataMelhorEnvio(evento.date || evento.timestamp),
+                unidade: {
+                  nome: evento.location || evento.city || 'CORREIOS'
+                }
+              }));
+              
+              return res.status(200).json({
+                objetos: [{
+                  codObjeto: codigo,
+                  eventos: eventos,
+                  tipoPostal: { 
+                    categoria: tracking.service || 'SEDEX' 
+                  }
+                }]
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Erro com Melhor Envio:', error.message);
+      }
+    } else {
+      console.log('Token do Melhor Envio não configurado');
+    }
+    
+    // MÉTODO 2: API Alternativa RastreiaEncomendas (gratuita sem token)
     try {
-      const linkeResponse = await fetch(linkeTrackUrl, {
+      console.log('Tentando API RastreiaEncomendas...');
+      
+      // Esta API funciona sem autenticação
+      const rastreiaUrl = `https://api.rastreiaencomendas.com/v1/track/${codigo}`;
+      
+      const rastreiaResponse = await fetch(rastreiaUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -52,19 +113,18 @@ export default async function handler(req, res) {
         }
       });
 
-      if (linkeResponse.ok) {
-        const linkeData = await linkeResponse.json();
+      if (rastreiaResponse.ok) {
+        const rastreiaData = await rastreiaResponse.json();
         
-        // Verificar se tem eventos
-        if (linkeData && linkeData.eventos && linkeData.eventos.length > 0) {
-          console.log('Sucesso com Linke Track API');
+        if (rastreiaData && rastreiaData.events && rastreiaData.events.length > 0) {
+          console.log('Sucesso com RastreiaEncomendas');
           
-          // Converter formato Linke Track para o formato esperado pelo frontend
-          const eventos = linkeData.eventos.map(evento => ({
+          // Converter formato
+          const eventos = rastreiaData.events.map(evento => ({
             descricao: evento.status,
-            dtHrCriado: `${evento.data} ${evento.hora}`,
+            dtHrCriado: `${evento.date} ${evento.time || ''}`.trim(),
             unidade: {
-              nome: evento.local || 'CORREIOS'
+              nome: evento.location || 'CORREIOS'
             }
           }));
           
@@ -73,112 +133,68 @@ export default async function handler(req, res) {
               codObjeto: codigo,
               eventos: eventos,
               tipoPostal: { 
-                categoria: linkeData.servico || 'SEDEX' 
+                categoria: rastreiaData.service || 'SEDEX' 
               }
             }]
           });
         }
       }
     } catch (error) {
-      console.log('Erro com Linke Track:', error.message);
+      console.log('Erro com RastreiaEncomendas:', error.message);
     }
     
-    // MÉTODO 2: API InfoSimples (alternativa)
-    console.log('Tentando API alternativa...');
-    
-    // Esta é uma API pública que funciona com scraping
-    const alternativeUrl = `https://api.infosimples.com/api/v2/consultas/correios/rastreamento`;
-    
+    // MÉTODO 3: Scraping via Puppeteer (mais confiável)
     try {
-      const altResponse = await fetch(alternativeUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          codigo: codigo,
-          // Token público para teste (limitado)
-          token: 'demo_token'
-        })
-      });
-
-      if (altResponse.ok) {
-        const altData = await altResponse.json();
-        
-        if (altData && altData.data && altData.data.eventos) {
-          console.log('Sucesso com API alternativa');
-          
-          // Converter formato para o esperado
-          const eventos = altData.data.eventos.map(evento => ({
-            descricao: evento.descricao,
-            dtHrCriado: evento.data_hora,
-            unidade: {
-              nome: evento.local || 'CORREIOS'
-            }
-          }));
-          
-          return res.status(200).json({
-            objetos: [{
-              codObjeto: codigo,
-              eventos: eventos,
-              tipoPostal: { 
-                categoria: 'SEDEX' 
-              }
-            }]
-          });
-        }
-      }
-    } catch (error) {
-      console.log('Erro com API alternativa:', error.message);
-    }
-    
-    // MÉTODO 3: Web Scraping direto (último recurso)
-    console.log('Tentando web scraping...');
-    
-    const scrapingUrl = `https://www.linkcorreios.com.br/?id=${codigo}`;
-    
-    try {
-      const scrapeResponse = await fetch(scrapingUrl, {
+      console.log('Tentando scraping avançado...');
+      
+      // Usar um serviço de scraping
+      const scraperUrl = `https://api.scraperapi.com/v1/scrape`;
+      const scraperApiKey = process.env.SCRAPER_API_KEY || 'demo';
+      
+      const targetUrl = `https://rastreamento.correios.com.br/app/resultado.php?objeto=${codigo}`;
+      
+      const scraperResponse = await fetch(`${scraperUrl}?api_key=${scraperApiKey}&url=${encodeURIComponent(targetUrl)}`, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          'Accept': 'text/html'
         }
       });
 
-      if (scrapeResponse.ok) {
-        const html = await scrapeResponse.text();
+      if (scraperResponse.ok) {
+        const html = await scraperResponse.text();
         
-        // Buscar dados no HTML usando regex
+        // Extrair eventos do HTML
         const eventos = [];
         
-        // Procurar por linhas de status
-        const statusRegex = /<li[^>]*class="[^"]*linha_status[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
-        const matches = Array.from(html.matchAll(statusRegex));
+        // Buscar tabela de eventos no HTML
+        const eventosRegex = /<tr class="[^"]*sro-table__body[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;
+        const matches = Array.from(html.matchAll(eventosRegex));
         
         for (const match of matches) {
-          const content = match[1];
+          const row = match[1];
           
-          // Extrair informações
-          const statusMatch = content.match(/<strong>([^<]+)<\/strong>/);
-          const dateMatch = content.match(/(\d{2}\/\d{2}\/\d{4})/);
-          const timeMatch = content.match(/(\d{2}:\d{2})/);
-          const localMatch = content.match(/Local:\s*([^<]+)/);
+          // Extrair dados
+          const dateRegex = /<td[^>]*>(\d{2}\/\d{2}\/\d{4})<\/td>/;
+          const timeRegex = /<td[^>]*>(\d{2}:\d{2})<\/td>/;
+          const statusRegex = /<td[^>]*>([^<]+)<\/td>/g;
           
-          if (statusMatch) {
+          const dateMatch = row.match(dateRegex);
+          const timeMatch = row.match(timeRegex);
+          const statusMatches = Array.from(row.matchAll(statusRegex));
+          
+          if (statusMatches.length >= 2) {
             eventos.push({
-              descricao: statusMatch[1].trim(),
+              descricao: statusMatches[1][1].trim(),
               dtHrCriado: `${dateMatch ? dateMatch[1] : ''} ${timeMatch ? timeMatch[1] : ''}`.trim(),
               unidade: {
-                nome: localMatch ? localMatch[1].trim() : 'CORREIOS'
+                nome: statusMatches[2] ? statusMatches[2][1].trim() : 'CORREIOS'
               }
             });
           }
         }
         
         if (eventos.length > 0) {
-          console.log('Sucesso com web scraping');
+          console.log('Sucesso com scraping');
           
           return res.status(200).json({
             objetos: [{
@@ -192,21 +208,21 @@ export default async function handler(req, res) {
         }
       }
     } catch (error) {
-      console.log('Erro no web scraping:', error.message);
+      console.log('Erro no scraping:', error.message);
     }
     
-    // Se todos os métodos falharam, retornar mensagem apropriada
-    console.log('Todos os métodos falharam');
+    // Se todos falharem, retornar estrutura básica
+    console.log('Usando fallback final');
     
     return res.status(200).json({
       objetos: [{
         codObjeto: codigo,
-        mensagem: 'Objeto em trânsito - atualizações em breve',
+        mensagem: 'Rastreamento temporariamente indisponível',
         eventos: [{
-          descricao: 'Objeto postado',
+          descricao: 'Tente novamente em alguns minutos',
           dtHrCriado: new Date().toLocaleDateString('pt-BR'),
           unidade: {
-            nome: 'Verifique novamente em algumas horas'
+            nome: 'Sistema em atualização'
           }
         }],
         tipoPostal: { 
@@ -220,33 +236,52 @@ export default async function handler(req, res) {
     
     return res.status(500).json({ 
       error: 'Erro ao buscar informações de rastreamento',
-      message: error.message,
-      details: 'Tente novamente em alguns instantes'
+      message: error.message
     });
   }
 }
 
+// Função auxiliar para formatar datas do Melhor Envio
+function formatarDataMelhorEnvio(dateString) {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+  } catch {
+    return dateString;
+  }
+}
+
 /* ==================================================
-NOTAS IMPORTANTES:
+INSTRUÇÕES DE CONFIGURAÇÃO:
 
-1. A API Linke Track é gratuita e pública (encontrada em fóruns)
-   - User: teste
-   - Token: 1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f
-   - Funciona sem necessidade de cadastro
+1. CRIAR CONTA NO MELHOR ENVIO:
+   - Acesse: https://melhorenvio.com.br
+   - Crie uma conta gratuita
+   - Vá em: Configurações > API
+   - Gere um Token de API
 
-2. CORS está configurado para seu domínio específico
-   - Mude para '*' apenas para testes
-   - Em produção, mantenha apenas seu domínio
+2. CONFIGURAR TOKEN NA VERCEL (SEGURO):
+   - No dashboard da Vercel
+   - Settings > Environment Variables
+   - Adicione:
+     Name: MELHOR_ENVIO_TOKEN
+     Value: [seu_token_aqui]
+     Environment: Production
 
-3. Três métodos de busca em cascata:
-   - Linke Track API (principal)
-   - API alternativa (backup)
-   - Web scraping (último recurso)
+3. OPCIONAL - SCRAPER API:
+   Se quiser usar o método 3 (scraping):
+   - Crie conta em: https://www.scraperapi.com
+   - Adicione na Vercel:
+     Name: SCRAPER_API_KEY
+     Value: [sua_api_key]
 
-4. Para testar localmente antes do deploy:
-   node api/rastreio.js
+4. TESTAR:
+   https://imaginatech-api.vercel.app/api/rastreio?codigo=AC992130091BR
 
-5. Códigos de teste válidos:
-   - OH159229325BR
-   - NX583687399BR
+IMPORTANTE:
+- NUNCA coloque tokens diretamente no código
+- SEMPRE use variáveis de ambiente
+- O token fica seguro no servidor da Vercel
 ================================================== */
