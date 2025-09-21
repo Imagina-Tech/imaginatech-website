@@ -600,7 +600,7 @@ function updateTimeline(orderData) {
 }
 
 // ===========================
-// TRACKING FUNCTIONS (COM API ALTERNATIVA)
+// TRACKING FUNCTIONS (COM API RASTREIA ENCOMENDAS)
 // ===========================
 
 async function trackOrder(trackingCode) {
@@ -628,130 +628,129 @@ async function trackOrder(trackingCode) {
         let data = null;
         let fetchSuccess = false;
         
-        // Tentar usar a API Link & Track que tem CORS habilitado
+        // Primeira tentativa: API RastreiaEncomendas (funciona bem com CORS)
         try {
-            console.log('Tentando API Link & Track...');
-            const linkTrackUrl = `https://api.linketrack.com/track/json?codigo=${trackingCode}&tipo=sedex`;
+            console.log('Tentando API RastreiaEncomendas...');
+            const apiUrl = `https://api.rastreiaencomendas.com.br/api/rastreio/v1?codigo=${trackingCode}`;
             
-            const response = await fetch(linkTrackUrl, {
+            const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
             
             if (response.ok) {
                 const trackData = await response.json();
-                if (trackData && trackData.eventos) {
-                    // Converter formato Link & Track para o formato esperado
+                if (trackData && trackData.eventos && trackData.eventos.length > 0) {
                     data = {
                         code: trackingCode,
-                        service: 'SEDEX',
+                        service: trackData.servico || 'SEDEX',
                         events: trackData.eventos.map(evento => ({
-                            description: evento.status,
-                            date: evento.data + ' ' + evento.hora,
+                            description: evento.descricao || evento.status,
+                            date: evento.data,
                             location: evento.local || evento.cidade || ''
                         }))
                     };
                     fetchSuccess = true;
-                    console.log('Sucesso com API Link & Track');
+                    console.log('Sucesso com API RastreiaEncomendas');
                 }
             }
-        } catch (linkError) {
-            console.log('Erro com Link & Track:', linkError.message);
+        } catch (error) {
+            console.log('Erro com RastreiaEncomendas:', error.message);
         }
         
-        // Se Link & Track falhar, tentar API CepAberto (gratuita e com CORS)
+        // Segunda tentativa: API via proxy CORS simples
         if (!fetchSuccess) {
             try {
-                console.log('Tentando API alternativa via JSONP...');
-                
-                // Criar callback único para JSONP
-                const callbackName = 'trackingCallback_' + Date.now();
-                
-                // Promise para aguardar resposta JSONP
-                const jsonpPromise = new Promise((resolve, reject) => {
-                    window[callbackName] = (response) => {
-                        delete window[callbackName];
-                        resolve(response);
-                    };
-                    
-                    setTimeout(() => {
-                        delete window[callbackName];
-                        reject(new Error('Timeout JSONP'));
-                    }, 5000);
-                });
-                
-                // Criar script tag para JSONP
-                const script = document.createElement('script');
-                script.src = `https://www.linkcorreios.com.br/ws/trackingservice.asmx/TrackingJson?trackingNumber=${trackingCode}&callback=${callbackName}`;
-                document.head.appendChild(script);
-                
-                try {
-                    const jsonpData = await jsonpPromise;
-                    document.head.removeChild(script);
-                    
-                    if (jsonpData && jsonpData.TrackingEvents) {
-                        data = {
-                            code: trackingCode,
-                            service: 'SEDEX',
-                            events: jsonpData.TrackingEvents.map(event => ({
-                                description: event.Description,
-                                date: event.EventDate + ' ' + event.EventTime,
-                                location: event.Location
-                            }))
-                        };
-                        fetchSuccess = true;
-                        console.log('Sucesso com JSONP');
-                    }
-                } catch (jsonpError) {
-                    document.head.removeChild(script);
-                    console.log('Erro JSONP:', jsonpError.message);
-                }
-            } catch (error) {
-                console.log('Erro na tentativa alternativa:', error.message);
-            }
-        }
-        
-        // Última tentativa: usar proxy público com API dos Correios
-        if (!fetchSuccess) {
-            try {
-                console.log('Tentando proxy público...');
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://proxyapp.correios.com.br/v1/sro-rastro/${trackingCode}`)}`;
+                console.log('Tentando via proxy CORS...');
+                // Usar proxy público que funciona
+                const proxyUrl = `https://cors-anywhere.herokuapp.com/https://www.correios.com.br/@@srorastro?objetos=${trackingCode}`;
                 
                 const response = await fetch(proxyUrl, {
-                    method: 'GET'
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 
                 if (response.ok) {
-                    const proxyData = await response.json();
-                    if (proxyData.contents) {
-                        const correiosData = JSON.parse(proxyData.contents);
-                        if (correiosData && correiosData.objetos && correiosData.objetos[0]) {
-                            const objeto = correiosData.objetos[0];
-                            if (objeto.eventos) {
-                                data = {
-                                    code: trackingCode,
-                                    service: objeto.tipoPostal ? objeto.tipoPostal.categoria : 'SEDEX',
-                                    events: objeto.eventos.map(evento => ({
-                                        description: evento.descricao,
-                                        date: evento.dtHrCriado,
-                                        location: evento.unidade ? `${evento.unidade.nome} - ${evento.unidade.endereco.cidade}/${evento.unidade.endereco.uf}` : ''
-                                    }))
-                                };
-                                fetchSuccess = true;
-                                console.log('Sucesso com proxy dos Correios');
-                            }
+                    const correiosData = await response.json();
+                    if (correiosData && correiosData.objetos && correiosData.objetos.length > 0) {
+                        const objeto = correiosData.objetos[0];
+                        if (objeto.eventos) {
+                            data = {
+                                code: trackingCode,
+                                service: 'SEDEX',
+                                events: objeto.eventos.map(evento => ({
+                                    description: evento.descricao,
+                                    date: evento.data + ' ' + evento.hora,
+                                    location: evento.local
+                                }))
+                            };
+                            fetchSuccess = true;
+                            console.log('Sucesso com proxy CORS');
                         }
                     }
                 }
-            } catch (proxyError) {
-                console.log('Erro com proxy:', proxyError.message);
+            } catch (error) {
+                console.log('Erro com proxy CORS:', error.message);
             }
         }
         
+        // Terceira tentativa: Widget dos Correios via iframe message
         if (!fetchSuccess) {
+            try {
+                console.log('Tentando via widget dos Correios...');
+                
+                // Criar iframe temporário
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = `https://rastreamento.correios.com.br/app/resultado.php?objeto=${trackingCode}&mqs=S`;
+                document.body.appendChild(iframe);
+                
+                // Aguardar carregamento e tentar extrair dados
+                await new Promise((resolve) => {
+                    iframe.onload = resolve;
+                    setTimeout(resolve, 3000); // Timeout de 3 segundos
+                });
+                
+                try {
+                    // Tentar acessar o conteúdo (pode falhar por CORS)
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const eventos = iframeDoc.querySelectorAll('.listEvent');
+                    
+                    if (eventos.length > 0) {
+                        data = {
+                            code: trackingCode,
+                            service: 'SEDEX',
+                            events: Array.from(eventos).map(evento => {
+                                const desc = evento.querySelector('.text') || {};
+                                const info = evento.querySelector('.date') || {};
+                                return {
+                                    description: desc.textContent || 'Status',
+                                    date: info.textContent || '',
+                                    location: ''
+                                };
+                            })
+                        };
+                        fetchSuccess = true;
+                        console.log('Sucesso via iframe');
+                    }
+                } catch (iframeError) {
+                    console.log('Erro ao acessar iframe:', iframeError.message);
+                }
+                
+                document.body.removeChild(iframe);
+            } catch (error) {
+                console.log('Erro com widget:', error.message);
+            }
+        }
+        
+        // Se nenhuma API funcionou, mostrar botão para site dos Correios
+        if (!fetchSuccess) {
+            console.log('Todas as tentativas falharam');
             throw new Error('Não foi possível obter dados via API');
         }
         
