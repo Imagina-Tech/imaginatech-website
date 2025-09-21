@@ -2,7 +2,7 @@
 // ARQUIVO: script.js
 // MÓDULO: Acompanhar Pedido (Portal do Cliente)
 // SISTEMA: ImaginaTech - Gestão de Impressão 3D
-// VERSÃO: 3.0 - Enhanced com Rastreamento Wonca Labs API
+// VERSÃO: 3.0 - Enhanced com Rastreamento via Proxy CORS
 // IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // ===========================
 
@@ -625,46 +625,62 @@ async function trackOrder(trackingCode) {
     `;
     
     try {
-        // Usar proxy CORS para contornar restrições
-        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        let data = null;
+        let fetchSuccess = false;
+        
+        // Lista de proxies CORS para tentar
+        const corsProxies = [
+            {
+                name: 'AllOrigins',
+                buildUrl: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+            },
+            {
+                name: 'CORS Proxy',
+                buildUrl: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            },
+            {
+                name: 'Proxy Server',
+                buildUrl: (targetUrl) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+            }
+        ];
+        
+        // URL da API de rastreamento
         const apiUrl = `https://api.melhorrastreio.com.br/api/v1/trackings/${trackingCode}`;
-        const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
         
-        const response = await fetch(finalUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
-        let data;
-        
-        if (response.ok) {
+        // Tentar cada proxy até um funcionar
+        for (const proxy of corsProxies) {
             try {
-                data = await response.json();
-            } catch (jsonError) {
-                // Se falhar o parse JSON, tentar API alternativa dos Correios via proxy
-                const correiosUrl = `https://proxyapi.cors.sh/v1/?q=${encodeURIComponent(`https://api.correios.com.br/sro-rastro/${trackingCode}`)}&key=temp_95c9a0b3c2c8c6e7f8e9d5a3b4c7d2e1`;
-                const correiosResponse = await fetch(correiosUrl);
+                console.log(`Tentando com proxy: ${proxy.name}`);
+                const proxyUrl = proxy.buildUrl(apiUrl);
                 
-                if (correiosResponse.ok) {
-                    const correiosData = await correiosResponse.json();
-                    // Converter formato Correios para formato esperado
-                    data = {
-                        code: trackingCode,
-                        service: 'SEDEX',
-                        events: correiosData.objetos?.[0]?.eventos?.map(evento => ({
-                            description: evento.descricao,
-                            date: evento.dtHrCriado,
-                            location: evento.unidade?.endereco?.cidade + '/' + evento.unidade?.endereco?.uf
-                        })) || []
-                    };
-                } else {
-                    throw new Error('Não foi possível obter dados de rastreamento');
+                const response = await fetch(proxyUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const responseText = await response.text();
+                    try {
+                        data = JSON.parse(responseText);
+                        fetchSuccess = true;
+                        console.log(`Sucesso com proxy: ${proxy.name}`);
+                        break;
+                    } catch (parseError) {
+                        console.log(`Erro ao parsear JSON do proxy ${proxy.name}:`, parseError);
+                        continue;
+                    }
                 }
+            } catch (error) {
+                console.log(`Erro com proxy ${proxy.name}:`, error.message);
+                continue;
             }
-        } else {
-            throw new Error('Código não encontrado');
+        }
+        
+        if (!fetchSuccess) {
+            throw new Error('Não foi possível obter dados via API');
+        }
         
         // Processar e exibir dados
         if (data && ((data.events && data.events.length > 0) || data.tracking_events)) {
