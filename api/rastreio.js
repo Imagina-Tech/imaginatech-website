@@ -1,9 +1,9 @@
-// ==================================================
+// =================================================
 // ARQUIVO: api/rastreio.js
 // LOCALIZAÇÃO: Criar pasta "api" na raiz do projeto
 // FUNÇÃO: Serverless para buscar rastreamento dos Correios
 // DEPLOY: Vercel (gratuito)
-// ==================================================
+// =================================================
 
 export default async function handler(req, res) {
   // Habilitar CORS para seu domínio
