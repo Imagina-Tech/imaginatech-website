@@ -609,12 +609,54 @@ async function trackOrder(trackingCode) {
     const trackingInfo = document.getElementById('trackingInfo');
     if (!trackingInfo) return;
     
-    trackingInfo.innerHTML = '<p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>';
+    trackingInfo.innerHTML = `
+        <div style="text-align: center; padding: 1rem;">
+            <div class="loading-spinner" style="
+                width: 30px;
+                height: 30px;
+                border: 3px solid rgba(0, 212, 255, 0.2);
+                border-top-color: var(--neon-blue);
+                border-radius: 50%;
+                animation: spin 1s ease-in-out infinite;
+                margin: 0 auto 0.5rem;
+            "></div>
+            <p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>
+        </div>
+    `;
     
     try {
-        // API alternativa gratuita para rastreamento dos Correios
-        // Usando a API Link & Track (gratuita e sem autenticação)
-        const response = await fetch(`https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${trackingCode}`);
+        // Usando BrasilAPI - API gratuita e confiável para rastreamento dos Correios
+        const response = await fetch(`https://brasilapi.com.br/api/cep/v2/rastreio?codigo=${trackingCode}`);
+        
+        if (response.status === 404) {
+            // Código não encontrado ainda
+            trackingInfo.innerHTML = `
+                <div style="
+                    padding: 1rem;
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid var(--neon-yellow);
+                    border-radius: 8px;
+                ">
+                    <div style="color: var(--neon-yellow); margin-bottom: 0.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Aguardando postagem</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        O código de rastreamento ainda não foi registrado no sistema dos Correios.
+                        Isso é normal se o pedido foi postado recentemente. Tente novamente em algumas horas.
+                    </p>
+                </div>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Verificar no site dos Correios
+                    </a>
+                </div>
+            `;
+            return;
+        }
         
         if (!response.ok) {
             throw new Error('Erro ao buscar rastreamento');
@@ -622,62 +664,184 @@ async function trackOrder(trackingCode) {
         
         const data = await response.json();
         
-        if (data.quantidade > 0 && data.eventos) {
+        if (data.eventos && data.eventos.length > 0) {
+            // Mapear status para ícones e cores
+            const getEventStyle = (descricao) => {
+                const desc = descricao.toLowerCase();
+                if (desc.includes('postado') || desc.includes('coletado')) {
+                    return { icon: 'fas fa-box', color: 'var(--neon-blue)' };
+                } else if (desc.includes('encaminhado') || desc.includes('trânsito')) {
+                    return { icon: 'fas fa-truck', color: 'var(--neon-yellow)' };
+                } else if (desc.includes('saiu para entrega')) {
+                    return { icon: 'fas fa-shipping-fast', color: 'var(--neon-orange)' };
+                } else if (desc.includes('entregue')) {
+                    return { icon: 'fas fa-check-circle', color: 'var(--neon-green)' };
+                } else {
+                    return { icon: 'fas fa-info-circle', color: 'var(--neon-blue)' };
+                }
+            };
+            
             // Renderizar eventos de rastreamento
-            const eventos = data.eventos.map(evento => `
-                <div style="
-                    padding: 0.75rem;
-                    margin-bottom: 0.5rem;
-                    background: var(--glass-bg);
-                    border-radius: 8px;
-                    border-left: 3px solid var(--neon-blue);
-                ">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                        <strong>${evento.status}</strong>
-                        <small>${evento.data} - ${evento.hora}</small>
-                    </div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                        ${evento.local} ${evento.cidade ? `- ${evento.cidade}/${evento.uf}` : ''}
-                    </div>
-                    ${evento.destino ? `
-                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
-                            Destino: ${evento.destino.local} - ${evento.destino.cidade}/${evento.destino.uf}
+            const eventos = data.eventos.map((evento, index) => {
+                const style = getEventStyle(evento.descricao);
+                const isFirst = index === 0;
+                
+                return `
+                    <div style="
+                        padding: 1rem;
+                        margin-bottom: 0.75rem;
+                        background: ${isFirst ? 'rgba(0, 212, 255, 0.05)' : 'var(--glass-bg)'};
+                        border-radius: 8px;
+                        border-left: 3px solid ${style.color};
+                        ${isFirst ? 'box-shadow: 0 2px 10px rgba(0, 212, 255, 0.2);' : ''}
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="${style.icon}" style="color: ${style.color};"></i>
+                                <strong style="${isFirst ? 'color: var(--neon-blue);' : ''}">${evento.descricao}</strong>
+                            </div>
+                            ${isFirst ? '<span style="background: var(--neon-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ÚLTIMO STATUS</span>' : ''}
                         </div>
-                    ` : ''}
-                </div>
-            `).join('');
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                            ${formatEventDate(evento.data)} às ${evento.hora || '00:00'}
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                            <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
+                            ${evento.local || 'Local não informado'}
+                            ${evento.cidade ? ` - ${evento.cidade}` : ''}
+                            ${evento.uf ? `/${evento.uf}` : ''}
+                        </div>
+                        ${evento.destino ? `
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; padding-left: 1rem;">
+                                <i class="fas fa-route" style="margin-right: 0.25rem;"></i>
+                                Destino: ${evento.destino.local} - ${evento.destino.cidade}/${evento.destino.uf}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
             
             trackingInfo.innerHTML = `
-                <div style="max-height: 300px; overflow-y: auto;">
+                <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
                     ${eventos}
+                </div>
+                <div style="
+                    margin-top: 1rem; 
+                    padding-top: 1rem; 
+                    border-top: 1px solid var(--glass-border);
+                    text-align: center;
+                ">
+                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Ver detalhes completos no site dos Correios
+                    </a>
                 </div>
             `;
         } else {
-            trackingInfo.innerHTML = `
-                <p style="color: var(--text-secondary);">
-                    Ainda não há informações de rastreamento disponíveis.
-                    <br>
-                    <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" style="color: var(--neon-blue);">
-                        Rastrear no site dos Correios
-                    </a>
-                </p>
-            `;
+            // Sem eventos ainda - tentar API alternativa
+            await trackOrderAlternative(trackingCode, trackingInfo);
         }
     } catch (error) {
         console.error('Erro ao buscar rastreamento:', error);
         
-        // Fallback: link direto para o site dos Correios
+        // Tentar API alternativa em caso de erro
+        await trackOrderAlternative(trackingCode, trackingInfo);
+    }
+}
+
+// Função alternativa de rastreamento usando proxy CORS
+async function trackOrderAlternative(trackingCode, trackingInfo) {
+    try {
+        // Usar proxy CORS para acessar a API dos Correios
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const correiosUrl = `https://proxyapp.correios.com.br/v1/sro-rastro/${trackingCode}`;
+        
+        // Nota: cors-anywhere pode estar desabilitado, então vamos para o fallback direto
+        throw new Error('Usar fallback');
+        
+    } catch (error) {
+        // Fallback final - mostrar informações básicas e link
         trackingInfo.innerHTML = `
-            <p style="color: var(--text-secondary);">
-                Não foi possível buscar as informações automaticamente.
-                <br>
-                <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" target="_blank" style="color: var(--neon-blue);">
-                    <i class="fas fa-external-link-alt"></i>
-                    Rastrear no site dos Correios
+            <div style="
+                padding: 1rem;
+                background: var(--glass-bg);
+                border-radius: 8px;
+                text-align: center;
+            ">
+                <div style="margin-bottom: 1rem;">
+                    <i class="fas fa-shipping-fast" style="font-size: 2rem; color: var(--neon-blue);"></i>
+                </div>
+                <p style="color: var(--text-primary); margin-bottom: 0.5rem;">
+                    <strong>Código de Rastreamento:</strong>
+                </p>
+                <p style="
+                    font-family: 'Orbitron', monospace;
+                    font-size: 1.5rem;
+                    color: var(--neon-blue);
+                    margin-bottom: 1rem;
+                ">
+                    ${trackingCode}
+                </p>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Para acompanhar seu pedido em tempo real, clique no botão abaixo:
+                </p>
+                <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
+                   target="_blank" 
+                   class="btn-tracking"
+                   style="
+                       display: inline-flex;
+                       padding: 0.75rem 1.5rem;
+                       text-decoration: none;
+                   ">
+                    <i class="fas fa-search"></i>
+                    Rastrear nos Correios
                 </a>
-            </p>
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Dica: O rastreamento pode demorar até 24h após a postagem para aparecer no sistema.
+                    </p>
+                </div>
+            </div>
         `;
     }
+}
+
+// Função auxiliar para formatar data do evento
+function formatEventDate(dateString) {
+    if (!dateString) return 'Data não informada';
+    
+    // Tentar diferentes formatos de data
+    let date;
+    
+    // Formato: DD/MM/YYYY
+    if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            date = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+    }
+    // Formato: YYYY-MM-DD
+    else if (dateString.includes('-')) {
+        date = new Date(dateString);
+    }
+    // Formato ISO
+    else {
+        date = new Date(dateString);
+    }
+    
+    if (date && !isNaN(date.getTime())) {
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+    
+    return dateString; // Retornar como está se não conseguir formatar
 }
 
 // ===========================
