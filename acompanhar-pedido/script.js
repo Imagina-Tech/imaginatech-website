@@ -599,157 +599,7 @@ function updateTimeline(orderData) {
     `).join('');
 }
 
-// ===========================
-// TRACKING FUNCTIONS (COM API RASTREIA ENCOMENDAS)
-// ===========================
-
-async function trackOrder(trackingCode) {
-    if (!trackingCode) return;
-    
-    const trackingInfo = document.getElementById('trackingInfo');
-    if (!trackingInfo) return;
-    
-    trackingInfo.innerHTML = `
-        <div style="text-align: center; padding: 1rem;">
-            <div class="loading-spinner" style="
-                width: 30px;
-                height: 30px;
-                border: 3px solid rgba(0, 212, 255, 0.2);
-                border-top-color: var(--neon-blue);
-                border-radius: 50%;
-                animation: spin 1s ease-in-out infinite;
-                margin: 0 auto 0.5rem;
-            "></div>
-            <p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>
-        </div>
-    `;
-    
-    try {
-        let data = null;
-        let fetchSuccess = false;
-        
-        // Primeira tentativa: API RastreiaEncomendas (funciona bem com CORS)
-        try {
-            console.log('Tentando API RastreiaEncomendas...');
-            const apiUrl = `https://api.rastreiaencomendas.com.br/api/rastreio/v1?codigo=${trackingCode}`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const trackData = await response.json();
-                if (trackData && trackData.eventos && trackData.eventos.length > 0) {
-                    data = {
-                        code: trackingCode,
-                        service: trackData.servico || 'SEDEX',
-                        events: trackData.eventos.map(evento => ({
-                            description: evento.descricao || evento.status,
-                            date: evento.data,
-                            location: evento.local || evento.cidade || ''
-                        }))
-                    };
-                    fetchSuccess = true;
-                    console.log('Sucesso com API RastreiaEncomendas');
-                }
-            }
-        } catch (error) {
-            console.log('Erro com RastreiaEncomendas:', error.message);
-        }
-        
-        // Segunda tentativa: API via proxy CORS simples
-        if (!fetchSuccess) {
-            try {
-                console.log('Tentando via proxy CORS...');
-                // Usar proxy público que funciona
-                const proxyUrl = `https://cors-anywhere.herokuapp.com/https://www.correios.com.br/@@srorastro?objetos=${trackingCode}`;
-                
-                const response = await fetch(proxyUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
-                if (response.ok) {
-                    const correiosData = await response.json();
-                    if (correiosData && correiosData.objetos && correiosData.objetos.length > 0) {
-                        const objeto = correiosData.objetos[0];
-                        if (objeto.eventos) {
-                            data = {
-                                code: trackingCode,
-                                service: 'SEDEX',
-                                events: objeto.eventos.map(evento => ({
-                                    description: evento.descricao,
-                                    date: evento.data + ' ' + evento.hora,
-                                    location: evento.local
-                                }))
-                            };
-                            fetchSuccess = true;
-                            console.log('Sucesso com proxy CORS');
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log('Erro com proxy CORS:', error.message);
-            }
-        }
-        
-        // Terceira tentativa: Widget dos Correios via iframe message
-        if (!fetchSuccess) {
-            try {
-                console.log('Tentando via widget dos Correios...');
-                
-                // Criar iframe temporário
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = `https://rastreamento.correios.com.br/app/resultado.php?objeto=${trackingCode}&mqs=S`;
-                document.body.appendChild(iframe);
-                
-                // Aguardar carregamento e tentar extrair dados
-                await new Promise((resolve) => {
-                    iframe.onload = resolve;
-                    setTimeout(resolve, 3000); // Timeout de 3 segundos
-                });
-                
-                try {
-                    // Tentar acessar o conteúdo (pode falhar por CORS)
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    const eventos = iframeDoc.querySelectorAll('.listEvent');
-                    
-                    if (eventos.length > 0) {
-                        data = {
-                            code: trackingCode,
-                            service: 'SEDEX',
-                            events: Array.from(eventos).map(evento => {
-                                const desc = evento.querySelector('.text') || {};
-                                const info = evento.querySelector('.date') || {};
-                                return {
-                                    description: desc.textContent || 'Status',
-                                    date: info.textContent || '',
-                                    location: ''
-                                };
-                            })
-                        };
-                        fetchSuccess = true;
-                        console.log('Sucesso via iframe');
-                    }
-                } catch (iframeError) {
-                    console.log('Erro ao acessar iframe:', iframeError.message);
-                }
-                
-                document.body.removeChild(iframe);
-            } catch (error) {
-                console.log('Erro com widget:', error.message);
-            }
-        }
-        
-        // Se nenhuma API funcionou, mostrar botão para site dos Correios
-        if (!fetchSuccess) {
+fetchSuccess) {
             console.log('Todas as tentativas falharam');
             throw new Error('Não foi possível obter dados via API');
         }
@@ -972,6 +822,46 @@ async function trackOrder(trackingCode) {
             </div>
         `;
     }
+}
+
+// Funções auxiliares para formatar dados dos Correios
+function formatCorreiosDate(dateString) {
+    if (!dateString) return 'Data não informada';
+    
+    try {
+        // Formato: "2024-01-15T14:30:00"
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        return dateString;
+    }
+}
+
+function formatCorreiosLocation(evento) {
+    if (!evento) return '';
+    
+    let location = '';
+    
+    if (evento.unidade) {
+        location = evento.unidade.nome || '';
+        
+        if (evento.unidade.endereco) {
+            const endereco = evento.unidade.endereco;
+            if (endereco.cidade && endereco.uf) {
+                location += ` - ${endereco.cidade}/${endereco.uf}`;
+            }
+        }
+    } else if (evento.local) {
+        location = evento.local;
+    }
+    
+    return location;
 }
 
 // Função para atualizar o rastreamento
