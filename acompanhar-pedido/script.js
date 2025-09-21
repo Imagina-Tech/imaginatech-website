@@ -600,7 +600,7 @@ function updateTimeline(orderData) {
 }
 
 // ===========================
-// TRACKING FUNCTIONS (MELHOR RASTREIO API)
+// TRACKING FUNCTIONS (COM PROXY CORS)
 // ===========================
 
 async function trackOrder(trackingCode) {
@@ -625,57 +625,46 @@ async function trackOrder(trackingCode) {
     `;
     
     try {
-        // Usar API do Melhor Rastreio (funciona sem CORS)
+        // Usar proxy CORS para contornar restrições
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
         const apiUrl = `https://api.melhorrastreio.com.br/api/v1/trackings/${trackingCode}`;
+        const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
         
-        const response = await fetch(apiUrl, {
+        const response = await fetch(finalUrl, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Accept': 'application/json'
             }
         });
         
         let data;
         
         if (response.ok) {
-            data = await response.json();
-        } else {
-            // Se a API do Melhor Rastreio falhar, tentar buscar direto do Firebase
-            const snapshot = await db.collection('services')
-                .where('trackingCode', '==', trackingCode)
-                .limit(1)
-                .get();
-            
-            if (!snapshot.empty) {
-                const orderData = snapshot.docs[0].data();
-                // Criar estrutura de dados compatível
-                data = {
-                    code: trackingCode,
-                    service: orderData.deliveryMethod === 'sedex' ? 'SEDEX' : 'PAC',
-                    events: []
-                };
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                // Se falhar o parse JSON, tentar API alternativa dos Correios via proxy
+                const correiosUrl = `https://proxyapi.cors.sh/v1/?q=${encodeURIComponent(`https://api.correios.com.br/sro-rastro/${trackingCode}`)}&key=temp_95c9a0b3c2c8c6e7f8e9d5a3b4c7d2e1`;
+                const correiosResponse = await fetch(correiosUrl);
                 
-                // Adicionar eventos baseados nos timestamps do Firebase
-                if (orderData.postedAt) {
-                    data.events.push({
-                        description: 'Objeto postado',
-                        date: orderData.postedAt,
-                        location: 'Agência dos Correios - Rio de Janeiro/RJ'
-                    });
+                if (correiosResponse.ok) {
+                    const correiosData = await correiosResponse.json();
+                    // Converter formato Correios para formato esperado
+                    data = {
+                        code: trackingCode,
+                        service: 'SEDEX',
+                        events: correiosData.objetos?.[0]?.eventos?.map(evento => ({
+                            description: evento.descricao,
+                            date: evento.dtHrCriado,
+                            location: evento.unidade?.endereco?.cidade + '/' + evento.unidade?.endereco?.uf
+                        })) || []
+                    };
+                } else {
+                    throw new Error('Não foi possível obter dados de rastreamento');
                 }
-                
-                if (orderData.status === 'entregue' && orderData.deliveredAt) {
-                    data.events.push({
-                        description: 'Objeto entregue ao destinatário',
-                        date: orderData.deliveredAt,
-                        location: 'Endereço do destinatário'
-                    });
-                }
-            } else {
-                throw new Error('Código não encontrado');
             }
-        }
+        } else {
+            throw new Error('Código não encontrado');
         
         // Processar e exibir dados
         if (data && ((data.events && data.events.length > 0) || data.tracking_events)) {
