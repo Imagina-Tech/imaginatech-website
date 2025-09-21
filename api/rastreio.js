@@ -2,20 +2,19 @@
 // ARQUIVO: api/rastreio.js
 // LOCALIZAÇÃO: Criar pasta "api" na raiz do projeto
 // FUNÇÃO: Serverless para buscar rastreamento dos Correios
-// DEPLOY: Vercel (gratuito)
+// VERSÃO: 2.0 - Usando API Cainiao Global (funciona com Correios)
 // ==================================================
 
 export default async function handler(req, res) {
-  // Habilitar CORS para permitir acesso do seu site
+  // Habilitar CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Temporariamente permitir todos para teste
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -29,7 +28,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Validar formato do código (brasileiro)
+  // Validar formato do código
   const codigoRegex = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/;
   if (!codigoRegex.test(codigo)) {
     return res.status(400).json({ 
@@ -40,139 +39,226 @@ export default async function handler(req, res) {
   try {
     console.log(`Buscando rastreamento para: ${codigo}`);
     
-    // Usar Web Scraping do site dos Correios (mais confiável)
-    const trackingUrl = `https://www.linkcorreios.com.br/?id=${codigo}`;
+    // Método 1: Usar API Cainiao (funciona globalmente incluindo Correios)
+    const cainiaoUrl = `https://global.cainiao.com/trackWebQueryRpc/getTrackingInfo.json?mailNos=${codigo}&lang=pt-BR`;
     
-    // Buscar a página HTML
-    const response = await fetch(trackingUrl, {
+    const cainiaoResponse = await fetch(cainiaoUrl, {
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://global.cainiao.com/'
       }
     });
 
-    if (!response.ok) {
-      throw new Error('Erro ao buscar dados de rastreamento');
-    }
-
-    const html = await response.text();
-    
-    // Parser simples para extrair dados do HTML
-    // Procurar por padrões conhecidos no HTML
-    const eventos = [];
-    
-    // Regex para encontrar eventos no HTML
-    const eventRegex = /<li[^>]*class="[^"]*linha_status[^"]*"[^>]*>(.*?)<\/li>/gs;
-    const matches = html.matchAll(eventRegex);
-    
-    for (const match of matches) {
-      const eventHtml = match[1];
+    if (cainiaoResponse.ok) {
+      const cainiaoData = await cainiaoResponse.json();
       
-      // Extrair descrição
-      const descMatch = eventHtml.match(/<strong>([^<]+)<\/strong>/);
-      const descricao = descMatch ? descMatch[1].trim() : 'Status';
-      
-      // Extrair data/hora
-      const dateMatch = eventHtml.match(/(\d{2}\/\d{2}\/\d{4})/);
-      const timeMatch = eventHtml.match(/(\d{2}:\d{2})/);
-      const dataHora = (dateMatch && timeMatch) ? `${dateMatch[1]} ${timeMatch[1]}` : '';
-      
-      // Extrair local
-      const localMatch = eventHtml.match(/Local:\s*([^<]+)/);
-      const local = localMatch ? localMatch[1].trim() : '';
-      
-      if (descricao) {
-        eventos.push({
-          descricao: descricao,
-          dtHrCriado: dataHora,
-          unidade: local ? { nome: local } : null
-        });
-      }
-    }
-    
-    // Se não encontrou eventos pelo parser, tentar buscar via API proxy alternativa
-    if (eventos.length === 0) {
-      console.log('Parser HTML não encontrou eventos, tentando API alternativa...');
-      
-      // Tentar API pública alternativa
-      const apiUrl = `https://api.rastrearpedidos.com.br/api/rastreio/v1?codigo=${codigo}`;
-      
-      try {
-        const apiResponse = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          },
-          timeout: 5000
-        });
+      // Processar resposta da Cainiao
+      if (cainiaoData && cainiaoData.success && cainiaoData.data && cainiaoData.data.length > 0) {
+        const tracking = cainiaoData.data[0];
         
-        if (apiResponse.ok) {
-          const apiData = await apiResponse.json();
+        if (tracking.detailList && tracking.detailList.length > 0) {
+          // Converter formato Cainiao para formato esperado
+          const eventos = tracking.detailList.map(detail => ({
+            descricao: detail.desc || detail.status,
+            dtHrCriado: detail.time || detail.date,
+            unidade: {
+              nome: detail.standerdDesc || detail.location || 'CORREIOS'
+            }
+          }));
           
-          // Formatar resposta no formato esperado
           return res.status(200).json({
             objetos: [{
               codObjeto: codigo,
-              eventos: apiData.eventos || [],
-              tipoPostal: { categoria: 'SEDEX' }
+              eventos: eventos,
+              tipoPostal: { 
+                categoria: tracking.productType || 'SEDEX' 
+              }
             }]
           });
         }
-      } catch (apiError) {
-        console.log('API alternativa também falhou:', apiError.message);
+      }
+    }
+    
+    console.log('Cainiao falhou, tentando método alternativo...');
+    
+    // Método 2: Usar API alternativa (17Track public endpoint)
+    const trackUrl = `https://t.17track.net/restapi/track`;
+    
+    const trackResponse = await fetch(trackUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Origin': 'https://www.17track.net'
+      },
+      body: JSON.stringify({
+        nums: [codigo],
+        fc: 0,
+        sc: 0
+      })
+    });
+    
+    if (trackResponse.ok) {
+      const trackData = await trackResponse.json();
+      
+      if (trackData && trackData.ret && trackData.ret === "1" && trackData.msg && trackData.msg.length > 0) {
+        const tracking = trackData.msg[0];
+        
+        if (tracking.z1 && tracking.z1.length > 0) {
+          // Converter formato 17track para formato esperado
+          const eventos = tracking.z1.map(event => ({
+            descricao: event.d || 'Status atualizado',
+            dtHrCriado: event.a,
+            unidade: {
+              nome: event.c || 'CORREIOS'
+            }
+          }));
+          
+          return res.status(200).json({
+            objetos: [{
+              codObjeto: codigo,
+              eventos: eventos,
+              tipoPostal: { 
+                categoria: 'SEDEX' 
+              }
+            }]
+          });
+        }
+      }
+    }
+    
+    console.log('17Track falhou, tentando scraping direto...');
+    
+    // Método 3: Web scraping direto do site dos Correios
+    const correiosPageUrl = `https://rastreamento.correios.com.br/app/resultado.php?objeto=${codigo}&mqs=S`;
+    
+    const pageResponse = await fetch(correiosPageUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    });
+    
+    if (pageResponse.ok) {
+      const html = await pageResponse.text();
+      
+      // Parser HTML para encontrar eventos
+      const eventos = [];
+      
+      // Regex para encontrar a tabela de eventos
+      const tableRegex = /<table[^>]*class="[^"]*sro-table[^"]*"[^>]*>(.*?)<\/table>/s;
+      const tableMatch = html.match(tableRegex);
+      
+      if (tableMatch) {
+        // Extrair linhas da tabela
+        const rowRegex = /<tr[^>]*>(.*?)<\/tr>/gs;
+        const rows = tableMatch[1].matchAll(rowRegex);
+        
+        for (const row of rows) {
+          const rowContent = row[1];
+          
+          // Extrair dados da linha
+          const cellRegex = /<td[^>]*>(.*?)<\/td>/gs;
+          const cells = Array.from(rowContent.matchAll(cellRegex));
+          
+          if (cells.length >= 2) {
+            // Limpar HTML das células
+            const cleanText = (html) => {
+              return html.replace(/<[^>]*>/g, '').trim();
+            };
+            
+            const dateTime = cleanText(cells[0][1]);
+            const description = cleanText(cells[1][1]);
+            const location = cells[2] ? cleanText(cells[2][1]) : '';
+            
+            if (description) {
+              eventos.push({
+                descricao: description,
+                dtHrCriado: dateTime,
+                unidade: {
+                  nome: location || 'CORREIOS'
+                }
+              });
+            }
+          }
+        }
       }
       
-      // Se ainda não tem eventos, retornar mensagem apropriada
-      return res.status(200).json({
-        objetos: [{
-          codObjeto: codigo,
-          mensagem: 'Objeto postado recentemente. Aguarde a atualização do sistema.',
-          eventos: []
-        }]
-      });
+      if (eventos.length > 0) {
+        return res.status(200).json({
+          objetos: [{
+            codObjeto: codigo,
+            eventos: eventos,
+            tipoPostal: { 
+              categoria: 'SEDEX' 
+            }
+          }]
+        });
+      }
     }
     
-    // Formatar resposta no formato esperado pelo frontend
-    const responseData = {
+    // Se todos os métodos falharam, buscar via proxy de API
+    console.log('Todos métodos falharam, tentando último recurso...');
+    
+    // Método 4: Usar serviço de proxy API
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://rastreamento.correios.com.br/app/resultado.php?objeto=${codigo}&mqs=S`)}`;
+    
+    const proxyResponse = await fetch(proxyUrl);
+    
+    if (proxyResponse.ok) {
+      const proxyData = await proxyResponse.json();
+      
+      if (proxyData.contents) {
+        const html = proxyData.contents;
+        
+        // Buscar dados no HTML
+        const statusRegex = /class="[^"]*status[^"]*"[^>]*>([^<]+)</gi;
+        const matches = Array.from(html.matchAll(statusRegex));
+        
+        if (matches.length > 0) {
+          const eventos = [{
+            descricao: matches[0][1].trim(),
+            dtHrCriado: new Date().toISOString(),
+            unidade: {
+              nome: 'Verificar no site dos Correios'
+            }
+          }];
+          
+          return res.status(200).json({
+            objetos: [{
+              codObjeto: codigo,
+              eventos: eventos,
+              tipoPostal: { 
+                categoria: 'SEDEX' 
+              }
+            }]
+          });
+        }
+      }
+    }
+    
+    // Se absolutamente nada funcionou
+    return res.status(200).json({
       objetos: [{
         codObjeto: codigo,
-        eventos: eventos,
-        tipoPostal: {
-          categoria: 'SEDEX'
+        mensagem: 'Sistema temporariamente indisponível. Tente novamente em alguns minutos.',
+        eventos: [],
+        tipoPostal: { 
+          categoria: 'SEDEX' 
         }
       }]
-    };
-    
-    return res.status(200).json(responseData);
+    });
     
   } catch (error) {
-    console.error('Erro ao buscar rastreamento:', error);
-    
-    // Tentar última alternativa: retornar dados simulados para teste
-    // REMOVA ESTA SEÇÃO EM PRODUÇÃO
-    if (codigo === 'TEST00000000BR') {
-      return res.status(200).json({
-        objetos: [{
-          codObjeto: codigo,
-          eventos: [
-            {
-              descricao: 'Objeto postado',
-              dtHrCriado: new Date().toISOString(),
-              unidade: { nome: 'AC RIO DE JANEIRO' }
-            }
-          ],
-          tipoPostal: { categoria: 'SEDEX' }
-        }]
-      });
-    }
+    console.error('Erro crítico:', error);
     
     return res.status(500).json({ 
       error: 'Erro ao buscar informações de rastreamento',
       message: error.message,
-      details: 'As APIs dos Correios podem estar temporariamente indisponíveis'
+      details: 'Tente novamente em alguns instantes'
     });
   }
 }
-
