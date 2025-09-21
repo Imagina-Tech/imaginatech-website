@@ -600,7 +600,7 @@ function updateTimeline(orderData) {
 }
 
 // ===========================
-// TRACKING FUNCTIONS (CORREIOS + LINK&TRACK API)
+// TRACKING FUNCTIONS (CORREIOS - WONCA LABS API)
 // ===========================
 
 async function trackOrder(trackingCode) {
@@ -623,6 +623,405 @@ async function trackOrder(trackingCode) {
             <p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>
         </div>
     `;
+    
+    try {
+        // API Wonca Labs - Rastreamento real dos Correios
+        const response = await fetch('https://api-labs.wonca.com.br/wonca.labs.v1.LabsService/Track', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Apikey U3Hiku0woQJr57OqqvYTI4hBouz8zxb9cpBlYhPNMLg'
+            },
+            body: JSON.stringify({
+                code: trackingCode
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Verificar se há dados de rastreamento
+        if (data && data.events && data.events.length > 0) {
+            // Ordenar eventos por data (mais recente primeiro)
+            const eventos = data.events.sort((a, b) => {
+                return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
+            });
+            
+            // Mapear eventos para exibição
+            const eventosHTML = eventos.map((evento, index) => {
+                const isFirst = index === 0;
+                const style = getTrackingEventStyle(evento.description || evento.status);
+                
+                // Formatar data e hora
+                let dataHora = '';
+                if (evento.date) {
+                    const date = new Date(evento.date);
+                    dataHora = date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                } else if (evento.timestamp) {
+                    const date = new Date(evento.timestamp);
+                    dataHora = date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                }
+                
+                // Formatar local
+                let local = evento.location || evento.local || '';
+                if (evento.city) local += (local ? ' - ' : '') + evento.city;
+                if (evento.state || evento.uf) local += '/' + (evento.state || evento.uf);
+                
+                return `
+                    <div style="
+                        padding: 1rem;
+                        margin-bottom: 0.75rem;
+                        background: ${isFirst ? 'rgba(0, 212, 255, 0.05)' : 'var(--glass-bg)'};
+                        border-radius: 8px;
+                        border-left: 3px solid ${style.color};
+                        ${isFirst ? 'box-shadow: 0 2px 10px rgba(0, 212, 255, 0.2);' : ''}
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="${style.icon}" style="color: ${style.color};"></i>
+                                <strong style="${isFirst ? 'color: var(--neon-blue);' : ''}">${evento.description || evento.status || 'Status'}</strong>
+                            </div>
+                            ${isFirst ? '<span style="background: var(--neon-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ÚLTIMO STATUS</span>' : ''}
+                        </div>
+                        ${dataHora ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                                ${dataHora}
+                            </div>
+                        ` : ''}
+                        ${local ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
+                                ${local}
+                            </div>
+                        ` : ''}
+                        ${evento.details ? `
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; padding-left: 1rem;">
+                                ${evento.details}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            // Informações do serviço
+            const serviceInfo = data.service ? `
+                <div style="
+                    margin-bottom: 1rem;
+                    padding: 0.75rem;
+                    background: var(--glass-bg);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <i class="fas fa-shipping-fast" style="color: var(--neon-blue);"></i>
+                    <span style="color: var(--text-secondary);">Serviço:</span>
+                    <strong>${data.service}</strong>
+                </div>
+            ` : '';
+            
+            trackingInfo.innerHTML = `
+                ${serviceInfo}
+                <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                    ${eventosHTML}
+                </div>
+                <div style="
+                    margin-top: 1rem; 
+                    padding-top: 1rem; 
+                    border-top: 1px solid var(--glass-border);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <small style="color: var(--text-secondary);">
+                        <i class="fas fa-sync-alt"></i>
+                        Total de ${data.events.length} evento(s)
+                    </small>
+                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Ver nos Correios
+                    </a>
+                </div>
+            `;
+            
+        } else if (data && data.error) {
+            // Erro retornado pela API
+            trackingInfo.innerHTML = `
+                <div style="
+                    padding: 1rem;
+                    background: rgba(255, 0, 85, 0.1);
+                    border: 1px solid var(--neon-red);
+                    border-radius: 8px;
+                ">
+                    <div style="color: var(--neon-red); margin-bottom: 0.5rem;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Erro ao buscar pedido</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        ${data.error || 'Código de rastreamento não encontrado'}
+                    </p>
+                </div>
+            `;
+            
+        } else {
+            // Código não encontrado ou sem eventos
+            trackingInfo.innerHTML = `
+                <div style="
+                    padding: 1rem;
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid var(--neon-yellow);
+                    border-radius: 8px;
+                ">
+                    <div style="color: var(--neon-yellow); margin-bottom: 0.5rem;">
+                        <i class="fas fa-clock"></i>
+                        <strong>Aguardando postagem</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0;">
+                        O código <strong>${trackingCode}</strong> ainda não possui informações de rastreamento.
+                    </p>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+                        Isso é normal se o pedido foi postado recentemente. 
+                        O rastreamento pode demorar até 24 horas para aparecer após a postagem.
+                    </p>
+                </div>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <button onclick="refreshOrder()" style="
+                        padding: 0.5rem 1rem;
+                        background: var(--glass-bg);
+                        color: var(--neon-blue);
+                        border: 1px solid var(--neon-blue);
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">
+                        <i class="fas fa-redo"></i>
+                        Tentar Novamente
+                    </button>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Erro ao buscar rastreamento:', error);
+        
+        // Fallback: Usar iframe do Site Rastreio
+        trackingInfo.innerHTML = `
+            <div style="
+                background: var(--glass-bg);
+                border-radius: 8px;
+                overflow: hidden;
+            ">
+                <!-- Iframe do Site Rastreio como fallback -->
+                <iframe 
+                    src="https://www.siterastreio.com.br/${trackingCode}"
+                    style="
+                        width: 100%;
+                        height: 600px;
+                        border: none;
+                        background: white;
+                        display: block;
+                    "
+                    title="Rastreamento de Pedido"
+                    onload="this.style.opacity = '1';"
+                ></iframe>
+                
+                <div style="
+                    padding: 1rem;
+                    background: var(--card-bg);
+                    border-top: 1px solid var(--glass-border);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Rastreamento alternativo
+                    </div>
+                    <a href="https://www.siterastreio.com.br/${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Abrir em nova aba
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+}) local += ` - ${evento.cidade}`;
+                if (evento.uf) local += `/${evento.uf}`;
+                
+                return `
+                    <div style="
+                        padding: 1rem;
+                        margin-bottom: 0.75rem;
+                        background: ${isFirst ? 'rgba(0, 212, 255, 0.05)' : 'var(--glass-bg)'};
+                        border-radius: 8px;
+                        border-left: 3px solid ${style.color};
+                        ${isFirst ? 'box-shadow: 0 2px 10px rgba(0, 212, 255, 0.2);' : ''}
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="${style.icon}" style="color: ${style.color};"></i>
+                                <strong style="${isFirst ? 'color: var(--neon-blue);' : ''}">${evento.status}</strong>
+                            </div>
+                            ${isFirst ? '<span style="background: var(--neon-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ÚLTIMO STATUS</span>' : ''}
+                        </div>
+                        ${dataHora ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                                ${dataHora}
+                            </div>
+                        ` : ''}
+                        ${local ? `
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
+                                ${local}
+                            </div>
+                        ` : ''}
+                        ${evento.subStatus && evento.subStatus.length > 0 ? `
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; padding-left: 1rem;">
+                                ${evento.subStatus.join('<br>')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            // Informações do serviço
+            const serviceInfo = data.servico ? `
+                <div style="
+                    margin-bottom: 1rem;
+                    padding: 0.75rem;
+                    background: var(--glass-bg);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <i class="fas fa-shipping-fast" style="color: var(--neon-blue);"></i>
+                    <span style="color: var(--text-secondary);">Serviço:</span>
+                    <strong>${data.servico}</strong>
+                </div>
+            ` : '';
+            
+            trackingInfo.innerHTML = `
+                ${serviceInfo}
+                <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                    ${eventos}
+                </div>
+                <div style="
+                    margin-top: 1rem; 
+                    padding-top: 1rem; 
+                    border-top: 1px solid var(--glass-border);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <small style="color: var(--text-secondary);">
+                        <i class="fas fa-sync-alt"></i>
+                        Total de ${data.quantidade || data.eventos.length} evento(s)
+                    </small>
+                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Ver nos Correios
+                    </a>
+                </div>
+            `;
+        } else if (data && data.quantidade === 0) {
+            // Código ainda não encontrado no sistema
+            trackingInfo.innerHTML = `
+                <div style="
+                    padding: 1rem;
+                    background: rgba(255, 215, 0, 0.1);
+                    border: 1px solid var(--neon-yellow);
+                    border-radius: 8px;
+                ">
+                    <div style="color: var(--neon-yellow); margin-bottom: 0.5rem;">
+                        <i class="fas fa-clock"></i>
+                        <strong>Aguardando postagem</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0;">
+                        O código <strong>${trackingCode}</strong> ainda não foi registrado no sistema dos Correios.
+                    </p>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+                        Isso é normal se o pedido foi postado recentemente. 
+                        O rastreamento pode demorar até 24 horas para aparecer após a postagem.
+                    </p>
+                </div>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <button onclick="refreshOrder()" style="
+                        padding: 0.5rem 1rem;
+                        background: var(--glass-bg);
+                        color: var(--neon-blue);
+                        border: 1px solid var(--neon-blue);
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">
+                        <i class="fas fa-redo"></i>
+                        Tentar Novamente
+                    </button>
+                </div>
+            `;
+        } else {
+            throw new Error('Resposta inválida da API');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao buscar rastreamento, usando iframe:', error);
+        
+        // Solução que funciona: Usar iframe do Site Rastreio
+        trackingInfo.innerHTML = `
+            <div style="
+                background: var(--glass-bg);
+                border-radius: 8px;
+                overflow: hidden;
+            ">
+                <!-- Iframe do Site Rastreio integrado diretamente -->
+                <iframe 
+                    src="https://www.siterastreio.com.br/${trackingCode}"
+                    style="
+                        width: 100%;
+                        height: 600px;
+                        border: none;
+                        background: white;
+                        display: block;
+                    "
+                    title="Rastreamento de Pedido"
+                    onload="this.style.opacity = '1';"
+                ></iframe>
+                
+                <div style="
+                    padding: 1rem;
+                    background: var(--card-bg);
+                    border-top: 1px solid var(--glass-border);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Rastreamento fornecido por Site Rastreio
+                    </div>
+                    <a href="https://www.siterastreio.com.br/${trackingCode}" 
+                       target="_blank" 
+                       style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Abrir em nova aba
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+}
     
     try {
         // API Link&Track - Funcional com credenciais de teste
