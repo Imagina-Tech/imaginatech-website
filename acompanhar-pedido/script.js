@@ -416,6 +416,31 @@ function showOrderDetails(orderId, orderData) {
     
     const statusInfo = STATUS_MESSAGES[actualStatus] || STATUS_MESSAGES['pendente'];
     
+    // Criar mensagem personalizada baseada no status e método de entrega
+    let customMessage = statusInfo.message;
+    
+    // Se o pedido está concluído, personalizar mensagem por método de entrega
+    if (orderData.status === 'concluido') {
+        if (orderData.deliveryMethod === 'sedex') {
+            // Para SEDEX - aguardando postagem
+            customMessage = 'Seu pedido foi concluído e está aguardando postagem nos Correios.';
+        } else if (orderData.deliveryMethod === 'retirada') {
+            // Para retirada - aguardando liberação
+            customMessage = 'Seu pedido foi concluído e está sendo preparado para retirada.';
+        } else if (orderData.deliveryMethod === 'uber') {
+            // Para Uber/99 - aguardando envio
+            customMessage = 'Seu pedido foi concluído e está aguardando envio via Uber/99.';
+        } else {
+            // Método indefinido
+            customMessage = 'Seu pedido foi concluído e está aguardando definição do método de entrega.';
+        }
+    }
+    
+    // Se está em "retirada" e é SEDEX, está em transporte
+    if (orderData.status === 'retirada' && orderData.deliveryMethod === 'sedex') {
+        customMessage = 'Seu pedido foi postado e está em transporte pelos Correios.';
+    }
+    
     // Verificar se a data está indefinida
     const days = orderData.dateUndefined ? null : calculateDaysRemaining(orderData.dueDate);
     const daysText = orderData.dateUndefined ? 'Prazo a definir' : formatDaysText(days);
@@ -466,7 +491,7 @@ function showOrderDetails(orderId, orderData) {
             border-left: 3px solid var(--neon-blue);
         ">
             <i class="${statusInfo.icon}" style="color: var(--neon-blue); margin-right: 0.5rem;"></i>
-            ${statusInfo.message}
+            ${customMessage}
         </div>
         
         <div class="order-details">
