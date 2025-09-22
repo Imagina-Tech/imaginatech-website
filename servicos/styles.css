@@ -488,12 +488,15 @@ body {
     border-radius: 15px;
     padding: 1.5rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    justify-content: center;
+    gap: 1rem;
     transition: all 0.3s;
     position: relative;
     overflow: hidden;
-    min-height: 100px;
+    min-height: 140px;
+    text-align: center;
 }
 
 .stat-card.clickable { cursor: pointer; }
@@ -516,20 +519,38 @@ body {
 .stat-card.active { border-color: var(--neon-blue); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
 
 .stat-icon {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: white;
     z-index: 1;
+    margin: 0 auto;
 }
 
-.stat-content { flex: 1; z-index: 1; }
-.stat-number { font: 700 2rem/1 inherit; margin-bottom: 0.25rem; }
-.stat-label { color: var(--text-secondary); font-size: 0.85rem; }
+.stat-content { 
+    flex: 1; 
+    z-index: 1; 
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.stat-number { 
+    font: 700 1.8rem/1 inherit; 
+    margin: 0;
+}
+.stat-label { 
+    color: var(--text-secondary); 
+    font-size: 0.8rem;
+    white-space: normal;
+    line-height: 1.2;
+    max-width: 100%;
+}
 
 /* ===========================
    SERVICES GRID
