@@ -101,22 +101,50 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loadingOverlay').classList.add('hidden');
     }, 1000);
     
-    // Verificar foco da janela para detectar mudanças de autenticação
+    // Variáveis de controle de estado
     let wasLoggedIn = false;
+    let isProcessingAuth = false;
     
-    window.addEventListener('focus', () => {
-        // Quando a janela ganhar foco, verificar se ainda está logado
-        if (wasLoggedIn && !auth.currentUser) {
-            console.log('Detectado logout em outra aba, tentando recuperar sessão...');
-            // Forçar verificação do estado de autenticação
-            auth.getRedirectResult().catch(() => {
-                // Ignorar erro, apenas forçar atualização
-            });
+    // Verificar sessão salva ao carregar a página
+    const savedUser = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
+    if (savedUser && savedUser.uid) {
+        console.log('Sessão salva encontrada para:', savedUser.email);
+        // Mostrar interface com dados salvos enquanto Firebase valida
+        currentUser = savedUser;
+        showCodeSection();
+    }
+    
+    // Verificar foco da janela para detectar mudanças
+    window.addEventListener('focus', async () => {
+        if (currentUser && !isProcessingAuth) {
+            console.log('Janela em foco, verificando autenticação...');
+            
+            // Verificar se ainda está autenticado
+            const authUser = auth.currentUser;
+            
+            if (!authUser) {
+                console.log('Sessão perdida, tentando recuperar...');
+                
+                // Se temos dados salvos, manter interface funcionando
+                const saved = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
+                if (saved && saved.uid) {
+                    currentUser = saved;
+                    // Não mudar a interface, manter como está
+                    console.log('Mantendo sessão local para:', saved.email);
+                }
+            } else {
+                console.log('Sessão ativa confirmada');
+                currentUser = authUser;
+            }
         }
     });
     
-    // Auth state observer
+    // Auth state observer com proteção contra loops
     auth.onAuthStateChanged(async (user) => {
+        // Evitar processar mudanças múltiplas
+        if (isProcessingAuth) return;
+        isProcessingAuth = true;
+        
         console.log('Estado de autenticação mudou:', user ? 'Logado como ' + user.email : 'Não logado');
         
         if (user) {
@@ -124,46 +152,57 @@ document.addEventListener('DOMContentLoaded', () => {
             wasLoggedIn = true;
             
             // Salvar informações do usuário localmente
-            localStorage.setItem('acompanhar_user', JSON.stringify({
+            const userData = {
                 uid: user.uid,
                 email: user.email,
-                name: user.displayName,
-                photo: user.photoURL
-            }));
+                displayName: user.displayName,
+                photoURL: user.photoURL
+            };
+            localStorage.setItem('acompanhar_user', JSON.stringify(userData));
             
             showCodeSection();
             
-            // Usar try-catch para evitar erros de permissão
+            // Carregar histórico com proteção
             try {
                 await loadUserOrders();
             } catch (error) {
                 console.warn('Erro ao carregar histórico:', error);
-                // Não fazer logout, apenas esconder histórico
                 document.getElementById('myOrdersSection').style.display = 'none';
             }
         } else {
-            // Verificar se é um logout real ou apenas um estado transitório
-            if (wasLoggedIn) {
-                console.log('Possível logout detectado, aguardando confirmação...');
+            // Se havia um usuário antes, tentar manter a sessão
+            if (wasLoggedIn || currentUser) {
+                console.log('Possível logout detectado, verificando...');
                 
-                // Aguardar um pouco antes de decidir se é logout real
-                setTimeout(() => {
-                    if (!auth.currentUser) {
-                        console.log('Logout confirmado');
-                        currentUser = null;
-                        wasLoggedIn = false;
-                        localStorage.removeItem('acompanhar_user');
-                        showLoginSection();
-                    } else {
-                        console.log('Falso alarme, usuário ainda logado');
-                    }
-                }, 1000);
-            } else {
-                // Primeira vez carregando, não há usuário
+                const saved = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
+                if (saved && saved.uid) {
+                    console.log('Mantendo sessão com dados salvos');
+                    currentUser = saved;
+                    // Não mudar interface, continuar funcionando
+                    
+                    // Aguardar e verificar novamente
+                    setTimeout(() => {
+                        if (!auth.currentUser && currentUser) {
+                            console.log('Sessão mantida localmente');
+                        }
+                        isProcessingAuth = false;
+                    }, 1500);
+                    return;
+                }
+            }
+            
+            // Só fazer logout real se não houver dados salvos
+            if (!currentUser) {
                 currentUser = null;
+                wasLoggedIn = false;
                 showLoginSection();
             }
         }
+        
+        // Resetar flag após processar
+        setTimeout(() => {
+            isProcessingAuth = false;
+        }, 500);
     });
     
     // Code input formatter
@@ -322,8 +361,8 @@ async function verifyCode() {
         return;
     }
     
-    // Verificar se está realmente autenticado
-    const user = auth.currentUser;
+    // Verificar se há usuário (Firebase ou salvo localmente)
+    const user = auth.currentUser || currentUser;
     if (!user) {
         console.log('Usuário não autenticado ao verificar código');
         showToast('Faça login primeiro', 'error');
@@ -343,7 +382,7 @@ async function verifyCode() {
     try {
         console.log('Buscando pedido com código:', code);
         
-        // Tentar buscar o pedido
+        // Tentar buscar o pedido - usar get() ao invés de onSnapshot para evitar listeners
         const snapshot = await db.collection('services')
             .where('orderCode', '==', code)
             .limit(1)
@@ -369,8 +408,12 @@ async function verifyCode() {
             // Show order details
             showOrderDetails(doc.id, doc.data());
             
-            // Listen for real-time updates
-            startOrderListener(doc.id);
+            // Listen for real-time updates com proteção
+            try {
+                startOrderListener(doc.id);
+            } catch (error) {
+                console.warn('Listener não disponível, modo somente leitura');
+            }
             
             showToast('Pedido encontrado!', 'success');
             
@@ -394,14 +437,15 @@ async function verifyCode() {
         
         // Verificar diferentes tipos de erro
         if (error.code === 'permission-denied' || error.message.includes('permission')) {
-            // Tentar re-autenticar
-            const currentAuth = auth.currentUser;
-            if (!currentAuth) {
+            // Verificar se temos dados salvos
+            const savedUser = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
+            if (savedUser && savedUser.uid) {
+                console.log('Erro de permissão mas temos sessão salva, tentando novamente...');
+                currentUser = savedUser;
+                showToast('Erro de conexão. Tente novamente.', 'error');
+            } else {
                 showToast('Sessão expirada. Faça login novamente.', 'error');
                 showLoginSection();
-            } else {
-                showToast('Erro de permissão. Recarregue a página e tente novamente.', 'error');
-                console.log('Usuário autenticado mas sem permissão:', currentAuth.email);
             }
         } else if (error.code === 'unavailable') {
             showToast('Serviço temporariamente indisponível. Tente novamente.', 'error');
