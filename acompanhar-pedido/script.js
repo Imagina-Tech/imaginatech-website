@@ -640,6 +640,158 @@ function refreshOrder() {
 }
 
 // ===========================
+// USER ORDERS HISTORY - REVISADO
+// ===========================
+
+async function loadUserOrders() {
+    if (!currentUser) return;
+    
+    try {
+        // Buscar documento do usuário específico pela conta Google
+        const userRef = db.collection('user_orders').doc(currentUser.uid);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            const orderCodes = userData.orderCodes || [];
+            
+            if (orderCodes.length > 0) {
+                await displayUserOrders(orderCodes);
+            } else {
+                // Esconder seção se não houver pedidos
+                document.getElementById('myOrdersSection').style.display = 'none';
+            }
+        } else {
+            // Criar documento do usuário se não existir
+            await userRef.set({
+                uid: currentUser.uid,
+                email: currentUser.email,
+                name: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                orderCodes: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+            document.getElementById('myOrdersSection').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar pedidos:', error);
+        document.getElementById('myOrdersSection').style.display = 'none';
+    }
+}
+
+async function displayUserOrders(orderCodes) {
+    const ordersList = document.getElementById('ordersList');
+    const myOrdersSection = document.getElementById('myOrdersSection');
+    
+    if (!orderCodes || orderCodes.length === 0) {
+        myOrdersSection.style.display = 'none';
+        return;
+    }
+    
+    myOrdersSection.style.display = 'block';
+    
+    // Buscar detalhes de cada pedido (máximo 5 mais recentes)
+    const orders = [];
+    const recentCodes = orderCodes.slice(-5).reverse(); // Pegar últimos 5 e inverter para mostrar mais recente primeiro
+    
+    for (const code of recentCodes) {
+        try {
+            const snapshot = await db.collection('services')
+                .where('orderCode', '==', code)
+                .limit(1)
+                .get();
+            
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                orders.push({
+                    code: code,
+                    data: doc.data(),
+                    id: doc.id
+                });
+            }
+        } catch (error) {
+            console.error(`Erro ao buscar pedido ${code}:`, error);
+        }
+    }
+    
+    if (orders.length === 0) {
+        myOrdersSection.style.display = 'none';
+        return;
+    }
+    
+    // Renderizar lista de pedidos
+    ordersList.innerHTML = orders.map(order => `
+        <div class="order-item" onclick="quickLoadOrder('${order.code}')">
+            <div>
+                <div class="order-item-code">#${order.code}</div>
+                <div class="order-item-date">${order.data.name || 'Sem nome'}</div>
+            </div>
+            <div class="status-badge status-${order.data.status}" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+                ${STATUS_MESSAGES[order.data.status]?.text || 'Status desconhecido'}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function quickLoadOrder(code) {
+    document.getElementById('orderCode').value = code;
+    await verifyCode();
+}
+
+async function saveOrderToHistory(code) {
+    if (!currentUser || !code) return;
+    
+    try {
+        const userRef = db.collection('user_orders').doc(currentUser.uid);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            let orderCodes = userData.orderCodes || [];
+            
+            // Adicionar código apenas se não existir
+            if (!orderCodes.includes(code)) {
+                orderCodes.push(code);
+                
+                // Manter apenas os últimos 20 pedidos
+                if (orderCodes.length > 20) {
+                    orderCodes = orderCodes.slice(-20);
+                }
+                
+                await userRef.update({
+                    orderCodes: orderCodes,
+                    lastOrderViewed: code,
+                    lastOrderViewedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                
+                // Recarregar lista de pedidos
+                await loadUserOrders();
+            }
+        } else {
+            // Criar documento se não existir
+            await userRef.set({
+                uid: currentUser.uid,
+                email: currentUser.email,
+                name: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                orderCodes: [code],
+                lastOrderViewed: code,
+                lastOrderViewedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+            
+            // Recarregar lista de pedidos
+            await loadUserOrders();
+        }
+    } catch (error) {
+        console.error('Erro ao salvar no histórico:', error);
+    }
+}
+
+// ===========================
 // UTILITY FUNCTIONS
 // ===========================
 
