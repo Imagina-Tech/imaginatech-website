@@ -307,44 +307,7 @@ function showOrderDetails(orderId, orderData) {
     const deliveryIcon = DELIVERY_ICONS[orderData.deliveryMethod] || DELIVERY_ICONS['definir'];
     const deliveryText = formatDeliveryMethod(orderData.deliveryMethod);
     
-    let trackingSection = '';
-    
-    // Se for SEDEX e tiver código de rastreio, mostrar código com botão para Correios
-    if (orderData.deliveryMethod === 'sedex' && orderData.trackingCode) {
-        trackingSection = `
-            <div class="tracking-section" style="
-                margin-top: 1.5rem;
-                padding: 1rem;
-                background: rgba(0, 212, 255, 0.1);
-                border: 1px solid var(--neon-blue);
-                border-radius: 10px;
-            ">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="color: var(--neon-blue); font-weight: 600; margin-bottom: 0.5rem;">
-                            <i class="fas fa-shipping-fast"></i>
-                            Código de Rastreamento SEDEX
-                        </div>
-                        <div style="font-family: 'Orbitron', monospace; font-size: 1.2rem;">
-                            ${orderData.trackingCode}
-                        </div>
-                    </div>
-                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${orderData.trackingCode}" 
-                       target="_blank"
-                       class="btn-tracking"
-                       style="
-                           text-decoration: none;
-                           display: inline-flex;
-                           align-items: center;
-                           gap: 0.5rem;
-                       ">
-                        <i class="fas fa-external-link-alt"></i>
-                        Rastrear nos Correios
-                    </a>
-                </div>
-            </div>
-        `;
-    }
+    // Removido trackingSection daqui - será mostrado na timeline
     
     // Informações de retirada
     let pickupSection = '';
@@ -387,8 +350,6 @@ function showOrderDetails(orderId, orderData) {
             <i class="${statusInfo.icon}" style="color: var(--neon-blue); margin-right: 0.5rem;"></i>
             ${statusInfo.message}
         </div>
-        
-        ${trackingSection}
         
         <div class="order-details">
             <div class="detail-item">
@@ -545,34 +506,81 @@ function updateTimeline(orderData) {
         });
     }
     
-    // Add posted event (SEDEX)
-    if (orderData.postedAt && orderData.deliveryMethod === 'sedex') {
-        events.push({
-            date: formatDateTime(orderData.postedAt),
-            text: 'Postado nos Correios',
-            icon: 'fas fa-shipping-fast',
-            completed: true
-        });
-    }
-    
-    // Add ready event
-    if (orderData.readyAt) {
-        events.push({
-            date: formatDateTime(orderData.readyAt),
-            text: 'Pronto para retirada',
-            icon: 'fas fa-box-open',
-            completed: true
-        });
-    }
-    
-    // Add delivered event
-    if (orderData.deliveredAt) {
-        events.push({
-            date: formatDateTime(orderData.deliveredAt),
-            text: 'Entregue',
-            icon: 'fas fa-handshake',
-            completed: true
-        });
+    // Lógica específica por método de entrega
+    if (orderData.deliveryMethod === 'sedex') {
+        // Para SEDEX - adicionar postado nos Correios
+        if (orderData.postedAt) {
+            events.push({
+                date: formatDateTime(orderData.postedAt),
+                text: 'Postado nos Correios',
+                icon: 'fas fa-shipping-fast',
+                completed: true
+            });
+        }
+        
+        // Adicionar código de rastreamento se existir
+        if (orderData.trackingCode) {
+            events.push({
+                date: 'Rastreamento disponível',
+                text: 'Código de Rastreamento',
+                icon: 'fas fa-barcode',
+                completed: true,
+                special: 'tracking',
+                trackingCode: orderData.trackingCode
+            });
+        }
+        
+        // Para SEDEX com status entregue
+        if (orderData.status === 'entregue' && orderData.deliveredAt) {
+            events.push({
+                date: formatDateTime(orderData.deliveredAt),
+                text: 'Entregue pelos Correios',
+                icon: 'fas fa-handshake',
+                completed: true
+            });
+        }
+        
+    } else if (orderData.deliveryMethod === 'retirada') {
+        // Para RETIRADA - adicionar pronto para retirada
+        if (orderData.readyAt) {
+            events.push({
+                date: formatDateTime(orderData.readyAt),
+                text: 'Pronto para retirada',
+                icon: 'fas fa-box-open',
+                completed: true
+            });
+        }
+        
+        // Para RETIRADA com status entregue
+        if (orderData.status === 'entregue' && orderData.deliveredAt) {
+            events.push({
+                date: formatDateTime(orderData.deliveredAt),
+                text: 'Retirado pelo cliente',
+                icon: 'fas fa-handshake',
+                completed: true
+            });
+        }
+        
+    } else if (orderData.deliveryMethod === 'uber') {
+        // Para UBER/99
+        if (orderData.deliveredAt) {
+            events.push({
+                date: formatDateTime(orderData.deliveredAt),
+                text: 'Entregue via Uber/99',
+                icon: 'fas fa-car',
+                completed: true
+            });
+        }
+    } else {
+        // Para outros métodos ou não definido
+        if (orderData.status === 'entregue' && orderData.deliveredAt) {
+            events.push({
+                date: formatDateTime(orderData.deliveredAt),
+                text: 'Entregue',
+                icon: 'fas fa-handshake',
+                completed: true
+            });
+        }
     }
     
     // Add current status as last event if not delivered
@@ -588,17 +596,70 @@ function updateTimeline(orderData) {
     }
     
     // Render timeline
-    timeline.innerHTML = events.map(event => `
-        <div class="timeline-item ${event.completed ? 'completed' : ''} ${event.current ? 'current' : ''}">
-            <div class="timeline-date">
-                ${event.current ? '<strong>Agora</strong>' : event.date}
+    timeline.innerHTML = events.map(event => {
+        // Se for evento de código de rastreamento, renderizar especial
+        if (event.special === 'tracking' && event.trackingCode) {
+            return `
+                <div class="timeline-item completed" style="
+                    background: rgba(0, 212, 255, 0.1);
+                    border: 1px solid var(--neon-blue);
+                ">
+                    <div class="timeline-date">
+                        <strong>${event.date}</strong>
+                    </div>
+                    <div class="timeline-content">
+                        <i class="${event.icon}" style="margin-right: 0.5rem; color: var(--neon-blue);"></i>
+                        ${event.text}
+                    </div>
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 0.75rem;
+                        padding-top: 0.75rem;
+                        border-top: 1px solid var(--glass-border);
+                    ">
+                        <code style="
+                            font-family: 'Orbitron', monospace;
+                            font-size: 1.1rem;
+                            color: var(--neon-blue);
+                            letter-spacing: 2px;
+                        ">${event.trackingCode}</code>
+                        <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${event.trackingCode}" 
+                           target="_blank"
+                           style="
+                               padding: 0.4rem 0.8rem;
+                               background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+                               color: white;
+                               border-radius: 6px;
+                               text-decoration: none;
+                               font-size: 0.85rem;
+                               display: inline-flex;
+                               align-items: center;
+                               gap: 0.5rem;
+                               transition: all 0.3s ease;
+                           ">
+                            <i class="fas fa-external-link-alt"></i>
+                            Rastrear nos Correios
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Renderização normal para outros eventos
+        return `
+            <div class="timeline-item ${event.completed ? 'completed' : ''} ${event.current ? 'current' : ''}">
+                <div class="timeline-date">
+                    ${event.current ? '<strong>Agora</strong>' : event.date}
+                </div>
+                <div class="timeline-content">
+                    <i class="${event.icon}" style="margin-right: 0.5rem;"></i>
+                    ${event.text}
+                </div>
             </div>
-            <div class="timeline-content">
-                <i class="${event.icon}" style="margin-right: 0.5rem;"></i>
-                ${event.text}
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ===========================
