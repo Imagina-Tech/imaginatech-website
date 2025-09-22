@@ -817,7 +817,13 @@ async function displayUserOrders(orderCodes) {
     
     // Limpar listeners anteriores
     if (historyListeners.length > 0) {
-        historyListeners.forEach(listener => listener());
+        historyListeners.forEach(listener => {
+            try {
+                listener();
+            } catch (e) {
+                console.warn('Erro ao limpar listener:', e);
+            }
+        });
         historyListeners = [];
     }
     
@@ -856,39 +862,49 @@ async function displayUserOrders(orderCodes) {
                     id: doc.id
                 });
                 
-                // Adicionar listener em tempo real para este pedido
-                const listener = db.collection('services').doc(doc.id)
-                    .onSnapshot((docSnapshot) => {
-                        if (docSnapshot.exists) {
-                            const updatedData = docSnapshot.data();
-                            let updatedStatus = updatedData.status;
-                            if (updatedData.deliveryMethod === 'sedex' && updatedData.status === 'retirada') {
-                                updatedStatus = 'transporte';
-                            }
-                            
-                            // Atualizar o item específico no DOM
-                            const orderElement = document.querySelector(`[data-order-code="${code}"]`);
-                            if (orderElement) {
-                                const statusBadge = orderElement.querySelector('.status-badge');
-                                if (statusBadge) {
-                                    // Remover classes antigas
-                                    statusBadge.className = `status-badge status-${updatedStatus}`;
-                                    statusBadge.style.cssText = 'font-size: 0.8rem; padding: 0.25rem 0.75rem;';
-                                    statusBadge.innerHTML = STATUS_MESSAGES[updatedStatus]?.text || 'Status desconhecido';
+                // Adicionar listener em tempo real com tratamento de erro
+                try {
+                    const listener = db.collection('services').doc(doc.id)
+                        .onSnapshot(
+                            (docSnapshot) => {
+                                if (docSnapshot.exists) {
+                                    const updatedData = docSnapshot.data();
+                                    let updatedStatus = updatedData.status;
+                                    if (updatedData.deliveryMethod === 'sedex' && updatedData.status === 'retirada') {
+                                        updatedStatus = 'transporte';
+                                    }
+                                    
+                                    // Atualizar o item específico no DOM
+                                    const orderElement = document.querySelector(`[data-order-code="${code}"]`);
+                                    if (orderElement) {
+                                        const statusBadge = orderElement.querySelector('.status-badge');
+                                        if (statusBadge) {
+                                            statusBadge.className = `status-badge status-${updatedStatus}`;
+                                            statusBadge.style.cssText = 'font-size: 0.8rem; padding: 0.25rem 0.75rem;';
+                                            statusBadge.innerHTML = STATUS_MESSAGES[updatedStatus]?.text || 'Status desconhecido';
+                                        }
+                                        const nameElement = orderElement.querySelector('.order-item-date');
+                                        if (nameElement) {
+                                            nameElement.textContent = updatedData.name || 'Sem nome';
+                                        }
+                                    }
                                 }
-                                // Atualizar nome do serviço se mudou
-                                const nameElement = orderElement.querySelector('.order-item-date');
-                                if (nameElement) {
-                                    nameElement.textContent = updatedData.name || 'Sem nome';
-                                }
+                            },
+                            (error) => {
+                                // Tratar erro silenciosamente - não forçar logout
+                                console.warn(`Listener do pedido ${code} desabilitado:`, error.message);
+                                // Não propagar o erro
                             }
-                        }
-                    });
-                
-                historyListeners.push(listener);
+                        );
+                    
+                    historyListeners.push(listener);
+                } catch (error) {
+                    console.warn(`Não foi possível criar listener para ${code}:`, error.message);
+                    // Continuar sem o listener - não é crítico
+                }
             }
         } catch (error) {
-            console.error(`Erro ao buscar pedido ${code}:`, error);
+            console.warn(`Erro ao buscar pedido ${code}:`, error.message);
         }
     }
     
