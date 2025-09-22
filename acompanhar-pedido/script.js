@@ -21,10 +21,17 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Configurar persistência de sessão
+// Configurar persistência de sessão ANTES de qualquer operação
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => {
         console.log('Persistência de sessão configurada');
+        
+        // Verificar se já existe usuário após configurar persistência
+        const user = auth.currentUser;
+        if (user) {
+            console.log('Usuário já estava logado:', user.email);
+            currentUser = user;
+        }
     })
     .catch((error) => {
         console.error('Erro ao configurar persistência:', error);
@@ -110,10 +117,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Auth state observer
     auth.onAuthStateChanged(async (user) => {
+        console.log('Estado de autenticação mudou:', user ? 'Logado como ' + user.email : 'Não logado');
+        
         if (user) {
             currentUser = user;
             wasLoggedIn = true;
+            
+            // Salvar informações do usuário localmente
+            localStorage.setItem('acompanhar_user', JSON.stringify({
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName,
+                photo: user.photoURL
+            }));
+            
             showCodeSection();
+            
             // Usar try-catch para evitar erros de permissão
             try {
                 await loadUserOrders();
@@ -123,20 +142,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('myOrdersSection').style.display = 'none';
             }
         } else {
-            // Só resetar se realmente não houver usuário
-            if (wasLoggedIn && !user) {
-                console.log('Usuário foi deslogado');
-                // Tentar recuperar sessão local
-                const localUser = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
-                if (localUser && localUser.uid) {
-                    console.log('Tentando recuperar sessão local...');
-                    // Não fazer nada aqui, deixar o Firebase tentar recuperar
-                    return;
-                }
+            // Verificar se é um logout real ou apenas um estado transitório
+            if (wasLoggedIn) {
+                console.log('Possível logout detectado, aguardando confirmação...');
+                
+                // Aguardar um pouco antes de decidir se é logout real
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        console.log('Logout confirmado');
+                        currentUser = null;
+                        wasLoggedIn = false;
+                        localStorage.removeItem('acompanhar_user');
+                        showLoginSection();
+                    } else {
+                        console.log('Falso alarme, usuário ainda logado');
+                    }
+                }, 1000);
+            } else {
+                // Primeira vez carregando, não há usuário
+                currentUser = null;
+                showLoginSection();
             }
-            currentUser = null;
-            wasLoggedIn = false;
-            showLoginSection();
         }
     });
     
@@ -243,10 +269,14 @@ function showCodeSection() {
     document.getElementById('codeSection').classList.remove('hidden');
     document.getElementById('orderView').classList.add('hidden');
     
-    // Update user info
-    if (currentUser) {
-        document.getElementById('userName').textContent = currentUser.displayName || 'Usuário';
-        document.getElementById('userPhoto').src = currentUser.photoURL || '/assets/default-avatar.png';
+    // Update user info - verificar se currentUser existe
+    const user = currentUser || auth.currentUser;
+    if (user) {
+        document.getElementById('userName').textContent = user.displayName || 'Usuário';
+        document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
+        
+        // Garantir que currentUser está definido
+        currentUser = user;
     }
     
     // Reset attempts
