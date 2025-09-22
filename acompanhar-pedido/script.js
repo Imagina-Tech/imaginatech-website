@@ -974,7 +974,8 @@ async function logUserActivity(action, data) {
             platform: 'web_tracking'
         });
     } catch (error) {
-        console.error('Erro ao registrar atividade:', error);
+        // Log silencioso - não interrompe o fluxo
+        console.warn('Log de atividade opcional:', error.message);
     }
 }
 
