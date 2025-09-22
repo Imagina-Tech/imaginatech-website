@@ -2,7 +2,7 @@
 // ARQUIVO: script.js
 // MÓDULO: Acompanhar Pedido (Portal do Cliente)
 // SISTEMA: ImaginaTech - Gestão de Impressão 3D
-// VERSÃO: 3.0 - Enhanced com Backend Próprio Vercel
+// VERSÃO: 4.0 - Simplificado sem API de Rastreamento
 // IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // ===========================
 
@@ -309,7 +309,7 @@ function showOrderDetails(orderId, orderData) {
     
     let trackingSection = '';
     
-    // Se for SEDEX e tiver código de rastreio, adicionar seção de rastreamento
+    // Se for SEDEX e tiver código de rastreio, mostrar código com botão para Correios
     if (orderData.deliveryMethod === 'sedex' && orderData.trackingCode) {
         trackingSection = `
             <div class="tracking-section" style="
@@ -323,25 +323,27 @@ function showOrderDetails(orderId, orderData) {
                     <div>
                         <div style="color: var(--neon-blue); font-weight: 600; margin-bottom: 0.5rem;">
                             <i class="fas fa-shipping-fast"></i>
-                            Rastreamento SEDEX
+                            Código de Rastreamento SEDEX
                         </div>
                         <div style="font-family: 'Orbitron', monospace; font-size: 1.2rem;">
                             ${orderData.trackingCode}
                         </div>
                     </div>
-                    <button class="btn-tracking" onclick="trackOrder('${orderData.trackingCode}')">
+                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${orderData.trackingCode}" 
+                       target="_blank"
+                       class="btn-tracking"
+                       style="
+                           text-decoration: none;
+                           display: inline-flex;
+                           align-items: center;
+                           gap: 0.5rem;
+                       ">
                         <i class="fas fa-external-link-alt"></i>
-                        Rastrear
-                    </button>
-                </div>
-                <div id="trackingInfo" style="margin-top: 1rem;">
-                    <!-- Info de rastreamento aparece aqui -->
+                        Rastrear nos Correios
+                    </a>
                 </div>
             </div>
         `;
-        
-        // Buscar informações de rastreamento automaticamente
-        setTimeout(() => trackOrder(orderData.trackingCode), 500);
     }
     
     // Informações de retirada
@@ -600,405 +602,6 @@ function updateTimeline(orderData) {
 }
 
 // ===========================
-// TRACKING FUNCTIONS (VIA BACKEND PRÓPRIO)
-// ===========================
-
-async function trackOrder(trackingCode) {
-    if (!trackingCode) return;
-    
-    const trackingInfo = document.getElementById('trackingInfo');
-    if (!trackingInfo) return;
-    
-    trackingInfo.innerHTML = `
-        <div style="text-align: center; padding: 1rem;">
-            <div class="loading-spinner" style="
-                width: 30px;
-                height: 30px;
-                border: 3px solid rgba(0, 212, 255, 0.2);
-                border-top-color: var(--neon-blue);
-                border-radius: 50%;
-                animation: spin 1s ease-in-out infinite;
-                margin: 0 auto 0.5rem;
-            "></div>
-            <p style="color: var(--text-secondary);">Buscando informações de rastreamento...</p>
-        </div>
-    `;
-    
-    try {
-        let data = null;
-        let fetchSuccess = false;
-        
-        // CONFIGURAÇÃO: URL da sua API na Vercel
-        const API_URL = 'https://imaginatech-api.vercel.app/api/rastreio';
-        
-        try {
-            console.log('Buscando rastreamento via API própria...');
-            console.log('Código:', trackingCode);
-            
-            const response = await fetch(`${API_URL}?codigo=${trackingCode}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const trackingData = await response.json();
-                
-                // Processar resposta da API unificada (Correios + Melhor Envio)
-                if (trackingData && trackingData.objetos && trackingData.objetos.length > 0) {
-                    const objeto = trackingData.objetos[0];
-                    
-                    if (objeto.eventos && objeto.eventos.length > 0) {
-                        // Adaptar formato de eventos para exibição
-                        data = {
-                            code: trackingCode,
-                            service: objeto.tipoPostal ? objeto.tipoPostal.categoria : 'SEDEX',
-                            events: objeto.eventos.map(evento => {
-                                // Criar descrição completa com cidade/UF se disponível
-                                let location = '';
-                                if (evento.unidade && evento.unidade.nome) {
-                                    location = evento.unidade.nome;
-                                }
-                                if (evento.cidade && evento.uf) {
-                                    location = location ? `${location} - ${evento.cidade}/${evento.uf}` : `${evento.cidade}/${evento.uf}`;
-                                } else if (evento.cidade) {
-                                    location = location ? `${location} - ${evento.cidade}` : evento.cidade;
-                                }
-                                
-                                // Adicionar destino se houver
-                                if (evento.destino) {
-                                    const destStr = evento.destino.local ? 
-                                        `${evento.destino.local} - ${evento.destino.cidade}/${evento.destino.uf}` :
-                                        `${evento.destino.cidade}/${evento.destino.uf}`;
-                                    location = location ? `${location} → ${destStr}` : destStr;
-                                }
-                                
-                                return {
-                                    description: evento.descricao,
-                                    date: evento.dtHrCriado,
-                                    location: location || 'Não informado'
-                                };
-                            })
-                        };
-                        fetchSuccess = true;
-                        console.log('Rastreamento obtido com sucesso!');
-                        console.log(`${data.events.length} eventos encontrados`);
-                    } else if (objeto.mensagem) {
-                        // Objeto ainda não postado ou sem eventos
-                        console.log('Mensagem da API:', objeto.mensagem);
-                        throw new Error(objeto.mensagem);
-                    }
-                } else if (trackingData.error) {
-                    throw new Error(trackingData.error);
-                }
-            } else {
-                const errorText = await response.text();
-                console.error('Resposta de erro:', errorText);
-                throw new Error('Erro ao conectar com o servidor');
-            }
-        } catch (error) {
-            console.error('Erro ao buscar rastreamento:', error.message);
-            fetchSuccess = false;
-        }
-        
-        if (!fetchSuccess) {
-            throw new Error('Não foi possível obter dados de rastreamento');
-        }
-        
-        // Processar e exibir dados
-        if (data && ((data.events && data.events.length > 0) || data.tracking_events)) {
-            // Normalizar eventos (Melhor Rastreio pode usar tracking_events ou events)
-            let eventos = data.tracking_events || data.events || [];
-            
-            // Ordenar por data (mais recente primeiro)
-            eventos = eventos.sort((a, b) => {
-                const dateA = new Date(a.date || a.created_at || a.timestamp);
-                const dateB = new Date(b.date || b.created_at || b.timestamp);
-                return dateB - dateA;
-            });
-            
-            // Mapear eventos para HTML
-            const eventosHTML = eventos.map((evento, index) => {
-                const isFirst = index === 0;
-                const description = evento.description || evento.message || evento.status || 'Status';
-                const style = getTrackingEventStyle(description);
-                
-                // Formatar data
-                let dataHora = '';
-                const eventDate = evento.date || evento.created_at || evento.timestamp;
-                if (eventDate) {
-                    const date = new Date(eventDate);
-                    dataHora = date.toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                }
-                
-                // Formatar local
-                const local = evento.location || evento.city || 
-                             (evento.unit ? `${evento.unit.name} - ${evento.unit.city}/${evento.unit.state}` : '');
-                
-                return `
-                    <div style="
-                        padding: 1rem;
-                        margin-bottom: 0.75rem;
-                        background: ${isFirst ? 'rgba(0, 212, 255, 0.05)' : 'var(--glass-bg)'};
-                        border-radius: 8px;
-                        border-left: 3px solid ${style.color};
-                        ${isFirst ? 'box-shadow: 0 2px 10px rgba(0, 212, 255, 0.2);' : ''}
-                        transition: all 0.3s ease;
-                    ">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="${style.icon}" style="color: ${style.color};"></i>
-                                <strong style="${isFirst ? 'color: var(--neon-blue);' : ''}">${description}</strong>
-                            </div>
-                            ${isFirst ? '<span style="background: var(--neon-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ÚLTIMO STATUS</span>' : ''}
-                        </div>
-                        ${dataHora ? `
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                                <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
-                                ${dataHora}
-                            </div>
-                        ` : ''}
-                        ${local ? `
-                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
-                                <i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i>
-                                ${local}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-            
-            // Informações do serviço
-            const serviceInfo = (data.service || data.service_name) ? `
-                <div style="
-                    margin-bottom: 1rem;
-                    padding: 0.75rem;
-                    background: var(--glass-bg);
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                ">
-                    <i class="fas fa-shipping-fast" style="color: var(--neon-blue);"></i>
-                    <span style="color: var(--text-secondary);">Serviço:</span>
-                    <strong>${data.service || data.service_name}</strong>
-                    ${data.code ? `<span style="margin-left: auto; font-family: 'Orbitron', monospace;">${data.code}</span>` : ''}
-                </div>
-            ` : '';
-            
-            // Renderizar eventos
-            trackingInfo.innerHTML = `
-                ${serviceInfo}
-                <div style="max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
-                    ${eventosHTML}
-                </div>
-                <div style="
-                    margin-top: 1rem; 
-                    padding-top: 1rem; 
-                    border-top: 1px solid var(--glass-border);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                ">
-                    <small style="color: var(--text-secondary);">
-                        <i class="fas fa-check-circle"></i>
-                        ${eventos.length} evento(s) encontrado(s)
-                    </small>
-                    <button onclick="refreshTracking('${trackingCode}')" style="
-                        background: transparent;
-                        color: var(--neon-blue);
-                        border: 1px solid var(--neon-blue);
-                        padding: 0.25rem 0.75rem;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        font-size: 0.85rem;
-                        transition: all 0.3s ease;
-                    ">
-                        <i class="fas fa-sync-alt"></i>
-                        Atualizar
-                    </button>
-                </div>
-            `;
-            
-        } else {
-            // Nenhum evento encontrado
-            trackingInfo.innerHTML = `
-                <div style="
-                    padding: 1.5rem;
-                    background: rgba(255, 215, 0, 0.1);
-                    border: 1px solid var(--neon-yellow);
-                    border-radius: 8px;
-                    text-align: center;
-                ">
-                    <div style="color: var(--neon-yellow); margin-bottom: 1rem; font-size: 2rem;">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div style="color: var(--neon-yellow); margin-bottom: 0.5rem;">
-                        <strong>Aguardando postagem</strong>
-                    </div>
-                    <p style="color: var(--text-secondary); margin: 0.5rem 0;">
-                        O código <strong style="font-family: 'Orbitron', monospace;">${trackingCode}</strong> 
-                        ainda não possui informações de rastreamento.
-                    </p>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
-                        Isso é normal se o pedido foi postado recentemente. 
-                        <br>O rastreamento pode demorar até 24 horas para aparecer.
-                    </p>
-                    <button onclick="refreshTracking('${trackingCode}')" style="
-                        margin-top: 1rem;
-                        padding: 0.5rem 1rem;
-                        background: var(--glass-bg);
-                        color: var(--neon-yellow);
-                        border: 1px solid var(--neon-yellow);
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">
-                        <i class="fas fa-redo"></i>
-                        Tentar Novamente
-                    </button>
-                </div>
-            `;
-        }
-        
-    } catch (error) {
-        console.error('Erro ao buscar rastreamento:', error);
-        
-        // Em caso de erro, mostrar mensagem amigável
-        trackingInfo.innerHTML = `
-            <div style="
-                padding: 1.5rem;
-                background: rgba(255, 0, 85, 0.1);
-                border: 1px solid var(--neon-red);
-                border-radius: 8px;
-                text-align: center;
-            ">
-                <div style="color: var(--neon-red); margin-bottom: 1rem; font-size: 2rem;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div style="color: var(--neon-red); margin-bottom: 0.5rem;">
-                    <strong>Não foi possível carregar o rastreamento</strong>
-                </div>
-                <p style="color: var(--text-secondary); margin: 0.5rem 0;">
-                    Verifique se o código está correto ou tente novamente mais tarde.
-                </p>
-                <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
-                    <button onclick="refreshTracking('${trackingCode}')" style="
-                        padding: 0.5rem 1rem;
-                        background: var(--glass-bg);
-                        color: var(--neon-red);
-                        border: 1px solid var(--neon-red);
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                    ">
-                        <i class="fas fa-redo"></i>
-                        Tentar Novamente
-                    </button>
-                    <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${trackingCode}" 
-                       target="_blank"
-                       style="
-                           padding: 0.5rem 1rem;
-                           background: var(--glass-bg);
-                           color: var(--neon-blue);
-                           border: 1px solid var(--neon-blue);
-                           border-radius: 6px;
-                           text-decoration: none;
-                           font-size: 0.9rem;
-                           display: inline-flex;
-                           align-items: center;
-                           gap: 0.5rem;
-                       ">
-                        <i class="fas fa-external-link-alt"></i>
-                        Site dos Correios
-                    </a>
-                </div>
-            </div>
-        `;
-    }
-}
-
-// Funções auxiliares para formatar dados dos Correios
-function formatCorreiosDate(dateString) {
-    if (!dateString) return 'Data não informada';
-    
-    try {
-        // Formato: "2024-01-15T14:30:00"
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (error) {
-        return dateString;
-    }
-}
-
-function formatCorreiosLocation(evento) {
-    if (!evento) return '';
-    
-    let location = '';
-    
-    if (evento.unidade) {
-        location = evento.unidade.nome || '';
-        
-        if (evento.unidade.endereco) {
-            const endereco = evento.unidade.endereco;
-            if (endereco.cidade && endereco.uf) {
-                location += ` - ${endereco.cidade}/${endereco.uf}`;
-            }
-        }
-    } else if (evento.local) {
-        location = evento.local;
-    }
-    
-    return location;
-}
-
-// Função para atualizar o rastreamento
-function refreshTracking(code) {
-    trackOrder(code);
-    showToast('Atualizando rastreamento...', 'info');
-}
-
-// Função para obter estilo do evento de rastreamento
-function getTrackingEventStyle(status) {
-    if (!status) return { icon: 'fas fa-info-circle', color: 'var(--neon-blue)' };
-    
-    const statusLower = status.toLowerCase();
-    
-    // Verificar palavras-chave no status
-    if (statusLower.includes('postado') || statusLower.includes('coletado') || statusLower.includes('recebido')) {
-        return { icon: 'fas fa-box', color: 'var(--neon-blue)' };
-    } else if (statusLower.includes('encaminhado') || statusLower.includes('trânsito') || statusLower.includes('transito')) {
-        return { icon: 'fas fa-truck', color: 'var(--neon-yellow)' };
-    } else if (statusLower.includes('saiu para entrega') || statusLower.includes('em rota')) {
-        return { icon: 'fas fa-shipping-fast', color: 'var(--neon-orange)' };
-    } else if (statusLower.includes('entregue') || statusLower.includes('entrega efetuada')) {
-        return { icon: 'fas fa-check-circle', color: 'var(--neon-green)' };
-    } else if (statusLower.includes('aguardando') || statusLower.includes('retirada')) {
-        return { icon: 'fas fa-clock', color: 'var(--neon-purple)' };
-    } else if (statusLower.includes('devolvido') || statusLower.includes('devolução')) {
-        return { icon: 'fas fa-undo', color: 'var(--neon-red)' };
-    } else if (statusLower.includes('fiscalização') || statusLower.includes('alfândega')) {
-        return { icon: 'fas fa-passport', color: 'var(--neon-orange)' };
-    } else {
-        return { icon: 'fas fa-info-circle', color: 'var(--neon-blue)' };
-    }
-}
-
-// ===========================
 // REAL-TIME UPDATES
 // ===========================
 
@@ -1033,98 +636,6 @@ function refreshOrder() {
         
         // Force refresh by restarting listener
         startOrderListener(currentOrderId);
-    }
-}
-
-// ===========================
-// USER ORDERS HISTORY
-// ===========================
-
-async function loadUserOrders() {
-    if (!currentUser) return;
-    
-    try {
-        const clientDoc = await db.collection('clients').doc(currentUser.uid).get();
-        
-        if (clientDoc.exists) {
-            const clientData = clientDoc.data();
-            const orderCodes = clientData.orders || [];
-            
-            if (orderCodes.length > 0) {
-                displayUserOrders(orderCodes);
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao carregar pedidos:', error);
-    }
-}
-
-async function displayUserOrders(orderCodes) {
-    const ordersList = document.getElementById('ordersList');
-    const myOrdersSection = document.getElementById('myOrdersSection');
-    
-    if (!orderCodes || orderCodes.length === 0) {
-        myOrdersSection.style.display = 'none';
-        return;
-    }
-    
-    myOrdersSection.style.display = 'block';
-    
-    // Get order details for each code
-    const orders = [];
-    for (const code of orderCodes.slice(0, 5)) { // Show max 5 recent orders
-        const snapshot = await db.collection('services')
-            .where('orderCode', '==', code)
-            .limit(1)
-            .get();
-        
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            orders.push({
-                code: code,
-                data: doc.data()
-            });
-        }
-    }
-    
-    // Render orders list
-    ordersList.innerHTML = orders.map(order => `
-        <div class="order-item" onclick="quickLoadOrder('${order.code}')">
-            <div>
-                <div class="order-item-code">#${order.code}</div>
-                <div class="order-item-date">${order.data.name || 'Sem nome'}</div>
-            </div>
-            <div class="status-badge status-${order.data.status}" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
-                ${STATUS_MESSAGES[order.data.status].text}
-            </div>
-        </div>
-    `).join('');
-}
-
-async function quickLoadOrder(code) {
-    document.getElementById('orderCode').value = code;
-    await verifyCode();
-}
-
-async function saveOrderToHistory(code) {
-    if (!currentUser) return;
-    
-    try {
-        const clientRef = db.collection('clients').doc(currentUser.uid);
-        
-        await clientRef.set({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            name: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            orders: firebase.firestore.FieldValue.arrayUnion(code),
-            lastOrderViewed: code,
-            lastOrderViewedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-        
-    } catch (error) {
-        console.error('Erro ao salvar no histórico:', error);
     }
 }
 
