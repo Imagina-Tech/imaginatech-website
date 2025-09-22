@@ -261,8 +261,12 @@ async function signInWithGoogle() {
         const user = result.user;
         
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
-            await auth.signOut();
-            return showToast(`Acesso negado! O email ${user.email} não está autorizado.`, 'error');
+            // NÃO FAZ LOGOUT - apenas mostra acesso negado
+            currentUser = user;
+            isAuthorized = false;
+            showAccessDeniedScreen(user);
+            showToast(`Olá ${user.displayName}! Esta área é restrita aos administradores.`, 'info');
+            return;
         }
         
         currentUser = user;
@@ -291,9 +295,8 @@ function checkAuthorization(user) {
         startServicesListener();
     } else {
         isAuthorized = false;
-        auth.signOut();
-        showToast('Acesso negado! Email não autorizado.', 'error');
-        showLoginScreen();
+        // NÃO FAZ LOGOUT - Mantém usuário logado para outras páginas
+        showAccessDeniedScreen(user);
     }
 }
 
@@ -303,6 +306,7 @@ function checkAuthorization(user) {
 function showLoginScreen() {
     document.getElementById('loginScreen')?.classList.remove('hidden');
     document.getElementById('adminDashboard')?.classList.add('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
     servicesListener?.();
     servicesListener = null;
 }
@@ -310,8 +314,61 @@ function showLoginScreen() {
 function showAdminDashboard(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('adminDashboard')?.classList.remove('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
     document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
     document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff');
+}
+
+function showAccessDeniedScreen(user) {
+    // Esconde login e dashboard
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('adminDashboard')?.classList.add('hidden');
+    
+    // Verifica se a tela de acesso negado existe, se não, cria
+    let accessDeniedScreen = document.getElementById('accessDeniedScreen');
+    if (!accessDeniedScreen) {
+        accessDeniedScreen = document.createElement('div');
+        accessDeniedScreen.id = 'accessDeniedScreen';
+        accessDeniedScreen.className = 'access-denied-screen';
+        accessDeniedScreen.innerHTML = `
+            <div class="access-denied-container">
+                <div class="access-denied-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h1>Acesso Restrito</h1>
+                <p class="access-denied-message">
+                    Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.
+                </p>
+                <p class="access-denied-info">
+                    Você está logado com: <strong>${user.email}</strong>
+                </p>
+                <div class="access-denied-actions">
+                    <a href="/" class="btn-primary">
+                        <i class="fas fa-home"></i>
+                        Voltar ao Início
+                    </a>
+                    <a href="/acompanhar-pedido/" class="btn-secondary">
+                        <i class="fas fa-cube"></i>
+                        Acompanhar Pedido
+                    </a>
+                </div>
+                <button class="btn-logout-denied" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Fazer Logout
+                </button>
+            </div>
+        `;
+        document.body.appendChild(accessDeniedScreen);
+    } else {
+        // Atualiza as informações do usuário se a tela já existe
+        const message = accessDeniedScreen.querySelector('.access-denied-message');
+        const info = accessDeniedScreen.querySelector('.access-denied-info');
+        if (message) message.innerHTML = `Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.`;
+        if (info) info.innerHTML = `Você está logado com: <strong>${user.email}</strong>`;
+    }
+    
+    // Exibe a tela
+    accessDeniedScreen.classList.remove('hidden');
 }
 
 // ===========================
@@ -758,9 +815,14 @@ function renderServices() {
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         grid.innerHTML = filtered.map(service => {
-            const days = service.dateUndefined ? null : calculateDaysRemaining(service.dueDate);
-            const daysText = service.dateUndefined ? 'Data a definir' : formatDaysText(days);
-            const daysColor = service.dateUndefined ? 'var(--neon-yellow)' : getDaysColor(days);
+            // Se o pedido foi entregue, não calcula dias de atraso
+            const days = (service.status === 'entregue' || service.dateUndefined) ? null : calculateDaysRemaining(service.dueDate);
+            const daysText = service.status === 'entregue' ? 'Entregue' : 
+                           service.dateUndefined ? 'Data a definir' : 
+                           formatDaysText(days);
+            const daysColor = service.status === 'entregue' ? 'var(--neon-green)' :
+                            service.dateUndefined ? 'var(--neon-yellow)' : 
+                            getDaysColor(days);
             
             return `
                 <div class="service-card priority-${service.priority || 'media'}">
@@ -782,13 +844,13 @@ function renderServices() {
                     ${service.imageUrl ? `<div class="service-image"><img src="${service.imageUrl}" alt="Imagem" onclick="window.open('${service.imageUrl}', '_blank')"></div>` : ''}
                     
                     ${service.deliveryMethod ? `
-                    <div class="delivery-badge ${days !== null && days < 0 ? 'badge-late' : days !== null && days <= 2 ? 'badge-urgent' : ''}">
+                    <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                         <div class="delivery-info">
                             <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
                             ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
                         </div>
-                        <div class="delivery-time ${days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
-                            <i class="fas fa-clock"></i>
+                        <div class="delivery-time ${service.status === 'entregue' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
+                            <i class="fas ${service.status === 'entregue' ? 'fa-check-circle' : 'fa-clock'}"></i>
                             ${daysText}
                         </div>
                     </div>` : ''}
