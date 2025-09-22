@@ -86,11 +86,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
     
     // Auth state observer
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
             showCodeSection();
-            loadUserOrders();
+            // Usar try-catch para evitar erros de permissão
+            try {
+                await loadUserOrders();
+            } catch (error) {
+                console.warn('Erro ao carregar histórico:', error);
+                // Não fazer logout, apenas esconder histórico
+                document.getElementById('myOrdersSection').style.display = 'none';
+            }
         } else {
             currentUser = null;
             showLoginSection();
@@ -125,16 +132,25 @@ async function loginWithGoogle() {
             currentUser = result.user;
             showToast('Login realizado com sucesso!', 'success');
             
-            // Log user login
-            await logUserActivity('login', {
-                uid: result.user.uid,
-                email: result.user.email,
-                name: result.user.displayName
-            });
+            // Log user login - usar try-catch para evitar erros
+            try {
+                await logUserActivity('login', {
+                    uid: result.user.uid,
+                    email: result.user.email,
+                    name: result.user.displayName
+                });
+            } catch (error) {
+                console.warn('Log opcional não registrado:', error.message);
+            }
         }
     } catch (error) {
         console.error('Erro no login:', error);
-        showToast('Erro ao fazer login. Tente novamente.', 'error');
+        // Verificar se é erro de permissão ou outro
+        if (error.code === 'auth/popup-blocked') {
+            showToast('Pop-up bloqueado. Permita pop-ups para este site.', 'error');
+        } else {
+            showToast('Erro ao fazer login. Tente novamente.', 'error');
+        }
     }
 }
 
@@ -252,8 +268,13 @@ async function verifyCode() {
             currentOrderId = doc.id;
             currentOrderCode = code;
             
-            // Save order to user's history
-            await saveOrderToHistory(code);
+            // Save order to user's history - usar try-catch
+            try {
+                await saveOrderToHistory(code);
+            } catch (error) {
+                console.warn('Erro ao salvar no histórico:', error.message);
+                // Continuar mesmo se falhar ao salvar histórico
+            }
             
             // Show order details
             showOrderDetails(doc.id, doc.data());
@@ -263,18 +284,28 @@ async function verifyCode() {
             
             showToast('Pedido encontrado!', 'success');
             
-            // Log successful access
-            await logUserActivity('order_viewed', {
-                orderCode: code,
-                orderId: doc.id
-            });
+            // Log successful access - usar try-catch
+            try {
+                await logUserActivity('order_viewed', {
+                    orderCode: code,
+                    orderId: doc.id
+                });
+            } catch (error) {
+                console.warn('Log opcional não registrado:', error.message);
+            }
             
         } else {
             handleInvalidCode();
         }
     } catch (error) {
         console.error('Erro ao verificar código:', error);
-        showToast('Erro ao buscar pedido. Tente novamente.', 'error');
+        
+        // Verificar se é erro de permissão
+        if (error.code === 'permission-denied') {
+            showToast('Erro de permissão. Verifique se está logado.', 'error');
+        } else {
+            showToast('Erro ao buscar pedido. Tente novamente.', 'error');
+        }
     }
 }
 
