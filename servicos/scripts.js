@@ -380,8 +380,50 @@ function startServicesListener() {
     servicesListener?.();
     
     servicesListener = db.collection('services').onSnapshot(snapshot => {
-        services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        services = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // SOLUÇÃO: Normaliza dados recuperados para garantir strings vazias ao invés de null/undefined
+            return {
+                id: doc.id,
+                name: data.name || '',
+                client: data.client || '',
+                clientEmail: data.clientEmail || '',
+                clientPhone: data.clientPhone || '',
+                description: data.description || '',
+                material: data.material || '',
+                color: data.color || '',
+                priority: data.priority || 'media',
+                startDate: data.startDate || '',
+                dueDate: data.dueDate || '',
+                dateUndefined: data.dateUndefined || false,
+                value: data.value || '',
+                weight: data.weight || '',
+                observations: data.observations || '',
+                deliveryMethod: data.deliveryMethod || '',
+                status: data.status || 'pendente',
+                fileUrl: data.fileUrl || '',
+                fileName: data.fileName || '',
+                fileSize: data.fileSize || '',
+                fileUploadedAt: data.fileUploadedAt || '',
+                imageUrl: data.imageUrl || '',
+                imageUploadedAt: data.imageUploadedAt || '',
+                trackingCode: data.trackingCode || '',
+                deliveryAddress: data.deliveryAddress || {},
+                pickupInfo: data.pickupInfo || {},
+                orderCode: data.orderCode || '',
+                serviceId: data.serviceId || '',
+                createdAt: data.createdAt || '',
+                createdBy: data.createdBy || '',
+                updatedAt: data.updatedAt || '',
+                updatedBy: data.updatedBy || '',
+                productionStartedAt: data.productionStartedAt || '',
+                completedAt: data.completedAt || '',
+                readyAt: data.readyAt || '',
+                deliveredAt: data.deliveredAt || '',
+                postedAt: data.postedAt || '',
+                lastStatusChange: data.lastStatusChange || ''
+            };
+        }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         updateStats();
         renderServices();
     }, error => {
@@ -407,21 +449,35 @@ async function saveService(event) {
     const dateUndefined = document.getElementById('dateUndefined');
     const dueDateInput = document.getElementById('dueDate');
     
+    // SOLUÇÃO: Função helper para tratar valores vazios consistentemente
+    const getFieldValue = (elementId, isNumeric = false) => {
+        const element = document.getElementById(elementId);
+        if (!element) return '';
+        const value = element.value.trim();
+        
+        if (isNumeric) {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) || parsed === 0 ? '' : parsed;
+        }
+        
+        return value; // Sempre retorna string, nunca null
+    };
+    
     const service = {
-        name: document.getElementById('serviceName').value.trim(),
-        client: document.getElementById('clientName').value.trim(),
-        clientEmail: document.getElementById('clientEmail').value.trim() || null,  // Mudança aqui
-        clientPhone: document.getElementById('clientPhone').value.trim() || null,  // Mudança aqui
-        description: document.getElementById('serviceDescription').value.trim() || null,
+        name: getFieldValue('serviceName'),
+        client: getFieldValue('clientName'),
+        clientEmail: getFieldValue('clientEmail'),
+        clientPhone: getFieldValue('clientPhone'),
+        description: getFieldValue('serviceDescription'),
         material: document.getElementById('serviceMaterial').value,
-        color: document.getElementById('serviceColor').value || null,
+        color: getFieldValue('serviceColor'),
         priority: document.getElementById('servicePriority').value,
         startDate: document.getElementById('startDate').value,
-        dueDate: dateUndefined?.checked ? null : dueDateInput.value,
+        dueDate: dateUndefined?.checked ? '' : (dueDateInput?.value || ''),
         dateUndefined: dateUndefined?.checked || false,
-        value: parseFloat(document.getElementById('serviceValue').value) || null,
-        weight: parseFloat(document.getElementById('serviceWeight').value) || null,
-        observations: document.getElementById('serviceObservations').value.trim() || null,
+        value: getFieldValue('serviceValue', true),
+        weight: getFieldValue('serviceWeight', true),
+        observations: getFieldValue('serviceObservations'),
         deliveryMethod,
         status: document.getElementById('serviceStatus').value,
         updatedAt: new Date().toISOString(),
@@ -430,24 +486,49 @@ async function saveService(event) {
     
     // Tratamento especial para código de rastreio ao editar
     if (editingServiceId) {
+        // Recupera o serviço atual para comparação
+        const currentService = services.find(s => s.id === editingServiceId);
+        
         if (deliveryMethod === 'sedex') {
             const trackingCodeInput = document.getElementById('editTrackingCode');
             if (trackingCodeInput) {
                 const trackingValue = trackingCodeInput.value.trim();
-                if (trackingValue) {
-                    // Se tem valor, salva/atualiza
-                    service.trackingCode = trackingValue.toUpperCase();
-                } else {
-                    // Se está vazio, marca para deletar do Firebase
-                    service.trackingCode = firebase.firestore.FieldValue.delete();
-                }
+                // Se tem valor, salva; se vazio, mantém string vazia
+                service.trackingCode = trackingValue.toUpperCase();
             }
         } else {
-            // Se não é SEDEX, remove código de rastreio se existir
-            const currentService = services.find(s => s.id === editingServiceId);
+            // Se mudou de SEDEX para outro método, limpa código de rastreio
             if (currentService && currentService.trackingCode) {
-                service.trackingCode = firebase.firestore.FieldValue.delete();
+                service.trackingCode = '';
             }
+        }
+        
+        // IMPORTANTE: Preserva dados existentes que não foram editados
+        if (currentService) {
+            // Preserva arquivos se não foram alterados
+            if (!selectedFile && currentService.fileUrl) {
+                service.fileUrl = currentService.fileUrl;
+                service.fileName = currentService.fileName || '';
+                service.fileSize = currentService.fileSize || '';
+                service.fileUploadedAt = currentService.fileUploadedAt || '';
+            }
+            if (!selectedImage && currentService.imageUrl) {
+                service.imageUrl = currentService.imageUrl;
+                service.imageUploadedAt = currentService.imageUploadedAt || '';
+            }
+            
+            // Preserva timestamps existentes
+            service.createdAt = currentService.createdAt;
+            service.createdBy = currentService.createdBy;
+            service.orderCode = currentService.orderCode;
+            service.serviceId = currentService.serviceId;
+            
+            // Preserva outros campos de status se existirem
+            if (currentService.productionStartedAt) service.productionStartedAt = currentService.productionStartedAt;
+            if (currentService.completedAt) service.completedAt = currentService.completedAt;
+            if (currentService.readyAt) service.readyAt = currentService.readyAt;
+            if (currentService.deliveredAt) service.deliveredAt = currentService.deliveredAt;
+            if (currentService.postedAt) service.postedAt = currentService.postedAt;
         }
     }
     
@@ -479,9 +560,15 @@ async function saveService(event) {
         service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
     } else if (deliveryMethod === 'sedex') {
         const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
-        const addr = Object.fromEntries(fields.map(f => [f, document.getElementById(f).value.trim()]));
-        addr.complemento = document.getElementById('complemento').value.trim() || null;
+        const addr = {};
         
+        // Coleta todos os campos, mesmo vazios (para preservar dados)
+        fields.forEach(field => {
+            addr[field] = document.getElementById(field)?.value.trim() || '';
+        });
+        addr.complemento = document.getElementById('complemento')?.value.trim() || '';
+        
+        // Valida apenas campos obrigatórios
         if (fields.some(f => !addr[f])) return showToast('Preencha todos os campos obrigatórios de entrega', 'error');
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) return showToast('E-mail inválido', 'error');
         
@@ -492,17 +579,7 @@ async function saveService(event) {
         let serviceDocId = editingServiceId;
         
         if (editingServiceId) {
-            // Preserve existing files
-            const currentFileUrl = document.getElementById('currentFileUrl');
-            const currentFileName = document.getElementById('currentFileName');
-            const currentImageUrl = document.getElementById('currentImageUrl');
-            
-            if (currentFileUrl?.value && !selectedFile) {
-                service.fileUrl = currentFileUrl.value;
-                service.fileName = currentFileName.value;
-            }
-            if (currentImageUrl?.value && !selectedImage) service.imageUrl = currentImageUrl.value;
-            
+            // NÃO usa FieldValue.delete() - sempre usa strings vazias
             await db.collection('services').doc(editingServiceId).update(service);
             showToast('Serviço atualizado com sucesso!', 'success');
         } else {
@@ -510,7 +587,15 @@ async function saveService(event) {
                 createdAt: new Date().toISOString(),
                 createdBy: currentUser.email,
                 orderCode: generateOrderCode(),
-                serviceId: 'SRV-' + Date.now()
+                serviceId: 'SRV-' + Date.now(),
+                // Garante que campos de arquivo sejam inicializados
+                fileUrl: '',
+                fileName: '',
+                fileSize: '',
+                fileUploadedAt: '',
+                imageUrl: '',
+                imageUploadedAt: '',
+                trackingCode: ''
             });
             
             const docRef = await db.collection('services').add(service);
