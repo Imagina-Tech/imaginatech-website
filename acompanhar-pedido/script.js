@@ -21,6 +21,15 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// Configurar persistência de sessão
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        console.log('Persistência de sessão configurada');
+    })
+    .catch((error) => {
+        console.error('Erro ao configurar persistência:', error);
+    });
+
 // Global Variables
 let currentUser = null;
 let currentOrderCode = null;
@@ -85,10 +94,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loadingOverlay').classList.add('hidden');
     }, 1000);
     
+    // Verificar foco da janela para detectar mudanças de autenticação
+    let wasLoggedIn = false;
+    
+    window.addEventListener('focus', () => {
+        // Quando a janela ganhar foco, verificar se ainda está logado
+        if (wasLoggedIn && !auth.currentUser) {
+            console.log('Detectado logout em outra aba, tentando recuperar sessão...');
+            // Forçar verificação do estado de autenticação
+            auth.getRedirectResult().catch(() => {
+                // Ignorar erro, apenas forçar atualização
+            });
+        }
+    });
+    
     // Auth state observer
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
+            wasLoggedIn = true;
             showCodeSection();
             // Usar try-catch para evitar erros de permissão
             try {
@@ -99,7 +123,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('myOrdersSection').style.display = 'none';
             }
         } else {
+            // Só resetar se realmente não houver usuário
+            if (wasLoggedIn && !user) {
+                console.log('Usuário foi deslogado');
+                // Tentar recuperar sessão local
+                const localUser = JSON.parse(localStorage.getItem('acompanhar_user') || 'null');
+                if (localUser && localUser.uid) {
+                    console.log('Tentando recuperar sessão local...');
+                    // Não fazer nada aqui, deixar o Firebase tentar recuperar
+                    return;
+                }
+            }
             currentUser = null;
+            wasLoggedIn = false;
             showLoginSection();
         }
     });
@@ -130,6 +166,15 @@ async function loginWithGoogle() {
         
         if (result.user) {
             currentUser = result.user;
+            
+            // Salvar informações básicas do usuário localmente
+            localStorage.setItem('acompanhar_user', JSON.stringify({
+                uid: result.user.uid,
+                email: result.user.email,
+                name: result.user.displayName,
+                photo: result.user.photoURL
+            }));
+            
             showToast('Login realizado com sucesso!', 'success');
             
             // Log user login - usar try-catch para evitar erros
@@ -166,6 +211,9 @@ async function logout() {
             historyListeners.forEach(listener => listener());
             historyListeners = [];
         }
+        
+        // Limpar dados salvos localmente
+        localStorage.removeItem('acompanhar_user');
         
         await auth.signOut();
         currentUser = null;
@@ -733,32 +781,57 @@ function updateTimeline(orderData) {
 
 function startOrderListener(orderId) {
     if (orderListener) {
-        orderListener();
+        try {
+            orderListener();
+        } catch (e) {
+            console.warn('Erro ao limpar listener anterior:', e);
+        }
+        orderListener = null;
     }
     
-    orderListener = db.collection('services').doc(orderId)
-        .onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                showOrderDetails(doc.id, data);
-                
-                // Atualizar também o histórico de pedidos se estiver visível
-                if (currentUser) {
-                    loadUserOrders();
+    try {
+        orderListener = db.collection('services').doc(orderId)
+            .onSnapshot(
+                (doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        showOrderDetails(doc.id, data);
+                        
+                        // Atualizar também o histórico de pedidos se estiver visível
+                        if (currentUser) {
+                            // Usar setTimeout para evitar conflitos
+                            setTimeout(() => loadUserOrders(), 100);
+                        }
+                        
+                        // Show notification if status changed
+                        if (data.lastStatusChange && 
+                            new Date(data.lastStatusChange) > new Date(Date.now() - 5000)) {
+                            showToast('Status do pedido atualizado!', 'info');
+                        }
+                    } else {
+                        showToast('Pedido não encontrado', 'error');
+                        backToCode();
+                    }
+                },
+                (error) => {
+                    // Tratar erro de permissão sem forçar logout
+                    console.error('Erro no listener do pedido:', error);
+                    if (error.code === 'permission-denied') {
+                        showToast('Erro de permissão ao monitorar pedido. Recarregue a página.', 'error');
+                        // Não fazer logout, apenas parar o listener
+                        if (orderListener) {
+                            orderListener();
+                            orderListener = null;
+                        }
+                    } else {
+                        showToast('Erro ao monitorar pedido', 'error');
+                    }
                 }
-                
-                // Show notification if status changed
-                if (data.lastStatusChange && 
-                    new Date(data.lastStatusChange) > new Date(Date.now() - 5000)) {
-                    showToast('Status do pedido atualizado!', 'info');
-                }
-            } else {
-                showToast('Pedido não encontrado', 'error');
-                backToCode();
-            }
-        }, (error) => {
-            console.error('Erro ao escutar mudanças:', error);
-        });
+            );
+    } catch (error) {
+        console.error('Erro ao criar listener:', error);
+        showToast('Erro ao monitorar atualizações', 'error');
+    }
 }
 
 function refreshOrder() {
