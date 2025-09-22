@@ -745,6 +745,13 @@ body {
     color: var(--neon-purple);
 }
 
+.status-transporte {
+    background: rgba(255, 107, 53, 0.2);
+    border: 2px solid var(--neon-orange);
+    color: var(--neon-orange);
+    animation: pulse-border 3s ease-in-out infinite;
+}
+
 .status-entregue {
     background: rgba(87, 212, 202, 0.2);
     border: 2px solid var(--secondary-blue);
