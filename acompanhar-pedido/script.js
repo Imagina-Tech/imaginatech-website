@@ -292,10 +292,16 @@ async function verifyCode() {
         return;
     }
     
-    if (!currentUser) {
+    // Verificar se está realmente autenticado
+    const user = auth.currentUser;
+    if (!user) {
+        console.log('Usuário não autenticado ao verificar código');
         showToast('Faça login primeiro', 'error');
         return;
     }
+    
+    // Debug: mostrar informações do usuário
+    console.log('Verificando código como:', user.email);
     
     if (clientAttempts >= MAX_ATTEMPTS) {
         showToast('Limite de tentativas excedido. Tente novamente mais tarde.', 'error');
@@ -305,16 +311,22 @@ async function verifyCode() {
     clientAttempts++;
     
     try {
-        // Search for order with this code
+        console.log('Buscando pedido com código:', code);
+        
+        // Tentar buscar o pedido
         const snapshot = await db.collection('services')
             .where('orderCode', '==', code)
             .limit(1)
             .get();
         
+        console.log('Resultado da busca:', snapshot.empty ? 'Nenhum pedido encontrado' : 'Pedido encontrado');
+        
         if (!snapshot.empty) {
             const doc = snapshot.docs[0];
             currentOrderId = doc.id;
             currentOrderCode = code;
+            
+            console.log('Pedido encontrado:', doc.id);
             
             // Save order to user's history - usar try-catch
             try {
@@ -346,11 +358,23 @@ async function verifyCode() {
             handleInvalidCode();
         }
     } catch (error) {
-        console.error('Erro ao verificar código:', error);
+        console.error('Erro detalhado ao verificar código:', error);
+        console.error('Código do erro:', error.code);
+        console.error('Mensagem:', error.message);
         
-        // Verificar se é erro de permissão
-        if (error.code === 'permission-denied') {
-            showToast('Erro de permissão. Verifique se está logado.', 'error');
+        // Verificar diferentes tipos de erro
+        if (error.code === 'permission-denied' || error.message.includes('permission')) {
+            // Tentar re-autenticar
+            const currentAuth = auth.currentUser;
+            if (!currentAuth) {
+                showToast('Sessão expirada. Faça login novamente.', 'error');
+                showLoginSection();
+            } else {
+                showToast('Erro de permissão. Recarregue a página e tente novamente.', 'error');
+                console.log('Usuário autenticado mas sem permissão:', currentAuth.email);
+            }
+        } else if (error.code === 'unavailable') {
+            showToast('Serviço temporariamente indisponível. Tente novamente.', 'error');
         } else {
             showToast('Erro ao buscar pedido. Tente novamente.', 'error');
         }
