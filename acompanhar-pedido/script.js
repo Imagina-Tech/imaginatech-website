@@ -26,6 +26,7 @@ let currentUser = null;
 let currentOrderCode = null;
 let currentOrderId = null;
 let orderListener = null;
+let historyListeners = []; // Array para armazenar listeners do histórico
 let clientAttempts = 0;
 const MAX_ATTEMPTS = 3;
 
@@ -139,14 +140,22 @@ async function loginWithGoogle() {
 
 async function logout() {
     try {
-        await auth.signOut();
-        currentUser = null;
-        currentOrderCode = null;
-        currentOrderId = null;
+        // Limpar todos os listeners antes de fazer logout
         if (orderListener) {
             orderListener();
             orderListener = null;
         }
+        
+        if (historyListeners.length > 0) {
+            historyListeners.forEach(listener => listener());
+            historyListeners = [];
+        }
+        
+        await auth.signOut();
+        currentUser = null;
+        currentOrderCode = null;
+        currentOrderId = null;
+        
         showToast('Logout realizado com sucesso!', 'info');
         showLoginSection();
     } catch (error) {
@@ -195,6 +204,11 @@ function backToCode() {
     if (orderListener) {
         orderListener();
         orderListener = null;
+    }
+    
+    // Recarregar histórico para garantir que os listeners estejam ativos
+    if (currentUser) {
+        loadUserOrders();
     }
     
     // Clear code input
@@ -697,6 +711,11 @@ function startOrderListener(orderId) {
                 const data = doc.data();
                 showOrderDetails(doc.id, data);
                 
+                // Atualizar também o histórico de pedidos se estiver visível
+                if (currentUser) {
+                    loadUserOrders();
+                }
+                
                 // Show notification if status changed
                 if (data.lastStatusChange && 
                     new Date(data.lastStatusChange) > new Date(Date.now() - 5000)) {
@@ -765,6 +784,12 @@ async function displayUserOrders(orderCodes) {
     const ordersList = document.getElementById('ordersList');
     const myOrdersSection = document.getElementById('myOrdersSection');
     
+    // Limpar listeners anteriores
+    if (historyListeners.length > 0) {
+        historyListeners.forEach(listener => listener());
+        historyListeners = [];
+    }
+    
     if (!orderCodes || orderCodes.length === 0) {
         myOrdersSection.style.display = 'none';
         return;
@@ -785,11 +810,51 @@ async function displayUserOrders(orderCodes) {
             
             if (!snapshot.empty) {
                 const doc = snapshot.docs[0];
+                const orderData = doc.data();
+                
+                // Aplicar lógica especial para SEDEX
+                let displayStatus = orderData.status;
+                if (orderData.deliveryMethod === 'sedex' && orderData.status === 'retirada') {
+                    displayStatus = 'transporte';
+                }
+                
                 orders.push({
                     code: code,
-                    data: doc.data(),
+                    data: orderData,
+                    displayStatus: displayStatus,
                     id: doc.id
                 });
+                
+                // Adicionar listener em tempo real para este pedido
+                const listener = db.collection('services').doc(doc.id)
+                    .onSnapshot((docSnapshot) => {
+                        if (docSnapshot.exists) {
+                            const updatedData = docSnapshot.data();
+                            let updatedStatus = updatedData.status;
+                            if (updatedData.deliveryMethod === 'sedex' && updatedData.status === 'retirada') {
+                                updatedStatus = 'transporte';
+                            }
+                            
+                            // Atualizar o item específico no DOM
+                            const orderElement = document.querySelector(`[data-order-code="${code}"]`);
+                            if (orderElement) {
+                                const statusBadge = orderElement.querySelector('.status-badge');
+                                if (statusBadge) {
+                                    // Remover classes antigas
+                                    statusBadge.className = `status-badge status-${updatedStatus}`;
+                                    statusBadge.style.cssText = 'font-size: 0.8rem; padding: 0.25rem 0.75rem;';
+                                    statusBadge.innerHTML = STATUS_MESSAGES[updatedStatus]?.text || 'Status desconhecido';
+                                }
+                                // Atualizar nome do serviço se mudou
+                                const nameElement = orderElement.querySelector('.order-item-date');
+                                if (nameElement) {
+                                    nameElement.textContent = updatedData.name || 'Sem nome';
+                                }
+                            }
+                        }
+                    });
+                
+                historyListeners.push(listener);
             }
         } catch (error) {
             console.error(`Erro ao buscar pedido ${code}:`, error);
@@ -801,15 +866,15 @@ async function displayUserOrders(orderCodes) {
         return;
     }
     
-    // Renderizar lista de pedidos
+    // Renderizar lista de pedidos com status correto e data-attribute para identificação
     ordersList.innerHTML = orders.map(order => `
-        <div class="order-item" onclick="quickLoadOrder('${order.code}')">
+        <div class="order-item" onclick="quickLoadOrder('${order.code}')" data-order-code="${order.code}">
             <div>
                 <div class="order-item-code">#${order.code}</div>
                 <div class="order-item-date">${order.data.name || 'Sem nome'}</div>
             </div>
-            <div class="status-badge status-${order.data.status}" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
-                ${STATUS_MESSAGES[order.data.status]?.text || 'Status desconhecido'}
+            <div class="status-badge status-${order.displayStatus}" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+                ${STATUS_MESSAGES[order.displayStatus]?.text || 'Status desconhecido'}
             </div>
         </div>
     `).join('');
