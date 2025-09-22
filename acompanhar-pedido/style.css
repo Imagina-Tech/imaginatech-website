@@ -888,7 +888,7 @@ body {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Button for tracking */
+/* Button for tracking - Direct link to Correios */
 .btn-tracking {
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
@@ -902,11 +902,13 @@ body {
     align-items: center;
     gap: 0.5rem;
     transition: all 0.3s ease;
+    text-decoration: none;
 }
 
 .btn-tracking:hover {
     transform: translateY(-2px);
     box-shadow: 0 3px 15px rgba(0, 212, 255, 0.4);
+    color: white;
 }
 
 /* ===========================
