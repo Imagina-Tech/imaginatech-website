@@ -729,7 +729,11 @@ async function updateStatus(serviceId, newStatus) {
         'pendente': 'Marcar como Pendente',
         'producao': 'Iniciar Produção',
         'concluido': 'Marcar como Concluído',
-        'retirada': service.deliveryMethod === 'sedex' ? 'Marcar como Postado' : 'Pronto para Retirada',
+        'retirada': service.deliveryMethod === 'retirada' ? 'Pronto para Retirada' :
+                   service.deliveryMethod === 'sedex' ? 'Marcar como Postado' :
+                   service.deliveryMethod === 'uber' ? 'Marcar como Postado' :
+                   service.deliveryMethod === 'definir' ? 'Marcar como Combinado' :
+                   'Marcar Processo de Entrega',
         'entregue': 'Confirmar Entrega'
     };
     
@@ -739,8 +743,8 @@ async function updateStatus(serviceId, newStatus) {
     // WhatsApp option
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
-        // Verifica se tem telefone válido (não nulo e não vazio)
-        const hasPhone = service.clientPhone && service.clientPhone.trim() !== '';
+        // Verifica se tem telefone válido (não vazio)
+        const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
         if (hasPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
             whatsappOption.style.display = 'block';
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
@@ -753,8 +757,8 @@ async function updateStatus(serviceId, newStatus) {
     // Email option - CORRIGIDO PARA TRATAR STRINGS VAZIAS
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
-        // Verifica se tem email válido (não nulo, não undefined e não vazio)
-        const hasEmail = service.clientEmail && service.clientEmail.trim() !== '';
+        // Verifica se tem email válido (não vazio)
+        const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
         if (hasEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
             emailOption.style.display = 'block';
             const emailCheckbox = document.getElementById('sendEmailNotification');
@@ -835,8 +839,14 @@ async function confirmStatusChange() {
             const messages = {
                 'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
                 'retirada': service.deliveryMethod === 'retirada' ? 
-                    `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}` :
-                    `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}`,
+                    `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!` :
+                    service.deliveryMethod === 'sedex' ?
+                    `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}` :
+                    service.deliveryMethod === 'uber' ?
+                    `📦 Postado via Uber Flash!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nEm breve chegará até você!` :
+                    service.deliveryMethod === 'definir' ?
+                    `📦 Entrega combinada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nConforme combinado com você!` :
+                    `📦 Em processo de entrega!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
                 'entregue': `✅ Entregue com sucesso!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nObrigado! 😊`
             };
             messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
@@ -958,12 +968,21 @@ function renderServices() {
                             ${['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map((status, index) => {
                                 const isActive = service.status === status;
                                 const isCompleted = isStatusCompleted(service.status, status);
-                                const label = status === 'retirada' && service.deliveryMethod === 'sedex' ? 'Postado' : 
-                                             status === 'pendente' ? 'Pendente' :
-                                             status === 'producao' ? 'Produção' :
-                                             status === 'concluido' ? 'Concluído' :
-                                             status === 'retirada' ? 'Retirada' :
-                                             'Entregue';
+                                
+                                // Label dinâmico baseado no método de entrega
+                                let label;
+                                if (status === 'pendente') label = 'Pendente';
+                                else if (status === 'producao') label = 'Produção';
+                                else if (status === 'concluido') label = 'Concluído';
+                                else if (status === 'retirada') {
+                                    // Label específico por método de entrega
+                                    if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
+                                    else if (service.deliveryMethod === 'sedex') label = 'Postado';
+                                    else if (service.deliveryMethod === 'uber') label = 'Postado';
+                                    else if (service.deliveryMethod === 'definir') label = 'Combinado';
+                                    else label = 'Entrega';
+                                }
+                                else if (status === 'entregue') label = 'Entregue';
                                 
                                 return `
                                     <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
@@ -1359,7 +1378,7 @@ const getDeliveryIcon = method => ({
 
 const getStatusLabel = status => ({
     'todos': 'Ativos', 'pendente': 'Pendentes', 'producao': 'Em Produção',
-    'concluido': 'Concluídos', 'retirada': 'Para Retirada', 'entregue': 'Entregues'
+    'concluido': 'Concluídos', 'retirada': 'Em Processo de Entrega', 'entregue': 'Entregues'
 }[status] || status);
 
 const getStatusIcon = status => ({
@@ -1377,15 +1396,15 @@ const isStatusCompleted = (currentStatus, checkStatus) => {
 // EMAIL NOTIFICATION
 // ===========================
 async function sendEmailNotification(service) {
-    // Verifica se tem email válido (não nulo, não undefined e não vazio)
-    if (!service.clientEmail || service.clientEmail.trim() === '') return;
+    // Verifica se tem email válido (não vazio)
+    if (!service.clientEmail || service.clientEmail.trim().length === 0) return;
     
     try {
         // IMPORTANTE: Inclui o email do cliente como destinatário
         await emailjs.send('service_vxndoi5', 'template_cwrmts1', {
             to_email: service.clientEmail,  // Email do destinatário (CLIENTE)
-            client_name: service.client,
-            order_code: service.orderCode,
+            client_name: service.client || 'Cliente',
+            order_code: service.orderCode || 'N/A',
             reply_to: '3d3printers@gmail.com'  // Email da empresa para respostas
         });
         console.log('Email enviado com sucesso para:', service.clientEmail);
