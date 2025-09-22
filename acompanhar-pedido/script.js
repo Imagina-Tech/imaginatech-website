@@ -54,6 +54,11 @@ const STATUS_MESSAGES = {
         icon: 'fas fa-box-open',
         message: 'Seu pedido está pronto! Você já pode retirá-lo.'
     },
+    'transporte': {
+        text: 'Em Transporte',
+        icon: 'fas fa-truck',
+        message: 'Seu pedido foi postado e está em transporte pelos Correios.'
+    },
     'entregue': {
         text: 'Entregue',
         icon: 'fas fa-handshake',
@@ -296,7 +301,13 @@ function showOrderDetails(orderId, orderData) {
     // Create order card content
     const orderCard = document.getElementById('orderCard');
     
-    const statusInfo = STATUS_MESSAGES[orderData.status] || STATUS_MESSAGES['pendente'];
+    // Lógica especial para SEDEX com status retirada (que na verdade é transporte)
+    let actualStatus = orderData.status;
+    if (orderData.deliveryMethod === 'sedex' && orderData.status === 'retirada') {
+        actualStatus = 'transporte';
+    }
+    
+    const statusInfo = STATUS_MESSAGES[actualStatus] || STATUS_MESSAGES['pendente'];
     
     // Verificar se a data está indefinida
     const days = orderData.dateUndefined ? null : calculateDaysRemaining(orderData.dueDate);
@@ -334,7 +345,7 @@ function showOrderDetails(orderId, orderData) {
                     Cliente: ${orderData.client || 'Não informado'}
                 </p>
             </div>
-            <div class="status-badge status-${orderData.status}">
+            <div class="status-badge status-${actualStatus}">
                 <i class="${statusInfo.icon}"></i>
                 ${statusInfo.text}
             </div>
@@ -541,13 +552,13 @@ function updateTimeline(orderData) {
         }
         
     } else if (orderData.deliveryMethod === 'retirada') {
-        // Para RETIRADA - adicionar pronto para retirada
-        if (orderData.readyAt) {
+        // Para RETIRADA - adicionar pronto para retirada somente se for retirada
+        if (orderData.readyAt || orderData.status === 'retirada') {
             events.push({
-                date: formatDateTime(orderData.readyAt),
+                date: orderData.readyAt ? formatDateTime(orderData.readyAt) : 'Status atual',
                 text: 'Pronto para retirada',
                 icon: 'fas fa-box-open',
-                completed: true
+                completed: !!orderData.readyAt
             });
         }
         
@@ -585,10 +596,19 @@ function updateTimeline(orderData) {
     
     // Add current status as last event if not delivered
     if (orderData.status !== 'entregue') {
-        const statusInfo = STATUS_MESSAGES[orderData.status];
+        // Verificar status especial para SEDEX
+        let currentStatusKey = orderData.status;
+        let currentStatusText = STATUS_MESSAGES[orderData.status].text;
+        
+        if (orderData.deliveryMethod === 'sedex' && orderData.status === 'retirada') {
+            currentStatusText = 'Em Transporte';
+            currentStatusKey = 'transporte';
+        }
+        
+        const statusInfo = STATUS_MESSAGES[currentStatusKey];
         events.push({
             date: 'Status atual',
-            text: statusInfo.text,
+            text: currentStatusText,
             icon: statusInfo.icon,
             completed: false,
             current: true
