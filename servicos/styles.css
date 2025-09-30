@@ -692,6 +692,22 @@ body {
 
 .btn-download:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0, 255, 136, 0.3); }
 
+.btn-image-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    background: linear-gradient(135deg, var(--neon-purple), #B845FF);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-image-view:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(153, 69, 255, 0.3); }
+
 .delivery-badge {
     display: flex;
     justify-content: space-between;
@@ -1015,6 +1031,29 @@ body {
 }
 
 .modal-content.modal-small { max-width: 450px; }
+
+.modal-content.modal-image { max-width: 900px; }
+
+.modal-image-body {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dark-bg);
+    min-height: 400px;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+.modal-image-body img {
+    max-width: 100%;
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+}
 
 @keyframes modalSlideIn {
     from { transform: scale(0.9); opacity: 0; }
@@ -1594,6 +1633,22 @@ input[type="file"]::file-selector-button {
     .btn-whatsapp, .btn-delivery {
         font-size: 0.85rem;
         padding: 0.6rem;
+    }
+    
+    /* Image modal mobile */
+    .modal-content.modal-image {
+        max-width: 100%;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+    
+    .modal-image-body {
+        min-height: 300px;
+        max-height: 60vh;
+    }
+    
+    .modal-image-body img {
+        max-height: 60vh;
     }
 }
 
