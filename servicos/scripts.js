@@ -27,7 +27,7 @@ const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "igor.butter@gmail.com"];
 // ===========================
 let db, auth, storage, services = [], currentFilter = 'todos', editingServiceId = null;
 let currentUser = null, isAuthorized = false, servicesListener = null;
-let pendingStatusUpdate = null, selectedFile = null, selectedImage = null;
+let pendingStatusUpdate = null, selectedFile = null, selectedImages = [];
 
 // ===========================
 // INITIALIZATION
@@ -187,26 +187,82 @@ function handleFileSelect(event) {
 }
 
 function handleImageSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return selectedImage = null;
+    const files = Array.from(event.target.files);
+    if (!files.length) return selectedImages = [];
     
-    if (!file.type.startsWith('image/') || file.size > 5242880) {
-        showToast(!file.type.startsWith('image/') ? 'Selecione uma imagem' : 'Imagem muito grande. Máximo: 5MB', 'error');
-        event.target.value = '';
-        return selectedImage = null;
-    }
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml'];
+    const maxSize = 5242880; // 5MB
     
-    selectedImage = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const preview = document.getElementById('imagePreview');
-        const img = document.getElementById('previewImg');
-        if (preview && img) {
-            img.src = e.target.result;
-            preview.style.display = 'block';
+    const validFiles = files.filter(file => {
+        if (!validTypes.includes(file.type)) {
+            showToast(`Formato inválido: ${file.name}. Use JPEG, PNG, GIF, WebP, BMP ou SVG`, 'error');
+            return false;
         }
-    };
-    reader.readAsDataURL(file);
+        if (file.size > maxSize) {
+            showToast(`Arquivo muito grande: ${file.name}. Máximo: 5MB`, 'error');
+            return false;
+        }
+        return true;
+    });
+    
+    selectedImages = validFiles;
+    
+    const preview = document.getElementById('imagePreview');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    
+    if (validFiles.length > 0 && preview && previewContainer) {
+        previewContainer.innerHTML = '';
+        
+        validFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'preview-image-wrapper';
+                imgWrapper.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview ${index + 1}">
+                    <button type="button" class="btn-remove-preview" onclick="removePreviewImage(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(imgWrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        preview.style.display = 'block';
+    }
+}
+
+function removePreviewImage(index) {
+    selectedImages.splice(index, 1);
+    const fileInput = document.getElementById('serviceImage');
+    if (fileInput) fileInput.value = '';
+    
+    if (selectedImages.length === 0) {
+        const preview = document.getElementById('imagePreview');
+        if (preview) preview.style.display = 'none';
+    } else {
+        // Re-render previews
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        if (previewContainer) {
+            previewContainer.innerHTML = '';
+            selectedImages.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'preview-image-wrapper';
+                    imgWrapper.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${idx + 1}">
+                        <button type="button" class="btn-remove-preview" onclick="removePreviewImage(${idx})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    previewContainer.appendChild(imgWrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
 }
 
 const removeFile = () => {
@@ -220,13 +276,15 @@ const removeFile = () => {
 };
 
 const removeImage = () => {
-    selectedImage = null;
+    selectedImages = [];
     ['serviceImage', 'currentImageUrl'].forEach(id => {
         const el = document.getElementById(id);
         el && (el.value = '');
     });
     const preview = document.getElementById('imagePreview');
     preview && (preview.style.display = 'none');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) previewContainer.innerHTML = '';
 };
 
 async function uploadFile(file, serviceId) {
@@ -413,8 +471,10 @@ function startServicesListener() {
                 fileName: data.fileName || '',
                 fileSize: data.fileSize || '',
                 fileUploadedAt: data.fileUploadedAt || '',
-                imageUrl: data.imageUrl || '',
+                imageUrl: data.imageUrl || '', // Legacy support
+                images: data.images || [], // Novo campo para múltiplas imagens
                 imageUploadedAt: data.imageUploadedAt || '',
+                instagramPhoto: data.instagramPhoto || '',
                 trackingCode: data.trackingCode || '',
                 deliveryAddress: data.deliveryAddress || {},
                 pickupInfo: data.pickupInfo || {},
@@ -641,12 +701,24 @@ async function saveService(event) {
             });
         }
         
-        if (selectedImage && serviceDocId) {
-            const imageData = await uploadFile(selectedImage, serviceDocId);
-            imageData && await db.collection('services').doc(serviceDocId).update({
-                imageUrl: imageData.url,
-                imageUploadedAt: imageData.uploadedAt
-            });
+        if (selectedImages.length > 0 && serviceDocId) {
+            const imageUrls = [];
+            for (const imageFile of selectedImages) {
+                const imageData = await uploadFile(imageFile, serviceDocId);
+                if (imageData) {
+                    imageUrls.push({
+                        url: imageData.url,
+                        name: imageFile.name,
+                        uploadedAt: imageData.uploadedAt
+                    });
+                }
+            }
+            if (imageUrls.length > 0) {
+                await db.collection('services').doc(serviceDocId).update({
+                    images: imageUrls,
+                    imageUploadedAt: new Date().toISOString()
+                });
+            }
         }
         
         // Close modal after a delay - FIXED: same delay for both create and edit
@@ -713,6 +785,12 @@ async function updateStatus(serviceId, newStatus) {
     
     const service = services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
+    
+    // Se está tentando mudar para "concluído", verifica se tem foto instagramável
+    if (newStatus === 'concluido' && !service.instagramPhoto) {
+        openInstagramPhotoModal(serviceId, service);
+        return;
+    }
     
     // Define a ordem dos status para verificar se é regressão
     const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
@@ -964,8 +1042,8 @@ function renderServices() {
                         <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
                         ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                         ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
-                        ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Baixar"><i class="fas fa-download"></i><span>${escapeHtml(service.fileName || 'Arquivo')}</span></button></div>` : ''}
-                        ${service.imageUrl ? `<div class="info-item"><button class="btn-image-view" onclick="showImageModal('${service.imageUrl}', '${escapeHtml(service.name || 'Serviço')}')" title="Ver Imagem"><i class="fas fa-image"></i><span>Imagem Anexada</span></button></div>` : ''}
+                        ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Download automático"><i class="fas fa-download"></i><span>Arquivo 3D</span></button></div>` : ''}
+                        ${(service.images && service.images.length > 0) || service.imageUrl ? `<div class="info-item"><button class="btn-image-view" onclick="showImageModal(${JSON.stringify(service.images && service.images.length > 0 ? service.images : [{url: service.imageUrl, name: service.name}])}, '${escapeHtml(service.name || 'Serviço')}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${service.images && service.images.length > 1 ? service.images.length + ' Imagens' : 'Imagem'}</span></button></div>` : ''}
                     </div>
                     
                     ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
@@ -1051,7 +1129,8 @@ function filterServices(filter) {
 }
 
 function openAddModal() {
-    editingServiceId = selectedFile = selectedImage = null;
+    editingServiceId = selectedFile = null;
+    selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
@@ -1063,6 +1142,9 @@ function openAddModal() {
         const el = document.getElementById(id);
         el && (el.style.display = 'none');
     });
+    
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) previewContainer.innerHTML = '';
     
     document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
     document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
@@ -1081,7 +1163,8 @@ function openEditModal(serviceId) {
     if (!service) return;
     
     editingServiceId = serviceId;
-    selectedFile = selectedImage = null;
+    selectedFile = null;
+    selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
@@ -1136,14 +1219,26 @@ function openEditModal(serviceId) {
         }
     }
     
-    if (service.imageUrl) {
-        document.getElementById('currentImageUrl') && (document.getElementById('currentImageUrl').value = service.imageUrl);
-        const preview = document.getElementById('imagePreview');
-        const img = document.getElementById('previewImg');
-        if (preview && img) {
-            img.src = service.imageUrl;
-            preview.style.display = 'block';
-        }
+    // Handle images - Legacy support + new multiple images
+    const preview = document.getElementById('imagePreview');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    
+    if (previewContainer) previewContainer.innerHTML = '';
+    
+    if ((service.images && service.images.length > 0) || service.imageUrl) {
+        const imagesToShow = service.images && service.images.length > 0 ? service.images : [{ url: service.imageUrl, name: 'Imagem' }];
+        
+        imagesToShow.forEach((img, index) => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'preview-image-wrapper existing-image';
+            imgWrapper.innerHTML = `
+                <img src="${img.url}" alt="Imagem ${index + 1}">
+                <span class="existing-badge">Existente</span>
+            `;
+            previewContainer.appendChild(imgWrapper);
+        });
+        
+        if (preview) preview.style.display = 'block';
     }
     
     // Handle delivery
@@ -1198,22 +1293,173 @@ const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.c
 // ===========================
 // IMAGE VIEWER MODAL
 // ===========================
-function showImageModal(imageUrl, serviceName) {
+let currentImageGallery = [];
+let currentImageIndex = 0;
+
+function showImageModal(images, serviceName, startIndex = 0) {
+    // Se receber uma string (URL única), converte para array
+    if (typeof images === 'string') {
+        images = [{ url: images, name: serviceName }];
+    }
+    
+    currentImageGallery = images;
+    currentImageIndex = startIndex;
+    
     const modal = document.getElementById('imageViewerModal');
     if (!modal) return;
     
-    const img = document.getElementById('viewerImage');
-    const title = document.getElementById('viewerTitle');
-    
-    if (img && title) {
-        img.src = imageUrl;
-        title.textContent = serviceName || 'Imagem do Serviço';
-    }
-    
+    updateImageViewer();
     modal.classList.add('active');
 }
 
-const closeImageModal = () => document.getElementById('imageViewerModal')?.classList.remove('active');
+function updateImageViewer() {
+    const img = document.getElementById('viewerImage');
+    const title = document.getElementById('viewerTitle');
+    const counter = document.getElementById('imageCounter');
+    const prevBtn = document.getElementById('prevImageBtn');
+    const nextBtn = document.getElementById('nextImageBtn');
+    
+    if (!img || !currentImageGallery.length) return;
+    
+    const currentImage = currentImageGallery[currentImageIndex];
+    img.src = currentImage.url;
+    
+    if (title) {
+        title.textContent = currentImage.name || `Imagem ${currentImageIndex + 1}`;
+    }
+    
+    if (counter) {
+        counter.textContent = `${currentImageIndex + 1} / ${currentImageGallery.length}`;
+        counter.style.display = currentImageGallery.length > 1 ? 'block' : 'none';
+    }
+    
+    if (prevBtn) {
+        prevBtn.style.display = currentImageGallery.length > 1 ? 'block' : 'none';
+        prevBtn.disabled = currentImageIndex === 0;
+    }
+    
+    if (nextBtn) {
+        nextBtn.style.display = currentImageGallery.length > 1 ? 'block' : 'none';
+        nextBtn.disabled = currentImageIndex === currentImageGallery.length - 1;
+    }
+}
+
+function prevImage() {
+    if (currentImageIndex > 0) {
+        currentImageIndex--;
+        updateImageViewer();
+    }
+}
+
+function nextImage() {
+    if (currentImageIndex < currentImageGallery.length - 1) {
+        currentImageIndex++;
+        updateImageViewer();
+    }
+}
+
+const closeImageModal = () => {
+    document.getElementById('imageViewerModal')?.classList.remove('active');
+    currentImageGallery = [];
+    currentImageIndex = 0;
+};
+
+// ===========================
+// INSTAGRAM PHOTO MODAL
+// ===========================
+let pendingInstagramUpload = null;
+let instagramPhotoFile = null;
+
+function openInstagramPhotoModal(serviceId, service) {
+    pendingInstagramUpload = { serviceId, service };
+    instagramPhotoFile = null;
+    
+    const modal = document.getElementById('instagramPhotoModal');
+    const serviceName = document.getElementById('instagramServiceName');
+    const preview = document.getElementById('instagramPhotoPreview');
+    
+    if (serviceName) serviceName.textContent = service.name || 'Serviço';
+    if (preview) preview.style.display = 'none';
+    
+    const fileInput = document.getElementById('instagramPhotoInput');
+    if (fileInput) fileInput.value = '';
+    
+    modal?.classList.add('active');
+}
+
+function handleInstagramPhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return instagramPhotoFile = null;
+    
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        showToast('Use apenas JPEG ou PNG para foto instagramável', 'error');
+        event.target.value = '';
+        return instagramPhotoFile = null;
+    }
+    
+    if (file.size > 5242880) {
+        showToast('Foto muito grande. Máximo: 5MB', 'error');
+        event.target.value = '';
+        return instagramPhotoFile = null;
+    }
+    
+    instagramPhotoFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+        const preview = document.getElementById('instagramPhotoPreview');
+        const img = document.getElementById('instagramPhotoImg');
+        if (preview && img) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function confirmInstagramPhoto() {
+    if (!instagramPhotoFile) {
+        return showToast('Selecione uma foto instagramável antes de confirmar', 'error');
+    }
+    
+    if (!pendingInstagramUpload) return;
+    
+    const { serviceId, service } = pendingInstagramUpload;
+    
+    try {
+        showToast('Fazendo upload da foto...', 'info');
+        
+        // Upload da foto instagramável
+        const photoData = await uploadFile(instagramPhotoFile, serviceId);
+        
+        if (!photoData) {
+            return showToast('Erro ao fazer upload da foto', 'error');
+        }
+        
+        // Atualiza o serviço com a foto e muda status para concluído
+        await db.collection('services').doc(serviceId).update({
+            instagramPhoto: photoData.url,
+            status: 'concluido',
+            completedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.email
+        });
+        
+        showToast('✅ Foto anexada! Status alterado para Concluído', 'success');
+        closeInstagramPhotoModal();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao confirmar foto instagramável', 'error');
+    }
+}
+
+const closeInstagramPhotoModal = () => {
+    document.getElementById('instagramPhotoModal')?.classList.remove('active');
+    pendingInstagramUpload = null;
+    instagramPhotoFile = null;
+};
 
 // ===========================
 // DELIVERY MANAGEMENT
