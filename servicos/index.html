@@ -326,14 +326,11 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                     <!-- Image Upload -->
                     <div class="form-group full-width">
-                        <label for="serviceImage"><i class="fas fa-image"></i> Imagem de Referência</label>
+                        <label for="serviceImage"><i class="fas fa-image"></i> Imagens de Referência (Múltiplas)</label>
                         <div class="image-input-wrapper">
-                            <input type="file" id="serviceImage" accept="image/*" onchange="handleImageSelect(event)">
+                            <input type="file" id="serviceImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml" multiple onchange="handleImageSelect(event)">
                             <div class="image-preview" id="imagePreview" style="display: none;">
-                                <img id="previewImg" src="" alt="Preview">
-                                <button type="button" class="btn-remove-image" onclick="removeImage()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div class="image-preview-grid" id="imagePreviewContainer"></div>
                             </div>
                         </div>
                     </div>
@@ -548,6 +545,45 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
+    <!-- Instagram Photo Modal -->
+    <div class="modal" id="instagramPhotoModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>📸 Foto Instagramável Obrigatória</h2>
+                <button class="modal-close" onclick="closeInstagramPhotoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="instagram-alert">
+                    <i class="fas fa-camera"></i>
+                    <p><strong>Antes de concluir o serviço:</strong></p>
+                    <p id="instagramServiceName" style="color: var(--neon-blue); font-weight: 600; margin-top: 0.5rem;">Produto</p>
+                    <p style="margin-top: 1rem;">É obrigatório anexar uma foto de alta qualidade do produto finalizado para divulgação no Instagram.</p>
+                </div>
+                
+                <div class="instagram-upload">
+                    <label for="instagramPhotoInput" class="instagram-label">
+                        <i class="fas fa-upload"></i> Selecionar Foto (JPEG ou PNG)
+                    </label>
+                    <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handleInstagramPhotoSelect(event)" style="display: none;">
+                </div>
+                
+                <div class="instagram-preview" id="instagramPhotoPreview" style="display: none;">
+                    <img id="instagramPhotoImg" src="" alt="Preview">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeInstagramPhotoModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-confirm" onclick="confirmInstagramPhoto()">
+                    <i class="fas fa-check"></i> Confirmar e Concluir
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Image Viewer Modal -->
     <div class="modal" id="imageViewerModal">
         <div class="modal-content modal-image">
@@ -558,7 +594,14 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </button>
             </div>
             <div class="modal-body modal-image-body">
+                <button class="image-nav-btn prev-btn" id="prevImageBtn" onclick="prevImage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
                 <img id="viewerImage" src="" alt="Imagem do Serviço">
+                <button class="image-nav-btn next-btn" id="nextImageBtn" onclick="nextImage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="image-counter" id="imageCounter">1 / 1</div>
             </div>
             <div class="modal-footer">
                 <button class="btn-primary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
