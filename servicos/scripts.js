@@ -233,12 +233,20 @@ async function uploadFile(file, serviceId) {
     if (!file || !storage) return null;
     try {
         const fileName = `${serviceId}_${Date.now()}_${file.name}`;
-        const snapshot = await storage.ref(`services/${serviceId}/${fileName}`).put(file);
+        const storageRef = storage.ref(`services/${serviceId}/${fileName}`);
+        const snapshot = await storageRef.put(file);
         const url = await snapshot.ref.getDownloadURL();
         return { url, name: file.name, size: file.size, uploadedAt: new Date().toISOString() };
     } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        showToast('Erro ao fazer upload do arquivo', 'error');
+        
+        // Tratamento específico para erro de CORS
+        if (error.code === 'storage/unauthorized' || error.message.includes('CORS')) {
+            showToast('⚠️ Erro de permissão no Firebase Storage. Configure CORS no console do Firebase.', 'error');
+            console.error('SOLUÇÃO: Configure CORS no Firebase Storage para o domínio imaginatech.com.br');
+        } else {
+            showToast('Erro ao fazer upload do arquivo: ' + error.message, 'error');
+        }
         return null;
     }
 }
@@ -936,8 +944,6 @@ function renderServices() {
                         </div>
                     </div>
                     
-                    ${service.imageUrl ? `<div class="service-image"><img src="${service.imageUrl}" alt="Imagem" onclick="window.open('${service.imageUrl}', '_blank')"></div>` : ''}
-                    
                     ${service.deliveryMethod ? `
                     <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                         <div class="delivery-info">
@@ -959,6 +965,7 @@ function renderServices() {
                         ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                         ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
                         ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Baixar"><i class="fas fa-download"></i><span>${escapeHtml(service.fileName || 'Arquivo')}</span></button></div>` : ''}
+                        ${service.imageUrl ? `<div class="info-item"><button class="btn-image-view" onclick="showImageModal('${service.imageUrl}', '${escapeHtml(service.name || 'Serviço')}')" title="Ver Imagem"><i class="fas fa-image"></i><span>Imagem Anexada</span></button></div>` : ''}
                     </div>
                     
                     ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
@@ -1187,6 +1194,26 @@ const closeStatusModal = () => {
 };
 
 const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.classList.remove('active');
+
+// ===========================
+// IMAGE VIEWER MODAL
+// ===========================
+function showImageModal(imageUrl, serviceName) {
+    const modal = document.getElementById('imageViewerModal');
+    if (!modal) return;
+    
+    const img = document.getElementById('viewerImage');
+    const title = document.getElementById('viewerTitle');
+    
+    if (img && title) {
+        img.src = imageUrl;
+        title.textContent = serviceName || 'Imagem do Serviço';
+    }
+    
+    modal.classList.add('active');
+}
+
+const closeImageModal = () => document.getElementById('imageViewerModal')?.classList.remove('active');
 
 // ===========================
 // DELIVERY MANAGEMENT
