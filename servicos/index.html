@@ -548,6 +548,29 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
+    <!-- Image Viewer Modal -->
+    <div class="modal" id="imageViewerModal">
+        <div class="modal-content modal-image">
+            <div class="modal-header">
+                <h2 id="viewerTitle">Imagem do Serviço</h2>
+                <button class="modal-close" onclick="closeImageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body modal-image-body">
+                <img id="viewerImage" src="" alt="Imagem do Serviço">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
+                    <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
+                </button>
+                <button class="btn-secondary" onclick="closeImageModal()">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
