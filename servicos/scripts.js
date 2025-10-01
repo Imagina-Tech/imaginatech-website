@@ -704,6 +704,7 @@ async function saveService(event) {
         
         // Upload files
         if (selectedFile && serviceDocId) {
+            showToast('Fazendo upload do arquivo 3D...', 'info');
             const fileData = await uploadFile(selectedFile, serviceDocId);
             fileData && await db.collection('services').doc(serviceDocId).update({
                 fileUrl: fileData.url,
@@ -715,6 +716,8 @@ async function saveService(event) {
         
         // CORREÇÃO 3: Upload de novas imagens (adiciona às existentes ao editar)
         if (selectedImages.length > 0 && serviceDocId) {
+            showToast(`Fazendo upload de ${selectedImages.length} ${selectedImages.length > 1 ? 'imagens' : 'imagem'}...`, 'info');
+            
             const currentService = services.find(s => s.id === serviceDocId);
             const existingImages = (editingServiceId && currentService && currentService.images) ? currentService.images : [];
             
@@ -737,17 +740,12 @@ async function saveService(event) {
                     images: allImages,
                     imageUploadedAt: new Date().toISOString()
                 });
+                showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
             }
         }
         
-        // Close modal after a delay - FIXED: same delay for both create and edit
-        if (!editingServiceId) {
-            // For new services, wait to show the order code
-            setTimeout(closeModal, 3000);
-        } else {
-            // For edits, close immediately after uploads complete
-            closeModal();
-        }
+        // Fecha modal imediatamente após uploads
+        closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
         showToast('Erro ao salvar serviço', 'error');
@@ -1087,11 +1085,44 @@ async function deleteService(serviceId) {
     if (!isAuthorized) return showToast('Sem permissão', 'error');
     
     const service = services.find(s => s.id === serviceId);
-    if (!service || !confirm(`Excluir o serviço "${service.name}"?`)) return;
+    if (!service || !confirm(`Excluir o serviço "${service.name}"?\n\nTodos os arquivos e imagens serão deletados permanentemente.`)) return;
     
     try {
+        // Array para armazenar todas as URLs de arquivos a deletar
+        const filesToDelete = [];
+        
+        // Coleta arquivo 3D
+        if (service.fileUrl) filesToDelete.push(service.fileUrl);
+        
+        // Coleta imagens múltiplas
+        if (service.images && service.images.length > 0) {
+            service.images.forEach(img => img.url && filesToDelete.push(img.url));
+        }
+        
+        // Coleta imagem legacy
+        if (service.imageUrl) filesToDelete.push(service.imageUrl);
+        
+        // Coleta foto instagramável
+        if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
+        
+        // Deleta todos os arquivos do Storage
+        if (filesToDelete.length > 0) {
+            showToast('Deletando arquivos...', 'info');
+            
+            for (const fileUrl of filesToDelete) {
+                try {
+                    const fileRef = storage.refFromURL(fileUrl);
+                    await fileRef.delete();
+                } catch (error) {
+                    console.error('Erro ao deletar arquivo:', fileUrl, error);
+                    // Continua mesmo se um arquivo falhar
+                }
+            }
+        }
+        
+        // Deleta o documento do Firestore
         await db.collection('services').doc(serviceId).delete();
-        showToast('Serviço excluído!', 'success');
+        showToast('Serviço e arquivos excluídos!', 'success');
     } catch (error) {
         console.error('Erro:', error);
         showToast('Erro ao excluir', 'error');
