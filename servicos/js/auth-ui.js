@@ -27,9 +27,36 @@ export async function signInWithGoogle() {
     if (!state.auth) return showToast('Sistema não está pronto. Recarregue a página.', 'error');
     
     try {
-        const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        const user = result.user;
+        let user;
         
+        // Verifica se está rodando no app nativo (Capacitor)
+        if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+            console.log('🚀 Login no app nativo - usando Google Auth plugin');
+            
+            // Importar o plugin dinamicamente
+            const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+            
+            // Fazer login com o plugin do Capacitor
+            const googleUser = await GoogleAuth.signIn();
+            
+            console.log('✅ Google Auth retornou:', googleUser);
+            
+            // Criar credencial do Firebase com o token do Google
+            const credential = firebase.auth.GoogleAuthProvider.credential(googleUser.authentication.idToken);
+            
+            // Fazer login no Firebase com a credencial
+            const result = await state.auth.signInWithCredential(credential);
+            user = result.user;
+            
+        } else {
+            console.log('🌐 Login no navegador web - usando Firebase popup');
+            
+            // Login normal via popup (navegador web)
+            const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+            user = result.user;
+        }
+        
+        // Verificar autorização
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
             state.currentUser = user;
             state.isAuthorized = false;
@@ -41,9 +68,17 @@ export async function signInWithGoogle() {
         state.currentUser = user;
         state.isAuthorized = true;
         showToast(`Bem-vindo, ${user.displayName}!`, 'success');
+        
     } catch (error) {
-        console.error('Erro no login:', error);
-        showToast(error.code === 'auth/popup-closed-by-user' ? 'Login cancelado' : 'Erro ao fazer login', error.code === 'auth/popup-closed-by-user' ? 'info' : 'error');
+        console.error('❌ Erro no login:', error);
+        
+        if (error.message && error.message.includes('popup_closed_by_user')) {
+            showToast('Login cancelado', 'info');
+        } else if (error.error === 'popup_closed_by_user') {
+            showToast('Login cancelado', 'info');
+        } else {
+            showToast('Erro ao fazer login: ' + (error.message || 'Tente novamente'), 'error');
+        }
     }
 }
 
