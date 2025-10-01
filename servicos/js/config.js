@@ -23,7 +23,7 @@ export const firebaseConfig = {
 // ===========================
 // CONSTANTS
 // ===========================
-export const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "igor.butter@gmail.com"];
+export const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "netrindademarcus@gmail.com", "igor.butter@gmail.com"];
 
 // ===========================
 // GLOBAL STATE
