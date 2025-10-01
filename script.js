@@ -1,4 +1,4 @@
-// Loading Screen Animation
+// Loading Screen Animati
 window.addEventListener('load', () => {
     setTimeout(() => {
         const loader = document.getElementById('loader');
