@@ -183,21 +183,6 @@ export function showAccessDeniedScreen(user) {
 }
 
 // ===========================
-// CONTINUA COM O RESTO DO CÓDIGO EXISTENTE...
-// (Cole aqui o restante do seu arquivo auth-ui.js original)
-// ===========================
-export function checkAuthorization(user) {
-    if (AUTHORIZED_EMAILS.includes(user.email)) {
-        state.isAuthorized = true;
-        showAdminDashboard(user);
-        startServicesListener();
-    } else {
-        state.isAuthorized = false;
-        showAccessDeniedScreen(user);
-    }
-}
-
-// ===========================
 // UI MANAGEMENT
 // ===========================
 export function showLoginScreen() {
