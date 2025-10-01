@@ -3,7 +3,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular
+VERSÃO: 3.1 - Modular + Capacitor Google Auth
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -84,9 +84,7 @@ export async function signInWithGoogle() {
     } catch (error) {
         console.error('❌ Erro no login:', error);
         
-        if (error.message && error.message.includes('popup_closed_by_user')) {
-            showToast('Login cancelado', 'info');
-        } else if (error.error === 'popup_closed_by_user') {
+        if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup_closed_by_user')) {
             showToast('Login cancelado', 'info');
         } else if (error.error === '12501') {
             showToast('Login cancelado pelo usuário', 'info');
@@ -96,6 +94,98 @@ export async function signInWithGoogle() {
     }
 }
 
+export async function signOut() {
+    try {
+        state.auth && await state.auth.signOut();
+        showToast('Logout realizado com sucesso!', 'info');
+    } catch (error) {
+        console.error('Erro no logout:', error);
+        showToast('Erro ao fazer logout.', 'error');
+    }
+}
+
+export function checkAuthorization(user) {
+    if (AUTHORIZED_EMAILS.includes(user.email)) {
+        state.isAuthorized = true;
+        showAdminDashboard(user);
+        startServicesListener();
+    } else {
+        state.isAuthorized = false;
+        showAccessDeniedScreen(user);
+    }
+}
+
+// ===========================
+// UI MANAGEMENT
+// ===========================
+export function showLoginScreen() {
+    document.getElementById('loginScreen')?.classList.remove('hidden');
+    document.getElementById('adminDashboard')?.classList.add('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
+    state.servicesListener?.();
+    state.servicesListener = null;
+}
+
+export function showAdminDashboard(user) {
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('adminDashboard')?.classList.remove('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
+    document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
+    document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff');
+}
+
+export function showAccessDeniedScreen(user) {
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('adminDashboard')?.classList.add('hidden');
+    
+    let accessDeniedScreen = document.getElementById('accessDeniedScreen');
+    if (!accessDeniedScreen) {
+        accessDeniedScreen = document.createElement('div');
+        accessDeniedScreen.id = 'accessDeniedScreen';
+        accessDeniedScreen.className = 'access-denied-screen';
+        accessDeniedScreen.innerHTML = `
+            <div class="access-denied-container">
+                <div class="access-denied-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h1>Acesso Restrito</h1>
+                <p class="access-denied-message">
+                    Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.
+                </p>
+                <p class="access-denied-info">
+                    Você está logado com: <strong>${user.email}</strong>
+                </p>
+                <div class="access-denied-actions">
+                    <a href="/" class="btn-primary">
+                        <i class="fas fa-home"></i>
+                        Voltar ao Início
+                    </a>
+                    <a href="/acompanhar-pedido/" class="btn-secondary">
+                        <i class="fas fa-cube"></i>
+                        Acompanhar Pedido
+                    </a>
+                </div>
+                <button class="btn-logout-denied" onclick="window.signOutGlobal()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Fazer Logout
+                </button>
+            </div>
+        `;
+        document.body.appendChild(accessDeniedScreen);
+    } else {
+        const message = accessDeniedScreen.querySelector('.access-denied-message');
+        const info = accessDeniedScreen.querySelector('.access-denied-info');
+        if (message) message.innerHTML = `Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.`;
+        if (info) info.innerHTML = `Você está logado com: <strong>${user.email}</strong>`;
+    }
+    
+    accessDeniedScreen.classList.remove('hidden');
+}
+
+// ===========================
+// CONTINUA COM O RESTO DO CÓDIGO EXISTENTE...
+// (Cole aqui o restante do seu arquivo auth-ui.js original)
+// ===========================
 export function checkAuthorization(user) {
     if (AUTHORIZED_EMAILS.includes(user.email)) {
         state.isAuthorized = true;
