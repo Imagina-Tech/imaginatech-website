@@ -1,11 +1,11 @@
 /* 
-==================================================
+=================================================
 ARQUIVO: servicos/js/config.js
 MÓDULO: Configuração e Inicialização
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
 VERSÃO: 3.0 - Modular
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
-==================================================
+=================================================
 */
 
 // ===========================
