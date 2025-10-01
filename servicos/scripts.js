@@ -265,6 +265,80 @@ function removePreviewImage(index) {
     }
 }
 
+// Nova função para remover imagens existentes no modal de edição
+async function removeExistingImage(imageUrl, imageType) {
+    if (!editingServiceId || !isAuthorized) return;
+    
+    const isInstagramPhoto = imageType === 'instagram';
+    
+    const confirmMsg = isInstagramPhoto 
+        ? 'Deletar foto instagramável?\n\nO status do pedido voltará para "Em Produção".'
+        : 'Deletar esta imagem?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+        showToast('Deletando imagem...', 'info');
+        
+        const service = services.find(s => s.id === editingServiceId);
+        if (!service) return;
+        
+        // Deleta do Storage
+        try {
+            const fileRef = storage.refFromURL(imageUrl);
+            await fileRef.delete();
+        } catch (error) {
+            console.error('Erro ao deletar do Storage:', error);
+        }
+        
+        // Atualiza Firestore
+        const updates = {};
+        
+        if (isInstagramPhoto) {
+            // Remove foto instagramável e regride status
+            updates.instagramPhoto = firebase.firestore.FieldValue.delete();
+            updates.status = 'producao';
+            updates.completedAt = firebase.firestore.FieldValue.delete();
+            updates.updatedAt = new Date().toISOString();
+            updates.updatedBy = currentUser.email;
+            
+            await db.collection('services').doc(editingServiceId).update(updates);
+            showToast('Foto instagramável removida! Status voltou para Produção.', 'success');
+        } else {
+            // Remove da lista de imagens
+            const updatedImages = service.images.filter(img => img.url !== imageUrl);
+            updates.images = updatedImages;
+            updates.updatedAt = new Date().toISOString();
+            updates.updatedBy = currentUser.email;
+            
+            await db.collection('services').doc(editingServiceId).update(updates);
+            showToast('Imagem removida!', 'success');
+        }
+        
+        // Remove visualmente do preview
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        if (previewContainer) {
+            const imgWrappers = previewContainer.querySelectorAll('.preview-image-wrapper');
+            imgWrappers.forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                if (img && img.src === imageUrl) {
+                    wrapper.remove();
+                }
+            });
+            
+            // Se não há mais imagens, oculta o preview
+            if (previewContainer.children.length === 0) {
+                const preview = document.getElementById('imagePreview');
+                if (preview) preview.style.display = 'none';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Erro ao deletar imagem:', error);
+        showToast('Erro ao deletar imagem', 'error');
+    }
+}
+
 const removeFile = () => {
     selectedFile = null;
     ['serviceFile', 'currentFileUrl', 'currentFileName'].forEach(id => {
@@ -1309,7 +1383,7 @@ function showServiceImages(serviceId) {
     }
     
     if (allImages.length > 0) {
-        showImageModal(allImages, service.name || 'Serviço');
+        showImageModal(allImages, service.name || 'Serviço', 0, serviceId);
     }
 }
 
@@ -1437,21 +1511,40 @@ function openEditModal(serviceId) {
         }
     }
     
-    // CORREÇÃO 3: Handle images - Legacy support + new multiple images
+    // CORREÇÃO 3: Handle images - Legacy support + new multiple images + INSTAGRAM PHOTO
     const preview = document.getElementById('imagePreview');
     const previewContainer = document.getElementById('imagePreviewContainer');
     
     if (previewContainer) previewContainer.innerHTML = '';
     
-    if ((service.images && service.images.length > 0) || service.imageUrl) {
-        const imagesToShow = service.images && service.images.length > 0 ? service.images : [{ url: service.imageUrl, name: 'Imagem' }];
-        
-        imagesToShow.forEach((img, index) => {
+    // Coleta TODAS as imagens para mostrar
+    const allImagesToShow = [];
+    
+    // Adiciona imagens regulares
+    if (service.images && service.images.length > 0) {
+        allImagesToShow.push(...service.images);
+    }
+    
+    // Adiciona imagem legacy se existir
+    if (service.imageUrl) {
+        allImagesToShow.push({ url: service.imageUrl, name: 'Imagem' });
+    }
+    
+    // Adiciona foto instagramável se existir
+    if (service.instagramPhoto) {
+        allImagesToShow.push({ url: service.instagramPhoto, name: 'Foto Instagramável ⭐', type: 'instagram' });
+    }
+    
+    if (allImagesToShow.length > 0) {
+        allImagesToShow.forEach((img, index) => {
             const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'preview-image-wrapper existing-image';
+            imgWrapper.className = `preview-image-wrapper existing-image ${img.type === 'instagram' ? 'instagram-badge' : ''}`;
             imgWrapper.innerHTML = `
                 <img src="${img.url}" alt="Imagem ${index + 1}">
-                <span class="existing-badge">Existente</span>
+                <span class="existing-badge">${img.type === 'instagram' ? '📸 Instagram' : 'Existente'}</span>
+                <button type="button" class="btn-remove-preview-existing" onclick="removeExistingImage('${img.url}', '${img.type || 'regular'}')">
+                    <i class="fas fa-trash"></i>
+                </button>
             `;
             previewContainer.appendChild(imgWrapper);
         });
@@ -1521,8 +1614,9 @@ const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.c
 // ===========================
 let currentImageGallery = [];
 let currentImageIndex = 0;
+let currentServiceId = null; // Para rastrear qual serviço está sendo visualizado
 
-function showImageModal(images, serviceName, startIndex = 0) {
+function showImageModal(images, serviceName, startIndex = 0, serviceId = null) {
     // Se receber uma string (URL única), converte para array
     if (typeof images === 'string') {
         images = [{ url: images, name: serviceName }];
@@ -1530,6 +1624,7 @@ function showImageModal(images, serviceName, startIndex = 0) {
     
     currentImageGallery = images;
     currentImageIndex = startIndex;
+    currentServiceId = serviceId;
     
     const modal = document.getElementById('imageViewerModal');
     if (!modal) return;
@@ -1545,6 +1640,7 @@ function updateImageViewer() {
     const prevBtn = document.getElementById('prevImageBtn');
     const nextBtn = document.getElementById('nextImageBtn');
     const downloadBtn = document.getElementById('downloadImageBtn');
+    const deleteBtn = document.getElementById('deleteImageBtn');
     
     if (!img || !currentImageGallery.length) return;
     
@@ -1575,6 +1671,11 @@ function updateImageViewer() {
     if (downloadBtn) {
         downloadBtn.onclick = () => downloadFile(currentImage.url, currentImage.name || 'imagem');
     }
+    
+    // Mostra/oculta botão de deletar (só aparece se tiver serviceId)
+    if (deleteBtn) {
+        deleteBtn.style.display = currentServiceId ? 'block' : 'none';
+    }
 }
 
 function prevImage() {
@@ -1591,10 +1692,83 @@ function nextImage() {
     }
 }
 
+// Nova função para deletar imagem do modal de visualização
+async function deleteCurrentImage() {
+    if (!currentServiceId || !currentImageGallery.length || !isAuthorized) return;
+    
+    const currentImage = currentImageGallery[currentImageIndex];
+    const isInstagramPhoto = currentImage.type === 'instagram';
+    
+    const confirmMsg = isInstagramPhoto 
+        ? 'Deletar foto instagramável?\n\nO status do pedido voltará para "Em Produção".'
+        : 'Deletar esta imagem?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+        showToast('Deletando imagem...', 'info');
+        
+        const service = services.find(s => s.id === currentServiceId);
+        if (!service) return;
+        
+        // Deleta do Storage
+        try {
+            const fileRef = storage.refFromURL(currentImage.url);
+            await fileRef.delete();
+        } catch (error) {
+            console.error('Erro ao deletar do Storage:', error);
+        }
+        
+        // Atualiza Firestore
+        const updates = {};
+        
+        if (isInstagramPhoto) {
+            // Remove foto instagramável e regride status
+            updates.instagramPhoto = firebase.firestore.FieldValue.delete();
+            updates.status = 'producao';
+            updates.completedAt = firebase.firestore.FieldValue.delete();
+            updates.updatedAt = new Date().toISOString();
+            updates.updatedBy = currentUser.email;
+            
+            await db.collection('services').doc(currentServiceId).update(updates);
+            showToast('Foto instagramável removida! Status voltou para Produção.', 'success');
+        } else {
+            // Remove da lista de imagens
+            const updatedImages = service.images.filter(img => img.url !== currentImage.url);
+            updates.images = updatedImages;
+            updates.updatedAt = new Date().toISOString();
+            updates.updatedBy = currentUser.email;
+            
+            await db.collection('services').doc(currentServiceId).update(updates);
+            showToast('Imagem removida!', 'success');
+        }
+        
+        // Remove da galeria atual
+        currentImageGallery.splice(currentImageIndex, 1);
+        
+        // Ajusta índice se necessário
+        if (currentImageIndex >= currentImageGallery.length) {
+            currentImageIndex = Math.max(0, currentImageGallery.length - 1);
+        }
+        
+        // Se não há mais imagens, fecha o modal
+        if (currentImageGallery.length === 0) {
+            closeImageModal();
+        } else {
+            updateImageViewer();
+        }
+        
+    } catch (error) {
+        console.error('Erro ao deletar imagem:', error);
+        showToast('Erro ao deletar imagem', 'error');
+    }
+}
+
 const closeImageModal = () => {
     document.getElementById('imageViewerModal')?.classList.remove('active');
     currentImageGallery = [];
     currentImageIndex = 0;
+    currentServiceId = null;
 };
 
 // ===========================
