@@ -3,7 +3,7 @@
 ARQUIVO: servicos/scripts.js
 MÓDULO: Serviços/Produção (Painel Administrativo)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.2 - Optimized
+VERSÃO: 2.3 - Fixed Image Gallery & Instagram Photo
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -580,9 +580,19 @@ async function saveService(event) {
                 service.fileSize = currentService.fileSize || '';
                 service.fileUploadedAt = currentService.fileUploadedAt || '';
             }
+            
+            // CORREÇÃO 3: Preserva imagens existentes se não houver novas
+            if (selectedImages.length === 0 && currentService.images && currentService.images.length > 0) {
+                service.images = currentService.images;
+                service.imageUploadedAt = currentService.imageUploadedAt || '';
+            }
             if (!selectedImage && currentService.imageUrl) {
                 service.imageUrl = currentService.imageUrl;
-                service.imageUploadedAt = currentService.imageUploadedAt || '';
+            }
+            
+            // CORREÇÃO 4: Preserva foto instagramável
+            if (currentService.instagramPhoto) {
+                service.instagramPhoto = currentService.instagramPhoto;
             }
             
             // Preserva timestamps existentes
@@ -662,7 +672,9 @@ async function saveService(event) {
                 fileSize: '',
                 fileUploadedAt: '',
                 imageUrl: '',
+                images: [],
                 imageUploadedAt: '',
+                instagramPhoto: '',
                 trackingCode: ''
             });
             
@@ -701,21 +713,28 @@ async function saveService(event) {
             });
         }
         
+        // CORREÇÃO 3: Upload de novas imagens (adiciona às existentes ao editar)
         if (selectedImages.length > 0 && serviceDocId) {
-            const imageUrls = [];
+            const currentService = services.find(s => s.id === serviceDocId);
+            const existingImages = (editingServiceId && currentService && currentService.images) ? currentService.images : [];
+            
+            const newImageUrls = [];
             for (const imageFile of selectedImages) {
                 const imageData = await uploadFile(imageFile, serviceDocId);
                 if (imageData) {
-                    imageUrls.push({
+                    newImageUrls.push({
                         url: imageData.url,
                         name: imageFile.name,
                         uploadedAt: imageData.uploadedAt
                     });
                 }
             }
-            if (imageUrls.length > 0) {
+            
+            if (newImageUrls.length > 0) {
+                // Combina imagens existentes com novas
+                const allImages = [...existingImages, ...newImageUrls];
                 await db.collection('services').doc(serviceDocId).update({
-                    images: imageUrls,
+                    images: allImages,
                     imageUploadedAt: new Date().toISOString()
                 });
             }
@@ -786,9 +805,11 @@ async function updateStatus(serviceId, newStatus) {
     const service = services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
-    // Se está tentando mudar para "concluído", verifica se tem foto instagramável
+    // CORREÇÃO 1: Se está tentando mudar para "concluído" e não tem foto instagramável, mostra campo no modal unificado
     if (newStatus === 'concluido' && !service.instagramPhoto) {
-        openInstagramPhotoModal(serviceId, service);
+        // Mostra modal de status com campo de foto
+        pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
+        showStatusModalWithPhoto(service, newStatus);
         return;
     }
     
@@ -854,15 +875,128 @@ async function updateStatus(serviceId, newStatus) {
         }
     }
     
+    // CORREÇÃO 1: Oculta campo de foto se não for necessário
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) photoField.style.display = 'none';
+    
     document.getElementById('statusModal')?.classList.add('active');
+}
+
+// CORREÇÃO 1: Nova função para mostrar modal com campo de foto
+function showStatusModalWithPhoto(service, newStatus) {
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma foto instagramável do serviço "${service.name}"`);
+    
+    // Mostra campo de foto
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) {
+        photoField.style.display = 'block';
+        const photoInput = document.getElementById('instagramPhotoInput');
+        if (photoInput) photoInput.value = '';
+        const photoPreview = document.getElementById('instagramPhotoPreview');
+        if (photoPreview) photoPreview.style.display = 'none';
+    }
+    
+    // Email option
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption) {
+        const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
+        if (hasEmail) {
+            emailOption.style.display = 'block';
+            const emailCheckbox = document.getElementById('sendEmailNotification');
+            if (emailCheckbox) emailCheckbox.checked = true;
+        } else {
+            emailOption.style.display = 'none';
+        }
+    }
+    
+    // WhatsApp option - oculta para conclusão
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) whatsappOption.style.display = 'none';
+    
+    document.getElementById('statusModal')?.classList.add('active');
+}
+
+// CORREÇÃO 1: Handler para seleção de foto instagramável
+function handleInstagramPhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        showToast('Use apenas JPEG ou PNG para foto instagramável', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    if (file.size > 5242880) {
+        showToast('Foto muito grande. Máximo: 5MB', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+        const preview = document.getElementById('instagramPhotoPreview');
+        const img = document.getElementById('instagramPhotoImg');
+        if (preview && img) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 async function confirmStatusChange() {
     if (!pendingStatusUpdate || !db) return;
     
-    const { serviceId, newStatus, service } = pendingStatusUpdate;
+    const { serviceId, newStatus, service, requiresInstagramPhoto } = pendingStatusUpdate;
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
+    
+    // CORREÇÃO 1: Se requer foto instagramável, processa upload
+    if (requiresInstagramPhoto) {
+        const photoInput = document.getElementById('instagramPhotoInput');
+        const photoFile = photoInput?.files[0];
+        
+        if (!photoFile) {
+            return showToast('Selecione uma foto instagramável antes de confirmar', 'error');
+        }
+        
+        try {
+            showToast('Fazendo upload da foto...', 'info');
+            
+            const photoData = await uploadFile(photoFile, serviceId);
+            
+            if (!photoData) {
+                return showToast('Erro ao fazer upload da foto', 'error');
+            }
+            
+            // Atualiza com foto e status
+            await db.collection('services').doc(serviceId).update({
+                instagramPhoto: photoData.url,
+                status: 'concluido',
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.email,
+                lastStatusChange: new Date().toISOString()
+            });
+            
+            showToast('✅ Foto anexada! Status alterado para Concluído', 'success');
+            
+            // Send Email notification if checked
+            if (sendEmail && service.clientEmail) {
+                await sendEmailNotification(service);
+            }
+            
+            closeStatusModal();
+            return;
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro ao confirmar foto instagramável', 'error');
+            return;
+        }
+    }
     
     try {
         const updates = {
@@ -1005,6 +1139,9 @@ function renderServices() {
                             service.dateUndefined ? 'var(--neon-yellow)' : 
                             getDaysColor(days);
             
+            // CORREÇÃO 2 e 4: Verifica se há imagens (incluindo instagramPhoto)
+            const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto;
+            
             return `
                 <div class="service-card priority-${service.priority || 'media'}">
                     <div class="service-header">
@@ -1043,7 +1180,7 @@ function renderServices() {
                         ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                         ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
                         ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Download automático"><i class="fas fa-download"></i><span>Arquivo 3D</span></button></div>` : ''}
-                        ${(service.images && service.images.length > 0) || service.imageUrl ? `<div class="info-item"><button class="btn-image-view" onclick="showImageModal(${JSON.stringify(service.images && service.images.length > 0 ? service.images : [{url: service.imageUrl, name: service.name}])}, '${escapeHtml(service.name || 'Serviço')}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${service.images && service.images.length > 1 ? service.images.length + ' Imagens' : 'Imagem'}</span></button></div>` : ''}
+                        ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
                     </div>
                     
                     ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
@@ -1092,6 +1229,56 @@ function renderServices() {
                 </div>
             `;
         }).join('');
+    }
+}
+
+// CORREÇÃO 2 e 4: Função auxiliar para contar total de imagens
+function getTotalImagesCount(service) {
+    let count = 0;
+    if (service.images && service.images.length > 0) count += service.images.length;
+    if (service.imageUrl) count += 1;
+    if (service.instagramPhoto) count += 1;
+    return count;
+}
+
+// CORREÇÃO 2 e 4: Nova função para mostrar imagens do serviço (por ID)
+function showServiceImages(serviceId) {
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    const allImages = [];
+    
+    // Adiciona imagens regulares
+    if (service.images && service.images.length > 0) {
+        service.images.forEach(img => {
+            allImages.push({
+                url: img.url,
+                name: img.name || 'Imagem',
+                type: 'regular'
+            });
+        });
+    }
+    
+    // Adiciona imagem legacy se existir
+    if (service.imageUrl) {
+        allImages.push({
+            url: service.imageUrl,
+            name: 'Imagem',
+            type: 'regular'
+        });
+    }
+    
+    // CORREÇÃO 4: Adiciona foto instagramável se existir
+    if (service.instagramPhoto) {
+        allImages.push({
+            url: service.instagramPhoto,
+            name: 'Foto Instagramável',
+            type: 'instagram'
+        });
+    }
+    
+    if (allImages.length > 0) {
+        showImageModal(allImages, service.name || 'Serviço');
     }
 }
 
@@ -1219,7 +1406,7 @@ function openEditModal(serviceId) {
         }
     }
     
-    // Handle images - Legacy support + new multiple images
+    // CORREÇÃO 3: Handle images - Legacy support + new multiple images
     const preview = document.getElementById('imagePreview');
     const previewContainer = document.getElementById('imagePreviewContainer');
     
@@ -1286,6 +1473,14 @@ const closeModal = () => {
 const closeStatusModal = () => {
     document.getElementById('statusModal')?.classList.remove('active');
     pendingStatusUpdate = null;
+    
+    // CORREÇÃO 1: Limpa campo de foto ao fechar
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) photoField.style.display = 'none';
+    const photoInput = document.getElementById('instagramPhotoInput');
+    if (photoInput) photoInput.value = '';
+    const photoPreview = document.getElementById('instagramPhotoPreview');
+    if (photoPreview) photoPreview.style.display = 'none';
 };
 
 const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.classList.remove('active');
@@ -1318,6 +1513,7 @@ function updateImageViewer() {
     const counter = document.getElementById('imageCounter');
     const prevBtn = document.getElementById('prevImageBtn');
     const nextBtn = document.getElementById('nextImageBtn');
+    const downloadBtn = document.getElementById('downloadImageBtn');
     
     if (!img || !currentImageGallery.length) return;
     
@@ -1325,7 +1521,8 @@ function updateImageViewer() {
     img.src = currentImage.url;
     
     if (title) {
-        title.textContent = currentImage.name || `Imagem ${currentImageIndex + 1}`;
+        const imageType = currentImage.type === 'instagram' ? ' 📸 (Instagramável)' : '';
+        title.textContent = (currentImage.name || `Imagem ${currentImageIndex + 1}`) + imageType;
     }
     
     if (counter) {
@@ -1341,6 +1538,11 @@ function updateImageViewer() {
     if (nextBtn) {
         nextBtn.style.display = currentImageGallery.length > 1 ? 'block' : 'none';
         nextBtn.disabled = currentImageIndex === currentImageGallery.length - 1;
+    }
+    
+    // CORREÇÃO 5: Atualiza botão de download
+    if (downloadBtn) {
+        downloadBtn.onclick = () => downloadFile(currentImage.url, currentImage.name || 'imagem');
     }
 }
 
@@ -1362,103 +1564,6 @@ const closeImageModal = () => {
     document.getElementById('imageViewerModal')?.classList.remove('active');
     currentImageGallery = [];
     currentImageIndex = 0;
-};
-
-// ===========================
-// INSTAGRAM PHOTO MODAL
-// ===========================
-let pendingInstagramUpload = null;
-let instagramPhotoFile = null;
-
-function openInstagramPhotoModal(serviceId, service) {
-    pendingInstagramUpload = { serviceId, service };
-    instagramPhotoFile = null;
-    
-    const modal = document.getElementById('instagramPhotoModal');
-    const serviceName = document.getElementById('instagramServiceName');
-    const preview = document.getElementById('instagramPhotoPreview');
-    
-    if (serviceName) serviceName.textContent = service.name || 'Serviço';
-    if (preview) preview.style.display = 'none';
-    
-    const fileInput = document.getElementById('instagramPhotoInput');
-    if (fileInput) fileInput.value = '';
-    
-    modal?.classList.add('active');
-}
-
-function handleInstagramPhotoSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return instagramPhotoFile = null;
-    
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-        showToast('Use apenas JPEG ou PNG para foto instagramável', 'error');
-        event.target.value = '';
-        return instagramPhotoFile = null;
-    }
-    
-    if (file.size > 5242880) {
-        showToast('Foto muito grande. Máximo: 5MB', 'error');
-        event.target.value = '';
-        return instagramPhotoFile = null;
-    }
-    
-    instagramPhotoFile = file;
-    
-    const reader = new FileReader();
-    reader.onload = e => {
-        const preview = document.getElementById('instagramPhotoPreview');
-        const img = document.getElementById('instagramPhotoImg');
-        if (preview && img) {
-            img.src = e.target.result;
-            preview.style.display = 'block';
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
-async function confirmInstagramPhoto() {
-    if (!instagramPhotoFile) {
-        return showToast('Selecione uma foto instagramável antes de confirmar', 'error');
-    }
-    
-    if (!pendingInstagramUpload) return;
-    
-    const { serviceId, service } = pendingInstagramUpload;
-    
-    try {
-        showToast('Fazendo upload da foto...', 'info');
-        
-        // Upload da foto instagramável
-        const photoData = await uploadFile(instagramPhotoFile, serviceId);
-        
-        if (!photoData) {
-            return showToast('Erro ao fazer upload da foto', 'error');
-        }
-        
-        // Atualiza o serviço com a foto e muda status para concluído
-        await db.collection('services').doc(serviceId).update({
-            instagramPhoto: photoData.url,
-            status: 'concluido',
-            completedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.email
-        });
-        
-        showToast('✅ Foto anexada! Status alterado para Concluído', 'success');
-        closeInstagramPhotoModal();
-        
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao confirmar foto instagramável', 'error');
-    }
-}
-
-const closeInstagramPhotoModal = () => {
-    document.getElementById('instagramPhotoModal')?.classList.remove('active');
-    pendingInstagramUpload = null;
-    instagramPhotoFile = null;
 };
 
 // ===========================
