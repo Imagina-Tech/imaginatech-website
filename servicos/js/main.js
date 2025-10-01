@@ -3,7 +3,7 @@
 ARQUIVO: servicos/js/main.js
 MÓDULO: Inicializador Principal
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular
+VERSÃO: 3.0 - Modular (Corrigido)
 ==================================================
 */
 
@@ -18,11 +18,22 @@ import {
     formatPhoneNumber,
     formatCEP,
     updateNotificationOptions,
-    monitorConnection,
-    showToast
+    monitorConnection
 } from './auth-ui.js';
 
-// Inicializa aplicação
+// ===========================
+// INICIALIZA FIREBASE PRIMEIRO
+// ===========================
+if (!initializeFirebase()) {
+    alert('Erro crítico ao conectar ao Firebase. Recarregue a página.');
+}
+
+// Setup error handlers
+setupErrorHandlers();
+
+// ===========================
+// DEPOIS INICIALIZA A APLICAÇÃO
+// ===========================
 onDOMReady(() => {
     if (!state.auth) {
         hideLoadingOverlay();
@@ -53,13 +64,7 @@ onDOMReady(() => {
     monitorConnection();
 });
 
-// Inicializa Firebase
-if (!initializeFirebase()) {
-    showToast('Erro ao conectar ao Firebase', 'error');
-}
-
-// Setup error handlers
-setupErrorHandlers();
-
-// Expõe saveService para o formulário
+// ===========================
+// EXPÕE FUNÇÕES GLOBAIS
+// ===========================
 window.saveService = saveService;
