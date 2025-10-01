@@ -186,62 +186,6 @@ export function showAccessDeniedScreen(user) {
 // UI MANAGEMENT
 // ===========================
 
-export function showAdminDashboard(user) {
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('adminDashboard')?.classList.remove('hidden');
-    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
-    document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
-    document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff');
-}
-
-export function showAccessDeniedScreen(user) {
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('adminDashboard')?.classList.add('hidden');
-    
-    let accessDeniedScreen = document.getElementById('accessDeniedScreen');
-    if (!accessDeniedScreen) {
-        accessDeniedScreen = document.createElement('div');
-        accessDeniedScreen.id = 'accessDeniedScreen';
-        accessDeniedScreen.className = 'access-denied-screen';
-        accessDeniedScreen.innerHTML = `
-            <div class="access-denied-container">
-                <div class="access-denied-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <h1>Acesso Restrito</h1>
-                <p class="access-denied-message">
-                    Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.
-                </p>
-                <p class="access-denied-info">
-                    Você está logado com: <strong>${user.email}</strong>
-                </p>
-                <div class="access-denied-actions">
-                    <a href="/" class="btn-primary">
-                        <i class="fas fa-home"></i>
-                        Voltar ao Início
-                    </a>
-                    <a href="/acompanhar-pedido/" class="btn-secondary">
-                        <i class="fas fa-cube"></i>
-                        Acompanhar Pedido
-                    </a>
-                </div>
-                <button class="btn-logout-denied" onclick="window.signOutGlobal()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Fazer Logout
-                </button>
-            </div>
-        `;
-        document.body.appendChild(accessDeniedScreen);
-    } else {
-        const message = accessDeniedScreen.querySelector('.access-denied-message');
-        const info = accessDeniedScreen.querySelector('.access-denied-info');
-        if (message) message.innerHTML = `Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.`;
-        if (info) info.innerHTML = `Você está logado com: <strong>${user.email}</strong>`;
-    }
-    
-    accessDeniedScreen.classList.remove('hidden');
-}
-
 export const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
 
 // ===========================
