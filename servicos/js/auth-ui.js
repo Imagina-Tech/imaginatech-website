@@ -39,6 +39,7 @@ export async function signInWithGoogle() {
             
             if (!GoogleAuth) {
                 console.error('❌ Plugin GoogleAuth não encontrado');
+                alert('DEBUG: Plugin GoogleAuth não encontrado');
                 throw new Error('Plugin de autenticação não disponível');
             }
             
@@ -48,7 +49,7 @@ export async function signInWithGoogle() {
                 await GoogleAuth.initialize();
                 console.log('✅ GoogleAuth inicializado');
             } catch (initError) {
-                console.log('⚠️ Plugin já inicializado ou não precisa inicializar:', initError);
+                console.log('⚠️ Plugin já inicializado:', initError);
             }
             
             // Fazer login com o plugin do Capacitor
@@ -56,14 +57,19 @@ export async function signInWithGoogle() {
             const googleUser = await GoogleAuth.signIn();
             
             console.log('✅ Google Auth retornou:', googleUser);
-            console.log('📋 googleUser completo:', JSON.stringify(googleUser, null, 2));
-            console.log('🔑 authentication:', googleUser.authentication);
-            console.log('🔐 idToken:', googleUser.authentication?.idToken);
-            console.log('🔓 accessToken:', googleUser.authentication?.accessToken);
+            
+            // DEBUG: Mostrar o que foi retornado
+            alert('DEBUG: Google retornou:\n' + JSON.stringify({
+                email: googleUser.email,
+                name: googleUser.name,
+                hasAuth: !!googleUser.authentication,
+                hasIdToken: !!googleUser.authentication?.idToken,
+                hasAccessToken: !!googleUser.authentication?.accessToken
+            }, null, 2));
             
             // Verificar se temos os tokens necessários
             if (!googleUser.authentication) {
-                console.error('❌ googleUser.authentication não existe');
+                alert('DEBUG: googleUser.authentication é NULL ou UNDEFINED');
                 throw new Error('Resposta do Google Auth inválida - authentication missing');
             }
             
@@ -71,28 +77,25 @@ export async function signInWithGoogle() {
             const accessToken = googleUser.authentication.accessToken;
             
             if (!idToken && !accessToken) {
-                console.error('❌ Nenhum token encontrado');
+                alert('DEBUG: Nenhum token encontrado!\nidToken: ' + idToken + '\naccessToken: ' + accessToken);
                 throw new Error('Tokens de autenticação não encontrados');
             }
             
             console.log('🔥 Criando credencial do Firebase...');
             
-            // Tentar criar credencial com idToken (preferencial)
+            // Criar credencial do Firebase
             let credential;
             if (idToken) {
-                console.log('🔐 Usando idToken para criar credencial');
+                console.log('🔐 Usando idToken');
                 credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
-            } else if (accessToken) {
-                console.log('🔓 Usando apenas accessToken para criar credencial');
+            } else {
+                console.log('🔓 Usando apenas accessToken');
                 credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
             }
             
-            console.log('✅ Credencial criada:', credential);
-            
             // Fazer login no Firebase com a credencial
-            console.log('🔥 Fazendo signInWithCredential no Firebase...');
+            console.log('🔥 Fazendo signInWithCredential...');
             const result = await state.auth.signInWithCredential(credential);
-            console.log('✅ signInWithCredential SUCCESS:', result);
             
             user = result.user;
             console.log('👤 Usuário logado:', user.email);
@@ -120,9 +123,12 @@ export async function signInWithGoogle() {
         
     } catch (error) {
         console.error('❌ ERRO COMPLETO:', error);
-        console.error('❌ error.message:', error.message);
-        console.error('❌ error.code:', error.code);
-        console.error('❌ error.stack:', error.stack);
+        
+        // Mostrar erro em alert para debug
+        alert('ERRO AO FAZER LOGIN:\n\n' + 
+              'Mensagem: ' + (error.message || 'Sem mensagem') + '\n' +
+              'Code: ' + (error.code || 'Sem código') + '\n' +
+              'Error: ' + (error.error || 'Sem error'));
         
         if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup_closed_by_user')) {
             showToast('Login cancelado', 'info');
@@ -133,7 +139,6 @@ export async function signInWithGoogle() {
         }
     }
 }
-
 export async function signOut() {
     try {
         state.auth && await state.auth.signOut();
