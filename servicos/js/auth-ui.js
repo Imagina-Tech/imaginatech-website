@@ -23,6 +23,7 @@ import {
 // ===========================
 // AUTHENTICATION
 // ===========================
+
 export async function signInWithGoogle() {
     if (!state.auth) return showToast('Sistema não está pronto. Recarregue a página.', 'error');
     
