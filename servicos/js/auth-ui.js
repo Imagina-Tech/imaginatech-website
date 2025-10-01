@@ -185,13 +185,6 @@ export function showAccessDeniedScreen(user) {
 // ===========================
 // UI MANAGEMENT
 // ===========================
-export function showLoginScreen() {
-    document.getElementById('loginScreen')?.classList.remove('hidden');
-    document.getElementById('adminDashboard')?.classList.add('hidden');
-    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
-    state.servicesListener?.();
-    state.servicesListener = null;
-}
 
 export function showAdminDashboard(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
