@@ -521,6 +521,27 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             </div>
             <div class="modal-body">
                 <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
+                
+                <!-- Campo de foto instagramável (aparece quando necessário) -->
+                <div id="instagramPhotoField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert">
+                        <i class="fas fa-camera"></i>
+                        <p style="margin: 0.5rem 0;"><strong>Foto Instagramável Obrigatória</strong></p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Anexe uma foto de alta qualidade do produto finalizado</p>
+                    </div>
+                    
+                    <div class="instagram-upload">
+                        <label for="instagramPhotoInput" class="instagram-label">
+                            <i class="fas fa-upload"></i> Selecionar Foto (JPEG ou PNG)
+                        </label>
+                        <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handleInstagramPhotoSelect(event)" style="display: none;">
+                    </div>
+                    
+                    <div class="instagram-preview" id="instagramPhotoPreview" style="display: none;">
+                        <img id="instagramPhotoImg" src="" alt="Preview">
+                    </div>
+                </div>
+                
                 <div class="whatsapp-option" id="whatsappOption" style="display: none;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="sendWhatsappNotification">
@@ -604,7 +625,10 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <div class="image-counter" id="imageCounter">1 / 1</div>
             </div>
             <div class="modal-footer">
-                <button class="btn-primary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
+                <button class="btn-primary" id="downloadImageBtn" onclick="">
+                    <i class="fas fa-download"></i> Baixar Imagem
+                </button>
+                <button class="btn-secondary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
                     <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
                 </button>
                 <button class="btn-secondary" onclick="closeImageModal()">
