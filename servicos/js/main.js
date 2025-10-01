@@ -3,7 +3,7 @@
 ARQUIVO: servicos/js/main.js
 MÓDULO: Inicializador Principal
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular (Corrigido)
+VERSÃO: 3.1 - Modular + Push Notifications
 ==================================================
 */
 
@@ -20,6 +20,11 @@ import {
     updateNotificationOptions,
     monitorConnection
 } from './auth-ui.js';
+
+// ===========================
+// NOVO: IMPORTAR PUSH NOTIFICATIONS
+// ===========================
+import { initPushNotifications } from './push-notifications.js';
 
 // ===========================
 // INICIALIZA FIREBASE PRIMEIRO
@@ -43,7 +48,23 @@ onDOMReady(() => {
     state.auth.onAuthStateChanged(user => {
         hideLoadingOverlay();
         state.currentUser = user;
-        user ? checkAuthorization(user) : (state.isAuthorized = false, showLoginScreen());
+        
+        if (user) {
+            checkAuthorization(user);
+            
+            // ===========================
+            // NOVO: INICIALIZAR PUSH NOTIFICATIONS (SOMENTE NO APP)
+            // ===========================
+            if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+                console.log('🚀 App nativo detectado - Inicializando notificações push');
+                initPushNotifications();
+            } else {
+                console.log('🌐 Rodando no navegador web - Push notifications desabilitadas');
+            }
+        } else {
+            state.isAuthorized = false;
+            showLoginScreen();
+        }
     }, error => {
         console.error('Erro no auth state:', error);
         hideLoadingOverlay();
