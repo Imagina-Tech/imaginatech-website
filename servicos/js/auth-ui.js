@@ -42,24 +42,60 @@ export async function signInWithGoogle() {
                 throw new Error('Plugin de autenticação não disponível');
             }
             
-            // Inicializar o plugin (necessário no Android)
+            // Inicializar o plugin
             try {
+                console.log('🔧 Inicializando GoogleAuth...');
                 await GoogleAuth.initialize();
+                console.log('✅ GoogleAuth inicializado');
             } catch (initError) {
-                console.log('⚠️ Plugin já inicializado ou não precisa inicializar');
+                console.log('⚠️ Plugin já inicializado ou não precisa inicializar:', initError);
             }
             
             // Fazer login com o plugin do Capacitor
+            console.log('📱 Chamando GoogleAuth.signIn()...');
             const googleUser = await GoogleAuth.signIn();
             
             console.log('✅ Google Auth retornou:', googleUser);
+            console.log('📋 googleUser completo:', JSON.stringify(googleUser, null, 2));
+            console.log('🔑 authentication:', googleUser.authentication);
+            console.log('🔐 idToken:', googleUser.authentication?.idToken);
+            console.log('🔓 accessToken:', googleUser.authentication?.accessToken);
             
-            // Criar credencial do Firebase com o token do Google
-            const credential = firebase.auth.GoogleAuthProvider.credential(googleUser.authentication.idToken);
+            // Verificar se temos os tokens necessários
+            if (!googleUser.authentication) {
+                console.error('❌ googleUser.authentication não existe');
+                throw new Error('Resposta do Google Auth inválida - authentication missing');
+            }
+            
+            const idToken = googleUser.authentication.idToken;
+            const accessToken = googleUser.authentication.accessToken;
+            
+            if (!idToken && !accessToken) {
+                console.error('❌ Nenhum token encontrado');
+                throw new Error('Tokens de autenticação não encontrados');
+            }
+            
+            console.log('🔥 Criando credencial do Firebase...');
+            
+            // Tentar criar credencial com idToken (preferencial)
+            let credential;
+            if (idToken) {
+                console.log('🔐 Usando idToken para criar credencial');
+                credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
+            } else if (accessToken) {
+                console.log('🔓 Usando apenas accessToken para criar credencial');
+                credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
+            }
+            
+            console.log('✅ Credencial criada:', credential);
             
             // Fazer login no Firebase com a credencial
+            console.log('🔥 Fazendo signInWithCredential no Firebase...');
             const result = await state.auth.signInWithCredential(credential);
+            console.log('✅ signInWithCredential SUCCESS:', result);
+            
             user = result.user;
+            console.log('👤 Usuário logado:', user.email);
             
         } else {
             console.log('🌐 Login no navegador web - usando Firebase popup');
@@ -83,7 +119,10 @@ export async function signInWithGoogle() {
         showToast(`Bem-vindo, ${user.displayName}!`, 'success');
         
     } catch (error) {
-        console.error('❌ Erro no login:', error);
+        console.error('❌ ERRO COMPLETO:', error);
+        console.error('❌ error.message:', error.message);
+        console.error('❌ error.code:', error.code);
+        console.error('❌ error.stack:', error.stack);
         
         if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup_closed_by_user')) {
             showToast('Login cancelado', 'info');
