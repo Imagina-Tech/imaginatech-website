@@ -33,8 +33,20 @@ export async function signInWithGoogle() {
         if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
             console.log('🚀 Login no app nativo - usando Google Auth plugin');
             
-            // Importar o plugin dinamicamente
-            const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+            // Acessar o plugin através do Capacitor.Plugins
+            const { GoogleAuth } = Capacitor.Plugins;
+            
+            if (!GoogleAuth) {
+                console.error('❌ Plugin GoogleAuth não encontrado');
+                throw new Error('Plugin de autenticação não disponível');
+            }
+            
+            // Inicializar o plugin (necessário no Android)
+            try {
+                await GoogleAuth.initialize();
+            } catch (initError) {
+                console.log('⚠️ Plugin já inicializado ou não precisa inicializar');
+            }
             
             // Fazer login com o plugin do Capacitor
             const googleUser = await GoogleAuth.signIn();
@@ -76,19 +88,11 @@ export async function signInWithGoogle() {
             showToast('Login cancelado', 'info');
         } else if (error.error === 'popup_closed_by_user') {
             showToast('Login cancelado', 'info');
+        } else if (error.error === '12501') {
+            showToast('Login cancelado pelo usuário', 'info');
         } else {
             showToast('Erro ao fazer login: ' + (error.message || 'Tente novamente'), 'error');
         }
-    }
-}
-
-export async function signOut() {
-    try {
-        state.auth && await state.auth.signOut();
-        showToast('Logout realizado com sucesso!', 'info');
-    } catch (error) {
-        console.error('Erro no logout:', error);
-        showToast('Erro ao fazer logout.', 'error');
     }
 }
 
