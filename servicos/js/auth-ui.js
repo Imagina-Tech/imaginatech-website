@@ -1,5 +1,4 @@
-/* 
-==================================================
+/* ==================================================
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
@@ -389,8 +388,13 @@ export function closeStatusModal() {
     if (photoField) photoField.style.display = 'none';
     const photoInput = document.getElementById('instagramPhotoInput');
     if (photoInput) photoInput.value = '';
+    
+    // MODIFICADO: Limpar múltiplos previews
     const photoPreview = document.getElementById('instagramPhotoPreview');
+    const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
     if (photoPreview) photoPreview.style.display = 'none';
+    if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
+    state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
 }
 
 export function showTrackingCodeModal() {
@@ -437,15 +441,20 @@ export async function confirmTrackingCode() {
 
 export function showStatusModalWithPhoto(service, newStatus) {
     document.getElementById('statusModalMessage') && 
-        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma foto instagramável do serviço "${service.name}"`);
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`);
     
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) {
         photoField.style.display = 'block';
         const photoInput = document.getElementById('instagramPhotoInput');
         if (photoInput) photoInput.value = '';
+        
+        // MODIFICADO: Limpar múltiplos previews
         const photoPreview = document.getElementById('instagramPhotoPreview');
+        const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
         if (photoPreview) photoPreview.style.display = 'none';
+        if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
+        state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
     }
     
     const emailOption = document.getElementById('emailOption');
@@ -762,34 +771,71 @@ export function downloadFile(url, fileName) {
     document.body.removeChild(link);
 }
 
+// MODIFICADO: Lógica para múltiplas fotos no modal de conclusão
+state.pendingInstagramPhotos = [];
+
 export function handleInstagramPhotoSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-        showToast('Use apenas JPEG ou PNG para foto instagramável', 'error');
-        event.target.value = '';
-        return;
-    }
-    
-    if (file.size > 5242880) {
-        showToast('Foto muito grande. Máximo: 5MB', 'error');
-        event.target.value = '';
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = e => {
-        const preview = document.getElementById('instagramPhotoPreview');
-        const img = document.getElementById('instagramPhotoImg');
-        if (preview && img) {
-            img.src = e.target.result;
-            preview.style.display = 'block';
+    const maxSize = 5242880; // 5MB
+
+    const validFiles = files.filter(file => {
+        if (!validTypes.includes(file.type)) {
+            showToast(`Formato inválido: ${file.name}. Use JPEG ou PNG.`, 'error');
+            return false;
         }
-    };
-    reader.readAsDataURL(file);
+        if (file.size > maxSize) {
+            showToast(`Foto muito grande: ${file.name}. Máximo: 5MB.`, 'error');
+            return false;
+        }
+        return true;
+    });
+
+    state.pendingInstagramPhotos.push(...validFiles);
+    renderInstagramPhotoPreviews();
 }
+
+function renderInstagramPhotoPreviews() {
+    const preview = document.getElementById('instagramPhotoPreview');
+    const previewGrid = document.getElementById('instagramPhotoPreviewGrid');
+
+    if (!preview || !previewGrid) return;
+
+    if (state.pendingInstagramPhotos.length === 0) {
+        preview.style.display = 'none';
+        previewGrid.innerHTML = '';
+        return;
+    }
+
+    preview.style.display = 'block';
+    previewGrid.innerHTML = '';
+
+    state.pendingInstagramPhotos.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'preview-image-wrapper';
+            imgWrapper.innerHTML = `
+                <img src="${e.target.result}" alt="Preview ${index + 1}">
+                <button type="button" class="btn-remove-preview" onclick="window.removeInstagramPhoto(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            previewGrid.appendChild(imgWrapper);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeInstagramPhoto(index) {
+    state.pendingInstagramPhotos.splice(index, 1);
+    const fileInput = document.getElementById('instagramPhotoInput');
+    if (fileInput) fileInput.value = ''; // Limpa o input para permitir nova seleção dos mesmos arquivos
+    renderInstagramPhotoPreviews();
+}
+
 
 // ===========================
 // FORM UTILITIES
@@ -1081,6 +1127,7 @@ window.closeTrackingModal = closeTrackingModal;
 window.confirmTrackingCode = confirmTrackingCode;
 window.showStatusModalWithPhoto = showStatusModalWithPhoto;
 window.handleInstagramPhotoSelect = handleInstagramPhotoSelect;
+window.removeInstagramPhoto = removeInstagramPhoto; // MODIFICADO: Expor nova função
 window.filterServices = filterServices;
 window.toggleDateInput = toggleDateInput;
 window.toggleDeliveryFields = toggleDeliveryFields;
