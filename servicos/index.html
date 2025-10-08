@@ -1,12 +1,3 @@
-<!-- 
-==================================================
-ARQUIVO: servicos/index.html
-MÓDULO: Serviços/Produção (Painel Administrativo)
-SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.2 - Optimized
-IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
-==================================================
--->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -16,11 +7,9 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <meta name="description" content="Painel administrativo de serviços - ImaginaTech">
     <meta name="robots" content="noindex, nofollow">
     
-    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -28,7 +17,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -36,13 +24,11 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Background Effects -->
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
         <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Login Screen -->
     <div class="login-screen hidden" id="loginScreen">
         <div class="login-container">
             <div class="login-header">
@@ -70,9 +56,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Admin Dashboard -->
     <div class="admin-dashboard hidden" id="adminDashboard">
-        <!-- Header -->
         <header class="navbar">
             <div class="navbar-container">
                 <div class="navbar-left">
@@ -101,10 +85,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="container">
-                <!-- Action Bar -->
                 <div class="action-bar">
                     <h2 class="page-title">
                         <i class="fas fa-tasks"></i>
@@ -118,7 +100,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- Statistics Cards -->
                 <div class="stats-grid">
                     <div class="stat-card clickable" onclick="filterServices('todos')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
@@ -176,10 +157,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- Services Grid -->
                 <div class="services-grid" id="servicesGrid"></div>
 
-                <!-- Empty State -->
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon"><i class="fas fa-inbox"></i></div>
                     <h3>Nenhum serviço encontrado</h3>
@@ -193,7 +172,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </main>
     </div>
 
-    <!-- Service Modal -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -205,14 +183,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             
             <form id="serviceForm" onsubmit="saveService(event)">
                 <div class="form-grid">
-                    <!-- Order Code Display -->
                     <div class="order-code-display" id="orderCodeDisplay" style="display: none; grid-column: 1 / -1;">
                         <div class="order-code-label">Código do Pedido</div>
                         <div class="order-code-value" id="orderCodeValue">-</div>
                         <div class="order-code-info">Guarde este código para acompanhamento</div>
                     </div>
 
-                    <!-- Basic Info -->
                     <div class="form-group">
                         <label for="serviceName"><i class="fas fa-cube"></i> Nome do Serviço *</label>
                         <input type="text" id="serviceName" class="form-input" required autocomplete="off">
@@ -230,7 +206,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <input type="tel" id="clientPhone" class="form-input" placeholder="(11) 99999-9999" autocomplete="off">
                     </div>
 
-                    <!-- Material & Color -->
                     <div class="form-group">
                         <label for="serviceMaterial"><i class="fas fa-layer-group"></i> Material *</label>
                         <select id="serviceMaterial" class="form-select" required>
@@ -262,7 +237,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </select>
                     </div>
 
-                    <!-- Delivery & Priority -->
                     <div class="form-group">
                         <label for="deliveryMethod"><i class="fas fa-truck"></i> Método de Entrega *</label>
                         <select id="deliveryMethod" class="form-select" required onchange="toggleDeliveryFields()">
@@ -283,7 +257,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </select>
                     </div>
 
-                    <!-- Dates -->
                     <div class="form-group">
                         <label for="startDate"><i class="fas fa-calendar-plus"></i> Data de Início *</label>
                         <input type="date" id="startDate" class="form-input" required>
@@ -299,7 +272,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
-                    <!-- Value & Weight -->
                     <div class="form-group">
                         <label for="serviceValue"><i class="fas fa-dollar-sign"></i> Valor (R$)</label>
                         <input type="number" id="serviceValue" class="form-input" step="0.01" min="0" placeholder="0,00">
@@ -309,7 +281,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
                     </div>
 
-                    <!-- File Upload -->
                     <div class="form-group full-width">
                         <label for="serviceFile"><i class="fas fa-file-upload"></i> Arquivo do Projeto (STL, OBJ, STEP, 3MF)</label>
                         <div class="file-input-wrapper">
@@ -324,7 +295,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
-                    <!-- Image Upload -->
                     <div class="form-group full-width">
                         <label for="serviceImage"><i class="fas fa-image"></i> Imagens de Referência (Múltiplas)</label>
                         <div class="image-input-wrapper">
@@ -335,7 +305,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
-                    <!-- Pickup Fields -->
                     <div class="pickup-fields" id="pickupFields">
                         <h4 class="section-title"><i class="fas fa-store"></i> Informações para Retirada</h4>
                         <div class="form-group">
@@ -348,7 +317,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
-                    <!-- Delivery Fields (Sedex) -->
                     <div class="delivery-fields" id="deliveryFields">
                         <h4 class="section-title"><i class="fas fa-shipping-fast"></i> Dados para Entrega</h4>
                         <div class="form-row">
@@ -404,7 +372,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <input type="text" id="complemento" class="form-input" placeholder="Apto, Bloco, etc">
                         </div>
                         
-                        <!-- Campo de Código de Rastreio (aparece apenas ao editar) -->
                         <div class="form-group" id="trackingCodeField" style="display: none;">
                             <label for="editTrackingCode">
                                 <i class="fas fa-barcode"></i> Código de Rastreio (Correios)
@@ -418,7 +385,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
-                    <!-- Description & Observations -->
                     <div class="form-group full-width">
                         <label for="serviceDescription"><i class="fas fa-align-left"></i> Descrição do Serviço</label>
                         <textarea id="serviceDescription" class="form-textarea" rows="3" placeholder="Detalhes sobre o serviço..." autocomplete="off"></textarea>
@@ -429,7 +395,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- Notification Options -->
                 <div class="notification-section" id="notificationSection" style="grid-column: 1 / -1; display: none;">
                     <h4 class="section-title"><i class="fas fa-bell"></i> Notificações ao Cliente</h4>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -448,7 +413,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- Hidden Fields -->
                 <input type="hidden" id="serviceId">
                 <input type="hidden" id="serviceStatus" value="pendente">
                 <input type="hidden" id="currentFileUrl">
@@ -468,7 +432,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Tracking Modal -->
     <div class="modal" id="trackingModal">
         <div class="modal-content modal-small">
             <div class="modal-header">
@@ -492,7 +455,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Delivery Info Modal -->
     <div class="modal" id="deliveryInfoModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -510,7 +472,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Status Confirmation Modal -->
     <div class="modal" id="statusModal">
         <div class="modal-content modal-small">
             <div class="modal-header">
@@ -522,23 +483,22 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             <div class="modal-body">
                 <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
                 
-                <!-- Campo de foto instagramável (aparece quando necessário) -->
                 <div id="instagramPhotoField" style="display: none; margin-top: 1.5rem;">
                     <div class="instagram-alert">
                         <i class="fas fa-camera"></i>
-                        <p style="margin: 0.5rem 0;"><strong>Foto Instagramável Obrigatória</strong></p>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Anexe uma foto de alta qualidade do produto finalizado</p>
+                        <p style="margin: 0.5rem 0;"><strong>Fotos Instagramáveis Obrigatórias</strong></p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Anexe uma ou mais fotos de alta qualidade do produto finalizado.</p>
                     </div>
                     
                     <div class="instagram-upload">
                         <label for="instagramPhotoInput" class="instagram-label">
-                            <i class="fas fa-upload"></i> Selecionar Foto (JPEG ou PNG)
+                            <i class="fas fa-upload"></i> Selecionar Foto(s)
                         </label>
-                        <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handleInstagramPhotoSelect(event)" style="display: none;">
+                        <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handleInstagramPhotoSelect(event)" style="display: none;" multiple>
                     </div>
                     
-                    <div class="instagram-preview" id="instagramPhotoPreview" style="display: none;">
-                        <img id="instagramPhotoImg" src="" alt="Preview">
+                    <div class="image-preview" id="instagramPhotoPreview" style="display: none;">
+                        <div class="image-preview-grid" id="instagramPhotoPreviewGrid"></div>
                     </div>
                 </div>
                 
@@ -566,46 +526,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Instagram Photo Modal -->
-    <div class="modal" id="instagramPhotoModal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h2>📸 Foto Instagramável Obrigatória</h2>
-                <button class="modal-close" onclick="closeInstagramPhotoModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="instagram-alert">
-                    <i class="fas fa-camera"></i>
-                    <p><strong>Antes de concluir o serviço:</strong></p>
-                    <p id="instagramServiceName" style="color: var(--neon-blue); font-weight: 600; margin-top: 0.5rem;">Produto</p>
-                    <p style="margin-top: 1rem;">É obrigatório anexar uma foto de alta qualidade do produto finalizado para divulgação no Instagram.</p>
-                </div>
-                
-                <div class="instagram-upload">
-                    <label for="instagramPhotoInput" class="instagram-label">
-                        <i class="fas fa-upload"></i> Selecionar Foto (JPEG ou PNG)
-                    </label>
-                    <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handleInstagramPhotoSelect(event)" style="display: none;">
-                </div>
-                
-                <div class="instagram-preview" id="instagramPhotoPreview" style="display: none;">
-                    <img id="instagramPhotoImg" src="" alt="Preview">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeInstagramPhotoModal()">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="button" class="btn-confirm" onclick="confirmInstagramPhoto()">
-                    <i class="fas fa-check"></i> Confirmar e Concluir
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Image Viewer Modal -->
     <div class="modal" id="imageViewerModal">
         <div class="modal-content modal-image">
             <div class="modal-header">
@@ -638,19 +558,15 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-    <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-    <!-- Scripts Modulares -->
     <script type="module" src="js/main.js"></script>
     
     <script>
