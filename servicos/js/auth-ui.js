@@ -2,41 +2,47 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.2 - Lógica de Status e Feedback Corrigida
+VERSÃO: 3.1 - Modular + Capacitor Google Auth
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
 import { state, AUTHORIZED_EMAILS } from './config.js';
-import {
-    startServicesListener,
-    saveService,
-    deleteService,
-    updateStatus,
-    confirmStatusChange,
-    renderServices,
-    filterServices,
-    uploadFile
+import { 
+    startServicesListener, 
+    saveService, 
+    deleteService, 
+    updateStatus, 
+    confirmStatusChange, 
+    renderServices, 
+    filterServices, 
+    uploadFile 
 } from './services.js';
 
 // ===========================
-// AUTHENTICATION 
-// ... (COLE A SEÇÃO DE AUTENTICAÇÃO DO SEU ARQUIVO auth-ui.js AQUI, ELA NÃO PRECISA DE MUDANÇAS) ...
+// AUTHENTICATION
 // ===========================
+
 export async function signInWithGoogle() {
     if (!state.auth) return showToast('Sistema não está pronto. Recarregue a página.', 'error');
-
+    
     try {
         let user;
-
+        
+        // Verifica se está rodando no app nativo (Capacitor)
         if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
             console.log('🚀 Login no app nativo - usando Google Auth plugin');
+            
+            // Acessar o plugin através do Capacitor.Plugins
             const { GoogleAuth } = Capacitor.Plugins;
+            
             if (!GoogleAuth) {
                 console.error('❌ Plugin GoogleAuth não encontrado');
                 alert('DEBUG: Plugin GoogleAuth não encontrado');
                 throw new Error('Plugin de autenticação não disponível');
             }
+            
+            // Inicializar o plugin
             try {
                 console.log('🔧 Inicializando GoogleAuth...');
                 await GoogleAuth.initialize();
@@ -44,9 +50,14 @@ export async function signInWithGoogle() {
             } catch (initError) {
                 console.log('⚠️ Plugin já inicializado:', initError);
             }
+            
+            // Fazer login com o plugin do Capacitor
             console.log('📱 Chamando GoogleAuth.signIn()...');
             const googleUser = await GoogleAuth.signIn();
+            
             console.log('✅ Google Auth retornou:', googleUser);
+            
+            // DEBUG: Mostrar o que foi retornado
             alert('DEBUG: Google retornou:\n' + JSON.stringify({
                 email: googleUser.email,
                 name: googleUser.name,
@@ -54,17 +65,24 @@ export async function signInWithGoogle() {
                 hasIdToken: !!googleUser.authentication?.idToken,
                 hasAccessToken: !!googleUser.authentication?.accessToken
             }, null, 2));
+            
+            // Verificar se temos os tokens necessários
             if (!googleUser.authentication) {
                 alert('DEBUG: googleUser.authentication é NULL ou UNDEFINED');
                 throw new Error('Resposta do Google Auth inválida - authentication missing');
             }
+            
             const idToken = googleUser.authentication.idToken;
             const accessToken = googleUser.authentication.accessToken;
+            
             if (!idToken && !accessToken) {
                 alert('DEBUG: Nenhum token encontrado!\nidToken: ' + idToken + '\naccessToken: ' + accessToken);
                 throw new Error('Tokens de autenticação não encontrados');
             }
+            
             console.log('🔥 Criando credencial do Firebase...');
+            
+            // Criar credencial do Firebase
             let credential;
             if (idToken) {
                 console.log('🔐 Usando idToken');
@@ -73,16 +91,23 @@ export async function signInWithGoogle() {
                 console.log('🔓 Usando apenas accessToken');
                 credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
             }
+            
+            // Fazer login no Firebase com a credencial
             console.log('🔥 Fazendo signInWithCredential...');
             const result = await state.auth.signInWithCredential(credential);
+            
             user = result.user;
             console.log('👤 Usuário logado:', user.email);
+            
         } else {
             console.log('🌐 Login no navegador web - usando Firebase popup');
+            
+            // Login normal via popup (navegador web)
             const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
             user = result.user;
         }
-
+        
+        // Verificar autorização
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
             state.currentUser = user;
             state.isAuthorized = false;
@@ -90,16 +115,20 @@ export async function signInWithGoogle() {
             showToast(`Olá ${user.displayName}! Esta área é restrita aos administradores.`, 'info');
             return;
         }
+        
         state.currentUser = user;
         state.isAuthorized = true;
         showToast(`Bem-vindo, ${user.displayName}!`, 'success');
-
+        
     } catch (error) {
         console.error('❌ ERRO COMPLETO:', error);
-        alert('ERRO AO FAZER LOGIN:\n\n' +
-            'Mensagem: ' + (error.message || 'Sem mensagem') + '\n' +
-            'Code: ' + (error.code || 'Sem código') + '\n' +
-            'Error: ' + (error.error || 'Sem error'));
+        
+        // Mostrar erro em alert para debug
+        alert('ERRO AO FAZER LOGIN:\n\n' + 
+              'Mensagem: ' + (error.message || 'Sem mensagem') + '\n' +
+              'Code: ' + (error.code || 'Sem código') + '\n' +
+              'Error: ' + (error.error || 'Sem error'));
+        
         if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup_closed_by_user')) {
             showToast('Login cancelado', 'info');
         } else if (error.error === '12501') {
@@ -133,7 +162,6 @@ export function checkAuthorization(user) {
 // ===========================
 // UI MANAGEMENT
 // ===========================
-// ... (COLE A SEÇÃO DE UI MANAGEMENT DO SEU ARQUIVO auth-ui.js AQUI, ELA NÃO PRECISA DE MUDANÇAS) ...
 export function showLoginScreen() {
     document.getElementById('loginScreen')?.classList.remove('hidden');
     document.getElementById('adminDashboard')?.classList.add('hidden');
@@ -153,6 +181,7 @@ export function showAdminDashboard(user) {
 export function showAccessDeniedScreen(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('adminDashboard')?.classList.add('hidden');
+    
     let accessDeniedScreen = document.getElementById('accessDeniedScreen');
     if (!accessDeniedScreen) {
         accessDeniedScreen = document.createElement('div');
@@ -160,16 +189,32 @@ export function showAccessDeniedScreen(user) {
         accessDeniedScreen.className = 'access-denied-screen';
         accessDeniedScreen.innerHTML = `
             <div class="access-denied-container">
-                <div class="access-denied-icon"><i class="fas fa-lock"></i></div>
-                <h1>Acesso Restrito</h1>
-                <p class="access-denied-message">Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.</p>
-                <p class="access-denied-info">Você está logado com: <strong>${user.email}</strong></p>
-                <div class="access-denied-actions">
-                    <a href="/" class="btn-primary"><i class="fas fa-home"></i> Voltar ao Início</a>
-                    <a href="/acompanhar-pedido/" class="btn-secondary"><i class="fas fa-cube"></i> Acompanhar Pedido</a>
+                <div class="access-denied-icon">
+                    <i class="fas fa-lock"></i>
                 </div>
-                <button class="btn-logout-denied" onclick="window.signOutGlobal()"><i class="fas fa-sign-out-alt"></i> Fazer Logout</button>
-            </div>`;
+                <h1>Acesso Restrito</h1>
+                <p class="access-denied-message">
+                    Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.
+                </p>
+                <p class="access-denied-info">
+                    Você está logado com: <strong>${user.email}</strong>
+                </p>
+                <div class="access-denied-actions">
+                    <a href="/" class="btn-primary">
+                        <i class="fas fa-home"></i>
+                        Voltar ao Início
+                    </a>
+                    <a href="/acompanhar-pedido/" class="btn-secondary">
+                        <i class="fas fa-cube"></i>
+                        Acompanhar Pedido
+                    </a>
+                </div>
+                <button class="btn-logout-denied" onclick="window.signOutGlobal()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Fazer Logout
+                </button>
+            </div>
+        `;
         document.body.appendChild(accessDeniedScreen);
     } else {
         const message = accessDeniedScreen.querySelector('.access-denied-message');
@@ -177,61 +222,44 @@ export function showAccessDeniedScreen(user) {
         if (message) message.innerHTML = `Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.`;
         if (info) info.innerHTML = `Você está logado com: <strong>${user.email}</strong>`;
     }
+    
     accessDeniedScreen.classList.remove('hidden');
 }
 
+// ===========================
+// UI MANAGEMENT
+// ===========================
+
 export const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
-
-// --- NOVA FUNÇÃO DE FEEDBACK ---
-/**
- * Alterna o estado de carregamento de botões em modais.
- * @param {boolean} isLoading - True para mostrar o spinner, false para reverter ao normal.
- */
-export function toggleModalLoading(isLoading) {
-    const modals = ['#statusModal', '#trackingModal', '#serviceModal'];
-    modals.forEach(modalSelector => {
-        const button = document.querySelector(`${modalSelector} .btn-confirm, ${modalSelector} .btn-save`);
-        if (!button) return;
-
-        const btnText = button.querySelector('.btn-text');
-        const spinner = button.querySelector('.spinner');
-
-        button.disabled = isLoading;
-        if (btnText) btnText.style.display = isLoading ? 'none' : 'inline-flex';
-        if (spinner) spinner.style.display = isLoading ? 'block' : 'none';
-    });
-}
-
 
 // ===========================
 // MODALS
 // ===========================
-// ... (COLE A SEÇÃO DE MODALS DO SEU ARQUIVO auth-ui.js AQUI, COM AS SEGUINTES MODIFICAÇÕES) ...
 export function openAddModal() {
     state.editingServiceId = state.selectedFile = null;
     state.selectedImages = [];
-
+    
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
     document.getElementById('serviceForm')?.reset();
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-
+    
     setupDateFields();
     ['fileInfo', 'imagePreview'].forEach(id => {
         const el = document.getElementById(id);
         el && (el.style.display = 'none');
     });
-
+    
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) previewContainer.innerHTML = '';
-
+    
     document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
     document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
-
+    
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
-
+    
     hideAllDeliveryFields();
     document.getElementById('serviceModal')?.classList.add('active');
 }
@@ -239,15 +267,15 @@ export function openAddModal() {
 export function openEditModal(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) return;
-
+    
     state.editingServiceId = serviceId;
     state.selectedFile = null;
     state.selectedImages = [];
-
+    
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-
+    
     Object.entries({
         serviceName: service.name,
         clientName: service.client,
@@ -268,10 +296,10 @@ export function openEditModal(serviceId) {
         const el = document.getElementById(id);
         el && (el.value = value || '');
     });
-
+    
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
-
+    
     const dateUndefined = document.getElementById('dateUndefined');
     const dueDateInput = document.getElementById('dueDate');
     if (dateUndefined) {
@@ -281,7 +309,7 @@ export function openEditModal(serviceId) {
             dueDateInput.value = '';
         }
     }
-
+    
     if (service.fileUrl) {
         document.getElementById('currentFileUrl') && (document.getElementById('currentFileUrl').value = service.fileUrl);
         document.getElementById('currentFileName') && (document.getElementById('currentFileName').value = service.fileName || '');
@@ -292,15 +320,15 @@ export function openEditModal(serviceId) {
             fileInfo.style.display = 'flex';
         }
     }
-
+    
     const preview = document.getElementById('imagePreview');
     const previewContainer = document.getElementById('imagePreviewContainer');
-
+    
     if (previewContainer) previewContainer.innerHTML = '';
-
+    
     if ((service.images && service.images.length > 0) || service.imageUrl) {
         const imagesToShow = service.images && service.images.length > 0 ? service.images : [{ url: service.imageUrl, name: 'Imagem' }];
-
+        
         imagesToShow.forEach((img, index) => {
             const imgWrapper = document.createElement('div');
             imgWrapper.className = 'preview-image-wrapper existing-image';
@@ -310,13 +338,13 @@ export function openEditModal(serviceId) {
             `;
             previewContainer.appendChild(imgWrapper);
         });
-
+        
         if (preview) preview.style.display = 'block';
     }
-
+    
     if (service.deliveryMethod) {
         toggleDeliveryFields();
-
+        
         if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
             document.getElementById('pickupName') && (document.getElementById('pickupName').value = service.pickupInfo.name || '');
             document.getElementById('pickupWhatsapp') && (document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '');
@@ -328,7 +356,7 @@ export function openEditModal(serviceId) {
                     el && (el.value = value || '');
                 });
             }
-
+            
             const trackingField = document.getElementById('trackingCodeField');
             const trackingInput = document.getElementById('editTrackingCode');
             if (trackingField) {
@@ -339,7 +367,7 @@ export function openEditModal(serviceId) {
             }
         }
     }
-
+    
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
@@ -355,17 +383,18 @@ export function closeModal() {
 export function closeStatusModal() {
     document.getElementById('statusModal')?.classList.remove('active');
     state.pendingStatusUpdate = null;
-
+    
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) photoField.style.display = 'none';
     const photoInput = document.getElementById('instagramPhotoInput');
     if (photoInput) photoInput.value = '';
-
+    
+    // MODIFICADO: Limpar múltiplos previews
     const photoPreview = document.getElementById('instagramPhotoPreview');
     const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
     if (photoPreview) photoPreview.style.display = 'none';
     if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
-    state.pendingInstagramPhotos = [];
+    state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
 }
 
 export function showTrackingCodeModal() {
@@ -381,15 +410,14 @@ export const closeTrackingModal = () => {
 };
 
 export async function confirmTrackingCode() {
-    window.toggleModalLoading(true);
+    const trackingInput = document.getElementById('trackingCode');
+    if (!trackingInput?.value.trim()) return showToast('Insira o código de rastreio', 'error');
+    if (!state.pendingStatusUpdate) return;
+    
+    const { serviceId, service } = state.pendingStatusUpdate;
+    const trackingCode = trackingInput.value.trim().toUpperCase();
+    
     try {
-        const trackingInput = document.getElementById('trackingCode');
-        if (!trackingInput?.value.trim()) throw new Error('Insira o código de rastreio');
-        if (!state.pendingStatusUpdate) return;
-
-        const { serviceId, service } = state.pendingStatusUpdate;
-        const trackingCode = trackingInput.value.trim().toUpperCase();
-
         await state.db.collection('services').doc(serviceId).update({
             status: 'retirada',
             trackingCode,
@@ -397,41 +425,38 @@ export async function confirmTrackingCode() {
             updatedAt: new Date().toISOString(),
             updatedBy: state.currentUser.email
         });
-
+        
         showToast('Pedido marcado como postado!', 'success');
+        
         if (service.clientPhone) {
             const message = `Seu pedido foi postado nos Correios!\n\n» ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
             sendWhatsAppMessage(service.clientPhone, message);
         }
     } catch (error) {
         console.error('Erro:', error);
-        showToast(error.message || 'Erro ao atualizar status', 'error');
-    } finally {
-        window.toggleModalLoading(false);
-        closeTrackingModal();
+        showToast('Erro ao atualizar status', 'error');
     }
+    closeTrackingModal();
 }
 
-// --- FUNÇÃO CORRIGIDA ---
 export function showStatusModalWithPhoto(service, newStatus) {
-    // Mensagem dinâmica baseada no status
-    const statusLabel = getStatusLabel(newStatus).replace(/s$/, ''); // Remove o 's' do plural
-    document.getElementById('statusModalMessage') &&
-        (document.getElementById('statusModalMessage').textContent = `Para marcar como "${statusLabel}", é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`);
-
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`);
+    
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) {
         photoField.style.display = 'block';
         const photoInput = document.getElementById('instagramPhotoInput');
         if (photoInput) photoInput.value = '';
-
+        
+        // MODIFICADO: Limpar múltiplos previews
         const photoPreview = document.getElementById('instagramPhotoPreview');
         const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
         if (photoPreview) photoPreview.style.display = 'none';
         if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
-        state.pendingInstagramPhotos = [];
+        state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
     }
-
+    
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
@@ -443,13 +468,12 @@ export function showStatusModalWithPhoto(service, newStatus) {
             emailOption.style.display = 'none';
         }
     }
-
+    
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) whatsappOption.style.display = 'none';
-
+    
     document.getElementById('statusModal')?.classList.add('active');
 }
-
 
 export function showDeliveryInfo(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
