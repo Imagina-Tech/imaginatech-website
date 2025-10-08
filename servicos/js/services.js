@@ -1,5 +1,4 @@
-/* 
-==================================================
+/* ==================================================
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
@@ -382,7 +381,7 @@ export async function updateStatus(serviceId, newStatus) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
-    if (newStatus === 'concluido' && !service.instagramPhoto) {
+    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
         return;
@@ -457,43 +456,56 @@ export async function confirmStatusChange() {
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
+    // MODIFICADO: Lógica para múltiplas fotos
     if (requiresInstagramPhoto) {
-        const photoInput = document.getElementById('instagramPhotoInput');
-        const photoFile = photoInput?.files[0];
-        
-        if (!photoFile) {
-            return showToast('Selecione uma foto instagramável antes de confirmar', 'error');
+        if (state.pendingInstagramPhotos.length === 0) {
+            return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
         }
-        
+
         try {
-            showToast('Fazendo upload da foto...', 'info');
-            
-            const photoData = await uploadFile(photoFile, serviceId);
-            
-            if (!photoData) {
-                return showToast('Erro ao fazer upload da foto', 'error');
+            showToast(`Fazendo upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
+
+            const newImageUrls = [];
+            for (const photoFile of state.pendingInstagramPhotos) {
+                const photoData = await uploadFile(photoFile, serviceId);
+                if (photoData) {
+                    newImageUrls.push({
+                        url: photoData.url,
+                        name: photoFile.name,
+                        uploadedAt: photoData.uploadedAt,
+                        isInstagram: true // Flag opcional
+                    });
+                }
             }
-            
+
+            if (newImageUrls.length === 0) {
+                return showToast('Erro ao fazer upload das fotos.', 'error');
+            }
+
+            const existingImages = service.images || [];
+            const allImages = [...existingImages, ...newImageUrls];
+
             await state.db.collection('services').doc(serviceId).update({
-                instagramPhoto: photoData.url,
+                images: allImages,
+                instagramPhoto: newImageUrls[0].url, // Mantém a primeira foto no campo antigo por compatibilidade
                 status: 'concluido',
                 completedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 updatedBy: state.currentUser.email,
                 lastStatusChange: new Date().toISOString()
             });
-            
-            showToast('✅ Foto anexada! Status alterado para Concluído', 'success');
-            
+
+            showToast(`✅ ${newImageUrls.length} foto(s) anexada(s)! Status alterado para Concluído.`, 'success');
+
             if (sendEmail && service.clientEmail) {
                 await sendEmailNotification(service);
             }
-            
+
             window.closeStatusModal();
             return;
         } catch (error) {
-            console.error('Erro:', error);
-            showToast('Erro ao confirmar foto instagramável', 'error');
+            console.error('Erro ao confirmar fotos instagramáveis:', error);
+            showToast('Erro ao processar as fotos.', 'error');
             return;
         }
     }
@@ -624,8 +636,9 @@ function createServiceCard(service) {
     const getTotalImagesCount = (svc) => {
         let count = 0;
         if (svc.images && svc.images.length > 0) count += svc.images.length;
-        if (svc.imageUrl) count += 1;
-        if (svc.instagramPhoto) count += 1;
+        // Adequação para não contar duplamente o campo legado imageUrl
+        if (svc.imageUrl && !(svc.images && svc.images.find(img => img.url === svc.imageUrl))) count += 1;
+        if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count +=1;
         return count;
     };
     
