@@ -2,17 +2,17 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular
+VERSÃO: 3.1 - Lógica de Status Corrigida
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
 import { state } from './config.js';
-import { 
-    showToast, 
-    escapeHtml, 
-    formatDate, 
-    formatMoney, 
+import {
+    showToast,
+    escapeHtml,
+    formatDate,
+    formatMoney,
     formatColorName,
     formatDaysText,
     getDaysColor,
@@ -27,16 +27,19 @@ import {
     sendEmailNotification
 } from './auth-ui.js';
 
+// Define a ordem hierárquica dos status para validação de fluxo
+const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
-export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
+export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' [Math.floor(Math.random() * 36)]).join('');
 
 export function startServicesListener() {
     if (!state.db) return console.error('Firestore não está disponível');
-    
+
     state.servicesListener?.();
-    
+
     state.servicesListener = state.db.collection('services').onSnapshot(snapshot => {
         state.services = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -93,253 +96,175 @@ export function startServicesListener() {
 
 export async function saveService(event) {
     event.preventDefault();
-    
-    if (!state.isAuthorized || !state.db || !state.currentUser) 
-        return showToast(!state.isAuthorized ? 'Sem permissão' : 'Sistema não está pronto', 'error');
-    
-    const deliveryMethod = document.getElementById('deliveryMethod').value;
-    if (!deliveryMethod) return showToast('Selecione um método de entrega', 'error');
-    
-    const dateUndefined = document.getElementById('dateUndefined');
-    const dueDateInput = document.getElementById('dueDate');
-    
-    const getFieldValue = (elementId, isNumeric = false) => {
-        const element = document.getElementById(elementId);
-        if (!element) return '';
-        const value = element.value.trim();
-        
-        if (isNumeric) {
-            const parsed = parseFloat(value);
-            return isNaN(parsed) || parsed === 0 ? '' : parsed;
-        }
-        
-        return value;
-    };
-    
-    const service = {
-        name: getFieldValue('serviceName'),
-        client: getFieldValue('clientName'),
-        clientEmail: getFieldValue('clientEmail'),
-        clientPhone: getFieldValue('clientPhone'),
-        description: getFieldValue('serviceDescription'),
-        material: document.getElementById('serviceMaterial').value,
-        color: getFieldValue('serviceColor'),
-        priority: document.getElementById('servicePriority').value,
-        startDate: document.getElementById('startDate').value,
-        dueDate: dateUndefined?.checked ? '' : (dueDateInput?.value || ''),
-        dateUndefined: dateUndefined?.checked || false,
-        value: getFieldValue('serviceValue', true),
-        weight: getFieldValue('serviceWeight', true),
-        observations: getFieldValue('serviceObservations'),
-        deliveryMethod,
-        status: document.getElementById('serviceStatus').value,
-        updatedAt: new Date().toISOString(),
-        updatedBy: state.currentUser.email
-    };
-    
-    if (state.editingServiceId) {
-        const currentService = state.services.find(s => s.id === state.editingServiceId);
-        
-        if (deliveryMethod === 'sedex') {
-            const trackingCodeInput = document.getElementById('editTrackingCode');
-            if (trackingCodeInput) {
-                service.trackingCode = trackingCodeInput.value.trim().toUpperCase();
+    window.toggleModalLoading(true); // Ativa o spinner
+
+    try {
+        if (!state.isAuthorized || !state.db || !state.currentUser)
+            throw new Error(!state.isAuthorized ? 'Sem permissão' : 'Sistema não está pronto');
+
+        const deliveryMethod = document.getElementById('deliveryMethod').value;
+        if (!deliveryMethod) throw new Error('Selecione um método de entrega');
+
+        const dateUndefined = document.getElementById('dateUndefined');
+        const dueDateInput = document.getElementById('dueDate');
+
+        const getFieldValue = (elementId, isNumeric = false) => {
+            const element = document.getElementById(elementId);
+            if (!element) return '';
+            const value = element.value.trim();
+            if (isNumeric) {
+                const parsed = parseFloat(value);
+                return isNaN(parsed) || parsed === 0 ? '' : parsed;
             }
-        } else {
-            if (currentService && currentService.trackingCode) {
+            return value;
+        };
+
+        const service = {
+            name: getFieldValue('serviceName'),
+            client: getFieldValue('clientName'),
+            clientEmail: getFieldValue('clientEmail'),
+            clientPhone: getFieldValue('clientPhone'),
+            description: getFieldValue('serviceDescription'),
+            material: document.getElementById('serviceMaterial').value,
+            color: getFieldValue('serviceColor'),
+            priority: document.getElementById('servicePriority').value,
+            startDate: document.getElementById('startDate').value,
+            dueDate: dateUndefined?.checked ? '' : (dueDateInput?.value || ''),
+            dateUndefined: dateUndefined?.checked || false,
+            value: getFieldValue('serviceValue', true),
+            weight: getFieldValue('serviceWeight', true),
+            observations: getFieldValue('serviceObservations'),
+            deliveryMethod,
+            status: document.getElementById('serviceStatus').value,
+            updatedAt: new Date().toISOString(),
+            updatedBy: state.currentUser.email
+        };
+
+        if (state.editingServiceId) {
+            const currentService = state.services.find(s => s.id === state.editingServiceId);
+            if (deliveryMethod === 'sedex') {
+                const trackingCodeInput = document.getElementById('editTrackingCode');
+                if (trackingCodeInput) service.trackingCode = trackingCodeInput.value.trim().toUpperCase();
+            } else if (currentService?.trackingCode) {
                 service.trackingCode = '';
             }
+            if (currentService) {
+                if (!state.selectedFile && currentService.fileUrl) Object.assign(service, { fileUrl: currentService.fileUrl, fileName: currentService.fileName || '', fileSize: currentService.fileSize || '', fileUploadedAt: currentService.fileUploadedAt || '' });
+                if (state.selectedImages.length === 0 && currentService.images?.length > 0) Object.assign(service, { images: currentService.images, imageUploadedAt: currentService.imageUploadedAt || '' });
+                if (!state.selectedImage && currentService.imageUrl) service.imageUrl = currentService.imageUrl;
+                if (currentService.instagramPhoto) service.instagramPhoto = currentService.instagramPhoto;
+                Object.assign(service, { createdAt: currentService.createdAt, createdBy: currentService.createdBy, orderCode: currentService.orderCode, serviceId: currentService.serviceId });
+                if (currentService.productionStartedAt) service.productionStartedAt = currentService.productionStartedAt;
+                if (currentService.completedAt) service.completedAt = currentService.completedAt;
+                if (currentService.readyAt) service.readyAt = currentService.readyAt;
+                if (currentService.deliveredAt) service.deliveredAt = currentService.deliveredAt;
+                if (currentService.postedAt) service.postedAt = currentService.postedAt;
+            }
         }
-        
-        if (currentService) {
-            if (!state.selectedFile && currentService.fileUrl) {
-                service.fileUrl = currentService.fileUrl;
-                service.fileName = currentService.fileName || '';
-                service.fileSize = currentService.fileSize || '';
-                service.fileUploadedAt = currentService.fileUploadedAt || '';
-            }
-            
-            if (state.selectedImages.length === 0 && currentService.images && currentService.images.length > 0) {
-                service.images = currentService.images;
-                service.imageUploadedAt = currentService.imageUploadedAt || '';
-            }
-            if (!state.selectedImage && currentService.imageUrl) {
-                service.imageUrl = currentService.imageUrl;
-            }
-            
-            if (currentService.instagramPhoto) {
-                service.instagramPhoto = currentService.instagramPhoto;
-            }
-            
-            service.createdAt = currentService.createdAt;
-            service.createdBy = currentService.createdBy;
-            service.orderCode = currentService.orderCode;
-            service.serviceId = currentService.serviceId;
-            
-            if (currentService.productionStartedAt) service.productionStartedAt = currentService.productionStartedAt;
-            if (currentService.completedAt) service.completedAt = currentService.completedAt;
-            if (currentService.readyAt) service.readyAt = currentService.readyAt;
-            if (currentService.deliveredAt) service.deliveredAt = currentService.deliveredAt;
-            if (currentService.postedAt) service.postedAt = currentService.postedAt;
-        }
-    }
-    
-    if (state.editingServiceId) {
-        const currentService = state.services.find(s => s.id === state.editingServiceId);
-        if (currentService && currentService.trackingCode && currentService.deliveryMethod === 'sedex' && 
-            (currentService.status === 'retirada' || currentService.status === 'entregue')) {
-            
-            if (deliveryMethod !== 'sedex') {
-                showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
+
+        if (state.editingServiceId) {
+            const currentService = state.services.find(s => s.id === state.editingServiceId);
+            if (currentService?.trackingCode && currentService.deliveryMethod === 'sedex' && (currentService.status === 'retirada' || currentService.status === 'entregue') && deliveryMethod !== 'sedex') {
                 document.getElementById('deliveryMethod').value = 'sedex';
                 window.toggleDeliveryFields();
-                return;
+                throw new Error('ERRO: Pedido já foi postado! Não é possível alterar o método de entrega.');
             }
         }
-    }
-    
-    if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
-        return showToast('Data de entrega não pode ser anterior à data de início', 'error');
-    
-    if (deliveryMethod === 'retirada') {
-        const pickupName = document.getElementById('pickupName').value.trim();
-        const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
-        if (!pickupName || !pickupWhatsapp) return showToast('Preencha todos os campos de retirada', 'error');
-        service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
-    } else if (deliveryMethod === 'sedex') {
-        const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
-        const addr = {};
-        
-        fields.forEach(field => {
-            addr[field] = document.getElementById(field)?.value.trim() || '';
-        });
-        addr.complemento = document.getElementById('complemento')?.value.trim() || '';
-        
-        if (fields.some(f => !addr[f])) return showToast('Preencha todos os campos obrigatórios de entrega', 'error');
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) return showToast('E-mail inválido', 'error');
-        
-        service.deliveryAddress = addr;
-    }
-    
-    try {
+
+        if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
+            throw new Error('Data de entrega não pode ser anterior à data de início');
+
+        if (deliveryMethod === 'retirada') {
+            const pickupName = document.getElementById('pickupName').value.trim();
+            const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
+            if (!pickupName || !pickupWhatsapp) throw new Error('Preencha todos os campos de retirada');
+            service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
+        } else if (deliveryMethod === 'sedex') {
+            const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
+            const addr = {};
+            fields.forEach(field => { addr[field] = document.getElementById(field)?.value.trim() || ''; });
+            addr.complemento = document.getElementById('complemento')?.value.trim() || '';
+            if (fields.some(f => !addr[f])) throw new Error('Preencha todos os campos obrigatórios de entrega');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) throw new Error('E-mail inválido');
+            service.deliveryAddress = addr;
+        }
+
         let serviceDocId = state.editingServiceId;
-        
         if (state.editingServiceId) {
             await state.db.collection('services').doc(state.editingServiceId).update(service);
             showToast('Serviço atualizado com sucesso!', 'success');
         } else {
-            Object.assign(service, {
-                createdAt: new Date().toISOString(),
-                createdBy: state.currentUser.email,
-                orderCode: generateOrderCode(),
-                serviceId: 'SRV-' + Date.now(),
-                fileUrl: '',
-                fileName: '',
-                fileSize: '',
-                fileUploadedAt: '',
-                imageUrl: '',
-                images: [],
-                imageUploadedAt: '',
-                instagramPhoto: '',
-                trackingCode: ''
-            });
-            
+            Object.assign(service, { createdAt: new Date().toISOString(), createdBy: state.currentUser.email, orderCode: generateOrderCode(), serviceId: 'SRV-' + Date.now(), fileUrl: '', fileName: '', fileSize: '', fileUploadedAt: '', imageUrl: '', images: [], imageUploadedAt: '', instagramPhoto: '', trackingCode: '' });
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
-            
             document.getElementById('orderCodeDisplay').style.display = 'block';
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
-            
             const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;
             const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
-            
             if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
                 const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
-            
-            if (service.clientEmail && sendEmail) {
-                await sendEmailNotification(service);
-            }
+            if (service.clientEmail && sendEmail) await sendEmailNotification(service);
         }
-        
+
         if (state.selectedFile && serviceDocId) {
             showToast('Fazendo upload do arquivo 3D...', 'info');
             const fileData = await uploadFile(state.selectedFile, serviceDocId);
-            fileData && await state.db.collection('services').doc(serviceDocId).update({
-                fileUrl: fileData.url,
-                fileName: fileData.name,
-                fileSize: fileData.size,
-                fileUploadedAt: fileData.uploadedAt
-            });
+            if (fileData) await state.db.collection('services').doc(serviceDocId).update({ fileUrl: fileData.url, fileName: fileData.name, fileSize: fileData.size, fileUploadedAt: fileData.uploadedAt });
         }
-        
+
         if (state.selectedImages.length > 0 && serviceDocId) {
             showToast(`Fazendo upload de ${state.selectedImages.length} ${state.selectedImages.length > 1 ? 'imagens' : 'imagem'}...`, 'info');
-            
             const currentService = state.services.find(s => s.id === serviceDocId);
-            const existingImages = (state.editingServiceId && currentService && currentService.images) ? currentService.images : [];
-            
+            const existingImages = (state.editingServiceId && currentService?.images) ? currentService.images : [];
             const newImageUrls = [];
             for (const imageFile of state.selectedImages) {
                 const imageData = await uploadFile(imageFile, serviceDocId);
-                if (imageData) {
-                    newImageUrls.push({
-                        url: imageData.url,
-                        name: imageFile.name,
-                        uploadedAt: imageData.uploadedAt
-                    });
-                }
+                if (imageData) newImageUrls.push({ url: imageData.url, name: imageFile.name, uploadedAt: imageData.uploadedAt });
             }
-            
             if (newImageUrls.length > 0) {
                 const allImages = [...existingImages, ...newImageUrls];
-                await state.db.collection('services').doc(serviceDocId).update({
-                    images: allImages,
-                    imageUploadedAt: new Date().toISOString()
-                });
+                await state.db.collection('services').doc(serviceDocId).update({ images: allImages, imageUploadedAt: new Date().toISOString() });
                 showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
             }
         }
-        
         window.closeModal();
+
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        showToast('Erro ao salvar serviço', 'error');
+        showToast(error.message || 'Erro ao salvar serviço', 'error');
+    } finally {
+        window.toggleModalLoading(false); // Desativa o spinner
     }
 }
 
 export async function deleteService(serviceId) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-    
+
     const service = state.services.find(s => s.id === serviceId);
     if (!service || !confirm(`Excluir o serviço "${service.name}"?\n\nTodos os arquivos e imagens serão deletados permanentemente.`)) return;
-    
+
     try {
         const filesToDelete = [];
-        
         if (service.fileUrl) filesToDelete.push(service.fileUrl);
-        if (service.images && service.images.length > 0) {
-            service.images.forEach(img => img.url && filesToDelete.push(img.url));
-        }
+        if (service.images?.length > 0) service.images.forEach(img => img.url && filesToDelete.push(img.url));
         if (service.imageUrl) filesToDelete.push(service.imageUrl);
         if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
-        
+
         if (filesToDelete.length > 0) {
             showToast('Deletando arquivos...', 'info');
-            
             for (const fileUrl of filesToDelete) {
                 try {
-                    const fileRef = state.storage.refFromURL(fileUrl);
-                    await fileRef.delete();
+                    await state.storage.refFromURL(fileUrl).delete();
                 } catch (error) {
                     console.error('Erro ao deletar arquivo:', fileUrl, error);
                 }
             }
         }
-        
+
         await state.db.collection('services').doc(serviceId).delete();
         showToast('Serviço e arquivos excluídos!', 'success');
     } catch (error) {
@@ -361,7 +286,6 @@ export async function uploadFile(file, serviceId) {
         return { url, name: file.name, size: file.size, uploadedAt: new Date().toISOString() };
     } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        
         if (error.code === 'storage/unauthorized' || error.message.includes('CORS')) {
             showToast('⚠️ Erro de permissão no Firebase Storage. Configure CORS no console do Firebase.', 'error');
             console.error('SOLUÇÃO: Configure CORS no Firebase Storage para o domínio imaginatech.com.br');
@@ -377,48 +301,54 @@ export async function uploadFile(file, serviceId) {
 // ===========================
 export async function updateStatus(serviceId, newStatus) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-    
+
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
-    
-    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
+
+    // --- LÓGICA CORRIGIDA ---
+    // Verifica se a foto é necessária para o status atual ou qualquer status futuro.
+    const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
+    const completedStatusIndex = STATUS_ORDER.indexOf('concluido');
+    const photoIsRequired = newStatusIndex >= completedStatusIndex;
+    const photosAreMissing = !service.instagramPhoto && (!service.images || service.images.length === 0);
+
+    if (photoIsRequired && photosAreMissing) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
         return;
     }
-    
-    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    const currentStatusIndex = statusOrder.indexOf(service.status);
-    const newStatusIndex = statusOrder.indexOf(newStatus);
-    
-    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < statusOrder.indexOf('retirada')) {
+    // --- FIM DA LÓGICA CORRIGIDA ---
+
+    const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
+
+    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
         if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
             return;
         }
     }
-    
+
     if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
         state.pendingStatusUpdate = { serviceId, newStatus, service };
         return window.showTrackingCodeModal();
     }
-    
+
     state.pendingStatusUpdate = { serviceId, newStatus, service };
-    
+
     const statusMessages = {
         'pendente': 'Marcar como Pendente',
         'producao': 'Iniciar Produção',
         'concluido': 'Marcar como Concluído',
         'retirada': service.deliveryMethod === 'retirada' ? 'Pronto para Retirada' :
-                   service.deliveryMethod === 'sedex' ? 'Marcar como Postado' :
-                   service.deliveryMethod === 'uber' ? 'Marcar como Postado' :
-                   service.deliveryMethod === 'definir' ? 'Marcar como Combinado' :
-                   'Marcar Processo de Entrega',
+            service.deliveryMethod === 'sedex' ? 'Marcar como Postado' :
+            service.deliveryMethod === 'uber' ? 'Marcar como Postado' :
+            service.deliveryMethod === 'definir' ? 'Marcar como Combinado' :
+            'Marcar Processo de Entrega',
         'entregue': 'Confirmar Entrega'
     };
-    
-    document.getElementById('statusModalMessage') && 
+
+    document.getElementById('statusModalMessage') &&
         (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
-    
+
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
@@ -430,7 +360,7 @@ export async function updateStatus(serviceId, newStatus) {
             whatsappOption.style.display = 'none';
         }
     }
-    
+
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
@@ -442,128 +372,91 @@ export async function updateStatus(serviceId, newStatus) {
             emailOption.style.display = 'none';
         }
     }
-    
+
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) photoField.style.display = 'none';
-    
+
     document.getElementById('statusModal')?.classList.add('active');
 }
 
 export async function confirmStatusChange() {
     if (!state.pendingStatusUpdate || !state.db) return;
-    
+
+    window.toggleModalLoading(true); // Ativa o spinner
+
     const { serviceId, newStatus, service, requiresInstagramPhoto } = state.pendingStatusUpdate;
-    const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
-    const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
-    
-    // MODIFICADO: Lógica para múltiplas fotos
-    if (requiresInstagramPhoto) {
-        if (state.pendingInstagramPhotos.length === 0) {
-            return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
-        }
 
-        try {
+    try {
+        const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
+        const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
+
+        if (requiresInstagramPhoto) {
+            if (state.pendingInstagramPhotos.length === 0) {
+                throw new Error('Selecione pelo menos uma foto antes de confirmar.');
+            }
             showToast(`Fazendo upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
-
             const newImageUrls = [];
             for (const photoFile of state.pendingInstagramPhotos) {
                 const photoData = await uploadFile(photoFile, serviceId);
-                if (photoData) {
-                    newImageUrls.push({
-                        url: photoData.url,
-                        name: photoFile.name,
-                        uploadedAt: photoData.uploadedAt,
-                        isInstagram: true // Flag opcional
-                    });
-                }
+                if (photoData) newImageUrls.push({ url: photoData.url, name: photoFile.name, uploadedAt: photoData.uploadedAt, isInstagram: true });
             }
-
-            if (newImageUrls.length === 0) {
-                return showToast('Erro ao fazer upload das fotos.', 'error');
-            }
+            if (newImageUrls.length === 0) throw new Error('Erro ao fazer upload das fotos.');
 
             const existingImages = service.images || [];
             const allImages = [...existingImages, ...newImageUrls];
 
             await state.db.collection('services').doc(serviceId).update({
                 images: allImages,
-                instagramPhoto: newImageUrls[0].url, // Mantém a primeira foto no campo antigo por compatibilidade
-                status: 'concluido',
-                completedAt: new Date().toISOString(),
+                instagramPhoto: newImageUrls[0].url,
+                status: newStatus, // Usa o status pendente
+                completedAt: service.completedAt || (newStatus === 'concluido' ? new Date().toISOString() : ''),
                 updatedAt: new Date().toISOString(),
                 updatedBy: state.currentUser.email,
                 lastStatusChange: new Date().toISOString()
             });
-
-            showToast(`✅ ${newImageUrls.length} foto(s) anexada(s)! Status alterado para Concluído.`, 'success');
-
-            if (sendEmail && service.clientEmail) {
-                await sendEmailNotification(service);
-            }
-
-            window.closeStatusModal();
-            return;
-        } catch (error) {
-            console.error('Erro ao confirmar fotos instagramáveis:', error);
-            showToast('Erro ao processar as fotos.', 'error');
-            return;
+            showToast(`✅ ${newImageUrls.length} foto(s) anexada(s)! Status alterado para ${getStatusLabel(newStatus)}.`, 'success');
+            if (sendEmail && service.clientEmail) await sendEmailNotification(service);
+            return; // Encerra a função aqui
         }
-    }
-    
-    try {
+
         const updates = {
             status: newStatus,
             updatedAt: new Date().toISOString(),
             updatedBy: state.currentUser.email,
             lastStatusChange: new Date().toISOString()
         };
-        
-        const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-        const currentStatusIndex = statusOrder.indexOf(service.status);
-        const newStatusIndex = statusOrder.indexOf(newStatus);
-        
+
+        const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
+        const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
+
         if (newStatusIndex > currentStatusIndex) {
-            const timestampField = newStatus === 'producao' ? 'productionStartedAt' : 
-                                  newStatus === 'concluido' ? 'completedAt' :
-                                  newStatus === 'retirada' ? 'readyAt' :
-                                  newStatus === 'entregue' ? 'deliveredAt' : null;
-            
-            if (timestampField) {
-                updates[timestampField] = new Date().toISOString();
-            }
-        } 
-        else if (newStatusIndex < currentStatusIndex) {
+            const timestampField = newStatus === 'producao' ? 'productionStartedAt' :
+                newStatus === 'concluido' ? 'completedAt' :
+                newStatus === 'retirada' ? 'readyAt' :
+                newStatus === 'entregue' ? 'deliveredAt' : null;
+            if (timestampField) updates[timestampField] = new Date().toISOString();
+        } else if (newStatusIndex < currentStatusIndex) {
             const timestampsToDelete = [];
-            
-            if (newStatusIndex < statusOrder.indexOf('entregue')) {
-                timestampsToDelete.push('deliveredAt');
-            }
-            if (newStatusIndex < statusOrder.indexOf('retirada')) {
+            if (newStatusIndex < STATUS_ORDER.indexOf('entregue')) timestampsToDelete.push('deliveredAt');
+            if (newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
                 timestampsToDelete.push('readyAt');
                 if (service.deliveryMethod === 'sedex' && service.trackingCode) {
                     updates.trackingCode = firebase.firestore.FieldValue.delete();
                     updates.postedAt = firebase.firestore.FieldValue.delete();
                 }
             }
-            if (newStatusIndex < statusOrder.indexOf('concluido')) {
-                timestampsToDelete.push('completedAt');
-            }
-            if (newStatusIndex < statusOrder.indexOf('producao')) {
-                timestampsToDelete.push('productionStartedAt');
-            }
-            
-            timestampsToDelete.forEach(field => {
-                updates[field] = firebase.firestore.FieldValue.delete();
-            });
+            if (newStatusIndex < STATUS_ORDER.indexOf('concluido')) timestampsToDelete.push('completedAt');
+            if (newStatusIndex < STATUS_ORDER.indexOf('producao')) timestampsToDelete.push('productionStartedAt');
+            timestampsToDelete.forEach(field => { updates[field] = firebase.firestore.FieldValue.delete(); });
         }
-        
+
         await state.db.collection('services').doc(serviceId).update(updates);
         showToast('Status atualizado!', 'success');
-        
+
         if (sendWhatsapp && service.clientPhone) {
             const messages = {
                 'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                'retirada': service.deliveryMethod === 'retirada' ? 
+                'retirada': service.deliveryMethod === 'retirada' ?
                     `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!` :
                     service.deliveryMethod === 'sedex' ?
                     `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}` :
@@ -576,15 +469,15 @@ export async function confirmStatusChange() {
             };
             messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
         }
-        
-        if (sendEmail && service.clientEmail) {
-            sendEmailNotification(service);
-        }
+        if (sendEmail && service.clientEmail) sendEmailNotification(service);
+
     } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao atualizar status', 'error');
+        console.error('Erro ao confirmar mudança de status:', error);
+        showToast(error.message || 'Erro ao atualizar status', 'error');
+    } finally {
+        window.toggleModalLoading(false); // Desativa o spinner
+        window.closeStatusModal();
     }
-    window.closeStatusModal();
 }
 
 // ===========================
@@ -594,26 +487,26 @@ export function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     if (!grid || !emptyState) return;
-    
-    let filtered = state.currentFilter === 'todos' ? 
-        state.services.filter(s => s.status !== 'entregue') : 
+
+    let filtered = state.currentFilter === 'todos' ?
+        state.services.filter(s => s.status !== 'entregue') :
         state.services.filter(s => s.status === state.currentFilter);
-    
+
     filtered.sort((a, b) => {
         const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
         const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
         if (diff !== 0) return diff;
-        
+
         if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
         return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
     });
-    
+
     if (filtered.length === 0) {
         grid.style.display = 'none';
         emptyState.style.display = 'flex';
         const emptyText = document.getElementById('emptyText');
-        emptyText && (emptyText.textContent = state.currentFilter === 'todos' ? 
-            'Nenhum serviço ativo encontrado' : 
+        emptyText && (emptyText.textContent = state.currentFilter === 'todos' ?
+            'Nenhum serviço ativo encontrado' :
             `Nenhum serviço ${getStatusLabel(state.currentFilter).toLowerCase()} encontrado`);
     } else {
         grid.style.display = 'grid';
@@ -624,24 +517,23 @@ export function renderServices() {
 
 function createServiceCard(service) {
     const days = (service.status === 'entregue' || service.dateUndefined) ? null : calculateDaysRemaining(service.dueDate);
-    const daysText = service.status === 'entregue' ? 'Entregue' : 
-                   service.dateUndefined ? 'Data a definir' : 
-                   formatDaysText(days);
+    const daysText = service.status === 'entregue' ? 'Entregue' :
+        service.dateUndefined ? 'Data a definir' :
+        formatDaysText(days);
     const daysColor = service.status === 'entregue' ? 'var(--neon-green)' :
-                    service.dateUndefined ? 'var(--neon-yellow)' : 
-                    getDaysColor(days);
-    
+        service.dateUndefined ? 'var(--neon-yellow)' :
+        getDaysColor(days);
+
     const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto;
-    
+
     const getTotalImagesCount = (svc) => {
         let count = 0;
         if (svc.images && svc.images.length > 0) count += svc.images.length;
-        // Adequação para não contar duplamente o campo legado imageUrl
         if (svc.imageUrl && !(svc.images && svc.images.find(img => img.url === svc.imageUrl))) count += 1;
-        if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count +=1;
+        if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count += 1;
         return count;
     };
-    
+
     return `
         <div class="service-card priority-${service.priority || 'media'}">
             <div class="service-header">
@@ -703,7 +595,7 @@ function createStatusTimeline(service) {
     return ['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map(status => {
         const isActive = service.status === status;
         const isCompleted = isStatusCompleted(service.status, status);
-        
+
         let label;
         if (status === 'pendente') label = 'Pendente';
         else if (status === 'producao') label = 'Produção';
@@ -714,9 +606,8 @@ function createStatusTimeline(service) {
             else if (service.deliveryMethod === 'uber') label = 'Postado';
             else if (service.deliveryMethod === 'definir') label = 'Combinado';
             else label = 'Entrega';
-        }
-        else if (status === 'entregue') label = 'Entregue';
-        
+        } else if (status === 'entregue') label = 'Entregue';
+
         return `
             <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
                 <button class="step-button" 
@@ -741,7 +632,7 @@ export function updateStats() {
         retirada: state.services.filter(s => s.status === 'retirada').length,
         entregue: state.services.filter(s => s.status === 'entregue').length
     };
-    
+
     Object.entries({
         'stat-active': stats.active,
         'stat-pending': stats.pendente,
