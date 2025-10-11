@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular
+VERSÃO: 3.1 - Múltiplos Arquivos + Fotos Embaladas
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -58,7 +58,8 @@ export function startServicesListener() {
                 observations: data.observations || '',
                 deliveryMethod: data.deliveryMethod || '',
                 status: data.status || 'pendente',
-                fileUrl: data.fileUrl || '',
+                files: data.files || [], // MODIFICADO: array de arquivos
+                fileUrl: data.fileUrl || '', // Mantido para compatibilidade
                 fileName: data.fileName || '',
                 fileSize: data.fileSize || '',
                 fileUploadedAt: data.fileUploadedAt || '',
@@ -66,6 +67,7 @@ export function startServicesListener() {
                 images: data.images || [],
                 imageUploadedAt: data.imageUploadedAt || '',
                 instagramPhoto: data.instagramPhoto || '',
+                packagedPhotos: data.packagedPhotos || [], // NOVO: fotos embaladas
                 trackingCode: data.trackingCode || '',
                 deliveryAddress: data.deliveryAddress || {},
                 pickupInfo: data.pickupInfo || {},
@@ -152,7 +154,12 @@ export async function saveService(event) {
         }
         
         if (currentService) {
-            if (!state.selectedFile && currentService.fileUrl) {
+            // MODIFICADO: Manter múltiplos arquivos existentes
+            if (state.selectedFiles.length === 0 && currentService.files && currentService.files.length > 0) {
+                service.files = currentService.files;
+            }
+            // Compatibilidade com arquivo único antigo
+            if (state.selectedFiles.length === 0 && !currentService.files && currentService.fileUrl) {
                 service.fileUrl = currentService.fileUrl;
                 service.fileName = currentService.fileName || '';
                 service.fileSize = currentService.fileSize || '';
@@ -169,6 +176,11 @@ export async function saveService(event) {
             
             if (currentService.instagramPhoto) {
                 service.instagramPhoto = currentService.instagramPhoto;
+            }
+            
+            // NOVO: Manter fotos embaladas
+            if (currentService.packagedPhotos && currentService.packagedPhotos.length > 0) {
+                service.packagedPhotos = currentService.packagedPhotos;
             }
             
             service.createdAt = currentService.createdAt;
@@ -233,6 +245,7 @@ export async function saveService(event) {
                 createdBy: state.currentUser.email,
                 orderCode: generateOrderCode(),
                 serviceId: 'SRV-' + Date.now(),
+                files: [], // MODIFICADO: array vazio
                 fileUrl: '',
                 fileName: '',
                 fileSize: '',
@@ -241,6 +254,7 @@ export async function saveService(event) {
                 images: [],
                 imageUploadedAt: '',
                 instagramPhoto: '',
+                packagedPhotos: [], // NOVO
                 trackingCode: ''
             });
             
@@ -265,15 +279,34 @@ export async function saveService(event) {
             }
         }
         
-        if (state.selectedFile && serviceDocId) {
-            showToast('Fazendo upload do arquivo 3D...', 'info');
-            const fileData = await uploadFile(state.selectedFile, serviceDocId);
-            fileData && await state.db.collection('services').doc(serviceDocId).update({
-                fileUrl: fileData.url,
-                fileName: fileData.name,
-                fileSize: fileData.size,
-                fileUploadedAt: fileData.uploadedAt
-            });
+        // MODIFICADO: Upload de múltiplos arquivos
+        if (state.selectedFiles.length > 0 && serviceDocId) {
+            showToast(`Fazendo upload de ${state.selectedFiles.length} ${state.selectedFiles.length > 1 ? 'arquivos' : 'arquivo'}...`, 'info');
+            
+            const currentService = state.services.find(s => s.id === serviceDocId);
+            const existingFiles = (state.editingServiceId && currentService && currentService.files) ? currentService.files : [];
+            
+            const newFiles = [];
+            for (const file of state.selectedFiles) {
+                const fileData = await uploadFile(file, serviceDocId);
+                if (fileData) {
+                    newFiles.push({
+                        url: fileData.url,
+                        name: file.name,
+                        size: fileData.size,
+                        uploadedAt: fileData.uploadedAt
+                    });
+                }
+            }
+            
+            if (newFiles.length > 0) {
+                const allFiles = [...existingFiles, ...newFiles];
+                await state.db.collection('services').doc(serviceDocId).update({
+                    files: allFiles,
+                    fileUploadedAt: new Date().toISOString()
+                });
+                showToast(`✅ ${newFiles.length} ${newFiles.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
+            }
         }
         
         if (state.selectedImages.length > 0 && serviceDocId) {
@@ -320,12 +353,23 @@ export async function deleteService(serviceId) {
     try {
         const filesToDelete = [];
         
+        // MODIFICADO: Deletar múltiplos arquivos
+        if (service.files && service.files.length > 0) {
+            service.files.forEach(file => file.url && filesToDelete.push(file.url));
+        }
+        // Compatibilidade
         if (service.fileUrl) filesToDelete.push(service.fileUrl);
+        
         if (service.images && service.images.length > 0) {
             service.images.forEach(img => img.url && filesToDelete.push(img.url));
         }
         if (service.imageUrl) filesToDelete.push(service.imageUrl);
         if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
+        
+        // NOVO: Deletar fotos embaladas
+        if (service.packagedPhotos && service.packagedPhotos.length > 0) {
+            service.packagedPhotos.forEach(photo => photo.url && filesToDelete.push(photo.url));
+        }
         
         if (filesToDelete.length > 0) {
             showToast('Deletando arquivos...', 'info');
@@ -380,6 +424,13 @@ export async function updateStatus(serviceId, newStatus) {
     
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
+    
+    // MODIFICADO: Foto obrigatória no status "retirada" (produto embalado)
+    if (newStatus === 'retirada' && (!service.packagedPhotos || service.packagedPhotos.length === 0)) {
+        state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
+        window.showStatusModalWithPackagedPhoto(service, newStatus);
+        return;
+    }
     
     if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
@@ -452,11 +503,63 @@ export async function updateStatus(serviceId, newStatus) {
 export async function confirmStatusChange() {
     if (!state.pendingStatusUpdate || !state.db) return;
     
-    const { serviceId, newStatus, service, requiresInstagramPhoto } = state.pendingStatusUpdate;
+    const { serviceId, newStatus, service, requiresInstagramPhoto, requiresPackagedPhoto } = state.pendingStatusUpdate;
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
-    // MODIFICADO: Lógica para múltiplas fotos
+    // NOVO: Processar fotos do produto embalado
+    if (requiresPackagedPhoto) {
+        if (state.pendingPackagedPhotos.length === 0) {
+            return showToast('Selecione pelo menos uma foto do produto embalado antes de confirmar.', 'error');
+        }
+
+        try {
+            showToast(`Fazendo upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
+
+            const newPackagedPhotos = [];
+            for (const photoFile of state.pendingPackagedPhotos) {
+                const photoData = await uploadFile(photoFile, serviceId);
+                if (photoData) {
+                    newPackagedPhotos.push({
+                        url: photoData.url,
+                        name: photoFile.name,
+                        uploadedAt: photoData.uploadedAt
+                    });
+                }
+            }
+
+            if (newPackagedPhotos.length === 0) {
+                return showToast('Erro ao fazer upload das fotos embaladas.', 'error');
+            }
+
+            const existingPackaged = service.packagedPhotos || [];
+            const allPackaged = [...existingPackaged, ...newPackagedPhotos];
+
+            await state.db.collection('services').doc(serviceId).update({
+                packagedPhotos: allPackaged,
+                status: 'retirada',
+                readyAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: state.currentUser.email,
+                lastStatusChange: new Date().toISOString()
+            });
+
+            showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado.`, 'success');
+
+            if (sendEmail && service.clientEmail) {
+                await sendEmailNotification(service);
+            }
+
+            window.closeStatusModal();
+            return;
+        } catch (error) {
+            console.error('Erro ao confirmar fotos embaladas:', error);
+            showToast('Erro ao processar as fotos embaladas.', 'error');
+            return;
+        }
+    }
+    
+    // Processar fotos instagramáveis (concluído)
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
             return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
@@ -473,7 +576,7 @@ export async function confirmStatusChange() {
                         url: photoData.url,
                         name: photoFile.name,
                         uploadedAt: photoData.uploadedAt,
-                        isInstagram: true // Flag opcional
+                        isInstagram: true
                     });
                 }
             }
@@ -487,7 +590,7 @@ export async function confirmStatusChange() {
 
             await state.db.collection('services').doc(serviceId).update({
                 images: allImages,
-                instagramPhoto: newImageUrls[0].url, // Mantém a primeira foto no campo antigo por compatibilidade
+                instagramPhoto: newImageUrls[0].url,
                 status: 'concluido',
                 completedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -599,14 +702,23 @@ export function renderServices() {
         state.services.filter(s => s.status !== 'entregue') : 
         state.services.filter(s => s.status === state.currentFilter);
     
-    filtered.sort((a, b) => {
-        const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
-        const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
-        if (diff !== 0) return diff;
-        
-        if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
-        return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
-    });
+    // MODIFICADO: Ordenação especial para concluídos
+    if (state.currentFilter === 'concluido') {
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.completedAt || a.createdAt || 0);
+            const dateB = new Date(b.completedAt || b.createdAt || 0);
+            return dateB - dateA; // Mais recente primeiro
+        });
+    } else {
+        filtered.sort((a, b) => {
+            const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
+            const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
+            if (diff !== 0) return diff;
+            
+            if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
+            return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
+        });
+    }
     
     if (filtered.length === 0) {
         grid.style.display = 'none';
@@ -636,11 +748,13 @@ function createServiceCard(service) {
     const getTotalImagesCount = (svc) => {
         let count = 0;
         if (svc.images && svc.images.length > 0) count += svc.images.length;
-        // Adequação para não contar duplamente o campo legado imageUrl
         if (svc.imageUrl && !(svc.images && svc.images.find(img => img.url === svc.imageUrl))) count += 1;
         if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count +=1;
         return count;
     };
+    
+    // MODIFICADO: Mostrar múltiplos arquivos
+    const filesCount = (service.files && service.files.length > 0) ? service.files.length : (service.fileUrl ? 1 : 0);
     
     return `
         <div class="service-card priority-${service.priority || 'media'}">
@@ -679,7 +793,7 @@ function createServiceCard(service) {
                 <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
                 ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                 ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
-                ${service.fileUrl ? `<div class="info-item"><button class="btn-download" onclick="window.downloadFile('${service.fileUrl}', '${escapeHtml(service.fileName || 'arquivo')}')" title="Download automático"><i class="fas fa-download"></i><span>Arquivo 3D</span></button></div>` : ''}
+                ${filesCount > 0 ? `<div class="info-item"><button class="btn-download" onclick="window.showServiceFiles('${service.id}')" title="Ver Arquivos"><i class="fas fa-file"></i><span>${filesCount} ${filesCount > 1 ? 'Arquivos' : 'Arquivo'}</span></button></div>` : ''}
                 ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="window.showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
             </div>
             
