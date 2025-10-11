@@ -1419,6 +1419,24 @@ export function formatCEP(e) {
     e.target.value = value;
 }
 
+export function copyClientDataToDelivery() {
+    const clientName = document.getElementById('clientName')?.value.trim();
+    const clientCPF = document.getElementById('clientCPF')?.value.trim();
+    const clientEmail = document.getElementById('clientEmail')?.value.trim();
+    const clientPhone = document.getElementById('clientPhone')?.value.trim();
+    
+    if (!clientName && !clientCPF && !clientEmail && !clientPhone) {
+        return showToast('Preencha os dados do cliente primeiro', 'warning');
+    }
+    
+    if (clientName) document.getElementById('fullName').value = clientName;
+    if (clientCPF) document.getElementById('cpfCnpj').value = clientCPF;
+    if (clientEmail) document.getElementById('email').value = clientEmail;
+    if (clientPhone) document.getElementById('telefone').value = clientPhone;
+    
+    showToast('✅ Dados copiados para a entrega!', 'success');
+}
+
 export async function buscarCEP() {
     const cep = document.getElementById('cep')?.value.replace(/\D/g, '');
     if (!cep || cep.length !== 8) return;
@@ -1629,3 +1647,4 @@ window.contactClient = contactClient;
 window.handleClientNameInput = handleClientNameInput;
 window.selectClient = selectClient;
 window.formatCPF = formatCPF;
+window.copyClientDataToDelivery = copyClientDataToDelivery;
