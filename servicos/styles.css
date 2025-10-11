@@ -557,8 +557,8 @@ body {
    =========================== */
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
     margin-bottom: 2rem;
     align-items: stretch;
 }
@@ -566,8 +566,8 @@ body {
 .service-card {
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 15px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     transition: all 0.3s;
     position: relative;
     max-width: 100%;
@@ -576,7 +576,7 @@ body {
     word-break: break-word;
     display: flex;
     flex-direction: column;
-    min-height: 500px;
+    min-height: 450px;
 }
 
 .service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
@@ -589,7 +589,7 @@ body {
     left: 0;
     right: 0;
     height: 3px;
-    border-radius: 15px 15px 0 0;
+    border-radius: 12px 12px 0 0;
 }
 
 .service-card.priority-baixa::before { background: var(--neon-green); }
@@ -604,18 +604,18 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
 }
 
 .service-title h3 { 
-    font-size: 1.1rem; 
+    font-size: 1rem; 
     margin-bottom: 0.25rem; 
     word-wrap: break-word;
     overflow-wrap: break-word;
     max-width: 100%;
 }
 .service-code { 
-    font: 400 0.85rem/1 'Orbitron', monospace; 
+    font: 400 0.8rem/1 'Orbitron', monospace; 
     color: var(--neon-blue);
     word-break: break-all;
 }
@@ -656,25 +656,25 @@ body {
 .service-info {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
     max-width: 100%;
 }
 
 .info-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
+    gap: 0.4rem;
+    padding: 0.2rem 0.6rem;
     background: var(--glass-bg);
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.info-item i { color: var(--text-secondary); font-size: 0.75rem; }
+.info-item i { color: var(--text-secondary); font-size: 0.7rem; }
 
 .btn-download {
     display: inline-flex;
@@ -713,14 +713,14 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
     background: linear-gradient(135deg, var(--neon-purple), rgba(153, 69, 255, 0.2));
     border: 1px solid var(--neon-purple);
-    border-radius: 20px;
-    font: 500 0.85rem/1 inherit;
+    border-radius: 18px;
+    font: 500 0.8rem/1 inherit;
     color: white;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
     position: relative;
     overflow: hidden;
     max-width: 100%;
@@ -797,18 +797,18 @@ body {
 }
 
 .service-description {
-    padding: 0.75rem;
+    padding: 0.6rem;
     background: var(--glass-bg);
     border-radius: 8px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
     flex: 1;
     overflow-y: auto;
-    max-height: 150px;
+    max-height: 120px;
 }
 
-.service-description p { font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); }
+.service-description p { font-size: 0.85rem; line-height: 1.4; color: var(--text-secondary); }
 
-.service-status { padding-top: 1rem; border-top: 1px solid var(--glass-border); }
+.service-status { padding-top: 0.85rem; border-top: 1px solid var(--glass-border); }
 
 /* Timeline Status - New Layout */
 .status-timeline {
@@ -921,7 +921,7 @@ body {
 .step-button:hover:not(:disabled) .step-text {
     color: var(--text-primary);
 }
-	
+
 .service-footer {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -1096,7 +1096,7 @@ body {
 
 .instagram-upload {
     text-align: center;
-    margin-bo ttom: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .instagram-label {
@@ -1131,7 +1131,7 @@ body {
 .instagram-preview img {
     width: 100%;
     height: auto;
-    display:  block;
+    display: block;
 }
 
 @keyframes modalSlideIn {
@@ -1201,7 +1201,7 @@ body {
 .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-textarea { resize: vertical; min-height: 80px; }
 
-.form-row { 
+.form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
@@ -1792,6 +1792,31 @@ input[type="file"]::file-selector-button {
 /* ===========================
    RESPONSIVE DESIGN
    =========================== */
+/* Desktop extra-largo (1920px+) */
+@media (min-width: 1920px) {
+    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .service-card { min-height: 420px; padding: 1.1rem; }
+}
+
+/* Desktop grande (1400px-1919px) */
+@media (min-width: 1400px) and (max-width: 1919px) {
+    .services-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+}
+
+/* Tablet/Desktop pequeno (1024px-1399px) */
+@media (min-width: 1024px) and (max-width: 1399px) {
+    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .service-card { padding: 1.1rem; min-height: 430px; }
+}
+
+/* Tablet (768px-1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .services-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .service-card { padding: 1rem; min-height: auto; }
+    .service-title h3 { font-size: 0.95rem; }
+    .info-item { font-size: 0.75rem; }
+}
+
 @media (max-width: 1200px) {
     .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 }
