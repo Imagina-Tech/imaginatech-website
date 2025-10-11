@@ -335,15 +335,48 @@ export function openEditModal(serviceId) {
     
     if (previewContainer) previewContainer.innerHTML = '';
     
-    if ((service.images && service.images.length > 0) || service.imageUrl) {
-        const imagesToShow = service.images && service.images.length > 0 ? service.images : [{ url: service.imageUrl, name: 'Imagem' }];
-        
-        imagesToShow.forEach((img, index) => {
+    // MODIFICADO: Mostrar imagens regulares + instagramáveis + fotos embaladas
+    const allImagesToShow = [];
+    
+    // Imagens regulares
+    if (service.images && service.images.length > 0) {
+        service.images.forEach(img => allImagesToShow.push({ ...img, type: 'regular' }));
+    }
+    
+    // Imagem única (compatibilidade)
+    if (service.imageUrl && !(service.images && service.images.find(img => img.url === service.imageUrl))) {
+        allImagesToShow.push({ url: service.imageUrl, name: 'Imagem', type: 'regular' });
+    }
+    
+    // Foto instagramável
+    if (service.instagramPhoto && !(service.images && service.images.find(img => img.url === service.instagramPhoto))) {
+        allImagesToShow.push({ url: service.instagramPhoto, name: 'Foto Instagramável', type: 'instagram' });
+    }
+    
+    // NOVO: Fotos do produto embalado
+    if (service.packagedPhotos && service.packagedPhotos.length > 0) {
+        service.packagedPhotos.forEach(photo => allImagesToShow.push({ ...photo, type: 'packaged' }));
+    }
+    
+    if (allImagesToShow.length > 0) {
+        allImagesToShow.forEach((img, index) => {
             const imgWrapper = document.createElement('div');
             imgWrapper.className = 'preview-image-wrapper existing-image';
+            
+            let badgeText = 'Existente';
+            let badgeClass = 'existing-badge';
+            
+            if (img.type === 'instagram') {
+                badgeText = '📸 Instagramável';
+                badgeClass = 'existing-badge badge-instagram';
+            } else if (img.type === 'packaged') {
+                badgeText = '📦 Embalado';
+                badgeClass = 'existing-badge badge-packaged';
+            }
+            
             imgWrapper.innerHTML = `
                 <img src="${img.url}" alt="Imagem ${index + 1}">
-                <span class="existing-badge">Existente</span>
+                <span class="${badgeClass}">${badgeText}</span>
             `;
             previewContainer.appendChild(imgWrapper);
         });
@@ -630,6 +663,17 @@ export function showServiceImages(serviceId) {
         });
     }
     
+    // NOVO: Incluir fotos do produto embalado
+    if (service.packagedPhotos && service.packagedPhotos.length > 0) {
+        service.packagedPhotos.forEach(photo => {
+            allImages.push({
+                url: photo.url,
+                name: photo.name || 'Produto Embalado',
+                type: 'packaged'
+            });
+        });
+    }
+    
     if (allImages.length > 0) {
         showImageModal(allImages, service.name || 'Serviço');
     }
@@ -718,8 +762,16 @@ export function updateImageViewer() {
     img.src = currentImage.url;
     
     if (title) {
-        const imageType = currentImage.type === 'instagram' ? ' 📸 (Instagramável)' : '';
-        title.textContent = (currentImage.name || `Imagem ${state.currentImageIndex + 1}`) + imageType;
+        let imageLabel = currentImage.name || `Imagem ${state.currentImageIndex + 1}`;
+        
+        // MODIFICADO: Labels diferentes por tipo de foto
+        if (currentImage.type === 'instagram') {
+            imageLabel += ' 📸 (Instagramável)';
+        } else if (currentImage.type === 'packaged') {
+            imageLabel += ' 📦 (Produto Embalado)';
+        }
+        
+        title.textContent = imageLabel;
     }
     
     if (counter) {
