@@ -3,7 +3,7 @@
 ARQUIVO: servicos/js/config.js
 MÓDULO: Configuração e Inicialização
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.0 - Modular
+VERSÃO: 3.2 - Múltiplos Arquivos + Fotos Embaladas
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 =================================================
 */
@@ -39,8 +39,10 @@ export const state = {
     isAuthorized: false,
     servicesListener: null,
     pendingStatusUpdate: null,
-    selectedFile: null,
+    selectedFiles: [], // MODIFICADO: array de múltiplos arquivos
     selectedImages: [],
+    pendingInstagramPhotos: [], // Fotos do produto finalizado
+    pendingPackagedPhotos: [], // NOVO: Fotos do produto embalado
     currentImageGallery: [],
     currentImageIndex: 0
 };
