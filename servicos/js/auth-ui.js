@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.1 - Modular + Capacitor Google Auth
+VERSÃO: 3.2 - Múltiplos Arquivos + Fotos Embaladas
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -29,11 +29,9 @@ export async function signInWithGoogle() {
     try {
         let user;
         
-        // Verifica se está rodando no app nativo (Capacitor)
         if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
             console.log('🚀 Login no app nativo - usando Google Auth plugin');
             
-            // Acessar o plugin através do Capacitor.Plugins
             const { GoogleAuth } = Capacitor.Plugins;
             
             if (!GoogleAuth) {
@@ -42,7 +40,6 @@ export async function signInWithGoogle() {
                 throw new Error('Plugin de autenticação não disponível');
             }
             
-            // Inicializar o plugin
             try {
                 console.log('🔧 Inicializando GoogleAuth...');
                 await GoogleAuth.initialize();
@@ -51,13 +48,11 @@ export async function signInWithGoogle() {
                 console.log('⚠️ Plugin já inicializado:', initError);
             }
             
-            // Fazer login com o plugin do Capacitor
             console.log('📱 Chamando GoogleAuth.signIn()...');
             const googleUser = await GoogleAuth.signIn();
             
             console.log('✅ Google Auth retornou:', googleUser);
             
-            // DEBUG: Mostrar o que foi retornado
             alert('DEBUG: Google retornou:\n' + JSON.stringify({
                 email: googleUser.email,
                 name: googleUser.name,
@@ -66,7 +61,6 @@ export async function signInWithGoogle() {
                 hasAccessToken: !!googleUser.authentication?.accessToken
             }, null, 2));
             
-            // Verificar se temos os tokens necessários
             if (!googleUser.authentication) {
                 alert('DEBUG: googleUser.authentication é NULL ou UNDEFINED');
                 throw new Error('Resposta do Google Auth inválida - authentication missing');
@@ -82,7 +76,6 @@ export async function signInWithGoogle() {
             
             console.log('🔥 Criando credencial do Firebase...');
             
-            // Criar credencial do Firebase
             let credential;
             if (idToken) {
                 console.log('🔐 Usando idToken');
@@ -92,7 +85,6 @@ export async function signInWithGoogle() {
                 credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
             }
             
-            // Fazer login no Firebase com a credencial
             console.log('🔥 Fazendo signInWithCredential...');
             const result = await state.auth.signInWithCredential(credential);
             
@@ -102,12 +94,10 @@ export async function signInWithGoogle() {
         } else {
             console.log('🌐 Login no navegador web - usando Firebase popup');
             
-            // Login normal via popup (navegador web)
             const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
             user = result.user;
         }
         
-        // Verificar autorização
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
             state.currentUser = user;
             state.isAuthorized = false;
@@ -123,7 +113,6 @@ export async function signInWithGoogle() {
     } catch (error) {
         console.error('❌ ERRO COMPLETO:', error);
         
-        // Mostrar erro em alert para debug
         alert('ERRO AO FAZER LOGIN:\n\n' + 
               'Mensagem: ' + (error.message || 'Sem mensagem') + '\n' +
               'Code: ' + (error.code || 'Sem código') + '\n' +
@@ -236,7 +225,8 @@ export const hideLoadingOverlay = () => document.getElementById('loadingOverlay'
 // MODALS
 // ===========================
 export function openAddModal() {
-    state.editingServiceId = state.selectedFile = null;
+    state.editingServiceId = null;
+    state.selectedFiles = []; // MODIFICADO: array vazio
     state.selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
@@ -245,13 +235,17 @@ export function openAddModal() {
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
     
     setupDateFields();
-    ['fileInfo', 'imagePreview'].forEach(id => {
+    ['filesInfo', 'imagePreview'].forEach(id => { // MODIFICADO: filesInfo
         const el = document.getElementById(id);
         el && (el.style.display = 'none');
     });
     
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) previewContainer.innerHTML = '';
+    
+    // MODIFICADO: Limpar preview de múltiplos arquivos
+    const filesPreviewContainer = document.getElementById('filesPreviewContainer');
+    if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
     
     document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
     document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
@@ -269,7 +263,7 @@ export function openEditModal(serviceId) {
     if (!service) return;
     
     state.editingServiceId = serviceId;
-    state.selectedFile = null;
+    state.selectedFiles = []; // MODIFICADO
     state.selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
@@ -310,15 +304,30 @@ export function openEditModal(serviceId) {
         }
     }
     
-    if (service.fileUrl) {
-        document.getElementById('currentFileUrl') && (document.getElementById('currentFileUrl').value = service.fileUrl);
-        document.getElementById('currentFileName') && (document.getElementById('currentFileName').value = service.fileName || '');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        if (fileInfo && fileName) {
-            fileName.textContent = service.fileName || 'Arquivo anexado';
-            fileInfo.style.display = 'flex';
-        }
+    // MODIFICADO: Mostrar múltiplos arquivos existentes
+    const filesPreview = document.getElementById('filesPreview');
+    const filesPreviewContainer = document.getElementById('filesPreviewContainer');
+    
+    if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
+    
+    if ((service.files && service.files.length > 0) || service.fileUrl) {
+        const filesToShow = service.files && service.files.length > 0 ? service.files : 
+                           service.fileUrl ? [{ url: service.fileUrl, name: service.fileName || 'Arquivo' }] : [];
+        
+        filesToShow.forEach((file, index) => {
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-item-wrapper existing-file';
+            fileWrapper.innerHTML = `
+                <div class="file-item-info">
+                    <i class="fas fa-file"></i>
+                    <span>${file.name || `Arquivo ${index + 1}`}</span>
+                </div>
+                <span class="existing-badge">Existente</span>
+            `;
+            filesPreviewContainer.appendChild(fileWrapper);
+        });
+        
+        if (filesPreview) filesPreview.style.display = 'block';
     }
     
     const preview = document.getElementById('imagePreview');
@@ -373,7 +382,8 @@ export function openEditModal(serviceId) {
 
 export function closeModal() {
     document.getElementById('serviceModal')?.classList.remove('active');
-    state.editingServiceId = state.selectedFile = null;
+    state.editingServiceId = null;
+    state.selectedFiles = []; // MODIFICADO
     const trackingField = document.getElementById('trackingCodeField');
     const trackingInput = document.getElementById('editTrackingCode');
     if (trackingField) trackingField.style.display = 'none';
@@ -389,12 +399,24 @@ export function closeStatusModal() {
     const photoInput = document.getElementById('instagramPhotoInput');
     if (photoInput) photoInput.value = '';
     
-    // MODIFICADO: Limpar múltiplos previews
+    // NOVO: Limpar fotos embaladas
+    const packagedField = document.getElementById('packagedPhotoField');
+    if (packagedField) packagedField.style.display = 'none';
+    const packagedInput = document.getElementById('packagedPhotoInput');
+    if (packagedInput) packagedInput.value = '';
+    
     const photoPreview = document.getElementById('instagramPhotoPreview');
     const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
     if (photoPreview) photoPreview.style.display = 'none';
     if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
-    state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
+    state.pendingInstagramPhotos = [];
+    
+    // NOVO: Limpar preview de fotos embaladas
+    const packagedPreview = document.getElementById('packagedPhotoPreview');
+    const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
+    if (packagedPreview) packagedPreview.style.display = 'none';
+    if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
+    state.pendingPackagedPhotos = [];
 }
 
 export function showTrackingCodeModal() {
@@ -449,12 +471,11 @@ export function showStatusModalWithPhoto(service, newStatus) {
         const photoInput = document.getElementById('instagramPhotoInput');
         if (photoInput) photoInput.value = '';
         
-        // MODIFICADO: Limpar múltiplos previews
         const photoPreview = document.getElementById('instagramPhotoPreview');
         const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
         if (photoPreview) photoPreview.style.display = 'none';
         if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
-        state.pendingInstagramPhotos = []; // Limpa o array de fotos pendentes
+        state.pendingInstagramPhotos = [];
     }
     
     const emailOption = document.getElementById('emailOption');
@@ -471,6 +492,42 @@ export function showStatusModalWithPhoto(service, newStatus) {
     
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) whatsappOption.style.display = 'none';
+    
+    document.getElementById('statusModal')?.classList.add('active');
+}
+
+// NOVO: Modal para fotos do produto embalado
+export function showStatusModalWithPackagedPhoto(service, newStatus) {
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Pronto/Postado, é obrigatório anexar uma ou mais fotos do produto embalado "${service.name}"`);
+    
+    const packagedField = document.getElementById('packagedPhotoField');
+    if (packagedField) {
+        packagedField.style.display = 'block';
+        const packagedInput = document.getElementById('packagedPhotoInput');
+        if (packagedInput) packagedInput.value = '';
+        
+        const packagedPreview = document.getElementById('packagedPhotoPreview');
+        const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
+        if (packagedPreview) packagedPreview.style.display = 'none';
+        if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
+        state.pendingPackagedPhotos = [];
+    }
+    
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption) emailOption.style.display = 'none';
+    
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) {
+        const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
+        if (hasPhone) {
+            whatsappOption.style.display = 'block';
+            const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
+            if (whatsappCheckbox) whatsappCheckbox.checked = true;
+        } else {
+            whatsappOption.style.display = 'none';
+        }
+    }
     
     document.getElementById('statusModal')?.classList.add('active');
 }
@@ -578,6 +635,60 @@ export function showServiceImages(serviceId) {
     }
 }
 
+// NOVO: Mostrar múltiplos arquivos em modal
+export function showServiceFiles(serviceId) {
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    const allFiles = [];
+    
+    if (service.files && service.files.length > 0) {
+        allFiles.push(...service.files);
+    } else if (service.fileUrl) {
+        allFiles.push({
+            url: service.fileUrl,
+            name: service.fileName || 'Arquivo',
+            size: service.fileSize || 0
+        });
+    }
+    
+    if (allFiles.length > 0) {
+        showFilesModal(allFiles, service.name || 'Serviço');
+    }
+}
+
+// NOVO: Modal de arquivos
+export function showFilesModal(files, serviceName) {
+    const modal = document.getElementById('filesViewerModal');
+    if (!modal) return;
+    
+    const title = document.getElementById('filesViewerTitle');
+    const container = document.getElementById('filesListContainer');
+    
+    if (title) title.textContent = `Arquivos - ${serviceName}`;
+    
+    if (container) {
+        container.innerHTML = files.map((file, index) => `
+            <div class="file-list-item">
+                <div class="file-list-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="file-list-info">
+                    <span class="file-list-name">${escapeHtml(file.name)}</span>
+                    ${file.size ? `<span class="file-list-size">${formatFileSize(file.size)}</span>` : ''}
+                </div>
+                <button class="btn-download-file" onclick="window.downloadFile('${file.url}', '${escapeHtml(file.name)}')">
+                    <i class="fas fa-download"></i> Baixar
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    modal.classList.add('active');
+}
+
+export const closeFilesModal = () => document.getElementById('filesViewerModal')?.classList.remove('active');
+
 export function showImageModal(images, serviceName, startIndex = 0) {
     if (typeof images === 'string') {
         images = [{ url: images, name: serviceName }];
@@ -654,25 +765,53 @@ export const closeImageModal = () => {
 // ===========================
 // FILE & IMAGE HANDLING
 // ===========================
+// MODIFICADO: Suportar múltiplos arquivos e mais formatos
 export function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return state.selectedFile = null;
+    const files = Array.from(event.target.files);
+    if (!files.length) return state.selectedFiles = [];
     
-    const validExts = ['.stl', '.obj', '.step', '.stp', '.3mf'];
-    const isValid = validExts.some(ext => file.name.toLowerCase().endsWith(ext));
+    const validExts = ['.stl', '.obj', '.step', '.stp', '.3mf', '.zip', '.txt', '.mtl', '.rar', '.7z', '.pdf'];
+    const maxSize = 52428800; // 50MB
     
-    if (!isValid || file.size > 52428800) {
-        showToast(!isValid ? 'Formato inválido. Use: STL, OBJ, STEP ou 3MF' : 'Arquivo muito grande. Máximo: 50MB', 'error');
-        event.target.value = '';
-        return state.selectedFile = null;
-    }
+    const validFiles = files.filter(file => {
+        const fileName = file.name.toLowerCase();
+        const isValid = validExts.some(ext => fileName.endsWith(ext));
+        
+        if (!isValid) {
+            showToast(`Formato inválido: ${file.name}`, 'error');
+            return false;
+        }
+        if (file.size > maxSize) {
+            showToast(`Arquivo muito grande: ${file.name}. Máximo: 50MB`, 'error');
+            return false;
+        }
+        return true;
+    });
     
-    state.selectedFile = file;
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    if (fileInfo && fileName) {
-        fileName.textContent = file.name;
-        fileInfo.style.display = 'flex';
+    state.selectedFiles = validFiles;
+    
+    const preview = document.getElementById('filesPreview');
+    const previewContainer = document.getElementById('filesPreviewContainer');
+    
+    if (validFiles.length > 0 && preview && previewContainer) {
+        previewContainer.innerHTML = '';
+        
+        validFiles.forEach((file, index) => {
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-item-wrapper';
+            fileWrapper.innerHTML = `
+                <div class="file-item-info">
+                    <i class="fas fa-file"></i>
+                    <span>${escapeHtml(file.name)}</span>
+                </div>
+                <button type="button" class="btn-remove-preview" onclick="window.removeFilePreview(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            previewContainer.appendChild(fileWrapper);
+        });
+        
+        preview.style.display = 'block';
     }
 }
 
@@ -754,14 +893,44 @@ export function removePreviewImage(index) {
     }
 }
 
+// NOVO: Remover preview de arquivo individual
+export function removeFilePreview(index) {
+    state.selectedFiles.splice(index, 1);
+    const fileInput = document.getElementById('serviceFiles');
+    if (fileInput) fileInput.value = '';
+    
+    if (state.selectedFiles.length === 0) {
+        const preview = document.getElementById('filesPreview');
+        if (preview) preview.style.display = 'none';
+    } else {
+        const previewContainer = document.getElementById('filesPreviewContainer');
+        if (previewContainer) {
+            previewContainer.innerHTML = '';
+            state.selectedFiles.forEach((file, idx) => {
+                const fileWrapper = document.createElement('div');
+                fileWrapper.className = 'file-item-wrapper';
+                fileWrapper.innerHTML = `
+                    <div class="file-item-info">
+                        <i class="fas fa-file"></i>
+                        <span>${escapeHtml(file.name)}</span>
+                    </div>
+                    <button type="button" class="btn-remove-preview" onclick="window.removeFilePreview(${idx})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(fileWrapper);
+            });
+        }
+    }
+}
+
 export const removeFile = () => {
-    state.selectedFile = null;
-    ['serviceFile', 'currentFileUrl', 'currentFileName'].forEach(id => {
-        const el = document.getElementById(id);
-        el && (el.value = '');
-    });
-    const fileInfo = document.getElementById('fileInfo');
-    fileInfo && (fileInfo.style.display = 'none');
+    state.selectedFiles = []; // MODIFICADO
+    const fileInput = document.getElementById('serviceFiles');
+    if (fileInput) fileInput.value = '';
+    
+    const filesPreview = document.getElementById('filesPreview');
+    if (filesPreview) filesPreview.style.display = 'none';
 };
 
 export function downloadFile(url, fileName) {
@@ -771,7 +940,7 @@ export function downloadFile(url, fileName) {
     document.body.removeChild(link);
 }
 
-// MODIFICADO: Lógica para múltiplas fotos no modal de conclusão
+// Fotos instagramáveis
 state.pendingInstagramPhotos = [];
 
 export function handleInstagramPhotoSelect(event) {
@@ -779,7 +948,7 @@ export function handleInstagramPhotoSelect(event) {
     if (!files.length) return;
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    const maxSize = 5242880; // 5MB
+    const maxSize = 5242880;
 
     const validFiles = files.filter(file => {
         if (!validTypes.includes(file.type)) {
@@ -832,10 +1001,74 @@ function renderInstagramPhotoPreviews() {
 function removeInstagramPhoto(index) {
     state.pendingInstagramPhotos.splice(index, 1);
     const fileInput = document.getElementById('instagramPhotoInput');
-    if (fileInput) fileInput.value = ''; // Limpa o input para permitir nova seleção dos mesmos arquivos
+    if (fileInput) fileInput.value = '';
     renderInstagramPhotoPreviews();
 }
 
+// NOVO: Fotos do produto embalado
+state.pendingPackagedPhotos = [];
+
+export function handlePackagedPhotoSelect(event) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const maxSize = 5242880;
+
+    const validFiles = files.filter(file => {
+        if (!validTypes.includes(file.type)) {
+            showToast(`Formato inválido: ${file.name}. Use JPEG ou PNG.`, 'error');
+            return false;
+        }
+        if (file.size > maxSize) {
+            showToast(`Foto muito grande: ${file.name}. Máximo: 5MB.`, 'error');
+            return false;
+        }
+        return true;
+    });
+
+    state.pendingPackagedPhotos.push(...validFiles);
+    renderPackagedPhotoPreviews();
+}
+
+function renderPackagedPhotoPreviews() {
+    const preview = document.getElementById('packagedPhotoPreview');
+    const previewGrid = document.getElementById('packagedPhotoPreviewGrid');
+
+    if (!preview || !previewGrid) return;
+
+    if (state.pendingPackagedPhotos.length === 0) {
+        preview.style.display = 'none';
+        previewGrid.innerHTML = '';
+        return;
+    }
+
+    preview.style.display = 'block';
+    previewGrid.innerHTML = '';
+
+    state.pendingPackagedPhotos.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'preview-image-wrapper';
+            imgWrapper.innerHTML = `
+                <img src="${e.target.result}" alt="Preview ${index + 1}">
+                <button type="button" class="btn-remove-preview" onclick="window.removePackagedPhoto(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            previewGrid.appendChild(imgWrapper);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removePackagedPhoto(index) {
+    state.pendingPackagedPhotos.splice(index, 1);
+    const fileInput = document.getElementById('packagedPhotoInput');
+    if (fileInput) fileInput.value = '';
+    renderPackagedPhotoPreviews();
+}
 
 // ===========================
 // FORM UTILITIES
@@ -1015,6 +1248,14 @@ export const formatColorName = color => ({
 
 export const formatMoney = value => (!value || isNaN(value)) ? '0,00' : value.toFixed(2).replace('.', ',');
 
+export const formatFileSize = bytes => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+};
+
 export const getDeliveryMethodName = method => ({
     'retirada': 'Retirada no Local', 'sedex': 'Sedex/Correios',
     'uber': 'Uber Flash', 'definir': 'A Definir'
@@ -1126,20 +1367,26 @@ window.showTrackingCodeModal = showTrackingCodeModal;
 window.closeTrackingModal = closeTrackingModal;
 window.confirmTrackingCode = confirmTrackingCode;
 window.showStatusModalWithPhoto = showStatusModalWithPhoto;
+window.showStatusModalWithPackagedPhoto = showStatusModalWithPackagedPhoto; // NOVO
 window.handleInstagramPhotoSelect = handleInstagramPhotoSelect;
-window.removeInstagramPhoto = removeInstagramPhoto; // MODIFICADO: Expor nova função
+window.removeInstagramPhoto = removeInstagramPhoto;
+window.handlePackagedPhotoSelect = handlePackagedPhotoSelect; // NOVO
+window.removePackagedPhoto = removePackagedPhoto; // NOVO
 window.filterServices = filterServices;
 window.toggleDateInput = toggleDateInput;
 window.toggleDeliveryFields = toggleDeliveryFields;
 window.handleFileSelect = handleFileSelect;
 window.handleImageSelect = handleImageSelect;
 window.removePreviewImage = removePreviewImage;
+window.removeFilePreview = removeFilePreview; // NOVO
 window.removeFile = removeFile;
 window.downloadFile = downloadFile;
 window.buscarCEP = buscarCEP;
 window.showDeliveryInfo = showDeliveryInfo;
 window.closeDeliveryModal = closeDeliveryModal;
 window.showServiceImages = showServiceImages;
+window.showServiceFiles = showServiceFiles; // NOVO
+window.closeFilesModal = closeFilesModal; // NOVO
 window.closeImageModal = closeImageModal;
 window.prevImage = prevImage;
 window.nextImage = nextImage;
