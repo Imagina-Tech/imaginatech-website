@@ -194,9 +194,14 @@
                         <label for="serviceName"><i class="fas fa-cube"></i> Nome do Serviço *</label>
                         <input type="text" id="serviceName" class="form-input" required autocomplete="off">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="position: relative;">
                         <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente *</label>
-                        <input type="text" id="clientName" class="form-input" required autocomplete="off">
+                        <input type="text" id="clientName" class="form-input" required autocomplete="off" oninput="handleClientNameInput(event)">
+                        <div id="clientSuggestions" class="client-suggestions" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientCPF"><i class="fas fa-id-card"></i> CPF do Cliente</label>
+                        <input type="text" id="clientCPF" class="form-input" placeholder="000.000.000-00" autocomplete="off" oninput="formatCPF(event)">
                     </div>
                     <div class="form-group">
                         <label for="clientEmail"><i class="fas fa-envelope"></i> E-mail do Cliente</label>
@@ -234,6 +239,7 @@
                             <option value="roxo">Roxo</option>
                             <option value="cinza">Cinza</option>
                             <option value="transparente">Transparente</option>
+                            <option value="colorido">Colorido</option>
                             <option value="outros">Outras</option>
                         </select>
                     </div>
@@ -282,7 +288,6 @@
                         <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
                     </div>
 
-                    <!-- MODIFICADO: Múltiplos arquivos com formatos expandidos -->
                     <div class="form-group full-width">
                         <label for="serviceFiles"><i class="fas fa-file-upload"></i> Arquivos do Projeto (STL, OBJ, STEP, 3MF, ZIP, TXT, MTL, etc)</label>
                         <div class="file-input-wrapper">
@@ -501,7 +506,7 @@
                     </div>
                 </div>
                 
-                <!-- NOVO: Fotos do Produto Embalado -->
+                <!-- Fotos do Produto Embalado -->
                 <div id="packagedPhotoField" style="display: none; margin-top: 1.5rem;">
                     <div class="instagram-alert" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 215, 0, 0.1)); border-color: var(--neon-orange);">
                         <i class="fas fa-box"></i>
@@ -578,7 +583,7 @@
         </div>
     </div>
 
-    <!-- NOVO: MODAL para Visualizar Múltiplos Arquivos -->
+    <!-- MODAL para Visualizar Múltiplos Arquivos -->
     <div class="modal" id="filesViewerModal">
         <div class="modal-content">
             <div class="modal-header">
