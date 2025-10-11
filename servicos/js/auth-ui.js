@@ -143,6 +143,7 @@ export function checkAuthorization(user) {
         showAdminDashboard(user);
         startServicesListener();
         loadClientsFromFirestore();
+        migrateExistingClientsOnce();
     } else {
         state.isAuthorized = false;
         showAccessDeniedScreen(user);
@@ -236,6 +237,77 @@ export async function loadClientsFromFirestore() {
         console.log(`✅ ${clientsCache.length} clientes carregados do Firestore`);
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
+    }
+}
+
+async function migrateExistingClientsOnce() {
+    const migrationKey = 'imaginatech_clients_migrated_v1';
+    
+    if (localStorage.getItem(migrationKey)) {
+        console.log('✅ Migração de clientes já realizada anteriormente');
+        return;
+    }
+    
+    console.log('🔄 Iniciando migração de clientes existentes...');
+    
+    try {
+        const servicesSnapshot = await state.db.collection('services').get();
+        const clientsToMigrate = new Map();
+        
+        servicesSnapshot.forEach(doc => {
+            const service = doc.data();
+            if (service.client && service.client.trim()) {
+                const clientKey = service.client.toLowerCase().trim();
+                
+                if (!clientsToMigrate.has(clientKey)) {
+                    clientsToMigrate.set(clientKey, {
+                        name: service.client,
+                        cpf: service.clientCPF || '',
+                        email: service.clientEmail || '',
+                        phone: service.clientPhone || '',
+                        createdAt: service.createdAt || new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                } else {
+                    const existing = clientsToMigrate.get(clientKey);
+                    if (!existing.cpf && service.clientCPF) existing.cpf = service.clientCPF;
+                    if (!existing.email && service.clientEmail) existing.email = service.clientEmail;
+                    if (!existing.phone && service.clientPhone) existing.phone = service.clientPhone;
+                }
+            }
+        });
+        
+        let migratedCount = 0;
+        
+        for (const [key, clientData] of clientsToMigrate) {
+            if (!clientData.cpf) continue;
+            
+            const cpfClean = clientData.cpf.replace(/\D/g, '');
+            
+            const existingClient = await state.db.collection('clients')
+                .where('cpf', '==', cpfClean)
+                .limit(1)
+                .get();
+            
+            if (existingClient.empty) {
+                await state.db.collection('clients').add({
+                    ...clientData,
+                    cpf: cpfClean
+                });
+                migratedCount++;
+            }
+        }
+        
+        localStorage.setItem(migrationKey, 'true');
+        console.log(`✅ Migração concluída: ${migratedCount} clientes migrados`);
+        
+        if (migratedCount > 0) {
+            await loadClientsFromFirestore();
+            showToast(`✅ ${migratedCount} clientes migrados automaticamente!`, 'success');
+        }
+        
+    } catch (error) {
+        console.error('Erro na migração de clientes:', error);
     }
 }
 
