@@ -748,6 +748,12 @@ export function renderServices() {
             const dateB = new Date(b.completedAt || b.createdAt || 0);
             return dateB - dateA;
         });
+    } else if (state.currentFilter === 'entregue') {
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.deliveredAt || a.createdAt || 0);
+            const dateB = new Date(b.deliveredAt || b.createdAt || 0);
+            return dateB - dateA;
+        });
     } else {
         filtered.sort((a, b) => {
             const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
