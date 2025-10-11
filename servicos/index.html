@@ -172,6 +172,7 @@
         </main>
     </div>
 
+    <!-- MODAL: Criar/Editar Serviço -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -281,16 +282,13 @@
                         <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
                     </div>
 
+                    <!-- MODIFICADO: Múltiplos arquivos com formatos expandidos -->
                     <div class="form-group full-width">
-                        <label for="serviceFile"><i class="fas fa-file-upload"></i> Arquivo do Projeto (STL, OBJ, STEP, 3MF)</label>
+                        <label for="serviceFiles"><i class="fas fa-file-upload"></i> Arquivos do Projeto (STL, OBJ, STEP, 3MF, ZIP, TXT, MTL, etc)</label>
                         <div class="file-input-wrapper">
-                            <input type="file" id="serviceFile" accept=".stl,.obj,.step,.stp,.3mf" onchange="handleFileSelect(event)">
-                            <div class="file-info" id="fileInfo" style="display: none;">
-                                <i class="fas fa-file"></i>
-                                <span id="fileName"></span>
-                                <button type="button" class="btn-remove-file" onclick="removeFile()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                            <input type="file" id="serviceFiles" accept=".stl,.obj,.step,.stp,.3mf,.zip,.txt,.mtl,.rar,.7z,.pdf" multiple onchange="handleFileSelect(event)">
+                            <div class="files-preview" id="filesPreview" style="display: none;">
+                                <div class="files-preview-container" id="filesPreviewContainer"></div>
                             </div>
                         </div>
                     </div>
@@ -415,9 +413,6 @@
 
                 <input type="hidden" id="serviceId">
                 <input type="hidden" id="serviceStatus" value="pendente">
-                <input type="hidden" id="currentFileUrl">
-                <input type="hidden" id="currentFileName">
-                <input type="hidden" id="currentImageUrl">
 
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="closeModal()">
@@ -432,6 +427,7 @@
         </div>
     </div>
 
+    <!-- MODAL: Código de Rastreio -->
     <div class="modal" id="trackingModal">
         <div class="modal-content modal-small">
             <div class="modal-header">
@@ -455,6 +451,7 @@
         </div>
     </div>
 
+    <!-- MODAL: Informações de Entrega -->
     <div class="modal" id="deliveryInfoModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -472,6 +469,7 @@
         </div>
     </div>
 
+    <!-- MODAL: Confirmar Status -->
     <div class="modal" id="statusModal">
         <div class="modal-content modal-small">
             <div class="modal-header">
@@ -483,6 +481,7 @@
             <div class="modal-body">
                 <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
                 
+                <!-- Fotos do Produto Finalizado (Instagramáveis) -->
                 <div id="instagramPhotoField" style="display: none; margin-top: 1.5rem;">
                     <div class="instagram-alert">
                         <i class="fas fa-camera"></i>
@@ -499,6 +498,26 @@
                     
                     <div class="image-preview" id="instagramPhotoPreview" style="display: none;">
                         <div class="image-preview-grid" id="instagramPhotoPreviewGrid"></div>
+                    </div>
+                </div>
+                
+                <!-- NOVO: Fotos do Produto Embalado -->
+                <div id="packagedPhotoField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 215, 0, 0.1)); border-color: var(--neon-orange);">
+                        <i class="fas fa-box"></i>
+                        <p style="margin: 0.5rem 0;"><strong>Fotos do Produto Embalado Obrigatórias</strong></p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Anexe uma ou mais fotos do produto já embalado e pronto para envio/retirada.</p>
+                    </div>
+                    
+                    <div class="instagram-upload">
+                        <label for="packagedPhotoInput" class="instagram-label" style="background: linear-gradient(135deg, var(--neon-orange), var(--neon-yellow));">
+                            <i class="fas fa-upload"></i> Selecionar Foto(s) da Embalagem
+                        </label>
+                        <input type="file" id="packagedPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handlePackagedPhotoSelect(event)" style="display: none;" multiple>
+                    </div>
+                    
+                    <div class="image-preview" id="packagedPhotoPreview" style="display: none;">
+                        <div class="image-preview-grid" id="packagedPhotoPreviewGrid"></div>
                     </div>
                 </div>
                 
@@ -526,6 +545,7 @@
         </div>
     </div>
 
+    <!-- MODAL: Visualizar Imagens -->
     <div class="modal" id="imageViewerModal">
         <div class="modal-content modal-image">
             <div class="modal-header">
@@ -553,6 +573,26 @@
                 </button>
                 <button class="btn-secondary" onclick="closeImageModal()">
                     <i class="fas fa-times"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: MODAL para Visualizar Múltiplos Arquivos -->
+    <div class="modal" id="filesViewerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="filesViewerTitle"><i class="fas fa-file"></i> Arquivos do Serviço</h2>
+                <button class="modal-close" onclick="closeFilesModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="filesListContainer" class="files-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeFilesModal()">
+                    <i class="fas fa-check"></i> Fechar
                 </button>
             </div>
         </div>
