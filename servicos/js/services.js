@@ -425,38 +425,62 @@ export async function updateStatus(serviceId, newStatus) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
-    // NOVO: Validação para impedir marcar como "Entregue" sem passar pelos status obrigatórios
-    if (newStatus === 'entregue') {
-        // Verificar se está no status correto (deve estar em "retirada")
-        if (service.status !== 'retirada') {
-            showToast('❌ Para marcar como Entregue, o serviço precisa estar em "Processo de Entrega"', 'error');
+    // NOVO: Validação LINEAR - forçar sequência correta de status
+    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+    const currentIndex = statusOrder.indexOf(service.status);
+    const newIndex = statusOrder.indexOf(newStatus);
+    
+    // Só permite avançar 1 etapa por vez (ou voltar livremente)
+    if (newIndex > currentIndex) {
+        const nextAllowedStatus = statusOrder[currentIndex + 1];
+        
+        if (newStatus !== nextAllowedStatus) {
+            const statusNames = {
+                'pendente': 'Pendente',
+                'producao': 'Produção',
+                'concluido': 'Concluído',
+                'retirada': 'Processo de Entrega',
+                'entregue': 'Entregue'
+            };
+            showToast(`❌ Você deve seguir a ordem: ${statusNames[service.status]} → ${statusNames[nextAllowedStatus]}`, 'error');
+            return;
+        }
+    }
+    
+    // Validações específicas para cada status (fotos obrigatórias)
+    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
+        state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
+        window.showStatusModalWithPhoto(service, newStatus);
+        return;
+    }
+    
+    if (newStatus === 'retirada') {
+        // Verificar se tem fotos do produto finalizado (passou por concluído)
+        if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
+            showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
         
-        // Verificar se tem fotos do produto finalizado (passou por concluído)
+        // Pedir fotos da embalagem
+        if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
+            state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
+            window.showStatusModalWithPackagedPhoto(service, newStatus);
+            return;
+        }
+    }
+    
+    if (newStatus === 'entregue') {
+        // Verificar se tem fotos do produto finalizado
         if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
         
-        // Verificar se tem fotos do produto embalado (passou por retirada)
+        // Verificar se tem fotos do produto embalado
         if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
             return;
         }
-    }
-    
-    // MODIFICADO: Foto obrigatória no status "retirada" (produto embalado)
-    if (newStatus === 'retirada' && (!service.packagedPhotos || service.packagedPhotos.length === 0)) {
-        state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
-        window.showStatusModalWithPackagedPhoto(service, newStatus);
-        return;
-    }
-    
-    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
-        state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
-        window.showStatusModalWithPhoto(service, newStatus);
-        return;
     }
     
     const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
