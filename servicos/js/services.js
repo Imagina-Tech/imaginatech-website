@@ -30,6 +30,9 @@ import {
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
+// Ordem linear dos status (usado em múltiplas funções)
+const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+
 export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 
 export function startServicesListener() {
@@ -426,13 +429,12 @@ export async function updateStatus(serviceId, newStatus) {
     if (!service || service.status === newStatus) return;
     
     // NOVO: Validação LINEAR - forçar sequência correta de status
-    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    const currentIndex = statusOrder.indexOf(service.status);
-    const newIndex = statusOrder.indexOf(newStatus);
+    const currentIndex = STATUS_ORDER.indexOf(service.status);
+    const newIndex = STATUS_ORDER.indexOf(newStatus);
     
     // Só permite avançar 1 etapa por vez (ou voltar livremente)
     if (newIndex > currentIndex) {
-        const nextAllowedStatus = statusOrder[currentIndex + 1];
+        const nextAllowedStatus = STATUS_ORDER[currentIndex + 1];
         
         if (newStatus !== nextAllowedStatus) {
             const statusNames = {
@@ -483,9 +485,8 @@ export async function updateStatus(serviceId, newStatus) {
         }
     }
     
-    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    const currentStatusIndex = statusOrder.indexOf(service.status);
-    const newStatusIndex = statusOrder.indexOf(newStatus);
+    const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
+    const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
     
     if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < statusOrder.indexOf('retirada')) {
         if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
@@ -666,9 +667,8 @@ export async function confirmStatusChange() {
             lastStatusChange: new Date().toISOString()
         };
         
-        const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-        const currentStatusIndex = statusOrder.indexOf(service.status);
-        const newStatusIndex = statusOrder.indexOf(newStatus);
+        const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
+        const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
         
         if (newStatusIndex > currentStatusIndex) {
             const timestampField = newStatus === 'producao' ? 'productionStartedAt' : 
@@ -683,20 +683,20 @@ export async function confirmStatusChange() {
         else if (newStatusIndex < currentStatusIndex) {
             const timestampsToDelete = [];
             
-            if (newStatusIndex < statusOrder.indexOf('entregue')) {
+            if (newStatusIndex < STATUS_ORDER.indexOf('entregue')) {
                 timestampsToDelete.push('deliveredAt');
             }
-            if (newStatusIndex < statusOrder.indexOf('retirada')) {
+            if (newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
                 timestampsToDelete.push('readyAt');
                 if (service.deliveryMethod === 'sedex' && service.trackingCode) {
                     updates.trackingCode = firebase.firestore.FieldValue.delete();
                     updates.postedAt = firebase.firestore.FieldValue.delete();
                 }
             }
-            if (newStatusIndex < statusOrder.indexOf('concluido')) {
+            if (newStatusIndex < STATUS_ORDER.indexOf('concluido')) {
                 timestampsToDelete.push('completedAt');
             }
-            if (newStatusIndex < statusOrder.indexOf('producao')) {
+            if (newStatusIndex < STATUS_ORDER.indexOf('producao')) {
                 timestampsToDelete.push('productionStartedAt');
             }
             
@@ -788,13 +788,16 @@ function createServiceCard(service) {
                     service.dateUndefined ? 'var(--neon-yellow)' : 
                     getDaysColor(days);
     
-    const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto;
+    // MODIFICADO: Incluir fotos embaladas na contagem
+    const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto || (service.packagedPhotos && service.packagedPhotos.length > 0);
     
     const getTotalImagesCount = (svc) => {
         let count = 0;
         if (svc.images && svc.images.length > 0) count += svc.images.length;
         if (svc.imageUrl && !(svc.images && svc.images.find(img => img.url === svc.imageUrl))) count += 1;
         if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count +=1;
+        // NOVO: Incluir fotos embaladas
+        if (svc.packagedPhotos && svc.packagedPhotos.length > 0) count += svc.packagedPhotos.length;
         return count;
     };
     
