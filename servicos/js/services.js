@@ -281,13 +281,19 @@ export async function saveService(event) {
             }
         }
         
-        if (service.client && service.clientCPF) {
-            await saveClientToFirestore({
+        if (service.client) {
+            const clientData = {
                 name: service.client,
                 cpf: service.clientCPF,
                 email: service.clientEmail,
                 phone: service.clientPhone
-            });
+            };
+            
+            if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+                clientData.address = service.deliveryAddress;
+            }
+            
+            await saveClientToFirestore(clientData);
         }
         
         if (state.selectedFiles.length > 0 && serviceDocId) {
