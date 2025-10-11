@@ -425,6 +425,27 @@ export async function updateStatus(serviceId, newStatus) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
+    // NOVO: Validação para impedir marcar como "Entregue" sem passar pelos status obrigatórios
+    if (newStatus === 'entregue') {
+        // Verificar se está no status correto (deve estar em "retirada")
+        if (service.status !== 'retirada') {
+            showToast('❌ Para marcar como Entregue, o serviço precisa estar em "Processo de Entrega"', 'error');
+            return;
+        }
+        
+        // Verificar se tem fotos do produto finalizado (passou por concluído)
+        if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
+            showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
+            return;
+        }
+        
+        // Verificar se tem fotos do produto embalado (passou por retirada)
+        if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
+            showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
+            return;
+        }
+    }
+    
     // MODIFICADO: Foto obrigatória no status "retirada" (produto embalado)
     if (newStatus === 'retirada' && (!service.packagedPhotos || service.packagedPhotos.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
