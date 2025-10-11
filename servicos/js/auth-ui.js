@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.2 - Múltiplos Arquivos + Fotos Embaladas
+VERSÃO: 3.3 - CPF + Autocomplete de Clientes
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -142,6 +142,7 @@ export function checkAuthorization(user) {
         state.isAuthorized = true;
         showAdminDashboard(user);
         startServicesListener();
+        loadClientsFromFirestore();
     } else {
         state.isAuthorized = false;
         showAccessDeniedScreen(user);
@@ -222,11 +223,109 @@ export function showAccessDeniedScreen(user) {
 export const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
 
 // ===========================
+// CLIENT AUTOCOMPLETE
+// ===========================
+let clientsCache = [];
+
+export async function loadClientsFromFirestore() {
+    if (!state.db) return;
+    
+    try {
+        const snapshot = await state.db.collection('clients').get();
+        clientsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`✅ ${clientsCache.length} clientes carregados do Firestore`);
+    } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+    }
+}
+
+export function handleClientNameInput(event) {
+    const value = event.target.value.trim().toLowerCase();
+    const suggestionsDiv = document.getElementById('clientSuggestions');
+    
+    if (!value || value.length < 2) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+    
+    const matches = clientsCache.filter(client => 
+        client.name.toLowerCase().includes(value)
+    );
+    
+    if (matches.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+    
+    suggestionsDiv.innerHTML = matches.map(client => `
+        <div class="client-suggestion-item" onclick="window.selectClient('${client.id}')">
+            <div class="client-suggestion-name">${escapeHtml(client.name)}</div>
+            <div class="client-suggestion-details">
+                ${client.cpf ? `CPF: ${client.cpf}` : ''}
+                ${client.email ? ` • ${client.email}` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    suggestionsDiv.style.display = 'block';
+}
+
+export function selectClient(clientId) {
+    const client = clientsCache.find(c => c.id === clientId);
+    if (!client) return;
+    
+    document.getElementById('clientName').value = client.name || '';
+    document.getElementById('clientCPF').value = client.cpf || '';
+    document.getElementById('clientEmail').value = client.email || '';
+    document.getElementById('clientPhone').value = client.phone || '';
+    
+    document.getElementById('clientSuggestions').style.display = 'none';
+    
+    showToast('✅ Dados do cliente preenchidos!', 'success');
+}
+
+export async function saveClientToFirestore(clientData) {
+    if (!state.db || !clientData.name || !clientData.cpf) return;
+    
+    try {
+        const cpfClean = clientData.cpf.replace(/\D/g, '');
+        
+        const existingClient = await state.db.collection('clients')
+            .where('cpf', '==', cpfClean)
+            .limit(1)
+            .get();
+        
+        const clientDoc = {
+            name: clientData.name,
+            cpf: cpfClean,
+            email: clientData.email || '',
+            phone: clientData.phone || '',
+            updatedAt: new Date().toISOString()
+        };
+        
+        if (existingClient.empty) {
+            clientDoc.createdAt = new Date().toISOString();
+            await state.db.collection('clients').add(clientDoc);
+            console.log('✅ Novo cliente salvo:', clientData.name);
+        } else {
+            const docId = existingClient.docs[0].id;
+            await state.db.collection('clients').doc(docId).update(clientDoc);
+            console.log('✅ Cliente atualizado:', clientData.name);
+        }
+        
+        await loadClientsFromFirestore();
+        
+    } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
+    }
+}
+
+// ===========================
 // MODALS
 // ===========================
 export function openAddModal() {
     state.editingServiceId = null;
-    state.selectedFiles = []; // MODIFICADO: array vazio
+    state.selectedFiles = [];
     state.selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
@@ -235,7 +334,7 @@ export function openAddModal() {
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
     
     setupDateFields();
-    ['filesInfo', 'imagePreview'].forEach(id => { // MODIFICADO: filesInfo
+    ['filesInfo', 'imagePreview'].forEach(id => {
         const el = document.getElementById(id);
         el && (el.style.display = 'none');
     });
@@ -243,7 +342,6 @@ export function openAddModal() {
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) previewContainer.innerHTML = '';
     
-    // MODIFICADO: Limpar preview de múltiplos arquivos
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');
     if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
     
@@ -254,6 +352,8 @@ export function openAddModal() {
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
     
+    document.getElementById('clientSuggestions').style.display = 'none';
+    
     hideAllDeliveryFields();
     document.getElementById('serviceModal')?.classList.add('active');
 }
@@ -263,7 +363,7 @@ export function openEditModal(serviceId) {
     if (!service) return;
     
     state.editingServiceId = serviceId;
-    state.selectedFiles = []; // MODIFICADO
+    state.selectedFiles = [];
     state.selectedImages = [];
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
@@ -273,6 +373,7 @@ export function openEditModal(serviceId) {
     Object.entries({
         serviceName: service.name,
         clientName: service.client,
+        clientCPF: service.clientCPF || '',
         clientEmail: service.clientEmail,
         clientPhone: service.clientPhone,
         serviceDescription: service.description,
@@ -304,7 +405,6 @@ export function openEditModal(serviceId) {
         }
     }
     
-    // MODIFICADO: Mostrar múltiplos arquivos existentes
     const filesPreview = document.getElementById('filesPreview');
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');
     
@@ -335,25 +435,20 @@ export function openEditModal(serviceId) {
     
     if (previewContainer) previewContainer.innerHTML = '';
     
-    // MODIFICADO: Mostrar imagens regulares + instagramáveis + fotos embaladas
     const allImagesToShow = [];
     
-    // Imagens regulares
     if (service.images && service.images.length > 0) {
         service.images.forEach(img => allImagesToShow.push({ ...img, type: 'regular' }));
     }
     
-    // Imagem única (compatibilidade)
     if (service.imageUrl && !(service.images && service.images.find(img => img.url === service.imageUrl))) {
         allImagesToShow.push({ url: service.imageUrl, name: 'Imagem', type: 'regular' });
     }
     
-    // Foto instagramável
     if (service.instagramPhoto && !(service.images && service.images.find(img => img.url === service.instagramPhoto))) {
         allImagesToShow.push({ url: service.instagramPhoto, name: 'Foto Instagramável', type: 'instagram' });
     }
     
-    // NOVO: Fotos do produto embalado
     if (service.packagedPhotos && service.packagedPhotos.length > 0) {
         service.packagedPhotos.forEach(photo => allImagesToShow.push({ ...photo, type: 'packaged' }));
     }
@@ -410,17 +505,21 @@ export function openEditModal(serviceId) {
         }
     }
     
+    document.getElementById('clientSuggestions').style.display = 'none';
+    
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
 export function closeModal() {
     document.getElementById('serviceModal')?.classList.remove('active');
     state.editingServiceId = null;
-    state.selectedFiles = []; // MODIFICADO
+    state.selectedFiles = [];
     const trackingField = document.getElementById('trackingCodeField');
     const trackingInput = document.getElementById('editTrackingCode');
     if (trackingField) trackingField.style.display = 'none';
     if (trackingInput) trackingInput.value = '';
+    
+    document.getElementById('clientSuggestions').style.display = 'none';
 }
 
 export function closeStatusModal() {
@@ -432,7 +531,6 @@ export function closeStatusModal() {
     const photoInput = document.getElementById('instagramPhotoInput');
     if (photoInput) photoInput.value = '';
     
-    // NOVO: Limpar fotos embaladas
     const packagedField = document.getElementById('packagedPhotoField');
     if (packagedField) packagedField.style.display = 'none';
     const packagedInput = document.getElementById('packagedPhotoInput');
@@ -444,7 +542,6 @@ export function closeStatusModal() {
     if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
     state.pendingInstagramPhotos = [];
     
-    // NOVO: Limpar preview de fotos embaladas
     const packagedPreview = document.getElementById('packagedPhotoPreview');
     const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
     if (packagedPreview) packagedPreview.style.display = 'none';
@@ -529,7 +626,6 @@ export function showStatusModalWithPhoto(service, newStatus) {
     document.getElementById('statusModal')?.classList.add('active');
 }
 
-// NOVO: Modal para fotos do produto embalado
 export function showStatusModalWithPackagedPhoto(service, newStatus) {
     document.getElementById('statusModalMessage') && 
         (document.getElementById('statusModalMessage').textContent = `Para marcar como Pronto/Postado, é obrigatório anexar uma ou mais fotos do produto embalado "${service.name}"`);
@@ -663,7 +759,6 @@ export function showServiceImages(serviceId) {
         });
     }
     
-    // NOVO: Incluir fotos do produto embalado
     if (service.packagedPhotos && service.packagedPhotos.length > 0) {
         service.packagedPhotos.forEach(photo => {
             allImages.push({
@@ -679,7 +774,6 @@ export function showServiceImages(serviceId) {
     }
 }
 
-// NOVO: Mostrar múltiplos arquivos em modal
 export function showServiceFiles(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) return;
@@ -701,7 +795,6 @@ export function showServiceFiles(serviceId) {
     }
 }
 
-// NOVO: Modal de arquivos
 export function showFilesModal(files, serviceName) {
     const modal = document.getElementById('filesViewerModal');
     if (!modal) return;
@@ -744,8 +837,21 @@ export function showImageModal(images, serviceName, startIndex = 0) {
     const modal = document.getElementById('imageViewerModal');
     if (!modal) return;
     
+    preloadAdjacentImages();
     updateImageViewer();
     modal.classList.add('active');
+}
+
+function preloadAdjacentImages() {
+    const gallery = state.currentImageGallery;
+    const currentIdx = state.currentImageIndex;
+    
+    [currentIdx - 1, currentIdx + 1].forEach(idx => {
+        if (idx >= 0 && idx < gallery.length) {
+            const img = new Image();
+            img.src = gallery[idx].url;
+        }
+    });
 }
 
 export function updateImageViewer() {
@@ -764,7 +870,6 @@ export function updateImageViewer() {
     if (title) {
         let imageLabel = currentImage.name || `Imagem ${state.currentImageIndex + 1}`;
         
-        // MODIFICADO: Labels diferentes por tipo de foto
         if (currentImage.type === 'instagram') {
             imageLabel += ' 📸 (Instagramável)';
         } else if (currentImage.type === 'packaged') {
@@ -792,6 +897,8 @@ export function updateImageViewer() {
     if (downloadBtn) {
         downloadBtn.onclick = () => downloadFile(currentImage.url, currentImage.name || 'imagem');
     }
+    
+    preloadAdjacentImages();
 }
 
 export function prevImage() {
@@ -817,13 +924,12 @@ export const closeImageModal = () => {
 // ===========================
 // FILE & IMAGE HANDLING
 // ===========================
-// MODIFICADO: Suportar múltiplos arquivos e mais formatos
 export function handleFileSelect(event) {
     const files = Array.from(event.target.files);
     if (!files.length) return state.selectedFiles = [];
     
     const validExts = ['.stl', '.obj', '.step', '.stp', '.3mf', '.zip', '.txt', '.mtl', '.rar', '.7z', '.pdf'];
-    const maxSize = 52428800; // 50MB
+    const maxSize = 52428800;
     
     const validFiles = files.filter(file => {
         const fileName = file.name.toLowerCase();
@@ -945,7 +1051,6 @@ export function removePreviewImage(index) {
     }
 }
 
-// NOVO: Remover preview de arquivo individual
 export function removeFilePreview(index) {
     state.selectedFiles.splice(index, 1);
     const fileInput = document.getElementById('serviceFiles');
@@ -977,7 +1082,7 @@ export function removeFilePreview(index) {
 }
 
 export const removeFile = () => {
-    state.selectedFiles = []; // MODIFICADO
+    state.selectedFiles = [];
     const fileInput = document.getElementById('serviceFiles');
     if (fileInput) fileInput.value = '';
     
@@ -992,7 +1097,6 @@ export function downloadFile(url, fileName) {
     document.body.removeChild(link);
 }
 
-// Fotos instagramáveis
 state.pendingInstagramPhotos = [];
 
 export function handleInstagramPhotoSelect(event) {
@@ -1057,7 +1161,6 @@ function removeInstagramPhoto(index) {
     renderInstagramPhotoPreviews();
 }
 
-// NOVO: Fotos do produto embalado
 state.pendingPackagedPhotos = [];
 
 export function handlePackagedPhotoSelect(event) {
@@ -1230,6 +1333,14 @@ export function formatPhoneNumber(e) {
     e.target.value = value;
 }
 
+export function formatCPF(e) {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (value.length > 9) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+    else if (value.length > 6) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+    else if (value.length > 3) value = `${value.slice(0, 3)}.${value.slice(3)}`;
+    e.target.value = value;
+}
+
 export function formatCEP(e) {
     let value = e.target.value.replace(/\D/g, '').slice(0, 8);
     if (value.length > 5) value = `${value.slice(0, 5)}-${value.slice(5)}`;
@@ -1295,7 +1406,7 @@ export const formatDate = dateString => dateString ? new Date(dateString).toLoca
 export const formatColorName = color => ({
     'preto': 'Preto', 'branco': 'Branco', 'vermelho': 'Vermelho', 'azul': 'Azul',
     'verde': 'Verde', 'amarelo': 'Amarelo', 'laranja': 'Laranja', 'roxo': 'Roxo',
-    'cinza': 'Cinza', 'transparente': 'Transparente', 'outros': 'Outras'
+    'cinza': 'Cinza', 'transparente': 'Transparente', 'colorido': 'Colorido', 'outros': 'Outras'
 }[color] || color);
 
 export const formatMoney = value => (!value || isNaN(value)) ? '0,00' : value.toFixed(2).replace('.', ',');
@@ -1419,27 +1530,30 @@ window.showTrackingCodeModal = showTrackingCodeModal;
 window.closeTrackingModal = closeTrackingModal;
 window.confirmTrackingCode = confirmTrackingCode;
 window.showStatusModalWithPhoto = showStatusModalWithPhoto;
-window.showStatusModalWithPackagedPhoto = showStatusModalWithPackagedPhoto; // NOVO
+window.showStatusModalWithPackagedPhoto = showStatusModalWithPackagedPhoto;
 window.handleInstagramPhotoSelect = handleInstagramPhotoSelect;
 window.removeInstagramPhoto = removeInstagramPhoto;
-window.handlePackagedPhotoSelect = handlePackagedPhotoSelect; // NOVO
-window.removePackagedPhoto = removePackagedPhoto; // NOVO
+window.handlePackagedPhotoSelect = handlePackagedPhotoSelect;
+window.removePackagedPhoto = removePackagedPhoto;
 window.filterServices = filterServices;
 window.toggleDateInput = toggleDateInput;
 window.toggleDeliveryFields = toggleDeliveryFields;
 window.handleFileSelect = handleFileSelect;
 window.handleImageSelect = handleImageSelect;
 window.removePreviewImage = removePreviewImage;
-window.removeFilePreview = removeFilePreview; // NOVO
+window.removeFilePreview = removeFilePreview;
 window.removeFile = removeFile;
 window.downloadFile = downloadFile;
 window.buscarCEP = buscarCEP;
 window.showDeliveryInfo = showDeliveryInfo;
 window.closeDeliveryModal = closeDeliveryModal;
 window.showServiceImages = showServiceImages;
-window.showServiceFiles = showServiceFiles; // NOVO
-window.closeFilesModal = closeFilesModal; // NOVO
+window.showServiceFiles = showServiceFiles;
+window.closeFilesModal = closeFilesModal;
 window.closeImageModal = closeImageModal;
 window.prevImage = prevImage;
 window.nextImage = nextImage;
 window.contactClient = contactClient;
+window.handleClientNameInput = handleClientNameInput;
+window.selectClient = selectClient;
+window.formatCPF = formatCPF;
