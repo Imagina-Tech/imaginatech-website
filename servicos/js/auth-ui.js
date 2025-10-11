@@ -241,7 +241,7 @@ export async function loadClientsFromFirestore() {
 }
 
 async function migrateExistingClientsOnce() {
-    const migrationKey = 'imaginatech_clients_migrated_v1';
+    const migrationKey = 'imaginatech_clients_migrated_v2';
     
     if (localStorage.getItem(migrationKey)) {
         console.log('✅ Migração de clientes já realizada anteriormente');
@@ -265,6 +265,7 @@ async function migrateExistingClientsOnce() {
                         cpf: service.clientCPF || '',
                         email: service.clientEmail || '',
                         phone: service.clientPhone || '',
+                        address: service.deliveryMethod === 'sedex' && service.deliveryAddress ? service.deliveryAddress : null,
                         createdAt: service.createdAt || new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     });
@@ -273,6 +274,9 @@ async function migrateExistingClientsOnce() {
                     if (!existing.cpf && service.clientCPF) existing.cpf = service.clientCPF;
                     if (!existing.email && service.clientEmail) existing.email = service.clientEmail;
                     if (!existing.phone && service.clientPhone) existing.phone = service.clientPhone;
+                    if (!existing.address && service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+                        existing.address = service.deliveryAddress;
+                    }
                 }
             }
         });
@@ -280,22 +284,34 @@ async function migrateExistingClientsOnce() {
         let migratedCount = 0;
         
         for (const [key, clientData] of clientsToMigrate) {
-            if (!clientData.cpf) continue;
+            let existingClient = null;
             
-            const cpfClean = clientData.cpf.replace(/\D/g, '');
-            
-            const existingClient = await state.db.collection('clients')
-                .where('cpf', '==', cpfClean)
-                .limit(1)
-                .get();
-            
-            if (existingClient.empty) {
-                await state.db.collection('clients').add({
-                    ...clientData,
-                    cpf: cpfClean
-                });
-                migratedCount++;
+            if (clientData.cpf) {
+                const cpfClean = clientData.cpf.replace(/\D/g, '');
+                existingClient = await state.db.collection('clients')
+                    .where('cpf', '==', cpfClean)
+                    .limit(1)
+                    .get();
             }
+            
+            if (!existingClient || existingClient.empty) {
+                existingClient = await state.db.collection('clients')
+                    .where('name', '==', clientData.name)
+                    .limit(1)
+                    .get();
+            }
+            
+            if (existingClient && !existingClient.empty) {
+                continue;
+            }
+            
+            const docToSave = { ...clientData };
+            if (docToSave.cpf) {
+                docToSave.cpf = docToSave.cpf.replace(/\D/g, '');
+            }
+            
+            await state.db.collection('clients').add(docToSave);
+            migratedCount++;
         }
         
         localStorage.setItem(migrationKey, 'true');
@@ -357,32 +373,44 @@ export function selectClient(clientId) {
 }
 
 export async function saveClientToFirestore(clientData) {
-    if (!state.db || !clientData.name || !clientData.cpf) return;
+    if (!state.db || !clientData.name) return;
     
     try {
-        const cpfClean = clientData.cpf.replace(/\D/g, '');
-        
-        const existingClient = await state.db.collection('clients')
-            .where('cpf', '==', cpfClean)
-            .limit(1)
-            .get();
-        
         const clientDoc = {
             name: clientData.name,
-            cpf: cpfClean,
+            cpf: clientData.cpf ? clientData.cpf.replace(/\D/g, '') : '',
             email: clientData.email || '',
             phone: clientData.phone || '',
+            address: clientData.address || null,
             updatedAt: new Date().toISOString()
         };
         
-        if (existingClient.empty) {
-            clientDoc.createdAt = new Date().toISOString();
-            await state.db.collection('clients').add(clientDoc);
-            console.log('✅ Novo cliente salvo:', clientData.name);
-        } else {
+        let existingClient = null;
+        
+        if (clientData.cpf) {
+            const cpfClean = clientData.cpf.replace(/\D/g, '');
+            existingClient = await state.db.collection('clients')
+                .where('cpf', '==', cpfClean)
+                .limit(1)
+                .get();
+        }
+        
+        if (!existingClient || existingClient.empty) {
+            const nameLower = clientData.name.toLowerCase().trim();
+            existingClient = await state.db.collection('clients')
+                .where('name', '==', clientData.name)
+                .limit(1)
+                .get();
+        }
+        
+        if (existingClient && !existingClient.empty) {
             const docId = existingClient.docs[0].id;
             await state.db.collection('clients').doc(docId).update(clientDoc);
             console.log('✅ Cliente atualizado:', clientData.name);
+        } else {
+            clientDoc.createdAt = new Date().toISOString();
+            await state.db.collection('clients').add(clientDoc);
+            console.log('✅ Novo cliente salvo:', clientData.name);
         }
         
         await loadClientsFromFirestore();
