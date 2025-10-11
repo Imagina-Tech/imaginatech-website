@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.1 - Múltiplos Arquivos + Fotos Embaladas
+VERSÃO: 3.3 - CPF Cliente + Autocomplete
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -24,13 +24,13 @@ import {
     parseDateBrazil,
     calculateDaysRemaining,
     sendWhatsAppMessage,
-    sendEmailNotification
+    sendEmailNotification,
+    saveClientToFirestore
 } from './auth-ui.js';
 
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
-// Ordem linear dos status (usado em múltiplas funções)
 const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
 
 export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
@@ -47,6 +47,7 @@ export function startServicesListener() {
                 id: doc.id,
                 name: data.name || '',
                 client: data.client || '',
+                clientCPF: data.clientCPF || '',
                 clientEmail: data.clientEmail || '',
                 clientPhone: data.clientPhone || '',
                 description: data.description || '',
@@ -61,8 +62,8 @@ export function startServicesListener() {
                 observations: data.observations || '',
                 deliveryMethod: data.deliveryMethod || '',
                 status: data.status || 'pendente',
-                files: data.files || [], // MODIFICADO: array de arquivos
-                fileUrl: data.fileUrl || '', // Mantido para compatibilidade
+                files: data.files || [],
+                fileUrl: data.fileUrl || '',
                 fileName: data.fileName || '',
                 fileSize: data.fileSize || '',
                 fileUploadedAt: data.fileUploadedAt || '',
@@ -70,7 +71,7 @@ export function startServicesListener() {
                 images: data.images || [],
                 imageUploadedAt: data.imageUploadedAt || '',
                 instagramPhoto: data.instagramPhoto || '',
-                packagedPhotos: data.packagedPhotos || [], // NOVO: fotos embaladas
+                packagedPhotos: data.packagedPhotos || [],
                 trackingCode: data.trackingCode || '',
                 deliveryAddress: data.deliveryAddress || {},
                 pickupInfo: data.pickupInfo || {},
@@ -124,6 +125,7 @@ export async function saveService(event) {
     const service = {
         name: getFieldValue('serviceName'),
         client: getFieldValue('clientName'),
+        clientCPF: getFieldValue('clientCPF'),
         clientEmail: getFieldValue('clientEmail'),
         clientPhone: getFieldValue('clientPhone'),
         description: getFieldValue('serviceDescription'),
@@ -157,11 +159,9 @@ export async function saveService(event) {
         }
         
         if (currentService) {
-            // MODIFICADO: Manter múltiplos arquivos existentes
             if (state.selectedFiles.length === 0 && currentService.files && currentService.files.length > 0) {
                 service.files = currentService.files;
             }
-            // Compatibilidade com arquivo único antigo
             if (state.selectedFiles.length === 0 && !currentService.files && currentService.fileUrl) {
                 service.fileUrl = currentService.fileUrl;
                 service.fileName = currentService.fileName || '';
@@ -181,7 +181,6 @@ export async function saveService(event) {
                 service.instagramPhoto = currentService.instagramPhoto;
             }
             
-            // NOVO: Manter fotos embaladas
             if (currentService.packagedPhotos && currentService.packagedPhotos.length > 0) {
                 service.packagedPhotos = currentService.packagedPhotos;
             }
@@ -248,7 +247,7 @@ export async function saveService(event) {
                 createdBy: state.currentUser.email,
                 orderCode: generateOrderCode(),
                 serviceId: 'SRV-' + Date.now(),
-                files: [], // MODIFICADO: array vazio
+                files: [],
                 fileUrl: '',
                 fileName: '',
                 fileSize: '',
@@ -257,7 +256,7 @@ export async function saveService(event) {
                 images: [],
                 imageUploadedAt: '',
                 instagramPhoto: '',
-                packagedPhotos: [], // NOVO
+                packagedPhotos: [],
                 trackingCode: ''
             });
             
@@ -282,7 +281,15 @@ export async function saveService(event) {
             }
         }
         
-        // MODIFICADO: Upload de múltiplos arquivos
+        if (service.client && service.clientCPF) {
+            await saveClientToFirestore({
+                name: service.client,
+                cpf: service.clientCPF,
+                email: service.clientEmail,
+                phone: service.clientPhone
+            });
+        }
+        
         if (state.selectedFiles.length > 0 && serviceDocId) {
             showToast(`Fazendo upload de ${state.selectedFiles.length} ${state.selectedFiles.length > 1 ? 'arquivos' : 'arquivo'}...`, 'info');
             
@@ -356,11 +363,9 @@ export async function deleteService(serviceId) {
     try {
         const filesToDelete = [];
         
-        // MODIFICADO: Deletar múltiplos arquivos
         if (service.files && service.files.length > 0) {
             service.files.forEach(file => file.url && filesToDelete.push(file.url));
         }
-        // Compatibilidade
         if (service.fileUrl) filesToDelete.push(service.fileUrl);
         
         if (service.images && service.images.length > 0) {
@@ -369,7 +374,6 @@ export async function deleteService(serviceId) {
         if (service.imageUrl) filesToDelete.push(service.imageUrl);
         if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
         
-        // NOVO: Deletar fotos embaladas
         if (service.packagedPhotos && service.packagedPhotos.length > 0) {
             service.packagedPhotos.forEach(photo => photo.url && filesToDelete.push(photo.url));
         }
@@ -428,11 +432,9 @@ export async function updateStatus(serviceId, newStatus) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
     
-    // NOVO: Validação LINEAR - forçar sequência correta de status
     const currentIndex = STATUS_ORDER.indexOf(service.status);
     const newIndex = STATUS_ORDER.indexOf(newStatus);
     
-    // Só permite avançar 1 etapa por vez (ou voltar livremente)
     if (newIndex > currentIndex) {
         const nextAllowedStatus = STATUS_ORDER[currentIndex + 1];
         
@@ -449,7 +451,6 @@ export async function updateStatus(serviceId, newStatus) {
         }
     }
     
-    // Validações específicas para cada status (fotos obrigatórias)
     if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
@@ -457,13 +458,11 @@ export async function updateStatus(serviceId, newStatus) {
     }
     
     if (newStatus === 'retirada') {
-        // Verificar se tem fotos do produto finalizado (passou por concluído)
         if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
             showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
         
-        // Pedir fotos da embalagem
         if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
             state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
             window.showStatusModalWithPackagedPhoto(service, newStatus);
@@ -472,13 +471,11 @@ export async function updateStatus(serviceId, newStatus) {
     }
     
     if (newStatus === 'entregue') {
-        // Verificar se tem fotos do produto finalizado
         if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
         
-        // Verificar se tem fotos do produto embalado
         if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
             return;
@@ -488,7 +485,7 @@ export async function updateStatus(serviceId, newStatus) {
     const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
     const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
     
-    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < statusOrder.indexOf('retirada')) {
+    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
         if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
             return;
         }
@@ -553,7 +550,6 @@ export async function confirmStatusChange() {
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
-    // NOVO: Processar fotos do produto embalado
     if (requiresPackagedPhoto) {
         if (state.pendingPackagedPhotos.length === 0) {
             return showToast('Selecione pelo menos uma foto do produto embalado antes de confirmar.', 'error');
@@ -605,7 +601,6 @@ export async function confirmStatusChange() {
         }
     }
     
-    // Processar fotos instagramáveis (concluído)
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
             return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
@@ -747,12 +742,11 @@ export function renderServices() {
         state.services.filter(s => s.status !== 'entregue') : 
         state.services.filter(s => s.status === state.currentFilter);
     
-    // MODIFICADO: Ordenação especial para concluídos
     if (state.currentFilter === 'concluido') {
         filtered.sort((a, b) => {
             const dateA = new Date(a.completedAt || a.createdAt || 0);
             const dateB = new Date(b.completedAt || b.createdAt || 0);
-            return dateB - dateA; // Mais recente primeiro
+            return dateB - dateA;
         });
     } else {
         filtered.sort((a, b) => {
@@ -788,7 +782,6 @@ function createServiceCard(service) {
                     service.dateUndefined ? 'var(--neon-yellow)' : 
                     getDaysColor(days);
     
-    // MODIFICADO: Incluir fotos embaladas na contagem
     const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto || (service.packagedPhotos && service.packagedPhotos.length > 0);
     
     const getTotalImagesCount = (svc) => {
@@ -796,12 +789,10 @@ function createServiceCard(service) {
         if (svc.images && svc.images.length > 0) count += svc.images.length;
         if (svc.imageUrl && !(svc.images && svc.images.find(img => img.url === svc.imageUrl))) count += 1;
         if (svc.instagramPhoto && !(svc.images && svc.images.find(img => img.url === svc.instagramPhoto))) count +=1;
-        // NOVO: Incluir fotos embaladas
         if (svc.packagedPhotos && svc.packagedPhotos.length > 0) count += svc.packagedPhotos.length;
         return count;
     };
     
-    // MODIFICADO: Mostrar múltiplos arquivos
     const filesCount = (service.files && service.files.length > 0) ? service.files.length : (service.fileUrl ? 1 : 0);
     
     return `
