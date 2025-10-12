@@ -1,0 +1,299 @@
+<!-- 
+==================================================
+ARQUIVO: caixa/index.html
+MÓDULO: Gestão Financeira (Caixa)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 1.0
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caixa - ImaginaTech Admin</title>
+    <meta name="description" content="Gestão financeira - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="styles-caixa.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando dados financeiros...</div>
+        </div>
+    </div>
+
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <div class="login-screen hidden" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <h1>ImaginaTech</h1>
+                    <p>Gestão Financeira</p>
+                </div>
+                <div class="login-info">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>Acesso Restrito</h2>
+                    <p>Área exclusiva para funcionários autorizados</p>
+                </div>
+            </div>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="login-footer">
+                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard hidden" id="dashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Gestão Financeira</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <a href="/servicos/" class="btn-nav">
+                        <i class="fas fa-tasks"></i>
+                        <span>Serviços</span>
+                    </a>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="btn-text">Sair</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="action-bar">
+                    <h2 class="page-title">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard Financeiro
+                    </h2>
+                    <div class="action-buttons">
+                        <button class="btn-success" onclick="openTransactionModal('entrada')">
+                            <i class="fas fa-plus-circle"></i>
+                            Nova Entrada
+                        </button>
+                        <button class="btn-danger" onclick="openTransactionModal('saida')">
+                            <i class="fas fa-minus-circle"></i>
+                            Nova Despesa
+                        </button>
+                    </div>
+                </div>
+
+                <div class="balance-card">
+                    <div class="balance-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="balance-content">
+                        <span class="balance-label">Saldo Atual</span>
+                        <h1 class="balance-value" id="balanceValue">R$ 0,00</h1>
+                    </div>
+                    <div class="balance-trend" id="balanceTrend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>--</span>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-buttons">
+                        <button class="filter-btn" data-period="week" onclick="changePeriod('week')">
+                            <i class="fas fa-calendar-week"></i>
+                            Semana
+                        </button>
+                        <button class="filter-btn active" data-period="month" onclick="changePeriod('month')">
+                            <i class="fas fa-calendar-alt"></i>
+                            Mês
+                        </button>
+                        <button class="filter-btn" data-period="year" onclick="changePeriod('year')">
+                            <i class="fas fa-calendar"></i>
+                            Ano
+                        </button>
+                    </div>
+                    <div class="period-display" id="periodDisplay">
+                        <i class="fas fa-clock"></i>
+                        <span id="periodText">Outubro 2025</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card stat-entrada">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-circle-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Entradas</span>
+                            <h3 class="stat-value" id="totalEntradas">R$ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-saida">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-circle-down"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Saídas</span>
+                            <h3 class="stat-value" id="totalSaidas">R$ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-lucro">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Resultado</span>
+                            <h3 class="stat-value" id="resultado">R$ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-bar"></i> Fluxo de Caixa</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="flowChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> Distribuição</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transactions-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-receipt"></i> Transações Recentes</h3>
+                        <div class="section-actions">
+                            <button class="btn-filter" onclick="filterTransactions('todos')">
+                                <i class="fas fa-list"></i> Todas
+                            </button>
+                            <button class="btn-filter" onclick="filterTransactions('entrada')">
+                                <i class="fas fa-arrow-up"></i> Entradas
+                            </button>
+                            <button class="btn-filter" onclick="filterTransactions('saida')">
+                                <i class="fas fa-arrow-down"></i> Saídas
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transactions-list" id="transactionsList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Nenhuma transação no período</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> Nova Transação</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="transactionForm" onsubmit="saveTransaction(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="transactionId">
+                    <input type="hidden" id="transactionType">
+                    
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left"></i> Descrição *</label>
+                        <input type="text" id="description" class="form-input" required placeholder="Ex: Venda de produto, Conta de luz...">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="value"><i class="fas fa-dollar-sign"></i> Valor *</label>
+                            <input type="number" id="value" class="form-input" step="0.01" min="0" required placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label for="date"><i class="fas fa-calendar"></i> Data *</label>
+                            <input type="date" id="date" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category"><i class="fas fa-tag"></i> Categoria</label>
+                        <select id="category" class="form-input">
+                            <option value="">Selecione uma categoria</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <textarea id="notes" class="form-textarea" rows="3" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.umd.min.js"></script>
+    
+    <script type="module" src="js/main-caixa.js"></script>
+    
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+</body>
+</html>
