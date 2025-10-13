@@ -1,9 +1,9 @@
 /* 
 ==================================================
 ARQUIVO: caixa/js/main-caixa.js
-MÓDULO: Gestão Financeira (Caixa) - Refatorado
+MÓDULO: Gestão Financeira (Caixa) - Canvas Nativo
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.0 - Chart.js Fix + Programadas
+VERSÃO: 2.1 - Gráficos Nativos (Zero Deps)
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -31,17 +31,23 @@ const state = {
     services: [],
     currentPeriod: 'month',
     currentFilter: 'todos',
-    flowChart: null,
-    pieChart: null,
+    flowChartCanvas: null,
+    pieChartCanvas: null,
     transactionsListener: null,
-    servicesListener: null,
-    chartJsReady: false,
-    chartsInitialized: false
+    servicesListener: null
 };
 
 const CATEGORIES = {
     entrada: ['Venda de Produto', 'Serviço Prestado', 'Outras Receitas'],
     saida: ['Matéria-Prima', 'Energia', 'Aluguel', 'Manutenção', 'Outras Despesas']
+};
+
+const COLORS = {
+    entrada: '#00FF88',
+    saida: '#FF0055',
+    grid: 'rgba(255, 255, 255, 0.1)',
+    text: '#9ca3af',
+    background: 'rgba(0, 0, 0, 0.3)'
 };
 
 // ===========================
@@ -57,57 +63,13 @@ try {
 }
 
 // ===========================
-// CHART.JS LOADER - FIX
-// ===========================
-const loadChartJS = () => {
-    return new Promise((resolve, reject) => {
-        // Verificar se já está carregado
-        if (typeof Chart !== 'undefined') {
-            console.log('✅ Chart.js já disponível');
-            state.chartJsReady = true;
-            return resolve();
-        }
-
-        // Verificar se script existe
-        const existingScript = document.querySelector('script[src*="chart.js"]');
-        if (!existingScript) {
-            console.error('❌ Script Chart.js não encontrado no HTML');
-            return reject(new Error('Chart.js script tag missing'));
-        }
-
-        // Aguardar carregamento
-        let attempts = 0;
-        const maxAttempts = 50; // 10 segundos (50 * 200ms)
-        
-        const checkInterval = setInterval(() => {
-            attempts++;
-            
-            if (typeof Chart !== 'undefined') {
-                clearInterval(checkInterval);
-                console.log('✅ Chart.js carregado após', attempts * 200, 'ms');
-                state.chartJsReady = true;
-                resolve();
-            } else if (attempts >= maxAttempts) {
-                clearInterval(checkInterval);
-                console.error('❌ Timeout: Chart.js não carregou em 10s');
-                showToast('Gráficos desabilitados. Verifique conexão.', 'error');
-                reject(new Error('Chart.js timeout'));
-            }
-        }, 200);
-    });
-};
-
-// ===========================
 // DOM READY
 // ===========================
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     if (!state.auth) {
         hideLoading();
         return alert('Erro ao inicializar autenticação.');
     }
-    
-    // Iniciar carregamento Chart.js em paralelo
-    loadChartJS().catch(err => console.error('Chart.js falhou:', err));
     
     state.auth.onAuthStateChanged(user => {
         hideLoading();
@@ -119,13 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showDashboard(user);
                 startListeners();
                 setTodayDate();
-                
-                // Tentar inicializar charts após 500ms (seguro)
-                setTimeout(() => {
-                    if (state.chartJsReady && !state.chartsInitialized) {
-                        initCharts();
-                    }
-                }, 500);
+                initCanvasCharts();
             } else {
                 state.isAuthorized = false;
                 showToast('Acesso negado. Área restrita aos administradores.', 'error');
@@ -205,9 +161,6 @@ const startListeners = () => {
             },
             error => {
                 console.error('Erro no listener de transactions:', error);
-                if (error.code === 'permission-denied') {
-                    showToast('Sem permissão para acessar transações.', 'error');
-                }
             }
         );
     
@@ -230,13 +183,11 @@ const startListeners = () => {
 const updateDashboard = () => {
     const { start, end } = getPeriodDates();
     
-    // Filtrar transações do período
     const filteredTransactions = state.transactions.filter(t => {
         const tDate = new Date(t.date);
         return tDate >= start && tDate <= end;
     });
     
-    // Converter serviços em entradas
     const serviceEntries = state.services
         .filter(s => {
             if (!s.createdAt || !s.value) return false;
@@ -256,21 +207,17 @@ const updateDashboard = () => {
     
     const allEntries = [...filteredTransactions, ...serviceEntries];
     
-    // Separar realizadas e programadas
     const realizadas = allEntries.filter(t => !t.scheduled);
     const programadas = allEntries.filter(t => t.scheduled);
     
-    // Cálculos - Realizadas
     const entradasRealizadas = realizadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saidasRealizadas = realizadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saldoReal = entradasRealizadas - saidasRealizadas;
     
-    // Cálculos - Programadas
     const entradasProgramadas = programadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saidasProgramadas = programadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saldoProjetado = saldoReal + entradasProgramadas - saidasProgramadas;
     
-    // Atualizar UI - Stats
     const totalEntradasEl = document.getElementById('totalEntradas');
     const totalSaidasEl = document.getElementById('totalSaidas');
     const resultadoEl = document.getElementById('resultado');
@@ -279,7 +226,6 @@ const updateDashboard = () => {
     if (totalSaidasEl) totalSaidasEl.textContent = formatCurrency(saidasRealizadas);
     if (resultadoEl) resultadoEl.textContent = formatCurrency(saldoReal);
     
-    // Atualizar UI - Balance Card (NOVO: dois valores)
     const balanceValueEl = document.getElementById('balanceValue');
     const balanceProjectedEl = document.getElementById('balanceProjected');
     
@@ -295,7 +241,6 @@ const updateDashboard = () => {
         if (saldoProjetado < 0) balanceProjectedEl.classList.add('negative');
     }
     
-    // Trend indicator
     const trend = document.getElementById('balanceTrend');
     if (trend) {
         const diff = saldoProjetado - saldoReal;
@@ -311,155 +256,224 @@ const updateDashboard = () => {
         }
     }
     
-    // Atualizar gráficos
-    if (state.chartJsReady && state.chartsInitialized) {
-        updateCharts(realizadas);
-    } else if (state.chartJsReady && !state.chartsInitialized) {
-        initCharts();
-        updateCharts(realizadas);
-    }
-    
+    updateNativeCharts(realizadas);
     renderTransactions(allEntries);
 };
 
 // ===========================
-// CHARTS
+// NATIVE CANVAS CHARTS
 // ===========================
-const initCharts = () => {
-    if (!state.chartJsReady || typeof Chart === 'undefined') {
-        console.warn('Chart.js não disponível para inicialização');
+const initCanvasCharts = () => {
+    const flowCanvas = document.getElementById('flowChart');
+    const pieCanvas = document.getElementById('pieChart');
+    
+    if (!flowCanvas || !pieCanvas) {
+        console.warn('Canvas não encontrado');
         return;
     }
     
-    const flowCtx = document.getElementById('flowChart')?.getContext('2d');
-    const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+    state.flowChartCanvas = flowCanvas.getContext('2d');
+    state.pieChartCanvas = pieCanvas.getContext('2d');
     
-    if (!flowCtx || !pieCtx) {
-        console.warn('Canvas não encontrado, tentando novamente em 1s');
-        setTimeout(initCharts, 1000);
-        return;
-    }
+    // Set canvas resolution
+    const setCanvasSize = (canvas) => {
+        const container = canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = container.clientWidth * dpr;
+        canvas.height = container.clientHeight * dpr;
+        canvas.style.width = container.clientWidth + 'px';
+        canvas.style.height = container.clientHeight + 'px';
+        canvas.getContext('2d').scale(dpr, dpr);
+    };
     
-    Chart.defaults.color = '#9ca3af';
-    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+    setCanvasSize(flowCanvas);
+    setCanvasSize(pieCanvas);
     
-    try {
-        state.flowChart = new Chart(flowCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Entradas',
-                    data: [],
-                    backgroundColor: 'rgba(0, 255, 136, 0.7)',
-                    borderColor: '#00FF88',
-                    borderWidth: 2,
-                    borderRadius: 8
-                }, {
-                    label: 'Saídas',
-                    data: [],
-                    backgroundColor: 'rgba(255, 0, 85, 0.7)',
-                    borderColor: '#FF0055',
-                    borderWidth: 2,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            color: '#9ca3af',
-                            font: { size: 12 }
-                        }
-                    }
-                },
-                scales: {
-                    y: { 
-                        beginAtZero: true,
-                        ticks: { 
-                            callback: v => 'R$ ' + v.toFixed(0),
-                            color: '#9ca3af'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)'
-                        }
-                    },
-                    x: {
-                        ticks: { color: '#9ca3af' },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-        
-        state.pieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Entradas', 'Saídas'],
-                datasets: [{
-                    data: [0, 0],
-                    backgroundColor: ['rgba(0, 255, 136, 0.8)', 'rgba(255, 0, 85, 0.8)'],
-                    borderColor: ['#00FF88', '#FF0055'],
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            color: '#9ca3af',
-                            font: { size: 12 },
-                            padding: 15
-                        }
-                    }
-                }
-            }
-        });
-        
-        state.chartsInitialized = true;
-        console.log('✅ Charts inicializados com sucesso');
-        
-    } catch (error) {
-        console.error('Erro ao inicializar charts:', error);
-        showToast('Erro ao criar gráficos', 'error');
-    }
+    window.addEventListener('resize', () => {
+        setCanvasSize(flowCanvas);
+        setCanvasSize(pieCanvas);
+        updateDashboard();
+    });
+    
+    console.log('✅ Canvas charts inicializados');
 };
 
-const updateCharts = entries => {
-    if (!state.chartsInitialized || !state.flowChart || !state.pieChart) {
-        console.warn('Charts não inicializados, pulando update');
+const updateNativeCharts = entries => {
+    if (!state.flowChartCanvas || !state.pieChartCanvas) {
+        console.warn('Canvas não inicializado');
         return;
     }
     
-    try {
-        const grouped = groupByPeriod(entries);
-        const labels = Object.keys(grouped).sort();
-        
-        const entradasData = labels.map(l => grouped[l].entradas);
-        const saidasData = labels.map(l => grouped[l].saidas);
-        
-        state.flowChart.data.labels = labels;
-        state.flowChart.data.datasets[0].data = entradasData;
-        state.flowChart.data.datasets[1].data = saidasData;
-        state.flowChart.update('none'); // Sem animação para performance
-        
-        const totalEntradas = entradasData.reduce((a, b) => a + b, 0);
-        const totalSaidas = saidasData.reduce((a, b) => a + b, 0);
-        
-        state.pieChart.data.datasets[0].data = [totalEntradas, totalSaidas];
-        state.pieChart.update('none');
-        
-    } catch (error) {
-        console.error('Erro ao atualizar charts:', error);
+    const grouped = groupByPeriod(entries);
+    drawBarChart(grouped);
+    drawPieChart(entries);
+};
+
+const drawBarChart = grouped => {
+    const ctx = state.flowChartCanvas;
+    const canvas = ctx.canvas;
+    const width = canvas.width / (window.devicePixelRatio || 1);
+    const height = canvas.height / (window.devicePixelRatio || 1);
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const labels = Object.keys(grouped).sort();
+    if (labels.length === 0) {
+        drawEmptyState(ctx, width, height, 'Sem dados no período');
+        return;
     }
+    
+    const entradasData = labels.map(l => grouped[l].entradas);
+    const saidasData = labels.map(l => grouped[l].saidas);
+    const maxValue = Math.max(...entradasData, ...saidasData, 100);
+    
+    const padding = { top: 40, right: 20, bottom: 40, left: 60 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+    
+    // Draw grid
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+        const y = padding.top + (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+    }
+    
+    // Draw Y axis labels
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+        const value = maxValue - (maxValue / 5) * i;
+        const y = padding.top + (chartHeight / 5) * i;
+        ctx.fillText('R$ ' + Math.round(value), padding.left - 10, y + 4);
+    }
+    
+    // Draw bars
+    const barWidth = chartWidth / labels.length / 3;
+    const groupWidth = chartWidth / labels.length;
+    
+    labels.forEach((label, i) => {
+        const x = padding.left + groupWidth * i + groupWidth / 2;
+        
+        // Entradas (green)
+        const entradaHeight = (entradasData[i] / maxValue) * chartHeight;
+        ctx.fillStyle = COLORS.entrada;
+        ctx.fillRect(
+            x - barWidth - 2,
+            padding.top + chartHeight - entradaHeight,
+            barWidth,
+            entradaHeight
+        );
+        
+        // Saídas (red)
+        const saidaHeight = (saidasData[i] / maxValue) * chartHeight;
+        ctx.fillStyle = COLORS.saida;
+        ctx.fillRect(
+            x + 2,
+            padding.top + chartHeight - saidaHeight,
+            barWidth,
+            saidaHeight
+        );
+        
+        // X axis label
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '10px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, height - padding.bottom + 20);
+    });
+    
+    // Legend
+    ctx.font = '12px Inter';
+    ctx.fillStyle = COLORS.entrada;
+    ctx.fillRect(padding.left, 10, 15, 15);
+    ctx.fillStyle = COLORS.text;
+    ctx.textAlign = 'left';
+    ctx.fillText('Entradas', padding.left + 20, 22);
+    
+    ctx.fillStyle = COLORS.saida;
+    ctx.fillRect(padding.left + 100, 10, 15, 15);
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText('Saídas', padding.left + 120, 22);
+};
+
+const drawPieChart = entries => {
+    const ctx = state.pieChartCanvas;
+    const canvas = ctx.canvas;
+    const width = canvas.width / (window.devicePixelRatio || 1);
+    const height = canvas.height / (window.devicePixelRatio || 1);
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const entradas = entries.filter(e => e.type === 'entrada').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
+    const saidas = entries.filter(e => e.type === 'saida').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
+    const total = entradas + saidas;
+    
+    if (total === 0) {
+        drawEmptyState(ctx, width, height, 'Sem movimentações');
+        return;
+    }
+    
+    const centerX = width / 2;
+    const centerY = height / 2 - 20;
+    const radius = Math.min(width, height) / 3;
+    
+    // Draw pie
+    let currentAngle = -Math.PI / 2;
+    
+    // Entradas
+    const entradasAngle = (entradas / total) * Math.PI * 2;
+    ctx.fillStyle = COLORS.entrada;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + entradasAngle);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Saídas
+    currentAngle += entradasAngle;
+    ctx.fillStyle = COLORS.saida;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Center hole (donut)
+    ctx.fillStyle = '#111827';
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Legend
+    const legendY = height - 60;
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'left';
+    
+    ctx.fillStyle = COLORS.entrada;
+    ctx.fillRect(width / 2 - 80, legendY, 15, 15);
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText('Entradas', width / 2 - 60, legendY + 12);
+    
+    ctx.fillStyle = COLORS.saida;
+    ctx.fillRect(width / 2 - 80, legendY + 25, 15, 15);
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText('Saídas', width / 2 - 60, legendY + 37);
+    
+    // Percentages
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round((entradas / total) * 100) + '%', width / 2 + 80, legendY + 12);
+    ctx.fillText(Math.round((saidas / total) * 100) + '%', width / 2 + 80, legendY + 37);
+};
+
+const drawEmptyState = (ctx, width, height, message) => {
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '14px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(message, width / 2, height / 2);
 };
 
 const groupByPeriod = entries => {
@@ -564,7 +578,6 @@ window.openTransactionModal = type => {
     document.getElementById('transactionForm').reset();
     setTodayDate();
     
-    // Mostrar campo "Programada"
     const scheduledField = document.getElementById('scheduledField');
     if (scheduledField) scheduledField.style.display = 'block';
     
@@ -632,11 +645,7 @@ window.saveTransaction = async e => {
         closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        if (error.code === 'permission-denied') {
-            showToast('Sem permissão. Configure as regras do Firestore.', 'error');
-        } else {
-            showToast('Erro ao salvar transação', 'error');
-        }
+        showToast('Erro ao salvar transação', 'error');
     }
 };
 
@@ -683,11 +692,7 @@ window.deleteTransaction = async id => {
         showToast('Transação excluída!', 'success');
     } catch (error) {
         console.error('Erro ao excluir:', error);
-        if (error.code === 'permission-denied') {
-            showToast('Sem permissão para excluir', 'error');
-        } else {
-            showToast('Erro ao excluir transação', 'error');
-        }
+        showToast('Erro ao excluir transação', 'error');
     }
 };
 
@@ -708,11 +713,11 @@ window.changePeriod = period => {
 window.filterTransactions = filter => {
     state.currentFilter = filter;
     
-    // Atualizar visual dos botões
     document.querySelectorAll('.btn-filter').forEach(btn => {
         btn.classList.remove('active');
     });
     
+    event.target.classList.add('active');
     updateDashboard();
 };
 
