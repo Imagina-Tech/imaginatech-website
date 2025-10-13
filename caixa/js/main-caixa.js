@@ -1,9 +1,9 @@
 /* 
 ==================================================
 ARQUIVO: caixa/js/main-caixa.js
-MÓDULO: Gestão Financeira (Caixa) - Main
+MÓDULO: Gestão Financeira (Caixa) - Refatorado
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 1.1 - Corrigido (Chart.js + Permissions)
+VERSÃO: 2.0 - Chart.js Fix + Programadas
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -35,7 +35,8 @@ const state = {
     pieChart: null,
     transactionsListener: null,
     servicesListener: null,
-    chartJsReady: false
+    chartJsReady: false,
+    chartsInitialized: false
 };
 
 const CATEGORIES = {
@@ -44,7 +45,7 @@ const CATEGORIES = {
 };
 
 // ===========================
-// INITIALIZATION
+// FIREBASE INIT
 // ===========================
 try {
     firebase.initializeApp(firebaseConfig);
@@ -56,30 +57,43 @@ try {
 }
 
 // ===========================
-// CHART.JS READY CHECK
+// CHART.JS LOADER - FIX
 // ===========================
-const waitForChart = () => {
-    return new Promise((resolve) => {
+const loadChartJS = () => {
+    return new Promise((resolve, reject) => {
+        // Verificar se já está carregado
         if (typeof Chart !== 'undefined') {
+            console.log('✅ Chart.js já disponível');
             state.chartJsReady = true;
-            resolve();
-        } else {
-            const checkInterval = setInterval(() => {
-                if (typeof Chart !== 'undefined') {
-                    clearInterval(checkInterval);
-                    state.chartJsReady = true;
-                    resolve();
-                }
-            }, 100);
-            
-            // Timeout após 5 segundos
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                console.error('Chart.js não carregou em 5 segundos');
-                showToast('Erro ao carregar gráficos. Recarregue a página.', 'error');
-                resolve(); // Resolve mesmo com erro para não travar
-            }, 5000);
+            return resolve();
         }
+
+        // Verificar se script existe
+        const existingScript = document.querySelector('script[src*="chart.js"]');
+        if (!existingScript) {
+            console.error('❌ Script Chart.js não encontrado no HTML');
+            return reject(new Error('Chart.js script tag missing'));
+        }
+
+        // Aguardar carregamento
+        let attempts = 0;
+        const maxAttempts = 50; // 10 segundos (50 * 200ms)
+        
+        const checkInterval = setInterval(() => {
+            attempts++;
+            
+            if (typeof Chart !== 'undefined') {
+                clearInterval(checkInterval);
+                console.log('✅ Chart.js carregado após', attempts * 200, 'ms');
+                state.chartJsReady = true;
+                resolve();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                console.error('❌ Timeout: Chart.js não carregou em 10s');
+                showToast('Gráficos desabilitados. Verifique conexão.', 'error');
+                reject(new Error('Chart.js timeout'));
+            }
+        }, 200);
     });
 };
 
@@ -92,8 +106,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return alert('Erro ao inicializar autenticação.');
     }
     
-    // Aguarda Chart.js carregar
-    await waitForChart();
+    // Iniciar carregamento Chart.js em paralelo
+    loadChartJS().catch(err => console.error('Chart.js falhou:', err));
     
     state.auth.onAuthStateChanged(user => {
         hideLoading();
@@ -104,13 +118,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.isAuthorized = true;
                 showDashboard(user);
                 startListeners();
-                if (state.chartJsReady) {
-                    initCharts();
-                }
                 setTodayDate();
+                
+                // Tentar inicializar charts após 500ms (seguro)
+                setTimeout(() => {
+                    if (state.chartJsReady && !state.chartsInitialized) {
+                        initCharts();
+                    }
+                }, 500);
             } else {
                 state.isAuthorized = false;
-                showToast('Acesso negado. Esta área é restrita aos administradores.', 'error');
+                showToast('Acesso negado. Área restrita aos administradores.', 'error');
                 setTimeout(() => state.auth.signOut(), 2000);
             }
         } else {
@@ -178,7 +196,6 @@ const showDashboard = user => {
 // FIREBASE LISTENERS
 // ===========================
 const startListeners = () => {
-    // Listener para transações manuais
     state.transactionsListener = state.db.collection('transactions')
         .orderBy('date', 'desc')
         .onSnapshot(
@@ -189,12 +206,11 @@ const startListeners = () => {
             error => {
                 console.error('Erro no listener de transactions:', error);
                 if (error.code === 'permission-denied') {
-                    showToast('Sem permissão para acessar transações. Configure o Firestore.', 'error');
+                    showToast('Sem permissão para acessar transações.', 'error');
                 }
             }
         );
     
-    // Listener para serviços (entradas automáticas)
     state.servicesListener = state.db.collection('services')
         .where('value', '>', 0)
         .onSnapshot(
@@ -214,11 +230,13 @@ const startListeners = () => {
 const updateDashboard = () => {
     const { start, end } = getPeriodDates();
     
+    // Filtrar transações do período
     const filteredTransactions = state.transactions.filter(t => {
         const tDate = new Date(t.date);
         return tDate >= start && tDate <= end;
     });
     
+    // Converter serviços em entradas
     const serviceEntries = state.services
         .filter(s => {
             if (!s.createdAt || !s.value) return false;
@@ -232,42 +250,75 @@ const updateDashboard = () => {
             description: `Venda: ${s.name || 'Sem nome'}`,
             category: 'Venda de Produto',
             source: 'service',
+            scheduled: false,
             serviceId: s.id
         }));
     
     const allEntries = [...filteredTransactions, ...serviceEntries];
     
-    const entradas = allEntries.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
-    const saidas = allEntries.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
-    const resultado = entradas - saidas;
+    // Separar realizadas e programadas
+    const realizadas = allEntries.filter(t => !t.scheduled);
+    const programadas = allEntries.filter(t => t.scheduled);
     
+    // Cálculos - Realizadas
+    const entradasRealizadas = realizadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saidasRealizadas = realizadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saldoReal = entradasRealizadas - saidasRealizadas;
+    
+    // Cálculos - Programadas
+    const entradasProgramadas = programadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saidasProgramadas = programadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saldoProjetado = saldoReal + entradasProgramadas - saidasProgramadas;
+    
+    // Atualizar UI - Stats
     const totalEntradasEl = document.getElementById('totalEntradas');
     const totalSaidasEl = document.getElementById('totalSaidas');
     const resultadoEl = document.getElementById('resultado');
+    
+    if (totalEntradasEl) totalEntradasEl.textContent = formatCurrency(entradasRealizadas);
+    if (totalSaidasEl) totalSaidasEl.textContent = formatCurrency(saidasRealizadas);
+    if (resultadoEl) resultadoEl.textContent = formatCurrency(saldoReal);
+    
+    // Atualizar UI - Balance Card (NOVO: dois valores)
     const balanceValueEl = document.getElementById('balanceValue');
+    const balanceProjectedEl = document.getElementById('balanceProjected');
     
-    if (totalEntradasEl) totalEntradasEl.textContent = formatCurrency(entradas);
-    if (totalSaidasEl) totalSaidasEl.textContent = formatCurrency(saidas);
-    if (resultadoEl) resultadoEl.textContent = formatCurrency(resultado);
-    if (balanceValueEl) balanceValueEl.textContent = formatCurrency(resultado);
+    if (balanceValueEl) {
+        balanceValueEl.textContent = formatCurrency(saldoReal);
+        balanceValueEl.className = 'balance-value';
+        if (saldoReal < 0) balanceValueEl.classList.add('negative');
+    }
     
+    if (balanceProjectedEl) {
+        balanceProjectedEl.textContent = formatCurrency(saldoProjetado);
+        balanceProjectedEl.className = 'balance-projected';
+        if (saldoProjetado < 0) balanceProjectedEl.classList.add('negative');
+    }
+    
+    // Trend indicator
     const trend = document.getElementById('balanceTrend');
     if (trend) {
-        if (resultado > 0) {
+        const diff = saldoProjetado - saldoReal;
+        if (diff > 0) {
             trend.className = 'balance-trend positive';
-            trend.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${formatCurrency(resultado)}</span>`;
-        } else if (resultado < 0) {
+            trend.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${formatCurrency(diff)} projetado</span>`;
+        } else if (diff < 0) {
             trend.className = 'balance-trend negative';
-            trend.innerHTML = `<i class="fas fa-arrow-down"></i><span>${formatCurrency(Math.abs(resultado))}</span>`;
+            trend.innerHTML = `<i class="fas fa-arrow-down"></i><span>${formatCurrency(Math.abs(diff))} a pagar</span>`;
         } else {
             trend.className = 'balance-trend';
-            trend.innerHTML = `<i class="fas fa-minus"></i><span>R$ 0,00</span>`;
+            trend.innerHTML = `<i class="fas fa-check"></i><span>Sem pendências</span>`;
         }
     }
     
-    if (state.chartJsReady) {
-        updateCharts(allEntries);
+    // Atualizar gráficos
+    if (state.chartJsReady && state.chartsInitialized) {
+        updateCharts(realizadas);
+    } else if (state.chartJsReady && !state.chartsInitialized) {
+        initCharts();
+        updateCharts(realizadas);
     }
+    
     renderTransactions(allEntries);
 };
 
@@ -276,7 +327,7 @@ const updateDashboard = () => {
 // ===========================
 const initCharts = () => {
     if (!state.chartJsReady || typeof Chart === 'undefined') {
-        console.warn('Chart.js não disponível, pulando inicialização');
+        console.warn('Chart.js não disponível para inicialização');
         return;
     }
     
@@ -284,88 +335,131 @@ const initCharts = () => {
     const pieCtx = document.getElementById('pieChart')?.getContext('2d');
     
     if (!flowCtx || !pieCtx) {
-        console.warn('Canvas não encontrado para gráficos');
+        console.warn('Canvas não encontrado, tentando novamente em 1s');
+        setTimeout(initCharts, 1000);
         return;
     }
     
     Chart.defaults.color = '#9ca3af';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
     
-    state.flowChart = new Chart(flowCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Entradas',
-                data: [],
-                backgroundColor: 'rgba(0, 255, 136, 0.7)',
-                borderColor: '#00FF88',
-                borderWidth: 2
-            }, {
-                label: 'Saídas',
-                data: [],
-                backgroundColor: 'rgba(255, 0, 85, 0.7)',
-                borderColor: '#FF0055',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true, position: 'top' }
+    try {
+        state.flowChart = new Chart(flowCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Entradas',
+                    data: [],
+                    backgroundColor: 'rgba(0, 255, 136, 0.7)',
+                    borderColor: '#00FF88',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }, {
+                    label: 'Saídas',
+                    data: [],
+                    backgroundColor: 'rgba(255, 0, 85, 0.7)',
+                    borderColor: '#FF0055',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
             },
-            scales: {
-                y: { 
-                    beginAtZero: true,
-                    ticks: { 
-                        callback: v => 'R$ ' + v.toFixed(0)
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#9ca3af',
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { 
+                            callback: v => 'R$ ' + v.toFixed(0),
+                            color: '#9ca3af'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { display: false }
                     }
                 }
             }
-        }
-    });
-    
-    state.pieChart = new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Entradas', 'Saídas'],
-            datasets: [{
-                data: [0, 0],
-                backgroundColor: ['rgba(0, 255, 136, 0.7)', 'rgba(255, 0, 85, 0.7)'],
-                borderColor: ['#00FF88', '#FF0055'],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true, position: 'bottom' }
+        });
+        
+        state.pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Entradas', 'Saídas'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['rgba(0, 255, 136, 0.8)', 'rgba(255, 0, 85, 0.8)'],
+                    borderColor: ['#00FF88', '#FF0055'],
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: '#9ca3af',
+                            font: { size: 12 },
+                            padding: 15
+                        }
+                    }
+                }
             }
-        }
-    });
+        });
+        
+        state.chartsInitialized = true;
+        console.log('✅ Charts inicializados com sucesso');
+        
+    } catch (error) {
+        console.error('Erro ao inicializar charts:', error);
+        showToast('Erro ao criar gráficos', 'error');
+    }
 };
 
 const updateCharts = entries => {
-    if (!state.flowChart || !state.pieChart || !state.chartJsReady) return;
+    if (!state.chartsInitialized || !state.flowChart || !state.pieChart) {
+        console.warn('Charts não inicializados, pulando update');
+        return;
+    }
     
-    const grouped = groupByPeriod(entries);
-    const labels = Object.keys(grouped).sort();
-    
-    const entradasData = labels.map(l => grouped[l].entradas);
-    const saidasData = labels.map(l => grouped[l].saidas);
-    
-    state.flowChart.data.labels = labels;
-    state.flowChart.data.datasets[0].data = entradasData;
-    state.flowChart.data.datasets[1].data = saidasData;
-    state.flowChart.update();
-    
-    const totalEntradas = entradasData.reduce((a, b) => a + b, 0);
-    const totalSaidas = saidasData.reduce((a, b) => a + b, 0);
-    
-    state.pieChart.data.datasets[0].data = [totalEntradas, totalSaidas];
-    state.pieChart.update();
+    try {
+        const grouped = groupByPeriod(entries);
+        const labels = Object.keys(grouped).sort();
+        
+        const entradasData = labels.map(l => grouped[l].entradas);
+        const saidasData = labels.map(l => grouped[l].saidas);
+        
+        state.flowChart.data.labels = labels;
+        state.flowChart.data.datasets[0].data = entradasData;
+        state.flowChart.data.datasets[1].data = saidasData;
+        state.flowChart.update('none'); // Sem animação para performance
+        
+        const totalEntradas = entradasData.reduce((a, b) => a + b, 0);
+        const totalSaidas = saidasData.reduce((a, b) => a + b, 0);
+        
+        state.pieChart.data.datasets[0].data = [totalEntradas, totalSaidas];
+        state.pieChart.update('none');
+        
+    } catch (error) {
+        console.error('Erro ao atualizar charts:', error);
+    }
 };
 
 const groupByPeriod = entries => {
@@ -422,7 +516,11 @@ const renderTransactions = entries => {
 const createTransactionCard = t => {
     const icon = t.type === 'entrada' ? 'fa-arrow-up' : 'fa-arrow-down';
     const date = new Date(t.date).toLocaleDateString('pt-BR');
-    const source = t.source === 'service' ? '<span class="transaction-badge">Do Painel</span>' : '';
+    
+    const badges = [];
+    if (t.source === 'service') badges.push('<span class="transaction-badge badge-service">Do Painel</span>');
+    if (t.scheduled) badges.push('<span class="transaction-badge badge-scheduled">Programada</span>');
+    
     const actions = t.source !== 'service' ? `
         <div class="transaction-actions">
             <button class="btn-icon-small" onclick="editTransaction('${t.id}')" title="Editar">
@@ -435,7 +533,7 @@ const createTransactionCard = t => {
     ` : '';
     
     return `
-        <div class="transaction-item ${t.type}">
+        <div class="transaction-item ${t.type} ${t.scheduled ? 'scheduled' : ''}">
             <div class="transaction-info">
                 <div class="transaction-icon">
                     <i class="fas ${icon}"></i>
@@ -445,7 +543,7 @@ const createTransactionCard = t => {
                     <div class="transaction-meta">
                         <span><i class="fas fa-calendar"></i> ${date}</span>
                         ${t.category ? `<span><i class="fas fa-tag"></i> ${escapeHtml(t.category)}</span>` : ''}
-                        ${source}
+                        ${badges.join(' ')}
                     </div>
                 </div>
             </div>
@@ -465,6 +563,10 @@ window.openTransactionModal = type => {
     document.getElementById('transactionType').value = type;
     document.getElementById('transactionForm').reset();
     setTodayDate();
+    
+    // Mostrar campo "Programada"
+    const scheduledField = document.getElementById('scheduledField');
+    if (scheduledField) scheduledField.style.display = 'block';
     
     const title = type === 'entrada' ? 'Nova Entrada' : 'Nova Despesa';
     const icon = type === 'entrada' ? 'fa-plus-circle' : 'fa-minus-circle';
@@ -495,6 +597,7 @@ window.saveTransaction = async e => {
     const date = document.getElementById('date').value;
     const category = document.getElementById('category').value;
     const notes = document.getElementById('notes').value.trim();
+    const scheduled = document.getElementById('scheduled')?.checked || false;
     
     if (!description || !value || !date) {
         return showToast('Preencha todos os campos obrigatórios', 'error');
@@ -511,6 +614,7 @@ window.saveTransaction = async e => {
         date,
         category,
         notes,
+        scheduled,
         updatedAt: new Date().toISOString(),
         updatedBy: state.currentUser.email
     };
@@ -547,6 +651,14 @@ window.editTransaction = id => {
     document.getElementById('date').value = transaction.date;
     document.getElementById('category').value = transaction.category || '';
     document.getElementById('notes').value = transaction.notes || '';
+    
+    const scheduledCheckbox = document.getElementById('scheduled');
+    if (scheduledCheckbox) {
+        scheduledCheckbox.checked = transaction.scheduled || false;
+    }
+    
+    const scheduledField = document.getElementById('scheduledField');
+    if (scheduledField) scheduledField.style.display = 'block';
     
     const title = transaction.type === 'entrada' ? 'Editar Entrada' : 'Editar Despesa';
     const icon = 'fa-edit';
@@ -595,29 +707,13 @@ window.changePeriod = period => {
 
 window.filterTransactions = filter => {
     state.currentFilter = filter;
-    const { start, end } = getPeriodDates();
     
-    const serviceEntries = state.services
-        .filter(s => {
-            if (!s.createdAt || !s.value) return false;
-            const sDate = new Date(s.createdAt);
-            return sDate >= start && sDate <= end && s.value > 0;
-        })
-        .map(s => ({
-            type: 'entrada',
-            value: s.value,
-            date: s.createdAt,
-            description: `Venda: ${s.name}`,
-            category: 'Venda de Produto',
-            source: 'service'
-        }));
-    
-    const entries = [...state.transactions, ...serviceEntries].filter(t => {
-        const tDate = new Date(t.date);
-        return tDate >= start && tDate <= end;
+    // Atualizar visual dos botões
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.classList.remove('active');
     });
     
-    renderTransactions(entries);
+    updateDashboard();
 };
 
 const getPeriodDates = () => {
