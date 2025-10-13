@@ -3,7 +3,7 @@
 ARQUIVO: caixa/js/main-caixa.js
 MÓDULO: Gestão Financeira (Caixa) - Main
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 1.0
+VERSÃO: 1.1 - Corrigido (Chart.js + Permissions)
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -34,7 +34,8 @@ const state = {
     flowChart: null,
     pieChart: null,
     transactionsListener: null,
-    servicesListener: null
+    servicesListener: null,
+    chartJsReady: false
 };
 
 const CATEGORIES = {
@@ -54,11 +55,45 @@ try {
     alert('Erro crítico ao conectar ao Firebase.');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// ===========================
+// CHART.JS READY CHECK
+// ===========================
+const waitForChart = () => {
+    return new Promise((resolve) => {
+        if (typeof Chart !== 'undefined') {
+            state.chartJsReady = true;
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(checkInterval);
+                    state.chartJsReady = true;
+                    resolve();
+                }
+            }, 100);
+            
+            // Timeout após 5 segundos
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                console.error('Chart.js não carregou em 5 segundos');
+                showToast('Erro ao carregar gráficos. Recarregue a página.', 'error');
+                resolve(); // Resolve mesmo com erro para não travar
+            }, 5000);
+        }
+    });
+};
+
+// ===========================
+// DOM READY
+// ===========================
+document.addEventListener('DOMContentLoaded', async () => {
     if (!state.auth) {
         hideLoading();
         return alert('Erro ao inicializar autenticação.');
     }
+    
+    // Aguarda Chart.js carregar
+    await waitForChart();
     
     state.auth.onAuthStateChanged(user => {
         hideLoading();
@@ -69,17 +104,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.isAuthorized = true;
                 showDashboard(user);
                 startListeners();
-                initCharts();
+                if (state.chartJsReady) {
+                    initCharts();
+                }
                 setTodayDate();
             } else {
                 state.isAuthorized = false;
-                showToast('Acesso negado. Esta área é restrita.', 'error');
-                state.auth.signOut();
+                showToast('Acesso negado. Esta área é restrita aos administradores.', 'error');
+                setTimeout(() => state.auth.signOut(), 2000);
             }
         } else {
             state.isAuthorized = false;
             showLoginScreen();
         }
+    }, error => {
+        console.error('Erro no auth state:', error);
+        hideLoading();
+        showLoginScreen();
     });
 });
 
@@ -88,19 +129,25 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===========================
 window.signInWithGoogle = async () => {
     try {
-        await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await state.auth.signInWithPopup(provider);
     } catch (error) {
         console.error('Erro no login:', error);
-        showToast('Erro ao fazer login', 'error');
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('Login cancelado', 'info');
+        } else {
+            showToast('Erro ao fazer login', 'error');
+        }
     }
 };
 
 window.signOut = async () => {
     try {
         await state.auth.signOut();
-        showToast('Logout realizado', 'info');
+        showToast('Logout realizado com sucesso', 'info');
     } catch (error) {
         console.error('Erro no logout:', error);
+        showToast('Erro ao fazer logout', 'error');
     }
 };
 
@@ -108,6 +155,7 @@ window.signOut = async () => {
 // UI MANAGEMENT
 // ===========================
 const hideLoading = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
+
 const showLoginScreen = () => {
     document.getElementById('loginScreen')?.classList.remove('hidden');
     document.getElementById('dashboard')?.classList.add('hidden');
@@ -116,27 +164,48 @@ const showLoginScreen = () => {
 const showDashboard = user => {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('dashboard')?.classList.remove('hidden');
-    document.getElementById('userName').textContent = user.displayName || user.email;
-    document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email);
+    
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+    
+    if (userName) userName.textContent = user.displayName || user.email;
+    if (userPhoto) {
+        userPhoto.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff';
+    }
 };
 
 // ===========================
 // FIREBASE LISTENERS
 // ===========================
 const startListeners = () => {
+    // Listener para transações manuais
     state.transactionsListener = state.db.collection('transactions')
         .orderBy('date', 'desc')
-        .onSnapshot(snapshot => {
-            state.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateDashboard();
-        });
+        .onSnapshot(
+            snapshot => {
+                state.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateDashboard();
+            },
+            error => {
+                console.error('Erro no listener de transactions:', error);
+                if (error.code === 'permission-denied') {
+                    showToast('Sem permissão para acessar transações. Configure o Firestore.', 'error');
+                }
+            }
+        );
     
+    // Listener para serviços (entradas automáticas)
     state.servicesListener = state.db.collection('services')
         .where('value', '>', 0)
-        .onSnapshot(snapshot => {
-            state.services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateDashboard();
-        });
+        .onSnapshot(
+            snapshot => {
+                state.services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateDashboard();
+            },
+            error => {
+                console.error('Erro no listener de services:', error);
+            }
+        );
 };
 
 // ===========================
@@ -152,14 +221,15 @@ const updateDashboard = () => {
     
     const serviceEntries = state.services
         .filter(s => {
+            if (!s.createdAt || !s.value) return false;
             const sDate = new Date(s.createdAt);
             return sDate >= start && sDate <= end && s.value > 0;
         })
         .map(s => ({
             type: 'entrada',
-            value: s.value,
+            value: parseFloat(s.value),
             date: s.createdAt,
-            description: `Venda: ${s.name}`,
+            description: `Venda: ${s.name || 'Sem nome'}`,
             category: 'Venda de Produto',
             source: 'service',
             serviceId: s.id
@@ -171,24 +241,33 @@ const updateDashboard = () => {
     const saidas = allEntries.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const resultado = entradas - saidas;
     
-    document.getElementById('totalEntradas').textContent = formatCurrency(entradas);
-    document.getElementById('totalSaidas').textContent = formatCurrency(saidas);
-    document.getElementById('resultado').textContent = formatCurrency(resultado);
-    document.getElementById('balanceValue').textContent = formatCurrency(resultado);
+    const totalEntradasEl = document.getElementById('totalEntradas');
+    const totalSaidasEl = document.getElementById('totalSaidas');
+    const resultadoEl = document.getElementById('resultado');
+    const balanceValueEl = document.getElementById('balanceValue');
+    
+    if (totalEntradasEl) totalEntradasEl.textContent = formatCurrency(entradas);
+    if (totalSaidasEl) totalSaidasEl.textContent = formatCurrency(saidas);
+    if (resultadoEl) resultadoEl.textContent = formatCurrency(resultado);
+    if (balanceValueEl) balanceValueEl.textContent = formatCurrency(resultado);
     
     const trend = document.getElementById('balanceTrend');
-    if (resultado > 0) {
-        trend.className = 'balance-trend positive';
-        trend.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${formatCurrency(resultado)}</span>`;
-    } else if (resultado < 0) {
-        trend.className = 'balance-trend negative';
-        trend.innerHTML = `<i class="fas fa-arrow-down"></i><span>${formatCurrency(resultado)}</span>`;
-    } else {
-        trend.className = 'balance-trend';
-        trend.innerHTML = `<i class="fas fa-minus"></i><span>R$ 0,00</span>`;
+    if (trend) {
+        if (resultado > 0) {
+            trend.className = 'balance-trend positive';
+            trend.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${formatCurrency(resultado)}</span>`;
+        } else if (resultado < 0) {
+            trend.className = 'balance-trend negative';
+            trend.innerHTML = `<i class="fas fa-arrow-down"></i><span>${formatCurrency(Math.abs(resultado))}</span>`;
+        } else {
+            trend.className = 'balance-trend';
+            trend.innerHTML = `<i class="fas fa-minus"></i><span>R$ 0,00</span>`;
+        }
     }
     
-    updateCharts(allEntries);
+    if (state.chartJsReady) {
+        updateCharts(allEntries);
+    }
     renderTransactions(allEntries);
 };
 
@@ -196,10 +275,18 @@ const updateDashboard = () => {
 // CHARTS
 // ===========================
 const initCharts = () => {
+    if (!state.chartJsReady || typeof Chart === 'undefined') {
+        console.warn('Chart.js não disponível, pulando inicialização');
+        return;
+    }
+    
     const flowCtx = document.getElementById('flowChart')?.getContext('2d');
     const pieCtx = document.getElementById('pieChart')?.getContext('2d');
     
-    if (!flowCtx || !pieCtx) return;
+    if (!flowCtx || !pieCtx) {
+        console.warn('Canvas não encontrado para gráficos');
+        return;
+    }
     
     Chart.defaults.color = '#9ca3af';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -229,7 +316,12 @@ const initCharts = () => {
                 legend: { display: true, position: 'top' }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toFixed(0) } }
+                y: { 
+                    beginAtZero: true,
+                    ticks: { 
+                        callback: v => 'R$ ' + v.toFixed(0)
+                    }
+                }
             }
         }
     });
@@ -256,7 +348,7 @@ const initCharts = () => {
 };
 
 const updateCharts = entries => {
-    if (!state.flowChart || !state.pieChart) return;
+    if (!state.flowChart || !state.pieChart || !state.chartJsReady) return;
     
     const grouped = groupByPeriod(entries);
     const labels = Object.keys(grouped).sort();
@@ -376,18 +468,25 @@ window.openTransactionModal = type => {
     
     const title = type === 'entrada' ? 'Nova Entrada' : 'Nova Despesa';
     const icon = type === 'entrada' ? 'fa-plus-circle' : 'fa-minus-circle';
-    document.getElementById('modalTitle').innerHTML = `<i class="fas ${icon}"></i> ${title}`;
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas ${icon}"></i> ${title}`;
+    }
     
     populateCategories(type);
-    document.getElementById('transactionModal').classList.add('active');
+    document.getElementById('transactionModal')?.classList.add('active');
 };
 
 window.closeModal = () => {
-    document.getElementById('transactionModal').classList.remove('active');
+    document.getElementById('transactionModal')?.classList.remove('active');
 };
 
 window.saveTransaction = async e => {
     e.preventDefault();
+    
+    if (!state.isAuthorized) {
+        return showToast('Sem permissão para salvar', 'error');
+    }
     
     const id = document.getElementById('transactionId').value;
     const type = document.getElementById('transactionType').value;
@@ -399,6 +498,10 @@ window.saveTransaction = async e => {
     
     if (!description || !value || !date) {
         return showToast('Preencha todos os campos obrigatórios', 'error');
+    }
+    
+    if (value <= 0) {
+        return showToast('O valor deve ser maior que zero', 'error');
     }
     
     const transaction = {
@@ -425,7 +528,11 @@ window.saveTransaction = async e => {
         closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        showToast('Erro ao salvar transação', 'error');
+        if (error.code === 'permission-denied') {
+            showToast('Sem permissão. Configure as regras do Firestore.', 'error');
+        } else {
+            showToast('Erro ao salvar transação', 'error');
+        }
     }
 };
 
@@ -442,22 +549,33 @@ window.editTransaction = id => {
     document.getElementById('notes').value = transaction.notes || '';
     
     const title = transaction.type === 'entrada' ? 'Editar Entrada' : 'Editar Despesa';
-    const icon = transaction.type === 'entrada' ? 'fa-edit' : 'fa-edit';
-    document.getElementById('modalTitle').innerHTML = `<i class="fas ${icon}"></i> ${title}`;
+    const icon = 'fa-edit';
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas ${icon}"></i> ${title}`;
+    }
     
     populateCategories(transaction.type);
-    document.getElementById('transactionModal').classList.add('active');
+    document.getElementById('transactionModal')?.classList.add('active');
 };
 
 window.deleteTransaction = async id => {
-    if (!confirm('Excluir esta transação?')) return;
+    if (!state.isAuthorized) {
+        return showToast('Sem permissão', 'error');
+    }
+    
+    if (!confirm('Deseja realmente excluir esta transação?')) return;
     
     try {
         await state.db.collection('transactions').doc(id).delete();
         showToast('Transação excluída!', 'success');
     } catch (error) {
         console.error('Erro ao excluir:', error);
-        showToast('Erro ao excluir transação', 'error');
+        if (error.code === 'permission-denied') {
+            showToast('Sem permissão para excluir', 'error');
+        } else {
+            showToast('Erro ao excluir transação', 'error');
+        }
     }
 };
 
@@ -478,14 +596,23 @@ window.changePeriod = period => {
 window.filterTransactions = filter => {
     state.currentFilter = filter;
     const { start, end } = getPeriodDates();
-    const entries = [...state.transactions, ...state.services.map(s => ({
-        type: 'entrada',
-        value: s.value,
-        date: s.createdAt,
-        description: `Venda: ${s.name}`,
-        category: 'Venda de Produto',
-        source: 'service'
-    }))].filter(t => {
+    
+    const serviceEntries = state.services
+        .filter(s => {
+            if (!s.createdAt || !s.value) return false;
+            const sDate = new Date(s.createdAt);
+            return sDate >= start && sDate <= end && s.value > 0;
+        })
+        .map(s => ({
+            type: 'entrada',
+            value: s.value,
+            date: s.createdAt,
+            description: `Venda: ${s.name}`,
+            category: 'Venda de Produto',
+            source: 'service'
+        }));
+    
+    const entries = [...state.transactions, ...serviceEntries].filter(t => {
         const tDate = new Date(t.date);
         return tDate >= start && tDate <= end;
     });
@@ -527,14 +654,18 @@ const updatePeriodDisplay = () => {
         text = `Ano ${now.getFullYear()}`;
     }
     
-    document.getElementById('periodText').textContent = text;
+    const periodText = document.getElementById('periodText');
+    if (periodText) periodText.textContent = text;
 };
 
 // ===========================
 // UTILITIES
 // ===========================
 const formatCurrency = value => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL' 
+    }).format(value);
 };
 
 const escapeHtml = text => {
@@ -553,11 +684,14 @@ const getWeekNumber = date => {
 
 const setTodayDate = () => {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+    const dateInput = document.getElementById('date');
+    if (dateInput) dateInput.value = today;
 };
 
 const populateCategories = type => {
     const select = document.getElementById('category');
+    if (!select) return;
+    
     select.innerHTML = '<option value="">Selecione uma categoria</option>';
     
     CATEGORIES[type].forEach(cat => {
@@ -571,12 +705,20 @@ const showToast = (message, type = 'info') => {
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+    const icons = { 
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+    };
     toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${escapeHtml(message)}</span>`;
     
     container.appendChild(toast);
     setTimeout(() => {
         toast.classList.add('fade-out');
-        setTimeout(() => container.removeChild(toast), 300);
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
     }, 3000);
 };
