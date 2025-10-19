@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.4 - Remoção Individual de Arquivos
+VERSÃO: 3.3 - CPF + Autocomplete de Clientes
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -16,8 +16,7 @@ import {
     confirmStatusChange, 
     renderServices, 
     filterServices, 
-    uploadFile,
-    removeFileFromService
+    uploadFile 
 } from './services.js';
 
 // ===========================
@@ -128,7 +127,6 @@ export async function signInWithGoogle() {
         }
     }
 }
-
 export async function signOut() {
     try {
         state.auth && await state.auth.signOut();
@@ -219,6 +217,10 @@ export function showAccessDeniedScreen(user) {
     accessDeniedScreen.classList.remove('hidden');
 }
 
+// ===========================
+// UI MANAGEMENT
+// ===========================
+
 export const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
 
 // ===========================
@@ -264,79 +266,79 @@ async function migrateExistingClientsOnce() {
                         email: service.clientEmail || '',
                         phone: service.clientPhone || '',
                         address: service.deliveryMethod === 'sedex' && service.deliveryAddress ? service.deliveryAddress : null,
-                        createdAt: new Date().toISOString()
+                        createdAt: service.createdAt || new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
                     });
+                } else {
+                    const existing = clientsToMigrate.get(clientKey);
+                    if (!existing.cpf && service.clientCPF) existing.cpf = service.clientCPF;
+                    if (!existing.email && service.clientEmail) existing.email = service.clientEmail;
+                    if (!existing.phone && service.clientPhone) existing.phone = service.clientPhone;
+                    if (!existing.address && service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+                        existing.address = service.deliveryAddress;
+                    }
                 }
             }
         });
         
-        console.log(`📊 ${clientsToMigrate.size} clientes únicos encontrados`);
+        let migratedCount = 0;
         
         for (const [key, clientData] of clientsToMigrate) {
-            try {
-                await state.db.collection('clients').doc(key).set(clientData, { merge: true });
-            } catch (error) {
-                console.error(`Erro ao migrar cliente ${clientData.name}:`, error);
+            let existingClient = null;
+            
+            if (clientData.cpf) {
+                const cpfClean = clientData.cpf.replace(/\D/g, '');
+                existingClient = await state.db.collection('clients')
+                    .where('cpf', '==', cpfClean)
+                    .limit(1)
+                    .get();
             }
+            
+            if (!existingClient || existingClient.empty) {
+                existingClient = await state.db.collection('clients')
+                    .where('name', '==', clientData.name)
+                    .limit(1)
+                    .get();
+            }
+            
+            if (existingClient && !existingClient.empty) {
+                continue;
+            }
+            
+            const docToSave = { ...clientData };
+            if (docToSave.cpf) {
+                docToSave.cpf = docToSave.cpf.replace(/\D/g, '');
+            }
+            
+            await state.db.collection('clients').add(docToSave);
+            migratedCount++;
         }
         
         localStorage.setItem(migrationKey, 'true');
-        console.log('✅ Migração concluída com sucesso!');
+        console.log(`✅ Migração concluída: ${migratedCount} clientes migrados`);
         
-        await loadClientsFromFirestore();
+        if (migratedCount > 0) {
+            await loadClientsFromFirestore();
+            showToast(`✅ ${migratedCount} clientes migrados automaticamente!`, 'success');
+        }
         
     } catch (error) {
         console.error('Erro na migração de clientes:', error);
     }
 }
 
-export async function saveClientToFirestore(clientData) {
-    if (!state.db || !clientData.name) return;
-    
-    try {
-        const clientKey = clientData.name.toLowerCase().trim();
-        
-        const dataToSave = {
-            name: clientData.name,
-            cpf: clientData.cpf || '',
-            email: clientData.email || '',
-            phone: clientData.phone || '',
-            lastUpdated: new Date().toISOString()
-        };
-        
-        if (clientData.address) {
-            dataToSave.address = clientData.address;
-        }
-        
-        await state.db.collection('clients').doc(clientKey).set(dataToSave, { merge: true });
-        
-        const index = clientsCache.findIndex(c => c.id === clientKey);
-        if (index >= 0) {
-            clientsCache[index] = { id: clientKey, ...dataToSave };
-        } else {
-            clientsCache.push({ id: clientKey, ...dataToSave });
-        }
-        
-    } catch (error) {
-        console.error('Erro ao salvar cliente:', error);
-    }
-}
-
 export function handleClientNameInput(event) {
-    const input = event.target;
-    const value = input.value.trim().toLowerCase();
+    const value = event.target.value.trim().toLowerCase();
     const suggestionsDiv = document.getElementById('clientSuggestions');
     
-    if (!suggestionsDiv) return;
-    
-    if (value.length < 2) {
+    if (!value || value.length < 2) {
         suggestionsDiv.style.display = 'none';
         return;
     }
     
     const matches = clientsCache.filter(client => 
         client.name.toLowerCase().includes(value)
-    ).slice(0, 5);
+    );
     
     if (matches.length === 0) {
         suggestionsDiv.style.display = 'none';
@@ -344,12 +346,11 @@ export function handleClientNameInput(event) {
     }
     
     suggestionsDiv.innerHTML = matches.map(client => `
-        <div class="client-suggestion-item" onclick="window.selectClient('${escapeHtml(client.id)}')">
+        <div class="client-suggestion-item" onclick="window.selectClient('${client.id}')">
             <div class="client-suggestion-name">${escapeHtml(client.name)}</div>
             <div class="client-suggestion-details">
-                ${client.phone ? `📱 ${client.phone}` : ''}
-                ${client.email ? ` • 📧 ${client.email}` : ''}
-                ${client.cpf ? ` • 🆔 ${formatCPFDisplay(client.cpf)}` : ''}
+                ${client.cpf ? `CPF: ${client.cpf}` : ''}
+                ${client.email ? ` • ${client.email}` : ''}
             </div>
         </div>
     `).join('');
@@ -361,68 +362,66 @@ export function selectClient(clientId) {
     const client = clientsCache.find(c => c.id === clientId);
     if (!client) return;
     
-    document.getElementById('clientName').value = client.name;
-    document.getElementById('clientCPF') && (document.getElementById('clientCPF').value = client.cpf || '');
-    document.getElementById('clientEmail') && (document.getElementById('clientEmail').value = client.email || '');
-    document.getElementById('clientPhone') && (document.getElementById('clientPhone').value = client.phone || '');
-    
-    if (client.address && document.getElementById('deliveryMethod')?.value === 'sedex') {
-        document.getElementById('street') && (document.getElementById('street').value = client.address.street || '');
-        document.getElementById('number') && (document.getElementById('number').value = client.address.number || '');
-        document.getElementById('complement') && (document.getElementById('complement').value = client.address.complement || '');
-        document.getElementById('neighborhood') && (document.getElementById('neighborhood').value = client.address.neighborhood || '');
-        document.getElementById('city') && (document.getElementById('city').value = client.address.city || '');
-        document.getElementById('state') && (document.getElementById('state').value = client.address.state || '');
-        document.getElementById('cep') && (document.getElementById('cep').value = client.address.cep || '');
-    }
+    document.getElementById('clientName').value = client.name || '';
+    document.getElementById('clientCPF').value = client.cpf || '';
+    document.getElementById('clientEmail').value = client.email || '';
+    document.getElementById('clientPhone').value = client.phone || '';
     
     document.getElementById('clientSuggestions').style.display = 'none';
     
-    updateNotificationOptions();
+    showToast('✅ Dados do cliente preenchidos!', 'success');
 }
 
-export function copyClientDataToDelivery() {
-    const clientName = document.getElementById('clientName')?.value || '';
-    const clientPhone = document.getElementById('clientPhone')?.value || '';
+export async function saveClientToFirestore(clientData) {
+    if (!state.db || !clientData.name) return;
     
-    const pickupLocation = document.getElementById('pickupLocation');
-    const pickupWhatsapp = document.getElementById('pickupWhatsapp');
-    
-    if (pickupLocation && !pickupLocation.value) {
-        pickupLocation.value = clientName;
+    try {
+        const clientDoc = {
+            name: clientData.name,
+            cpf: clientData.cpf ? clientData.cpf.replace(/\D/g, '') : '',
+            email: clientData.email || '',
+            phone: clientData.phone || '',
+            address: clientData.address || null,
+            updatedAt: new Date().toISOString()
+        };
+        
+        let existingClient = null;
+        
+        if (clientData.cpf) {
+            const cpfClean = clientData.cpf.replace(/\D/g, '');
+            existingClient = await state.db.collection('clients')
+                .where('cpf', '==', cpfClean)
+                .limit(1)
+                .get();
+        }
+        
+        if (!existingClient || existingClient.empty) {
+            const nameLower = clientData.name.toLowerCase().trim();
+            existingClient = await state.db.collection('clients')
+                .where('name', '==', clientData.name)
+                .limit(1)
+                .get();
+        }
+        
+        if (existingClient && !existingClient.empty) {
+            const docId = existingClient.docs[0].id;
+            await state.db.collection('clients').doc(docId).update(clientDoc);
+            console.log('✅ Cliente atualizado:', clientData.name);
+        } else {
+            clientDoc.createdAt = new Date().toISOString();
+            await state.db.collection('clients').add(clientDoc);
+            console.log('✅ Novo cliente salvo:', clientData.name);
+        }
+        
+        await loadClientsFromFirestore();
+        
+    } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
     }
-    
-    if (pickupWhatsapp && !pickupWhatsapp.value) {
-        pickupWhatsapp.value = clientPhone;
-    }
-}
-
-export function formatCPF(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
-    
-    if (value.length > 9) {
-        value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    } else if (value.length > 6) {
-        value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-    } else if (value.length > 3) {
-        value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-    }
-    
-    event.target.value = value;
-}
-
-function formatCPFDisplay(cpf) {
-    if (!cpf) return '';
-    const cleaned = cpf.replace(/\D/g, '');
-    if (cleaned.length === 11) {
-        return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    return cpf;
 }
 
 // ===========================
-// MODAL MANAGEMENT
+// MODALS
 // ===========================
 export function openAddModal() {
     state.editingServiceId = null;
@@ -469,295 +468,365 @@ export function openEditModal(serviceId) {
     
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
+    document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
     
-    const form = document.getElementById('serviceForm');
-    if (form) {
-        document.getElementById('serviceName') && (document.getElementById('serviceName').value = service.name || '');
-        document.getElementById('clientName') && (document.getElementById('clientName').value = service.client || '');
-        document.getElementById('clientCPF') && (document.getElementById('clientCPF').value = service.clientCPF || '');
-        document.getElementById('clientEmail') && (document.getElementById('clientEmail').value = service.clientEmail || '');
-        document.getElementById('clientPhone') && (document.getElementById('clientPhone').value = service.clientPhone || '');
-        document.getElementById('serviceDescription') && (document.getElementById('serviceDescription').value = service.description || '');
-        document.getElementById('serviceMaterial') && (document.getElementById('serviceMaterial').value = service.material || '');
-        document.getElementById('serviceColor') && (document.getElementById('serviceColor').value = service.color || '');
-        document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = service.priority || 'media');
-        document.getElementById('startDate') && (document.getElementById('startDate').value = service.startDate || '');
-        document.getElementById('dueDate') && (document.getElementById('dueDate').value = service.dueDate || '');
-        document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = service.dateUndefined || false);
-        document.getElementById('serviceValue') && (document.getElementById('serviceValue').value = service.value || '');
-        document.getElementById('serviceWeight') && (document.getElementById('serviceWeight').value = service.weight || '');
-        document.getElementById('serviceObservations') && (document.getElementById('serviceObservations').value = service.observations || '');
-        document.getElementById('deliveryMethod') && (document.getElementById('deliveryMethod').value = service.deliveryMethod || '');
-        document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = service.status || 'pendente');
-        
-        toggleDateInput();
-        toggleDeliveryFields();
-        
-        if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-            Object.entries(service.deliveryAddress).forEach(([key, value]) => {
-                const field = document.getElementById(key);
-                field && (field.value = value || '');
-            });
-            
-            if (service.trackingCode && (service.status === 'retirada' || service.status === 'entregue')) {
-                const trackingField = document.getElementById('editTrackingCode');
-                if (trackingField) {
-                    trackingField.value = service.trackingCode;
-                    trackingField.parentElement.style.display = 'block';
-                }
-            }
-        } else if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-            document.getElementById('pickupLocation') && (document.getElementById('pickupLocation').value = service.pickupInfo.location || '');
-            document.getElementById('pickupWhatsapp') && (document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '');
+    Object.entries({
+        serviceName: service.name,
+        clientName: service.client,
+        clientCPF: service.clientCPF || '',
+        clientEmail: service.clientEmail,
+        clientPhone: service.clientPhone,
+        serviceDescription: service.description,
+        serviceMaterial: service.material,
+        serviceColor: service.color,
+        servicePriority: service.priority || 'media',
+        startDate: service.startDate,
+        dueDate: service.dueDate,
+        serviceValue: service.value,
+        serviceWeight: service.weight,
+        serviceObservations: service.observations,
+        serviceStatus: service.status || 'pendente',
+        deliveryMethod: service.deliveryMethod
+    }).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        el && (el.value = value || '');
+    });
+    
+    const notificationSection = document.getElementById('notificationSection');
+    if (notificationSection) notificationSection.style.display = 'none';
+    
+    const dateUndefined = document.getElementById('dateUndefined');
+    const dueDateInput = document.getElementById('dueDate');
+    if (dateUndefined) {
+        dateUndefined.checked = service.dateUndefined === true;
+        if (service.dateUndefined && dueDateInput) {
+            dueDateInput.disabled = true;
+            dueDateInput.value = '';
         }
-    }
-    
-    const orderCodeDisplay = document.getElementById('orderCodeDisplay');
-    if (orderCodeDisplay) {
-        orderCodeDisplay.style.display = 'block';
-        const codeValue = document.getElementById('orderCodeValue');
-        codeValue && (codeValue.textContent = service.orderCode || 'N/A');
     }
     
     const filesPreview = document.getElementById('filesPreview');
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');
     
-    if (service.files && service.files.length > 0 && filesPreview && filesPreviewContainer) {
-        filesPreviewContainer.innerHTML = service.files.map((file, idx) => `
-            <div class="file-item-wrapper existing-file">
+    if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
+    
+    if ((service.files && service.files.length > 0) || service.fileUrl) {
+        const filesToShow = service.files && service.files.length > 0 ? service.files : 
+                           service.fileUrl ? [{ url: service.fileUrl, name: service.fileName || 'Arquivo' }] : [];
+        
+        filesToShow.forEach((file, index) => {
+            const fileWrapper = document.createElement('div');
+            fileWrapper.className = 'file-item-wrapper existing-file';
+            fileWrapper.innerHTML = `
                 <div class="file-item-info">
                     <i class="fas fa-file"></i>
-                    <span>${escapeHtml(file.name)}</span>
+                    <span>${file.name || `Arquivo ${index + 1}`}</span>
                 </div>
-                <span class="existing-badge">Anexado</span>
-            </div>
-        `).join('');
-        filesPreview.style.display = 'block';
-    }
-    
-    const imagePreview = document.getElementById('imagePreview');
-    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-    
-    if (service.images && service.images.length > 0 && imagePreview && imagePreviewContainer) {
-        imagePreviewContainer.innerHTML = service.images.map((img, idx) => `
-            <div class="preview-image-wrapper existing-image">
-                <img src="${img.url}" alt="Imagem ${idx + 1}">
-                <span class="existing-badge">Anexada</span>
-            </div>
-        `).join('');
-        imagePreview.style.display = 'block';
-    }
-    
-    if (service.instagramPhoto && imagePreview && imagePreviewContainer) {
-        const instagramHTML = `
-            <div class="preview-image-wrapper existing-image">
-                <img src="${service.instagramPhoto}" alt="Foto Instagram">
-                <span class="existing-badge badge-instagram">Instagram</span>
-            </div>
-        `;
-        imagePreviewContainer.insertAdjacentHTML('beforeend', instagramHTML);
-        imagePreview.style.display = 'block';
-    }
-    
-    if (service.packagedPhotos && service.packagedPhotos.length > 0 && imagePreview && imagePreviewContainer) {
-        service.packagedPhotos.forEach((photo, idx) => {
-            const packagedHTML = `
-                <div class="preview-image-wrapper existing-image">
-                    <img src="${photo.url}" alt="Produto Embalado ${idx + 1}">
-                    <span class="existing-badge badge-packaged">Embalado</span>
-                </div>
+                <span class="existing-badge">Existente</span>
             `;
-            imagePreviewContainer.insertAdjacentHTML('beforeend', packagedHTML);
+            filesPreviewContainer.appendChild(fileWrapper);
         });
-        imagePreview.style.display = 'block';
+        
+        if (filesPreview) filesPreview.style.display = 'block';
     }
     
-    const notificationSection = document.getElementById('notificationSection');
-    if (notificationSection) notificationSection.style.display = 'none';
+    const preview = document.getElementById('imagePreview');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    
+    if (previewContainer) previewContainer.innerHTML = '';
+    
+    const allImagesToShow = [];
+    
+    if (service.images && service.images.length > 0) {
+        service.images.forEach(img => allImagesToShow.push({ ...img, type: 'regular' }));
+    }
+    
+    if (service.imageUrl && !(service.images && service.images.find(img => img.url === service.imageUrl))) {
+        allImagesToShow.push({ url: service.imageUrl, name: 'Imagem', type: 'regular' });
+    }
+    
+    if (service.instagramPhoto && !(service.images && service.images.find(img => img.url === service.instagramPhoto))) {
+        allImagesToShow.push({ url: service.instagramPhoto, name: 'Foto Instagramável', type: 'instagram' });
+    }
+    
+    if (service.packagedPhotos && service.packagedPhotos.length > 0) {
+        service.packagedPhotos.forEach(photo => allImagesToShow.push({ ...photo, type: 'packaged' }));
+    }
+    
+    if (allImagesToShow.length > 0) {
+        allImagesToShow.forEach((img, index) => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'preview-image-wrapper existing-image';
+            
+            let badgeText = 'Existente';
+            let badgeClass = 'existing-badge';
+            
+            if (img.type === 'instagram') {
+                badgeText = '📸 Instagramável';
+                badgeClass = 'existing-badge badge-instagram';
+            } else if (img.type === 'packaged') {
+                badgeText = '📦 Embalado';
+                badgeClass = 'existing-badge badge-packaged';
+            }
+            
+            imgWrapper.innerHTML = `
+                <img src="${img.url}" alt="Imagem ${index + 1}">
+                <span class="${badgeClass}">${badgeText}</span>
+            `;
+            previewContainer.appendChild(imgWrapper);
+        });
+        
+        if (preview) preview.style.display = 'block';
+    }
+    
+    if (service.deliveryMethod) {
+        toggleDeliveryFields();
+        
+        if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+            document.getElementById('pickupName') && (document.getElementById('pickupName').value = service.pickupInfo.name || '');
+            document.getElementById('pickupWhatsapp') && (document.getElementById('pickupWhatsapp').value = service.pickupInfo.whatsapp || '');
+        } else if (service.deliveryMethod === 'sedex') {
+            if (service.deliveryAddress) {
+                const addr = service.deliveryAddress;
+                Object.entries(addr).forEach(([key, value]) => {
+                    const el = document.getElementById(key);
+                    el && (el.value = value || '');
+                });
+            }
+            
+            const trackingField = document.getElementById('trackingCodeField');
+            const trackingInput = document.getElementById('editTrackingCode');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+                if (trackingInput) {
+                    trackingInput.value = service.trackingCode || '';
+                }
+            }
+        }
+    }
     
     document.getElementById('clientSuggestions').style.display = 'none';
     
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
-export const closeModal = () => {
+export function closeModal() {
     document.getElementById('serviceModal')?.classList.remove('active');
     state.editingServiceId = null;
     state.selectedFiles = [];
-    state.selectedImages = [];
-};
+    const trackingField = document.getElementById('trackingCodeField');
+    const trackingInput = document.getElementById('editTrackingCode');
+    if (trackingField) trackingField.style.display = 'none';
+    if (trackingInput) trackingInput.value = '';
+    
+    document.getElementById('clientSuggestions').style.display = 'none';
+}
 
-export const closeStatusModal = () => {
+export function closeStatusModal() {
     document.getElementById('statusModal')?.classList.remove('active');
     state.pendingStatusUpdate = null;
+    
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) photoField.style.display = 'none';
+    const photoInput = document.getElementById('instagramPhotoInput');
+    if (photoInput) photoInput.value = '';
+    
+    const packagedField = document.getElementById('packagedPhotoField');
+    if (packagedField) packagedField.style.display = 'none';
+    const packagedInput = document.getElementById('packagedPhotoInput');
+    if (packagedInput) packagedInput.value = '';
+    
+    const photoPreview = document.getElementById('instagramPhotoPreview');
+    const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
+    if (photoPreview) photoPreview.style.display = 'none';
+    if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
     state.pendingInstagramPhotos = [];
-    state.pendingPackagedPhotos = [];
     
-    const instagramPreview = document.getElementById('instagramPhotoPreview');
     const packagedPreview = document.getElementById('packagedPhotoPreview');
-    
-    if (instagramPreview) instagramPreview.style.display = 'none';
+    const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
     if (packagedPreview) packagedPreview.style.display = 'none';
+    if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
+    state.pendingPackagedPhotos = [];
+}
+
+export function showTrackingCodeModal() {
+    const modal = document.getElementById('trackingModal');
+    modal?.classList.add('active');
+    const input = document.getElementById('trackingCode');
+    input && (input.value = '', input.focus());
+}
+
+export const closeTrackingModal = () => {
+    document.getElementById('trackingModal')?.classList.remove('active');
+    state.pendingStatusUpdate = null;
 };
 
-export const closeTrackingModal = () => document.getElementById('trackingModal')?.classList.remove('active');
-export const closeDeliveryModal = () => document.getElementById('deliveryModal')?.classList.remove('active');
-
-// ===========================
-// DELIVERY INFO
-// ===========================
-export function showDeliveryInfo(serviceId) {
-    const service = state.services.find(s => s.id === serviceId);
-    if (!service) return;
-    
-    const modal = document.getElementById('deliveryModal');
-    const content = document.getElementById('deliveryInfoContent');
-    
-    if (!modal || !content) return;
-    
-    let html = `<h3><i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i> ${getDeliveryMethodName(service.deliveryMethod)}</h3>`;
-    
-    if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-        const addr = service.deliveryAddress;
-        html += `
-            <div class="delivery-details">
-                <p><strong>Endereço de Entrega:</strong></p>
-                <p>${addr.street}, ${addr.number}${addr.complement ? ' - ' + addr.complement : ''}</p>
-                <p>${addr.neighborhood}</p>
-                <p>${addr.city} - ${addr.state}</p>
-                <p>CEP: ${addr.cep}</p>
-                ${service.trackingCode ? `
-                    <p style="margin-top: 1rem;"><strong>Código de Rastreio:</strong></p>
-                    <p style="font-family: 'Orbitron', monospace; font-size: 1.1rem; color: var(--neon-purple);">${service.trackingCode}</p>
-                    <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" class="btn-primary" style="margin-top: 1rem; display: inline-flex;">
-                        <i class="fas fa-external-link-alt"></i> Rastrear nos Correios
-                    </a>
-                ` : ''}
-            </div>
-        `;
-    } else if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
-        html += `
-            <div class="delivery-details">
-                <p><strong>Local de Retirada:</strong></p>
-                <p>${service.pickupInfo.location || 'Não especificado'}</p>
-                ${service.pickupInfo.whatsapp ? `
-                    <p style="margin-top: 1rem;"><strong>Contato:</strong></p>
-                    <p>${service.pickupInfo.whatsapp}</p>
-                ` : ''}
-            </div>
-        `;
-    } else if (service.deliveryMethod === 'uber') {
-        html += `
-            <div class="delivery-details">
-                <p><i class="fas fa-motorcycle"></i> <strong>Entrega via Uber Flash</strong></p>
-                <p>Entrega rápida por motoboy</p>
-            </div>
-        `;
-    } else if (service.deliveryMethod === 'definir') {
-        html += `
-            <div class="delivery-details">
-                <p><i class="fas fa-handshake"></i> <strong>Entrega a Combinar</strong></p>
-                <p>Forma de entrega será definida diretamente com o cliente</p>
-            </div>
-        `;
-    }
-    
-    content.innerHTML = html;
-    modal.classList.add('active');
-}
-
-// ===========================
-// STATUS MODAL
-// ===========================
-export function showStatusModalWithPhoto(service, newStatus) {
-    const modal = document.getElementById('statusModal');
-    const message = document.getElementById('statusModalMessage');
-    const instagramField = document.getElementById('instagramPhotoField');
-    const packagedField = document.getElementById('packagedPhotoField');
-    const whatsappOption = document.getElementById('whatsappOption');
-    const emailOption = document.getElementById('emailOption');
-    
-    if (!modal) return;
-    
-    if (message) {
-        message.textContent = `Confirmar mudança de status para "${getStatusLabel(newStatus)}"?`;
-    }
-    
-    if (instagramField) instagramField.style.display = 'none';
-    if (packagedField) packagedField.style.display = 'none';
-    
-    if (whatsappOption) whatsappOption.style.display = service.clientPhone ? 'block' : 'none';
-    if (emailOption) emailOption.style.display = service.clientEmail ? 'block' : 'none';
-    
-    modal.classList.add('active');
-}
-
-export function showStatusModalWithPackagedPhoto(service, newStatus) {
-    const modal = document.getElementById('statusModal');
-    const message = document.getElementById('statusModalMessage');
-    const packagedField = document.getElementById('packagedPhotoField');
-    const instagramField = document.getElementById('instagramPhotoField');
-    const whatsappOption = document.getElementById('whatsappOption');
-    const emailOption = document.getElementById('emailOption');
-    
-    if (!modal) return;
-    
-    if (message) {
-        message.textContent = `Anexe foto(s) do produto embalado para marcar como "${getStatusLabel(newStatus)}"`;
-    }
-    
-    if (packagedField) packagedField.style.display = 'block';
-    if (instagramField) instagramField.style.display = 'none';
-    
-    if (whatsappOption) whatsappOption.style.display = service.clientPhone ? 'block' : 'none';
-    if (emailOption) emailOption.style.display = service.clientEmail ? 'block' : 'none';
-    
-    modal.classList.add('active');
-}
-
-export function showTrackingCodeModal(service) {
-    const modal = document.getElementById('trackingModal');
-    const input = document.getElementById('trackingCode');
-    
-    if (!modal || !input) return;
-    
-    input.value = service.trackingCode || '';
-    modal.classList.add('active');
-}
-
 export async function confirmTrackingCode() {
+    const trackingInput = document.getElementById('trackingCode');
+    if (!trackingInput?.value.trim()) return showToast('Insira o código de rastreio', 'error');
     if (!state.pendingStatusUpdate) return;
     
-    const trackingCode = document.getElementById('trackingCode')?.value.trim().toUpperCase();
-    
-    if (!trackingCode) {
-        return showToast('Digite o código de rastreio', 'error');
-    }
-    
-    const { serviceId, newStatus } = state.pendingStatusUpdate;
+    const { serviceId, service } = state.pendingStatusUpdate;
+    const trackingCode = trackingInput.value.trim().toUpperCase();
     
     try {
         await state.db.collection('services').doc(serviceId).update({
+            status: 'retirada',
             trackingCode,
-            status: newStatus,
-            readyAt: new Date().toISOString(),
             postedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             updatedBy: state.currentUser.email
         });
         
-        showToast('Código de rastreio salvo!', 'success');
-        closeTrackingModal();
-        state.pendingStatusUpdate = null;
+        showToast('Pedido marcado como postado!', 'success');
+        
+        if (service.clientPhone) {
+            const message = `Seu pedido foi postado nos Correios!\n\n» ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
+            sendWhatsAppMessage(service.clientPhone, message);
+        }
     } catch (error) {
-        console.error('Erro ao salvar código:', error);
-        showToast('Erro ao salvar código de rastreio', 'error');
+        console.error('Erro:', error);
+        showToast('Erro ao atualizar status', 'error');
     }
+    closeTrackingModal();
 }
 
-// ===========================
-// IMAGE & FILE VIEWERS
-// ===========================
+export function showStatusModalWithPhoto(service, newStatus) {
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`);
+    
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) {
+        photoField.style.display = 'block';
+        const photoInput = document.getElementById('instagramPhotoInput');
+        if (photoInput) photoInput.value = '';
+        
+        const photoPreview = document.getElementById('instagramPhotoPreview');
+        const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
+        if (photoPreview) photoPreview.style.display = 'none';
+        if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
+        state.pendingInstagramPhotos = [];
+    }
+    
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption) {
+        const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
+        if (hasEmail) {
+            emailOption.style.display = 'block';
+            const emailCheckbox = document.getElementById('sendEmailNotification');
+            if (emailCheckbox) emailCheckbox.checked = true;
+        } else {
+            emailOption.style.display = 'none';
+        }
+    }
+    
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) whatsappOption.style.display = 'none';
+    
+    document.getElementById('statusModal')?.classList.add('active');
+}
+
+export function showStatusModalWithPackagedPhoto(service, newStatus) {
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Para marcar como Pronto/Postado, é obrigatório anexar uma ou mais fotos do produto embalado "${service.name}"`);
+    
+    const packagedField = document.getElementById('packagedPhotoField');
+    if (packagedField) {
+        packagedField.style.display = 'block';
+        const packagedInput = document.getElementById('packagedPhotoInput');
+        if (packagedInput) packagedInput.value = '';
+        
+        const packagedPreview = document.getElementById('packagedPhotoPreview');
+        const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
+        if (packagedPreview) packagedPreview.style.display = 'none';
+        if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
+        state.pendingPackagedPhotos = [];
+    }
+    
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption) emailOption.style.display = 'none';
+    
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) {
+        const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
+        if (hasPhone) {
+            whatsappOption.style.display = 'block';
+            const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
+            if (whatsappCheckbox) whatsappCheckbox.checked = true;
+        } else {
+            whatsappOption.style.display = 'none';
+        }
+    }
+    
+    document.getElementById('statusModal')?.classList.add('active');
+}
+
+export function showDeliveryInfo(serviceId) {
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    const content = document.getElementById('deliveryInfoContent');
+    if (!content) return;
+    
+    let html = `
+        <div class="info-section">
+            <h3 class="info-title"><i class="fas fa-truck"></i> Método de Entrega</h3>
+            <div class="info-row">
+                <span class="info-label">Tipo</span>
+                <span class="info-value">${getDeliveryMethodName(service.deliveryMethod)}</span>
+            </div>
+        </div>`;
+    
+    if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
+        const pickup = service.pickupInfo;
+        const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
+        const message = encodeURIComponent(`Olá ${pickup.name}!\n\nSeu pedido está pronto para retirada!\n\n» Pedido: ${service.name}\n» Código: ${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
+        
+        html += `
+            <div class="info-section">
+                <h3 class="info-title"><i class="fas fa-user-check"></i> Informações para Retirada</h3>
+                <div class="info-row">
+                    <span class="info-label">Nome</span>
+                    <span class="info-value">${pickup.name || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">WhatsApp</span>
+                    <span class="info-value">
+                        <a href="https://wa.me/55${whatsappNumber}?text=${message}" target="_blank" style="color: var(--neon-green);">
+                            <i class="fab fa-whatsapp"></i> ${pickup.whatsapp}
+                        </a>
+                    </span>
+                </div>
+            </div>`;
+    }
+    
+    if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
+        const addr = service.deliveryAddress;
+        html += `
+            <div class="info-section">
+                <h3 class="info-title"><i class="fas fa-user"></i> Destinatário</h3>
+                <div class="info-row"><span class="info-label">Nome</span><span class="info-value">${addr.fullName || '-'}</span></div>
+                <div class="info-row"><span class="info-label">CPF/CNPJ</span><span class="info-value">${addr.cpfCnpj || '-'}</span></div>
+                <div class="info-row"><span class="info-label">E-mail</span><span class="info-value">${addr.email || '-'}</span></div>
+                <div class="info-row"><span class="info-label">Telefone</span><span class="info-value">${addr.telefone || '-'}</span></div>
+            </div>
+            
+            <div class="info-section">
+                <h3 class="info-title"><i class="fas fa-map-marker-alt"></i> Endereço</h3>
+                <div class="info-row"><span class="info-label">CEP</span><span class="info-value">${addr.cep || '-'}</span></div>
+                <div class="info-row"><span class="info-label">Endereço</span><span class="info-value">${addr.rua || ''}, ${addr.numero || 's/n'}</span></div>
+                ${addr.complemento ? `<div class="info-row"><span class="info-label">Complemento</span><span class="info-value">${addr.complemento}</span></div>` : ''}
+                <div class="info-row"><span class="info-label">Bairro</span><span class="info-value">${addr.bairro || '-'}</span></div>
+                <div class="info-row"><span class="info-label">Cidade/Estado</span><span class="info-value">${addr.cidade || '-'} / ${addr.estado || '-'}</span></div>
+            </div>`;
+    }
+    
+    content.innerHTML = html;
+    document.getElementById('deliveryInfoModal')?.classList.add('active');
+}
+
+export const closeDeliveryModal = () => document.getElementById('deliveryInfoModal')?.classList.remove('active');
+
 export function showServiceImages(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) return;
@@ -822,73 +891,40 @@ export function showServiceFiles(serviceId) {
     }
     
     if (allFiles.length > 0) {
-        showFilesModal(service.name || 'Serviço', allFiles, serviceId);
+        showFilesModal(allFiles, service.name || 'Serviço');
     }
 }
 
-export function showFilesModal(serviceName, files, serviceId) {
+export function showFilesModal(files, serviceName) {
     const modal = document.getElementById('filesViewerModal');
+    if (!modal) return;
+    
     const title = document.getElementById('filesViewerTitle');
     const container = document.getElementById('filesListContainer');
     
-    if (!modal || !title || !container) return;
+    if (title) title.textContent = `Arquivos - ${serviceName}`;
     
-    title.innerHTML = `<i class="fas fa-file"></i> Arquivos de ${escapeHtml(serviceName)}`;
-    
-    if (!files || files.length === 0) {
-        container.innerHTML = '<p class="no-files-message">Nenhum arquivo anexado</p>';
-    } else {
-        container.innerHTML = files.map((file, index) => {
-            const fileName = file.name || 'arquivo-sem-nome';
-            const fileSize = file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Tamanho desconhecido';
-            const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString('pt-BR') : '';
-            const fileExtension = fileName.split('.').pop().toLowerCase();
-            
-            let fileIcon = 'fa-file';
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) fileIcon = 'fa-file-image';
-            else if (['pdf'].includes(fileExtension)) fileIcon = 'fa-file-pdf';
-            else if (['stl', 'obj', '3mf', 'gcode'].includes(fileExtension)) fileIcon = 'fa-cube';
-            else if (['zip', 'rar', '7z'].includes(fileExtension)) fileIcon = 'fa-file-zipper';
-            
-            return `
-                <div class="file-item">
-                    <div class="file-icon-wrapper">
-                        <i class="fas ${fileIcon}"></i>
-                    </div>
-                    <div class="file-info">
-                        <div class="file-name">${escapeHtml(fileName)}</div>
-                        <div class="file-meta">
-                            <span>${fileSize}</span>
-                            ${uploadDate ? `<span>• ${uploadDate}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="file-actions">
-                        <button class="btn-icon-action" onclick="window.open('${file.url}', '_blank')" title="Abrir arquivo">
-                            <i class="fas fa-external-link-alt"></i>
-                        </button>
-                        <a href="${file.url}" download="${fileName}" class="btn-icon-action" title="Baixar arquivo">
-                            <i class="fas fa-download"></i>
-                        </a>
-                        ${state.isAuthorized ? `
-                        <button class="btn-icon-action btn-remove-file" 
-                                onclick="window.removeFileFromService('${serviceId}', ${index}, '${file.url}')" 
-                                title="Remover arquivo">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                        ` : ''}
-                    </div>
+    if (container) {
+        container.innerHTML = files.map((file, index) => `
+            <div class="file-list-item">
+                <div class="file-list-icon">
+                    <i class="fas fa-file"></i>
                 </div>
-            `;
-        }).join('');
+                <div class="file-list-info">
+                    <span class="file-list-name">${escapeHtml(file.name)}</span>
+                    ${file.size ? `<span class="file-list-size">${formatFileSize(file.size)}</span>` : ''}
+                </div>
+                <button class="btn-download-file" onclick="window.downloadFile('${file.url}', '${escapeHtml(file.name)}')">
+                    <i class="fas fa-download"></i> Baixar
+                </button>
+            </div>
+        `).join('');
     }
     
-    modal.classList.add('show');
+    modal.classList.add('active');
 }
 
-export const closeFilesModal = () => {
-    const modal = document.getElementById('filesViewerModal');
-    if (modal) modal.classList.remove('show');
-};
+export const closeFilesModal = () => document.getElementById('filesViewerModal')?.classList.remove('active');
 
 export function showImageModal(images, serviceName, startIndex = 0) {
     if (typeof images === 'string') {
@@ -1093,8 +1129,25 @@ export function removePreviewImage(index) {
         const preview = document.getElementById('imagePreview');
         if (preview) preview.style.display = 'none';
     } else {
-        const event = { target: { files: state.selectedImages } };
-        handleImageSelect(event);
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        if (previewContainer) {
+            previewContainer.innerHTML = '';
+            state.selectedImages.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'preview-image-wrapper';
+                    imgWrapper.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${idx + 1}">
+                        <button type="button" class="btn-remove-preview" onclick="window.removePreviewImage(${idx})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    previewContainer.appendChild(imgWrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
     }
 }
 
@@ -1104,15 +1157,12 @@ export function removeFilePreview(index) {
     if (fileInput) fileInput.value = '';
     
     if (state.selectedFiles.length === 0) {
-        const filesPreview = document.getElementById('filesPreview');
-        if (filesPreview) filesPreview.style.display = 'none';
+        const preview = document.getElementById('filesPreview');
+        if (preview) preview.style.display = 'none';
     } else {
-        const filesPreview = document.getElementById('filesPreview');
         const previewContainer = document.getElementById('filesPreviewContainer');
-        
-        if (previewContainer && filesPreview) {
+        if (previewContainer) {
             previewContainer.innerHTML = '';
-            
             state.selectedFiles.forEach((file, idx) => {
                 const fileWrapper = document.createElement('div');
                 fileWrapper.className = 'file-item-wrapper';
@@ -1162,7 +1212,7 @@ export function handleInstagramPhotoSelect(event) {
             return false;
         }
         if (file.size > maxSize) {
-            showToast(`Foto muito grande: ${file.name}. Máximo: 5MB`, 'error');
+            showToast(`Foto muito grande: ${file.name}. Máximo: 5MB.`, 'error');
             return false;
         }
         return true;
@@ -1210,6 +1260,8 @@ function removeInstagramPhoto(index) {
     if (fileInput) fileInput.value = '';
     renderInstagramPhotoPreviews();
 }
+
+state.pendingPackagedPhotos = [];
 
 export function handlePackagedPhotoSelect(event) {
     const files = Array.from(event.target.files);
@@ -1296,104 +1348,249 @@ export function toggleDateInput() {
     if (dateInput && checkbox) {
         dateInput.disabled = dateInput.required = checkbox.checked;
         dateInput.value = checkbox.checked ? '' : getTodayBrazil();
+        dateInput.required = !checkbox.checked;
     }
 }
 
 export function toggleDeliveryFields() {
     const method = document.getElementById('deliveryMethod')?.value;
-    const deliveryFields = document.getElementById('deliveryFields');
-    const pickupFields = document.getElementById('pickupFields');
+    
+    if (state.editingServiceId) {
+        const service = state.services.find(s => s.id === state.editingServiceId);
+        if (service && service.trackingCode && service.deliveryMethod === 'sedex' && method !== 'sedex') {
+            showToast('ATENÇÃO: Este pedido já foi postado! Não é possível mudar o método de entrega.', 'error');
+            document.getElementById('deliveryMethod').value = 'sedex';
+            hideAllDeliveryFields();
+            document.getElementById('deliveryFields')?.classList.add('active');
+            
+            const trackingField = document.getElementById('trackingCodeField');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+                const trackingInput = document.getElementById('editTrackingCode');
+                if (trackingInput && service.trackingCode) {
+                    trackingInput.value = service.trackingCode;
+                }
+            }
+            return;
+        }
+    }
     
     hideAllDeliveryFields();
     
-    if (method === 'sedex' && deliveryFields) {
-        deliveryFields.classList.add('active');
-    } else if (method === 'retirada' && pickupFields) {
-        pickupFields.classList.add('active');
+    if (method === 'retirada') {
+        document.getElementById('pickupFields')?.classList.add('active');
+    } else if (method === 'sedex') {
+        document.getElementById('deliveryFields')?.classList.add('active');
+        if (state.editingServiceId) {
+            const trackingField = document.getElementById('trackingCodeField');
+            if (trackingField) {
+                trackingField.style.display = 'block';
+            }
+        }
+    }
+    
+    if (method !== 'sedex') {
+        const trackingField = document.getElementById('trackingCodeField');
+        if (trackingField) {
+            trackingField.style.display = 'none';
+        }
     }
 }
 
-function hideAllDeliveryFields() {
-    document.getElementById('deliveryFields')?.classList.remove('active');
-    document.getElementById('pickupFields')?.classList.remove('active');
-}
+export const hideAllDeliveryFields = () => {
+    ['pickupFields', 'deliveryFields'].forEach(id => 
+        document.getElementById(id)?.classList.remove('active')
+    );
+};
 
 export function updateNotificationOptions() {
-    const phone = document.getElementById('clientPhone')?.value;
-    const email = document.getElementById('clientEmail')?.value;
+    const phone = document.getElementById('clientPhone')?.value.trim();
+    const email = document.getElementById('clientEmail')?.value.trim();
     const notificationSection = document.getElementById('notificationSection');
+    const whatsappOption = document.getElementById('createWhatsappOption');
+    const emailOption = document.getElementById('createEmailOption');
     
-    if (notificationSection && (phone || email)) {
-        notificationSection.style.display = 'block';
+    if (!state.editingServiceId && (phone || email)) {
+        if (notificationSection) notificationSection.style.display = 'block';
+        
+        if (whatsappOption) {
+            whatsappOption.style.display = phone ? 'block' : 'none';
+        }
+        
+        if (emailOption) {
+            emailOption.style.display = email ? 'block' : 'none';
+        }
     } else if (notificationSection) {
         notificationSection.style.display = 'none';
     }
 }
 
-export async function buscarCEP() {
-    const cepInput = document.getElementById('cep');
-    if (!cepInput) return;
+export function formatPhoneNumber(e) {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (value.length > 6) value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    else if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    else if (value.length > 0) value = `(${value}`;
+    e.target.value = value;
+}
+
+export function formatCPF(e) {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (value.length > 9) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+    else if (value.length > 6) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+    else if (value.length > 3) value = `${value.slice(0, 3)}.${value.slice(3)}`;
+    e.target.value = value;
+}
+
+export function formatCEP(e) {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 8);
+    if (value.length > 5) value = `${value.slice(0, 5)}-${value.slice(5)}`;
+    e.target.value = value;
+}
+
+export function copyClientDataToDelivery() {
+    const clientName = document.getElementById('clientName')?.value.trim();
+    const clientCPF = document.getElementById('clientCPF')?.value.trim();
+    const clientEmail = document.getElementById('clientEmail')?.value.trim();
+    const clientPhone = document.getElementById('clientPhone')?.value.trim();
     
-    const cep = cepInput.value.replace(/\D/g, '');
-    
-    if (cep.length !== 8) {
-        return showToast('CEP inválido', 'error');
+    if (!clientName && !clientCPF && !clientEmail && !clientPhone) {
+        return showToast('Preencha os dados do cliente primeiro', 'warning');
     }
+    
+    if (clientName) document.getElementById('fullName').value = clientName;
+    if (clientCPF) document.getElementById('cpfCnpj').value = clientCPF;
+    if (clientEmail) document.getElementById('email').value = clientEmail;
+    if (clientPhone) document.getElementById('telefone').value = clientPhone;
+    
+    showToast('✅ Dados copiados para a entrega!', 'success');
+}
+
+export async function buscarCEP() {
+    const cep = document.getElementById('cep')?.value.replace(/\D/g, '');
+    if (!cep || cep.length !== 8) return;
     
     try {
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         
-        if (data.erro) {
-            return showToast('CEP não encontrado', 'error');
+        if (!data.erro) {
+            ['rua', 'bairro', 'cidade', 'estado'].forEach(field => {
+                const el = document.getElementById(field);
+                const value = field === 'rua' ? data.logradouro : 
+                              field === 'cidade' ? data.localidade : 
+                              field === 'estado' ? data.uf : data[field];
+                el && (el.value = value || '');
+            });
         }
-        
-        document.getElementById('street') && (document.getElementById('street').value = data.logradouro || '');
-        document.getElementById('neighborhood') && (document.getElementById('neighborhood').value = data.bairro || '');
-        document.getElementById('city') && (document.getElementById('city').value = data.localidade || '');
-        document.getElementById('state') && (document.getElementById('state').value = data.uf || '');
-        
-        document.getElementById('number')?.focus();
-        
-        showToast('CEP encontrado!', 'success');
     } catch (error) {
         console.error('Erro ao buscar CEP:', error);
-        showToast('Erro ao buscar CEP', 'error');
     }
 }
 
-export const formatPhoneNumber = event => {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
-    
-    if (value.length > 10) {
-        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (value.length > 6) {
-        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else if (value.length > 2) {
-        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-    }
-    
-    event.target.value = value;
+// ===========================
+// DATE UTILITIES
+// ===========================
+export function getTodayBrazil() {
+    const now = new Date();
+    const brazilTime = new Date(now.getTime() - (now.getTimezoneOffset() + 180) * 60000);
+    brazilTime.setHours(0, 0, 0, 0);
+    return brazilTime.toISOString().split('T')[0];
+}
+
+export function parseDateBrazil(dateString) {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0);
+}
+
+export function calculateDaysRemaining(dueDate) {
+    if (!dueDate) return null;
+    const due = parseDateBrazil(dueDate);
+    const today = parseDateBrazil(getTodayBrazil());
+    return due && today ? Math.round((due - today) / 86400000) : null;
+}
+
+// ===========================
+// FORMATTING UTILITIES
+// ===========================
+export const escapeHtml = text => text ? text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : '';
+
+export const formatDaysText = days => days === null ? 'Sem prazo' : days === 0 ? 'Entrega hoje' : days === 1 ? 'Entrega amanhã' : days < 0 ? `${Math.abs(days)} dias atrás` : `${days} dias`;
+
+export const getDaysColor = days => days === null ? 'var(--text-secondary)' : days < 0 ? 'var(--neon-red)' : days === 0 ? 'var(--neon-orange)' : days <= 2 ? 'var(--neon-yellow)' : 'var(--text-secondary)';
+
+export const formatDate = dateString => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
+
+export const formatColorName = color => ({
+    'preto': 'Preto', 'branco': 'Branco', 'vermelho': 'Vermelho', 'azul': 'Azul',
+    'verde': 'Verde', 'amarelo': 'Amarelo', 'laranja': 'Laranja', 'roxo': 'Roxo',
+    'cinza': 'Cinza', 'transparente': 'Transparente', 'colorido': 'Colorido', 'outros': 'Outras'
+}[color] || color);
+
+export const formatMoney = value => (!value || isNaN(value)) ? '0,00' : value.toFixed(2).replace('.', ',');
+
+export const formatFileSize = bytes => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-export const formatCEP = event => {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length > 8) value = value.slice(0, 8);
-    value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    event.target.value = value;
+export const getDeliveryMethodName = method => ({
+    'retirada': 'Retirada no Local', 'sedex': 'Sedex/Correios',
+    'uber': 'Uber Flash', 'definir': 'A Definir'
+}[method] || method);
+
+export const getDeliveryIcon = method => ({
+    'retirada': 'fa-store', 'sedex': 'fa-shipping-fast',
+    'uber': 'fa-motorcycle', 'definir': 'fa-question-circle'
+}[method] || 'fa-truck');
+
+export const getStatusLabel = status => ({
+    'todos': 'Ativos', 'pendente': 'Pendentes', 'producao': 'Em Produção',
+    'concluido': 'Concluídos', 'retirada': 'Em Processo de Entrega', 'entregue': 'Entregues'
+}[status] || status);
+
+export const getStatusIcon = status => ({
+    'pendente': 'fa-clock', 'producao': 'fa-cogs', 'concluido': 'fa-check',
+    'retirada': 'fa-box-open', 'entregue': 'fa-handshake'
+}[status] || 'fa-question');
+
+export const isStatusCompleted = (currentStatus, checkStatus) => {
+    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+    return statusOrder.indexOf(currentStatus) > statusOrder.indexOf(checkStatus);
+};
+
+// ===========================
+// NOTIFICATIONS
+// ===========================
+export function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
+    
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => container.contains(toast) && container.removeChild(toast), 300);
+    }, 3000);
+}
+
+export const sendWhatsAppMessage = (phone, message) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
 };
 
 export const contactClient = (phone, serviceName, orderCode) => {
     const message = `Olá!\n\nSobre seu pedido:\n\n» Serviço: ${serviceName}\n» Código: #${orderCode}\n\nPode falar agora?`;
     sendWhatsAppMessage(phone, message);
-};
-
-const sendWhatsAppMessage = (phone, message) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
 };
 
 export async function sendEmailNotification(service) {
@@ -1417,142 +1614,8 @@ export async function sendEmailNotification(service) {
 }
 
 // ===========================
-// UTILITY FUNCTIONS
+// CONNECTION MONITORING
 // ===========================
-export const showToast = (message, type = 'info') => {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    
-    toast.innerHTML = `
-        <i class="fas ${icons[type] || icons.info}"></i>
-        <span>${message}</span>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-};
-
-export const escapeHtml = text => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-};
-
-export const getTodayBrazil = () => {
-    const now = new Date();
-    now.setHours(now.getHours() - 3);
-    return now.toISOString().split('T')[0];
-};
-
-export const parseDateBrazil = dateStr => {
-    if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-};
-
-export const calculateDaysRemaining = dueDate => {
-    if (!dueDate) return null;
-    const due = parseDateBrazil(dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-};
-
-export const formatDate = dateStr => {
-    if (!dateStr) return 'N/A';
-    const date = parseDateBrazil(dateStr);
-    return date ? date.toLocaleDateString('pt-BR') : 'N/A';
-};
-
-export const formatMoney = value => {
-    if (!value) return 'R$ 0,00';
-    return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
-};
-
-export const formatColorName = color => {
-    if (!color) return '';
-    return color.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
-export const formatDaysText = days => {
-    if (days === null) return 'N/A';
-    if (days < 0) return `${Math.abs(days)} dias atrasado`;
-    if (days === 0) return 'Vence hoje';
-    if (days === 1) return 'Vence amanhã';
-    return `${days} dias restantes`;
-};
-
-export const getDaysColor = days => {
-    if (days === null) return 'var(--text-secondary)';
-    if (days < 0) return 'var(--neon-red)';
-    if (days === 0) return 'var(--neon-orange)';
-    if (days <= 2) return 'var(--neon-yellow)';
-    return 'rgba(255, 255, 255, 0.2)';
-};
-
-export const getDeliveryMethodName = method => {
-    const names = {
-        'sedex': 'Correios SEDEX',
-        'retirada': 'Retirada no Local',
-        'uber': 'Uber Flash',
-        'definir': 'A Combinar'
-    };
-    return names[method] || 'Não definido';
-};
-
-export const getDeliveryIcon = method => {
-    const icons = {
-        'sedex': 'fa-box',
-        'retirada': 'fa-store',
-        'uber': 'fa-motorcycle',
-        'definir': 'fa-handshake'
-    };
-    return icons[method] || 'fa-truck';
-};
-
-export const getStatusLabel = status => {
-    const labels = {
-        'pendente': 'Pendente',
-        'producao': 'Produção',
-        'concluido': 'Concluído',
-        'retirada': 'Pronto/Postado',
-        'entregue': 'Entregue'
-    };
-    return labels[status] || status;
-};
-
-export const getStatusIcon = status => {
-    const icons = {
-        'pendente': 'fa-clock',
-        'producao': 'fa-cogs',
-        'concluido': 'fa-check-circle',
-        'retirada': 'fa-box-open',
-        'entregue': 'fa-handshake'
-    };
-    return icons[status] || 'fa-question';
-};
-
-export const isStatusCompleted = (currentStatus, checkStatus) => {
-    const order = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    const currentIndex = order.indexOf(currentStatus);
-    const checkIndex = order.indexOf(checkStatus);
-    return checkIndex < currentIndex;
-};
-
 export function monitorConnection() {
     const updateStatus = connected => {
         const statusEl = document.getElementById('connectionStatus');
@@ -1613,4 +1676,3 @@ window.handleClientNameInput = handleClientNameInput;
 window.selectClient = selectClient;
 window.formatCPF = formatCPF;
 window.copyClientDataToDelivery = copyClientDataToDelivery;
-window.removeFileFromService = removeFileFromService;
