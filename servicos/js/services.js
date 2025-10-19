@@ -8,11 +8,11 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 */
 
 import { state } from './config.js';
-import {
-    showToast,
-    escapeHtml,
-    formatDate,
-    formatMoney,
+import { 
+    showToast, 
+    escapeHtml, 
+    formatDate, 
+    formatMoney, 
     formatColorName,
     formatDaysText,
     getDaysColor,
@@ -37,9 +37,9 @@ export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLM
 
 export function startServicesListener() {
     if (!state.db) return console.error('Firestore não está disponível');
-
+    
     state.servicesListener?.();
-
+    
     state.servicesListener = state.db.collection('services').onSnapshot(snapshot => {
         state.services = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -99,29 +99,29 @@ export function startServicesListener() {
 
 export async function saveService(event) {
     event.preventDefault();
-
-    if (!state.isAuthorized || !state.db || !state.currentUser)
+    
+    if (!state.isAuthorized || !state.db || !state.currentUser) 
         return showToast(!state.isAuthorized ? 'Sem permissão' : 'Sistema não está pronto', 'error');
-
+    
     const deliveryMethod = document.getElementById('deliveryMethod').value;
     if (!deliveryMethod) return showToast('Selecione um método de entrega', 'error');
-
+    
     const dateUndefined = document.getElementById('dateUndefined');
     const dueDateInput = document.getElementById('dueDate');
-
+    
     const getFieldValue = (elementId, isNumeric = false) => {
         const element = document.getElementById(elementId);
         if (!element) return '';
         const value = element.value.trim();
-
+        
         if (isNumeric) {
             const parsed = parseFloat(value);
             return isNaN(parsed) || parsed === 0 ? '' : parsed;
         }
-
+        
         return value;
     };
-
+    
     const service = {
         name: getFieldValue('serviceName'),
         client: getFieldValue('clientName'),
@@ -143,10 +143,10 @@ export async function saveService(event) {
         updatedAt: new Date().toISOString(),
         updatedBy: state.currentUser.email
     };
-
+    
     if (state.editingServiceId) {
         const currentService = state.services.find(s => s.id === state.editingServiceId);
-
+        
         if (deliveryMethod === 'sedex') {
             const trackingCodeInput = document.getElementById('editTrackingCode');
             if (trackingCodeInput) {
@@ -157,7 +157,7 @@ export async function saveService(event) {
                 service.trackingCode = '';
             }
         }
-
+        
         if (currentService) {
             if (state.selectedFiles.length === 0 && currentService.files && currentService.files.length > 0) {
                 service.files = currentService.files;
@@ -168,7 +168,7 @@ export async function saveService(event) {
                 service.fileSize = currentService.fileSize || '';
                 service.fileUploadedAt = currentService.fileUploadedAt || '';
             }
-
+            
             if (state.selectedImages.length === 0 && currentService.images && currentService.images.length > 0) {
                 service.images = currentService.images;
                 service.imageUploadedAt = currentService.imageUploadedAt || '';
@@ -176,20 +176,20 @@ export async function saveService(event) {
             if (!state.selectedImage && currentService.imageUrl) {
                 service.imageUrl = currentService.imageUrl;
             }
-
+            
             if (currentService.instagramPhoto) {
                 service.instagramPhoto = currentService.instagramPhoto;
             }
-
+            
             if (currentService.packagedPhotos && currentService.packagedPhotos.length > 0) {
                 service.packagedPhotos = currentService.packagedPhotos;
             }
-
+            
             service.createdAt = currentService.createdAt;
             service.createdBy = currentService.createdBy;
             service.orderCode = currentService.orderCode;
             service.serviceId = currentService.serviceId;
-
+            
             if (currentService.productionStartedAt) service.productionStartedAt = currentService.productionStartedAt;
             if (currentService.completedAt) service.completedAt = currentService.completedAt;
             if (currentService.readyAt) service.readyAt = currentService.readyAt;
@@ -197,12 +197,12 @@ export async function saveService(event) {
             if (currentService.postedAt) service.postedAt = currentService.postedAt;
         }
     }
-
+    
     if (state.editingServiceId) {
         const currentService = state.services.find(s => s.id === state.editingServiceId);
-        if (currentService && currentService.trackingCode && currentService.deliveryMethod === 'sedex' &&
+        if (currentService && currentService.trackingCode && currentService.deliveryMethod === 'sedex' && 
             (currentService.status === 'retirada' || currentService.status === 'entregue')) {
-
+            
             if (deliveryMethod !== 'sedex') {
                 showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
                 document.getElementById('deliveryMethod').value = 'sedex';
@@ -211,10 +211,10 @@ export async function saveService(event) {
             }
         }
     }
-
+    
     if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
         return showToast('Data de entrega não pode ser anterior à data de início', 'error');
-
+    
     if (deliveryMethod === 'retirada') {
         const pickupName = document.getElementById('pickupName').value.trim();
         const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
@@ -223,21 +223,21 @@ export async function saveService(event) {
     } else if (deliveryMethod === 'sedex') {
         const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
         const addr = {};
-
+        
         fields.forEach(field => {
             addr[field] = document.getElementById(field)?.value.trim() || '';
         });
         addr.complemento = document.getElementById('complemento')?.value.trim() || '';
-
+        
         if (fields.some(f => !addr[f])) return showToast('Preencha todos os campos obrigatórios de entrega', 'error');
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) return showToast('E-mail inválido', 'error');
-
+        
         service.deliveryAddress = addr;
     }
-
+    
     try {
         let serviceDocId = state.editingServiceId;
-
+        
         if (state.editingServiceId) {
             await state.db.collection('services').doc(state.editingServiceId).update(service);
             showToast('Serviço atualizado com sucesso!', 'success');
@@ -259,28 +259,28 @@ export async function saveService(event) {
                 packagedPhotos: [],
                 trackingCode: ''
             });
-
+            
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
-
+            
             document.getElementById('orderCodeDisplay').style.display = 'block';
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
-
+            
             const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;
             const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
-
+            
             if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
                 const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
-
+            
             if (service.clientEmail && sendEmail) {
                 await sendEmailNotification(service);
             }
         }
-
+        
         if (service.client) {
             const clientData = {
                 name: service.client,
@@ -288,20 +288,20 @@ export async function saveService(event) {
                 email: service.clientEmail,
                 phone: service.clientPhone
             };
-
+            
             if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
                 clientData.address = service.deliveryAddress;
             }
-
+            
             await saveClientToFirestore(clientData);
         }
-
+        
         if (state.selectedFiles.length > 0 && serviceDocId) {
             showToast(`Fazendo upload de ${state.selectedFiles.length} ${state.selectedFiles.length > 1 ? 'arquivos' : 'arquivo'}...`, 'info');
-
+            
             const currentService = state.services.find(s => s.id === serviceDocId);
             const existingFiles = (state.editingServiceId && currentService && currentService.files) ? currentService.files : [];
-
+            
             const newFiles = [];
             for (const file of state.selectedFiles) {
                 const fileData = await uploadFile(file, serviceDocId);
@@ -314,7 +314,7 @@ export async function saveService(event) {
                     });
                 }
             }
-
+            
             if (newFiles.length > 0) {
                 const allFiles = [...existingFiles, ...newFiles];
                 await state.db.collection('services').doc(serviceDocId).update({
@@ -324,13 +324,13 @@ export async function saveService(event) {
                 showToast(`✅ ${newFiles.length} ${newFiles.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
             }
         }
-
+        
         if (state.selectedImages.length > 0 && serviceDocId) {
             showToast(`Fazendo upload de ${state.selectedImages.length} ${state.selectedImages.length > 1 ? 'imagens' : 'imagem'}...`, 'info');
-
+            
             const currentService = state.services.find(s => s.id === serviceDocId);
             const existingImages = (state.editingServiceId && currentService && currentService.images) ? currentService.images : [];
-
+            
             const newImageUrls = [];
             for (const imageFile of state.selectedImages) {
                 const imageData = await uploadFile(imageFile, serviceDocId);
@@ -342,7 +342,7 @@ export async function saveService(event) {
                     });
                 }
             }
-
+            
             if (newImageUrls.length > 0) {
                 const allImages = [...existingImages, ...newImageUrls];
                 await state.db.collection('services').doc(serviceDocId).update({
@@ -352,7 +352,7 @@ export async function saveService(event) {
                 showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
             }
         }
-
+        
         window.closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
@@ -362,31 +362,31 @@ export async function saveService(event) {
 
 export async function deleteService(serviceId) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-
+    
     const service = state.services.find(s => s.id === serviceId);
     if (!service || !confirm(`Excluir o serviço "${service.name}"?\n\nTodos os arquivos e imagens serão deletados permanentemente.`)) return;
-
+    
     try {
         const filesToDelete = [];
-
+        
         if (service.files && service.files.length > 0) {
             service.files.forEach(file => file.url && filesToDelete.push(file.url));
         }
         if (service.fileUrl) filesToDelete.push(service.fileUrl);
-
+        
         if (service.images && service.images.length > 0) {
             service.images.forEach(img => img.url && filesToDelete.push(img.url));
         }
         if (service.imageUrl) filesToDelete.push(service.imageUrl);
         if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
-
+        
         if (service.packagedPhotos && service.packagedPhotos.length > 0) {
             service.packagedPhotos.forEach(photo => photo.url && filesToDelete.push(photo.url));
         }
-
+        
         if (filesToDelete.length > 0) {
             showToast('Deletando arquivos...', 'info');
-
+            
             for (const fileUrl of filesToDelete) {
                 try {
                     const fileRef = state.storage.refFromURL(fileUrl);
@@ -396,7 +396,7 @@ export async function deleteService(serviceId) {
                 }
             }
         }
-
+        
         await state.db.collection('services').doc(serviceId).delete();
         showToast('Serviço e arquivos excluídos!', 'success');
     } catch (error) {
@@ -418,7 +418,7 @@ export async function uploadFile(file, serviceId) {
         return { url, name: file.name, size: file.size, uploadedAt: new Date().toISOString() };
     } catch (error) {
         console.error('Erro ao fazer upload:', error);
-
+        
         if (error.code === 'storage/unauthorized' || error.message.includes('CORS')) {
             showToast('⚠️ Erro de permissão no Firebase Storage. Configure CORS no console do Firebase.', 'error');
             console.error('SOLUÇÃO: Configure CORS no Firebase Storage para o domínio imaginatech.com.br');
@@ -434,16 +434,16 @@ export async function uploadFile(file, serviceId) {
 // ===========================
 export async function updateStatus(serviceId, newStatus) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-
+    
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
-
+    
     const currentIndex = STATUS_ORDER.indexOf(service.status);
     const newIndex = STATUS_ORDER.indexOf(newStatus);
-
+    
     if (newIndex > currentIndex) {
         const nextAllowedStatus = STATUS_ORDER[currentIndex + 1];
-
+        
         if (newStatus !== nextAllowedStatus) {
             const statusNames = {
                 'pendente': 'Pendente',
@@ -456,54 +456,54 @@ export async function updateStatus(serviceId, newStatus) {
             return;
         }
     }
-
+    
     if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
         return;
     }
-
+    
     if (newStatus === 'retirada') {
         if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
             showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
-
+        
         if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
             state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
             window.showStatusModalWithPackagedPhoto(service, newStatus);
             return;
         }
     }
-
+    
     if (newStatus === 'entregue') {
         if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
             return;
         }
-
+        
         if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
             showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
             return;
         }
     }
-
+    
     const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
     const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
-
+    
     if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
         if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
             return;
         }
     }
-
+    
     if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
         state.pendingStatusUpdate = { serviceId, newStatus, service };
         return window.showTrackingCodeModal();
     }
-
+    
     state.pendingStatusUpdate = { serviceId, newStatus, service };
-
+    
     const statusMessages = {
         'pendente': 'Marcar como Pendente',
         'producao': 'Iniciar Produção',
@@ -515,10 +515,10 @@ export async function updateStatus(serviceId, newStatus) {
                    'Marcar Processo de Entrega',
         'entregue': 'Confirmar Entrega'
     };
-
-    document.getElementById('statusModalMessage') &&
+    
+    document.getElementById('statusModalMessage') && 
         (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
-
+    
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
@@ -530,7 +530,7 @@ export async function updateStatus(serviceId, newStatus) {
             whatsappOption.style.display = 'none';
         }
     }
-
+    
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
@@ -542,20 +542,20 @@ export async function updateStatus(serviceId, newStatus) {
             emailOption.style.display = 'none';
         }
     }
-
+    
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) photoField.style.display = 'none';
-
+    
     document.getElementById('statusModal')?.classList.add('active');
 }
 
 export async function confirmStatusChange() {
     if (!state.pendingStatusUpdate || !state.db) return;
-
+    
     const { serviceId, newStatus, service, requiresInstagramPhoto, requiresPackagedPhoto } = state.pendingStatusUpdate;
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
-
+    
     if (requiresPackagedPhoto) {
         if (state.pendingPackagedPhotos.length === 0) {
             return showToast('Selecione pelo menos uma foto do produto embalado antes de confirmar.', 'error');
@@ -606,7 +606,7 @@ export async function confirmStatusChange() {
             return;
         }
     }
-
+    
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
             return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
@@ -659,7 +659,7 @@ export async function confirmStatusChange() {
             return;
         }
     }
-
+    
     try {
         const updates = {
             status: newStatus,
@@ -667,23 +667,23 @@ export async function confirmStatusChange() {
             updatedBy: state.currentUser.email,
             lastStatusChange: new Date().toISOString()
         };
-
+        
         const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
         const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
-
+        
         if (newStatusIndex > currentStatusIndex) {
-            const timestampField = newStatus === 'producao' ? 'productionStartedAt' :
+            const timestampField = newStatus === 'producao' ? 'productionStartedAt' : 
                                   newStatus === 'concluido' ? 'completedAt' :
                                   newStatus === 'retirada' ? 'readyAt' :
                                   newStatus === 'entregue' ? 'deliveredAt' : null;
-
+            
             if (timestampField) {
                 updates[timestampField] = new Date().toISOString();
             }
-        }
+        } 
         else if (newStatusIndex < currentStatusIndex) {
             const timestampsToDelete = [];
-
+            
             if (newStatusIndex < STATUS_ORDER.indexOf('entregue')) {
                 timestampsToDelete.push('deliveredAt');
             }
@@ -700,19 +700,19 @@ export async function confirmStatusChange() {
             if (newStatusIndex < STATUS_ORDER.indexOf('producao')) {
                 timestampsToDelete.push('productionStartedAt');
             }
-
+            
             timestampsToDelete.forEach(field => {
                 updates[field] = firebase.firestore.FieldValue.delete();
             });
         }
-
+        
         await state.db.collection('services').doc(serviceId).update(updates);
         showToast('Status atualizado!', 'success');
-
+        
         if (sendWhatsapp && service.clientPhone) {
             const messages = {
                 'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                'retirada': service.deliveryMethod === 'retirada' ?
+                'retirada': service.deliveryMethod === 'retirada' ? 
                     `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!` :
                     service.deliveryMethod === 'sedex' ?
                     `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}` :
@@ -725,7 +725,7 @@ export async function confirmStatusChange() {
             };
             messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
         }
-
+        
         if (sendEmail && service.clientEmail) {
             sendEmailNotification(service);
         }
@@ -743,11 +743,11 @@ export function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     if (!grid || !emptyState) return;
-
-    let filtered = state.currentFilter === 'todos' ?
-        state.services.filter(s => s.status !== 'entregue') :
+    
+    let filtered = state.currentFilter === 'todos' ? 
+        state.services.filter(s => s.status !== 'entregue') : 
         state.services.filter(s => s.status === state.currentFilter);
-
+    
     if (state.currentFilter === 'concluido') {
         filtered.sort((a, b) => {
             const dateA = new Date(a.completedAt || a.createdAt || 0);
@@ -765,18 +765,18 @@ export function renderServices() {
             const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
             const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
             if (diff !== 0) return diff;
-
+            
             if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
             return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
         });
     }
-
+    
     if (filtered.length === 0) {
         grid.style.display = 'none';
         emptyState.style.display = 'flex';
         const emptyText = document.getElementById('emptyText');
-        emptyText && (emptyText.textContent = state.currentFilter === 'todos' ?
-            'Nenhum serviço ativo encontrado' :
+        emptyText && (emptyText.textContent = state.currentFilter === 'todos' ? 
+            'Nenhum serviço ativo encontrado' : 
             `Nenhum serviço ${getStatusLabel(state.currentFilter).toLowerCase()} encontrado`);
     } else {
         grid.style.display = 'grid';
@@ -787,15 +787,15 @@ export function renderServices() {
 
 function createServiceCard(service) {
     const days = (service.status === 'entregue' || service.dateUndefined) ? null : calculateDaysRemaining(service.dueDate);
-    const daysText = service.status === 'entregue' ? 'Entregue' :
-                   service.dateUndefined ? 'Data a definir' :
+    const daysText = service.status === 'entregue' ? 'Entregue' : 
+                   service.dateUndefined ? 'Data a definir' : 
                    formatDaysText(days);
     const daysColor = service.status === 'entregue' ? 'var(--neon-green)' :
-                    service.dateUndefined ? 'var(--neon-yellow)' :
+                    service.dateUndefined ? 'var(--neon-yellow)' : 
                     getDaysColor(days);
-
+    
     const hasImages = (service.images && service.images.length > 0) || service.imageUrl || service.instagramPhoto || (service.packagedPhotos && service.packagedPhotos.length > 0);
-
+    
     const getTotalImagesCount = (svc) => {
         let count = 0;
         if (svc.images && svc.images.length > 0) count += svc.images.length;
@@ -804,9 +804,9 @@ function createServiceCard(service) {
         if (svc.packagedPhotos && svc.packagedPhotos.length > 0) count += svc.packagedPhotos.length;
         return count;
     };
-
+    
     const filesCount = (service.files && service.files.length > 0) ? service.files.length : (service.fileUrl ? 1 : 0);
-
+    
     return `
         <div class="service-card priority-${service.priority || 'media'}">
             <div class="service-header">
@@ -823,7 +823,7 @@ function createServiceCard(service) {
                     </button>
                 </div>
             </div>
-
+            
             ${service.deliveryMethod ? `
             <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                 <div class="delivery-info">
@@ -835,7 +835,7 @@ function createServiceCard(service) {
                     ${daysText}
                 </div>
             </div>` : ''}
-
+            
             <div class="service-info">
                 <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
                 ${service.clientPhone ? `<div class="info-item"><i class="fas fa-phone"></i><span>${escapeHtml(service.clientPhone)}</span></div>` : ''}
@@ -847,15 +847,15 @@ function createServiceCard(service) {
                 ${filesCount > 0 ? `<div class="info-item"><button class="btn-download" onclick="window.showServiceFiles('${service.id}')" title="Ver Arquivos"><i class="fas fa-file"></i><span>${filesCount} ${filesCount > 1 ? 'Arquivos' : 'Arquivo'}</span></button></div>` : ''}
                 ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="window.showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
             </div>
-
+            
             ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
-
+            
             <div class="service-status">
                 <div class="status-timeline">
                     ${createStatusTimeline(service)}
                 </div>
             </div>
-
+            
             <div class="service-footer">
                 ${service.clientPhone ? `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
                 ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
@@ -868,7 +868,7 @@ function createStatusTimeline(service) {
     return ['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map(status => {
         const isActive = service.status === status;
         const isCompleted = isStatusCompleted(service.status, status);
-
+        
         let label;
         if (status === 'pendente') label = 'Pendente';
         else if (status === 'producao') label = 'Produção';
@@ -881,10 +881,10 @@ function createStatusTimeline(service) {
             else label = 'Entrega';
         }
         else if (status === 'entregue') label = 'Entregue';
-
+        
         return `
             <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-                <button class="step-button"
+                <button class="step-button" 
                         onclick="window.updateStatusGlobal('${service.id}', '${status}')"
                         ${isActive ? 'disabled' : ''}>
                     <span class="step-icon">
@@ -906,7 +906,7 @@ export function updateStats() {
         retirada: state.services.filter(s => s.status === 'retirada').length,
         entregue: state.services.filter(s => s.status === 'entregue').length
     };
-
+    
     Object.entries({
         'stat-active': stats.active,
         'stat-pending': stats.pendente,
@@ -925,5 +925,4 @@ export function filterServices(filter) {
     document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
     event?.currentTarget?.classList.add('active');
     renderServices();
-   removeFileFromService;
 }
