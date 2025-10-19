@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.4 - Remoção Individual de Arquivos
+VERSÃO: 3.3 - CPF Cliente + Autocomplete
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -29,18 +29,12 @@ import {
 } from './auth-ui.js';
 
 // ===========================
-// CONSTANTS
+// SERVICE MANAGEMENT
 // ===========================
 const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
 
-// ===========================
-// UTILITY FUNCTIONS
-// ===========================
 export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 
-// ===========================
-// FIRESTORE LISTENER
-// ===========================
 export function startServicesListener() {
     if (!state.db) return console.error('Firestore não está disponível');
     
@@ -103,9 +97,6 @@ export function startServicesListener() {
     });
 }
 
-// ===========================
-// CRUD OPERATIONS
-// ===========================
 export async function saveService(event) {
     event.preventDefault();
     
@@ -214,62 +205,74 @@ export async function saveService(event) {
             
             if (deliveryMethod !== 'sedex') {
                 showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
+                document.getElementById('deliveryMethod').value = 'sedex';
+                window.toggleDeliveryFields();
                 return;
             }
         }
     }
     
-    if (deliveryMethod === 'sedex') {
-        const requiredFields = ['street', 'number', 'neighborhood', 'city', 'state', 'cep'];
-        const addressFields = {};
+    if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
+        return showToast('Data de entrega não pode ser anterior à data de início', 'error');
+    
+    if (deliveryMethod === 'retirada') {
+        const pickupName = document.getElementById('pickupName').value.trim();
+        const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
+        if (!pickupName || !pickupWhatsapp) return showToast('Preencha todos os campos de retirada', 'error');
+        service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
+    } else if (deliveryMethod === 'sedex') {
+        const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
+        const addr = {};
         
-        requiredFields.forEach(field => {
-            const value = document.getElementById(field)?.value?.trim();
-            addressFields[field] = value || '';
+        fields.forEach(field => {
+            addr[field] = document.getElementById(field)?.value.trim() || '';
         });
+        addr.complemento = document.getElementById('complemento')?.value.trim() || '';
         
-        addressFields.complement = document.getElementById('complement')?.value?.trim() || '';
+        if (fields.some(f => !addr[f])) return showToast('Preencha todos os campos obrigatórios de entrega', 'error');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email)) return showToast('E-mail inválido', 'error');
         
-        const missingFields = requiredFields.filter(field => !addressFields[field]);
-        if (missingFields.length > 0) {
-            return showToast('Preencha todos os campos obrigatórios do endereço de entrega', 'error');
-        }
-        
-        service.deliveryAddress = addressFields;
-    } else if (deliveryMethod === 'retirada') {
-        service.pickupInfo = {
-            location: document.getElementById('pickupLocation')?.value?.trim() || '',
-            whatsapp: document.getElementById('pickupWhatsapp')?.value?.trim() || ''
-        };
+        service.deliveryAddress = addr;
     }
     
     try {
-        let serviceDocId;
+        let serviceDocId = state.editingServiceId;
         
         if (state.editingServiceId) {
             await state.db.collection('services').doc(state.editingServiceId).update(service);
-            serviceDocId = state.editingServiceId;
-            showToast('Serviço atualizado!', 'success');
+            showToast('Serviço atualizado com sucesso!', 'success');
         } else {
-            const orderCode = generateOrderCode();
-            const newService = {
-                ...service,
-                orderCode,
-                serviceId: orderCode,
+            Object.assign(service, {
                 createdAt: new Date().toISOString(),
-                createdBy: state.currentUser.email
-            };
+                createdBy: state.currentUser.email,
+                orderCode: generateOrderCode(),
+                serviceId: 'SRV-' + Date.now(),
+                files: [],
+                fileUrl: '',
+                fileName: '',
+                fileSize: '',
+                fileUploadedAt: '',
+                imageUrl: '',
+                images: [],
+                imageUploadedAt: '',
+                instagramPhoto: '',
+                packagedPhotos: [],
+                trackingCode: ''
+            });
             
-            const docRef = await state.db.collection('services').add(newService);
+            const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
-            showToast(`Serviço criado! Código: ${orderCode}`, 'success');
+            
+            document.getElementById('orderCodeDisplay').style.display = 'block';
+            document.getElementById('orderCodeValue').textContent = service.orderCode;
+            showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
             
             const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;
             const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
             
             if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
-                const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
+                const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
             
@@ -403,56 +406,6 @@ export async function deleteService(serviceId) {
 }
 
 // ===========================
-// NOVA FUNCIONALIDADE: REMOVER ARQUIVO INDIVIDUAL
-// ===========================
-export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
-    if (!state.isAuthorized) return showToast('Sem permissão para remover arquivos', 'error');
-    
-    const service = state.services.find(s => s.id === serviceId);
-    if (!service || !service.files || !service.files[fileIndex]) {
-        return showToast('Arquivo não encontrado', 'error');
-    }
-    
-    if (!confirm('Deseja realmente remover este arquivo?\n\nEsta ação não pode ser desfeita.')) return;
-    
-    try {
-        showToast('Removendo arquivo...', 'info');
-        
-        // Deletar do Storage
-        try {
-            const fileRef = state.storage.refFromURL(fileUrl);
-            await fileRef.delete();
-        } catch (storageError) {
-            console.error('Erro ao deletar do Storage:', storageError);
-        }
-        
-        // Atualizar Firestore
-        const updatedFiles = service.files.filter((_, index) => index !== fileIndex);
-        
-        await state.db.collection('services').doc(serviceId).update({
-            files: updatedFiles,
-            lastModified: new Date().toISOString()
-        });
-        
-        showToast('Arquivo removido com sucesso!', 'success');
-        
-        // Atualizar modal se estiver aberto
-        const modal = document.getElementById('filesViewerModal');
-        if (modal && modal.classList.contains('show')) {
-            setTimeout(() => {
-                if (window.showFilesModal && typeof window.showFilesModal === 'function') {
-                    window.showFilesModal(service.name, updatedFiles, serviceId);
-                }
-            }, 300);
-        }
-        
-    } catch (error) {
-        console.error('Erro ao remover arquivo:', error);
-        showToast('Erro ao remover arquivo: ' + error.message, 'error');
-    }
-}
-
-// ===========================
 // FILE UPLOAD
 // ===========================
 export async function uploadFile(file, serviceId) {
@@ -535,21 +488,71 @@ export async function updateStatus(serviceId, newStatus) {
         }
     }
     
-    if (newStatus === 'retirada' && service.deliveryMethod === 'sedex') {
+    const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
+    const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
+    
+    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
+        if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
+            return;
+        }
+    }
+    
+    if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
         state.pendingStatusUpdate = { serviceId, newStatus, service };
-        window.showTrackingCodeModal(service);
-        return;
+        return window.showTrackingCodeModal();
     }
     
     state.pendingStatusUpdate = { serviceId, newStatus, service };
-    window.showStatusModalWithPhoto(service, newStatus);
+    
+    const statusMessages = {
+        'pendente': 'Marcar como Pendente',
+        'producao': 'Iniciar Produção',
+        'concluido': 'Marcar como Concluído',
+        'retirada': service.deliveryMethod === 'retirada' ? 'Pronto para Retirada' :
+                   service.deliveryMethod === 'sedex' ? 'Marcar como Postado' :
+                   service.deliveryMethod === 'uber' ? 'Marcar como Postado' :
+                   service.deliveryMethod === 'definir' ? 'Marcar como Combinado' :
+                   'Marcar Processo de Entrega',
+        'entregue': 'Confirmar Entrega'
+    };
+    
+    document.getElementById('statusModalMessage') && 
+        (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
+    
+    const whatsappOption = document.getElementById('whatsappOption');
+    if (whatsappOption) {
+        const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
+        if (hasPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
+            whatsappOption.style.display = 'block';
+            const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
+            if (whatsappCheckbox) whatsappCheckbox.checked = true;
+        } else {
+            whatsappOption.style.display = 'none';
+        }
+    }
+    
+    const emailOption = document.getElementById('emailOption');
+    if (emailOption) {
+        const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
+        if (hasEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
+            emailOption.style.display = 'block';
+            const emailCheckbox = document.getElementById('sendEmailNotification');
+            if (emailCheckbox) emailCheckbox.checked = true;
+        } else {
+            emailOption.style.display = 'none';
+        }
+    }
+    
+    const photoField = document.getElementById('instagramPhotoField');
+    if (photoField) photoField.style.display = 'none';
+    
+    document.getElementById('statusModal')?.classList.add('active');
 }
 
 export async function confirmStatusChange() {
-    if (!state.pendingStatusUpdate) return;
+    if (!state.pendingStatusUpdate || !state.db) return;
     
     const { serviceId, newStatus, service, requiresInstagramPhoto, requiresPackagedPhoto } = state.pendingStatusUpdate;
-    
     const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
@@ -634,21 +637,15 @@ export async function confirmStatusChange() {
 
             await state.db.collection('services').doc(serviceId).update({
                 images: allImages,
-                status: newStatus,
-                completedAt: newStatus === 'concluido' ? new Date().toISOString() : service.completedAt,
+                instagramPhoto: newImageUrls[0].url,
+                status: 'concluido',
+                completedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 updatedBy: state.currentUser.email,
                 lastStatusChange: new Date().toISOString()
             });
 
-            showToast(`✅ ${newImageUrls.length} foto(s) anexada(s)! Status alterado para ${getStatusLabel(newStatus)}.`, 'success');
-
-            if (sendWhatsapp && service.clientPhone) {
-                const messages = {
-                    'concluido': `🎉 Seu pedido está pronto!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                };
-                messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
-            }
+            showToast(`✅ ${newImageUrls.length} foto(s) anexada(s)! Status alterado para Concluído.`, 'success');
 
             if (sendEmail && service.clientEmail) {
                 await sendEmailNotification(service);
@@ -657,7 +654,7 @@ export async function confirmStatusChange() {
             window.closeStatusModal();
             return;
         } catch (error) {
-            console.error('Erro ao confirmar fotos:', error);
+            console.error('Erro ao confirmar fotos instagramáveis:', error);
             showToast('Erro ao processar as fotos.', 'error');
             return;
         }
@@ -828,94 +825,62 @@ function createServiceCard(service) {
             </div>
             
             ${service.deliveryMethod ? `
-            <div class="delivery-badge" style="background: ${service.deliveryMethod === 'sedex' ? 'linear-gradient(135deg, #9945FF, #B845FF)' : service.deliveryMethod === 'retirada' ? 'linear-gradient(135deg, #00FF88, #00D4AA)' : service.deliveryMethod === 'uber' ? 'linear-gradient(135deg, #FF6B35, #F7931E)' : 'linear-gradient(135deg, #FFD700, #FFA500)'};">
+            <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                 <div class="delivery-info">
                     <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
-                    <span>${getDeliveryMethodName(service.deliveryMethod)}</span>
+                    ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
                 </div>
-                <div class="delivery-time" style="background: ${daysColor};">
-                    <i class="fas fa-clock"></i>
-                    <span>${daysText}</span>
+                <div class="delivery-time ${service.status === 'entregue' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
+                    <i class="fas ${service.status === 'entregue' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                    ${daysText}
                 </div>
-            </div>
-            ` : ''}
+            </div>` : ''}
             
-            <div class="service-description">
-                <p>${escapeHtml(service.description || 'Sem descrição')}</p>
+            <div class="service-info">
+                <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
+                ${service.clientPhone ? `<div class="info-item"><i class="fas fa-phone"></i><span>${escapeHtml(service.clientPhone)}</span></div>` : ''}
+                <div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material || 'N/A'}</span></div>
+                ${service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
+                <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
+                ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
+                ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
+                ${filesCount > 0 ? `<div class="info-item"><button class="btn-download" onclick="window.showServiceFiles('${service.id}')" title="Ver Arquivos"><i class="fas fa-file"></i><span>${filesCount} ${filesCount > 1 ? 'Arquivos' : 'Arquivo'}</span></button></div>` : ''}
+                ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="window.showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
             </div>
             
-            <div class="info-grid">
-                <div class="info-item">
-                    <i class="fas fa-user"></i>
-                    <span>${escapeHtml(service.client || 'N/A')}</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-phone"></i>
-                    <span>${service.clientPhone || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-cube"></i>
-                    <span>${service.material || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-palette"></i>
-                    <span>${formatColorName(service.color) || 'N/A'}</span>
-                </div>
-                ${service.value ? `
-                <div class="info-item">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>${formatMoney(service.value)}</span>
-                </div>
-                ` : ''}
-                ${service.weight ? `
-                <div class="info-item">
-                    <i class="fas fa-weight-hanging"></i>
-                    <span>${service.weight}g</span>
-                </div>
-                ` : ''}
-                ${filesCount > 0 ? `
-                <div class="info-item clickable" onclick="window.showServiceFiles('${service.id}')" style="cursor: pointer;">
-                    <i class="fas fa-file"></i>
-                    <span>${filesCount} arquivo${filesCount > 1 ? 's' : ''}</span>
-                </div>
-                ` : ''}
-                ${hasImages ? `
-                <div class="info-item clickable" onclick="window.showServiceImages('${service.id}')" style="cursor: pointer;">
-                    <i class="fas fa-images"></i>
-                    <span>${getTotalImagesCount(service)} foto${getTotalImagesCount(service) > 1 ? 's' : ''}</span>
-                </div>
-                ` : ''}
-            </div>
+            ${service.description ? `<div class="service-description"><p>${escapeHtml(service.description)}</p></div>` : ''}
             
             <div class="service-status">
                 <div class="status-timeline">
-                    ${renderTimeline(service)}
+                    ${createStatusTimeline(service)}
                 </div>
             </div>
             
             <div class="service-footer">
-                ${service.clientPhone ? `
-                <button class="btn-whatsapp" onclick="window.contactClient('${service.clientPhone}', '${escapeHtml(service.name)}', '${service.orderCode}')">
-                    <i class="fab fa-whatsapp"></i>
-                    <span>WhatsApp</span>
-                </button>
-                ` : ''}
-                ${service.deliveryMethod ? `
-                <button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')">
-                    <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
-                    <span>Ver Entrega</span>
-                </button>
-                ` : ''}
+                ${service.clientPhone ? `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
+                ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
             </div>
         </div>
     `;
 }
 
-function renderTimeline(service) {
-    return STATUS_ORDER.map(status => {
+function createStatusTimeline(service) {
+    return ['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map(status => {
         const isActive = service.status === status;
         const isCompleted = isStatusCompleted(service.status, status);
-        const label = getStatusLabel(status);
+        
+        let label;
+        if (status === 'pendente') label = 'Pendente';
+        else if (status === 'producao') label = 'Produção';
+        else if (status === 'concluido') label = 'Concluído';
+        else if (status === 'retirada') {
+            if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
+            else if (service.deliveryMethod === 'sedex') label = 'Postado';
+            else if (service.deliveryMethod === 'uber') label = 'Postado';
+            else if (service.deliveryMethod === 'definir') label = 'Combinado';
+            else label = 'Entrega';
+        }
+        else if (status === 'entregue') label = 'Entregue';
         
         return `
             <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
