@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.3 - CPF + Autocomplete de Clientes
+VERSÃO: 3.4 - Remoção de Arquivos Individuais
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -16,7 +16,8 @@ import {
     confirmStatusChange, 
     renderServices, 
     filterServices, 
-    uploadFile 
+    uploadFile,
+    removeFileFromService
 } from './services.js';
 
 // ===========================
@@ -891,37 +892,67 @@ export function showServiceFiles(serviceId) {
     }
     
     if (allFiles.length > 0) {
-        showFilesModal(allFiles, service.name || 'Serviço');
+        showFilesModal(service.name || 'Serviço', allFiles, serviceId);
     }
 }
 
-export function showFilesModal(files, serviceName) {
+export function showFilesModal(serviceName, files, serviceId) {
     const modal = document.getElementById('filesViewerModal');
-    if (!modal) return;
-    
     const title = document.getElementById('filesViewerTitle');
     const container = document.getElementById('filesListContainer');
     
-    if (title) title.textContent = `Arquivos - ${serviceName}`;
+    if (!modal || !title || !container) return;
     
-    if (container) {
-        container.innerHTML = files.map((file, index) => `
-            <div class="file-list-item">
-                <div class="file-list-icon">
-                    <i class="fas fa-file"></i>
+    title.innerHTML = `<i class="fas fa-file"></i> Arquivos de ${escapeHtml(serviceName)}`;
+    
+    if (!files || files.length === 0) {
+        container.innerHTML = '<p class="no-files-message">Nenhum arquivo anexado</p>';
+    } else {
+        container.innerHTML = files.map((file, index) => {
+            const fileName = file.name || 'arquivo-sem-nome';
+            const fileSize = file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Tamanho desconhecido';
+            const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString('pt-BR') : '';
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            let fileIcon = 'fa-file';
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) fileIcon = 'fa-file-image';
+            else if (['pdf'].includes(fileExtension)) fileIcon = 'fa-file-pdf';
+            else if (['stl', 'obj', '3mf', 'gcode'].includes(fileExtension)) fileIcon = 'fa-cube';
+            else if (['zip', 'rar', '7z'].includes(fileExtension)) fileIcon = 'fa-file-zipper';
+            
+            return `
+                <div class="file-item">
+                    <div class="file-icon-wrapper">
+                        <i class="fas ${fileIcon}"></i>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(fileName)}</div>
+                        <div class="file-meta">
+                            <span>${fileSize}</span>
+                            ${uploadDate ? `<span>• ${uploadDate}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn-icon-action" onclick="window.open('${file.url}', '_blank')" title="Abrir arquivo">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                        <a href="${file.url}" download="${fileName}" class="btn-icon-action" title="Baixar arquivo">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        ${state.isAuthorized ? `
+                        <button class="btn-icon-action btn-remove-file" 
+                                onclick="window.removeFileFromService('${serviceId}', ${index}, '${file.url}')" 
+                                title="Remover arquivo">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="file-list-info">
-                    <span class="file-list-name">${escapeHtml(file.name)}</span>
-                    ${file.size ? `<span class="file-list-size">${formatFileSize(file.size)}</span>` : ''}
-                </div>
-                <button class="btn-download-file" onclick="window.downloadFile('${file.url}', '${escapeHtml(file.name)}')">
-                    <i class="fas fa-download"></i> Baixar
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
     
-    modal.classList.add('active');
+    modal.classList.add('show');
 }
 
 export const closeFilesModal = () => document.getElementById('filesViewerModal')?.classList.remove('active');
@@ -1676,3 +1707,4 @@ window.handleClientNameInput = handleClientNameInput;
 window.selectClient = selectClient;
 window.formatCPF = formatCPF;
 window.copyClientDataToDelivery = copyClientDataToDelivery;
+window.removeFileFromService = removeFileFromService;
