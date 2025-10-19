@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.3 - CPF Cliente + Autocomplete
+VERSÃO: 3.4 - Remoção de Arquivos Individuais
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -426,6 +426,53 @@ export async function uploadFile(file, serviceId) {
             showToast('Erro ao fazer upload do arquivo: ' + error.message, 'error');
         }
         return null;
+    }
+}
+
+/**
+ * Remove um arquivo específico do serviço
+ */
+export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
+    if (!state.isAuthorized) return showToast('Sem permissão para remover arquivos', 'error');
+    
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service || !service.files || !service.files[fileIndex]) {
+        return showToast('Arquivo não encontrado', 'error');
+    }
+    
+    if (!confirm('Deseja realmente remover este arquivo?\n\nEsta ação não pode ser desfeita.')) return;
+    
+    try {
+        showToast('Removendo arquivo...', 'info');
+        
+        // Deletar do Storage
+        try {
+            const fileRef = state.storage.refFromURL(fileUrl);
+            await fileRef.delete();
+        } catch (storageError) {
+            console.error('Erro ao deletar do Storage:', storageError);
+        }
+        
+        // Atualizar Firestore
+        const updatedFiles = service.files.filter((_, index) => index !== fileIndex);
+        
+        await state.db.collection('services').doc(serviceId).update({
+            files: updatedFiles,
+            lastModified: new Date().toISOString()
+        });
+        
+        showToast('Arquivo removido com sucesso!', 'success');
+        
+        // Atualizar modal se estiver aberto
+        const modal = document.getElementById('filesViewerModal');
+        if (modal && modal.classList.contains('show')) {
+            const { showFilesModal } = await import('./auth-ui.js');
+            setTimeout(() => showFilesModal(service.name, updatedFiles, serviceId), 300);
+        }
+        
+    } catch (error) {
+        console.error('Erro ao remover arquivo:', error);
+        showToast('Erro ao remover arquivo: ' + error.message, 'error');
     }
 }
 
