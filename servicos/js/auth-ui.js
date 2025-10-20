@@ -952,7 +952,7 @@ export function showFilesModal(serviceName, files, serviceId) {
         }).join('');
     }
     
-    modal.classList.add('show');
+    modal.classList.add('active');
 }
 
 export const closeFilesModal = () => document.getElementById('filesViewerModal')?.classList.remove('active');
