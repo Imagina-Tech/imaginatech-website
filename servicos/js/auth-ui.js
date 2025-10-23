@@ -643,6 +643,7 @@ export function closeStatusModal() {
     if (trackingInput) {
     trackingInput.value = '';
     trackingInput.required = false;
+    }
     
     const photoPreview = document.getElementById('instagramPhotoPreview');
     const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
