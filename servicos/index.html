@@ -524,11 +524,30 @@
                         <label for="packagedPhotoInput" class="instagram-label" style="background: linear-gradient(135deg, var(--neon-orange), var(--neon-yellow));">
                             <i class="fas fa-upload"></i> Selecionar Foto(s) da Embalagem
                         </label>
+               
                         <input type="file" id="packagedPhotoInput" accept="image/jpeg,image/jpg,image/png" onchange="handlePackagedPhotoSelect(event)" style="display: none;" multiple>
                     </div>
                     
                     <div class="image-preview" id="packagedPhotoPreview" style="display: none;">
                         <div class="image-preview-grid" id="packagedPhotoPreviewGrid"></div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Código de Rastreio (Sedex) -->
+                <div id="statusTrackingCodeField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert" style="background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(0, 212, 255, 0.1)); border-color: var(--neon-purple);">
+                          <i class="fas fa-barcode"></i>
+                        <p style="margin: 0.5rem 0;"><strong>Código de Rastreio Obrigatório</strong></p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Digite o código de rastreio dos Correios para este pedido.</p>
+                    </div>
+    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <input type="text" id="statusTrackingCodeInput" class="form-input" 
+                            placeholder="Ex: BR123456789BR" 
+                            style="text-transform: uppercase; font-family: 'Orbitron', monospace; letter-spacing: 1px; border: 2px solid var(--neon-purple);">
+                        <small style="color: var(--text-secondary); font-size: 0.8rem; display: block; margin-top: 0.5rem;">
+                            <i class="fas fa-info-circle"></i> Formato: 13 caracteres (Ex: BR123456789BR)
+                        </small>
                     </div>
                 </div>
                 
