@@ -604,55 +604,98 @@ export async function confirmStatusChange() {
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
     if (requiresPackagedPhoto) {
-        if (state.pendingPackagedPhotos.length === 0) {
-            return showToast('Selecione pelo menos uma foto do produto embalado antes de confirmar.', 'error');
+    // Validar fotos embaladas
+    if (state.pendingPackagedPhotos.length === 0) {
+        return showToast('❌ Selecione pelo menos uma foto do produto embalado', 'error');
+    }
+    
+    // NOVO: Validar código de rastreio se for sedex
+    const trackingInput = document.getElementById('statusTrackingCodeInput');
+    let trackingCode = null;
+    
+    if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
+        if (!trackingInput || !trackingInput.value.trim()) {
+            return showToast('❌ Digite o código de rastreio dos Correios', 'error');
         }
-
-        try {
-            showToast(`Fazendo upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
-
-            const newPackagedPhotos = [];
-            for (const photoFile of state.pendingPackagedPhotos) {
-                const photoData = await uploadFile(photoFile, serviceId);
-                if (photoData) {
-                    newPackagedPhotos.push({
-                        url: photoData.url,
-                        name: photoFile.name,
-                        uploadedAt: photoData.uploadedAt
-                    });
-                }
-            }
-
-            if (newPackagedPhotos.length === 0) {
-                return showToast('Erro ao fazer upload das fotos embaladas.', 'error');
-            }
-
-            const existingPackaged = service.packagedPhotos || [];
-            const allPackaged = [...existingPackaged, ...newPackagedPhotos];
-
-            await state.db.collection('services').doc(serviceId).update({
-                packagedPhotos: allPackaged,
-                status: 'retirada',
-                readyAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                updatedBy: state.currentUser.email,
-                lastStatusChange: new Date().toISOString()
-            });
-
-            showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado.`, 'success');
-
-            if (sendEmail && service.clientEmail) {
-                await sendEmailNotification(service);
-            }
-
-            window.closeStatusModal();
-            return;
-        } catch (error) {
-            console.error('Erro ao confirmar fotos embaladas:', error);
-            showToast('Erro ao processar as fotos embaladas.', 'error');
-            return;
+        
+        trackingCode = trackingInput.value.trim().toUpperCase();
+        
+        // Validação básica do formato
+        if (trackingCode.length < 10) {
+            return showToast('❌ Código de rastreio inválido (muito curto)', 'error');
         }
     }
+    
+    try {
+        showToast(`📤 Fazendo upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
+
+        // Upload das fotos embaladas
+        const newPackagedPhotos = [];
+        for (const photoFile of state.pendingPackagedPhotos) {
+            const photoData = await uploadFile(photoFile, serviceId);
+            if (photoData) {
+                newPackagedPhotos.push({
+                    url: photoData.url,
+                    name: photoFile.name,
+                    uploadedAt: photoData.uploadedAt
+                });
+            }
+        }
+
+        if (newPackagedPhotos.length === 0) {
+            return showToast('❌ Erro ao fazer upload das fotos embaladas', 'error');
+        }
+
+        const existingPackaged = service.packagedPhotos || [];
+        const allPackaged = [...existingPackaged, ...newPackagedPhotos];
+
+        // Preparar atualização do Firebase
+        const updates = {
+            packagedPhotos: allPackaged,
+            status: 'retirada',
+            readyAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            updatedBy: state.currentUser.email,
+            lastStatusChange: new Date().toISOString()
+        };
+        
+        // NOVO: Adicionar código de rastreio se for sedex
+        if (trackingCode) {
+            updates.trackingCode = trackingCode;
+            updates.postedAt = new Date().toISOString();
+        }
+
+        // Salvar no Firebase
+        await state.db.collection('services').doc(serviceId).update(updates);
+
+        showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado para Postado.`, 'success');
+
+        // Enviar notificação por WhatsApp
+        if (sendWhatsapp && service.clientPhone) {
+            let message = `📦 Seu pedido foi postado!\n\n» ${service.name}\n» Código: ${service.orderCode}`;
+            
+            if (trackingCode) {
+                message += `\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
+            } else {
+                message += `\n\n${service.deliveryMethod === 'retirada' ? 'Venha buscar seu pedido!' : 'Em breve chegará até você!'}`;
+            }
+            
+            sendWhatsAppMessage(service.clientPhone, message);
+        }
+
+        // Enviar email se solicitado
+        if (sendEmail && service.clientEmail) {
+            await sendEmailNotification(service);
+        }
+
+        window.closeStatusModal();
+        return;
+    } catch (error) {
+        console.error('Erro ao confirmar fotos embaladas:', error);
+        showToast('❌ Erro ao processar as fotos embaladas', 'error');
+        return;
+    }
+}
     
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
