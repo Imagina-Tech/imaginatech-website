@@ -296,17 +296,59 @@ export async function saveService(event) {
             await saveClientToFirestore(clientData);
         }
         
-        if (state.selectedFiles.length > 0 && serviceDocId) {
-  showToast(`Preparando upload de ${state.selectedFiles.length} arquivo(s)...`, 'info');
-  const uploadResults = await uploadMultipleFiles(state.selectedFiles, serviceDocId, 'files');
-  const currentService = state.services.find(s => s.id === serviceDocId);
-  const existingFiles = (state.editingServiceId && currentService?.files) ? currentService.files : [];
-  const newFileUrls = uploadResults.map(fileData => ({ url: fileData.url, name: fileData.name, size: fileData.size, uploadedAt: fileData.uploadedAt }));
-  if (newFileUrls.length > 0) {
-    const allFiles = [...existingFiles, ...newFileUrls];
-    await state.db.collection('services').doc(serviceDocId).update({ files: allFiles, fileUploadedAt: new Date().toISOString() });
-    showToast(`✅ ${newFileUrls.length} ${newFileUrls.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
-  }
+if (state.selectedFiles.length > 0 && serviceDocId) {
+    showToast(`Preparando upload de ${state.selectedFiles.length} arquivo(s)...`, 'info');
+    
+    const uploadResults = await uploadMultipleFiles(state.selectedFiles, serviceDocId, 'files');
+    const currentService = state.services.find(s => s.id === serviceDocId);
+    const existingFiles = (state.editingServiceId && currentService?.files) ? currentService.files : [];
+    
+    const newFileUrls = uploadResults.map(fileData => ({
+        url: fileData.url,
+        name: fileData.name,
+        size: fileData.size,
+        uploadedAt: fileData.uploadedAt
+    }));
+    
+    if (newFileUrls.length > 0) {
+        const allFiles = [...existingFiles, ...newFileUrls];
+        await state.db.collection('services').doc(serviceDocId).update({
+            files: allFiles,
+            fileUploadedAt: new Date().toISOString()
+        });
+        showToast(`✅ ${newFileUrls.length} ${newFileUrls.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
+    }
+}
+
+// Upload de imagens (ADICIONAR ESTE BLOCO)
+if (state.selectedImages.length > 0 && serviceDocId) {
+    showToast(`Preparando upload de ${state.selectedImages.length} imagem(ns)...`, 'info');
+    
+    const uploadResults = await uploadMultipleFiles(state.selectedImages, serviceDocId, 'images');
+    const currentService = state.services.find(s => s.id === serviceDocId);
+    const existingImages = (state.editingServiceId && currentService?.images) ? currentService.images : [];
+    
+    const newImageUrls = uploadResults.map(imageData => ({
+        url: imageData.url,
+        name: imageData.name,
+        uploadedAt: imageData.uploadedAt
+    }));
+    
+    if (newImageUrls.length > 0) {
+        const allImages = [...existingImages, ...newImageUrls];
+        await state.db.collection('services').doc(serviceDocId).update({
+            images: allImages,
+            imageUploadedAt: new Date().toISOString()
+        });
+        showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
+    }
+}
+
+window.closeModal();
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        showToast('Erro ao salvar serviço', 'error');
+    }
 }
 
 export async function deleteService(serviceId) {
