@@ -297,67 +297,16 @@ export async function saveService(event) {
         }
         
         if (state.selectedFiles.length > 0 && serviceDocId) {
-            showToast(`Fazendo upload de ${state.selectedFiles.length} ${state.selectedFiles.length > 1 ? 'arquivos' : 'arquivo'}...`, 'info');
-            
-            const currentService = state.services.find(s => s.id === serviceDocId);
-            const existingFiles = (state.editingServiceId && currentService && currentService.files) ? currentService.files : [];
-            
-            const newFiles = [];
-            for (const file of state.selectedFiles) {
-                const fileData = await uploadFile(file, serviceDocId);
-                if (fileData) {
-                    newFiles.push({
-                        url: fileData.url,
-                        name: file.name,
-                        size: fileData.size,
-                        uploadedAt: fileData.uploadedAt
-                    });
-                }
-            }
-            
-            if (newFiles.length > 0) {
-                const allFiles = [...existingFiles, ...newFiles];
-                await state.db.collection('services').doc(serviceDocId).update({
-                    files: allFiles,
-                    fileUploadedAt: new Date().toISOString()
-                });
-                showToast(`✅ ${newFiles.length} ${newFiles.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
-            }
-        }
-        
-        if (state.selectedImages.length > 0 && serviceDocId) {
-            showToast(`Fazendo upload de ${state.selectedImages.length} ${state.selectedImages.length > 1 ? 'imagens' : 'imagem'}...`, 'info');
-            
-            const currentService = state.services.find(s => s.id === serviceDocId);
-            const existingImages = (state.editingServiceId && currentService && currentService.images) ? currentService.images : [];
-            
-            const newImageUrls = [];
-            for (const imageFile of state.selectedImages) {
-                const imageData = await uploadFile(imageFile, serviceDocId);
-                if (imageData) {
-                    newImageUrls.push({
-                        url: imageData.url,
-                        name: imageFile.name,
-                        uploadedAt: imageData.uploadedAt
-                    });
-                }
-            }
-            
-            if (newImageUrls.length > 0) {
-                const allImages = [...existingImages, ...newImageUrls];
-                await state.db.collection('services').doc(serviceDocId).update({
-                    images: allImages,
-                    imageUploadedAt: new Date().toISOString()
-                });
-                showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
-            }
-        }
-        
-        window.closeModal();
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        showToast('Erro ao salvar serviço', 'error');
-    }
+  showToast(`Preparando upload de ${state.selectedFiles.length} arquivo(s)...`, 'info');
+  const uploadResults = await uploadMultipleFiles(state.selectedFiles, serviceDocId, 'files');
+  const currentService = state.services.find(s => s.id === serviceDocId);
+  const existingFiles = (state.editingServiceId && currentService?.files) ? currentService.files : [];
+  const newFileUrls = uploadResults.map(fileData => ({ url: fileData.url, name: fileData.name, size: fileData.size, uploadedAt: fileData.uploadedAt }));
+  if (newFileUrls.length > 0) {
+    const allFiles = [...existingFiles, ...newFileUrls];
+    await state.db.collection('services').doc(serviceDocId).update({ files: allFiles, fileUploadedAt: new Date().toISOString() });
+    showToast(`✅ ${newFileUrls.length} ${newFileUrls.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
+  }
 }
 
 export async function deleteService(serviceId) {
@@ -429,6 +378,91 @@ export async function uploadFile(file, serviceId) {
     }
 }
 
+/* =================================================
+ARQUIVO: servicos/js/services.js
+MÓDULO: Upload Paralelo + Progress Bar
+VERSÃO: 3.3 - Performance Optimized
+=================================================*/
+/**
+ * Upload paralelo de múltiplos arquivos com progress bar
+ */
+export async function uploadMultipleFiles(files, serviceId, type = 'files') {
+  if (!files || files.length === 0) return [];
+  const total = files.length;
+  let completed = 0;
+  const progressId = `progress-${type}-${Date.now()}`;
+  createProgressBar(progressId, type, total);
+  try {
+    const uploadPromises = files.map(async (file) => {
+      try {
+        const result = await uploadFile(file, serviceId);
+        completed++;
+        updateProgressBar(progressId, completed, total);
+        return result;
+      } catch (error) {
+        console.error(`Erro no upload de ${file.name}:`, error);
+        completed++;
+        updateProgressBar(progressId, completed, total);
+        return null;
+      }
+    });
+    const results = await Promise.all(uploadPromises);
+    setTimeout(() => removeProgressBar(progressId), 1000);
+    return results.filter(r => r !== null);
+  } catch (error) {
+    console.error('Erro no upload múltiplo:', error);
+    removeProgressBar(progressId);
+    throw error;
+  }
+}
+function createProgressBar(id, type, total) {
+  const typeLabels = {
+    'images': 'Imagens',
+    'files': 'Arquivos',
+    'instagram': 'Fotos Instagram',
+    'packaged': 'Fotos Embaladas'
+  };
+  const container = document.getElementById('toastContainer') || document.body;
+  const progressDiv = document.createElement('div');
+  progressDiv.id = id;
+  progressDiv.className = 'upload-progress-bar';
+  progressDiv.innerHTML = `
+    <div class="progress-header">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <span class="progress-label">Enviando ${typeLabels[type]} (0/${total})</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 0%"></div>
+    </div>
+    <div class="progress-percentage">0%</div>
+  `;
+  container.appendChild(progressDiv);
+}
+function updateProgressBar(id, completed, total) {
+  const progressDiv = document.getElementById(id);
+  if (!progressDiv) return;
+  const percentage = Math.round((completed / total) * 100);
+  const label = progressDiv.querySelector('.progress-label');
+  const fill = progressDiv.querySelector('.progress-fill');
+  const percentageText = progressDiv.querySelector('.progress-percentage');
+  if (label) label.textContent = label.textContent.replace(/\(\d+\/\d+\)/, `(${completed}/${total})`);
+  if (fill) fill.style.width = `${percentage}%`;
+  if (percentageText) percentageText.textContent = `${percentage}%`;
+  if (completed === total) {
+    progressDiv.classList.add('complete');
+    if (fill) fill.style.background = 'var(--success-color, #10b981)';
+  }
+}
+function removeProgressBar(id) {
+  const progressDiv = document.getElementById(id);
+  if (progressDiv) {
+    progressDiv.style.opacity = '0';
+    setTimeout(() => progressDiv.remove(), 300);
+  }
+}
+
+
+
 /**
  * Remove um arquivo específico do serviço
  */
@@ -475,6 +509,45 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
         showToast('Erro ao remover arquivo: ' + error.message, 'error');
     }
 }
+
+/**
+ * Remove uma imagem específica do serviço
+ */
+export async function removeImageFromService(serviceId, imageIndex, imageUrl) {
+  if (!state.isAuthorized) return showToast('Sem permissão para remover imagens', 'error');
+  const service = state.services.find(s => s.id === serviceId);
+  if (!service || !service.images || !service.images[imageIndex]) {
+    return showToast('Imagem não encontrada', 'error');
+  }
+  if (!confirm('Deseja realmente remover esta imagem?
+
+Esta ação não pode ser desfeita.')) return;
+  try {
+    showToast('Removendo imagem...', 'info');
+    try {
+      const imageRef = state.storage.refFromURL(imageUrl);
+      await imageRef.delete();
+    } catch (storageError) {
+      console.error('Erro ao deletar do Storage:', storageError);
+    }
+    const updatedImages = service.images.filter((_, index) => index !== imageIndex);
+    const updates = { images: updatedImages, lastModified: new Date().toISOString() };
+    if (service.instagramPhoto === imageUrl) {
+      updates.instagramPhoto = updatedImages.find(img => img.isInstagram)?.url || null;
+    }
+    await state.db.collection('services').doc(serviceId).update(updates);
+    showToast('Imagem removida com sucesso!', 'success');
+    const imageModal = document.getElementById('imageViewerModal');
+    if (imageModal && imageModal.classList.contains('active')) {
+      window.closeImageModal();
+    }
+  } catch (error) {
+    console.error('Erro ao remover imagem:', error);
+    showToast('Erro ao remover imagem: ' + error.message, 'error');
+  }
+}
+
+
 
 // ===========================
 // STATUS MANAGEMENT
@@ -631,16 +704,9 @@ export async function confirmStatusChange() {
 
         // Upload das fotos embaladas
         const newPackagedPhotos = [];
-        for (const photoFile of state.pendingPackagedPhotos) {
-            const photoData = await uploadFile(photoFile, serviceId);
-            if (photoData) {
-                newPackagedPhotos.push({
-                    url: photoData.url,
-                    name: photoFile.name,
-                    uploadedAt: photoData.uploadedAt
-                });
-            }
-        }
+        showToast(`Preparando upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
+const uploadResults = await uploadMultipleFiles(state.pendingPackagedPhotos, serviceId, 'packaged');
+const newPackagedPhotos = uploadResults.map(photoData => ({ url: photoData.url, name: photoData.name, uploadedAt: photoData.uploadedAt}));
 
         if (newPackagedPhotos.length === 0) {
             return showToast('❌ Erro ao fazer upload das fotos embaladas', 'error');
@@ -706,17 +772,9 @@ export async function confirmStatusChange() {
             showToast(`Fazendo upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
 
             const newImageUrls = [];
-            for (const photoFile of state.pendingInstagramPhotos) {
-                const photoData = await uploadFile(photoFile, serviceId);
-                if (photoData) {
-                    newImageUrls.push({
-                        url: photoData.url,
-                        name: photoFile.name,
-                        uploadedAt: photoData.uploadedAt,
-                        isInstagram: true
-                    });
-                }
-            }
+            showToast(`Preparando upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
+const uploadResults = await uploadMultipleFiles(state.pendingInstagramPhotos, serviceId, 'instagram');
+const newImageUrls = uploadResults.map(photoData => ({ url: photoData.url, name: photoData.name, uploadedAt: photoData.uploadedAt, isInstagram: true}));
 
             if (newImageUrls.length === 0) {
                 return showToast('Erro ao fazer upload das fotos.', 'error');
