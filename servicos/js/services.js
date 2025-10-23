@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.4 - Remoção de Arquivos Individuais
+VERSÃO: 3.5 - Correção função saveService()
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -296,55 +296,56 @@ export async function saveService(event) {
             await saveClientToFirestore(clientData);
         }
         
-if (state.selectedFiles.length > 0 && serviceDocId) {
-    showToast(`Preparando upload de ${state.selectedFiles.length} arquivo(s)...`, 'info');
-    
-    const uploadResults = await uploadMultipleFiles(state.selectedFiles, serviceDocId, 'files');
-    const currentService = state.services.find(s => s.id === serviceDocId);
-    const existingFiles = (state.editingServiceId && currentService?.files) ? currentService.files : [];
-    
-    const newFileUrls = uploadResults.map(fileData => ({
-        url: fileData.url,
-        name: fileData.name,
-        size: fileData.size,
-        uploadedAt: fileData.uploadedAt
-    }));
-    
-    if (newFileUrls.length > 0) {
-        const allFiles = [...existingFiles, ...newFileUrls];
-        await state.db.collection('services').doc(serviceDocId).update({
-            files: allFiles,
-            fileUploadedAt: new Date().toISOString()
-        });
-        showToast(`✅ ${newFileUrls.length} ${newFileUrls.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
-    }
-}
-
-// Upload de imagens (ADICIONAR ESTE BLOCO)
-if (state.selectedImages.length > 0 && serviceDocId) {
-    showToast(`Preparando upload de ${state.selectedImages.length} imagem(ns)...`, 'info');
-    
-    const uploadResults = await uploadMultipleFiles(state.selectedImages, serviceDocId, 'images');
-    const currentService = state.services.find(s => s.id === serviceDocId);
-    const existingImages = (state.editingServiceId && currentService?.images) ? currentService.images : [];
-    
-    const newImageUrls = uploadResults.map(imageData => ({
-        url: imageData.url,
-        name: imageData.name,
-        uploadedAt: imageData.uploadedAt
-    }));
-    
-    if (newImageUrls.length > 0) {
-        const allImages = [...existingImages, ...newImageUrls];
-        await state.db.collection('services').doc(serviceDocId).update({
-            images: allImages,
-            imageUploadedAt: new Date().toISOString()
-        });
-        showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
-    }
-}
-
-window.closeModal();
+        // Upload de arquivos
+        if (state.selectedFiles.length > 0 && serviceDocId) {
+            showToast(`Preparando upload de ${state.selectedFiles.length} arquivo(s)...`, 'info');
+            
+            const uploadResults = await uploadMultipleFiles(state.selectedFiles, serviceDocId, 'files');
+            const currentService = state.services.find(s => s.id === serviceDocId);
+            const existingFiles = (state.editingServiceId && currentService?.files) ? currentService.files : [];
+            
+            const newFileUrls = uploadResults.map(fileData => ({
+                url: fileData.url,
+                name: fileData.name,
+                size: fileData.size,
+                uploadedAt: fileData.uploadedAt
+            }));
+            
+            if (newFileUrls.length > 0) {
+                const allFiles = [...existingFiles, ...newFileUrls];
+                await state.db.collection('services').doc(serviceDocId).update({
+                    files: allFiles,
+                    fileUploadedAt: new Date().toISOString()
+                });
+                showToast(`✅ ${newFileUrls.length} ${newFileUrls.length > 1 ? 'arquivos enviados' : 'arquivo enviado'}!`, 'success');
+            }
+        }
+        
+        // Upload de imagens
+        if (state.selectedImages.length > 0 && serviceDocId) {
+            showToast(`Preparando upload de ${state.selectedImages.length} imagem(ns)...`, 'info');
+            
+            const uploadResults = await uploadMultipleFiles(state.selectedImages, serviceDocId, 'images');
+            const currentService = state.services.find(s => s.id === serviceDocId);
+            const existingImages = (state.editingServiceId && currentService?.images) ? currentService.images : [];
+            
+            const newImageUrls = uploadResults.map(imageData => ({
+                url: imageData.url,
+                name: imageData.name,
+                uploadedAt: imageData.uploadedAt
+            }));
+            
+            if (newImageUrls.length > 0) {
+                const allImages = [...existingImages, ...newImageUrls];
+                await state.db.collection('services').doc(serviceDocId).update({
+                    images: allImages,
+                    imageUploadedAt: new Date().toISOString()
+                });
+                showToast(`✅ ${newImageUrls.length} ${newImageUrls.length > 1 ? 'imagens enviadas' : 'imagem enviada'}!`, 'success');
+            }
+        }
+        
+        window.closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
         showToast('Erro ao salvar serviço', 'error');
@@ -420,90 +421,86 @@ export async function uploadFile(file, serviceId) {
     }
 }
 
-/* =================================================
-ARQUIVO: servicos/js/services.js
-MÓDULO: Upload Paralelo + Progress Bar
-VERSÃO: 3.3 - Performance Optimized
-=================================================*/
 /**
  * Upload paralelo de múltiplos arquivos com progress bar
  */
 export async function uploadMultipleFiles(files, serviceId, type = 'files') {
-  if (!files || files.length === 0) return [];
-  const total = files.length;
-  let completed = 0;
-  const progressId = `progress-${type}-${Date.now()}`;
-  createProgressBar(progressId, type, total);
-  try {
-    const uploadPromises = files.map(async (file) => {
-      try {
-        const result = await uploadFile(file, serviceId);
-        completed++;
-        updateProgressBar(progressId, completed, total);
-        return result;
-      } catch (error) {
-        console.error(`Erro no upload de ${file.name}:`, error);
-        completed++;
-        updateProgressBar(progressId, completed, total);
-        return null;
-      }
-    });
-    const results = await Promise.all(uploadPromises);
-    setTimeout(() => removeProgressBar(progressId), 1000);
-    return results.filter(r => r !== null);
-  } catch (error) {
-    console.error('Erro no upload múltiplo:', error);
-    removeProgressBar(progressId);
-    throw error;
-  }
+    if (!files || files.length === 0) return [];
+    const total = files.length;
+    let completed = 0;
+    const progressId = `progress-${type}-${Date.now()}`;
+    createProgressBar(progressId, type, total);
+    try {
+        const uploadPromises = files.map(async (file) => {
+            try {
+                const result = await uploadFile(file, serviceId);
+                completed++;
+                updateProgressBar(progressId, completed, total);
+                return result;
+            } catch (error) {
+                console.error(`Erro no upload de ${file.name}:`, error);
+                completed++;
+                updateProgressBar(progressId, completed, total);
+                return null;
+            }
+        });
+        const results = await Promise.all(uploadPromises);
+        setTimeout(() => removeProgressBar(progressId), 1000);
+        return results.filter(r => r !== null);
+    } catch (error) {
+        console.error('Erro no upload múltiplo:', error);
+        removeProgressBar(progressId);
+        throw error;
+    }
 }
+
 function createProgressBar(id, type, total) {
-  const typeLabels = {
-    'images': 'Imagens',
-    'files': 'Arquivos',
-    'instagram': 'Fotos Instagram',
-    'packaged': 'Fotos Embaladas'
-  };
-  const container = document.getElementById('toastContainer') || document.body;
-  const progressDiv = document.createElement('div');
-  progressDiv.id = id;
-  progressDiv.className = 'upload-progress-bar';
-  progressDiv.innerHTML = `
-    <div class="progress-header">
-      <i class="fas fa-cloud-upload-alt"></i>
-      <span class="progress-label">Enviando ${typeLabels[type]} (0/${total})</span>
-    </div>
-    <div class="progress-track">
-      <div class="progress-fill" style="width: 0%"></div>
-    </div>
-    <div class="progress-percentage">0%</div>
-  `;
-  container.appendChild(progressDiv);
+    const typeLabels = {
+        'images': 'Imagens',
+        'files': 'Arquivos',
+        'instagram': 'Fotos Instagram',
+        'packaged': 'Fotos Embaladas'
+    };
+    const container = document.getElementById('toastContainer') || document.body;
+    const progressDiv = document.createElement('div');
+    progressDiv.id = id;
+    progressDiv.className = 'upload-progress-bar';
+    progressDiv.innerHTML = `
+        <div class="progress-header">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span class="progress-label">Enviando ${typeLabels[type]} (0/${total})</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-percentage">0%</div>
+    `;
+    container.appendChild(progressDiv);
 }
+
 function updateProgressBar(id, completed, total) {
-  const progressDiv = document.getElementById(id);
-  if (!progressDiv) return;
-  const percentage = Math.round((completed / total) * 100);
-  const label = progressDiv.querySelector('.progress-label');
-  const fill = progressDiv.querySelector('.progress-fill');
-  const percentageText = progressDiv.querySelector('.progress-percentage');
-  if (label) label.textContent = label.textContent.replace(/\(\d+\/\d+\)/, `(${completed}/${total})`);
-  if (fill) fill.style.width = `${percentage}%`;
-  if (percentageText) percentageText.textContent = `${percentage}%`;
-  if (completed === total) {
-    progressDiv.classList.add('complete');
-    if (fill) fill.style.background = 'var(--success-color, #10b981)';
-  }
+    const progressDiv = document.getElementById(id);
+    if (!progressDiv) return;
+    const percentage = Math.round((completed / total) * 100);
+    const label = progressDiv.querySelector('.progress-label');
+    const fill = progressDiv.querySelector('.progress-fill');
+    const percentageText = progressDiv.querySelector('.progress-percentage');
+    if (label) label.textContent = label.textContent.replace(/\(\d+\/\d+\)/, `(${completed}/${total})`);
+    if (fill) fill.style.width = `${percentage}%`;
+    if (percentageText) percentageText.textContent = `${percentage}%`;
+    if (completed === total) {
+        progressDiv.classList.add('complete');
+        if (fill) fill.style.background = 'var(--success-color, #10b981)';
+    }
 }
+
 function removeProgressBar(id) {
-  const progressDiv = document.getElementById(id);
-  if (progressDiv) {
-    progressDiv.style.opacity = '0';
-    setTimeout(() => progressDiv.remove(), 300);
-  }
+    const progressDiv = document.getElementById(id);
+    if (progressDiv) {
+        progressDiv.style.opacity = '0';
+        setTimeout(() => progressDiv.remove(), 300);
+    }
 }
-
-
 
 /**
  * Remove um arquivo específico do serviço
@@ -521,7 +518,6 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
     try {
         showToast('Removendo arquivo...', 'info');
         
-        // Deletar do Storage
         try {
             const fileRef = state.storage.refFromURL(fileUrl);
             await fileRef.delete();
@@ -529,7 +525,6 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
             console.error('Erro ao deletar do Storage:', storageError);
         }
         
-        // Atualizar Firestore
         const updatedFiles = service.files.filter((_, index) => index !== fileIndex);
         
         await state.db.collection('services').doc(serviceId).update({
@@ -539,7 +534,6 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
         
         showToast('Arquivo removido com sucesso!', 'success');
         
-        // Atualizar modal se estiver aberto
         const modal = document.getElementById('filesViewerModal');
         if (modal && modal.classList.contains('show')) {
             const { showFilesModal } = await import('./auth-ui.js');
@@ -556,40 +550,36 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
  * Remove uma imagem específica do serviço
  */
 export async function removeImageFromService(serviceId, imageIndex, imageUrl) {
-  if (!state.isAuthorized) return showToast('Sem permissão para remover imagens', 'error');
-  const service = state.services.find(s => s.id === serviceId);
-  if (!service || !service.images || !service.images[imageIndex]) {
-    return showToast('Imagem não encontrada', 'error');
-  }
-  if (!confirm('Deseja realmente remover esta imagem?
-
-Esta ação não pode ser desfeita.')) return;
-  try {
-    showToast('Removendo imagem...', 'info');
+    if (!state.isAuthorized) return showToast('Sem permissão para remover imagens', 'error');
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service || !service.images || !service.images[imageIndex]) {
+        return showToast('Imagem não encontrada', 'error');
+    }
+    if (!confirm('Deseja realmente remover esta imagem?\n\nEsta ação não pode ser desfeita.')) return;
     try {
-      const imageRef = state.storage.refFromURL(imageUrl);
-      await imageRef.delete();
-    } catch (storageError) {
-      console.error('Erro ao deletar do Storage:', storageError);
+        showToast('Removendo imagem...', 'info');
+        try {
+            const imageRef = state.storage.refFromURL(imageUrl);
+            await imageRef.delete();
+        } catch (storageError) {
+            console.error('Erro ao deletar do Storage:', storageError);
+        }
+        const updatedImages = service.images.filter((_, index) => index !== imageIndex);
+        const updates = { images: updatedImages, lastModified: new Date().toISOString() };
+        if (service.instagramPhoto === imageUrl) {
+            updates.instagramPhoto = updatedImages.find(img => img.isInstagram)?.url || null;
+        }
+        await state.db.collection('services').doc(serviceId).update(updates);
+        showToast('Imagem removida com sucesso!', 'success');
+        const imageModal = document.getElementById('imageViewerModal');
+        if (imageModal && imageModal.classList.contains('active')) {
+            window.closeImageModal();
+        }
+    } catch (error) {
+        console.error('Erro ao remover imagem:', error);
+        showToast('Erro ao remover imagem: ' + error.message, 'error');
     }
-    const updatedImages = service.images.filter((_, index) => index !== imageIndex);
-    const updates = { images: updatedImages, lastModified: new Date().toISOString() };
-    if (service.instagramPhoto === imageUrl) {
-      updates.instagramPhoto = updatedImages.find(img => img.isInstagram)?.url || null;
-    }
-    await state.db.collection('services').doc(serviceId).update(updates);
-    showToast('Imagem removida com sucesso!', 'success');
-    const imageModal = document.getElementById('imageViewerModal');
-    if (imageModal && imageModal.classList.contains('active')) {
-      window.closeImageModal();
-    }
-  } catch (error) {
-    console.error('Erro ao remover imagem:', error);
-    showToast('Erro ao remover imagem: ' + error.message, 'error');
-  }
 }
-
-
 
 // ===========================
 // STATUS MANAGEMENT
@@ -719,91 +709,83 @@ export async function confirmStatusChange() {
     const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
     
     if (requiresPackagedPhoto) {
-    // Validar fotos embaladas
-    if (state.pendingPackagedPhotos.length === 0) {
-        return showToast('❌ Selecione pelo menos uma foto do produto embalado', 'error');
-    }
-    
-    // NOVO: Validar código de rastreio se for sedex
-    const trackingInput = document.getElementById('statusTrackingCodeInput');
-    let trackingCode = null;
-    
-    if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
-        if (!trackingInput || !trackingInput.value.trim()) {
-            return showToast('❌ Digite o código de rastreio dos Correios', 'error');
+        if (state.pendingPackagedPhotos.length === 0) {
+            return showToast('❌ Selecione pelo menos uma foto do produto embalado', 'error');
         }
         
-        trackingCode = trackingInput.value.trim().toUpperCase();
+        const trackingInput = document.getElementById('statusTrackingCodeInput');
+        let trackingCode = null;
         
-        // Validação básica do formato
-        if (trackingCode.length < 10) {
-            return showToast('❌ Código de rastreio inválido (muito curto)', 'error');
-        }
-    }
-    
-    try {
-        showToast(`📤 Fazendo upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
-
-        // Upload das fotos embaladas
-        const newPackagedPhotos = [];
-        showToast(`Preparando upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
-const uploadResults = await uploadMultipleFiles(state.pendingPackagedPhotos, serviceId, 'packaged');
-const newPackagedPhotos = uploadResults.map(photoData => ({ url: photoData.url, name: photoData.name, uploadedAt: photoData.uploadedAt}));
-
-        if (newPackagedPhotos.length === 0) {
-            return showToast('❌ Erro ao fazer upload das fotos embaladas', 'error');
-        }
-
-        const existingPackaged = service.packagedPhotos || [];
-        const allPackaged = [...existingPackaged, ...newPackagedPhotos];
-
-        // Preparar atualização do Firebase
-        const updates = {
-            packagedPhotos: allPackaged,
-            status: 'retirada',
-            readyAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            updatedBy: state.currentUser.email,
-            lastStatusChange: new Date().toISOString()
-        };
-        
-        // NOVO: Adicionar código de rastreio se for sedex
-        if (trackingCode) {
-            updates.trackingCode = trackingCode;
-            updates.postedAt = new Date().toISOString();
-        }
-
-        // Salvar no Firebase
-        await state.db.collection('services').doc(serviceId).update(updates);
-
-        showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado para Postado.`, 'success');
-
-        // Enviar notificação por WhatsApp
-        if (sendWhatsapp && service.clientPhone) {
-            let message = `📦 Seu pedido foi postado!\n\n» ${service.name}\n» Código: ${service.orderCode}`;
-            
-            if (trackingCode) {
-                message += `\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
-            } else {
-                message += `\n\n${service.deliveryMethod === 'retirada' ? 'Venha buscar seu pedido!' : 'Em breve chegará até você!'}`;
+        if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
+            if (!trackingInput || !trackingInput.value.trim()) {
+                return showToast('❌ Digite o código de rastreio dos Correios', 'error');
             }
             
-            sendWhatsAppMessage(service.clientPhone, message);
+            trackingCode = trackingInput.value.trim().toUpperCase();
+            
+            if (trackingCode.length < 10) {
+                return showToast('❌ Código de rastreio inválido (muito curto)', 'error');
+            }
         }
+        
+        try {
+            showToast(`Preparando upload de ${state.pendingPackagedPhotos.length} foto(s) embalada(s)...`, 'info');
+            const uploadResults = await uploadMultipleFiles(state.pendingPackagedPhotos, serviceId, 'packaged');
+            const newPackagedPhotos = uploadResults.map(photoData => ({ 
+                url: photoData.url, 
+                name: photoData.name, 
+                uploadedAt: photoData.uploadedAt
+            }));
 
-        // Enviar email se solicitado
-        if (sendEmail && service.clientEmail) {
-            await sendEmailNotification(service);
+            if (newPackagedPhotos.length === 0) {
+                return showToast('❌ Erro ao fazer upload das fotos embaladas', 'error');
+            }
+
+            const existingPackaged = service.packagedPhotos || [];
+            const allPackaged = [...existingPackaged, ...newPackagedPhotos];
+
+            const updates = {
+                packagedPhotos: allPackaged,
+                status: 'retirada',
+                readyAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: state.currentUser.email,
+                lastStatusChange: new Date().toISOString()
+            };
+            
+            if (trackingCode) {
+                updates.trackingCode = trackingCode;
+                updates.postedAt = new Date().toISOString();
+            }
+
+            await state.db.collection('services').doc(serviceId).update(updates);
+
+            showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado para Postado.`, 'success');
+
+            if (sendWhatsapp && service.clientPhone) {
+                let message = `📦 Seu pedido foi postado!\n\n» ${service.name}\n» Código: ${service.orderCode}`;
+                
+                if (trackingCode) {
+                    message += `\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
+                } else {
+                    message += `\n\n${service.deliveryMethod === 'retirada' ? 'Venha buscar seu pedido!' : 'Em breve chegará até você!'}`;
+                }
+                
+                sendWhatsAppMessage(service.clientPhone, message);
+            }
+
+            if (sendEmail && service.clientEmail) {
+                await sendEmailNotification(service);
+            }
+
+            window.closeStatusModal();
+            return;
+        } catch (error) {
+            console.error('Erro ao confirmar fotos embaladas:', error);
+            showToast('❌ Erro ao processar as fotos embaladas', 'error');
+            return;
         }
-
-        window.closeStatusModal();
-        return;
-    } catch (error) {
-        console.error('Erro ao confirmar fotos embaladas:', error);
-        showToast('❌ Erro ao processar as fotos embaladas', 'error');
-        return;
     }
-}
     
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
@@ -811,12 +793,14 @@ const newPackagedPhotos = uploadResults.map(photoData => ({ url: photoData.url, 
         }
 
         try {
-            showToast(`Fazendo upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
-
-            const newImageUrls = [];
             showToast(`Preparando upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
-const uploadResults = await uploadMultipleFiles(state.pendingInstagramPhotos, serviceId, 'instagram');
-const newImageUrls = uploadResults.map(photoData => ({ url: photoData.url, name: photoData.name, uploadedAt: photoData.uploadedAt, isInstagram: true}));
+            const uploadResults = await uploadMultipleFiles(state.pendingInstagramPhotos, serviceId, 'instagram');
+            const newImageUrls = uploadResults.map(photoData => ({ 
+                url: photoData.url, 
+                name: photoData.name, 
+                uploadedAt: photoData.uploadedAt, 
+                isInstagram: true
+            }));
 
             if (newImageUrls.length === 0) {
                 return showToast('Erro ao fazer upload das fotos.', 'error');
