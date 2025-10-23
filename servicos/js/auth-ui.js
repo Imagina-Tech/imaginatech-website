@@ -637,6 +637,13 @@ export function closeStatusModal() {
     const packagedInput = document.getElementById('packagedPhotoInput');
     if (packagedInput) packagedInput.value = '';
     
+    const trackingField = document.getElementById('statusTrackingCodeField');
+    if (trackingField) trackingField.style.display = 'none';
+    const trackingInput = document.getElementById('statusTrackingCodeInput');
+    if (trackingInput) {
+    trackingInput.value = '';
+    trackingInput.required = false;
+    
     const photoPreview = document.getElementById('instagramPhotoPreview');
     const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
     if (photoPreview) photoPreview.style.display = 'none';
@@ -728,9 +735,17 @@ export function showStatusModalWithPhoto(service, newStatus) {
 }
 
 export function showStatusModalWithPackagedPhoto(service, newStatus) {
-    document.getElementById('statusModalMessage') && 
-        (document.getElementById('statusModalMessage').textContent = `Para marcar como Pronto/Postado, é obrigatório anexar uma ou mais fotos do produto embalado "${service.name}"`);
+    // Atualizar mensagem do modal
+    const modalMessage = document.getElementById('statusModalMessage');
+    if (modalMessage) {
+        if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
+            modalMessage.textContent = `Para marcar como Postado, é obrigatório anexar fotos do produto embalado E informar o código de rastreio dos Correios`;
+        } else {
+            modalMessage.textContent = `Para marcar como Pronto/Postado, é obrigatório anexar uma ou mais fotos do produto embalado "${service.name}"`;
+        }
+    }
     
+    // Mostrar campo de fotos embaladas
     const packagedField = document.getElementById('packagedPhotoField');
     if (packagedField) {
         packagedField.style.display = 'block';
@@ -744,9 +759,26 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
         state.pendingPackagedPhotos = [];
     }
     
+    // NOVO: Mostrar campo de código de rastreio se for sedex sem código
+    const trackingField = document.getElementById('statusTrackingCodeField');
+    if (trackingField) {
+        if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
+            trackingField.style.display = 'block';
+            const trackingInput = document.getElementById('statusTrackingCodeInput');
+            if (trackingInput) {
+                trackingInput.value = '';
+                trackingInput.required = true;
+            }
+        } else {
+            trackingField.style.display = 'none';
+        }
+    }
+    
+    // Esconder campo de email
     const emailOption = document.getElementById('emailOption');
     if (emailOption) emailOption.style.display = 'none';
     
+    // Mostrar opção de WhatsApp se houver telefone
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
