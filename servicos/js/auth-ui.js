@@ -867,12 +867,15 @@ export function showServiceImages(serviceId) {
     
     const allImages = [];
     
+    // Coletar imagens com índices para remoção
     if (service.images && service.images.length > 0) {
-        service.images.forEach(img => {
+        service.images.forEach((img, index) => {
             allImages.push({
                 url: img.url,
                 name: img.name || 'Imagem',
-                type: 'regular'
+                type: 'regular',
+                imageIndex: index,
+                serviceId: serviceId
             });
         });
     }
@@ -904,9 +907,126 @@ export function showServiceImages(serviceId) {
     }
     
     if (allImages.length > 0) {
-        showImageModal(allImages, service.name || 'Serviço');
+        showImagesGallery(allImages, service.name || 'Serviço', serviceId);
     }
 }
+
+/**
+ * Galeria de imagens com remoção individual
+ */
+function showImagesGallery(images, serviceName, serviceId) {
+    const modal = document.getElementById('imageViewerModal');
+    if (!modal) return;
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (!modalContent) return;
+    
+    const galleryHTML = `
+        <div class="modal-header">
+            <h2><i class="fas fa-images"></i> ${serviceName} - ${images.length} Imagem(ns)</h2>
+            <button class="modal-close" onclick="closeImageGalleryModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="images-gallery-grid">
+                ${images.map((img, index) => `
+                    <div class="gallery-image-item">
+                        <img 
+                            src="${img.url}" 
+                            alt="${img.name}"
+                            onclick="window.viewFullImage('${img.url}', '${escapeHtml(img.name)}')"
+                        >
+                        ${state.isAuthorized && img.imageIndex !== undefined ? `
+                            <button 
+                                class="btn-remove-gallery-item" 
+                                onclick="event.stopPropagation(); window.removeImageFromGallery('${serviceId}', ${img.imageIndex}, '${img.url}')"
+                                title="Remover imagem"
+                            >
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                        ${img.type === 'instagram' ? '<span class="instagram-badge"><i class="fab fa-instagram"></i></span>' : ''}
+                        ${img.type === 'packaged' ? '<span class="packaged-badge">📦</span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" onclick="closeImageGalleryModal()">
+                <i class="fas fa-check"></i> Fechar
+            </button>
+        </div>
+    `;
+    
+    modalContent.innerHTML = galleryHTML;
+    modal.classList.add('active');
+}
+
+/**
+ * Visualizar imagem em tamanho completo
+ */
+window.viewFullImage = function(url, name) {
+    showImageModal([{url, name}], name, 0);
+};
+
+/**
+ * Fechar galeria e restaurar modal original
+ */
+window.closeImageGalleryModal = function() {
+    const modal = document.getElementById('imageViewerModal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div class="modal-header">
+                        <h2 id="viewerTitle">Imagem</h2>
+                        <button class="modal-close" onclick="closeImageModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body image-viewer-body">
+                        <img id="viewerImage" src="" alt="Imagem do Serviço">
+                        <button class="image-nav-btn prev-btn" id="prevImageBtn" onclick="prevImage()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="image-nav-btn next-btn" id="nextImageBtn" onclick="nextImage()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div class="image-counter" id="imageCounter">1 / 1</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" id="downloadImageBtn">
+                            <i class="fas fa-download"></i> Baixar Imagem
+                        </button>
+                        <button class="btn-secondary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
+                            <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
+                        </button>
+                        <button class="btn-secondary" onclick="closeImageModal()">
+                            <i class="fas fa-times"></i> Fechar
+                        </button>
+                    </div>
+                `;
+            }
+        }, 300);
+    }
+};
+
+/**
+ * Remover imagem e reabrir galeria
+ */
+window.removeImageFromGallery = async function(serviceId, imageIndex, imageUrl) {
+    const { removeImageFromService } = await import('./services.js');
+    await removeImageFromService(serviceId, imageIndex, imageUrl);
+    setTimeout(() => {
+        const service = state.services.find(s => s.id === serviceId);
+        if (service) {
+            showServiceImages(serviceId);
+        }
+    }, 500);
+};
 
 export function showServiceFiles(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
