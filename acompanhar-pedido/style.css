@@ -2,7 +2,7 @@
    ARQUIVO: style.css
    MÓDULO: Acompanhar Pedido (Portal do Cliente)
    SISTEMA: ImaginaTech - Gestão de Impressão 3D
-   VERSÃO: 2.0 - Enhanced
+   VERSÃO: 2.1 - Mobile Responsivo
    IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
    =========================== */
 
@@ -769,7 +769,7 @@ body {
 
 .order-details {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
 }
 
@@ -792,6 +792,45 @@ body {
 .detail-value {
     font-size: 1.1rem;
     font-weight: 500;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* ===========================
+   DELIVERY ADDRESS CONTAINER
+   =========================== */
+
+.delivery-address-container {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(153, 69, 255, 0.1);
+    border: 1px solid var(--neon-purple);
+    border-radius: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.delivery-address-container p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ===========================
+   TRACKING CODE
+   =========================== */
+
+.tracking-code {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    color: var(--neon-blue);
+    letter-spacing: 2px;
+    word-break: break-all;
+    display: block;
+    max-width: 100%;
 }
 
 /* ===========================
@@ -1168,6 +1207,75 @@ body {
     .toast {
         min-width: 250px;
         right: 10px;
+    }
+    
+    /* Correções mobile adicionadas */
+    .welcome-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .order-card {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .order-details {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        padding: 0.75rem;
+    }
+    
+    .detail-item[style*="grid-column: 1 / -1"] {
+        grid-column: 1;
+    }
+    
+    .order-status-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .status-badge {
+        width: 100%;
+        text-align: center;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .code-input {
+        font-size: 1rem;
+        letter-spacing: 2px;
+    }
+    
+    .btn-verify {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .timeline {
+        padding-left: 1.5rem;
+    }
+    
+    .timeline-item {
+        margin-left: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .timeline-item::before {
+        left: -1.25rem;
+    }
+    
+    .delivery-address-container {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .tracking-code {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
     }
 }
 
