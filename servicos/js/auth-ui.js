@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/auth-ui.js
 MÓDULO: Autenticação, Interface e Utilities
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.4 - Remoção de Arquivos Individuais
+VERSÃO: 3.5 - Correção de Redundâncias
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -16,8 +16,7 @@ import {
     confirmStatusChange, 
     renderServices, 
     filterServices, 
-    uploadFile,
-    removeFileFromService
+    uploadFile
 } from './services.js';
 
 // ===========================
@@ -736,7 +735,6 @@ export function showStatusModalWithPhoto(service, newStatus) {
 }
 
 export function showStatusModalWithPackagedPhoto(service, newStatus) {
-    // Atualizar mensagem do modal
     const modalMessage = document.getElementById('statusModalMessage');
     if (modalMessage) {
         if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
@@ -746,7 +744,6 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
         }
     }
     
-    // Mostrar campo de fotos embaladas
     const packagedField = document.getElementById('packagedPhotoField');
     if (packagedField) {
         packagedField.style.display = 'block';
@@ -760,7 +757,6 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
         state.pendingPackagedPhotos = [];
     }
     
-    // NOVO: Mostrar campo de código de rastreio se for sedex sem código
     const trackingField = document.getElementById('statusTrackingCodeField');
     if (trackingField) {
         if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
@@ -775,11 +771,9 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
         }
     }
     
-    // Esconder campo de email
     const emailOption = document.getElementById('emailOption');
     if (emailOption) emailOption.style.display = 'none';
     
-    // Mostrar opção de WhatsApp se houver telefone
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
@@ -867,7 +861,6 @@ export function showServiceImages(serviceId) {
     
     const allImages = [];
     
-    // Coletar imagens com índices para remoção
     if (service.images && service.images.length > 0) {
         service.images.forEach((img, index) => {
             allImages.push({
@@ -911,9 +904,6 @@ export function showServiceImages(serviceId) {
     }
 }
 
-/**
- * Galeria de imagens com remoção individual
- */
 function showImagesGallery(images, serviceName, serviceId) {
     const modal = document.getElementById('imageViewerModal');
     if (!modal) return;
@@ -924,7 +914,7 @@ function showImagesGallery(images, serviceName, serviceId) {
     const galleryHTML = `
         <div class="modal-header">
             <h2><i class="fas fa-images"></i> ${serviceName} - ${images.length} Imagem(ns)</h2>
-            <button class="modal-close" onclick="closeImageGalleryModal()">
+            <button class="modal-close" onclick="closeImageModal()">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -953,7 +943,7 @@ function showImagesGallery(images, serviceName, serviceId) {
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn-primary" onclick="closeImageGalleryModal()">
+            <button class="btn-primary" onclick="closeImageModal()">
                 <i class="fas fa-check"></i> Fechar
             </button>
         </div>
@@ -963,60 +953,10 @@ function showImagesGallery(images, serviceName, serviceId) {
     modal.classList.add('active');
 }
 
-/**
- * Visualizar imagem em tamanho completo
- */
 window.viewFullImage = function(url, name) {
     showImageModal([{url, name}], name, 0);
 };
 
-/**
- * Fechar galeria e restaurar modal original
- */
-window.closeImageGalleryModal = function() {
-    const modal = document.getElementById('imageViewerModal');
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => {
-            const modalContent = modal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.innerHTML = `
-                    <div class="modal-header">
-                        <h2 id="viewerTitle">Imagem</h2>
-                        <button class="modal-close" onclick="closeImageModal()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body image-viewer-body">
-                        <img id="viewerImage" src="" alt="Imagem do Serviço">
-                        <button class="image-nav-btn prev-btn" id="prevImageBtn" onclick="prevImage()">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="image-nav-btn next-btn" id="nextImageBtn" onclick="nextImage()">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <div class="image-counter" id="imageCounter">1 / 1</div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" id="downloadImageBtn">
-                            <i class="fas fa-download"></i> Baixar Imagem
-                        </button>
-                        <button class="btn-secondary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
-                            <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
-                        </button>
-                        <button class="btn-secondary" onclick="closeImageModal()">
-                            <i class="fas fa-times"></i> Fechar
-                        </button>
-                    </div>
-                `;
-            }
-        }, 300);
-    }
-};
-
-/**
- * Remover imagem e reabrir galeria
- */
 window.removeImageFromGallery = async function(serviceId, imageIndex, imageUrl) {
     const { removeImageFromService } = await import('./services.js');
     await removeImageFromService(serviceId, imageIndex, imageUrl);
@@ -1200,9 +1140,47 @@ export function nextImage() {
 }
 
 export const closeImageModal = () => {
-    document.getElementById('imageViewerModal')?.classList.remove('active');
+    const modal = document.getElementById('imageViewerModal');
+    if (!modal) return;
+    
+    modal.classList.remove('active');
     state.currentImageGallery = [];
     state.currentImageIndex = 0;
+    
+    setTimeout(() => {
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2 id="viewerTitle">Imagem</h2>
+                    <button class="modal-close" onclick="closeImageModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body image-viewer-body">
+                    <img id="viewerImage" src="" alt="Imagem do Serviço">
+                    <button class="image-nav-btn prev-btn" id="prevImageBtn" onclick="prevImage()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="image-nav-btn next-btn" id="nextImageBtn" onclick="nextImage()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="image-counter" id="imageCounter">1 / 1</div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" id="downloadImageBtn">
+                        <i class="fas fa-download"></i> Baixar Imagem
+                    </button>
+                    <button class="btn-secondary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
+                        <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
+                    </button>
+                    <button class="btn-secondary" onclick="closeImageModal()">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+            `;
+        }
+    }, 300);
 };
 
 // ===========================
@@ -1860,4 +1838,7 @@ window.handleClientNameInput = handleClientNameInput;
 window.selectClient = selectClient;
 window.formatCPF = formatCPF;
 window.copyClientDataToDelivery = copyClientDataToDelivery;
-window.removeFileFromService = removeFileFromService;
+window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
+    const { removeFileFromService } = await import('./services.js');
+    await removeFileFromService(serviceId, fileIndex, fileUrl);
+};
