@@ -89,9 +89,3 @@ onDOMReady(() => {
 // EXPÕE FUNÇÕES GLOBAIS
 // ===========================
 window.saveService = saveService;
-
-// Remoção de imagens individuais
-window.removeImage = async (serviceId, imageIndex, imageUrl) => {
-    const { removeImageFromService } = await import('./services.js');
-    await removeImageFromService(serviceId, imageIndex, imageUrl);
-};
