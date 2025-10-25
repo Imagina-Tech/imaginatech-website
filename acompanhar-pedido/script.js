@@ -2,7 +2,7 @@
 // ARQUIVO: script.js
 // MÓDULO: Acompanhar Pedido (Portal do Cliente)
 // SISTEMA: ImaginaTech - Gestão de Impressão 3D
-// VERSÃO: 4.0 - Simplificado sem API de Rastreamento
+// VERSÃO: 4.1 - Mobile Responsivo
 // IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // ===========================
 
@@ -450,8 +450,6 @@ function showOrderDetails(orderId, orderData) {
     const deliveryIcon = DELIVERY_ICONS[orderData.deliveryMethod] || DELIVERY_ICONS['definir'];
     const deliveryText = formatDeliveryMethod(orderData.deliveryMethod);
     
-    // Removido trackingSection daqui - será mostrado na timeline
-    
     // Informações de retirada
     let pickupSection = '';
     if (orderData.deliveryMethod === 'retirada' && orderData.pickupInfo) {
@@ -591,13 +589,7 @@ function showOrderDetails(orderId, orderData) {
         </div>
         
         ${orderData.deliveryMethod === 'sedex' && orderData.deliveryAddress ? `
-        <div style="
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(153, 69, 255, 0.1);
-            border: 1px solid var(--neon-purple);
-            border-radius: 10px;
-        ">
+        <div class="delivery-address-container">
             <div style="color: var(--neon-purple); margin-bottom: 0.5rem;">
                 <i class="fas fa-map-marked-alt"></i>
                 <strong>Endereço de Entrega:</strong>
@@ -771,12 +763,7 @@ function updateTimeline(orderData) {
                         padding-top: 0.75rem;
                         border-top: 1px solid var(--glass-border);
                     ">
-                        <code style="
-                            font-family: 'Orbitron', monospace;
-                            font-size: 1.1rem;
-                            color: var(--neon-blue);
-                            letter-spacing: 2px;
-                        ">${event.trackingCode}</code>
+                        <code class="tracking-code">${event.trackingCode}</code>
                         <a href="https://rastreamento.correios.com.br/app/index.php?objeto=${event.trackingCode}" 
                            target="_blank"
                            style="
