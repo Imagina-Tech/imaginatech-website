@@ -2,7 +2,7 @@
 ARQUIVO: servicos/js/services.js
 MÓDULO: Lógica de Serviços (CRUD, Status, Upload, Renderização)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.5 - Correção função saveService()
+VERSÃO: 3.6 - Filtro de visualização otimizado
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -919,7 +919,7 @@ export function renderServices() {
     if (!grid || !emptyState) return;
     
     let filtered = state.currentFilter === 'todos' ? 
-        state.services.filter(s => s.status !== 'entregue') : 
+        state.services.filter(s => !['entregue', 'retirada'].includes(s.status)) : 
         state.services.filter(s => s.status === state.currentFilter);
     
     if (state.currentFilter === 'concluido') {
@@ -1073,7 +1073,7 @@ function createStatusTimeline(service) {
 
 export function updateStats() {
     const stats = {
-        active: state.services.filter(s => s.status !== 'entregue').length,
+        active: state.services.filter(s => !['entregue', 'retirada'].includes(s.status)).length,
         pendente: state.services.filter(s => s.status === 'pendente').length,
         producao: state.services.filter(s => s.status === 'producao').length,
         concluido: state.services.filter(s => s.status === 'concluido').length,
