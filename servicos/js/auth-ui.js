@@ -861,6 +861,7 @@ export function showServiceImages(serviceId) {
     
     const allImages = [];
     
+    // 1. images[] - mantém compatibilidade
     if (service.images && service.images.length > 0) {
         service.images.forEach((img, index) => {
             allImages.push({
@@ -868,33 +869,46 @@ export function showServiceImages(serviceId) {
                 name: img.name || 'Imagem',
                 type: 'regular',
                 imageIndex: index,
+                imageSource: 'images', // ✅ NOVO
                 serviceId: serviceId
             });
         });
     }
     
-    if (service.imageUrl) {
+    // 2. imageUrl legado
+    if (service.imageUrl && !(service.images && service.images.find(img => img.url === service.imageUrl))) {
         allImages.push({
             url: service.imageUrl,
             name: 'Imagem',
-            type: 'regular'
+            type: 'regular',
+            imageIndex: 0,
+            imageSource: 'imageUrl', // ✅ NOVO
+            serviceId: serviceId
         });
     }
     
-    if (service.instagramPhoto) {
+    // 3. instagramPhoto
+    if (service.instagramPhoto && !(service.images && service.images.find(img => img.url === service.instagramPhoto))) {
         allImages.push({
             url: service.instagramPhoto,
             name: 'Foto Instagramável',
-            type: 'instagram'
+            type: 'instagram',
+            imageIndex: 0,
+            imageSource: 'instagramPhoto', // ✅ NOVO
+            serviceId: serviceId
         });
     }
     
+    // 4. packagedPhotos[]
     if (service.packagedPhotos && service.packagedPhotos.length > 0) {
-        service.packagedPhotos.forEach(photo => {
+        service.packagedPhotos.forEach((photo, index) => {
             allImages.push({
                 url: photo.url,
                 name: photo.name || 'Produto Embalado',
-                type: 'packaged'
+                type: 'packaged',
+                imageIndex: index,
+                imageSource: 'packagedPhotos', // ✅ NOVO
+                serviceId: serviceId
             });
         });
     }
@@ -927,10 +941,10 @@ function showImagesGallery(images, serviceName, serviceId) {
                             alt="${img.name}"
                             onclick="window.viewFullImage('${img.url}', '${escapeHtml(img.name)}')"
                         >
-                        ${state.isAuthorized && img.imageIndex !== undefined ? `
+                        ${state.isAuthorized ? `
                             <button 
                                 class="btn-remove-gallery-item" 
-                                onclick="event.stopPropagation(); window.removeImageFromGallery('${serviceId}', ${img.imageIndex}, '${img.url}')"
+                                onclick="event.stopPropagation(); window.removeImageFromGallery('${serviceId}', ${img.imageIndex}, '${img.imageSource}', '${img.url}')"
                                 title="Remover imagem"
                             >
                                 <i class="fas fa-times"></i>
@@ -957,9 +971,10 @@ window.viewFullImage = function(url, name) {
     showImageModal([{url, name}], name, 0);
 };
 
-window.removeImageFromGallery = async function(serviceId, imageIndex, imageUrl) {
+window.removeImageFromGallery = async function(serviceId, imageIndex, imageSource, imageUrl) {
     const { removeImageFromService } = await import('./services.js');
-    await removeImageFromService(serviceId, imageIndex, imageUrl);
+    await removeImageFromService(serviceId, imageIndex, imageSource, imageUrl);
+    
     setTimeout(() => {
         const service = state.services.find(s => s.id === serviceId);
         if (service) {
