@@ -3,7 +3,7 @@
 ARQUIVO: servicos/styles.css
 MÓDULO: Serviços/Produção (Painel Administrativo)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.5 - Limpeza de CSS Órfão
+VERSÃO: 2.6 - Mobile Image Viewer Optimized
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -974,7 +974,7 @@ body {
 .empty-state p { color: var(--text-secondary); margin-bottom: 2rem; }
 
 /* ===========================
-   MODALS
+   MODALS - OTIMIZADO MOBILE
    =========================== */
 .modal {
     display: none;
@@ -1001,7 +1001,11 @@ body {
     animation: modalSlideIn 0.3s ease;
 }
 
-.modal-content.modal-image { max-width: 900px; }
+/* Modal de imagem - Desktop */
+.modal-content.modal-image { 
+    max-width: 90vw;
+    max-height: 90vh;
+}
 
 .modal-image-body {
     padding: 0;
@@ -1025,6 +1029,7 @@ body {
     object-fit: contain;
 }
 
+/* Botões de navegação - Desktop */
 .image-nav-btn {
     position: absolute;
     top: 50%;
@@ -1057,13 +1062,8 @@ body {
     color: var(--glass-border);
 }
 
-.image-nav-btn.prev-btn {
-    left: 20px;
-}
-
-.image-nav-btn.next-btn {
-    right: 20px;
-}
+.image-nav-btn.prev-btn { left: 20px; }
+.image-nav-btn.next-btn { right: 20px; }
 
 .image-counter {
     position: absolute;
@@ -1205,11 +1205,16 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     transition: color 0.3s;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close:hover { color: var(--neon-red); }
 .modal-body { padding: 1.5rem; }
-.modal-footer { display: flex; gap: 1rem; padding: 1.5rem; border-top: 1px solid var(--glass-border); }
+.modal-footer { display: flex; gap: 1rem; padding: 1.5rem; border-top: 1px solid var(--glass-border); flex-wrap: wrap; }
 
 /* ===========================
    FORMS
@@ -1849,305 +1854,112 @@ input[type="file"]::file-selector-button {
 .toast.warning i { color: var(--neon-orange); }
 
 /* ===========================
-   RESPONSIVE DESIGN
+   GALERIA DE IMAGENS - OTIMIZADA
    =========================== */
-/* Desktop extra-largo (1920px+) */
-@media (min-width: 1920px) {
-    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .service-card { min-height: 420px; padding: 1.1rem; }
+.images-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
 }
 
-/* Desktop grande (1400px-1919px) */
-@media (min-width: 1400px) and (max-width: 1919px) {
-    .services-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.gallery-image-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s;
+    aspect-ratio: 1;
 }
 
-/* Tablet/Desktop pequeno (1024px-1399px) */
-@media (min-width: 1024px) and (max-width: 1399px) {
-    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .service-card { padding: 1.1rem; min-height: 430px; }
+.gallery-image-item:hover {
+    transform: translateY(-3px);
+    border-color: var(--neon-blue);
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
 }
 
-/* Tablet (768px-1023px) */
-@media (min-width: 768px) and (max-width: 1023px) {
-    .services-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-    .service-card { padding: 1rem; min-height: auto; }
-    .service-title h3 { font-size: 0.95rem; }
-    .info-item { font-size: 0.75rem; }
+.gallery-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
 }
 
-@media (max-width: 1200px) {
-    .services-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.gallery-image-item:hover img {
+    transform: scale(1.05);
 }
 
-@media (max-width: 768px) {
-    .navbar-container { flex-direction: column; gap: 1rem; padding: 1rem; }
-    .navbar-left, .navbar-right { width: 100%; justify-content: space-between; }
-    .btn-text { display: none; }
-    .action-bar { flex-direction: column; gap: 1rem; align-items: stretch; }
-    .action-buttons { width: 100%; }
-    .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-    .services-grid { grid-template-columns: 1fr; padding: 0 0.5rem; }
-    .form-grid { grid-template-columns: 1fr; }
-    .form-row { grid-template-columns: 1fr; }
-    
-    .container { padding: 0 1rem; }
-    
-    .service-card { 
-        padding: 1rem; 
-        width: 100%;
-        box-sizing: border-box;
-        min-height: auto;
-    }
-    
-    .service-description {
-        max-height: none;
-        flex: none;
-    }
-    
-    .delivery-badge {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-    }
-    
-    .delivery-time {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-    }
-    
-    /* Timeline mobile adjustments */
-    .status-timeline {
-        padding: 0.5rem 0;
-        overflow-x: auto;
-        max-width: 100%;
-    }
-    
-    .timeline-step {
-        min-width: 60px;
-    }
-    
-    .timeline-step:not(:last-child)::after {
-        top: 12px;
-        left: 55%;
-        width: 100%;
-    }
-    
-    .step-icon {
-        width: 25px;
-        height: 25px;
-    }
-    
-    .step-icon i {
-        font-size: 0.65rem;
-    }
-    
-    .step-text {
-        font-size: 0.55rem;
-        max-width: 50px;
-    }
+.btn-remove-gallery-item {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.95);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
 }
 
-@media (max-width: 480px) {
-    .login-container { padding: 2rem 1.5rem; }
-    .login-logo h1 { font-size: 2rem; }
-    .page-title { font-size: 1.25rem; }
-    .stat-card { flex-direction: column; text-align: center; padding: 1rem; }
-    .modal-content { border-radius: 0; max-height: 100vh; }
-    .service-footer { flex-direction: column; }
-    
-    .container { padding: 0 0.75rem; }
-    
-    .services-grid { 
-        padding: 0; 
-        gap: 1rem;
-    }
-    
-    .service-card {
-        padding: 0.75rem;
-        margin: 0;
-        width: 100%;
-        min-height: auto;
-    }
-    
-    .service-description {
-        max-height: none;
-        flex: none;
-    }
-    
-    .service-header {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .service-title {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .service-title h3 {
-        font-size: 1rem;
-        white-space: normal;
-    }
-    
-    .service-actions {
-        flex-wrap: nowrap;
-    }
-    
-    .info-item {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.5rem;
-    }
-    
-    .info-item span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 150px;
-    }
-    
-    /* Timeline mobile small screens */
-    .status-timeline {
-        padding: 0.25rem 0;
-        margin: 0;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .timeline-step {
-        min-width: 55px;
-    }
-    
-    .timeline-step:not(:last-child)::after {
-        top: 11px;
-        left: 55%;
-        width: 90%;
-    }
-    
-    .step-icon {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .step-icon i {
-        font-size: 0.6rem;
-    }
-    
-    .step-text {
-        font-size: 0.5rem;
-        max-width: 45px;
-    }
-    
-    .delivery-badge {
-        padding: 0.5rem;
-        font-size: 0.75rem;
-    }
-    
-    .delivery-info {
-        width: 100%;
-    }
-    
-    .btn-whatsapp, .btn-delivery {
-        font-size: 0.85rem;
-        padding: 0.6rem;
-    }
-    
-    /* Image modal mobile */
-    .modal-content.modal-image {
-        max-width: 100%;
-        border-radius: 0;
-        max-height: 100vh;
-    }
-    
-    .modal-image-body {
-        min-height: 300px;
-        max-height: 60vh;
-    }
-    
-    .modal-image-body img {
-        max-height: 60vh;
-    }
-    
-    .image-nav-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-    }
-    
-    .image-nav-btn.prev-btn {
-        left: 10px;
-    }
-    
-    .image-nav-btn.next-btn {
-        right: 10px;
-    }
-    
-    .image-counter {
-        bottom: 10px;
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-    
-    /* Image preview grid mobile */
-    .image-preview-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 0.5rem;
-    }
-    
-    .preview-image-wrapper {
-        height: 100px;
-    }
-    
-    /* Instagram modal mobile */
-    .instagram-alert {
-        padding: 1rem;
-    }
-    
-    .instagram-alert i {
-        font-size: 2rem;
-    }
-    
-    .instagram-label {
-        padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
-    }
+.gallery-image-item:hover .btn-remove-gallery-item {
+    opacity: 1;
+}
 
-    /* Responsivo para file-item mobile */
-    .file-item {
-        flex-wrap: wrap;
-    }
-    
-    .file-actions {
-        width: 100%;
-        justify-content: flex-end;
-        gap: 6px;
-    }
-    
-    .btn-icon-action {
-        width: 40px;
-        height: 40px;
-    }
+.btn-remove-gallery-item:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-remove-gallery-item:active {
+    transform: scale(0.95);
+}
+
+.btn-remove-gallery-item i {
+    font-size: 0.9rem;
+}
+
+.instagram-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.packaged-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(139, 92, 246, 0.95);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ===========================
-   UTILITIES
+   PROGRESS BAR - Upload Paralelo
    =========================== */
-.hidden { display: none !important; }
-.text-center { text-align: center; }
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mt-3 { margin-top: 1.5rem; }
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.mb-3 { margin-bottom: 1.5rem; }
-
-/* 
-=================================================
-Progress Bar - Upload Paralelo
-=================================================
-*/
-
 .upload-progress-bar {
     position: fixed;
     bottom: 20px;
@@ -2241,7 +2053,175 @@ Progress Bar - Upload Paralelo
     100% { transform: translateX(100%); }
 }
 
+/* ===========================
+   RESPONSIVE DESIGN - MOBILE OTIMIZADO
+   =========================== */
+
+/* Tablet (768px-1023px) */
+@media (max-width: 1023px) {
+    /* Modal de imagem ajustado para tablet */
+    .modal-content.modal-image {
+        max-width: 95vw;
+    }
+    
+    .images-gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+/* Mobile (até 768px) */
 @media (max-width: 768px) {
+    /* Navbar mobile */
+    .navbar-container { 
+        flex-direction: column; 
+        gap: 1rem; 
+        padding: 1rem; 
+    }
+    .navbar-left, .navbar-right { 
+        width: 100%; 
+        justify-content: space-between; 
+    }
+    .btn-text { display: none; }
+    
+    /* Main layout mobile */
+    .action-bar { 
+        flex-direction: column; 
+        gap: 1rem; 
+        align-items: stretch; 
+    }
+    .action-buttons { width: 100%; }
+    .stats-grid { 
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+        gap: 1rem; 
+    }
+    .services-grid { 
+        grid-template-columns: 1fr; 
+        padding: 0 0.5rem; 
+    }
+    
+    /* Modal responsivo mobile */
+    .modal {
+        padding: 0;
+    }
+    
+    .modal-content {
+        border-radius: 15px 15px 0 0;
+        max-height: 100vh;
+        margin: auto 0 0 0;
+    }
+    
+    /* MODAL DE IMAGEM MOBILE FULLSCREEN */
+    .modal-content.modal-image {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    .modal-image-body {
+        min-height: calc(100vh - 140px); /* Espaço para header e footer */
+        max-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        position: relative;
+    }
+    
+    .modal-image-body img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+    
+    /* Botões de navegação mobile - Touch friendly */
+    .image-nav-btn {
+        width: 44px; /* Touch-friendly size */
+        height: 44px;
+        font-size: 1.2rem;
+        background: rgba(0, 0, 0, 0.85);
+        border-width: 1px;
+    }
+    
+    .image-nav-btn.prev-btn {
+        left: 10px;
+    }
+    
+    .image-nav-btn.next-btn {
+        right: 10px;
+    }
+    
+    /* Contador ajustado */
+    .image-counter {
+        bottom: 80px; /* Mais alto para não conflitar com footer */
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Modal footer mobile */
+    .modal-footer {
+        flex-wrap: wrap;
+        padding: 1rem;
+        gap: 0.5rem;
+        position: sticky;
+        bottom: 0;
+        background: var(--card-bg);
+    }
+    
+    .modal-footer button {
+        flex: 1;
+        min-width: 100px;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Galeria de imagens mobile */
+    .images-gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .gallery-image-item {
+        aspect-ratio: 1;
+        border-radius: 8px;
+    }
+    
+    /* Botão remover sempre visível no mobile */
+    .btn-remove-gallery-item {
+        opacity: 1;
+        width: 30px;
+        height: 30px;
+        top: 5px;
+        right: 5px;
+    }
+    
+    .btn-remove-gallery-item i {
+        font-size: 0.8rem;
+    }
+    
+    /* Badges mobile */
+    .instagram-badge,
+    .packaged-badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+        border-radius: 4px;
+    }
+    
+    /* Forms mobile */
+    .form-grid { 
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    .form-row { 
+        grid-template-columns: 1fr; 
+    }
+    
+    /* Upload Progress mobile */
     .upload-progress-bar {
         bottom: 10px;
         right: 10px;
@@ -2249,141 +2229,186 @@ Progress Bar - Upload Paralelo
         min-width: auto;
         max-width: none;
     }
+    
+    /* Container */
+    .container { 
+        padding: 0 1rem; 
+    }
+    
+    /* Service card mobile */
+    .service-card { 
+        padding: 1rem; 
+        min-height: auto;
+    }
+    
+    /* Timeline mobile */
+    .status-timeline {
+        padding: 0.5rem 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .timeline-step {
+        min-width: 60px;
+    }
+    
+    .step-icon {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .step-icon i {
+        font-size: 0.65rem;
+    }
+    
+    .step-text {
+        font-size: 0.55rem;
+        max-width: 50px;
+    }
 }
 
-/* 
-=================================================
-Botões de Remoção na Galeria
-=================================================
-*/
-
-.btn-remove-gallery-item {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(239, 68, 68, 0.95);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-}
-
-.gallery-item:hover .btn-remove-gallery-item {
-    opacity: 1;
-}
-
-.btn-remove-gallery-item:hover {
-    background: rgba(220, 38, 38, 1);
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-.btn-remove-gallery-item:active {
-    transform: scale(0.95);
-}
-
-.btn-remove-gallery-item i {
-    font-size: 0.9rem;
-}
-
-.instagram-badge {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    z-index: 5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 768px) {
+/* Mobile pequeno (até 480px) */
+@media (max-width: 480px) {
+    /* Login mobile */
+    .login-container { 
+        padding: 2rem 1.5rem; 
+    }
+    .login-logo h1 { 
+        font-size: 2rem; 
+    }
+    
+    /* Typography */
+    .page-title { 
+        font-size: 1.25rem; 
+    }
+    .stat-card { 
+        flex-direction: column; 
+        text-align: center; 
+        padding: 1rem; 
+    }
+    
+    /* Modal fullscreen */
+    .modal-content {
+        border-radius: 0;
+        max-height: 100vh;
+        width: 100vw;
+        max-width: 100vw;
+    }
+    
+    /* Galeria extra pequena */
+    .images-gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+        padding: 0.25rem;
+    }
+    
+    .gallery-image-item {
+        border-radius: 6px;
+        border-width: 1px;
+    }
+    
+    /* Botões ainda menores */
     .btn-remove-gallery-item {
-        opacity: 1;
-        width: 28px;
-        height: 28px;
-        top: 6px;
-        right: 6px;
+        width: 26px;
+        height: 26px;
+        top: 3px;
+        right: 3px;
     }
     
     .btn-remove-gallery-item i {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+    }
+    
+    /* Service card compacto */
+    .service-card {
+        padding: 0.75rem;
+    }
+    
+    .service-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .service-title h3 {
+        font-size: 1rem;
+    }
+    
+    .info-item {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+    
+    /* Timeline extra pequeno */
+    .timeline-step {
+        min-width: 55px;
+    }
+    
+    .step-icon {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .step-icon i {
+        font-size: 0.6rem;
+    }
+    
+    .step-text {
+        font-size: 0.5rem;
+        max-width: 45px;
+    }
+    
+    /* Footer botões mobile */
+    .service-footer {
+        flex-direction: column;
+    }
+    
+    .btn-whatsapp, 
+    .btn-delivery {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+    }
+    
+    /* File item responsivo */
+    .file-item {
+        flex-wrap: wrap;
+        padding: 12px;
+    }
+    
+    .file-actions {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    
+    .btn-icon-action {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Preview de imagens pequeno */
+    .image-preview-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .preview-image-wrapper {
+        height: 100px;
     }
 }
 
-/* 
-=================================================
-Galeria de Imagens com Remoção
-=================================================
-*/
-.images-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    padding: 1rem 0;
-}
+/* ===========================
+   UTILITIES
+   =========================== */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
 
-.gallery-image-item {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    transition: all 0.3s;
-    aspect-ratio: 1;
-}
-
-.gallery-image-item:hover {
-    transform: translateY(-3px);
-    border-color: var(--neon-blue);
-    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
-}
-
-.gallery-image-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    cursor: pointer;
-    transition: transform 0.3s;
-}
-
-.gallery-image-item:hover img {
-    transform: scale(1.05);
-}
-
-.gallery-image-item:hover .btn-remove-gallery-item {
-    opacity: 1;
-}
-
-.packaged-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: rgba(139, 92, 246, 0.95);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    z-index: 5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 768px) {
-    .images-gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 0.75rem;
-    }
-}
+/* ===========================
+   FIM DO ARQUIVO
+   =========================== */
