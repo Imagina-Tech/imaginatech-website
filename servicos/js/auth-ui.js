@@ -971,25 +971,72 @@ function showImagesGallery(images, serviceName, serviceId) {
     state.currentImageIndex = 0;
 }
 
-// ✅ NOVA: Visualiza imagem específica da galeria atual
 window.viewFullImageFromGallery = function(imageIndex) {
     if (!state.currentImageGallery || state.currentImageGallery.length === 0) {
         console.error('❌ Nenhuma galeria carregada');
         return;
     }
     
+    console.log('📸 Abrindo imagem', imageIndex + 1, 'de', state.currentImageGallery.length);
+    
     state.currentImageIndex = imageIndex;
     
-    // Fecha modal de galeria
+    // 1. Fecha modal de galeria
     const galleryModal = document.getElementById('imageViewerModal');
     if (galleryModal) {
         galleryModal.classList.remove('active');
     }
     
-    // Aguarda animação de fechamento
+    // 2. Aguarda animação + RESTAURA estrutura do modal
     setTimeout(() => {
-        showImageModal(state.currentImageGallery, 'Visualização', imageIndex);
-    }, 300);
+        const modal = document.getElementById('imageViewerModal');
+        if (!modal) {
+            console.error('❌ Modal não encontrado');
+            return;
+        }
+        
+        // ✅ CRÍTICO: Restaurar estrutura HTML original
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2 id="viewerTitle">Imagem</h2>
+                    <button class="modal-close" onclick="closeImageModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body modal-image-body">
+                    <button class="image-nav-btn prev-btn" id="prevImageBtn" onclick="prevImage()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <img id="viewerImage" src="" alt="Imagem do Serviço">
+                    <button class="image-nav-btn next-btn" id="nextImageBtn" onclick="nextImage()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="image-counter" id="imageCounter">1 / 1</div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" id="downloadImageBtn">
+                        <i class="fas fa-download"></i> Baixar Imagem
+                    </button>
+                    <button class="btn-secondary" onclick="window.open(document.getElementById('viewerImage').src, '_blank')">
+                        <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
+                    </button>
+                    <button class="btn-secondary" onclick="closeImageModal()">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+            `;
+        }
+        
+        // 3. Atualiza estado e interface
+        updateImageViewer();
+        
+        // 4. Reabre modal com estrutura correta
+        modal.classList.add('active');
+        
+        console.log('✅ Modal de visualização aberto');
+    }, 350); // 350ms para garantir fechamento completo
 };
 
 // ✅ MANTÉM: Para compatibilidade com outros módulos
