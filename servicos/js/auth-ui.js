@@ -939,7 +939,7 @@ function showImagesGallery(images, serviceName, serviceId) {
                         <img 
                             src="${img.url}" 
                             alt="${img.name}"
-                            onclick="window.viewFullImage('${img.url}', '${escapeHtml(img.name)}')"
+                            onclick="window.viewFullImageFromGallery(${index})"
                         >
                         ${state.isAuthorized ? `
                             <button 
@@ -965,8 +965,34 @@ function showImagesGallery(images, serviceName, serviceId) {
     
     modalContent.innerHTML = galleryHTML;
     modal.classList.add('active');
+    
+    // ✅ NOVO: Armazena galeria no estado global
+    state.currentImageGallery = images;
+    state.currentImageIndex = 0;
 }
 
+// ✅ NOVA: Visualiza imagem específica da galeria atual
+window.viewFullImageFromGallery = function(imageIndex) {
+    if (!state.currentImageGallery || state.currentImageGallery.length === 0) {
+        console.error('❌ Nenhuma galeria carregada');
+        return;
+    }
+    
+    state.currentImageIndex = imageIndex;
+    
+    // Fecha modal de galeria
+    const galleryModal = document.getElementById('imageViewerModal');
+    if (galleryModal) {
+        galleryModal.classList.remove('active');
+    }
+    
+    // Aguarda animação de fechamento
+    setTimeout(() => {
+        showImageModal(state.currentImageGallery, 'Visualização', imageIndex);
+    }, 300);
+};
+
+// ✅ MANTÉM: Para compatibilidade com outros módulos
 window.viewFullImage = function(url, name) {
     showImageModal([{url, name}], name, 0);
 };
