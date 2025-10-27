@@ -549,32 +549,91 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
 /**
  * Remove uma imagem específica do serviço
  */
-export async function removeImageFromService(serviceId, imageIndex, imageUrl) {
-    if (!state.isAuthorized) return showToast('Sem permissão para remover imagens', 'error');
+export async function removeImageFromService(serviceId, imageIndex, imageSource, imageUrl) {
+    if (!state.isAuthorized) {
+        return showToast('Sem permissão para remover imagens', 'error');
+    }
+    
     const service = state.services.find(s => s.id === serviceId);
-    if (!service || !service.images || !service.images[imageIndex]) {
+    if (!service) {
+        return showToast('Serviço não encontrado', 'error');
+    }
+    
+    // Validação por fonte
+    let isValid = false;
+    let imageName = 'imagem';
+    
+    switch (imageSource) {
+        case 'images':
+            isValid = service.images && service.images[imageIndex];
+            imageName = 'imagem';
+            break;
+        case 'imageUrl':
+            isValid = service.imageUrl === imageUrl;
+            imageName = 'imagem legado';
+            break;
+        case 'instagramPhoto':
+            isValid = service.instagramPhoto === imageUrl;
+            imageName = 'foto instagramável';
+            break;
+        case 'packagedPhotos':
+            isValid = service.packagedPhotos && service.packagedPhotos[imageIndex];
+            imageName = 'foto embalada';
+            break;
+        default:
+            return showToast('Fonte de imagem inválida', 'error');
+    }
+    
+    if (!isValid) {
         return showToast('Imagem não encontrada', 'error');
     }
-    if (!confirm('Deseja realmente remover esta imagem?\n\nEsta ação não pode ser desfeita.')) return;
+    
+    if (!confirm(`Deseja realmente remover esta ${imageName}?\n\nEsta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
     try {
         showToast('Removendo imagem...', 'info');
+        
+        // Deletar do Storage
         try {
             const imageRef = state.storage.refFromURL(imageUrl);
             await imageRef.delete();
         } catch (storageError) {
             console.error('Erro ao deletar do Storage:', storageError);
         }
-        const updatedImages = service.images.filter((_, index) => index !== imageIndex);
-        const updates = { images: updatedImages, lastModified: new Date().toISOString() };
-        if (service.instagramPhoto === imageUrl) {
-            updates.instagramPhoto = updatedImages.find(img => img.isInstagram)?.url || null;
+        
+        // Atualizar Firestore
+        const updates = { lastModified: new Date().toISOString() };
+        
+        switch (imageSource) {
+            case 'images':
+                const updatedImages = service.images.filter((_, index) => index !== imageIndex);
+                updates.images = updatedImages;
+                if (service.instagramPhoto === imageUrl) {
+                    updates.instagramPhoto = firebase.firestore.FieldValue.delete();
+                }
+                break;
+            case 'imageUrl':
+                updates.imageUrl = firebase.firestore.FieldValue.delete();
+                break;
+            case 'instagramPhoto':
+                updates.instagramPhoto = firebase.firestore.FieldValue.delete();
+                break;
+            case 'packagedPhotos':
+                const updatedPackaged = service.packagedPhotos.filter((_, index) => index !== imageIndex);
+                updates.packagedPhotos = updatedPackaged;
+                break;
         }
+        
         await state.db.collection('services').doc(serviceId).update(updates);
-        showToast('Imagem removida com sucesso!', 'success');
+        showToast(`✅ ${imageName.charAt(0).toUpperCase() + imageName.slice(1)} removida!`, 'success');
+        
         const imageModal = document.getElementById('imageViewerModal');
         if (imageModal && imageModal.classList.contains('active')) {
             window.closeImageModal();
         }
+        
     } catch (error) {
         console.error('Erro ao remover imagem:', error);
         showToast('Erro ao remover imagem: ' + error.message, 'error');
