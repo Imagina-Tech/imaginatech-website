@@ -74,32 +74,33 @@
     <!-- Main App (Hidden until authenticated) -->
     <div class="main-app" id="mainApp" style="display: none;">
         <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="header-left">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
                     <div class="logo-section">
-                        <img src="/imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
-                        <span class="logo-text">ImaginaTech</span>
-                        <span class="nav-divider">|</span>
-                        <span class="nav-subtitle">Sistema de Orçamento</span>
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Sistema de Orçamento</span>
                     </div>
                     <div class="connection-status" id="connectionStatus">
                         <div class="status-dot"></div>
                         <span id="statusText">Conectado</span>
                     </div>
                 </div>
-                <div class="header-actions">
-                    <div class="user-info">
-                        <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
-                        <span class="user-name" id="userName"></span>
-                    </div>
-                    <a href="/servicos" class="btn btn-services">
+                <div class="navbar-right">
+                    <a href="/servicos" class="btn-nav">
                         <i class="fas fa-tasks"></i>
-                        <span>Painel de Serviços</span>
+                        <span>Serviços</span>
                     </a>
-                    <button class="btn btn-logout" onclick="logout()">
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
+                        <span class="btn-text">Sair</span>
                     </button>
                 </div>
             </div>
