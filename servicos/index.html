@@ -57,32 +57,33 @@
     </div>
 
     <div class="admin-dashboard hidden" id="adminDashboard">
-        <header class="header">
-            <div class="header-content">
-                <div class="header-left">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
                     <div class="logo-section">
-                        <img src="/imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img" onerror="this.style.display='none'">
-                        <span class="logo-text">ImaginaTech</span>
-                        <span class="nav-divider">|</span>
-                        <span class="nav-subtitle">Painel de Serviços</span>
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Painel de Serviços</span>
                     </div>
                     <div class="connection-status" id="connectionStatus">
                         <div class="status-dot"></div>
                         <span id="statusText">Conectado</span>
                     </div>
                 </div>
-                <div class="header-actions">
-                    <div class="user-info">
-                        <img class="user-avatar" id="userPhoto" src="https://ui-avatars.com/api/?name=User&background=00D4FF&color=fff" alt="Foto">
-                        <span class="user-name" id="userName">Carregando...</span>
-                    </div>
-                    <a href="/caixa/" class="btn btn-caixa">
+                <div class="navbar-right">
+                    <a href="/caixa/" class="btn-nav btn-caixa">
                         <i class="fas fa-cash-register"></i>
                         <span>Caixa</span>
                     </a>
-                    <button class="btn btn-logout" onclick="signOutGlobal()">
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto" src="https://ui-avatars.com/api/?name=User&background=00D4FF&color=fff">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="signOutGlobal()">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
+                        <span class="btn-text">Sair</span>
                     </button>
                 </div>
             </div>
