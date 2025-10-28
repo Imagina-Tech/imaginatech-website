@@ -138,14 +138,16 @@ const showLoginScreen = () => {
 const showDashboard = user => {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('dashboard')?.classList.remove('hidden');
-    
+
     const userName = document.getElementById('userName');
     const userPhoto = document.getElementById('userPhoto');
-    
+
     if (userName) userName.textContent = user.displayName || user.email;
     if (userPhoto) {
         userPhoto.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff';
     }
+
+    monitorConnection();
 };
 
 // ===========================
@@ -798,6 +800,32 @@ const populateCategories = type => {
     CATEGORIES[type].forEach(cat => {
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
     });
+};
+
+// ===========================
+// CONNECTION MONITORING
+// ===========================
+const monitorConnection = () => {
+    const updateStatus = connected => {
+        const statusEl = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        if (statusEl && statusText) {
+            connected ? statusEl.classList.remove('offline') : statusEl.classList.add('offline');
+            statusText.textContent = connected ? 'Conectado' : 'Offline';
+        }
+    };
+
+    window.addEventListener('online', () => {
+        updateStatus(true);
+        showToast('Conexão restaurada', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+        updateStatus(false);
+        showToast('Sem conexão', 'error');
+    });
+
+    updateStatus(navigator.onLine);
 };
 
 const showToast = (message, type = 'info') => {

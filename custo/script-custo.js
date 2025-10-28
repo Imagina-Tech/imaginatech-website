@@ -70,16 +70,17 @@ function showMainApp() {
     document.getElementById('loadingOverlay').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
-    
+
     // Update user info
     if (currentUser) {
-        document.getElementById('userAvatar').src = currentUser.photoURL || 
+        document.getElementById('userAvatar').src = currentUser.photoURL ||
             'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
         document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
     }
-    
+
     // Initialize app
     initializeCalculator();
+    monitorConnection();
 }
 
 function hideMainApp() {
@@ -799,3 +800,29 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log('Sistema de Orçamento ImaginaTech carregado com sucesso!');
     console.log('Versão: 4.0 - Com Autenticação e Seletor de Materiais');
 });
+
+// ===========================
+// CONNECTION MONITORING
+// ===========================
+function monitorConnection() {
+    const updateStatus = connected => {
+        const statusEl = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        if (statusEl && statusText) {
+            connected ? statusEl.classList.remove('offline') : statusEl.classList.add('offline');
+            statusText.textContent = connected ? 'Conectado' : 'Offline';
+        }
+    };
+
+    window.addEventListener('online', () => {
+        updateStatus(true);
+        alert('Conexão restaurada!');
+    });
+
+    window.addEventListener('offline', () => {
+        updateStatus(false);
+        alert('Sem conexão com a internet!');
+    });
+
+    updateStatus(navigator.onLine);
+}
