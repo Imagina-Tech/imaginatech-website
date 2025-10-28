@@ -73,7 +73,7 @@ function showMainApp() {
 
     // Update user info
     if (currentUser) {
-        document.getElementById('userAvatar').src = currentUser.photoURL ||
+        document.getElementById('userPhoto').src = currentUser.photoURL ||
             'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
         document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
     }
