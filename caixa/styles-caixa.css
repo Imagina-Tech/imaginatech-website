@@ -11,26 +11,7 @@ IMPORTANTE: Estilos base em /servicos/styles.css
 /* ===========================
    NAVBAR ADDITIONS
    =========================== */
-.btn-nav {
-    padding: 0.6rem 1.2rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    color: var(--text-primary);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.btn-nav:hover {
-    border-color: var(--neon-blue);
-    background: rgba(0, 212, 255, 0.1);
-    transform: translateY(-1px);
-}
+/* Removido sobrescrita de .btn-nav - usando estilo padrão de /servicos/styles.css */
 
 /* ===========================
    ACTION BUTTONS - ENTRADA/DESPESA
