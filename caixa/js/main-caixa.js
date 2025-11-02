@@ -20,7 +20,7 @@ const firebaseConfig = {
     appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
 };
 
-const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "netrindademarcus@gmail.com", "igor.butter@gmail.com"];
+const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "netrindademarcus@gmail.com", "allanedg01@gmail.com", "igor.butter@gmail.com"];
 
 const state = {
     db: null,
