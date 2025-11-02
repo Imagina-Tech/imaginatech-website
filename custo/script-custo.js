@@ -21,6 +21,7 @@ const auth = firebase.auth();
 // Authorized Emails
 const AUTHORIZED_EMAILS = [
     "3d3printers@gmail.com",
+    "allanedg01@gmail.com",
     "igor.butter@gmail.com"
 ];
 
