@@ -27,6 +27,11 @@ import {
 import { initPushNotifications } from './push-notifications.js';
 
 // ===========================
+// NOVO: IMPORTAR SISTEMA DE TAREFAS
+// ===========================
+import { initTasksSystem } from './tasks.js';
+
+// ===========================
 // INICIALIZA FIREBASE PRIMEIRO
 // ===========================
 if (!initializeFirebase()) {
@@ -51,7 +56,12 @@ onDOMReady(() => {
         
         if (user) {
             checkAuthorization(user);
-            
+
+            // ===========================
+            // NOVO: INICIALIZAR SISTEMA DE TAREFAS
+            // ===========================
+            initTasksSystem();
+
             // ===========================
             // NOVO: INICIALIZAR PUSH NOTIFICATIONS (SOMENTE NO APP)
             // ===========================
