@@ -491,7 +491,26 @@ function showOrderDetails(orderId, orderData) {
             <i class="${statusInfo.icon}" style="color: var(--neon-blue); margin-right: 0.5rem;"></i>
             ${customMessage}
         </div>
-        
+
+        ${orderData.images && orderData.images.length > 0 ? `
+        <div class="product-photos-section">
+            <div class="photos-header">
+                <i class="fas fa-camera"></i>
+                <h4>Fotos do Produto Finalizado</h4>
+            </div>
+            <div class="photos-gallery">
+                ${orderData.images.map((image, index) => `
+                    <div class="photo-item" onclick="openPhotoModal('${image.url}', ${index}, ${orderData.images.length})">
+                        <img src="${image.url}" alt="Foto do produto ${index + 1}" loading="lazy">
+                        <div class="photo-overlay">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
         <div class="order-details">
             <div class="detail-item">
                 <div class="detail-label">
@@ -1247,6 +1266,93 @@ function showModal(title, message, onConfirm) {
 function closeModal() {
     document.getElementById('confirmModal').classList.remove('active');
 }
+
+// ===========================
+// PHOTO MODAL
+// ===========================
+
+let currentPhotoIndex = 0;
+let totalPhotos = 0;
+let currentPhotos = [];
+
+function openPhotoModal(photoUrl, index, total) {
+    currentPhotoIndex = index;
+    totalPhotos = total;
+
+    // Criar modal se não existir
+    let photoModal = document.getElementById('photoModal');
+    if (!photoModal) {
+        photoModal = document.createElement('div');
+        photoModal.id = 'photoModal';
+        photoModal.className = 'photo-modal';
+        photoModal.innerHTML = `
+            <div class="photo-modal-overlay" onclick="closePhotoModal()"></div>
+            <div class="photo-modal-content">
+                <button class="photo-modal-close" onclick="closePhotoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+                ${total > 1 ? `
+                <button class="photo-nav-btn prev" onclick="navigatePhoto(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="photo-nav-btn next" onclick="navigatePhoto(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                ` : ''}
+                <img id="photoModalImage" src="${photoUrl}" alt="Foto do produto">
+                ${total > 1 ? `<div class="photo-counter" id="photoCounter">${index + 1} / ${total}</div>` : ''}
+            </div>
+        `;
+        document.body.appendChild(photoModal);
+    } else {
+        document.getElementById('photoModalImage').src = photoUrl;
+        if (total > 1) {
+            document.getElementById('photoCounter').textContent = `${index + 1} / ${total}`;
+        }
+    }
+
+    photoModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePhotoModal() {
+    const photoModal = document.getElementById('photoModal');
+    if (photoModal) {
+        photoModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function navigatePhoto(direction) {
+    // Pegar todas as imagens do pedido atual
+    const orderCard = document.getElementById('orderCard');
+    const images = Array.from(orderCard.querySelectorAll('.photo-item img'));
+
+    currentPhotoIndex += direction;
+
+    // Circular navigation
+    if (currentPhotoIndex < 0) currentPhotoIndex = images.length - 1;
+    if (currentPhotoIndex >= images.length) currentPhotoIndex = 0;
+
+    const newPhotoUrl = images[currentPhotoIndex].src;
+    document.getElementById('photoModalImage').src = newPhotoUrl;
+    document.getElementById('photoCounter').textContent = `${currentPhotoIndex + 1} / ${images.length}`;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+    const photoModal = document.getElementById('photoModal');
+    if (photoModal && photoModal.classList.contains('active')) {
+        if (e.key === 'Escape') closePhotoModal();
+        if (e.key === 'ArrowLeft') navigatePhoto(-1);
+        if (e.key === 'ArrowRight') navigatePhoto(1);
+    }
+});
+
+// Global functions
+window.openPhotoModal = openPhotoModal;
+window.closePhotoModal = closePhotoModal;
+window.navigatePhoto = navigatePhoto;
 
 // ===========================
 // ACTIVITY LOGGING

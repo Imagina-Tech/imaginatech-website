@@ -994,7 +994,7 @@ body {
     .navbar-right {
         gap: 6px;
         flex-direction: row;
-        justify-content: flex-end;
+        justify-content: center;
     }
 
     /* Logo ainda menor */
