@@ -9,8 +9,8 @@
 
 .tasks-icon-wrapper {
     position: relative;
-    display: inline-block;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
 }
 
 .btn-tasks {
@@ -24,8 +24,11 @@
     border-radius: 8px;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
+    transition: all 0.3s;
+    text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .btn-tasks:hover {
