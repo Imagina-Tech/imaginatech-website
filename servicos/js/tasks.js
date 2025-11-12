@@ -556,10 +556,599 @@ window.toggleTaskComplete = async function(taskId, completed) {
 };
 
 function showTaskDetails(task) {
-    // TODO: Implementar modal de detalhes (FASE 2)
-    console.log('Detalhes da tarefa:', task);
-    showToast('Detalhes da tarefa (em breve)', 'info');
+    // Criar modal de detalhes
+    const detailsModal = createTaskDetailsModal(task);
+    document.body.appendChild(detailsModal);
+
+    // Listener de comentários em tempo real
+    startCommentsListener(task.id);
+
+    // Setup event listeners
+    setupDetailsModalListeners(task);
 }
+
+function createTaskDetailsModal(task) {
+    const modal = document.createElement('div');
+    modal.className = 'task-modal-overlay active';
+    modal.id = 'taskDetailsModal';
+
+    const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.media;
+    const creatorName = AUTHORIZED_ADMINS.find(a => a.email === task.createdBy)?.name || task.createdBy;
+    const assignedNames = task.assignedTo.map(email =>
+        AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email
+    ).join(', ');
+
+    const isCompleted = task.status === 'concluida';
+    const isNotFeasible = task.status === 'nao_factivel';
+
+    modal.innerHTML = `
+        <div class="task-modal" style="max-width: 700px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <span style="font-size: 1.5rem;">${priority.icon}</span>
+                    <span>Detalhes da Tarefa</span>
+                </div>
+                <button class="btn-close-modal" onclick="closeTaskDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Título -->
+                <div class="task-detail-section">
+                    <h2 style="margin: 0 0 1rem 0; color: ${priority.color}; font-size: 1.3rem;">
+                        ${escapeHtml(task.title)}
+                    </h2>
+
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        ${task.category ? `<span class="task-category">${escapeHtml(task.category)}</span>` : ''}
+                        <span class="task-category" style="background: ${priority.color}20; color: ${priority.color};">
+                            ${priority.label} Prioridade
+                        </span>
+                        ${isCompleted ? '<span class="task-category" style="background: rgba(0,255,136,0.2); color: var(--neon-green);">✓ Concluída</span>' : ''}
+                        ${isNotFeasible ? '<span class="task-category" style="background: rgba(255,0,85,0.2); color: var(--neon-red);">✗ Não Factível</span>' : ''}
+                    </div>
+                </div>
+
+                <!-- Informações -->
+                <div class="task-detail-section">
+                    <div class="task-detail-grid">
+                        <div class="task-detail-item">
+                            <i class="fas fa-user"></i>
+                            <div>
+                                <strong>Criado por</strong>
+                                <p>${creatorName}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-users"></i>
+                            <div>
+                                <strong>Responsável(is)</strong>
+                                <p>${assignedNames}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-calendar-plus"></i>
+                            <div>
+                                <strong>Criada em</strong>
+                                <p>${formatDateTime(task.createdAt)}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div>
+                                <strong>Prazo</strong>
+                                <p>${formatDateTime(task.dueDate)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                ${task.description ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-align-left"></i> Descrição</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">${escapeHtml(task.description)}</p>
+                </div>
+                ` : ''}
+
+                <!-- Pedido vinculado -->
+                ${task.linkedOrderCode ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-link"></i> Pedido Vinculado</h3>
+                    <p>
+                        <span class="task-category" style="font-family: 'Orbitron', monospace; font-size: 1rem;">
+                            #${task.linkedOrderCode}
+                        </span>
+                    </p>
+                </div>
+                ` : ''}
+
+                <!-- Anexos -->
+                ${task.attachments && task.attachments.length > 0 ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-paperclip"></i> Anexos (${task.attachments.length})</h3>
+                    <div class="attachments-list">
+                        ${task.attachments.map(att => `
+                            <a href="${att.url}" target="_blank" class="attachment-item">
+                                <i class="fas fa-file"></i>
+                                <span>${att.name}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Comentários -->
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-comments"></i> Comentários <span id="commentsCount">(0)</span></h3>
+                    <div class="comments-container" id="commentsContainer">
+                        <div class="comments-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Carregando comentários...
+                        </div>
+                    </div>
+
+                    ${!isCompleted && !isNotFeasible ? `
+                    <div class="comment-input-container">
+                        <textarea id="commentInput" placeholder="Adicionar comentário..."
+                                  class="task-form-textarea" style="min-height: 80px;"></textarea>
+                        <button class="btn-task btn-task-primary" onclick="addComment('${task.id}')">
+                            <i class="fas fa-paper-plane"></i>
+                            Enviar
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                ${!isCompleted && !isNotFeasible ? `
+                    <button class="btn-task btn-task-secondary" onclick="openTransferModal('${task.id}')">
+                        <i class="fas fa-exchange-alt"></i>
+                        Transferir
+                    </button>
+                    <button class="btn-task btn-task-secondary" onclick="openAttachmentsModal('${task.id}')">
+                        <i class="fas fa-paperclip"></i>
+                        Anexar
+                    </button>
+                    <button class="btn-task btn-task-secondary" style="border-color: var(--neon-red); color: var(--neon-red);"
+                            onclick="markAsNotFeasible('${task.id}')">
+                        <i class="fas fa-times-circle"></i>
+                        Não Factível
+                    </button>
+                    <button class="btn-task btn-task-primary" onclick="toggleTaskComplete('${task.id}', true)">
+                        <i class="fas fa-check"></i>
+                        Concluir
+                    </button>
+                ` : `
+                    <button class="btn-task btn-task-secondary" onclick="closeTaskDetailsModal()">
+                        Fechar
+                    </button>
+                `}
+            </div>
+        </div>
+    `;
+
+    return modal;
+}
+
+function setupDetailsModalListeners(task) {
+    // Fechar ao clicar fora
+    const overlay = document.getElementById('taskDetailsModal');
+    overlay?.addEventListener('click', (e) => {
+        if (e.target.id === 'taskDetailsModal') {
+            closeTaskDetailsModal();
+        }
+    });
+
+    // Esc para fechar
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeTaskDetailsModal();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+}
+
+window.closeTaskDetailsModal = function() {
+    const modal = document.getElementById('taskDetailsModal');
+    if (modal) {
+        // Parar listener de comentários
+        if (tasksState.commentsUnsubscribe) {
+            tasksState.commentsUnsubscribe();
+            tasksState.commentsUnsubscribe = null;
+        }
+        modal.remove();
+    }
+};
+
+// ===========================
+// COMENTÁRIOS
+// ===========================
+
+function startCommentsListener(taskId) {
+    if (tasksState.commentsUnsubscribe) {
+        tasksState.commentsUnsubscribe();
+    }
+
+    tasksState.commentsUnsubscribe = state.db.collection('tasks').doc(taskId)
+        .onSnapshot(doc => {
+            if (doc.exists) {
+                const task = doc.data();
+                const comments = task.comments || [];
+                renderComments(comments);
+            }
+        });
+}
+
+function renderComments(comments) {
+    const container = document.getElementById('commentsContainer');
+    const countSpan = document.getElementById('commentsCount');
+
+    if (!container) return;
+
+    countSpan.textContent = `(${comments.length})`;
+
+    if (comments.length === 0) {
+        container.innerHTML = `
+            <div class="comments-empty">
+                <i class="fas fa-comments"></i>
+                <p>Nenhum comentário ainda</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por data (mais recentes por último)
+    const sorted = [...comments].sort((a, b) =>
+        new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    container.innerHTML = sorted.map(comment => {
+        const authorName = AUTHORIZED_ADMINS.find(a => a.email === comment.author)?.name || comment.author;
+        const isOwn = comment.author === tasksState.currentUser.email;
+
+        return `
+            <div class="comment-item ${isOwn ? 'own' : ''}">
+                <div class="comment-header">
+                    <strong>${authorName}</strong>
+                    <span class="comment-time">${formatCommentTime(comment.timestamp)}</span>
+                </div>
+                <div class="comment-text">${escapeHtml(comment.text)}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Scroll para o final
+    container.scrollTop = container.scrollHeight;
+}
+
+window.addComment = async function(taskId) {
+    const input = document.getElementById('commentInput');
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) {
+        showToast('Digite um comentário', 'error');
+        return;
+    }
+
+    try {
+        const task = tasksState.tasks.find(t => t.id === taskId);
+        const comments = task.comments || [];
+
+        comments.push({
+            author: tasksState.currentUser.email,
+            text,
+            timestamp: new Date().toISOString()
+        });
+
+        await state.db.collection('tasks').doc(taskId).update({
+            comments,
+            updatedAt: new Date().toISOString()
+        });
+
+        input.value = '';
+        showToast('✓ Comentário adicionado', 'success');
+    } catch (error) {
+        console.error('Erro ao adicionar comentário:', error);
+        showToast('Erro ao adicionar comentário', 'error');
+    }
+};
+
+// ===========================
+// TRANSFERIR TAREFA
+// ===========================
+
+window.openTransferModal = function(taskId) {
+    const task = tasksState.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const transferModal = document.createElement('div');
+    transferModal.className = 'task-modal-overlay active';
+    transferModal.id = 'transferModal';
+    transferModal.style.zIndex = '10001';
+
+    transferModal.innerHTML = `
+        <div class="task-modal" style="max-width: 500px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transferir Tarefa</span>
+                </div>
+                <button class="btn-close-modal" onclick="closeTransferModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Selecione os novos responsáveis para: <strong>${escapeHtml(task.title)}</strong>
+                </p>
+
+                <div class="assignees-list" id="transferAssigneesList">
+                    ${AUTHORIZED_ADMINS.map(admin => `
+                        <label class="assignee-option">
+                            <input type="checkbox" class="assignee-checkbox" value="${admin.email}"
+                                   ${task.assignedTo.includes(admin.email) ? 'checked' : ''}>
+                            <span class="assignee-name">${admin.name}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                <button class="btn-task btn-task-secondary" onclick="closeTransferModal()">
+                    Cancelar
+                </button>
+                <button class="btn-task btn-task-primary" onclick="confirmTransfer('${taskId}')">
+                    <i class="fas fa-check"></i>
+                    Transferir
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(transferModal);
+};
+
+window.closeTransferModal = function() {
+    document.getElementById('transferModal')?.remove();
+};
+
+window.confirmTransfer = async function(taskId) {
+    const checkboxes = document.querySelectorAll('#transferAssigneesList .assignee-checkbox:checked');
+    const newAssignedTo = Array.from(checkboxes).map(cb => cb.value);
+
+    if (newAssignedTo.length === 0) {
+        showToast('Selecione pelo menos um responsável', 'error');
+        return;
+    }
+
+    try {
+        await state.db.collection('tasks').doc(taskId).update({
+            assignedTo: newAssignedTo,
+            status: 'transferida',
+            updatedAt: new Date().toISOString()
+        });
+
+        // Voltar para pendente imediatamente
+        await state.db.collection('tasks').doc(taskId).update({
+            status: 'pendente'
+        });
+
+        showToast('✓ Tarefa transferida!', 'success');
+        closeTransferModal();
+        closeTaskDetailsModal();
+    } catch (error) {
+        console.error('Erro ao transferir:', error);
+        showToast('Erro ao transferir tarefa', 'error');
+    }
+};
+
+// ===========================
+// NÃO FACTÍVEL
+// ===========================
+
+window.markAsNotFeasible = async function(taskId) {
+    if (!confirm('Tem certeza que deseja marcar esta tarefa como Não Factível?')) {
+        return;
+    }
+
+    try {
+        await state.db.collection('tasks').doc(taskId).update({
+            status: 'nao_factivel',
+            completedAt: new Date().toISOString(),
+            completedBy: tasksState.currentUser.email,
+            updatedAt: new Date().toISOString()
+        });
+
+        showToast('✓ Tarefa marcada como Não Factível', 'success');
+        closeTaskDetailsModal();
+    } catch (error) {
+        console.error('Erro ao marcar como não factível:', error);
+        showToast('Erro ao atualizar tarefa', 'error');
+    }
+};
+
+// ===========================
+// ANEXOS
+// ===========================
+
+window.openAttachmentsModal = function(taskId) {
+    const attachModal = document.createElement('div');
+    attachModal.className = 'task-modal-overlay active';
+    attachModal.id = 'attachModal';
+    attachModal.style.zIndex = '10001';
+
+    attachModal.innerHTML = `
+        <div class="task-modal" style="max-width: 500px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <i class="fas fa-paperclip"></i>
+                    <span>Anexar Arquivo</span>
+                </div>
+                <button class="btn-close-modal" onclick="closeAttachModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body">
+                <div class="task-form-group">
+                    <label class="task-form-label">
+                        <i class="fas fa-file-upload"></i>
+                        Selecione um arquivo
+                    </label>
+                    <input type="file" id="attachmentInput" class="task-form-input"
+                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                    <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">
+                        Máximo: 10MB
+                    </small>
+                </div>
+
+                <div id="attachmentPreview" style="display: none; margin-top: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem;
+                                background: var(--glass-bg); border-radius: 8px;">
+                        <i class="fas fa-file" style="font-size: 2rem; color: var(--neon-blue);"></i>
+                        <div style="flex: 1;">
+                            <div id="attachmentName" style="font-weight: 600;"></div>
+                            <div id="attachmentSize" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                <button class="btn-task btn-task-secondary" onclick="closeAttachModal()">
+                    Cancelar
+                </button>
+                <button class="btn-task btn-task-primary" onclick="uploadAttachment('${taskId}')" id="btnUploadAttachment" disabled>
+                    <i class="fas fa-upload"></i>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(attachModal);
+
+    // Preview do arquivo
+    document.getElementById('attachmentInput')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('attachmentPreview').style.display = 'block';
+            document.getElementById('attachmentName').textContent = file.name;
+            document.getElementById('attachmentSize').textContent = formatFileSize(file.size);
+            document.getElementById('btnUploadAttachment').disabled = false;
+        }
+    });
+};
+
+window.closeAttachModal = function() {
+    document.getElementById('attachModal')?.remove();
+};
+
+window.uploadAttachment = async function(taskId) {
+    const input = document.getElementById('attachmentInput');
+    const file = input?.files[0];
+
+    if (!file) {
+        showToast('Selecione um arquivo', 'error');
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Arquivo muito grande (máx: 10MB)', 'error');
+        return;
+    }
+
+    try {
+        showToast('Enviando arquivo...', 'info');
+
+        // Upload para Firebase Storage
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`tasks/${taskId}/${Date.now()}_${file.name}`);
+        const uploadTask = await fileRef.put(file);
+        const url = await uploadTask.ref.getDownloadURL();
+
+        // Adicionar aos anexos da tarefa
+        const task = tasksState.tasks.find(t => t.id === taskId);
+        const attachments = task.attachments || [];
+
+        attachments.push({
+            name: file.name,
+            url,
+            uploadedBy: tasksState.currentUser.email,
+            uploadedAt: new Date().toISOString(),
+            size: file.size
+        });
+
+        await state.db.collection('tasks').doc(taskId).update({
+            attachments,
+            updatedAt: new Date().toISOString()
+        });
+
+        showToast('✓ Arquivo anexado!', 'success');
+        closeAttachModal();
+
+        // Recarregar modal de detalhes
+        closeTaskDetailsModal();
+        const updatedTask = tasksState.tasks.find(t => t.id === taskId);
+        if (updatedTask) {
+            setTimeout(() => showTaskDetails(updatedTask), 300);
+        }
+    } catch (error) {
+        console.error('Erro ao enviar anexo:', error);
+        showToast('Erro ao enviar arquivo', 'error');
+    }
+};
+
+// ===========================
+// UTILITÁRIOS FASE 2
+// ===========================
+
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatCommentTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Agora';
+    if (minutes < 60) return `Há ${minutes} min`;
+    if (hours < 24) return `Há ${hours}h`;
+    if (days === 1) return 'Ontem';
+    if (days < 7) return `Há ${days} dias`;
+
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// Adicionar ao estado
+tasksState.commentsUnsubscribe = null;
+
 
 async function handleCreateTask(e) {
     e.preventDefault();
