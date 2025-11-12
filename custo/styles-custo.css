@@ -873,33 +873,84 @@ body {
         font-size: 2.5rem;
     }
 
+    /* Navbar mobile */
+    .navbar {
+        padding: 15px 10px;
+    }
+
     .navbar-container {
         flex-direction: column;
-        text-align: center;
+        gap: 1rem;
     }
 
     .navbar-left {
-        flex-direction: column;
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
         gap: 10px;
-    }
-
-    .logo-section {
-        align-items: center;
-        text-align: center;
-    }
-
-    .connection-status {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .user-details {
-        display: none;
     }
 
     .navbar-right {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Logo section responsiva */
+    .logo {
+        font-size: 1.3rem;
+        letter-spacing: 1px;
+    }
+
+    .logo-subtitle {
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+    }
+
+    /* Connection status compacto */
+    .connection-status {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    /* Botões de navegação mobile */
+    .btn-nav {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
+    }
+
+    .btn-nav span {
+        font-size: 0.85rem;
+    }
+
+    /* User info mobile */
+    .user-info {
+        gap: 0.5rem;
+    }
+
+    .user-photo {
+        width: 35px;
+        height: 35px;
+    }
+
+    .user-name {
+        font-size: 0.85rem;
+    }
+
+    .user-role {
+        font-size: 0.7rem;
+    }
+
+    /* Botão logout */
+    .btn-logout {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .btn-text {
+        display: none;
     }
     
     .form-row {
@@ -931,39 +982,99 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* Navbar extra small */
+    .navbar {
+        padding: 12px 8px;
+    }
+
+    .navbar-left {
+        gap: 8px;
+    }
+
+    .navbar-right {
+        gap: 6px;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    /* Logo ainda menor */
+    .logo {
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .logo-subtitle {
+        font-size: 0.6rem;
+        letter-spacing: 1.5px;
+    }
+
+    /* Connection status muito compacto */
+    .connection-status {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+
+    .connection-status span {
+        display: none;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Botões mais compactos */
+    .btn-nav {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        gap: 0.3rem;
+    }
+
+    .btn-nav i {
+        font-size: 0.9rem;
+    }
+
+    /* User details texto escondido em telas pequenas */
+    .user-details {
+        display: none;
+    }
+
+    .user-photo {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Botão logout apenas ícone */
+    .btn-logout {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    /* Login e outros elementos */
     .login-logo h1 {
         font-size: 2rem;
     }
-    
+
     .login-card {
         padding: 30px 20px;
     }
-    
+
     .logo-text {
         font-size: 1.2rem;
     }
-    
+
     .form-title,
     .results-title {
         font-size: 1.1rem;
     }
-    
+
     .material-buttons {
         grid-template-columns: 1fr;
     }
-    
+
     .btn {
         padding: 10px 20px;
         font-size: 0.9rem;
-    }
-    
-    .navbar-right {
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .btn {
         width: 100%;
         justify-content: center;
     }
