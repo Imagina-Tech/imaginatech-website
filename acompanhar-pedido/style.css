@@ -169,10 +169,10 @@ body {
 }
 
 /* ===========================
-   HEADER
+   HEADER / NAVBAR
    =========================== */
 
-.header {
+.navbar {
     background: rgba(10, 14, 26, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -183,8 +183,8 @@ body {
     z-index: 100;
 }
 
-.header-container {
-    max-width: 1200px;
+.navbar-container {
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -193,22 +193,26 @@ body {
     flex-wrap: wrap;
 }
 
-.logo-section {
+.navbar-left {
     display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navbar-right {
+    display: flex;
+    gap: 15px;
     align-items: center;
 }
 
-.logo-link {
-    text-decoration: none;
+.logo-section {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
 .logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.8rem;
-    font-weight: 900;
+    font: 900 1.5rem 'Orbitron', monospace;
     background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -217,7 +221,7 @@ body {
 }
 
 .logo-subtitle {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -225,33 +229,66 @@ body {
     font-weight: 600;
 }
 
-.nav-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.nav-link {
+.connection-status {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
     transition: all 0.3s ease;
 }
 
-.nav-link:hover {
-    color: var(--text-primary);
-    background: var(--glass-bg);
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
 }
 
-.nav-link.whatsapp {
+.connection-status.offline .status-dot {
+    background: var(--neon-red);
+    animation: none;
+}
+
+.connection-status.offline {
+    border-color: rgba(255, 0, 85, 0.3);
+    background: rgba(255, 0, 85, 0.1);
+}
+
+.btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.btn-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    border-color: var(--neon-blue);
+}
+
+.btn-nav.whatsapp {
     background: linear-gradient(135deg, #25d366, #128c7e);
     color: white;
+    border-color: #25d366;
 }
 
-.nav-link.whatsapp:hover {
+.btn-nav.whatsapp:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
 }
@@ -1154,15 +1191,28 @@ body {
    =========================== */
 
 @media (max-width: 768px) {
-    /* Header mobile */
-    .header {
+    /* Navbar mobile */
+    .navbar {
         padding: 15px 10px;
     }
 
-    .header-container {
-        padding: 0;
+    .navbar-container {
         flex-direction: column;
         gap: 1rem;
+    }
+
+    .navbar-left {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .navbar-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     /* Logo section responsiva */
@@ -1176,31 +1226,21 @@ body {
         letter-spacing: 2px;
     }
 
-    .logo-section {
-        width: 100%;
-        justify-content: center;
+    /* Connection status compacto */
+    .connection-status {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
     }
 
-    /* Nav links mobile */
-    .nav-links {
-        width: 100%;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .nav-link {
+    /* Botões de navegação mobile */
+    .btn-nav {
         padding: 0.5rem 0.8rem;
         font-size: 0.85rem;
         gap: 0.4rem;
     }
 
-    .nav-link span {
-        display: none;
-    }
-
-    .nav-link i {
-        font-size: 1rem;
+    .btn-nav span {
+        font-size: 0.85rem;
     }
     
     .main-container {
@@ -1239,13 +1279,17 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Header extra small */
-    .header {
+    /* Navbar extra small */
+    .navbar {
         padding: 12px 8px;
     }
 
-    .header-container {
-        gap: 0.75rem;
+    .navbar-left {
+        gap: 8px;
+    }
+
+    .navbar-right {
+        gap: 6px;
     }
 
     /* Logo ainda menor */
@@ -1259,17 +1303,29 @@ body {
         letter-spacing: 1.5px;
     }
 
-    /* Nav links muito compactos */
-    .nav-links {
-        gap: 6px;
+    /* Connection status muito compacto */
+    .connection-status {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
     }
 
-    .nav-link {
+    .connection-status span {
+        display: none;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Botões mais compactos */
+    .btn-nav {
         padding: 0.4rem 0.6rem;
         font-size: 0.8rem;
+        gap: 0.3rem;
     }
 
-    .nav-link i {
+    .btn-nav i {
         font-size: 0.9rem;
     }
 
