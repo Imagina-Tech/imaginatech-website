@@ -865,13 +865,24 @@
 }
 
 @media (max-width: 480px) {
-    /* Botão de tarefas - esconder texto */
-    .btn-tasks span {
-        display: none;
+    /* Botão de tarefas - mantém texto visível */
+    .btn-tasks {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
     }
 
-    .btn-tasks {
-        padding: 0.5rem;
+    .btn-tasks i {
+        font-size: 1rem;
+    }
+
+    /* Badge sempre visível */
+    .tasks-badge {
+        top: -6px;
+        right: -6px;
+        font-size: 0.65rem;
+        padding: 0.12rem 0.35rem;
+        min-width: 18px;
     }
 
     /* Dropdown ainda mais compacto */
