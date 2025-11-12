@@ -503,17 +503,7 @@ async function getAdminPhotoURL(email) {
         return user.photoURL;
     }
 
-    // 3. Tentar buscar no Firestore (adminUsers collection)
-    try {
-        const userDoc = await state.db.collection('adminUsers').doc(email).get();
-        if (userDoc.exists && userDoc.data().photoURL) {
-            return userDoc.data().photoURL;
-        }
-    } catch (error) {
-        console.log('Não foi possível buscar foto do Firestore:', error);
-    }
-
-    // 4. Fallback: gerar avatar com iniciais
+    // 3. Fallback: gerar avatar com iniciais e cor de fundo
     const name = AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email.split('@')[0];
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00D4FF&color=fff&bold=true&size=128`;
 }
