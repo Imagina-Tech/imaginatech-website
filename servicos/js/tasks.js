@@ -32,11 +32,12 @@ const PRIORITY_CONFIG = {
 const tasksState = {
     tasks: [],
     filteredTasks: [],
-    viewMode: 'mine', // 'mine' | 'all'
+    viewMode: 'mine', // 'mine' | 'all' | email do admin
     statusFilter: 'all', // 'all' | 'pendente' | 'concluida'
     unsubscribe: null,
     dropdownOpen: false,
-    currentUser: null
+    currentUser: null,
+    adminsPhotos: {} // Cache de fotos dos admins
 };
 
 // ===========================
@@ -93,8 +94,8 @@ function createTasksUI() {
         <button class="btn-tasks" id="btnTasks">
             <i class="fas fa-clipboard-list"></i>
             <span>Tarefas</span>
-            <span class="tasks-badge hidden" id="tasksBadge">0</span>
         </button>
+        <span class="tasks-badge hidden" id="tasksBadge">0</span>
 
         <!-- Dropdown -->
         <div class="tasks-dropdown" id="tasksDropdown">
@@ -104,6 +105,9 @@ function createTasksUI() {
                     <span id="dropdownTitle">Minhas Tarefas (0)</span>
                 </div>
                 <div class="tasks-dropdown-actions">
+                    <button class="btn-close-dropdown" id="btnCloseDropdown" title="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
                     <button class="btn-new-task" id="btnNewTask">
                         <i class="fas fa-plus"></i>
                         Nova
@@ -117,10 +121,6 @@ function createTasksUI() {
             </div>
 
             <div class="tasks-filters">
-                <div class="tasks-toggle">
-                    <button class="active" data-view="mine">Minhas</button>
-                    <button data-view="all">Todas</button>
-                </div>
                 <select class="tasks-status-filter" id="statusFilter">
                     <option value="all">Todas as Tarefas</option>
                     <option value="pendente">Apenas Pendentes</option>
@@ -297,6 +297,9 @@ function setupEventListeners() {
     const btnTasks = document.getElementById('btnTasks');
     btnTasks?.addEventListener('click', toggleDropdown);
 
+    // Botão fechar dropdown
+    document.getElementById('btnCloseDropdown')?.addEventListener('click', closeDropdown);
+
     // Fechar dropdown ao clicar fora
     document.addEventListener('click', (e) => {
         const wrapper = document.getElementById('tasksIconWrapper');
@@ -307,16 +310,6 @@ function setupEventListeners() {
 
     // Nova tarefa
     document.getElementById('btnNewTask')?.addEventListener('click', openTaskModal);
-
-    // Toggle view (Minhas/Todas)
-    document.querySelectorAll('.tasks-toggle button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tasks-toggle button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            tasksState.viewMode = btn.dataset.view;
-            filterAndRenderTasks();
-        });
-    });
 
     // Status filter
     document.getElementById('statusFilter')?.addEventListener('change', (e) => {
@@ -431,7 +424,7 @@ function startTasksListener() {
 // FILTROS E RENDERIZAÇÃO
 // ===========================
 
-async function renderAdminsOverview() {
+function renderAdminsOverview() {
     const container = document.getElementById('tasksAdminsOverview');
     if (!container) return;
 
@@ -466,18 +459,27 @@ async function renderAdminsOverview() {
 
     container.style.display = 'flex';
 
-    // Buscar fotos de forma assíncrona
-    const adminsData = await Promise.all(
-        adminsWithTasks.map(async (admin) => {
-            const count = pendingTasksByAdmin[admin.email];
-            const photoURL = await getAdminPhotoURL(admin.email);
-            return { admin, count, photoURL };
-        })
-    );
+    // Botão "Todas" sempre visível
+    const totalPending = tasksState.tasks.filter(t => t.status === 'pendente').length;
+    let adminsHTML = `
+        <div class="admin-overview-item ${tasksState.viewMode === 'all' ? 'active' : ''}" onclick="filterByAdmin('all')">
+            <div class="admin-avatar all-tasks-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="admin-info">
+                <span class="admin-name">Todas</span>
+                <span class="admin-tasks-count has-tasks">${totalPending}</span>
+            </div>
+        </div>
+    `;
 
-    const adminsHTML = adminsData.map(({ admin, count, photoURL }) => {
+    // Admins com tarefas
+    adminsHTML += adminsWithTasks.map(admin => {
+        const count = pendingTasksByAdmin[admin.email];
+        const photoURL = getAdminPhotoURL(admin.email);
+        const isActive = tasksState.viewMode === admin.email;
         return `
-            <div class="admin-overview-item">
+            <div class="admin-overview-item ${isActive ? 'active' : ''}" onclick="filterByAdmin('${admin.email}')">
                 <div class="admin-avatar" style="background-image: url('${photoURL}')"></div>
                 <div class="admin-info">
                     <span class="admin-name">${escapeHtml(admin.name)}</span>
@@ -490,43 +492,59 @@ async function renderAdminsOverview() {
     container.innerHTML = adminsHTML;
 }
 
-async function getAdminPhotoURL(email) {
-    // 1. Tentar obter foto do usuário logado atual
-    if (state.currentUser && state.currentUser.email === email && state.currentUser.photoURL) {
-        return state.currentUser.photoURL;
+function getAdminPhotoURL(email) {
+    // Se já temos no cache, retorna
+    if (tasksState.adminsPhotos[email]) {
+        return tasksState.adminsPhotos[email];
     }
 
-    // 2. Tentar obter do Firebase Auth atual
-    const auth = firebase.auth();
-    const user = auth.currentUser;
-    if (user && user.email === email && user.photoURL) {
-        return user.photoURL;
+    // Lógica IGUAL ao header: user.photoURL do Firebase Auth ou fallback
+    const user = firebase.auth().currentUser;
+
+    // Se for o usuário logado, usa a foto dele
+    if (user && user.email === email) {
+        const photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff&bold=true&size=128`;
+        tasksState.adminsPhotos[email] = photoURL;
+        return photoURL;
     }
 
-    // 3. Fallback: gerar avatar com iniciais e cor de fundo
+    // Para outros admins, gera fallback com o nome
     const name = AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email.split('@')[0];
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00D4FF&color=fff&bold=true&size=128`;
+    const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00D4FF&color=fff&bold=true&size=128`;
+    tasksState.adminsPhotos[email] = photoURL;
+    return photoURL;
 }
+
+// Função global para filtrar por admin (chamada pelo onclick)
+window.filterByAdmin = function(viewMode) {
+    tasksState.viewMode = viewMode;
+    filterAndRenderTasks();
+};
 
 function filterAndRenderTasks() {
     const userEmail = tasksState.currentUser?.email;
     let filtered = [...tasksState.tasks];
 
-    // Filtro por responsável (Minhas / Todas)
+    // Filtro por responsável
     if (tasksState.viewMode === 'mine') {
+        // Minhas tarefas
         filtered = filtered.filter(task =>
             task.assignedTo && task.assignedTo.includes(userEmail)
         );
+    } else if (tasksState.viewMode !== 'all') {
+        // Tarefas de um admin específico (viewMode = email)
+        filtered = filtered.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.viewMode)
+        );
     }
+    // Se viewMode === 'all', mostra todas (sem filtro de responsável)
 
     // Filtro por status
     if (tasksState.statusFilter !== 'all') {
         filtered = filtered.filter(task => task.status === tasksState.statusFilter);
     } else {
-        // No modo "Todas", mostrar apenas pendentes por padrão para todos
-        if (tasksState.viewMode === 'all') {
-            filtered = filtered.filter(task => task.status === 'pendente');
-        }
+        // Mostrar apenas pendentes por padrão
+        filtered = filtered.filter(task => task.status === 'pendente');
     }
 
     tasksState.filteredTasks = filtered;
