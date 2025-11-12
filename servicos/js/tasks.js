@@ -12,11 +12,11 @@ import { showToast } from './auth-ui.js';
 // ===========================
 
 const AUTHORIZED_ADMINS = [
-    { email: '3d3printers@gmail.com', name: '3D Printers' },
-    { email: 'netrindademarcus@gmail.com', name: 'Marcus Trindade' },
-    { email: 'allanedg01@gmail.com', name: 'Allan' },
-    { email: 'quequell1010@gmail.com', name: 'Quequell' },
-    { email: 'igor.butter@gmail.com', name: 'Igor Butter' }
+    { email: '3d3printers@gmail.com', name: 'ADMIN' },
+    { email: 'netrindademarcus@gmail.com', name: 'Trindade' },
+    { email: 'allanedg01@gmail.com', name: 'Gonçalves' },
+    { email: 'quequell1010@gmail.com', name: 'Raquel' },
+    { email: 'igor.butter@gmail.com', name: 'Leão' }
 ];
 
 const PRIORITY_CONFIG = {
@@ -109,6 +109,11 @@ function createTasksUI() {
                         Nova
                     </button>
                 </div>
+            </div>
+
+            <!-- Admins overview -->
+            <div class="tasks-admins-overview" id="tasksAdminsOverview">
+                <!-- Será preenchido dinamicamente -->
             </div>
 
             <div class="tasks-filters">
@@ -426,6 +431,67 @@ function startTasksListener() {
 // FILTROS E RENDERIZAÇÃO
 // ===========================
 
+function renderAdminsOverview() {
+    const container = document.getElementById('tasksAdminsOverview');
+    if (!container) return;
+
+    // Calcular tarefas pendentes por admin
+    const pendingTasksByAdmin = {};
+
+    // Inicializar contadores
+    AUTHORIZED_ADMINS.forEach(admin => {
+        pendingTasksByAdmin[admin.email] = 0;
+    });
+
+    // Contar tarefas pendentes
+    tasksState.tasks
+        .filter(task => task.status === 'pendente')
+        .forEach(task => {
+            if (task.assignedTo && Array.isArray(task.assignedTo)) {
+                task.assignedTo.forEach(email => {
+                    if (pendingTasksByAdmin.hasOwnProperty(email)) {
+                        pendingTasksByAdmin[email]++;
+                    }
+                });
+            }
+        });
+
+    // Renderizar admins
+    const adminsHTML = AUTHORIZED_ADMINS.map(admin => {
+        const count = pendingTasksByAdmin[admin.email];
+        const photoURL = getAdminPhotoURL(admin.email);
+
+        return `
+            <div class="admin-overview-item">
+                <div class="admin-avatar" style="background-image: url('${photoURL}')"></div>
+                <div class="admin-info">
+                    <span class="admin-name">${escapeHtml(admin.name)}</span>
+                    <span class="admin-tasks-count ${count > 0 ? 'has-tasks' : ''}">${count}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = adminsHTML;
+}
+
+function getAdminPhotoURL(email) {
+    // Tentar obter foto do usuário logado
+    if (state.currentUser && state.currentUser.email === email && state.currentUser.photoURL) {
+        return state.currentUser.photoURL;
+    }
+
+    // Tentar obter de usuários autenticados via Firebase
+    const auth = firebase.auth();
+    const user = auth.currentUser;
+    if (user && user.email === email && user.photoURL) {
+        return user.photoURL;
+    }
+
+    // Fallback: usar Gravatar ou inicial
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=00D4FF&color=fff&bold=true&size=128`;
+}
+
 function filterAndRenderTasks() {
     const userEmail = tasksState.currentUser?.email;
     let filtered = [...tasksState.tasks];
@@ -448,6 +514,7 @@ function filterAndRenderTasks() {
     }
 
     tasksState.filteredTasks = filtered;
+    renderAdminsOverview(); // Renderizar overview dos admins
     renderTasksList();
     updateDropdownTitle();
 }
