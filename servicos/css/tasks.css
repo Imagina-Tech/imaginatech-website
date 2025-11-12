@@ -29,7 +29,6 @@
     line-height: 1;
     white-space: nowrap;
     box-sizing: border-box;
-    position: relative;
 }
 
 .btn-tasks:hover {
@@ -85,7 +84,7 @@
     top: calc(100% + 10px);
     right: 0;
     width: 450px;
-    max-height: 600px;
+    max-height: calc(100vh - 120px);
     background: rgba(10, 14, 26, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -142,6 +141,27 @@
     gap: 0.5rem;
 }
 
+.btn-close-dropdown {
+    padding: 0.4rem;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: none; /* Oculto por padrão, visível apenas no mobile */
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-close-dropdown:hover {
+    background: var(--neon-red);
+    color: white;
+    border-color: var(--neon-red);
+}
+
 .btn-new-task {
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
@@ -181,12 +201,19 @@
     border: 1px solid var(--glass-border);
     border-radius: 25px;
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .admin-overview-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
     border-color: var(--neon-blue);
+}
+
+.admin-overview-item.active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(153, 69, 255, 0.2));
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
 }
 
 .admin-avatar {
@@ -198,6 +225,19 @@
     background-color: var(--glass-bg);
     border: 2px solid var(--neon-blue);
     flex-shrink: 0;
+}
+
+.admin-avatar.all-tasks-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+    border-color: var(--neon-blue);
+}
+
+.admin-avatar.all-tasks-icon i {
+    font-size: 0.9rem;
+    color: white;
 }
 
 .admin-info {
@@ -783,6 +823,11 @@
         border-radius: 12px;
     }
 
+    /* Botão X visível no mobile */
+    .btn-close-dropdown {
+        display: flex;
+    }
+
     .tasks-dropdown-header {
         padding: 1rem;
         flex-wrap: wrap;
@@ -843,11 +888,12 @@
         font-size: 0.85rem;
     }
 
-    /* Lista de tarefas */
+    /* Lista de tarefas - ocupa máximo possível */
     .tasks-list {
         padding: 0.85rem 1rem;
-        max-height: calc(100vh - 350px);
-        max-height: calc(100dvh - 350px);
+        max-height: calc(100vh - 300px);
+        max-height: calc(100dvh - 300px);
+        flex: 1;
     }
 
     /* Cards mais compactos e touch-friendly */
@@ -1072,11 +1118,12 @@
         font-size: 0.8rem;
     }
 
-    /* Lista de tarefas */
+    /* Lista de tarefas - ocupa máximo possível */
     .tasks-list {
         padding: 0.75rem 0.85rem;
-        max-height: calc(100vh - 340px);
-        max-height: calc(100dvh - 340px);
+        max-height: calc(100vh - 280px);
+        max-height: calc(100dvh - 280px);
+        flex: 1;
     }
 
     /* Task cards */
