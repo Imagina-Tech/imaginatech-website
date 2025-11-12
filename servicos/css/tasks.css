@@ -36,7 +36,7 @@
 }
 
 .btn-tasks i {
-    font-size: 1.1rem;
+    font-size: 0.9rem; /* Igual aos outros botões */
 }
 
 /* Badge contador */
@@ -760,6 +760,13 @@
    =========================== */
 
 @media (max-width: 768px) {
+    /* Botão de tarefas - igual aos outros */
+    .btn-tasks {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
+    }
+
     /* Dropdown com position fixed para não cortar */
     .tasks-dropdown {
         position: fixed;
@@ -970,15 +977,15 @@
 }
 
 @media (max-width: 480px) {
-    /* Botão de tarefas - mantém texto visível */
+    /* Botão de tarefas - igual aos outros */
     .btn-tasks {
-        padding: 0.4rem 0.75rem;
-        font-size: 0.85rem;
-        gap: 0.4rem;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        gap: 0.3rem;
     }
 
     .btn-tasks i {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 
     /* Badge sempre visível */
