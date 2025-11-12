@@ -431,7 +431,7 @@ function startTasksListener() {
 // FILTROS E RENDERIZAÇÃO
 // ===========================
 
-function renderAdminsOverview() {
+async function renderAdminsOverview() {
     const container = document.getElementById('tasksAdminsOverview');
     if (!container) return;
 
@@ -456,17 +456,32 @@ function renderAdminsOverview() {
             }
         });
 
-    // Renderizar admins
-    const adminsHTML = AUTHORIZED_ADMINS.map(admin => {
-        const count = pendingTasksByAdmin[admin.email];
-        const photoURL = getAdminPhotoURL(admin.email);
+    // Renderizar apenas admins COM tarefas pendentes
+    const adminsWithTasks = AUTHORIZED_ADMINS.filter(admin => pendingTasksByAdmin[admin.email] > 0);
 
+    if (adminsWithTasks.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+
+    // Buscar fotos de forma assíncrona
+    const adminsData = await Promise.all(
+        adminsWithTasks.map(async (admin) => {
+            const count = pendingTasksByAdmin[admin.email];
+            const photoURL = await getAdminPhotoURL(admin.email);
+            return { admin, count, photoURL };
+        })
+    );
+
+    const adminsHTML = adminsData.map(({ admin, count, photoURL }) => {
         return `
             <div class="admin-overview-item">
                 <div class="admin-avatar" style="background-image: url('${photoURL}')"></div>
                 <div class="admin-info">
                     <span class="admin-name">${escapeHtml(admin.name)}</span>
-                    <span class="admin-tasks-count ${count > 0 ? 'has-tasks' : ''}">${count}</span>
+                    <span class="admin-tasks-count has-tasks">${count}</span>
                 </div>
             </div>
         `;
@@ -475,21 +490,32 @@ function renderAdminsOverview() {
     container.innerHTML = adminsHTML;
 }
 
-function getAdminPhotoURL(email) {
-    // Tentar obter foto do usuário logado
+async function getAdminPhotoURL(email) {
+    // 1. Tentar obter foto do usuário logado atual
     if (state.currentUser && state.currentUser.email === email && state.currentUser.photoURL) {
         return state.currentUser.photoURL;
     }
 
-    // Tentar obter de usuários autenticados via Firebase
+    // 2. Tentar obter do Firebase Auth atual
     const auth = firebase.auth();
     const user = auth.currentUser;
     if (user && user.email === email && user.photoURL) {
         return user.photoURL;
     }
 
-    // Fallback: usar Gravatar ou inicial
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=00D4FF&color=fff&bold=true&size=128`;
+    // 3. Tentar buscar no Firestore (adminUsers collection)
+    try {
+        const userDoc = await state.db.collection('adminUsers').doc(email).get();
+        if (userDoc.exists && userDoc.data().photoURL) {
+            return userDoc.data().photoURL;
+        }
+    } catch (error) {
+        console.log('Não foi possível buscar foto do Firestore:', error);
+    }
+
+    // 4. Fallback: gerar avatar com iniciais
+    const name = AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email.split('@')[0];
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00D4FF&color=fff&bold=true&size=128`;
 }
 
 function filterAndRenderTasks() {
