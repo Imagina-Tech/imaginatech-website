@@ -29,6 +29,7 @@
     line-height: 1;
     white-space: nowrap;
     box-sizing: border-box;
+    position: relative;
 }
 
 .btn-tasks:hover {
