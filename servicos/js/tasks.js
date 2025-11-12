@@ -14,6 +14,7 @@ import { showToast } from './auth-ui.js';
 const AUTHORIZED_ADMINS = [
     { email: '3d3printers@gmail.com', name: '3D Printers' },
     { email: 'netrindademarcus@gmail.com', name: 'Marcus Trindade' },
+    { email: 'allanedg01@gmail.com', name: 'Allan' },
     { email: 'quequell1010@gmail.com', name: 'Quequell' },
     { email: 'igor.butter@gmail.com', name: 'Igor Butter' }
 ];
