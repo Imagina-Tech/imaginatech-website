@@ -32,6 +32,7 @@ let selectedMaterial = null;
 let customMaterialPrice = null;
 let timeHours = 0;
 let timeMinutes = 0;
+let materialAmount = 0;
 
 // ===========================
 // AUTHENTICATION FUNCTIONS
@@ -213,8 +214,15 @@ function initializeCalculator() {
     const btnAdd15m = document.getElementById("btn-add-15m");
     const btnSub15m = document.getElementById("btn-sub-15m");
 
+    // Material controls
+    const materialAmountDisplay = document.getElementById("material-amount-display");
+    const materialUnitDisplay = document.getElementById("material-unit-display");
+    const btnAdd500 = document.getElementById("btn-add-500");
+    const btnSub500 = document.getElementById("btn-sub-500");
+    const btnAdd10 = document.getElementById("btn-add-10");
+    const btnSub10 = document.getElementById("btn-sub-10");
+
     // Inputs
-    const materialUsedInput = document.getElementById("material-used");
     const printQuantityInput = document.getElementById("print-quantity");
     const stlPriceInput = document.getElementById("stl-price");
     const shippingCostInput = document.getElementById("shipping-cost");
@@ -275,14 +283,44 @@ function initializeCalculator() {
         calculateCost();
     }
 
+    function updateMaterialDisplay() {
+        if (materialAmountDisplay) {
+            materialAmountDisplay.textContent = materialAmount;
+        }
+    }
+
+    function addMaterial(amount) {
+        materialAmount += amount;
+
+        // Prevent negative values
+        if (materialAmount < 0) {
+            materialAmount = 0;
+        }
+
+        updateMaterialDisplay();
+        calculateCost();
+    }
+
+    function updateMaterialUnit() {
+        if (!currentPrinter) return;
+
+        const unit = currentPrinter.materialUnit;
+        if (materialUnitDisplay) {
+            materialUnitDisplay.textContent = unit;
+        }
+
+        // Update button units
+        const materialBtnUnits = document.querySelectorAll('.material-btn-unit');
+        materialBtnUnits.forEach(span => {
+            span.textContent = unit;
+        });
+    }
+
     function clearInputs() {
-        if (materialUsedInput) materialUsedInput.value = "";
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
-        timeHours = 0;
-        timeMinutes = 0;
-        updateTimeDisplay();
+        // NÃO zera mais o tempo e material - conforme solicitado
         selectedMaterial = null;
         customMaterialPrice = null;
     }
@@ -337,6 +375,9 @@ function initializeCalculator() {
         } else {
             materialUsageLabel.innerHTML = `<i class="fas fa-cube"></i> Material Utilizado (<span id="material-unit">${currentPrinter.materialUnit}</span>)`;
         }
+
+        // Update material control unit
+        updateMaterialUnit();
     }
 
     function selectMaterial(material) {
@@ -391,7 +432,7 @@ function initializeCalculator() {
 
         // Get input values
         const totalTimeHours = timeHours + timeMinutes / 60;
-        const materialUsed = getInputValue(materialUsedInput, 0);
+        const materialUsed = materialAmount; // Using global variable
         const printQuantity = getInputValue(printQuantityInput, 1);
         const stlPrice = getInputValue(stlPriceInput, 0);
         const shippingCost = getInputValue(shippingCostInput, 0);
@@ -840,6 +881,20 @@ function initializeCalculator() {
         btnSub15m.addEventListener("click", () => addTime(0, -15));
     }
 
+    // Material control buttons
+    if (btnAdd500) {
+        btnAdd500.addEventListener("click", () => addMaterial(500));
+    }
+    if (btnSub500) {
+        btnSub500.addEventListener("click", () => addMaterial(-500));
+    }
+    if (btnAdd10) {
+        btnAdd10.addEventListener("click", () => addMaterial(10));
+    }
+    if (btnSub10) {
+        btnSub10.addEventListener("click", () => addMaterial(-10));
+    }
+
     // Custom material price input
     customMaterialPriceInput.addEventListener("input", () => {
         if (selectedMaterial && selectedMaterial.id === 'outros') {
@@ -850,7 +905,7 @@ function initializeCalculator() {
 
     // Main inputs - recalculate in real time
     const mainInputs = [
-        materialUsedInput, printQuantityInput, stlPriceInput, shippingCostInput,
+        printQuantityInput, stlPriceInput, shippingCostInput,
         profitMarginInput, consumablesInput
     ];
     
