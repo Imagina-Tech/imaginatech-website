@@ -462,7 +462,7 @@ function renderAdminsOverview() {
     // Botão "Todas" sempre visível
     const totalPending = tasksState.tasks.filter(t => t.status === 'pendente').length;
     let adminsHTML = `
-        <div class="admin-overview-item ${tasksState.viewMode === 'all' ? 'active' : ''}" onclick="filterByAdmin('all')">
+        <div class="admin-overview-item ${tasksState.viewMode === 'all' ? 'active' : ''}" onclick="filterByAdmin('all', event)">
             <div class="admin-avatar all-tasks-icon">
                 <i class="fas fa-list"></i>
             </div>
@@ -479,7 +479,7 @@ function renderAdminsOverview() {
         const photoURL = getAdminPhotoURL(admin.email);
         const isActive = tasksState.viewMode === admin.email;
         return `
-            <div class="admin-overview-item ${isActive ? 'active' : ''}" onclick="filterByAdmin('${admin.email}')">
+            <div class="admin-overview-item ${isActive ? 'active' : ''}" onclick="filterByAdmin('${admin.email}', event)">
                 <div class="admin-avatar" style="background-image: url('${photoURL}')"></div>
                 <div class="admin-info">
                     <span class="admin-name">${escapeHtml(admin.name)}</span>
@@ -516,7 +516,11 @@ function getAdminPhotoURL(email) {
 }
 
 // Função global para filtrar por admin (chamada pelo onclick)
-window.filterByAdmin = function(viewMode) {
+window.filterByAdmin = function(viewMode, event) {
+    // Prevenir que o click feche o dropdown
+    if (event) {
+        event.stopPropagation();
+    }
     tasksState.viewMode = viewMode;
     filterAndRenderTasks();
 };
