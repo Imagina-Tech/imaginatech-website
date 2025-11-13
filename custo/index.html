@@ -139,20 +139,42 @@
                                 <i class="fas fa-print"></i>
                                 Impressora / Máquina
                             </label>
-                            <select id="printer-select" class="form-select">
-                                <option value="">Selecione a máquina</option>
-                                <optgroup label="Impressoras de Resina">
-                                    <option value="SATURN_2">Saturn 2 (Resina)</option>
-                                </optgroup>
-                                <optgroup label="Impressoras FDM">
-                                    <option value="K1">Creality K1</option>
-                                    <option value="K1M">Creality K1 Max</option>
-                                    <option value="K2PLUS">Creality K2 Plus</option>
-                                </optgroup>
-                                <optgroup label="Corte a Laser">
-                                    <option value="LASER">Máquina Laser CO2</option>
-                                </optgroup>
-                            </select>
+
+                            <!-- Impressoras de Resina -->
+                            <div class="printer-category">
+                                <h4 class="category-title">Impressoras de Resina</h4>
+                                <div class="printer-buttons">
+                                    <button type="button" class="printer-btn" data-printer="SATURN_2">
+                                        Saturn 2
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Impressoras FDM -->
+                            <div class="printer-category">
+                                <h4 class="category-title">Impressoras FDM</h4>
+                                <div class="printer-buttons">
+                                    <button type="button" class="printer-btn" data-printer="K1">
+                                        Creality K1
+                                    </button>
+                                    <button type="button" class="printer-btn" data-printer="K1M">
+                                        Creality K1 Max
+                                    </button>
+                                    <button type="button" class="printer-btn" data-printer="K2PLUS">
+                                        Creality K2 Plus
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Corte a Laser -->
+                            <div class="printer-category">
+                                <h4 class="category-title">Corte a Laser</h4>
+                                <div class="printer-buttons">
+                                    <button type="button" class="printer-btn" data-printer="LASER">
+                                        Máquina Laser CO2
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Seleção de Material (aparece após selecionar impressora) -->
@@ -171,23 +193,35 @@
                         </div>
 
                         <!-- Tempo de Produção -->
-                        <div class="form-row">
-                            <div class="form-section">
-                                <label class="form-label">
-                                    <i class="fas fa-clock"></i>
-                                    Tempo de Produção
-                                </label>
-                                <div class="time-input-container">
-                                    <div class="time-input-group">
-                                        <input type="number" id="time-hours" class="form-input" min="0" max="999" placeholder="0">
-                                        <span class="input-suffix">horas</span>
-                                    </div>
-                                    <div class="time-input-group">
-                                        <input type="number" id="time-minutes" class="form-input" min="0" max="59" placeholder="0">
-                                        <span class="input-suffix">minutos</span>
-                                    </div>
+                        <div class="form-section">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Tempo de Produção
+                            </label>
+                            <div class="time-control-container">
+                                <div class="time-display">
+                                    <span id="time-hours-display">0</span>h
+                                    <span id="time-minutes-display">00</span>min
+                                </div>
+                                <div class="time-buttons">
+                                    <button type="button" class="time-btn" id="btn-add-1h">
+                                        <i class="fas fa-plus"></i> 1h
+                                    </button>
+                                    <button type="button" class="time-btn" id="btn-sub-1h">
+                                        <i class="fas fa-minus"></i> 1h
+                                    </button>
+                                    <button type="button" class="time-btn" id="btn-add-15m">
+                                        <i class="fas fa-plus"></i> 15min
+                                    </button>
+                                    <button type="button" class="time-btn" id="btn-sub-15m">
+                                        <i class="fas fa-minus"></i> 15min
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Quantidade -->
+                        <div class="form-row">
                             <div class="form-section">
                                 <label class="form-label">
                                     <i class="fas fa-layer-group"></i>
