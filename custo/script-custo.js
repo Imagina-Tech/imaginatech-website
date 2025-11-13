@@ -30,6 +30,8 @@ let isAuthorized = false;
 let currentPrinter = null;
 let selectedMaterial = null;
 let customMaterialPrice = null;
+let timeHours = 0;
+let timeMinutes = 0;
 
 // ===========================
 // AUTHENTICATION FUNCTIONS
@@ -196,14 +198,22 @@ const printerDefaults = {
 
 function initializeCalculator() {
     // DOM Elements
-    const printerSelect = document.getElementById("printer-select");
     const resultsOutput = document.getElementById("results-output");
     const materialUnitSpan = document.getElementById("material-unit");
     const customUnitSpan = document.getElementById("custom-unit");
 
+    // Printer buttons
+    const printerButtons = document.querySelectorAll(".printer-btn");
+
+    // Time controls
+    const timeHoursDisplay = document.getElementById("time-hours-display");
+    const timeMinutesDisplay = document.getElementById("time-minutes-display");
+    const btnAdd1h = document.getElementById("btn-add-1h");
+    const btnSub1h = document.getElementById("btn-sub-1h");
+    const btnAdd15m = document.getElementById("btn-add-15m");
+    const btnSub15m = document.getElementById("btn-sub-15m");
+
     // Inputs
-    const timeHoursInput = document.getElementById("time-hours");
-    const timeMinutesInput = document.getElementById("time-minutes");
     const materialUsedInput = document.getElementById("material-used");
     const printQuantityInput = document.getElementById("print-quantity");
     const stlPriceInput = document.getElementById("stl-price");
@@ -236,13 +246,43 @@ function initializeCalculator() {
         }).format(value);
     }
 
+    function updateTimeDisplay() {
+        if (timeHoursDisplay) {
+            timeHoursDisplay.textContent = timeHours;
+        }
+        if (timeMinutesDisplay) {
+            timeMinutesDisplay.textContent = timeMinutes.toString().padStart(2, '0');
+        }
+    }
+
+    function addTime(hours, minutes) {
+        timeMinutes += minutes;
+        timeHours += hours;
+
+        // Normalize minutes
+        if (timeMinutes >= 60) {
+            timeHours += Math.floor(timeMinutes / 60);
+            timeMinutes = timeMinutes % 60;
+        }
+
+        // Prevent negative values
+        if (timeHours < 0 || (timeHours === 0 && timeMinutes < 0)) {
+            timeHours = 0;
+            timeMinutes = 0;
+        }
+
+        updateTimeDisplay();
+        calculateCost();
+    }
+
     function clearInputs() {
-        [timeHoursInput, timeMinutesInput, materialUsedInput].forEach(input => {
-            if (input) input.value = "";
-        });
+        if (materialUsedInput) materialUsedInput.value = "";
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
+        timeHours = 0;
+        timeMinutes = 0;
+        updateTimeDisplay();
         selectedMaterial = null;
         customMaterialPrice = null;
     }
@@ -350,9 +390,7 @@ function initializeCalculator() {
         }
 
         // Get input values
-        const hours = getInputValue(timeHoursInput, 0);
-        const minutes = getInputValue(timeMinutesInput, 0);
-        const totalTimeHours = hours + minutes / 60;
+        const totalTimeHours = timeHours + timeMinutes / 60;
         const materialUsed = getInputValue(materialUsedInput, 0);
         const printQuantity = getInputValue(printQuantityInput, 1);
         const stlPrice = getInputValue(stlPriceInput, 0);
@@ -582,86 +620,146 @@ function initializeCalculator() {
             position: fixed;
             top: -9999px;
             left: -9999px;
-            width: 600px;
-            background: linear-gradient(135deg, #1a2332, #0a0e1a);
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 20px;
-            padding: 40px;
+            width: 700px;
+            height: auto;
+            background: #0a0e1a;
+            position: relative;
+            padding: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: white;
+            overflow: hidden;
         `;
 
         const { unitPrice, totalPrice, totalWithShipping, quantity, hasShipping } = window.printData;
-        
+
         printContainer.innerHTML = `
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="font-family: 'Orbitron', monospace; font-size: 28px; 
-                    background: linear-gradient(135deg, #00D4FF, #57D4CA); 
-                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                    background-clip: text; margin: 0;">
-                    ImaginaTech
-                </h1>
-                <p style="color: #00FF88; font-size: 18px; margin: 10px 0; font-weight: 600;">
-                    Orçamento Simplificado
-                </p>
+            <!-- Background Grid -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background-image:
+                    linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+                background-size: 25px 25px;
+                pointer-events: none;">
             </div>
-            
-            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); 
-                border-radius: 15px; padding: 25px; margin-bottom: 25px;">
-                <h2 style="color: #00D4FF; font-size: 20px; margin: 0 0 20px 0; 
-                    font-family: 'Orbitron', monospace;">
-                    <span style="color: #FFD700;">📦</span> ${modelName}
-                </h2>
-                
-                <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
-                    border: 2px solid #00FF88; border-radius: 10px; padding: 20px;">
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; 
-                        padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                        <span style="font-size: 18px; color: white;">Valor Unitário:</span>
-                        <span style="font-size: 22px; font-weight: 700; color: #00FF88; 
-                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">
+
+            <!-- Top Border -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                background: linear-gradient(90deg, #00D4FF, #00FF88, #00D4FF);"></div>
+
+            <!-- Content -->
+            <div style="position: relative; padding: 50px;">
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 40px; position: relative;">
+                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+                        width: 150px; height: 2px; background: linear-gradient(90deg, transparent, #00D4FF, transparent);"></div>
+
+                    <h1 style="font-family: 'Orbitron', monospace; font-size: 36px;
+                        background: linear-gradient(135deg, #00D4FF, #57D4CA);
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        background-clip: text; margin: 0; letter-spacing: 4px; text-transform: uppercase;">
+                        IMAGINATECH
+                    </h1>
+
+                    <div style="margin: 15px auto; width: 200px; height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);"></div>
+
+                    <p style="color: #00FF88; font-size: 14px; margin: 0; font-weight: 600;
+                        letter-spacing: 3px; text-transform: uppercase;">
+                        ORÇAMENTO SIMPLIFICADO
+                    </p>
+                </div>
+
+                <!-- Model Name -->
+                <div style="margin-bottom: 30px; padding: 20px;
+                    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(0, 255, 136, 0.08));
+                    border-left: 4px solid #00D4FF; border-right: 4px solid #00FF88;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 4px; height: 30px; background: #FFD700;"></div>
+                        <h2 style="color: #FFFFFF; font-size: 24px; margin: 0;
+                            font-family: 'Orbitron', monospace; font-weight: 700;">
+                            ${modelName}
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Prices Section -->
+                <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 212, 255, 0.05));
+                    border: 2px solid #00FF88; padding: 30px; position: relative;">
+
+                    <!-- Corner Accents -->
+                    <div style="position: absolute; top: -2px; left: -2px; width: 20px; height: 20px;
+                        border-top: 4px solid #00D4FF; border-left: 4px solid #00D4FF;"></div>
+                    <div style="position: absolute; top: -2px; right: -2px; width: 20px; height: 20px;
+                        border-top: 4px solid #00D4FF; border-right: 4px solid #00D4FF;"></div>
+                    <div style="position: absolute; bottom: -2px; left: -2px; width: 20px; height: 20px;
+                        border-bottom: 4px solid #00D4FF; border-left: 4px solid #00D4FF;"></div>
+                    <div style="position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px;
+                        border-bottom: 4px solid #00D4FF; border-right: 4px solid #00D4FF;"></div>
+
+                    <!-- Unit Price -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;
+                        margin-bottom: 20px; padding-bottom: 20px;
+                        border-bottom: 2px solid rgba(0, 212, 255, 0.2);">
+                        <span style="font-size: 18px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
+                            VALOR UNITÁRIO
+                        </span>
+                        <span style="font-size: 28px; font-weight: 700; color: #00FF88;
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);">
                             ${formatCurrency(unitPrice)}
                         </span>
                     </div>
-                    
+
                     ${quantity > 1 ? `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;
-                        padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                        <span style="font-size: 18px; color: white;">
-                            Valor Total (${quantity} unidades):
+                    <!-- Total Price -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;
+                        margin-bottom: 20px; padding-bottom: 20px;
+                        border-bottom: 2px solid rgba(0, 212, 255, 0.2);">
+                        <span style="font-size: 18px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
+                            TOTAL (${quantity} UNIDADES)
                         </span>
-                        <span style="font-size: 22px; font-weight: 700; color: #00FF88; 
-                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">
+                        <span style="font-size: 28px; font-weight: 700; color: #00FF88;
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);">
                             ${formatCurrency(totalPrice)}
                         </span>
                     </div>
                     ` : ''}
-                    
+
                     ${hasShipping ? `
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 18px; color: white;">Total com Frete:</span>
-                        <span style="font-size: 22px; font-weight: 700; color: #FFD700; 
-                            font-family: 'Orbitron', monospace; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">
+                    <!-- Total with Shipping -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 18px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
+                            TOTAL COM FRETE
+                        </span>
+                        <span style="font-size: 28px; font-weight: 700; color: #FFD700;
+                            font-family: 'Orbitron', monospace; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);">
                             ${formatCurrency(totalWithShipping)}
                         </span>
                     </div>
                     ` : ''}
                 </div>
+
+                <!-- Footer -->
+                <div style="margin-top: 40px; text-align: center; position: relative;">
+                    <div style="margin: 0 auto 20px; width: 200px; height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);"></div>
+
+                    <p style="color: rgba(255, 255, 255, 0.5); font-size: 13px; margin: 8px 0;">
+                        ${new Date().toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </p>
+                    <p style="color: rgba(0, 212, 255, 0.7); font-size: 14px; margin: 8px 0;
+                        font-weight: 600; letter-spacing: 1px;">
+                        www.imaginatech.com.br
+                    </p>
+                </div>
             </div>
-            
-            <div style="text-align: center; margin-top: 25px;">
-                <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">
-                    ${new Date().toLocaleDateString('pt-BR', { 
-                        day: '2-digit', 
-                        month: 'long', 
-                        year: 'numeric' 
-                    })}
-                </p>
-                <p style="color: rgba(255, 255, 255, 0.4); font-size: 12px; margin-top: 10px;">
-                    www.imaginatech.com.br
-                </p>
-            </div>
+
+            <!-- Bottom Border -->
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+                background: linear-gradient(90deg, #00D4FF, #00FF88, #00D4FF);"></div>
         `;
         
         document.body.appendChild(printContainer);
@@ -709,21 +807,38 @@ function initializeCalculator() {
     // ===========================
     // EVENT LISTENERS
     // ===========================
-    
-    // Printer selection change
-    printerSelect.addEventListener("change", (e) => {
-        const selectedPrinter = e.target.value;
-        if (selectedPrinter && printerDefaults[selectedPrinter]) {
-            currentPrinter = printerDefaults[selectedPrinter];
-            clearInputs();
-            updateMaterialButtons();
-            calculateCost();
-        } else {
-            currentPrinter = null;
-            materialSelection.style.display = 'none';
-            calculateCost();
-        }
+
+    // Printer buttons
+    printerButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const printerKey = button.dataset.printer;
+            if (printerKey && printerDefaults[printerKey]) {
+                // Remove active class from all buttons
+                printerButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                currentPrinter = printerDefaults[printerKey];
+                clearInputs();
+                updateMaterialButtons();
+                calculateCost();
+            }
+        });
     });
+
+    // Time control buttons
+    if (btnAdd1h) {
+        btnAdd1h.addEventListener("click", () => addTime(1, 0));
+    }
+    if (btnSub1h) {
+        btnSub1h.addEventListener("click", () => addTime(-1, 0));
+    }
+    if (btnAdd15m) {
+        btnAdd15m.addEventListener("click", () => addTime(0, 15));
+    }
+    if (btnSub15m) {
+        btnSub15m.addEventListener("click", () => addTime(0, -15));
+    }
 
     // Custom material price input
     customMaterialPriceInput.addEventListener("input", () => {
@@ -735,8 +850,7 @@ function initializeCalculator() {
 
     // Main inputs - recalculate in real time
     const mainInputs = [
-        timeHoursInput, timeMinutesInput, materialUsedInput, 
-        printQuantityInput, stlPriceInput, shippingCostInput,
+        materialUsedInput, printQuantityInput, stlPriceInput, shippingCostInput,
         profitMarginInput, consumablesInput
     ];
     

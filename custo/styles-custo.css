@@ -451,6 +451,118 @@ body {
 }
 
 /* ===========================
+   PRINTER SELECTION
+   =========================== */
+
+.printer-category {
+    margin-bottom: 20px;
+}
+
+.category-title {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.printer-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.printer-btn {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.printer-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-blue);
+    transform: translateY(-2px);
+}
+
+.printer-btn.active {
+    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+    border-color: var(--neon-blue);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+}
+
+/* ===========================
+   TIME CONTROLS
+   =========================== */
+
+.time-control-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(87, 212, 202, 0.1));
+    border: 2px solid var(--neon-blue);
+    border-radius: 15px;
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.time-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.time-btn {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.time-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+}
+
+.time-btn:active {
+    transform: translateY(0);
+}
+
+.time-btn i {
+    font-size: 0.85rem;
+}
+
+/* ===========================
    CONTAINER & LAYOUT
    =========================== */
 
