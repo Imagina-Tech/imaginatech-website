@@ -454,36 +454,25 @@ body {
    PRINTER SELECTION
    =========================== */
 
-.printer-category {
-    margin-bottom: 20px;
-}
-
-.category-title {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
 .printer-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .printer-btn {
-    padding: 12px 16px;
+    padding: 12px 20px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
     border-radius: 10px;
     color: rgba(255, 255, 255, 0.8);
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
+    font-family: 'Orbitron', monospace;
+    min-width: 70px;
 }
 
 .printer-btn:hover {
@@ -560,6 +549,74 @@ body {
 
 .time-btn i {
     font-size: 0.85rem;
+}
+
+/* ===========================
+   MATERIAL CONTROLS
+   =========================== */
+
+.material-control-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.material-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(0, 212, 255, 0.1));
+    border: 2px solid var(--neon-purple);
+    border-radius: 15px;
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-purple);
+    text-shadow: 0 0 20px rgba(153, 69, 255, 0.5);
+}
+
+.material-buttons-control {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.material-increment-btn {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.material-increment-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-purple);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(153, 69, 255, 0.2);
+}
+
+.material-increment-btn:active {
+    transform: translateY(0);
+}
+
+.material-increment-btn i {
+    font-size: 0.85rem;
+}
+
+.material-btn-unit {
+    font-size: 0.85rem;
+    opacity: 0.8;
 }
 
 /* ===========================
