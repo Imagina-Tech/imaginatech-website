@@ -267,14 +267,19 @@ function initializeCalculator() {
         timeMinutes += minutes;
         timeHours += hours;
 
-        // Normalize minutes
-        if (timeMinutes >= 60) {
-            timeHours += Math.floor(timeMinutes / 60);
-            timeMinutes = timeMinutes % 60;
+        // Normalize minutes (handle both positive and negative)
+        while (timeMinutes >= 60) {
+            timeHours += 1;
+            timeMinutes -= 60;
         }
 
-        // Prevent negative values
-        if (timeHours < 0 || (timeHours === 0 && timeMinutes < 0)) {
+        while (timeMinutes < 0) {
+            timeHours -= 1;
+            timeMinutes += 60;
+        }
+
+        // Prevent negative total time
+        if (timeHours < 0) {
             timeHours = 0;
             timeMinutes = 0;
         }

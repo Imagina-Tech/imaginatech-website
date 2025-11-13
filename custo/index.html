@@ -191,17 +191,6 @@
                             </div>
                         </div>
 
-                        <!-- Quantidade -->
-                        <div class="form-row">
-                            <div class="form-section">
-                                <label class="form-label">
-                                    <i class="fas fa-layer-group"></i>
-                                    Quantidade
-                                </label>
-                                <input type="number" id="print-quantity" class="form-input" min="1" value="1">
-                            </div>
-                        </div>
-
                         <!-- Material Utilizado -->
                         <div class="form-section">
                             <label class="form-label" id="material-usage-label">
@@ -229,8 +218,15 @@
                             </div>
                         </div>
 
-                        <!-- Parâmetros de Cálculo (integrados ao formulário principal) -->
+                        <!-- Quantidade e Margem de Lucro -->
                         <div class="form-row">
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    Quantidade
+                                </label>
+                                <input type="number" id="print-quantity" class="form-input" min="1" value="1">
+                            </div>
                             <div class="form-section">
                                 <label class="form-label">
                                     <i class="fas fa-percentage"></i>
@@ -238,13 +234,15 @@
                                 </label>
                                 <input type="number" id="profit-margin" class="form-input" min="0" value="280" step="1">
                             </div>
-                            <div class="form-section" id="consumables-field" style="display: none;">
-                                <label class="form-label">
-                                    <i class="fas fa-tools"></i>
-                                    Consumíveis (R$)
-                                </label>
-                                <input type="number" id="consumables" class="form-input" min="0" value="2" step="0.01">
-                            </div>
+                        </div>
+
+                        <!-- Consumíveis (apenas para resina) -->
+                        <div class="form-section" id="consumables-field" style="display: none;">
+                            <label class="form-label">
+                                <i class="fas fa-tools"></i>
+                                Consumíveis (R$)
+                            </label>
+                            <input type="number" id="consumables" class="form-input" min="0" value="2" step="0.01">
                         </div>
 
                         <!-- Custos Adicionais -->
