@@ -26,9 +26,6 @@
     cursor: pointer;
     transition: all 0.3s;
     text-decoration: none;
-    line-height: 1;
-    white-space: nowrap;
-    box-sizing: border-box;
 }
 
 .btn-tasks:hover {
@@ -36,10 +33,6 @@
     box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
     border-color: var(--neon-blue);
     background: var(--glass-bg);
-}
-
-.btn-tasks i {
-    font-size: 0.9rem; /* Igual aos outros botões */
 }
 
 /* Badge contador */
