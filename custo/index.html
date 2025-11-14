@@ -169,22 +169,24 @@
                                 <i class="fas fa-clock"></i>
                                 Tempo de Produção
                             </label>
-                            <div class="time-control-container">
-                                <div class="time-display">
-                                    <span id="time-hours-display">0</span>h
-                                    <span id="time-minutes-display">00</span>min
+                            <div class="control-with-buttons">
+                                <div class="display-box">
+                                    <div class="time-display">
+                                        <span id="time-hours-display">0</span>h
+                                        <span id="time-minutes-display">00</span>min
+                                    </div>
                                 </div>
-                                <div class="time-buttons">
-                                    <button type="button" class="time-btn" id="btn-add-1h">
+                                <div class="buttons-grid buttons-grid-2x2">
+                                    <button type="button" class="increment-btn" id="btn-add-1h">
                                         <i class="fas fa-plus"></i> 1h
                                     </button>
-                                    <button type="button" class="time-btn" id="btn-sub-1h">
+                                    <button type="button" class="increment-btn" id="btn-sub-1h">
                                         <i class="fas fa-minus"></i> 1h
                                     </button>
-                                    <button type="button" class="time-btn" id="btn-add-15m">
+                                    <button type="button" class="increment-btn" id="btn-add-15m">
                                         <i class="fas fa-plus"></i> 15min
                                     </button>
-                                    <button type="button" class="time-btn" id="btn-sub-15m">
+                                    <button type="button" class="increment-btn" id="btn-sub-15m">
                                         <i class="fas fa-minus"></i> 15min
                                     </button>
                                 </div>
@@ -197,21 +199,29 @@
                                 <i class="fas fa-cube"></i>
                                 Material Utilizado (<span id="material-unit">g</span>)
                             </label>
-                            <div class="material-control-container">
-                                <div class="material-display">
-                                    <span id="material-amount-display">0</span><span id="material-unit-display">g</span>
+                            <div class="control-with-buttons">
+                                <div class="display-box">
+                                    <div class="material-display">
+                                        <span id="material-amount-display">0</span><span id="material-unit-display">g</span>
+                                    </div>
                                 </div>
-                                <div class="material-buttons-control">
-                                    <button type="button" class="material-increment-btn" id="btn-add-500">
+                                <div class="buttons-grid buttons-grid-2x3">
+                                    <button type="button" class="increment-btn" id="btn-add-500">
                                         <i class="fas fa-plus"></i> 500<span class="material-btn-unit">g</span>
                                     </button>
-                                    <button type="button" class="material-increment-btn" id="btn-sub-500">
+                                    <button type="button" class="increment-btn" id="btn-sub-500">
                                         <i class="fas fa-minus"></i> 500<span class="material-btn-unit">g</span>
                                     </button>
-                                    <button type="button" class="material-increment-btn" id="btn-add-10">
+                                    <button type="button" class="increment-btn" id="btn-add-100">
+                                        <i class="fas fa-plus"></i> 100<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-100">
+                                        <i class="fas fa-minus"></i> 100<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-add-10">
                                         <i class="fas fa-plus"></i> 10<span class="material-btn-unit">g</span>
                                     </button>
-                                    <button type="button" class="material-increment-btn" id="btn-sub-10">
+                                    <button type="button" class="increment-btn" id="btn-sub-10">
                                         <i class="fas fa-minus"></i> 10<span class="material-btn-unit">g</span>
                                     </button>
                                 </div>

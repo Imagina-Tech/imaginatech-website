@@ -458,6 +458,7 @@ body {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .printer-btn {
@@ -489,13 +490,75 @@ body {
 }
 
 /* ===========================
-   TIME CONTROLS
+   UNIFIED CONTROLS LAYOUT
    =========================== */
 
-.time-control-container {
+.control-with-buttons {
     display: flex;
-    flex-direction: column;
     gap: 15px;
+    align-items: center;
+}
+
+.display-box {
+    flex: 1;
+    min-width: 200px;
+    padding: 25px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(87, 212, 202, 0.08));
+    border: 2px solid var(--glass-border);
+    border-radius: 0;
+    position: relative;
+}
+
+.display-box::before,
+.display-box::after {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--neon-blue);
+}
+
+/* Top corners */
+.display-box::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.display-box::after {
+    top: -2px;
+    right: -2px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.time-display::before,
+.time-display::after,
+.material-display::before,
+.material-display::after {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--neon-blue);
+}
+
+/* Bottom corners */
+.time-display::before,
+.material-display::before {
+    bottom: -27px;
+    left: -2px;
+    border-right: none;
+    border-top: none;
+}
+
+.time-display::after,
+.material-display::after {
+    bottom: -27px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
 }
 
 .time-display {
@@ -503,10 +566,6 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(87, 212, 202, 0.1));
-    border: 2px solid var(--neon-blue);
-    border-radius: 15px;
     font-family: 'Orbitron', monospace;
     font-size: 2rem;
     font-weight: 700;
@@ -514,64 +573,11 @@ body {
     text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
 }
 
-.time-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.time-btn {
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid var(--glass-border);
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-width: auto;
-}
-
-.time-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--neon-green);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
-}
-
-.time-btn:active {
-    transform: translateY(0);
-}
-
-.time-btn i {
-    font-size: 0.85rem;
-}
-
-/* ===========================
-   MATERIAL CONTROLS
-   =========================== */
-
-.material-control-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
 .material-display {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(0, 212, 255, 0.1));
-    border: 2px solid var(--neon-purple);
-    border-radius: 15px;
     font-family: 'Orbitron', monospace;
     font-size: 2rem;
     font-weight: 700;
@@ -579,47 +585,55 @@ body {
     text-shadow: 0 0 20px rgba(153, 69, 255, 0.5);
 }
 
-.material-buttons-control {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
+.buttons-grid {
+    display: grid;
+    gap: 8px;
 }
 
-.material-increment-btn {
-    padding: 10px 14px;
+.buttons-grid-2x2 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
+
+.buttons-grid-2x3 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.increment-btn {
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    min-width: auto;
+    gap: 4px;
+    white-space: nowrap;
 }
 
-.material-increment-btn:hover {
+.increment-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: var(--neon-purple);
+    border-color: var(--neon-blue);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(153, 69, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
 }
 
-.material-increment-btn:active {
+.increment-btn:active {
     transform: translateY(0);
 }
 
-.material-increment-btn i {
-    font-size: 0.85rem;
+.increment-btn i {
+    font-size: 0.75rem;
 }
 
 .material-btn-unit {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     opacity: 0.8;
 }
 

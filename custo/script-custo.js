@@ -28,6 +28,7 @@ const AUTHORIZED_EMAILS = [
 let currentUser = null;
 let isAuthorized = false;
 let currentPrinter = null;
+let previousPrinterType = null;
 let selectedMaterial = null;
 let customMaterialPrice = null;
 let timeHours = 0;
@@ -219,6 +220,8 @@ function initializeCalculator() {
     const materialUnitDisplay = document.getElementById("material-unit-display");
     const btnAdd500 = document.getElementById("btn-add-500");
     const btnSub500 = document.getElementById("btn-sub-500");
+    const btnAdd100 = document.getElementById("btn-add-100");
+    const btnSub100 = document.getElementById("btn-sub-100");
     const btnAdd10 = document.getElementById("btn-add-10");
     const btnSub10 = document.getElementById("btn-sub-10");
 
@@ -321,13 +324,16 @@ function initializeCalculator() {
         });
     }
 
-    function clearInputs() {
+    function clearInputs(clearMaterial = false) {
         if (printQuantityInput) printQuantityInput.value = "1";
         if (stlPriceInput) stlPriceInput.value = "0";
         if (shippingCostInput) shippingCostInput.value = "0";
         // NÃO zera mais o tempo e material - conforme solicitado
-        selectedMaterial = null;
-        customMaterialPrice = null;
+        // Só limpa material se explicitamente solicitado (mudança de tipo de impressora)
+        if (clearMaterial) {
+            selectedMaterial = null;
+            customMaterialPrice = null;
+        }
     }
 
     function updateMaterialButtons() {
@@ -813,11 +819,13 @@ function initializeCalculator() {
         try {
             // Use html2canvas to generate image
             const canvas = await html2canvas(printContainer, {
-                backgroundColor: null,
+                backgroundColor: '#0a0e1a',
                 scale: 2,
                 logging: false,
-                width: 600,
-                height: printContainer.scrollHeight
+                width: 700,
+                height: printContainer.scrollHeight,
+                windowWidth: 700,
+                windowHeight: printContainer.scrollHeight
             });
             
             // Convert to blob and download
@@ -864,8 +872,13 @@ function initializeCalculator() {
                 // Add active class to clicked button
                 button.classList.add('active');
 
-                currentPrinter = printerDefaults[printerKey];
-                clearInputs();
+                const newPrinter = printerDefaults[printerKey];
+                const typeChanged = !currentPrinter || currentPrinter.type !== newPrinter.type;
+
+                currentPrinter = newPrinter;
+
+                // Só limpa material se o tipo de impressora mudou
+                clearInputs(typeChanged);
                 updateMaterialButtons();
                 calculateCost();
             }
@@ -892,6 +905,12 @@ function initializeCalculator() {
     }
     if (btnSub500) {
         btnSub500.addEventListener("click", () => addMaterial(-500));
+    }
+    if (btnAdd100) {
+        btnAdd100.addEventListener("click", () => addMaterial(100));
+    }
+    if (btnSub100) {
+        btnSub100.addEventListener("click", () => addMaterial(-100));
     }
     if (btnAdd10) {
         btnAdd10.addEventListener("click", () => addMaterial(10));
