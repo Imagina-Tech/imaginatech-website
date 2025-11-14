@@ -410,28 +410,30 @@ body {
    =========================== */
 
 .material-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    flex-direction: column;
 }
 
 .material-btn {
-    padding: 10px 16px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
+    white-space: nowrap;
 }
 
 .material-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--neon-purple);
     transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(153, 69, 255, 0.2);
 }
 
 .material-btn.active {
@@ -454,29 +456,31 @@ body {
    =========================== */
 
 .printer-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    flex-direction: column;
 }
 
 .printer-btn {
-    padding: 10px 16px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     font-family: 'Orbitron', monospace;
+    white-space: nowrap;
 }
 
 .printer-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--neon-blue);
     transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
 }
 
 .printer-btn.active {
