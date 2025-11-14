@@ -410,19 +410,18 @@ body {
    =========================== */
 
 .material-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
 }
 
 .material-btn {
-    padding: 12px 16px;
+    padding: 10px 16px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
     border-radius: 10px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -431,15 +430,15 @@ body {
 
 .material-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: var(--neon-blue);
+    border-color: var(--neon-purple);
     transform: translateY(-2px);
 }
 
 .material-btn.active {
-    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
-    border-color: var(--neon-blue);
+    background: linear-gradient(135deg, var(--neon-purple), rgba(153, 69, 255, 0.7));
+    border-color: var(--neon-purple);
     color: white;
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(153, 69, 255, 0.3);
 }
 
 .custom-price-field {
@@ -456,24 +455,22 @@ body {
 
 .printer-buttons {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 8px;
+    flex-direction: column;
 }
 
 .printer-btn {
-    padding: 12px 20px;
+    padding: 10px 16px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
     border-radius: 10px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     font-family: 'Orbitron', monospace;
-    min-width: 70px;
 }
 
 .printer-btn:hover {
@@ -503,62 +500,10 @@ body {
     flex: 1;
     min-width: 200px;
     padding: 25px;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(87, 212, 202, 0.08));
-    border: 2px solid var(--glass-border);
-    border-radius: 0;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(87, 212, 202, 0.1));
+    border: 2px solid var(--neon-blue);
+    border-radius: 15px;
     position: relative;
-}
-
-.display-box::before,
-.display-box::after {
-    content: '';
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    border: 2px solid var(--neon-blue);
-}
-
-/* Top corners */
-.display-box::before {
-    top: -2px;
-    left: -2px;
-    border-right: none;
-    border-bottom: none;
-}
-
-.display-box::after {
-    top: -2px;
-    right: -2px;
-    border-left: none;
-    border-bottom: none;
-}
-
-.time-display::before,
-.time-display::after,
-.material-display::before,
-.material-display::after {
-    content: '';
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    border: 2px solid var(--neon-blue);
-}
-
-/* Bottom corners */
-.time-display::before,
-.material-display::before {
-    bottom: -27px;
-    left: -2px;
-    border-right: none;
-    border-top: none;
-}
-
-.time-display::after,
-.material-display::after {
-    bottom: -27px;
-    right: -2px;
-    border-left: none;
-    border-top: none;
 }
 
 .time-display {
@@ -583,6 +528,16 @@ body {
     font-weight: 700;
     color: var(--neon-purple);
     text-shadow: 0 0 20px rgba(153, 69, 255, 0.5);
+}
+
+/* Material display box with purple border */
+.material-display + .buttons-grid {
+    /* Just spacing, purple color already set */
+}
+
+.form-section:has(.material-display) .display-box {
+    border-color: var(--neon-purple);
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(0, 212, 255, 0.1));
 }
 
 .buttons-grid {
