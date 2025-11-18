@@ -8,11 +8,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 */
 
 import { state } from './config.js';
-import { 
-    showToast, 
-    escapeHtml, 
-    formatDate, 
-    formatMoney, 
+import {
+    showToast,
+    escapeHtml,
+    formatDate,
+    formatDateBrazil,
+    formatMoney,
     formatColorName,
     formatDaysText,
     getDaysColor,
@@ -271,8 +272,8 @@ export async function saveService(event) {
             const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
             
             if (service.clientPhone && sendWhatsapp) {
-                const dueDateText = service.dateUndefined ? 'A definir' : formatDate(service.dueDate);
-                const message = `Olá ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
+                const dueDateText = service.dateUndefined ? 'A definir' : formatDateBrazil(service.dueDate);
+                const message = `Olá, ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
             
@@ -822,14 +823,14 @@ export async function confirmStatusChange() {
             showToast(`✅ ${newPackagedPhotos.length} foto(s) embalada(s) anexada(s)! Status alterado para Postado.`, 'success');
 
             if (sendWhatsapp && service.clientPhone) {
-                let message = `📦 Seu pedido foi postado!\n\n» ${service.name}\n» Código: ${service.orderCode}`;
-                
+                let message = `Olá, ${service.client}!\n\n📦 Seu pedido foi postado!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}`;
+
                 if (trackingCode) {
                     message += `\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
                 } else {
                     message += `\n\n${service.deliveryMethod === 'retirada' ? 'Venha buscar seu pedido!' : 'Em breve chegará até você!'}`;
                 }
-                
+
                 sendWhatsAppMessage(service.clientPhone, message);
             }
 
@@ -944,17 +945,17 @@ export async function confirmStatusChange() {
         
         if (sendWhatsapp && service.clientPhone) {
             const messages = {
-                'producao': `✅ Iniciamos a produção!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                'retirada': service.deliveryMethod === 'retirada' ? 
-                    `🎉 Pronto para retirada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nVenha buscar seu pedido!` :
+                'producao': `Olá, ${service.client}!\n\n✅ Iniciamos a produção!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}`,
+                'retirada': service.deliveryMethod === 'retirada' ?
+                    `Olá, ${service.client}!\n\n🎉 Pronto para retirada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nVenha buscar seu pedido!` :
                     service.deliveryMethod === 'sedex' ?
-                    `📦 Postado nos Correios!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}${service.trackingCode ? `\n🔍 Rastreio: ${service.trackingCode}` : ''}` :
+                    `Olá, ${service.client}!\n\n📦 Postado nos Correios!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${service.trackingCode ? `\n» Rastreio: ${service.trackingCode}` : ''}` :
                     service.deliveryMethod === 'uber' ?
-                    `📦 Postado via Uber Flash!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nEm breve chegará até você!` :
+                    `Olá, ${service.client}!\n\n📦 Postado via Uber Flash!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nEm breve chegará até você!` :
                     service.deliveryMethod === 'definir' ?
-                    `📦 Entrega combinada!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nConforme combinado com você!` :
-                    `📦 Em processo de entrega!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}`,
-                'entregue': `✅ Entregue com sucesso!\n\n📦 ${service.name}\n📖 Código: ${service.orderCode}\n\nObrigado! 😊`
+                    `Olá, ${service.client}!\n\n📦 Entrega combinada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nConforme combinado com você!` :
+                    `Olá, ${service.client}!\n\n📦 Em processo de entrega!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}`,
+                'entregue': `Olá, ${service.client}!\n\n✅ Entregue com sucesso!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nObrigado! 😊`
             };
             messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
         }
@@ -1090,7 +1091,7 @@ function createServiceCard(service) {
             </div>
             
             <div class="service-footer">
-                ${service.clientPhone ? `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
+                ${service.clientPhone ? `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}', '${escapeHtml(service.client || '')}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
                 ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
             </div>
         </div>
