@@ -689,7 +689,7 @@ export async function confirmTrackingCode() {
         showToast('Pedido marcado como postado!', 'success');
         
         if (service.clientPhone) {
-            const message = `Seu pedido foi postado nos Correios!\n\n» ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
+            const message = `Olá, ${service.client}!\n\nSeu pedido foi postado nos Correios!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis`;
             sendWhatsAppMessage(service.clientPhone, message);
         }
     } catch (error) {
@@ -808,7 +808,7 @@ export function showDeliveryInfo(serviceId) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        const message = encodeURIComponent(`Olá ${pickup.name}!\n\nSeu pedido está pronto para retirada!\n\n» Pedido: ${service.name}\n» Código: ${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
+        const message = encodeURIComponent(`Olá, ${pickup.name}!\n\nSeu pedido está pronto para retirada!\n\n» Pedido: ${service.name}\n» Código: ${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
         
         html += `
             <div class="info-section">
@@ -1771,6 +1771,12 @@ export const getDaysColor = days => days === null ? 'var(--text-secondary)' : da
 
 export const formatDate = dateString => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
 
+export const formatDateBrazil = dateString => {
+    if (!dateString) return 'N/A';
+    const date = parseDateBrazil(dateString);
+    return date ? date.toLocaleDateString('pt-BR') : 'N/A';
+};
+
 export const formatColorName = color => ({
     'preto': 'Preto', 'branco': 'Branco', 'vermelho': 'Vermelho', 'azul': 'Azul',
     'verde': 'Verde', 'amarelo': 'Amarelo', 'laranja': 'Laranja', 'roxo': 'Roxo',
@@ -1838,8 +1844,9 @@ export const sendWhatsAppMessage = (phone, message) => {
     window.open(whatsappUrl, '_blank');
 };
 
-export const contactClient = (phone, serviceName, orderCode) => {
-    const message = `Olá!\n\nSobre seu pedido:\n\n» Serviço: ${serviceName}\n» Código: #${orderCode}\n\nPode falar agora?`;
+export const contactClient = (phone, serviceName, orderCode, clientName) => {
+    const greeting = clientName ? `Olá, ${clientName}!` : 'Olá!';
+    const message = `${greeting}\n\nSobre seu pedido:\n\n» Serviço: ${serviceName}\n» Código: #${orderCode}\n\nPode falar agora?`;
     sendWhatsAppMessage(phone, message);
 };
 
