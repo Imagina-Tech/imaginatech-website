@@ -959,6 +959,13 @@ window.addComment = async function(taskId) {
             updatedAt: new Date().toISOString()
         });
 
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar responsáveis sobre novo comentário
+        // Ver: /servicos/push-system/integration-points.md (PONTO 5)
+        // ===========================
+
         input.value = '';
         showToast('✓ Comentário adicionado', 'success');
     } catch (error) {
@@ -1047,6 +1054,13 @@ window.confirmTransfer = async function(taskId) {
         await state.db.collection('tasks').doc(taskId).update({
             status: 'pendente'
         });
+
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar novos responsáveis sobre transferência
+        // Ver: /servicos/push-system/integration-points.md (PONTO 4)
+        // ===========================
 
         showToast('✓ Tarefa transferida!', 'success');
         closeTransferModal();
@@ -1294,6 +1308,13 @@ async function handleCreateTask(e) {
         };
 
         await state.db.collection('tasks').add(taskData);
+
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar responsáveis sobre nova tarefa
+        // Ver: /servicos/push-system/integration-points.md (PONTO 3)
+        // ===========================
 
         showToast('✓ Tarefa criada com sucesso!', 'success');
         closeTaskModal();

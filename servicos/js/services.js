@@ -280,6 +280,21 @@ export async function saveService(event) {
             if (service.clientEmail && sendEmail) {
                 await sendEmailNotification(service);
             }
+
+            // ===========================
+            // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+            // ===========================
+            // INSTRUÇÕES FUTURAS: Adicionar notificação push para admins aqui
+            // Ver: /servicos/push-system/integration-points.md (PONTO 2)
+            // ===========================
+            // if (typeof window.sendPushToAdmins === 'function') {
+            //     await window.sendPushToAdmins(
+            //         'Novo Serviço Criado',
+            //         `${service.client} - ${service.name} (#${service.orderCode})`,
+            //         { serviceId: docRef.id, filterStatus: 'pendente', type: 'new_service' }
+            //     );
+            // }
+            // ===========================
         }
         
         if (service.client) {
