@@ -22,9 +22,15 @@ import {
 } from './auth-ui.js';
 
 // ===========================
-// NOVO: IMPORTAR PUSH NOTIFICATIONS
+// PUSH NOTIFICATIONS - DESABILITADO
 // ===========================
-import { initPushNotifications } from './push-notifications.js';
+// 🔔 INSTRUÇÕES PARA IMPLEMENTAÇÃO FUTURA:
+// 1. Descomentar a linha abaixo
+// 2. Corrigir o path para: '../push-system/push-notifications.js'
+// 3. Descomentar linhas 68-73 (inicialização)
+// 4. Ver documentação completa em: /servicos/push-system/README.md
+// ===========================
+// import { initPushNotifications } from '../push-system/push-notifications.js';
 
 // ===========================
 // NOVO: IMPORTAR SISTEMA DE TAREFAS
@@ -63,14 +69,15 @@ onDOMReady(() => {
             initTasksSystem();
 
             // ===========================
-            // NOVO: INICIALIZAR PUSH NOTIFICATIONS (SOMENTE NO APP)
+            // PUSH NOTIFICATIONS - DESABILITADO
             // ===========================
-            if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-                console.log('🚀 App nativo detectado - Inicializando notificações push');
-                initPushNotifications();
-            } else {
-                console.log('🌐 Rodando no navegador web - Push notifications desabilitadas');
-            }
+            // 🔔 DESCOMENTAR APÓS IMPLEMENTAR (ver /servicos/push-system/README.md)
+            // if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+            //     console.log('🚀 App nativo detectado - Inicializando notificações push');
+            //     initPushNotifications();
+            // } else {
+            //     console.log('🌐 Rodando no navegador web - Push notifications desabilitadas');
+            // }
         } else {
             state.isAuthorized = false;
             showLoginScreen();

@@ -1,16 +1,36 @@
-/* 
+/*
 ==================================================
-ARQUIVO: servicos/js/push-notifications.js
+ARQUIVO: servicos/push-system/push-notifications.js
 MÓDULO: Notificações Push (Capacitor + Firebase)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 1.0
-IMPORTANTE: Este módulo gerencia as notificações push
-            quando o site está rodando dentro do app Android
+VERSÃO: 1.0 - PREPARADO MAS NÃO IMPLEMENTADO
+STATUS: 🟡 OCIOSO - Aguardando implementação
+
+OBJETIVO:
+    Notificar admins/técnicos via push notification quando:
+    - Novo serviço criado
+    - Nova tarefa atribuída
+    - Tarefa transferida
+    - Novo comentário em tarefa
+
+IMPORTANTE:
+    Este módulo está PREPARADO mas NÃO INTEGRADO ao sistema.
+    Para implementar, siga as instruções em:
+    → /servicos/push-system/README.md (documentação completa)
+    → /servicos/push-system/integration-points.md (pontos de integração)
+    → /servicos/push-system/implementation-checklist.md (checklist)
+
+PRÉ-REQUISITOS:
+    1. Firebase Functions configurado (Cloud Function)
+    2. App Capacitor criado (Android/iOS)
+    3. google-services.json configurado
+    4. Código integrado nos pontos corretos
+
 ==================================================
 */
 
-import { state } from './config.js';
-import { showToast } from './auth-ui.js';
+import { state } from '../js/config.js';
+import { showToast } from '../js/auth-ui.js';
 
 // Verifica se está rodando em um app nativo (Capacitor)
 const isNativeApp = () => {
