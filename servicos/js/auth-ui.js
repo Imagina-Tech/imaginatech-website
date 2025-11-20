@@ -8,14 +8,14 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 */
 
 import { state, AUTHORIZED_EMAILS } from './config.js';
-import { 
-    startServicesListener, 
-    saveService, 
-    deleteService, 
-    updateStatus, 
-    confirmStatusChange, 
-    renderServices, 
-    filterServices, 
+import {
+    startServicesListener,
+    saveService,
+    deleteService,
+    updateStatus,
+    confirmStatusChange,
+    renderServices,
+    filterServices,
     uploadFile
 } from './services.js';
 
@@ -129,6 +129,10 @@ export async function signInWithGoogle() {
 }
 export async function signOut() {
     try {
+        // Destruir listeners antes do logout para evitar erros de permissão
+        if (window.destroyTasksSystem) {
+            window.destroyTasksSystem();
+        }
         state.auth && await state.auth.signOut();
         showToast('Logout realizado com sucesso!', 'info');
     } catch (error) {
