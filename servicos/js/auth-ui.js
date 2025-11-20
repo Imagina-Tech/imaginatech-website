@@ -144,9 +144,35 @@ export function checkAuthorization(user) {
         startServicesListener();
         loadClientsFromFirestore();
         migrateExistingClientsOnce();
+        updateLastAccess(user); // Registrar último acesso
     } else {
         state.isAuthorized = false;
         showAccessDeniedScreen(user);
+    }
+}
+
+// ===========================
+// ADMIN ACCESS TRACKING
+// ===========================
+export async function updateLastAccess(user) {
+    if (!state.db || !user) return;
+
+    try {
+        const userEmail = user.email;
+        const userId = user.uid;
+
+        await state.db.collection('adminAccess').doc(userId).set({
+            email: userEmail,
+            name: user.displayName || userEmail,
+            photoURL: user.photoURL || null,
+            lastAccess: new Date().toISOString(),
+            device: navigator.userAgent,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        console.log('✅ Último acesso registrado para:', userEmail);
+    } catch (error) {
+        console.error('❌ Erro ao registrar último acesso:', error);
     }
 }
 
