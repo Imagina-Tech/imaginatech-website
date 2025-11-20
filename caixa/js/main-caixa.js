@@ -44,10 +44,14 @@ const CATEGORIES = {
 
 const COLORS = {
     entrada: '#00FF88',
+    entradaGradient: ['#00FF88', '#00cc70'],
     saida: '#FF0055',
-    grid: 'rgba(255, 255, 255, 0.1)',
+    saidaGradient: ['#FF0055', '#cc0044'],
+    grid: 'rgba(255, 255, 255, 0.06)',
     text: '#9ca3af',
-    background: 'rgba(0, 0, 0, 0.3)'
+    textLight: '#6b7280',
+    background: 'rgba(0, 0, 0, 0.3)',
+    accent: '#00D4FF'
 };
 
 // ===========================
@@ -316,90 +320,118 @@ const drawBarChart = grouped => {
     const canvas = ctx.canvas;
     const width = canvas.width / (window.devicePixelRatio || 1);
     const height = canvas.height / (window.devicePixelRatio || 1);
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     const labels = Object.keys(grouped).sort();
     if (labels.length === 0) {
         drawEmptyState(ctx, width, height, 'Sem dados no período');
         return;
     }
-    
+
     const entradasData = labels.map(l => grouped[l].entradas);
     const saidasData = labels.map(l => grouped[l].saidas);
-    const maxValue = Math.max(...entradasData, ...saidasData, 100);
-    
-    const padding = { top: 40, right: 20, bottom: 40, left: 60 };
+    const maxValue = Math.max(...entradasData, ...saidasData, 100) * 1.1;
+
+    const padding = { top: 50, right: 20, bottom: 45, left: 65 };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
-    
-    // Draw grid
+
+    // Draw grid lines
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-        const y = padding.top + (chartHeight / 5) * i;
+    for (let i = 0; i <= 4; i++) {
+        const y = padding.top + (chartHeight / 4) * i;
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(width - padding.right, y);
         ctx.stroke();
     }
-    
+
     // Draw Y axis labels
-    ctx.fillStyle = COLORS.text;
-    ctx.font = '11px Inter';
+    ctx.fillStyle = COLORS.textLight;
+    ctx.font = '10px Inter';
     ctx.textAlign = 'right';
-    for (let i = 0; i <= 5; i++) {
-        const value = maxValue - (maxValue / 5) * i;
-        const y = padding.top + (chartHeight / 5) * i;
-        ctx.fillText('R$ ' + Math.round(value), padding.left - 10, y + 4);
+    for (let i = 0; i <= 4; i++) {
+        const value = maxValue - (maxValue / 4) * i;
+        const y = padding.top + (chartHeight / 4) * i;
+        ctx.fillText(formatCompactCurrency(value), padding.left - 10, y + 3);
     }
-    
-    // Draw bars
-    const barWidth = chartWidth / labels.length / 3;
+
+    // Draw bars with gradients
+    const barWidth = Math.min(chartWidth / labels.length / 3, 25);
     const groupWidth = chartWidth / labels.length;
-    
+    const barRadius = 4;
+
     labels.forEach((label, i) => {
         const x = padding.left + groupWidth * i + groupWidth / 2;
-        
-        // Entradas (green)
+
+        // Entradas (green) with gradient
         const entradaHeight = (entradasData[i] / maxValue) * chartHeight;
-        ctx.fillStyle = COLORS.entrada;
-        ctx.fillRect(
-            x - barWidth - 2,
-            padding.top + chartHeight - entradaHeight,
-            barWidth,
-            entradaHeight
-        );
-        
-        // Saídas (red)
+        if (entradaHeight > 0) {
+            const gradient1 = ctx.createLinearGradient(0, padding.top + chartHeight - entradaHeight, 0, padding.top + chartHeight);
+            gradient1.addColorStop(0, COLORS.entradaGradient[0]);
+            gradient1.addColorStop(1, COLORS.entradaGradient[1]);
+            ctx.fillStyle = gradient1;
+            drawRoundedBar(ctx, x - barWidth - 3, padding.top + chartHeight - entradaHeight, barWidth, entradaHeight, barRadius);
+        }
+
+        // Saídas (red) with gradient
         const saidaHeight = (saidasData[i] / maxValue) * chartHeight;
-        ctx.fillStyle = COLORS.saida;
-        ctx.fillRect(
-            x + 2,
-            padding.top + chartHeight - saidaHeight,
-            barWidth,
-            saidaHeight
-        );
-        
+        if (saidaHeight > 0) {
+            const gradient2 = ctx.createLinearGradient(0, padding.top + chartHeight - saidaHeight, 0, padding.top + chartHeight);
+            gradient2.addColorStop(0, COLORS.saidaGradient[0]);
+            gradient2.addColorStop(1, COLORS.saidaGradient[1]);
+            ctx.fillStyle = gradient2;
+            drawRoundedBar(ctx, x + 3, padding.top + chartHeight - saidaHeight, barWidth, saidaHeight, barRadius);
+        }
+
         // X axis label
-        ctx.fillStyle = COLORS.text;
+        ctx.fillStyle = COLORS.textLight;
         ctx.font = '10px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText(label, x, height - padding.bottom + 20);
+        ctx.fillText(label, x, height - padding.bottom + 18);
     });
-    
-    // Legend
-    ctx.font = '12px Inter';
+
+    // Legend with icons
+    const legendY = 18;
+    ctx.font = '11px Inter';
+
+    // Entrada legend
     ctx.fillStyle = COLORS.entrada;
-    ctx.fillRect(padding.left, 10, 15, 15);
+    drawRoundedBar(ctx, padding.left, legendY - 10, 12, 12, 3);
     ctx.fillStyle = COLORS.text;
     ctx.textAlign = 'left';
-    ctx.fillText('Entradas', padding.left + 20, 22);
-    
+    ctx.fillText('Entradas', padding.left + 18, legendY);
+
+    // Saída legend
     ctx.fillStyle = COLORS.saida;
-    ctx.fillRect(padding.left + 100, 10, 15, 15);
+    drawRoundedBar(ctx, padding.left + 90, legendY - 10, 12, 12, 3);
     ctx.fillStyle = COLORS.text;
-    ctx.fillText('Saídas', padding.left + 120, 22);
+    ctx.fillText('Saídas', padding.left + 108, legendY);
+};
+
+// Helper function to draw rounded bars
+const drawRoundedBar = (ctx, x, y, width, height, radius) => {
+    if (height < radius * 2) radius = height / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x, y + height);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+};
+
+// Helper to format compact currency
+const formatCompactCurrency = value => {
+    if (value >= 1000) {
+        return 'R$ ' + (value / 1000).toFixed(1) + 'k';
+    }
+    return 'R$ ' + Math.round(value);
 };
 
 const drawPieChart = entries => {
@@ -407,68 +439,101 @@ const drawPieChart = entries => {
     const canvas = ctx.canvas;
     const width = canvas.width / (window.devicePixelRatio || 1);
     const height = canvas.height / (window.devicePixelRatio || 1);
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     const entradas = entries.filter(e => e.type === 'entrada').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
     const saidas = entries.filter(e => e.type === 'saida').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
     const total = entradas + saidas;
-    
+
     if (total === 0) {
         drawEmptyState(ctx, width, height, 'Sem movimentações');
         return;
     }
-    
+
     const centerX = width / 2;
-    const centerY = height / 2 - 20;
-    const radius = Math.min(width, height) / 3;
-    
-    // Draw pie
+    const centerY = height / 2 - 30;
+    const radius = Math.min(width, height) / 3.2;
+    const innerRadius = radius * 0.65;
+
+    // Draw pie segments with gradients
     let currentAngle = -Math.PI / 2;
-    
-    // Entradas
+
+    // Entradas segment
     const entradasAngle = (entradas / total) * Math.PI * 2;
-    ctx.fillStyle = COLORS.entrada;
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + entradasAngle);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Saídas
+    if (entradasAngle > 0) {
+        const gradient1 = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
+        gradient1.addColorStop(0, COLORS.entradaGradient[1]);
+        gradient1.addColorStop(1, COLORS.entradaGradient[0]);
+        ctx.fillStyle = gradient1;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + entradasAngle);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Saídas segment
     currentAngle += entradasAngle;
-    ctx.fillStyle = COLORS.saida;
+    const saidasAngle = (saidas / total) * Math.PI * 2;
+    if (saidasAngle > 0) {
+        const gradient2 = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
+        gradient2.addColorStop(0, COLORS.saidaGradient[1]);
+        gradient2.addColorStop(1, COLORS.saidaGradient[0]);
+        ctx.fillStyle = gradient2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + saidasAngle);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Center hole (donut) with gradient
+    const holeGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius);
+    holeGradient.addColorStop(0, '#1a1a2e');
+    holeGradient.addColorStop(1, '#0d0d1a');
+    ctx.fillStyle = holeGradient;
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + Math.PI * 2);
-    ctx.closePath();
+    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Center hole (donut)
-    ctx.fillStyle = '#111827';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Legend
-    const legendY = height - 60;
-    ctx.font = '12px Inter';
-    ctx.textAlign = 'left';
-    
+
+    // Center text - Total
+    ctx.fillStyle = COLORS.textLight;
+    ctx.font = '10px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('TOTAL', centerX, centerY - 8);
+    ctx.fillStyle = COLORS.text;
+    ctx.font = 'bold 14px Orbitron';
+    ctx.fillText(formatCompactCurrency(total), centerX, centerY + 12);
+
+    // Legend with better styling
+    const legendY = height - 55;
+    const legendSpacing = 22;
+    const legendX = width / 2;
+
+    // Entradas legend
     ctx.fillStyle = COLORS.entrada;
-    ctx.fillRect(width / 2 - 80, legendY, 15, 15);
+    drawRoundedBar(ctx, legendX - 85, legendY - 8, 10, 10, 2);
     ctx.fillStyle = COLORS.text;
-    ctx.fillText('Entradas', width / 2 - 60, legendY + 12);
-    
-    ctx.fillStyle = COLORS.saida;
-    ctx.fillRect(width / 2 - 80, legendY + 25, 15, 15);
-    ctx.fillStyle = COLORS.text;
-    ctx.fillText('Saídas', width / 2 - 60, legendY + 37);
-    
-    // Percentages
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('Entradas', legendX - 70, legendY);
+    ctx.fillStyle = COLORS.entrada;
+    ctx.font = 'bold 11px Inter';
     ctx.textAlign = 'right';
-    ctx.fillText(Math.round((entradas / total) * 100) + '%', width / 2 + 80, legendY + 12);
-    ctx.fillText(Math.round((saidas / total) * 100) + '%', width / 2 + 80, legendY + 37);
+    ctx.fillText(Math.round((entradas / total) * 100) + '%', legendX + 85, legendY);
+
+    // Saídas legend
+    ctx.fillStyle = COLORS.saida;
+    drawRoundedBar(ctx, legendX - 85, legendY + legendSpacing - 8, 10, 10, 2);
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('Saídas', legendX - 70, legendY + legendSpacing);
+    ctx.fillStyle = COLORS.saida;
+    ctx.font = 'bold 11px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round((saidas / total) * 100) + '%', legendX + 85, legendY + legendSpacing);
 };
 
 const drawEmptyState = (ctx, width, height, message) => {
