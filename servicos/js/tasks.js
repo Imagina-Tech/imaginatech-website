@@ -120,12 +120,7 @@ function createTasksUI() {
                 </div>
             </div>
 
-            <!-- Admins overview -->
-            <div class="tasks-admins-overview" id="tasksAdminsOverview">
-                <!-- Será preenchido dinamicamente -->
-            </div>
-
-            <!-- Painel de último acesso -->
+            <!-- Painel de último acesso com tarefas pendentes -->
             <div class="admin-access-panel" id="adminAccessPanel">
                 <div class="admin-access-header">
                     <i class="fas fa-clock"></i>
@@ -440,74 +435,6 @@ function startTasksListener() {
 // FILTROS E RENDERIZAÇÃO
 // ===========================
 
-function renderAdminsOverview() {
-    const container = document.getElementById('tasksAdminsOverview');
-    if (!container) return;
-
-    // Calcular tarefas pendentes por admin
-    const pendingTasksByAdmin = {};
-
-    // Inicializar contadores
-    AUTHORIZED_ADMINS.forEach(admin => {
-        pendingTasksByAdmin[admin.email] = 0;
-    });
-
-    // Contar tarefas pendentes
-    tasksState.tasks
-        .filter(task => task.status === 'pendente')
-        .forEach(task => {
-            if (task.assignedTo && Array.isArray(task.assignedTo)) {
-                task.assignedTo.forEach(email => {
-                    if (pendingTasksByAdmin.hasOwnProperty(email)) {
-                        pendingTasksByAdmin[email]++;
-                    }
-                });
-            }
-        });
-
-    // Renderizar apenas admins COM tarefas pendentes
-    const adminsWithTasks = AUTHORIZED_ADMINS.filter(admin => pendingTasksByAdmin[admin.email] > 0);
-
-    if (adminsWithTasks.length === 0) {
-        container.style.display = 'none';
-        return;
-    }
-
-    container.style.display = 'flex';
-
-    // Botão "Todas" sempre visível
-    const totalPending = tasksState.tasks.filter(t => t.status === 'pendente').length;
-    let adminsHTML = `
-        <div class="admin-overview-item ${tasksState.viewMode === 'all' ? 'active' : ''}" onclick="filterByAdmin('all', event)">
-            <div class="admin-avatar all-tasks-icon">
-                <i class="fas fa-list"></i>
-            </div>
-            <div class="admin-info">
-                <span class="admin-name">Todas</span>
-                <span class="admin-tasks-count has-tasks">${totalPending}</span>
-            </div>
-        </div>
-    `;
-
-    // Admins com tarefas
-    adminsHTML += adminsWithTasks.map(admin => {
-        const count = pendingTasksByAdmin[admin.email];
-        const photoURL = getAdminPhotoURL(admin.email);
-        const isActive = tasksState.viewMode === admin.email;
-        return `
-            <div class="admin-overview-item ${isActive ? 'active' : ''}" onclick="filterByAdmin('${admin.email}', event)">
-                <div class="admin-avatar" style="background-image: url('${photoURL}')"></div>
-                <div class="admin-info">
-                    <span class="admin-name">${escapeHtml(admin.name)}</span>
-                    <span class="admin-tasks-count has-tasks">${count}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    container.innerHTML = adminsHTML;
-}
-
 function getAdminPhotoURL(email) {
     // Se já temos no cache, retorna
     if (tasksState.adminsPhotos[email]) {
@@ -575,7 +502,7 @@ function filterAndRenderTasks() {
     }
 
     tasksState.filteredTasks = filtered;
-    renderAdminsOverview(); // Renderizar overview dos admins
+    renderAdminAccessPanel(); // Atualizar painel com contagem de tarefas
     renderTasksList();
     updateDropdownTitle();
 }
@@ -1457,7 +1384,6 @@ function startAdminAccessListener() {
 
             console.log(`✅ ${tasksState.adminAccessData.length} registros de acesso carregados`);
             renderAdminAccessPanel();
-            renderAdminsOverview(); // Atualizar fotos na lista de tarefas
         }, error => {
             console.error('❌ Erro no listener de acesso:', error);
         });
@@ -1472,6 +1398,18 @@ function renderAdminAccessPanel() {
         return;
     }
 
+    // Calcular tarefas pendentes por admin
+    const pendingTasksByAdmin = {};
+    tasksState.tasks
+        .filter(task => task.status === 'pendente')
+        .forEach(task => {
+            if (task.assignedTo && Array.isArray(task.assignedTo)) {
+                task.assignedTo.forEach(email => {
+                    pendingTasksByAdmin[email] = (pendingTasksByAdmin[email] || 0) + 1;
+                });
+            }
+        });
+
     // Ordenar por último acesso (mais recente primeiro)
     const sortedData = [...tasksState.adminAccessData].sort((a, b) => {
         return new Date(b.lastAccess) - new Date(a.lastAccess);
@@ -1483,9 +1421,10 @@ function renderAdminAccessPanel() {
         const photoURL = admin.photoURL || getAdminPhotoURL(admin.email);
         const timeAgo = formatTimeAgo(admin.lastAccess);
         const isOnline = isRecentAccess(admin.lastAccess);
+        const pendingCount = pendingTasksByAdmin[admin.email] || 0;
 
         return `
-            <div class="admin-access-item ${isOnline ? 'online' : ''}">
+            <div class="admin-access-item ${isOnline ? 'online' : ''}" onclick="filterByAdmin('${admin.email}', event)">
                 <div class="admin-access-avatar" style="background-image: url('${photoURL}')">
                     ${isOnline ? '<span class="online-indicator"></span>' : ''}
                 </div>
@@ -1493,6 +1432,7 @@ function renderAdminAccessPanel() {
                     <span class="admin-access-name">${escapeHtml(displayName)}</span>
                     <span class="admin-access-time" title="${new Date(admin.lastAccess).toLocaleString('pt-BR')}">${timeAgo}</span>
                 </div>
+                ${pendingCount > 0 ? `<span class="admin-pending-count">${pendingCount}</span>` : ''}
             </div>
         `;
     }).join('');
