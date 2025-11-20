@@ -35,6 +35,8 @@ const tasksState = {
     viewMode: 'mine', // 'mine' | 'all' | email do admin
     statusFilter: 'all', // 'all' | 'pendente' | 'concluida'
     unsubscribe: null,
+    unsubscribeAdminAccess: null, // Listener de último acesso
+    adminAccessData: [], // Dados de último acesso dos admins
     dropdownOpen: false,
     currentUser: null,
     adminsPhotos: {} // Cache de fotos dos admins
@@ -59,6 +61,9 @@ export function initTasksSystem() {
 
     // Iniciar listener de tarefas
     startTasksListener();
+
+    // Iniciar listener de último acesso dos admins
+    startAdminAccessListener();
 
     // Event listeners
     setupEventListeners();
@@ -118,6 +123,17 @@ function createTasksUI() {
             <!-- Admins overview -->
             <div class="tasks-admins-overview" id="tasksAdminsOverview">
                 <!-- Será preenchido dinamicamente -->
+            </div>
+
+            <!-- Painel de último acesso -->
+            <div class="admin-access-panel" id="adminAccessPanel">
+                <div class="admin-access-header">
+                    <i class="fas fa-clock"></i>
+                    <span>Último Acesso</span>
+                </div>
+                <div class="admin-access-list" id="adminAccessList">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
             </div>
 
             <div class="tasks-filters">
@@ -1410,6 +1426,104 @@ function escapeHtml(text) {
 }
 
 // ===========================
+// ADMIN ACCESS TRACKING
+// ===========================
+
+function startAdminAccessListener() {
+    if (tasksState.unsubscribeAdminAccess) {
+        tasksState.unsubscribeAdminAccess();
+    }
+
+    console.log('📡 Iniciando listener de último acesso dos admins...');
+
+    tasksState.unsubscribeAdminAccess = state.db.collection('adminAccess')
+        .onSnapshot(snapshot => {
+            tasksState.adminAccessData = [];
+
+            snapshot.forEach(doc => {
+                tasksState.adminAccessData.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            console.log(`✅ ${tasksState.adminAccessData.length} registros de acesso carregados`);
+            renderAdminAccessPanel();
+        }, error => {
+            console.error('❌ Erro no listener de acesso:', error);
+        });
+}
+
+function renderAdminAccessPanel() {
+    const container = document.getElementById('adminAccessList');
+    if (!container) return;
+
+    if (tasksState.adminAccessData.length === 0) {
+        container.innerHTML = '<div class="admin-access-empty">Nenhum acesso registrado</div>';
+        return;
+    }
+
+    // Ordenar por último acesso (mais recente primeiro)
+    const sortedData = [...tasksState.adminAccessData].sort((a, b) => {
+        return new Date(b.lastAccess) - new Date(a.lastAccess);
+    });
+
+    const accessHTML = sortedData.map(admin => {
+        const adminInfo = AUTHORIZED_ADMINS.find(a => a.email === admin.email);
+        const displayName = adminInfo ? adminInfo.name : (admin.name || admin.email.split('@')[0]);
+        const photoURL = admin.photoURL || getAdminPhotoURL(admin.email);
+        const timeAgo = formatTimeAgo(admin.lastAccess);
+        const isOnline = isRecentAccess(admin.lastAccess);
+
+        return `
+            <div class="admin-access-item ${isOnline ? 'online' : ''}">
+                <div class="admin-access-avatar" style="background-image: url('${photoURL}')">
+                    ${isOnline ? '<span class="online-indicator"></span>' : ''}
+                </div>
+                <div class="admin-access-info">
+                    <span class="admin-access-name">${escapeHtml(displayName)}</span>
+                    <span class="admin-access-time" title="${new Date(admin.lastAccess).toLocaleString('pt-BR')}">${timeAgo}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = accessHTML;
+}
+
+function formatTimeAgo(dateString) {
+    if (!dateString) return 'Nunca';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) return 'Agora mesmo';
+    if (diffMins < 60) return `há ${diffMins} min`;
+    if (diffHours < 24) return `há ${diffHours}h`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `há ${diffDays} dias`;
+
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+function isRecentAccess(dateString) {
+    if (!dateString) return false;
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 1000 / 60);
+
+    // Considera "online" se acessou nos últimos 15 minutos
+    return diffMins <= 15;
+}
+
+// ===========================
 // CLEANUP
 // ===========================
 
@@ -1417,6 +1531,10 @@ export function destroyTasksSystem() {
     if (tasksState.unsubscribe) {
         tasksState.unsubscribe();
         tasksState.unsubscribe = null;
+    }
+    if (tasksState.unsubscribeAdminAccess) {
+        tasksState.unsubscribeAdminAccess();
+        tasksState.unsubscribeAdminAccess = null;
     }
     console.log('🗑️ Sistema de tarefas destruído');
 }
