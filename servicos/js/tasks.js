@@ -514,6 +514,13 @@ function getAdminPhotoURL(email) {
         return tasksState.adminsPhotos[email];
     }
 
+    // Primeiro, verificar nos dados de adminAccess (tem as fotos reais de todos os admins)
+    const adminAccessInfo = tasksState.adminAccessData.find(a => a.email === email);
+    if (adminAccessInfo && adminAccessInfo.photoURL) {
+        tasksState.adminsPhotos[email] = adminAccessInfo.photoURL;
+        return adminAccessInfo.photoURL;
+    }
+
     // Lógica IGUAL ao header: user.photoURL do Firebase Auth ou fallback
     const user = firebase.auth().currentUser;
 
@@ -1439,6 +1446,7 @@ function startAdminAccessListener() {
     tasksState.unsubscribeAdminAccess = state.db.collection('adminAccess')
         .onSnapshot(snapshot => {
             tasksState.adminAccessData = [];
+            tasksState.adminsPhotos = {}; // Limpar cache para usar fotos atualizadas
 
             snapshot.forEach(doc => {
                 tasksState.adminAccessData.push({
@@ -1449,6 +1457,7 @@ function startAdminAccessListener() {
 
             console.log(`✅ ${tasksState.adminAccessData.length} registros de acesso carregados`);
             renderAdminAccessPanel();
+            renderAdminsOverview(); // Atualizar fotos na lista de tarefas
         }, error => {
             console.error('❌ Erro no listener de acesso:', error);
         });
@@ -1538,3 +1547,6 @@ export function destroyTasksSystem() {
     }
     console.log('🗑️ Sistema de tarefas destruído');
 }
+
+// Expor globalmente para evitar dependência circular com auth-ui
+window.destroyTasksSystem = destroyTasksSystem;
