@@ -1,9 +1,9 @@
-/* 
+/*
 ==================================================
 ARQUIVO: caixa/js/main-caixa.js
-MÓDULO: Gestão Financeira (Caixa) - Canvas Nativo
+MÓDULO: Gestão Financeira (Caixa) - Dashboard Completo
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.1 - Gráficos Nativos (Zero Deps)
+VERSÃO: 4.0 - Dashboard Financeiro Moderno
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -29,29 +29,28 @@ const state = {
     isAuthorized: false,
     transactions: [],
     services: [],
+    goals: { receita: 5000, despesa: 3000 },
     currentPeriod: 'month',
     currentFilter: 'todos',
     flowChartCanvas: null,
-    pieChartCanvas: null,
-    transactionsListener: null,
-    servicesListener: null
+    categoryChartCanvas: null
 };
 
 const CATEGORIES = {
     entrada: ['Venda de Produto', 'Serviço Prestado', 'Outras Receitas'],
-    saida: ['Matéria-Prima', 'Energia', 'Aluguel', 'Manutenção', 'Outras Despesas']
+    saida: ['Matéria-Prima', 'Energia', 'Aluguel', 'Manutenção', 'Marketing', 'Outras Despesas']
 };
 
 const COLORS = {
     entrada: '#00FF88',
-    entradaGradient: ['#00FF88', '#00cc70'],
     saida: '#FF0055',
-    saidaGradient: ['#FF0055', '#cc0044'],
+    blue: '#00D4FF',
+    purple: '#9945FF',
+    yellow: '#FFD700',
+    orange: '#FF6B35',
+    categories: ['#00D4FF', '#9945FF', '#FF6B35', '#FFD700', '#00FF88', '#FF0055'],
     grid: 'rgba(255, 255, 255, 0.06)',
-    text: '#9ca3af',
-    textLight: '#6b7280',
-    background: 'rgba(0, 0, 0, 0.3)',
-    accent: '#00D4FF'
+    text: '#9ca3af'
 };
 
 // ===========================
@@ -63,7 +62,6 @@ try {
     state.auth = firebase.auth();
 } catch (error) {
     console.error('Erro ao inicializar Firebase:', error);
-    alert('Erro crítico ao conectar ao Firebase.');
 }
 
 // ===========================
@@ -74,31 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
         hideLoading();
         return alert('Erro ao inicializar autenticação.');
     }
-    
+
     state.auth.onAuthStateChanged(user => {
         hideLoading();
         state.currentUser = user;
-        
+
         if (user) {
             if (AUTHORIZED_EMAILS.includes(user.email)) {
                 state.isAuthorized = true;
                 showDashboard(user);
                 startListeners();
-                setTodayDate();
-                initCanvasCharts();
+                loadGoals();
+                initCharts();
+                updatePeriodDisplay();
             } else {
                 state.isAuthorized = false;
-                showToast('Acesso negado. Área restrita aos administradores.', 'error');
+                showToast('Acesso negado. Área restrita.', 'error');
                 setTimeout(() => state.auth.signOut(), 2000);
             }
         } else {
             state.isAuthorized = false;
             showLoginScreen();
         }
-    }, error => {
-        console.error('Erro no auth state:', error);
-        hideLoading();
-        showLoginScreen();
     });
 });
 
@@ -111,21 +106,16 @@ window.signInWithGoogle = async () => {
         await state.auth.signInWithPopup(provider);
     } catch (error) {
         console.error('Erro no login:', error);
-        if (error.code === 'auth/popup-closed-by-user') {
-            showToast('Login cancelado', 'info');
-        } else {
-            showToast('Erro ao fazer login', 'error');
-        }
+        showToast('Erro ao fazer login', 'error');
     }
 };
 
 window.signOut = async () => {
     try {
         await state.auth.signOut();
-        showToast('Logout realizado com sucesso', 'info');
+        showToast('Logout realizado', 'info');
     } catch (error) {
         console.error('Erro no logout:', error);
-        showToast('Erro ao fazer logout', 'error');
     }
 };
 
@@ -133,7 +123,6 @@ window.signOut = async () => {
 // UI MANAGEMENT
 // ===========================
 const hideLoading = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
-
 const showLoginScreen = () => {
     document.getElementById('loginScreen')?.classList.remove('hidden');
     document.getElementById('dashboard')?.classList.add('hidden');
@@ -148,7 +137,7 @@ const showDashboard = user => {
 
     if (userName) userName.textContent = user.displayName || user.email;
     if (userPhoto) {
-        userPhoto.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff';
+        userPhoto.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`;
     }
 
     monitorConnection();
@@ -158,29 +147,67 @@ const showDashboard = user => {
 // FIREBASE LISTENERS
 // ===========================
 const startListeners = () => {
-    state.transactionsListener = state.db.collection('transactions')
+    state.db.collection('transactions')
         .orderBy('date', 'desc')
-        .onSnapshot(
-            snapshot => {
-                state.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                updateDashboard();
-            },
-            error => {
-                console.error('Erro no listener de transactions:', error);
-            }
-        );
-    
-    state.servicesListener = state.db.collection('services')
+        .onSnapshot(snapshot => {
+            state.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateDashboard();
+        });
+
+    state.db.collection('services')
         .where('value', '>', 0)
-        .onSnapshot(
-            snapshot => {
-                state.services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                updateDashboard();
-            },
-            error => {
-                console.error('Erro no listener de services:', error);
-            }
-        );
+        .onSnapshot(snapshot => {
+            state.services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateDashboard();
+        });
+};
+
+// ===========================
+// GOALS
+// ===========================
+const loadGoals = async () => {
+    try {
+        const doc = await state.db.collection('settings').doc('goals').get();
+        if (doc.exists) {
+            state.goals = doc.data();
+        }
+        updateGoalsDisplay();
+    } catch (error) {
+        console.error('Erro ao carregar metas:', error);
+    }
+};
+
+window.openGoalModal = () => {
+    document.getElementById('goalReceita').value = state.goals.receita;
+    document.getElementById('goalDespesa').value = state.goals.despesa;
+    document.getElementById('goalModal')?.classList.add('active');
+};
+
+window.closeGoalModal = () => {
+    document.getElementById('goalModal')?.classList.remove('active');
+};
+
+window.saveGoals = async e => {
+    e.preventDefault();
+
+    const receita = parseFloat(document.getElementById('goalReceita').value);
+    const despesa = parseFloat(document.getElementById('goalDespesa').value);
+
+    try {
+        await state.db.collection('settings').doc('goals').set({ receita, despesa });
+        state.goals = { receita, despesa };
+        closeGoalModal();
+        updateGoalsDisplay();
+        showToast('Metas atualizadas!', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar metas:', error);
+        showToast('Erro ao salvar metas', 'error');
+    }
+};
+
+const updateGoalsDisplay = () => {
+    document.getElementById('receitaMeta').textContent = formatCurrency(state.goals.receita);
+    document.getElementById('despesaLimite').textContent = formatCurrency(state.goals.despesa);
 };
 
 // ===========================
@@ -188,142 +215,173 @@ const startListeners = () => {
 // ===========================
 const updateDashboard = () => {
     const { start, end } = getPeriodDates();
-    
-    const filteredTransactions = state.transactions.filter(t => {
-        const tDate = new Date(t.date);
-        return tDate >= start && tDate <= end;
+    const { start: prevStart, end: prevEnd } = getPreviousPeriodDates();
+
+    // Filter current period
+    const currentTransactions = state.transactions.filter(t => {
+        const date = new Date(t.date);
+        return date >= start && date <= end;
     });
-    
+
+    // Filter previous period for comparison
+    const previousTransactions = state.transactions.filter(t => {
+        const date = new Date(t.date);
+        return date >= prevStart && date <= prevEnd;
+    });
+
+    // Service entries
     const serviceEntries = state.services
         .filter(s => {
             if (!s.createdAt || !s.value) return false;
-            const sDate = new Date(s.createdAt);
-            return sDate >= start && sDate <= end && s.value > 0;
+            const date = new Date(s.createdAt);
+            return date >= start && date <= end && s.value > 0;
         })
         .map(s => ({
             type: 'entrada',
             value: parseFloat(s.value),
             date: s.createdAt,
-            description: `Venda: ${s.name || 'Sem nome'}`,
+            description: `Venda: ${s.name || 'Serviço'}`,
             category: 'Venda de Produto',
             source: 'service',
             scheduled: false,
             serviceId: s.id
         }));
-    
-    const allEntries = [...filteredTransactions, ...serviceEntries];
-    
+
+    const allEntries = [...currentTransactions, ...serviceEntries];
+
+    // Calculate current period
     const realizadas = allEntries.filter(t => !t.scheduled);
     const programadas = allEntries.filter(t => t.scheduled);
-    
+
     const entradasRealizadas = realizadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saidasRealizadas = realizadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
     const saldoReal = entradasRealizadas - saidasRealizadas;
-    
-    const entradasProgramadas = programadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
-    const saidasProgramadas = programadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
-    const saldoProjetado = saldoReal + entradasProgramadas - saidasProgramadas;
-    
-    const totalEntradasEl = document.getElementById('totalEntradas');
-    const totalSaidasEl = document.getElementById('totalSaidas');
-    const resultadoEl = document.getElementById('resultado');
-    
-    if (totalEntradasEl) totalEntradasEl.textContent = formatCurrency(entradasRealizadas);
-    if (totalSaidasEl) totalSaidasEl.textContent = formatCurrency(saidasRealizadas);
-    if (resultadoEl) resultadoEl.textContent = formatCurrency(saldoReal);
-    
-    const balanceValueEl = document.getElementById('balanceValue');
-    const balanceProjectedEl = document.getElementById('balanceProjected');
-    
-    if (balanceValueEl) {
-        balanceValueEl.textContent = formatCurrency(saldoReal);
-        balanceValueEl.className = 'balance-value';
-        if (saldoReal < 0) balanceValueEl.classList.add('negative');
-    }
-    
-    if (balanceProjectedEl) {
-        balanceProjectedEl.textContent = formatCurrency(saldoProjetado);
-        balanceProjectedEl.className = 'balance-projected';
-        if (saldoProjetado < 0) balanceProjectedEl.classList.add('negative');
-    }
-    
-    const trend = document.getElementById('balanceTrend');
-    if (trend) {
-        const diff = saldoProjetado - saldoReal;
-        if (diff > 0) {
-            trend.className = 'balance-trend positive';
-            trend.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${formatCurrency(diff)} projetado</span>`;
-        } else if (diff < 0) {
-            trend.className = 'balance-trend negative';
-            trend.innerHTML = `<i class="fas fa-arrow-down"></i><span>${formatCurrency(Math.abs(diff))} a pagar</span>`;
-        } else {
-            trend.className = 'balance-trend';
-            trend.innerHTML = `<i class="fas fa-check"></i><span>Sem pendências</span>`;
-        }
-    }
-    
-    updateNativeCharts(realizadas);
+
+    const entradasProg = programadas.filter(t => t.type === 'entrada').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saidasProg = programadas.filter(t => t.type === 'saida').reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const saldoProjetado = saldoReal + entradasProg - saidasProg;
+
+    // Calculate previous period
+    const prevEntradas = previousTransactions.filter(t => t.type === 'entrada' && !t.scheduled).reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const prevSaidas = previousTransactions.filter(t => t.type === 'saida' && !t.scheduled).reduce((sum, t) => sum + parseFloat(t.value || 0), 0);
+    const prevSaldo = prevEntradas - prevSaidas;
+    const prevResultado = prevEntradas - prevSaidas;
+
+    // Update KPIs
+    document.getElementById('saldoAtual').textContent = formatCurrency(saldoReal);
+    document.getElementById('totalEntradas').textContent = formatCurrency(entradasRealizadas);
+    document.getElementById('totalSaidas').textContent = formatCurrency(saidasRealizadas);
+    document.getElementById('resultado').textContent = formatCurrency(saldoReal);
+
+    // Update counts
+    const entradasCount = realizadas.filter(t => t.type === 'entrada').length;
+    const saidasCount = realizadas.filter(t => t.type === 'saida').length;
+    document.getElementById('entradasCount').textContent = `${entradasCount} transações`;
+    document.getElementById('saidasCount').textContent = `${saidasCount} transações`;
+
+    // Update margin
+    const margem = entradasRealizadas > 0 ? ((saldoReal / entradasRealizadas) * 100).toFixed(1) : 0;
+    document.getElementById('margemLucro').textContent = `Margem: ${margem}%`;
+
+    // Update trends
+    updateTrend('saldoTrend', saldoReal, prevSaldo);
+    updateTrend('entradasTrend', entradasRealizadas, prevEntradas);
+    updateTrend('saidasTrend', saidasRealizadas, prevSaidas, true);
+    updateTrend('resultadoTrend', saldoReal, prevResultado);
+
+    // Update projections
+    document.getElementById('saldoProjetado').textContent = formatCurrency(saldoProjetado);
+    document.getElementById('entradasProgramadas').textContent = formatCurrency(entradasProg);
+    document.getElementById('saidasProgramadas').textContent = formatCurrency(saidasProg);
+    document.getElementById('entradasProgramadasCount').textContent = `${programadas.filter(t => t.type === 'entrada').length} pendentes`;
+    document.getElementById('saidasProgramadasCount').textContent = `${programadas.filter(t => t.type === 'saida').length} pendentes`;
+
+    // Update goals
+    const receitaPercent = Math.min((entradasRealizadas / state.goals.receita) * 100, 100);
+    const despesaPercent = Math.min((saidasRealizadas / state.goals.despesa) * 100, 100);
+
+    document.getElementById('receitaAtual').textContent = formatCurrency(entradasRealizadas);
+    document.getElementById('despesaAtual').textContent = formatCurrency(saidasRealizadas);
+    document.getElementById('receitaBar').style.width = `${receitaPercent}%`;
+    document.getElementById('despesaBar').style.width = `${despesaPercent}%`;
+    document.getElementById('receitaPercent').textContent = `${receitaPercent.toFixed(0)}%`;
+    document.getElementById('despesaPercent').textContent = `${despesaPercent.toFixed(0)}%`;
+
+    // Update charts
+    updateCharts(realizadas);
+
+    // Update transactions list
     renderTransactions(allEntries);
 };
 
-// ===========================
-// NATIVE CANVAS CHARTS
-// ===========================
-const initCanvasCharts = () => {
-    const flowCanvas = document.getElementById('flowChart');
-    const pieCanvas = document.getElementById('pieChart');
-    
-    if (!flowCanvas || !pieCanvas) {
-        console.warn('Canvas não encontrado');
-        return;
+const updateTrend = (elementId, current, previous, inverse = false) => {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    let percent = 0;
+    if (previous > 0) {
+        percent = ((current - previous) / previous) * 100;
+    } else if (current > 0) {
+        percent = 100;
     }
-    
-    state.flowChartCanvas = flowCanvas.getContext('2d');
-    state.pieChartCanvas = pieCanvas.getContext('2d');
-    
-    // Set canvas resolution
-    const setCanvasSize = (canvas) => {
-        const container = canvas.parentElement;
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = container.clientWidth * dpr;
-        canvas.height = container.clientHeight * dpr;
-        canvas.style.width = container.clientWidth + 'px';
-        canvas.style.height = container.clientHeight + 'px';
-        canvas.getContext('2d').scale(dpr, dpr);
-    };
-    
-    setCanvasSize(flowCanvas);
-    setCanvasSize(pieCanvas);
-    
+
+    const isPositive = inverse ? percent <= 0 : percent >= 0;
+    element.className = `kpi-trend ${isPositive ? 'positive' : 'negative'}`;
+    element.innerHTML = `<i class="fas fa-arrow-up"></i><span>${Math.abs(percent).toFixed(0)}%</span>`;
+};
+
+// ===========================
+// CHARTS
+// ===========================
+const initCharts = () => {
+    const flowCanvas = document.getElementById('flowChart');
+    const categoryCanvas = document.getElementById('categoryChart');
+
+    if (flowCanvas) {
+        state.flowChartCanvas = flowCanvas.getContext('2d');
+        setupCanvas(flowCanvas);
+    }
+
+    if (categoryCanvas) {
+        state.categoryChartCanvas = categoryCanvas.getContext('2d');
+        setupCanvas(categoryCanvas);
+    }
+
     window.addEventListener('resize', () => {
-        setCanvasSize(flowCanvas);
-        setCanvasSize(pieCanvas);
+        if (flowCanvas) setupCanvas(flowCanvas);
+        if (categoryCanvas) setupCanvas(categoryCanvas);
         updateDashboard();
     });
-    
-    console.log('✅ Canvas charts inicializados');
 };
 
-const updateNativeCharts = entries => {
-    if (!state.flowChartCanvas || !state.pieChartCanvas) {
-        console.warn('Canvas não inicializado');
-        return;
-    }
-    
-    const grouped = groupByPeriod(entries);
-    drawBarChart(grouped);
-    drawPieChart(entries);
+const setupCanvas = canvas => {
+    const container = canvas.parentElement;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = container.clientWidth * dpr;
+    canvas.height = container.clientHeight * dpr;
+    canvas.style.width = container.clientWidth + 'px';
+    canvas.style.height = container.clientHeight + 'px';
+    canvas.getContext('2d').scale(dpr, dpr);
 };
 
-const drawBarChart = grouped => {
+const updateCharts = entries => {
+    drawFlowChart(entries);
+    drawCategoryChart(entries);
+};
+
+const drawFlowChart = entries => {
     const ctx = state.flowChartCanvas;
+    if (!ctx) return;
+
     const canvas = ctx.canvas;
     const width = canvas.width / (window.devicePixelRatio || 1);
     const height = canvas.height / (window.devicePixelRatio || 1);
 
     ctx.clearRect(0, 0, width, height);
 
+    const grouped = groupByPeriod(entries);
     const labels = Object.keys(grouped).sort();
+
     if (labels.length === 0) {
         drawEmptyState(ctx, width, height, 'Sem dados no período');
         return;
@@ -333,11 +391,11 @@ const drawBarChart = grouped => {
     const saidasData = labels.map(l => grouped[l].saidas);
     const maxValue = Math.max(...entradasData, ...saidasData, 100) * 1.1;
 
-    const padding = { top: 50, right: 20, bottom: 45, left: 65 };
+    const padding = { top: 20, right: 20, bottom: 40, left: 60 };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
 
-    // Draw grid lines
+    // Grid
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -348,246 +406,191 @@ const drawBarChart = grouped => {
         ctx.stroke();
     }
 
-    // Draw Y axis labels
-    ctx.fillStyle = COLORS.textLight;
+    // Y labels
+    ctx.fillStyle = COLORS.text;
     ctx.font = '10px Inter';
     ctx.textAlign = 'right';
     for (let i = 0; i <= 4; i++) {
         const value = maxValue - (maxValue / 4) * i;
         const y = padding.top + (chartHeight / 4) * i;
-        ctx.fillText(formatCompactCurrency(value), padding.left - 10, y + 3);
+        ctx.fillText(formatCompact(value), padding.left - 8, y + 3);
     }
 
-    // Draw bars with gradients
-    const barWidth = Math.min(chartWidth / labels.length / 3, 25);
+    // Bars
+    const barWidth = Math.min(chartWidth / labels.length / 3, 20);
     const groupWidth = chartWidth / labels.length;
-    const barRadius = 4;
 
     labels.forEach((label, i) => {
         const x = padding.left + groupWidth * i + groupWidth / 2;
 
-        // Entradas (green) with gradient
-        const entradaHeight = (entradasData[i] / maxValue) * chartHeight;
-        if (entradaHeight > 0) {
-            const gradient1 = ctx.createLinearGradient(0, padding.top + chartHeight - entradaHeight, 0, padding.top + chartHeight);
-            gradient1.addColorStop(0, COLORS.entradaGradient[0]);
-            gradient1.addColorStop(1, COLORS.entradaGradient[1]);
-            ctx.fillStyle = gradient1;
-            drawRoundedBar(ctx, x - barWidth - 3, padding.top + chartHeight - entradaHeight, barWidth, entradaHeight, barRadius);
+        // Entradas
+        const eh = (entradasData[i] / maxValue) * chartHeight;
+        if (eh > 0) {
+            ctx.fillStyle = COLORS.entrada;
+            roundedRect(ctx, x - barWidth - 2, padding.top + chartHeight - eh, barWidth, eh, 3);
         }
 
-        // Saídas (red) with gradient
-        const saidaHeight = (saidasData[i] / maxValue) * chartHeight;
-        if (saidaHeight > 0) {
-            const gradient2 = ctx.createLinearGradient(0, padding.top + chartHeight - saidaHeight, 0, padding.top + chartHeight);
-            gradient2.addColorStop(0, COLORS.saidaGradient[0]);
-            gradient2.addColorStop(1, COLORS.saidaGradient[1]);
-            ctx.fillStyle = gradient2;
-            drawRoundedBar(ctx, x + 3, padding.top + chartHeight - saidaHeight, barWidth, saidaHeight, barRadius);
+        // Saídas
+        const sh = (saidasData[i] / maxValue) * chartHeight;
+        if (sh > 0) {
+            ctx.fillStyle = COLORS.saida;
+            roundedRect(ctx, x + 2, padding.top + chartHeight - sh, barWidth, sh, 3);
         }
 
-        // X axis label
-        ctx.fillStyle = COLORS.textLight;
-        ctx.font = '10px Inter';
+        // X label
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '9px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText(label, x, height - padding.bottom + 18);
+        ctx.fillText(label, x, height - padding.bottom + 15);
     });
-
-    // Legend with icons
-    const legendY = 18;
-    ctx.font = '11px Inter';
-
-    // Entrada legend
-    ctx.fillStyle = COLORS.entrada;
-    drawRoundedBar(ctx, padding.left, legendY - 10, 12, 12, 3);
-    ctx.fillStyle = COLORS.text;
-    ctx.textAlign = 'left';
-    ctx.fillText('Entradas', padding.left + 18, legendY);
-
-    // Saída legend
-    ctx.fillStyle = COLORS.saida;
-    drawRoundedBar(ctx, padding.left + 90, legendY - 10, 12, 12, 3);
-    ctx.fillStyle = COLORS.text;
-    ctx.fillText('Saídas', padding.left + 108, legendY);
 };
 
-// Helper function to draw rounded bars
-const drawRoundedBar = (ctx, x, y, width, height, radius) => {
-    if (height < radius * 2) radius = height / 2;
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height);
-    ctx.lineTo(x, y + height);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    ctx.fill();
-};
+const drawCategoryChart = entries => {
+    const ctx = state.categoryChartCanvas;
+    if (!ctx) return;
 
-// Helper to format compact currency
-const formatCompactCurrency = value => {
-    if (value >= 1000) {
-        return 'R$ ' + (value / 1000).toFixed(1) + 'k';
-    }
-    return 'R$ ' + Math.round(value);
-};
-
-const drawPieChart = entries => {
-    const ctx = state.pieChartCanvas;
     const canvas = ctx.canvas;
     const width = canvas.width / (window.devicePixelRatio || 1);
     const height = canvas.height / (window.devicePixelRatio || 1);
 
     ctx.clearRect(0, 0, width, height);
 
-    const entradas = entries.filter(e => e.type === 'entrada').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
-    const saidas = entries.filter(e => e.type === 'saida').reduce((sum, e) => sum + parseFloat(e.value || 0), 0);
-    const total = entradas + saidas;
+    // Group by category (only saidas)
+    const saidas = entries.filter(e => e.type === 'saida');
+    const byCategory = {};
+
+    saidas.forEach(s => {
+        const cat = s.category || 'Outras Despesas';
+        byCategory[cat] = (byCategory[cat] || 0) + parseFloat(s.value || 0);
+    });
+
+    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+    const total = categories.reduce((sum, [, val]) => sum + val, 0);
 
     if (total === 0) {
-        drawEmptyState(ctx, width, height, 'Sem movimentações');
+        drawEmptyState(ctx, width, height, 'Sem despesas');
         return;
     }
 
     const centerX = width / 2;
-    const centerY = height / 2 - 30;
-    const radius = Math.min(width, height) / 3.2;
-    const innerRadius = radius * 0.65;
+    const centerY = height / 2 - 20;
+    const radius = Math.min(width, height) / 3;
+    const innerRadius = radius * 0.6;
 
-    // Draw pie segments with gradients
     let currentAngle = -Math.PI / 2;
 
-    // Entradas segment
-    const entradasAngle = (entradas / total) * Math.PI * 2;
-    if (entradasAngle > 0) {
-        const gradient1 = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
-        gradient1.addColorStop(0, COLORS.entradaGradient[1]);
-        gradient1.addColorStop(1, COLORS.entradaGradient[0]);
-        ctx.fillStyle = gradient1;
+    categories.forEach(([cat, value], i) => {
+        const angle = (value / total) * Math.PI * 2;
+        ctx.fillStyle = COLORS.categories[i % COLORS.categories.length];
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + entradasAngle);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
         ctx.closePath();
         ctx.fill();
-    }
+        currentAngle += angle;
+    });
 
-    // Saídas segment
-    currentAngle += entradasAngle;
-    const saidasAngle = (saidas / total) * Math.PI * 2;
-    if (saidasAngle > 0) {
-        const gradient2 = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
-        gradient2.addColorStop(0, COLORS.saidaGradient[1]);
-        gradient2.addColorStop(1, COLORS.saidaGradient[0]);
-        ctx.fillStyle = gradient2;
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + saidasAngle);
-        ctx.closePath();
-        ctx.fill();
-    }
-
-    // Center hole (donut) with gradient
-    const holeGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius);
-    holeGradient.addColorStop(0, '#1a1a2e');
-    holeGradient.addColorStop(1, '#0d0d1a');
-    ctx.fillStyle = holeGradient;
+    // Center hole
+    ctx.fillStyle = '#111827';
     ctx.beginPath();
     ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Center text - Total
-    ctx.fillStyle = COLORS.textLight;
+    // Center text
+    ctx.fillStyle = COLORS.text;
     ctx.font = '10px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText('TOTAL', centerX, centerY - 8);
-    ctx.fillStyle = COLORS.text;
-    ctx.font = 'bold 14px Orbitron';
-    ctx.fillText(formatCompactCurrency(total), centerX, centerY + 12);
+    ctx.fillText('DESPESAS', centerX, centerY - 5);
+    ctx.font = 'bold 12px Orbitron';
+    ctx.fillText(formatCompact(total), centerX, centerY + 12);
 
-    // Legend with better styling
-    const legendY = height - 55;
-    const legendSpacing = 22;
-    const legendX = width / 2;
+    // Legend
+    const legendY = height - 40;
+    const legendX = 10;
+    const itemWidth = width / Math.min(categories.length, 3);
 
-    // Entradas legend
-    ctx.fillStyle = COLORS.entrada;
-    drawRoundedBar(ctx, legendX - 85, legendY - 8, 10, 10, 2);
-    ctx.fillStyle = COLORS.text;
-    ctx.font = '11px Inter';
-    ctx.textAlign = 'left';
-    ctx.fillText('Entradas', legendX - 70, legendY);
-    ctx.fillStyle = COLORS.entrada;
-    ctx.font = 'bold 11px Inter';
-    ctx.textAlign = 'right';
-    ctx.fillText(Math.round((entradas / total) * 100) + '%', legendX + 85, legendY);
-
-    // Saídas legend
-    ctx.fillStyle = COLORS.saida;
-    drawRoundedBar(ctx, legendX - 85, legendY + legendSpacing - 8, 10, 10, 2);
-    ctx.fillStyle = COLORS.text;
-    ctx.font = '11px Inter';
-    ctx.textAlign = 'left';
-    ctx.fillText('Saídas', legendX - 70, legendY + legendSpacing);
-    ctx.fillStyle = COLORS.saida;
-    ctx.font = 'bold 11px Inter';
-    ctx.textAlign = 'right';
-    ctx.fillText(Math.round((saidas / total) * 100) + '%', legendX + 85, legendY + legendSpacing);
-};
-
-const drawEmptyState = (ctx, width, height, message) => {
-    ctx.fillStyle = COLORS.text;
-    ctx.font = '14px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText(message, width / 2, height / 2);
+    categories.slice(0, 3).forEach(([cat, value], i) => {
+        const x = legendX + itemWidth * i;
+        ctx.fillStyle = COLORS.categories[i % COLORS.categories.length];
+        ctx.fillRect(x, legendY - 6, 8, 8);
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '9px Inter';
+        ctx.textAlign = 'left';
+        const shortCat = cat.length > 12 ? cat.substring(0, 10) + '...' : cat;
+        ctx.fillText(shortCat, x + 12, legendY);
+    });
 };
 
 const groupByPeriod = entries => {
     const grouped = {};
-    
+
     entries.forEach(entry => {
-        let key;
         const date = new Date(entry.date);
-        
+        let key;
+
         if (state.currentPeriod === 'week') {
-            const week = getWeekNumber(date);
-            key = `Sem ${week}`;
+            key = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
         } else if (state.currentPeriod === 'month') {
             key = date.getDate().toString().padStart(2, '0');
         } else {
             key = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
         }
-        
+
         if (!grouped[key]) grouped[key] = { entradas: 0, saidas: 0 };
-        
+
         if (entry.type === 'entrada') {
             grouped[key].entradas += parseFloat(entry.value || 0);
         } else {
             grouped[key].saidas += parseFloat(entry.value || 0);
         }
     });
-    
+
     return grouped;
 };
 
+const roundedRect = (ctx, x, y, w, h, r) => {
+    if (h < r * 2) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+};
+
+const drawEmptyState = (ctx, width, height, message) => {
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(message, width / 2, height / 2);
+};
+
 // ===========================
-// TRANSACTIONS RENDER
+// TRANSACTIONS
 // ===========================
 const renderTransactions = entries => {
     const container = document.getElementById('transactionsList');
     if (!container) return;
-    
+
     let filtered = entries;
-    if (state.currentFilter !== 'todos') {
-        filtered = entries.filter(e => e.type === state.currentFilter);
+
+    if (state.currentFilter === 'entrada') {
+        filtered = entries.filter(e => e.type === 'entrada');
+    } else if (state.currentFilter === 'saida') {
+        filtered = entries.filter(e => e.type === 'saida');
+    } else if (state.currentFilter === 'scheduled') {
+        filtered = entries.filter(e => e.scheduled);
     }
-    
+
     if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma transação no período</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma transação encontrada</p></div>';
         return;
     }
-    
+
     container.innerHTML = filtered
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .map(t => createTransactionCard(t))
@@ -597,35 +600,33 @@ const renderTransactions = entries => {
 const createTransactionCard = t => {
     const icon = t.type === 'entrada' ? 'fa-arrow-up' : 'fa-arrow-down';
     const date = new Date(t.date).toLocaleDateString('pt-BR');
-    
+
     const badges = [];
-    if (t.source === 'service') badges.push('<span class="transaction-badge badge-service">Do Painel</span>');
+    if (t.source === 'service') badges.push('<span class="transaction-badge badge-service">Serviço</span>');
     if (t.scheduled) badges.push('<span class="transaction-badge badge-scheduled">Programada</span>');
-    
+
     const actions = t.source !== 'service' ? `
         <div class="transaction-actions">
-            <button class="btn-icon-small" onclick="editTransaction('${t.id}')" title="Editar">
+            <button class="btn-action" onclick="editTransaction('${t.id}')" title="Editar">
                 <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-icon-small delete" onclick="deleteTransaction('${t.id}')" title="Excluir">
+            <button class="btn-action delete" onclick="deleteTransaction('${t.id}')" title="Excluir">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
     ` : '';
-    
+
     return `
-        <div class="transaction-item ${t.type} ${t.scheduled ? 'scheduled' : ''}">
-            <div class="transaction-info">
-                <div class="transaction-icon">
-                    <i class="fas ${icon}"></i>
-                </div>
-                <div class="transaction-details">
-                    <div class="transaction-desc">${escapeHtml(t.description)}</div>
-                    <div class="transaction-meta">
-                        <span><i class="fas fa-calendar"></i> ${date}</span>
-                        ${t.category ? `<span><i class="fas fa-tag"></i> ${escapeHtml(t.category)}</span>` : ''}
-                        ${badges.join(' ')}
-                    </div>
+        <div class="transaction-item ${t.type}">
+            <div class="transaction-icon">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-desc">${escapeHtml(t.description)}</div>
+                <div class="transaction-meta">
+                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                    ${t.category ? `<span><i class="fas fa-tag"></i> ${escapeHtml(t.category)}</span>` : ''}
+                    ${badges.join(' ')}
                 </div>
             </div>
             <div class="transaction-value">
@@ -637,24 +638,18 @@ const createTransactionCard = t => {
 };
 
 // ===========================
-// CRUD OPERATIONS
+// CRUD
 // ===========================
 window.openTransactionModal = type => {
     document.getElementById('transactionId').value = '';
     document.getElementById('transactionType').value = type;
     document.getElementById('transactionForm').reset();
     setTodayDate();
-    
-    const scheduledField = document.getElementById('scheduledField');
-    if (scheduledField) scheduledField.style.display = 'block';
-    
-    const title = type === 'entrada' ? 'Nova Entrada' : 'Nova Despesa';
-    const icon = type === 'entrada' ? 'fa-plus-circle' : 'fa-minus-circle';
-    const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) {
-        modalTitle.innerHTML = `<i class="fas ${icon}"></i> ${title}`;
-    }
-    
+
+    const title = type === 'entrada' ? 'Nova Entrada' : 'Nova Saída';
+    const icon = type === 'entrada' ? 'fa-plus' : 'fa-minus';
+    document.getElementById('modalTitle').innerHTML = `<i class="fas ${icon}"></i> ${title}`;
+
     populateCategories(type);
     document.getElementById('transactionModal')?.classList.add('active');
 };
@@ -665,11 +660,11 @@ window.closeModal = () => {
 
 window.saveTransaction = async e => {
     e.preventDefault();
-    
+
     if (!state.isAuthorized) {
-        return showToast('Sem permissão para salvar', 'error');
+        return showToast('Sem permissão', 'error');
     }
-    
+
     const id = document.getElementById('transactionId').value;
     const type = document.getElementById('transactionType').value;
     const description = document.getElementById('description').value.trim();
@@ -678,27 +673,17 @@ window.saveTransaction = async e => {
     const category = document.getElementById('category').value;
     const notes = document.getElementById('notes').value.trim();
     const scheduled = document.getElementById('scheduled')?.checked || false;
-    
+
     if (!description || !value || !date) {
-        return showToast('Preencha todos os campos obrigatórios', 'error');
+        return showToast('Preencha os campos obrigatórios', 'error');
     }
-    
-    if (value <= 0) {
-        return showToast('O valor deve ser maior que zero', 'error');
-    }
-    
+
     const transaction = {
-        type,
-        description,
-        value,
-        date,
-        category,
-        notes,
-        scheduled,
+        type, description, value, date, category, notes, scheduled,
         updatedAt: new Date().toISOString(),
         updatedBy: state.currentUser.email
     };
-    
+
     try {
         if (id) {
             await state.db.collection('transactions').doc(id).update(transaction);
@@ -712,54 +697,40 @@ window.saveTransaction = async e => {
         closeModal();
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        showToast('Erro ao salvar transação', 'error');
+        showToast('Erro ao salvar', 'error');
     }
 };
 
 window.editTransaction = id => {
-    const transaction = state.transactions.find(t => t.id === id);
-    if (!transaction) return;
-    
+    const t = state.transactions.find(t => t.id === id);
+    if (!t) return;
+
     document.getElementById('transactionId').value = id;
-    document.getElementById('transactionType').value = transaction.type;
-    document.getElementById('description').value = transaction.description;
-    document.getElementById('value').value = transaction.value;
-    document.getElementById('date').value = transaction.date;
-    document.getElementById('category').value = transaction.category || '';
-    document.getElementById('notes').value = transaction.notes || '';
-    
-    const scheduledCheckbox = document.getElementById('scheduled');
-    if (scheduledCheckbox) {
-        scheduledCheckbox.checked = transaction.scheduled || false;
-    }
-    
-    const scheduledField = document.getElementById('scheduledField');
-    if (scheduledField) scheduledField.style.display = 'block';
-    
-    const title = transaction.type === 'entrada' ? 'Editar Entrada' : 'Editar Despesa';
-    const icon = 'fa-edit';
-    const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) {
-        modalTitle.innerHTML = `<i class="fas ${icon}"></i> ${title}`;
-    }
-    
-    populateCategories(transaction.type);
+    document.getElementById('transactionType').value = t.type;
+    document.getElementById('description').value = t.description;
+    document.getElementById('value').value = t.value;
+    document.getElementById('date').value = t.date;
+    document.getElementById('category').value = t.category || '';
+    document.getElementById('notes').value = t.notes || '';
+    document.getElementById('scheduled').checked = t.scheduled || false;
+
+    const title = t.type === 'entrada' ? 'Editar Entrada' : 'Editar Saída';
+    document.getElementById('modalTitle').innerHTML = `<i class="fas fa-edit"></i> ${title}`;
+
+    populateCategories(t.type);
     document.getElementById('transactionModal')?.classList.add('active');
 };
 
 window.deleteTransaction = async id => {
-    if (!state.isAuthorized) {
-        return showToast('Sem permissão', 'error');
-    }
-    
-    if (!confirm('Deseja realmente excluir esta transação?')) return;
-    
+    if (!state.isAuthorized) return showToast('Sem permissão', 'error');
+    if (!confirm('Excluir esta transação?')) return;
+
     try {
         await state.db.collection('transactions').doc(id).delete();
         showToast('Transação excluída!', 'success');
     } catch (error) {
         console.error('Erro ao excluir:', error);
-        showToast('Erro ao excluir transação', 'error');
+        showToast('Erro ao excluir', 'error');
     }
 };
 
@@ -768,33 +739,33 @@ window.deleteTransaction = async id => {
 // ===========================
 window.changePeriod = period => {
     state.currentPeriod = period;
-    
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+
+    document.querySelectorAll('.period-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.period === period);
     });
-    
+
     updatePeriodDisplay();
     updateDashboard();
 };
 
 window.filterTransactions = filter => {
     state.currentFilter = filter;
-    
-    document.querySelectorAll('.btn-filter').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    event.target.classList.add('active');
+
+    document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.filter-chip').classList.add('active');
+
     updateDashboard();
 };
 
 const getPeriodDates = () => {
     const now = new Date();
-    let start, end = new Date();
-    
+    let start, end;
+
     if (state.currentPeriod === 'week') {
-        start = new Date(now.setDate(now.getDate() - now.getDay()));
-        end = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+        start = new Date(now);
+        start.setDate(now.getDate() - now.getDay());
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
     } else if (state.currentPeriod === 'month') {
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -802,38 +773,63 @@ const getPeriodDates = () => {
         start = new Date(now.getFullYear(), 0, 1);
         end = new Date(now.getFullYear(), 11, 31);
     }
-    
+
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
-    
+
+    return { start, end };
+};
+
+const getPreviousPeriodDates = () => {
+    const now = new Date();
+    let start, end;
+
+    if (state.currentPeriod === 'week') {
+        start = new Date(now);
+        start.setDate(now.getDate() - now.getDay() - 7);
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+    } else if (state.currentPeriod === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0);
+    } else {
+        start = new Date(now.getFullYear() - 1, 0, 1);
+        end = new Date(now.getFullYear() - 1, 11, 31);
+    }
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
     return { start, end };
 };
 
 const updatePeriodDisplay = () => {
     const now = new Date();
     let text;
-    
+
     if (state.currentPeriod === 'week') {
-        text = `Semana ${getWeekNumber(now)} de ${now.getFullYear()}`;
+        const weekNum = getWeekNumber(now);
+        text = `Semana ${weekNum}`;
     } else if (state.currentPeriod === 'month') {
         text = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         text = text.charAt(0).toUpperCase() + text.slice(1);
     } else {
         text = `Ano ${now.getFullYear()}`;
     }
-    
-    const periodText = document.getElementById('periodText');
-    if (periodText) periodText.textContent = text;
+
+    document.getElementById('periodText').textContent = text;
 };
 
 // ===========================
 // UTILITIES
 // ===========================
 const formatCurrency = value => {
-    return new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL' 
-    }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
+const formatCompact = value => {
+    if (value >= 1000) return 'R$ ' + (value / 1000).toFixed(1) + 'k';
+    return 'R$ ' + Math.round(value);
 };
 
 const escapeHtml = text => {
@@ -852,67 +848,49 @@ const getWeekNumber = date => {
 
 const setTodayDate = () => {
     const today = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('date');
-    if (dateInput) dateInput.value = today;
+    document.getElementById('date').value = today;
 };
 
 const populateCategories = type => {
     const select = document.getElementById('category');
     if (!select) return;
-    
-    select.innerHTML = '<option value="">Selecione uma categoria</option>';
-    
+
+    select.innerHTML = '<option value="">Selecione</option>';
     CATEGORIES[type].forEach(cat => {
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
     });
 };
 
 // ===========================
-// CONNECTION MONITORING
+// CONNECTION & TOAST
 // ===========================
 const monitorConnection = () => {
-    const updateStatus = connected => {
-        const statusEl = document.getElementById('connectionStatus');
-        const statusText = document.getElementById('statusText');
-        if (statusEl && statusText) {
-            connected ? statusEl.classList.remove('offline') : statusEl.classList.add('offline');
-            statusText.textContent = connected ? 'Conectado' : 'Offline';
+    const update = connected => {
+        const el = document.getElementById('connectionStatus');
+        const text = document.getElementById('statusText');
+        if (el && text) {
+            el.classList.toggle('offline', !connected);
+            text.textContent = connected ? 'Conectado' : 'Offline';
         }
     };
 
-    window.addEventListener('online', () => {
-        updateStatus(true);
-        showToast('Conexão restaurada', 'success');
-    });
-
-    window.addEventListener('offline', () => {
-        updateStatus(false);
-        showToast('Sem conexão', 'error');
-    });
-
-    updateStatus(navigator.onLine);
+    window.addEventListener('online', () => { update(true); showToast('Conexão restaurada', 'success'); });
+    window.addEventListener('offline', () => { update(false); showToast('Sem conexão', 'error'); });
+    update(navigator.onLine);
 };
 
 const showToast = (message, type = 'info') => {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-    
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icons = { 
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
     toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${escapeHtml(message)}</span>`;
-    
+
     container.appendChild(toast);
     setTimeout(() => {
         toast.classList.add('fade-out');
-        setTimeout(() => {
-            if (container.contains(toast)) {
-                container.removeChild(toast);
-            }
-        }, 300);
+        setTimeout(() => container.contains(toast) && container.removeChild(toast), 300);
     }, 3000);
 };

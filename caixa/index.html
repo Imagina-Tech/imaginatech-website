@@ -1,9 +1,9 @@
-<!-- 
+<!--
 ==================================================
 ARQUIVO: caixa/index.html
 MÓDULO: Gestão Financeira (Caixa)
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.1 - Gráficos Nativos (Canvas API)
+VERSÃO: 4.0 - Dashboard Financeiro Completo
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 -->
@@ -28,12 +28,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
+
     <!-- Estilos base compartilhados -->
     <link rel="stylesheet" href="/servicos/styles.css">
     <!-- Customizações do módulo Caixa -->
@@ -113,134 +113,248 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </header>
 
         <main class="main-content">
-            <div class="container">
-                <div class="action-bar">
-                    <h2 class="page-title">
-                        <i class="fas fa-chart-line"></i>
-                        Dashboard Financeiro
-                    </h2>
-                    <div class="action-buttons">
-                        <button class="btn-success" onclick="openTransactionModal('entrada')">
-                            <i class="fas fa-plus-circle"></i>
-                            Nova Entrada
-                        </button>
-                        <button class="btn-danger" onclick="openTransactionModal('saida')">
-                            <i class="fas fa-minus-circle"></i>
-                            Nova Despesa
-                        </button>
-                    </div>
-                </div>
-
-                <div class="balance-card">
-                    <div class="balance-icon">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div class="balance-content-wrapper">
-                        <div class="balance-content">
-                            <span class="balance-label">Saldo Atual (Real)</span>
-                            <h1 class="balance-value" id="balanceValue">R$ 0,00</h1>
-                        </div>
-                        <div class="balance-projected-wrapper">
-                            <span class="balance-label-small">Saldo Projetado</span>
-                            <h2 class="balance-projected" id="balanceProjected">R$ 0,00</h2>
-                            <small class="balance-info">Incluindo programadas</small>
+            <div class="dashboard-container">
+                <!-- Header com período e ações -->
+                <div class="dashboard-header">
+                    <div class="header-left">
+                        <h1 class="dashboard-title">
+                            <i class="fas fa-chart-line"></i>
+                            Dashboard Financeiro
+                        </h1>
+                        <div class="period-selector">
+                            <button class="period-btn" data-period="week" onclick="changePeriod('week')">
+                                <i class="fas fa-calendar-week"></i>
+                                Semana
+                            </button>
+                            <button class="period-btn active" data-period="month" onclick="changePeriod('month')">
+                                <i class="fas fa-calendar-alt"></i>
+                                Mês
+                            </button>
+                            <button class="period-btn" data-period="year" onclick="changePeriod('year')">
+                                <i class="fas fa-calendar"></i>
+                                Ano
+                            </button>
                         </div>
                     </div>
-                    <div class="balance-trend" id="balanceTrend">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>--</span>
-                    </div>
-                </div>
-
-                <div class="filter-bar">
-                    <div class="filter-buttons">
-                        <button class="filter-btn" data-period="week" onclick="changePeriod('week')">
-                            <i class="fas fa-calendar-week"></i>
-                            Semana
-                        </button>
-                        <button class="filter-btn active" data-period="month" onclick="changePeriod('month')">
-                            <i class="fas fa-calendar-alt"></i>
-                            Mês
-                        </button>
-                        <button class="filter-btn" data-period="year" onclick="changePeriod('year')">
-                            <i class="fas fa-calendar"></i>
-                            Ano
-                        </button>
-                    </div>
-                    <div class="period-display" id="periodDisplay">
-                        <i class="fas fa-clock"></i>
-                        <span id="periodText">Outubro 2025</span>
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card stat-entrada">
-                        <div class="stat-icon">
-                            <i class="fas fa-arrow-circle-up"></i>
+                    <div class="header-right">
+                        <div class="current-period" id="currentPeriod">
+                            <i class="fas fa-clock"></i>
+                            <span id="periodText">Novembro 2025</span>
                         </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Entradas</span>
-                            <h3 class="stat-value" id="totalEntradas">R$ 0,00</h3>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-saida">
-                        <div class="stat-icon">
-                            <i class="fas fa-arrow-circle-down"></i>
-                        </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Saídas</span>
-                            <h3 class="stat-value" id="totalSaidas">R$ 0,00</h3>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-lucro">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <div class="stat-content">
-                            <span class="stat-label">Resultado</span>
-                            <h3 class="stat-value" id="resultado">R$ 0,00</h3>
+                        <div class="quick-actions">
+                            <button class="action-btn action-entrada" onclick="openTransactionModal('entrada')">
+                                <i class="fas fa-plus"></i>
+                                Entrada
+                            </button>
+                            <button class="action-btn action-saida" onclick="openTransactionModal('saida')">
+                                <i class="fas fa-minus"></i>
+                                Saída
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-saldo">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="kpi-trend" id="saldoTrend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Saldo Atual</span>
+                            <h2 class="kpi-value" id="saldoAtual">R$ 0,00</h2>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-comparison" id="saldoComparison">vs. período anterior</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card kpi-entradas">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="kpi-trend positive" id="entradasTrend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Entradas</span>
+                            <h2 class="kpi-value" id="totalEntradas">R$ 0,00</h2>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-count" id="entradasCount">0 transações</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card kpi-saidas">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="kpi-trend negative" id="saidasTrend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Saídas</span>
+                            <h2 class="kpi-value" id="totalSaidas">R$ 0,00</h2>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-count" id="saidasCount">0 transações</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card kpi-resultado">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="kpi-trend" id="resultadoTrend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Resultado</span>
+                            <h2 class="kpi-value" id="resultado">R$ 0,00</h2>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-margin" id="margemLucro">Margem: 0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="main-grid">
+                    <!-- Gráfico de Fluxo -->
+                    <div class="card card-chart">
+                        <div class="card-header">
                             <h3><i class="fas fa-chart-bar"></i> Fluxo de Caixa</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item legend-entrada">
+                                    <i class="fas fa-circle"></i> Entradas
+                                </span>
+                                <span class="legend-item legend-saida">
+                                    <i class="fas fa-circle"></i> Saídas
+                                </span>
+                            </div>
                         </div>
-                        <div class="chart-container">
+                        <div class="card-body">
                             <canvas id="flowChart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3><i class="fas fa-chart-pie"></i> Distribuição</h3>
+
+                    <!-- Gráfico de Categorias -->
+                    <div class="card card-chart">
+                        <div class="card-header">
+                            <h3><i class="fas fa-tags"></i> Despesas por Categoria</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="pieChart"></canvas>
+                        <div class="card-body">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Projeções -->
+                    <div class="card card-projections">
+                        <div class="card-header">
+                            <h3><i class="fas fa-crystal-ball"></i> Projeções</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="projection-item">
+                                <div class="projection-info">
+                                    <span class="projection-label">Saldo Projetado</span>
+                                    <span class="projection-sublabel">Incluindo programadas</span>
+                                </div>
+                                <span class="projection-value" id="saldoProjetado">R$ 0,00</span>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-info">
+                                    <span class="projection-label">Entradas Programadas</span>
+                                    <span class="projection-sublabel" id="entradasProgramadasCount">0 pendentes</span>
+                                </div>
+                                <span class="projection-value positive" id="entradasProgramadas">R$ 0,00</span>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-info">
+                                    <span class="projection-label">Saídas Programadas</span>
+                                    <span class="projection-sublabel" id="saidasProgramadasCount">0 pendentes</span>
+                                </div>
+                                <span class="projection-value negative" id="saidasProgramadas">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metas -->
+                    <div class="card card-goals">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bullseye"></i> Metas do Mês</h3>
+                            <button class="btn-icon" onclick="openGoalModal()" title="Definir metas">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="goal-item">
+                                <div class="goal-header">
+                                    <span class="goal-label">Meta de Receita</span>
+                                    <span class="goal-values">
+                                        <span id="receitaAtual">R$ 0</span> / <span id="receitaMeta">R$ 5.000</span>
+                                    </span>
+                                </div>
+                                <div class="goal-progress">
+                                    <div class="goal-bar" id="receitaBar" style="width: 0%"></div>
+                                </div>
+                                <span class="goal-percent" id="receitaPercent">0%</span>
+                            </div>
+                            <div class="goal-item">
+                                <div class="goal-header">
+                                    <span class="goal-label">Limite de Despesas</span>
+                                    <span class="goal-values">
+                                        <span id="despesaAtual">R$ 0</span> / <span id="despesaLimite">R$ 3.000</span>
+                                    </span>
+                                </div>
+                                <div class="goal-progress warning">
+                                    <div class="goal-bar" id="despesaBar" style="width: 0%"></div>
+                                </div>
+                                <span class="goal-percent" id="despesaPercent">0%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="transactions-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-receipt"></i> Transações Recentes</h3>
-                        <div class="section-actions">
-                            <button class="btn-filter active" onclick="filterTransactions('todos')">
-                                <i class="fas fa-list"></i> Todas
+                <!-- Transações Recentes -->
+                <div class="card card-transactions">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exchange-alt"></i> Transações Recentes</h3>
+                        <div class="transaction-filters">
+                            <button class="filter-chip active" onclick="filterTransactions('todos')">
+                                Todas
                             </button>
-                            <button class="btn-filter" onclick="filterTransactions('entrada')">
+                            <button class="filter-chip" onclick="filterTransactions('entrada')">
                                 <i class="fas fa-arrow-up"></i> Entradas
                             </button>
-                            <button class="btn-filter" onclick="filterTransactions('saida')">
+                            <button class="filter-chip" onclick="filterTransactions('saida')">
                                 <i class="fas fa-arrow-down"></i> Saídas
+                            </button>
+                            <button class="filter-chip" onclick="filterTransactions('scheduled')">
+                                <i class="fas fa-clock"></i> Programadas
                             </button>
                         </div>
                     </div>
-                    <div class="transactions-list" id="transactionsList">
-                        <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p>Nenhuma transação no período</p>
+                    <div class="card-body">
+                        <div class="transactions-list" id="transactionsList">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Nenhuma transação no período</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -248,6 +362,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </main>
     </div>
 
+    <!-- Modal de Transação -->
     <div class="modal" id="transactionModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -260,12 +375,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <div class="modal-body">
                     <input type="hidden" id="transactionId">
                     <input type="hidden" id="transactionType">
-                    
+
                     <div class="form-group">
                         <label for="description"><i class="fas fa-align-left"></i> Descrição *</label>
                         <input type="text" id="description" class="form-input" required placeholder="Ex: Venda de produto, Conta de luz...">
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="value"><i class="fas fa-dollar-sign"></i> Valor *</label>
@@ -276,34 +391,67 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <input type="date" id="date" class="form-input" required>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category"><i class="fas fa-tag"></i> Categoria</label>
                         <select id="category" class="form-input">
                             <option value="">Selecione uma categoria</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group" id="scheduledField">
-                        <label class="checkbox-label-inline">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="scheduled">
-                            <span>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
                                 <strong><i class="fas fa-clock"></i> Transação Programada</strong>
                                 <small>Marque se esta transação ainda não foi realizada</small>
                             </span>
                         </label>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="notes"><i class="fas fa-sticky-note"></i> Observações</label>
                         <textarea id="notes" class="form-textarea" rows="3" placeholder="Informações adicionais..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">
-                        <i class="fas fa-times"></i> Cancelar
+                    <button type="button" class="btn-secondary" onclick="closeModal()">
+                        Cancelar
                     </button>
-                    <button type="submit" class="btn-save">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Metas -->
+    <div class="modal" id="goalModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2><i class="fas fa-bullseye"></i> Definir Metas</h2>
+                <button class="modal-close" onclick="closeGoalModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="goalForm" onsubmit="saveGoals(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="goalReceita"><i class="fas fa-arrow-up"></i> Meta de Receita *</label>
+                        <input type="number" id="goalReceita" class="form-input" step="0.01" min="0" required placeholder="5000.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="goalDespesa"><i class="fas fa-arrow-down"></i> Limite de Despesas *</label>
+                        <input type="number" id="goalDespesa" class="form-input" step="0.01" min="0" required placeholder="3000.00">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeGoalModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary">
                         <i class="fas fa-save"></i> Salvar
                     </button>
                 </div>
@@ -316,9 +464,9 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
+
     <script type="module" src="js/main-caixa.js"></script>
-    
+
     <script>
         function createParticles() {
             const container = document.getElementById('particles');
