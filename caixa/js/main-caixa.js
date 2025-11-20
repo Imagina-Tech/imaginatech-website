@@ -163,13 +163,13 @@ const startListeners = () => {
 };
 
 // ===========================
-// GOALS
+// GOALS (usando localStorage para evitar problemas de permissão)
 // ===========================
-const loadGoals = async () => {
+const loadGoals = () => {
     try {
-        const doc = await state.db.collection('settings').doc('goals').get();
-        if (doc.exists) {
-            state.goals = doc.data();
+        const saved = localStorage.getItem('imaginatech_goals');
+        if (saved) {
+            state.goals = JSON.parse(saved);
         }
         updateGoalsDisplay();
     } catch (error) {
@@ -187,17 +187,18 @@ window.closeGoalModal = () => {
     document.getElementById('goalModal')?.classList.remove('active');
 };
 
-window.saveGoals = async e => {
+window.saveGoals = e => {
     e.preventDefault();
 
     const receita = parseFloat(document.getElementById('goalReceita').value);
     const despesa = parseFloat(document.getElementById('goalDespesa').value);
 
     try {
-        await state.db.collection('settings').doc('goals').set({ receita, despesa });
         state.goals = { receita, despesa };
+        localStorage.setItem('imaginatech_goals', JSON.stringify(state.goals));
         closeGoalModal();
         updateGoalsDisplay();
+        updateDashboard();
         showToast('Metas atualizadas!', 'success');
     } catch (error) {
         console.error('Erro ao salvar metas:', error);
@@ -271,23 +272,21 @@ const updateDashboard = () => {
     document.getElementById('saldoAtual').textContent = formatCurrency(saldoReal);
     document.getElementById('totalEntradas').textContent = formatCurrency(entradasRealizadas);
     document.getElementById('totalSaidas').textContent = formatCurrency(saidasRealizadas);
-    document.getElementById('resultado').textContent = formatCurrency(saldoReal);
+    document.getElementById('saldoProjetadoKpi').textContent = formatCurrency(saldoProjetado);
 
     // Update counts
     const entradasCount = realizadas.filter(t => t.type === 'entrada').length;
     const saidasCount = realizadas.filter(t => t.type === 'saida').length;
+    const programadasCount = programadas.length;
     document.getElementById('entradasCount').textContent = `${entradasCount} transações`;
     document.getElementById('saidasCount').textContent = `${saidasCount} transações`;
-
-    // Update margin
-    const margem = entradasRealizadas > 0 ? ((saldoReal / entradasRealizadas) * 100).toFixed(1) : 0;
-    document.getElementById('margemLucro').textContent = `Margem: ${margem}%`;
+    document.getElementById('pendingCount').textContent = `${programadasCount} programadas`;
 
     // Update trends
     updateTrend('saldoTrend', saldoReal, prevSaldo);
     updateTrend('entradasTrend', entradasRealizadas, prevEntradas);
     updateTrend('saidasTrend', saidasRealizadas, prevSaidas, true);
-    updateTrend('resultadoTrend', saldoReal, prevResultado);
+    updateTrend('projetadoTrend', saldoProjetado, prevSaldo);
 
     // Update projections
     document.getElementById('saldoProjetado').textContent = formatCurrency(saldoProjetado);

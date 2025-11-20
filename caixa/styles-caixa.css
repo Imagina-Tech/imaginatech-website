@@ -184,7 +184,7 @@ IMPORTANTE: Estilos base em /servicos/styles.css
 .kpi-saldo::before { background: linear-gradient(90deg, var(--neon-blue), transparent); }
 .kpi-entradas::before { background: linear-gradient(90deg, var(--neon-green), transparent); }
 .kpi-saidas::before { background: linear-gradient(90deg, var(--neon-red), transparent); }
-.kpi-resultado::before { background: linear-gradient(90deg, var(--neon-purple), transparent); }
+.kpi-projetado::before { background: linear-gradient(90deg, var(--neon-purple), transparent); }
 
 .kpi-header {
     display: flex;
@@ -206,7 +206,7 @@ IMPORTANTE: Estilos base em /servicos/styles.css
 .kpi-saldo .kpi-icon { background: rgba(0, 212, 255, 0.15); color: var(--neon-blue); }
 .kpi-entradas .kpi-icon { background: rgba(0, 255, 136, 0.15); color: var(--neon-green); }
 .kpi-saidas .kpi-icon { background: rgba(255, 0, 85, 0.15); color: var(--neon-red); }
-.kpi-resultado .kpi-icon { background: rgba(153, 69, 255, 0.15); color: var(--neon-purple); }
+.kpi-projetado .kpi-icon { background: rgba(153, 69, 255, 0.15); color: var(--neon-purple); }
 
 .kpi-trend {
     display: flex;
@@ -256,7 +256,7 @@ IMPORTANTE: Estilos base em /servicos/styles.css
 .kpi-saldo .kpi-value { color: var(--neon-blue); }
 .kpi-entradas .kpi-value { color: var(--neon-green); }
 .kpi-saidas .kpi-value { color: var(--neon-red); }
-.kpi-resultado .kpi-value { color: var(--neon-purple); }
+.kpi-projetado .kpi-value { color: var(--neon-purple); }
 
 .kpi-footer {
     font-size: 0.75rem;
@@ -819,25 +819,31 @@ IMPORTANTE: Estilos base em /servicos/styles.css
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
+    margin: 0;
 }
 
 .checkbox-label:hover {
     background: rgba(255, 215, 0, 0.1);
 }
 
-.checkbox-label input {
-    display: none;
+.checkbox-label input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .checkbox-custom {
     width: 20px;
     height: 20px;
+    min-width: 20px;
     background: rgba(0, 0, 0, 0.3);
     border: 2px solid var(--glass-border);
     border-radius: 4px;
     flex-shrink: 0;
     position: relative;
     transition: all 0.2s;
+    margin-top: 2px;
 }
 
 .checkbox-label input:checked + .checkbox-custom {
@@ -861,11 +867,14 @@ IMPORTANTE: Estilos base em /servicos/styles.css
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    flex: 1;
 }
 
 .checkbox-text strong {
     font-size: 0.9rem;
     color: var(--neon-yellow);
+    display: flex;
+    align-items: center;
 }
 
 .checkbox-text strong i {
@@ -875,6 +884,7 @@ IMPORTANTE: Estilos base em /servicos/styles.css
 .checkbox-text small {
     font-size: 0.8rem;
     color: var(--text-secondary);
+    display: block;
 }
 
 /* Buttons */
