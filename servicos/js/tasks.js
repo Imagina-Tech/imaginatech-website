@@ -120,35 +120,41 @@ function createTasksUI() {
                 </div>
             </div>
 
-            <!-- Painel de último acesso com tarefas pendentes -->
-            <div class="admin-access-panel" id="adminAccessPanel">
-                <div class="admin-access-header">
-                    <i class="fas fa-clock"></i>
-                    <span>Último Acesso</span>
+            <!-- Container principal com layout lado a lado -->
+            <div class="tasks-dropdown-content">
+                <!-- Painel de último acesso (coluna esquerda no desktop) -->
+                <div class="admin-access-panel" id="adminAccessPanel">
+                    <div class="admin-access-header">
+                        <i class="fas fa-clock"></i>
+                        <span>Último Acesso</span>
+                    </div>
+                    <div class="admin-access-list" id="adminAccessList">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
                 </div>
-                <div class="admin-access-list" id="adminAccessList">
-                    <!-- Será preenchido dinamicamente -->
+
+                <!-- Seção de tarefas (coluna direita no desktop) -->
+                <div class="tasks-main-section">
+                    <div class="tasks-filters">
+                        <select class="tasks-status-filter" id="statusFilter">
+                            <option value="all">Todas as Tarefas</option>
+                            <option value="pendente">Apenas Pendentes</option>
+                            <option value="concluida">Apenas Concluídas</option>
+                        </select>
+                    </div>
+
+                    <div class="tasks-list" id="tasksList">
+                        <div class="tasks-empty">
+                            <i class="fas fa-clipboard-check"></i>
+                            <p><strong>Nenhuma tarefa encontrada</strong></p>
+                            <p>Crie uma nova tarefa ou ajuste os filtros</p>
+                        </div>
+                    </div>
+
+                    <div class="tasks-footer">
+                        <a href="#" id="btnViewCompleted">Ver tarefas concluídas (0)</a>
+                    </div>
                 </div>
-            </div>
-
-            <div class="tasks-filters">
-                <select class="tasks-status-filter" id="statusFilter">
-                    <option value="all">Todas as Tarefas</option>
-                    <option value="pendente">Apenas Pendentes</option>
-                    <option value="concluida">Apenas Concluídas</option>
-                </select>
-            </div>
-
-            <div class="tasks-list" id="tasksList">
-                <div class="tasks-empty">
-                    <i class="fas fa-clipboard-check"></i>
-                    <p><strong>Nenhuma tarefa encontrada</strong></p>
-                    <p>Crie uma nova tarefa ou ajuste os filtros</p>
-                </div>
-            </div>
-
-            <div class="tasks-footer">
-                <a href="#" id="btnViewCompleted">Ver tarefas concluídas (0)</a>
             </div>
         </div>
     `;
