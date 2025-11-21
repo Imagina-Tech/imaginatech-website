@@ -2026,8 +2026,58 @@ async function loadClientsForModal() {
     `;
 
     try {
-        const snapshot = await state.db.collection('clients').get();
-        const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Carregar de clients
+        const clientsSnapshot = await state.db.collection('clients').get();
+        const clientsMap = new Map();
+
+        clientsSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const email = (data.email || data.googleEmail || '').toLowerCase();
+            if (email) {
+                clientsMap.set(email, { id: doc.id, ...data, source: 'clients' });
+            }
+        });
+
+        // Carregar de tracking_access (acessos de clientes não-admin)
+        const trackingSnapshot = await state.db.collection('tracking_access')
+            .orderBy('accessedAt', 'desc')
+            .limit(100)
+            .get();
+
+        // Agrupar tracking por email e pegar o mais recente
+        trackingSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const email = (data.googleEmail || '').toLowerCase();
+
+            if (email && !clientsMap.has(email)) {
+                // Cliente que só existe em tracking_access
+                clientsMap.set(email, {
+                    id: doc.id,
+                    name: data.googleName || email.split('@')[0],
+                    email: email,
+                    googleEmail: email,
+                    googlePhotoURL: data.googlePhotoURL,
+                    googleUid: data.googleUid,
+                    phone: data.orderClientPhone || '',
+                    lastOrderTrackingAccess: data.accessedAt,
+                    orderCodes: [data.orderCode],
+                    source: 'tracking_access'
+                });
+            } else if (email && clientsMap.has(email)) {
+                // Atualizar último acesso se mais recente
+                const existing = clientsMap.get(email);
+                if (!existing.lastOrderTrackingAccess ||
+                    new Date(data.accessedAt) > new Date(existing.lastOrderTrackingAccess)) {
+                    existing.lastOrderTrackingAccess = data.accessedAt;
+                }
+                // Atualizar foto se não tiver
+                if (!existing.googlePhotoURL && data.googlePhotoURL) {
+                    existing.googlePhotoURL = data.googlePhotoURL;
+                }
+            }
+        });
+
+        const clients = Array.from(clientsMap.values());
 
         // Sort by lastOrderTrackingAccess (most recent first)
         clients.sort((a, b) => {
