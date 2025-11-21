@@ -9,16 +9,17 @@ VERSÃO: 3.1 - Modular + Push Notifications
 
 import { initializeFirebase, onDOMReady, setupErrorHandlers, state } from './config.js';
 import { saveService } from './services.js';
-import { 
-    signInWithGoogle, 
-    checkAuthorization, 
-    showLoginScreen, 
+import {
+    signInWithGoogle,
+    checkAuthorization,
+    showLoginScreen,
     hideLoadingOverlay,
     setupDateFields,
     formatPhoneNumber,
     formatCEP,
     updateNotificationOptions,
-    monitorConnection
+    monitorConnection,
+    updateLastAccess
 } from './auth-ui.js';
 
 // ===========================
@@ -59,9 +60,15 @@ onDOMReady(() => {
     state.auth.onAuthStateChanged(user => {
         hideLoadingOverlay();
         state.currentUser = user;
-        
+
         if (user) {
             checkAuthorization(user);
+
+            // ===========================
+            // REGISTRO DE ÚLTIMO ACESSO
+            // ===========================
+            // Chamar diretamente para garantir registro em cada carregamento
+            updateLastAccess(user);
 
             // ===========================
             // NOVO: INICIALIZAR SISTEMA DE TAREFAS
@@ -86,6 +93,15 @@ onDOMReady(() => {
         console.error('Erro no auth state:', error);
         hideLoadingOverlay();
         showLoginScreen();
+    });
+
+    // ===========================
+    // ATUALIZAR ACESSO AO VOLTAR À ABA
+    // ===========================
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && state.currentUser && state.isAuthorized) {
+            updateLastAccess(state.currentUser);
+        }
     });
     
     setupDateFields();

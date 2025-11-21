@@ -148,7 +148,7 @@ export function checkAuthorization(user) {
         startServicesListener();
         loadClientsFromFirestore();
         migrateExistingClientsOnce();
-        updateLastAccess(user); // Registrar último acesso
+        // Nota: updateLastAccess é chamado diretamente no main.js
     } else {
         state.isAuthorized = false;
         showAccessDeniedScreen(user);
