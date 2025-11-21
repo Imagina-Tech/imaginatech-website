@@ -740,12 +740,13 @@
     /* Layout empilhado no mobile */
     .tasks-dropdown-content {
         flex-direction: column;
+        overflow-y: auto;
     }
 
     .admin-access-panel {
         width: auto;
         min-width: auto;
-        max-height: 150px;
+        flex-shrink: 0;
     }
 
     .tasks-main-section {
@@ -2239,8 +2240,6 @@
     padding: 0.75rem;
     width: 220px;
     min-width: 220px;
-    max-height: 100%;
-    overflow-y: auto;
     flex-shrink: 0;
 }
 
