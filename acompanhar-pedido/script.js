@@ -1088,36 +1088,56 @@ async function quickLoadOrder(code) {
     await verifyCode();
 }
 
-async function saveOrderToHistory(code) {
+async function saveOrderToHistory(code, orderData = null) {
     if (!currentUser || !code) return;
-    
+
     try {
         const userRef = db.collection('user_orders').doc(currentUser.uid);
         const userDoc = await userRef.get();
-        
+
+        // Dados do acesso de tracking para registro
+        const trackingAccess = {
+            orderCode: code,
+            accessedAt: new Date().toISOString(),
+            device: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'
+        };
+
         if (userDoc.exists) {
             const userData = userDoc.data();
             let orderCodes = userData.orderCodes || [];
-            
+            let trackingHistory = userData.trackingHistory || [];
+
             // Adicionar código apenas se não existir
             if (!orderCodes.includes(code)) {
                 orderCodes.push(code);
-                
+
                 // Manter apenas os últimos 20 pedidos
                 if (orderCodes.length > 20) {
                     orderCodes = orderCodes.slice(-20);
                 }
-                
-                await userRef.update({
-                    orderCodes: orderCodes,
-                    lastOrderViewed: code,
-                    lastOrderViewedAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
-                
-                // Recarregar lista de pedidos
-                await loadUserOrders();
             }
+
+            // Adicionar ao histórico de tracking
+            trackingHistory.push(trackingAccess);
+            // Manter últimos 50 acessos
+            if (trackingHistory.length > 50) {
+                trackingHistory = trackingHistory.slice(-50);
+            }
+
+            await userRef.update({
+                orderCodes: orderCodes,
+                lastOrderViewed: code,
+                lastOrderViewedAt: new Date().toISOString(),
+                trackingHistory: trackingHistory,
+                // Atualizar dados do usuário Google
+                email: currentUser.email,
+                name: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                updatedAt: new Date().toISOString()
+            });
+
+            // Recarregar lista de pedidos
+            await loadUserOrders();
         } else {
             // Criar documento se não existir
             await userRef.set({
@@ -1128,15 +1148,18 @@ async function saveOrderToHistory(code) {
                 orderCodes: [code],
                 lastOrderViewed: code,
                 lastOrderViewedAt: new Date().toISOString(),
+                trackingHistory: [trackingAccess],
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             });
-            
+
             // Recarregar lista de pedidos
             await loadUserOrders();
         }
+
+        console.log('✅ Histórico salvo em user_orders para:', currentUser.email);
     } catch (error) {
-        console.error('Erro ao salvar no histórico:', error);
+        console.error('❌ Erro ao salvar no histórico:', error);
     }
 }
 
@@ -1422,101 +1445,132 @@ async function updateClientTrackingAccess(orderCode, orderData) {
     if (!currentUser) return;
 
     try {
-        // Get photo URL from Google - use same logic as admin photos
+        // Get photo URL from Google
         const photoURL = currentUser.photoURL ||
-                         `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || currentUser.email)}&background=00D4FF&color=fff&bold=true&size=128`;
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || currentUser.email)}&background=00D4FF&color=fff&bold=true&size=128`;
 
         // Check if the logged user matches the order's client email
         const isOrderClient = orderData.clientEmail &&
-                              currentUser.email &&
-                              orderData.clientEmail.toLowerCase() === currentUser.email.toLowerCase();
+            currentUser.email &&
+            orderData.clientEmail.toLowerCase() === currentUser.email.toLowerCase();
 
-        // Try to find existing client by logged user's email
-        let clientRef = null;
-        let clientDoc = null;
+        // Dados do acesso de tracking
+        const trackingData = {
+            // Dados do usuário Google
+            googleUid: currentUser.uid,
+            googleEmail: currentUser.email.toLowerCase(),
+            googleName: currentUser.displayName || currentUser.email.split('@')[0],
+            googlePhotoURL: photoURL,
+            // Dados do pedido
+            orderCode: orderCode,
+            orderClientEmail: orderData.clientEmail || null,
+            orderClientName: orderData.client || null,
+            orderClientPhone: orderData.clientPhone || null,
+            isOrderClient: isOrderClient,
+            // Metadados
+            accessedAt: new Date().toISOString(),
+            device: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+            userAgent: navigator.userAgent
+        };
 
-        const emailQuery = await db.collection('clients')
-            .where('email', '==', currentUser.email.toLowerCase())
-            .limit(1)
-            .get();
+        // Registrar em tracking_access (coleção que clientes podem escrever)
+        await db.collection('tracking_access').add(trackingData);
+        console.log('✅ Acesso de tracking registrado para:', currentUser.email);
 
-        if (!emailQuery.empty) {
-            clientDoc = emailQuery.docs[0];
-            clientRef = clientDoc.ref;
-        }
+        // Tentar atualizar a coleção clients (pode falhar por permissão - é esperado para não-admins)
+        try {
+            // Buscar cliente existente
+            let clientRef = null;
+            let clientDoc = null;
 
-        // If not found by email, try by googleEmail
-        if (!clientRef) {
-            const googleEmailQuery = await db.collection('clients')
-                .where('googleEmail', '==', currentUser.email.toLowerCase())
+            // Buscar por email do Google
+            const emailQuery = await db.collection('clients')
+                .where('email', '==', currentUser.email.toLowerCase())
                 .limit(1)
                 .get();
 
-            if (!googleEmailQuery.empty) {
-                clientDoc = googleEmailQuery.docs[0];
+            if (!emailQuery.empty) {
+                clientDoc = emailQuery.docs[0];
                 clientRef = clientDoc.ref;
             }
-        }
 
-        // If still not found, create new client with Google user info
-        if (!clientRef) {
-            const newClientData = {
-                name: currentUser.displayName || currentUser.email.split('@')[0],
-                email: currentUser.email.toLowerCase(),
-                phone: isOrderClient && orderData.clientPhone ? orderData.clientPhone : '',
-                cpf: isOrderClient && orderData.clientCPF ? orderData.clientCPF.replace(/\D/g, '') : '',
-                googleUid: currentUser.uid,
-                googleEmail: currentUser.email.toLowerCase(),
-                googlePhotoURL: photoURL,
-                orderCodes: [orderCode],
-                lastOrderTrackingAccess: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
+            // Se não encontrou, buscar por googleEmail
+            if (!clientRef) {
+                const googleEmailQuery = await db.collection('clients')
+                    .where('googleEmail', '==', currentUser.email.toLowerCase())
+                    .limit(1)
+                    .get();
 
-            await db.collection('clients').add(newClientData);
-            console.log('✅ Novo cliente criado com acesso registrado:', newClientData.name);
-            return;
-        }
-
-        // Update existing client
-        const existingData = clientDoc.data();
-        const existingOrderCodes = existingData.orderCodes || [];
-
-        // Add order code if not already present
-        if (!existingOrderCodes.includes(orderCode)) {
-            existingOrderCodes.push(orderCode);
-        }
-
-        const updateData = {
-            lastOrderTrackingAccess: new Date().toISOString(),
-            googleUid: currentUser.uid,
-            googleEmail: currentUser.email.toLowerCase(),
-            googlePhotoURL: photoURL,
-            orderCodes: existingOrderCodes,
-            updatedAt: new Date().toISOString()
-        };
-
-        // Update missing fields if this is the order's client
-        if (isOrderClient) {
-            if (!existingData.phone && orderData.clientPhone) {
-                updateData.phone = orderData.clientPhone;
+                if (!googleEmailQuery.empty) {
+                    clientDoc = googleEmailQuery.docs[0];
+                    clientRef = clientDoc.ref;
+                }
             }
-            if (!existingData.cpf && orderData.clientCPF) {
-                updateData.cpf = orderData.clientCPF.replace(/\D/g, '');
+
+            // Se não encontrou e é o cliente do pedido, buscar pelo email do pedido
+            if (!clientRef && isOrderClient) {
+                const orderEmailQuery = await db.collection('clients')
+                    .where('email', '==', orderData.clientEmail.toLowerCase())
+                    .limit(1)
+                    .get();
+
+                if (!orderEmailQuery.empty) {
+                    clientDoc = orderEmailQuery.docs[0];
+                    clientRef = clientDoc.ref;
+                }
             }
-        }
 
-        // Update name if we have a better one from Google
-        if (currentUser.displayName && (!existingData.name || existingData.name === existingData.email.split('@')[0])) {
-            updateData.name = currentUser.displayName;
-        }
+            if (clientRef) {
+                // Atualizar cliente existente
+                const existingData = clientDoc.data();
+                const existingOrderCodes = existingData.orderCodes || [];
 
-        await clientRef.update(updateData);
-        console.log('✅ Acesso do cliente registrado:', existingData.name || currentUser.email);
+                if (!existingOrderCodes.includes(orderCode)) {
+                    existingOrderCodes.push(orderCode);
+                }
+
+                const updateData = {
+                    lastOrderTrackingAccess: new Date().toISOString(),
+                    googleUid: currentUser.uid,
+                    googleEmail: currentUser.email.toLowerCase(),
+                    googlePhotoURL: photoURL,
+                    orderCodes: existingOrderCodes,
+                    updatedAt: new Date().toISOString()
+                };
+
+                // Atualizar nome se melhor
+                if (currentUser.displayName && (!existingData.name || existingData.name === existingData.email?.split('@')[0])) {
+                    updateData.name = currentUser.displayName;
+                }
+
+                await clientRef.update(updateData);
+                console.log('✅ Cliente atualizado em clients:', existingData.name || currentUser.email);
+            } else {
+                // Criar novo cliente
+                const newClientData = {
+                    name: currentUser.displayName || currentUser.email.split('@')[0],
+                    email: currentUser.email.toLowerCase(),
+                    phone: isOrderClient && orderData.clientPhone ? orderData.clientPhone : '',
+                    cpf: isOrderClient && orderData.clientCPF ? orderData.clientCPF.replace(/\D/g, '') : '',
+                    googleUid: currentUser.uid,
+                    googleEmail: currentUser.email.toLowerCase(),
+                    googlePhotoURL: photoURL,
+                    orderCodes: [orderCode],
+                    lastOrderTrackingAccess: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                await db.collection('clients').add(newClientData);
+                console.log('✅ Novo cliente criado em clients:', newClientData.name);
+            }
+        } catch (clientError) {
+            // Esperado falhar para usuários não-admin - o registro em tracking_access já foi feito
+            console.log('ℹ️ Registro em clients não permitido (esperado para clientes):', clientError.code || clientError.message);
+        }
 
     } catch (error) {
-        console.warn('Erro ao registrar acesso do cliente:', error.message);
+        console.error('❌ Erro ao registrar acesso de tracking:', error);
     }
 }
 
