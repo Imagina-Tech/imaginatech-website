@@ -1726,6 +1726,26 @@ export function formatCPF(e) {
     e.target.value = value;
 }
 
+// Formata CPF (11 dígitos) ou CNPJ (14 dígitos) automaticamente
+export function formatCPFCNPJ(e) {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 14);
+
+    if (value.length <= 11) {
+        // Formato CPF: XXX.XXX.XXX-XX
+        if (value.length > 9) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+        else if (value.length > 6) value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+        else if (value.length > 3) value = `${value.slice(0, 3)}.${value.slice(3)}`;
+    } else {
+        // Formato CNPJ: XX.XXX.XXX/XXXX-XX
+        if (value.length > 12) value = `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5, 8)}/${value.slice(8, 12)}-${value.slice(12)}`;
+        else if (value.length > 8) value = `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5, 8)}/${value.slice(8)}`;
+        else if (value.length > 5) value = `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5)}`;
+        else if (value.length > 2) value = `${value.slice(0, 2)}.${value.slice(2)}`;
+    }
+
+    e.target.value = value;
+}
+
 export function formatCEP(e) {
     let value = e.target.value.replace(/\D/g, '').slice(0, 8);
     if (value.length > 5) value = `${value.slice(0, 5)}-${value.slice(5)}`;
@@ -1967,6 +1987,7 @@ window.contactClient = contactClient;
 window.handleClientNameInput = handleClientNameInput;
 window.selectClient = selectClient;
 window.formatCPF = formatCPF;
+window.formatCPFCNPJ = formatCPFCNPJ;
 window.copyClientDataToDelivery = copyClientDataToDelivery;
 window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
     const { removeFileFromService } = await import('./services.js');
@@ -2074,10 +2095,17 @@ function renderClientItem(client) {
         lastAccessClass = '';
     }
 
-    // Format CPF for display
+    // Format CPF/CNPJ for display
     let cpfDisplay = client.cpf || '-';
-    if (client.cpf && client.cpf.length === 11) {
-        cpfDisplay = `${client.cpf.slice(0,3)}.${client.cpf.slice(3,6)}.${client.cpf.slice(6,9)}-${client.cpf.slice(9)}`;
+    if (client.cpf) {
+        const digits = client.cpf.replace(/\D/g, '');
+        if (digits.length === 11) {
+            // CPF: XXX.XXX.XXX-XX
+            cpfDisplay = `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6,9)}-${digits.slice(9)}`;
+        } else if (digits.length === 14) {
+            // CNPJ: XX.XXX.XXX/XXXX-XX
+            cpfDisplay = `${digits.slice(0,2)}.${digits.slice(2,5)}.${digits.slice(5,8)}/${digits.slice(8,12)}-${digits.slice(12)}`;
+        }
     }
 
     // Order codes
@@ -2109,7 +2137,7 @@ function renderClientItem(client) {
             </div>
             <div class="client-details">
                 <div class="client-detail-row">
-                    <span class="client-detail-label"><i class="fas fa-id-card"></i> CPF</span>
+                    <span class="client-detail-label"><i class="fas fa-id-card"></i> CPF/CNPJ</span>
                     <span class="client-detail-value">${cpfDisplay}</span>
                 </div>
                 <div class="client-detail-row">
