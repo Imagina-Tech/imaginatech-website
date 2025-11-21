@@ -744,10 +744,10 @@
     }
 
     .admin-access-panel {
-        width: calc(100% - 1rem);
-        min-width: auto;
+        width: auto !important;
+        min-width: 0 !important;
         flex-shrink: 0;
-        margin: 0.5rem;
+        align-self: stretch;
     }
 
     .admin-access-item {
