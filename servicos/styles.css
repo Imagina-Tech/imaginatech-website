@@ -2625,19 +2625,6 @@ input[type="file"]::file-selector-button {
 /* ===========================
    CLIENTS MODAL
    =========================== */
-.btn-clientes {
-    background: linear-gradient(135deg, #00D4FF, #0099CC);
-    color: white;
-    border: 1px solid #00D4FF;
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
-}
-
-.btn-clientes:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
-    border-color: #00f2fe;
-}
-
 .clients-list-container {
     max-height: 60vh;
     overflow-y: auto;

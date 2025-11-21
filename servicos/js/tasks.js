@@ -161,6 +161,22 @@ function createTasksUI() {
         navbarRight.appendChild(wrapper);
     }
 
+    // Inject Clientes button after Tarefas
+    const clientsButton = document.createElement('button');
+    clientsButton.className = 'btn-tasks';
+    clientsButton.id = 'btnClientes';
+    clientsButton.onclick = () => window.openClientsModal && window.openClientsModal();
+    clientsButton.innerHTML = `
+        <i class="fas fa-users"></i>
+        <span>Clientes</span>
+    `;
+
+    if (userInfo) {
+        navbarRight.insertBefore(clientsButton, userInfo);
+    } else {
+        navbarRight.appendChild(clientsButton);
+    }
+
     // Criar modal
     createTaskModal();
 }
