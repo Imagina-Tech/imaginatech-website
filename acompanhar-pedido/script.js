@@ -1395,21 +1395,30 @@ async function updateClientTrackingAccess(orderCode, orderData) {
         const clientName = orderData.client;
         if (!clientName) return;
 
-        // Find client by name or email
+        // Check if the logged user is the actual client (email match)
+        const isActualClient = orderData.clientEmail &&
+                               currentUser.email &&
+                               orderData.clientEmail.toLowerCase() === currentUser.email.toLowerCase();
+
+        // If it's not the actual client viewing, don't update client tracking
+        // (could be admin checking or someone with the code)
+        if (!isActualClient) {
+            console.log('ℹ️ Acesso ao pedido por usuário diferente do cliente:', currentUser.email);
+            return;
+        }
+
+        // Find client by email
         let clientRef = null;
         let clientDoc = null;
 
-        // Try to find by email first (more reliable)
-        if (orderData.clientEmail) {
-            const emailQuery = await db.collection('clients')
-                .where('email', '==', orderData.clientEmail)
-                .limit(1)
-                .get();
+        const emailQuery = await db.collection('clients')
+            .where('email', '==', orderData.clientEmail)
+            .limit(1)
+            .get();
 
-            if (!emailQuery.empty) {
-                clientDoc = emailQuery.docs[0];
-                clientRef = clientDoc.ref;
-            }
+        if (!emailQuery.empty) {
+            clientDoc = emailQuery.docs[0];
+            clientRef = clientDoc.ref;
         }
 
         // If not found by email, try by name
@@ -1465,9 +1474,6 @@ async function updateClientTrackingAccess(orderCode, orderData) {
         };
 
         // Update missing fields if available
-        if (!existingData.email && orderData.clientEmail) {
-            updateData.email = orderData.clientEmail;
-        }
         if (!existingData.phone && orderData.clientPhone) {
             updateData.phone = orderData.clientPhone;
         }
