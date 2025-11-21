@@ -527,6 +527,7 @@ function filterAndRenderTasks() {
     renderAdminAccessPanel(); // Atualizar painel com contagem de tarefas
     renderTasksList();
     updateDropdownTitle();
+    updateBadge(); // Atualizar badge e contador de concluídas
 }
 
 function renderTasksList() {
@@ -1322,16 +1323,25 @@ function updateBadge() {
         badge.classList.remove('pulsing');
     }
 
-    // Atualizar contador de concluídas
-    const completedCount = tasksState.tasks.filter(task =>
-        task.status === 'concluida' &&
-        task.assignedTo &&
-        task.assignedTo.includes(tasksState.currentUser.email)
-    ).length;
+    // Atualizar contador de concluídas baseado no viewMode atual
+    let completedTasks = tasksState.tasks.filter(task => task.status === 'concluida');
+
+    // Filtrar por viewMode
+    if (tasksState.viewMode === 'mine') {
+        completedTasks = completedTasks.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.currentUser.email)
+        );
+    } else if (tasksState.viewMode !== 'all') {
+        // viewMode é o email de um admin específico
+        completedTasks = completedTasks.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.viewMode)
+        );
+    }
+    // Se viewMode === 'all', mostra todas as concluídas
 
     const btnViewCompleted = document.getElementById('btnViewCompleted');
     if (btnViewCompleted) {
-        btnViewCompleted.textContent = `Ver tarefas concluídas (${completedCount})`;
+        btnViewCompleted.textContent = `Ver tarefas concluídas (${completedTasks.length})`;
     }
 }
 
