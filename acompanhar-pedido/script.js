@@ -100,15 +100,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         document.getElementById('loadingOverlay').classList.add('hidden');
     }, 1000);
-    
+
+    // Verificar se há código na URL (ex: /acompanhar-pedido/KJ4FE)
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const urlOrderCode = pathParts.length >= 2 && pathParts[0] === 'acompanhar-pedido' ? pathParts[1].toUpperCase() : null;
+
+    if (urlOrderCode && urlOrderCode.length === 5) {
+        console.log('📋 Código do pedido encontrado na URL:', urlOrderCode);
+    }
+
     // Auth state observer simplificado
     auth.onAuthStateChanged(async (user) => {
         console.log('Estado de autenticação:', user ? `Logado como ${user.email}` : 'Não logado');
-        
+
         if (user) {
             currentUser = user;
             showCodeSection();
-            
+
+            // Se há código na URL, preencher e verificar automaticamente
+            if (urlOrderCode) {
+                const codeInput = document.getElementById('orderCode');
+                if (codeInput) {
+                    codeInput.value = urlOrderCode;
+                    // Pequeno delay para garantir que tudo carregou
+                    setTimeout(() => verifyCode(), 500);
+                }
+            }
+
             // Carregar histórico de pedidos
             try {
                 await loadUserOrders();
@@ -119,6 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentUser = null;
             showLoginSection();
+
+            // Se há código na URL, preencher o input mesmo sem login
+            if (urlOrderCode) {
+                const codeInput = document.getElementById('orderCode');
+                if (codeInput) {
+                    codeInput.value = urlOrderCode;
+                }
+            }
         }
     });
     
