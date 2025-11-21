@@ -45,6 +45,7 @@ let orderListener = null;
 let historyListeners = []; // Array para armazenar listeners do histórico
 let clientAttempts = 0;
 const MAX_ATTEMPTS = 3;
+let pendingUrlOrderCode = null; // Código da URL aguardando processamento
 
 // WhatsApp da ImaginaTech
 const WHATSAPP_NUMBER = '5521968972539';
@@ -107,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (urlOrderCode && urlOrderCode.length === 5) {
         console.log('📋 Código do pedido encontrado na URL:', urlOrderCode);
+        pendingUrlOrderCode = urlOrderCode; // Armazenar globalmente
     }
 
     // Auth state observer simplificado
@@ -117,13 +119,20 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = user;
             showCodeSection();
 
-            // Se há código na URL, preencher e verificar automaticamente
-            if (urlOrderCode) {
+            // Se há código pendente da URL, preencher e verificar automaticamente
+            if (pendingUrlOrderCode) {
                 const codeInput = document.getElementById('orderCode');
                 if (codeInput) {
-                    codeInput.value = urlOrderCode;
-                    // Pequeno delay para garantir que tudo carregou
-                    setTimeout(() => verifyCode(), 500);
+                    codeInput.value = pendingUrlOrderCode;
+                    console.log('📋 Preenchendo código da URL:', pendingUrlOrderCode);
+                    // Limpar o código pendente e verificar
+                    const codeToVerify = pendingUrlOrderCode;
+                    pendingUrlOrderCode = null;
+                    // Delay para garantir que o DOM está pronto
+                    setTimeout(() => {
+                        console.log('🔍 Verificando código automaticamente:', codeToVerify);
+                        verifyCode();
+                    }, 800);
                 }
             }
 
@@ -137,14 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentUser = null;
             showLoginSection();
-
-            // Se há código na URL, preencher o input mesmo sem login
-            if (urlOrderCode) {
-                const codeInput = document.getElementById('orderCode');
-                if (codeInput) {
-                    codeInput.value = urlOrderCode;
-                }
-            }
         }
     });
     
@@ -254,20 +255,23 @@ function showCodeSection() {
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('codeSection').classList.remove('hidden');
     document.getElementById('orderView').classList.add('hidden');
-    
+
     // Update user info - verificar se currentUser existe
     const user = currentUser || auth.currentUser;
     if (user) {
         document.getElementById('userName').textContent = user.displayName || 'Usuário';
         document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
-        
+
         // Garantir que currentUser está definido
         currentUser = user;
     }
-    
+
     // Reset attempts
     clientAttempts = 0;
-    document.getElementById('orderCode').value = '';
+    // Só limpar o input se não houver código pendente da URL
+    if (!pendingUrlOrderCode) {
+        document.getElementById('orderCode').value = '';
+    }
     document.getElementById('attemptsWarning').classList.remove('show');
 }
 
