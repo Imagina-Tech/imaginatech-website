@@ -1967,3 +1967,181 @@ window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
     const { removeFileFromService } = await import('./services.js');
     await removeFileFromService(serviceId, fileIndex, fileUrl);
 };
+
+// ===========================
+// CLIENTS MODAL
+// ===========================
+export async function openClientsModal() {
+    const modal = document.getElementById('clientsModal');
+    if (!modal) return;
+
+    modal.classList.add('active');
+    await loadClientsForModal();
+}
+
+export function closeClientsModal() {
+    const modal = document.getElementById('clientsModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+async function loadClientsForModal() {
+    if (!state.db) return;
+
+    const container = document.getElementById('clientsListContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-clients">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Carregando clientes...</span>
+        </div>
+    `;
+
+    try {
+        const snapshot = await state.db.collection('clients').get();
+        const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Sort by lastOrderTrackingAccess (most recent first)
+        clients.sort((a, b) => {
+            const dateA = a.lastOrderTrackingAccess ? new Date(a.lastOrderTrackingAccess) : new Date(0);
+            const dateB = b.lastOrderTrackingAccess ? new Date(b.lastOrderTrackingAccess) : new Date(0);
+            return dateB - dateA;
+        });
+
+        if (clients.length === 0) {
+            container.innerHTML = `
+                <div class="no-clients-message">
+                    <i class="fas fa-users-slash"></i>
+                    <p>Nenhum cliente cadastrado ainda</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = clients.map(client => renderClientItem(client)).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+        container.innerHTML = `
+            <div class="no-clients-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Erro ao carregar clientes</p>
+            </div>
+        `;
+    }
+}
+
+function renderClientItem(client) {
+    const photoUrl = client.googlePhotoURL ||
+                     `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name || 'Cliente')}&background=00D4FF&color=fff`;
+
+    const lastAccess = client.lastOrderTrackingAccess;
+    let lastAccessText = 'Nunca acessou';
+    let lastAccessClass = 'never';
+
+    if (lastAccess) {
+        const date = new Date(lastAccess);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) {
+            lastAccessText = 'Agora mesmo';
+        } else if (diffMins < 60) {
+            lastAccessText = `Há ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
+        } else if (diffHours < 24) {
+            lastAccessText = `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+        } else if (diffDays < 7) {
+            lastAccessText = `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+        } else {
+            lastAccessText = date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        lastAccessClass = '';
+    }
+
+    // Format CPF for display
+    let cpfDisplay = client.cpf || '-';
+    if (client.cpf && client.cpf.length === 11) {
+        cpfDisplay = `${client.cpf.slice(0,3)}.${client.cpf.slice(3,6)}.${client.cpf.slice(6,9)}-${client.cpf.slice(9)}`;
+    }
+
+    // Order codes
+    const orderCodes = client.orderCodes || [];
+    const orderCodesHtml = orderCodes.length > 0
+        ? `<div class="client-orders-section">
+            <div class="client-orders-title">
+                <i class="fas fa-clipboard-list"></i>
+                Pedidos (${orderCodes.length})
+            </div>
+            <div class="client-order-codes">
+                ${orderCodes.map(code => `<span class="client-order-code">#${code}</span>`).join('')}
+            </div>
+           </div>`
+        : '';
+
+    return `
+        <div class="client-item" id="client-${client.id}">
+            <div class="client-item-header" onclick="toggleClientDetails('${client.id}')">
+                <img src="${photoUrl}" alt="${escapeHtml(client.name)}" class="client-photo">
+                <div class="client-info">
+                    <div class="client-name">${escapeHtml(client.name || 'Cliente sem nome')}</div>
+                    <div class="client-last-access ${lastAccessClass}">
+                        <i class="fas fa-circle"></i>
+                        ${lastAccessText}
+                    </div>
+                </div>
+                <i class="fas fa-chevron-down client-expand-icon"></i>
+            </div>
+            <div class="client-details">
+                <div class="client-detail-row">
+                    <span class="client-detail-label"><i class="fas fa-id-card"></i> CPF</span>
+                    <span class="client-detail-value">${cpfDisplay}</span>
+                </div>
+                <div class="client-detail-row">
+                    <span class="client-detail-label"><i class="fas fa-envelope"></i> Email</span>
+                    <span class="client-detail-value">${client.email || '-'}</span>
+                </div>
+                <div class="client-detail-row">
+                    <span class="client-detail-label"><i class="fas fa-phone"></i> Telefone</span>
+                    <span class="client-detail-value">
+                        ${client.phone ? `<a href="https://wa.me/55${client.phone.replace(/\D/g, '')}" target="_blank">${client.phone}</a>` : '-'}
+                    </span>
+                </div>
+                ${client.googleEmail ? `
+                <div class="client-detail-row">
+                    <span class="client-detail-label"><i class="fab fa-google"></i> Google</span>
+                    <span class="client-detail-value">${client.googleEmail}</span>
+                </div>
+                ` : ''}
+                ${client.lastOrderTrackingAccess ? `
+                <div class="client-detail-row">
+                    <span class="client-detail-label"><i class="fas fa-clock"></i> Último Acesso</span>
+                    <span class="client-detail-value">${new Date(client.lastOrderTrackingAccess).toLocaleString('pt-BR')}</span>
+                </div>
+                ` : ''}
+                ${orderCodesHtml}
+            </div>
+        </div>
+    `;
+}
+
+export function toggleClientDetails(clientId) {
+    const clientItem = document.getElementById(`client-${clientId}`);
+    if (clientItem) {
+        clientItem.classList.toggle('expanded');
+    }
+}
+
+window.openClientsModal = openClientsModal;
+window.closeClientsModal = closeClientsModal;
+window.toggleClientDetails = toggleClientDetails;

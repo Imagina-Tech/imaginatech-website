@@ -89,6 +89,10 @@
                         <i class="fas fa-calculator"></i>
                         <span>Custo</span>
                     </a>
+                    <button class="btn-nav btn-clientes" onclick="openClientsModal()">
+                        <i class="fas fa-users"></i>
+                        <span>Clientes</span>
+                    </button>
                     <div class="user-info" id="userInfo">
                         <img id="userPhoto" class="user-photo" alt="Foto" src="https://ui-avatars.com/api/?name=User&background=00D4FF&color=fff">
                         <div class="user-details">
@@ -648,6 +652,31 @@
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MODAL: Lista de Clientes -->
+    <div class="modal" id="clientsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> Clientes ImaginaTech</h2>
+                <button class="modal-close" onclick="closeClientsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div id="clientsListContainer" class="clients-list-container">
+                    <div class="loading-clients">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Carregando clientes...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeClientsModal()">
+                    <i class="fas fa-check"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>

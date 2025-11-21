@@ -315,9 +315,10 @@ async function verifyCode() {
             const doc = snapshot.docs[0];
             currentOrderId = doc.id;
             currentOrderCode = code;
-            
+            const orderData = doc.data();
+
             console.log('Pedido encontrado:', doc.id);
-            
+
             // Save order to user's history - usar try-catch
             try {
                 await saveOrderToHistory(code);
@@ -325,15 +326,22 @@ async function verifyCode() {
                 console.warn('Erro ao salvar no histórico:', error.message);
                 // Continuar mesmo se falhar ao salvar histórico
             }
-            
+
+            // Update client tracking access
+            try {
+                await updateClientTrackingAccess(code, orderData);
+            } catch (error) {
+                console.warn('Erro ao registrar acesso do cliente:', error.message);
+            }
+
             // Show order details
-            showOrderDetails(doc.id, doc.data());
-            
+            showOrderDetails(doc.id, orderData);
+
             // Listen for real-time updates
             startOrderListener(doc.id);
-            
+
             showToast('Pedido encontrado!', 'success');
-            
+
             // Log successful access - usar try-catch
             try {
                 await logUserActivity('order_viewed', {
@@ -1360,7 +1368,7 @@ window.navigatePhoto = navigatePhoto;
 
 async function logUserActivity(action, data) {
     if (!currentUser) return;
-    
+
     try {
         await db.collection('activity_logs').add({
             userId: currentUser.uid,
@@ -1374,6 +1382,104 @@ async function logUserActivity(action, data) {
     } catch (error) {
         // Log silencioso - não interrompe o fluxo
         console.warn('Log de atividade opcional:', error.message);
+    }
+}
+
+// ===========================
+// CLIENT ACCESS TRACKING
+// ===========================
+async function updateClientTrackingAccess(orderCode, orderData) {
+    if (!currentUser) return;
+
+    try {
+        const clientName = orderData.client;
+        if (!clientName) return;
+
+        // Find client by name or email
+        let clientRef = null;
+        let clientDoc = null;
+
+        // Try to find by email first (more reliable)
+        if (orderData.clientEmail) {
+            const emailQuery = await db.collection('clients')
+                .where('email', '==', orderData.clientEmail)
+                .limit(1)
+                .get();
+
+            if (!emailQuery.empty) {
+                clientDoc = emailQuery.docs[0];
+                clientRef = clientDoc.ref;
+            }
+        }
+
+        // If not found by email, try by name
+        if (!clientRef) {
+            const nameQuery = await db.collection('clients')
+                .where('name', '==', clientName)
+                .limit(1)
+                .get();
+
+            if (!nameQuery.empty) {
+                clientDoc = nameQuery.docs[0];
+                clientRef = clientDoc.ref;
+            }
+        }
+
+        // If still not found, create new client
+        if (!clientRef) {
+            const newClientData = {
+                name: clientName,
+                email: orderData.clientEmail || '',
+                phone: orderData.clientPhone || '',
+                cpf: orderData.clientCPF ? orderData.clientCPF.replace(/\D/g, '') : '',
+                googleUid: currentUser.uid,
+                googleEmail: currentUser.email,
+                googlePhotoURL: currentUser.photoURL || '',
+                orderCodes: [orderCode],
+                lastOrderTrackingAccess: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            await db.collection('clients').add(newClientData);
+            console.log('✅ Novo cliente criado com acesso registrado:', clientName);
+            return;
+        }
+
+        // Update existing client
+        const existingData = clientDoc.data();
+        const existingOrderCodes = existingData.orderCodes || [];
+
+        // Add order code if not already present
+        if (!existingOrderCodes.includes(orderCode)) {
+            existingOrderCodes.push(orderCode);
+        }
+
+        const updateData = {
+            lastOrderTrackingAccess: new Date().toISOString(),
+            googleUid: currentUser.uid,
+            googleEmail: currentUser.email,
+            googlePhotoURL: currentUser.photoURL || '',
+            orderCodes: existingOrderCodes,
+            updatedAt: new Date().toISOString()
+        };
+
+        // Update missing fields if available
+        if (!existingData.email && orderData.clientEmail) {
+            updateData.email = orderData.clientEmail;
+        }
+        if (!existingData.phone && orderData.clientPhone) {
+            updateData.phone = orderData.clientPhone;
+        }
+        if (!existingData.cpf && orderData.clientCPF) {
+            updateData.cpf = orderData.clientCPF.replace(/\D/g, '');
+        }
+
+        await clientRef.update(updateData);
+        console.log('✅ Acesso do cliente registrado:', clientName);
+
+    } catch (error) {
+        console.warn('Erro ao registrar acesso do cliente:', error.message);
     }
 }
 

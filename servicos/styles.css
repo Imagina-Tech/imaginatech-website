@@ -2623,5 +2623,216 @@ input[type="file"]::file-selector-button {
 .mb-3 { margin-bottom: 1.5rem; }
 
 /* ===========================
+   CLIENTS MODAL
+   =========================== */
+.btn-clientes {
+    background: linear-gradient(135deg, #00D4FF, #0099CC);
+    color: white;
+    border: 1px solid #00D4FF;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+}
+
+.btn-clientes:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
+    border-color: #00f2fe;
+}
+
+.clients-list-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.loading-clients {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.loading-clients i {
+    font-size: 1.5rem;
+    color: var(--neon-blue);
+}
+
+.client-item {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.client-item:hover {
+    border-color: var(--neon-blue);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+}
+
+.client-item-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.client-item-header:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.client-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-blue);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.client-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.client-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.client-last-access {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.client-last-access i {
+    color: var(--neon-green);
+    font-size: 0.7rem;
+}
+
+.client-last-access.never {
+    color: var(--text-secondary);
+}
+
+.client-last-access.never i {
+    color: var(--text-secondary);
+}
+
+.client-expand-icon {
+    color: var(--text-secondary);
+    transition: transform 0.3s;
+}
+
+.client-item.expanded .client-expand-icon {
+    transform: rotate(180deg);
+}
+
+.client-details {
+    display: none;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--glass-border);
+}
+
+.client-item.expanded .client-details {
+    display: block;
+}
+
+.client-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.client-detail-row:last-child {
+    border-bottom: none;
+}
+
+.client-detail-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.client-detail-label i {
+    width: 16px;
+    text-align: center;
+    color: var(--neon-blue);
+}
+
+.client-detail-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-all;
+}
+
+.client-detail-value a {
+    color: var(--neon-green);
+    text-decoration: none;
+}
+
+.client-detail-value a:hover {
+    text-decoration: underline;
+}
+
+.client-orders-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.client-orders-title {
+    font-size: 0.85rem;
+    color: var(--neon-purple);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.client-order-codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.client-order-code {
+    background: var(--glass-bg);
+    border: 1px solid var(--neon-purple);
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-family: 'Orbitron', monospace;
+    color: var(--neon-purple);
+}
+
+.no-clients-message {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.no-clients-message i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--glass-border);
+    display: block;
+}
+
+/* ===========================
    FIM DO ARQUIVO
    =========================== */
