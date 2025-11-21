@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loadingOverlay').classList.add('hidden');
     }, 1000);
 
-    // Verificar se há código na URL (ex: /acompanhar-pedido/KJ4FE)
-    const pathParts = window.location.pathname.split('/').filter(Boolean);
-    const urlOrderCode = pathParts.length >= 2 && pathParts[0] === 'acompanhar-pedido' ? pathParts[1].toUpperCase() : null;
+    // Verificar se há código na URL (ex: /acompanhar-pedido/?codigo=KJ4FE)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlOrderCode = urlParams.get('codigo')?.toUpperCase() || null;
 
     if (urlOrderCode && urlOrderCode.length === 5) {
         console.log('📋 Código do pedido encontrado na URL:', urlOrderCode);
@@ -1069,7 +1069,7 @@ async function displayUserOrders(orderCodes) {
     ordersList.innerHTML = orders.map(order => `
         <div class="order-item" onclick="quickLoadOrder('${order.code}')" data-order-code="${order.code}">
             <div>
-                <div class="order-item-code">#${order.code}</div>
+                <div class="order-item-code">${order.code}</div>
                 <div class="order-item-date">${order.data.name || 'Sem nome'}</div>
             </div>
             <div class="status-badge status-${order.displayStatus}" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">

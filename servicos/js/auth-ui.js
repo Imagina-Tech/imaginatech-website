@@ -724,7 +724,7 @@ export async function confirmTrackingCode() {
         showToast('Pedido marcado como postado!', 'success');
         
         if (service.clientPhone) {
-            const message = `Olá, ${service.client}!\n\nSeu pedido foi postado nos Correios!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/${service.orderCode}`;
+            const message = `Olá, ${service.client}!\n\nSeu pedido foi postado nos Correios!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Rastreio: ${trackingCode}\n\nRastreie em:\nhttps://rastreamento.correios.com.br/app/index.php\n\nPrazo estimado: 3-7 dias úteis\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
             sendWhatsAppMessage(service.clientPhone, message);
         }
     } catch (error) {
@@ -843,7 +843,7 @@ export function showDeliveryInfo(serviceId) {
     if (service.deliveryMethod === 'retirada' && service.pickupInfo) {
         const pickup = service.pickupInfo;
         const whatsappNumber = pickup.whatsapp.replace(/\D/g, '');
-        const message = encodeURIComponent(`Olá, ${pickup.name}!\n\nSeu pedido está pronto para retirada!\n\n» Pedido: ${service.name}\n» Código: ${service.orderCode}\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
+        const message = encodeURIComponent(`Olá, ${pickup.name}!\n\nSeu pedido está pronto para retirada!\n\n» Pedido: ${service.name}\n» Código: ${service.orderCode}\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}\n\nPodemos confirmar o horário de retirada?`);
         
         html += `
             <div class="info-section">
@@ -1901,7 +1901,7 @@ export const sendWhatsAppMessage = (phone, message) => {
 
 export const contactClient = (phone, serviceName, orderCode, clientName) => {
     const greeting = clientName ? `Olá, ${clientName}!` : 'Olá!';
-    const message = `${greeting}\n\nSobre seu pedido:\n\n» Serviço: ${serviceName}\n» Código: #${orderCode}\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/${orderCode}\n\nPode falar agora?`;
+    const message = `${greeting}\n\nSobre seu pedido:\n\n» Serviço: ${serviceName}\n» Código: ${orderCode}\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${orderCode}\n\nPode falar agora?`;
     sendWhatsAppMessage(phone, message);
 };
 

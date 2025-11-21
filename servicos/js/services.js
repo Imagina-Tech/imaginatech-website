@@ -273,7 +273,7 @@ export async function saveService(event) {
             
             if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDateBrazil(service.dueDate);
-                const message = `Olá, ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/${service.orderCode}`;
+                const message = `Olá, ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
             
@@ -846,7 +846,7 @@ export async function confirmStatusChange() {
                     message += `\n\n${service.deliveryMethod === 'retirada' ? 'Venha buscar seu pedido!' : 'Em breve chegará até você!'}`;
                 }
 
-                message += `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/${service.orderCode}`;
+                message += `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
 
                 sendWhatsAppMessage(service.clientPhone, message);
             }
@@ -961,7 +961,7 @@ export async function confirmStatusChange() {
         showToast('Status atualizado!', 'success');
         
         if (sendWhatsapp && service.clientPhone) {
-            const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/${service.orderCode}`;
+            const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
             const messages = {
                 'producao': `Olá, ${service.client}!\n\n✅ Iniciamos a produção!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
                 'retirada': service.deliveryMethod === 'retirada' ?
@@ -1064,7 +1064,7 @@ function createServiceCard(service) {
             <div class="service-header">
                 <div class="service-title">
                     <h3>${escapeHtml(service.name || 'Sem nome')}</h3>
-                    <span class="service-code">#${service.orderCode || 'N/A'}</span>
+                    <span class="service-code">${service.orderCode || 'N/A'}</span>
                 </div>
                 <div class="service-actions">
                     <button class="btn-icon" onclick="window.openEditModal('${service.id}')" title="Editar">

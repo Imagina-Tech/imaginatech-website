@@ -17,7 +17,7 @@ function initPage() {
     const orderCode = urlParams.get('pedido') || urlParams.get('order') || urlParams.get('code');
 
     if (orderCode) {
-        document.getElementById('orderCode').textContent = `#${orderCode.toUpperCase()}`;
+        document.getElementById('orderCode').textContent = orderCode.toUpperCase();
     } else {
         // Se não houver código, mostrar mensagem genérica
         document.getElementById('orderCode').textContent = 'Confira seu e-mail';
