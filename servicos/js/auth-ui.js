@@ -165,12 +165,17 @@ export async function updateLastAccess(user) {
         const userEmail = user.email;
         const userId = user.uid;
 
+        // Detect device type
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const deviceType = isMobile ? 'Mobile' : 'Computador';
+
         await state.db.collection('adminAccess').doc(userId).set({
             email: userEmail,
             name: user.displayName || userEmail,
             photoURL: user.photoURL || null,
             lastAccess: new Date().toISOString(),
             device: navigator.userAgent,
+            deviceType: deviceType,
             updatedAt: new Date().toISOString()
         }, { merge: true });
 

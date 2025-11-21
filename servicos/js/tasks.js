@@ -1444,6 +1444,8 @@ function renderAdminAccessPanel() {
         const timeAgo = formatTimeAgo(admin.lastAccess);
         const isOnline = isRecentAccess(admin.lastAccess);
         const pendingCount = pendingTasksByAdmin[admin.email] || 0;
+        const deviceType = admin.deviceType || 'Computador';
+        const deviceIcon = deviceType === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop';
 
         return `
             <div class="admin-access-item ${isOnline ? 'online' : ''}" onclick="filterByAdmin('${admin.email}', event)">
@@ -1452,7 +1454,9 @@ function renderAdminAccessPanel() {
                 </div>
                 <div class="admin-access-info">
                     <span class="admin-access-name">${escapeHtml(displayName)}</span>
-                    <span class="admin-access-time" title="${new Date(admin.lastAccess).toLocaleString('pt-BR')}">${timeAgo}</span>
+                    <span class="admin-access-time" title="${new Date(admin.lastAccess).toLocaleString('pt-BR')}">
+                        <i class="fas ${deviceIcon}"></i> ${timeAgo}
+                    </span>
                 </div>
                 ${pendingCount > 0 ? `<span class="admin-pending-count">${pendingCount}</span>` : ''}
             </div>
