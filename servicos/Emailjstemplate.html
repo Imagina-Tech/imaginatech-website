@@ -4,30 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Forçar Dark Mode -->
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
     <title>Atualização do Pedido - ImaginaTech</title>
+    <style type="text/css">
+        /* Forçar Dark Mode em todos os clientes */
+        :root { color-scheme: dark; supported-color-schemes: dark; }
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #0a0e1a !important; }
+        }
+    </style>
     <!--[if mso]>
     <style type="text/css">
         body, table, td {font-family: Georgia, 'Times New Roman', Times, serif !important;}
+        .logo-text {font-family: 'Segoe UI', Arial, sans-serif !important;}
     </style>
     <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', Times, serif; background-color: #0a0e1a; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', Times, serif; background-color: #0a0e1a !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; color-scheme: dark;">
 
     <!-- Container Principal -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0e1a;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0e1a !important;">
         <tr>
-            <td align="center" style="padding: 20px 10px;">
+            <td align="center" style="padding: 20px 10px; background-color: #0a0e1a !important;">
 
                 <!-- Card do Email -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; background-color: #111827; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; background-color: #111827 !important; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);">
 
                     <!-- Header com Logo -->
                     <tr>
-                        <td style="padding: 30px 20px 25px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                            <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #00D4FF;">
+                        <td style="padding: 30px 20px 25px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); background-color: #111827 !important;">
+                            <h1 class="logo-text" style="margin: 0; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 28px; font-weight: 800; letter-spacing: 3px; color: #00D4FF; text-transform: uppercase;">
                                 IMAGINATECH
                             </h1>
-                            <p style="margin: 8px 0 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 2px;">
+                            <p style="margin: 8px 0 0; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 3px; font-weight: 300;">
                                 Impressão 3D Profissional
                             </p>
                         </td>
@@ -35,7 +46,7 @@
 
                     <!-- Conteúdo Principal -->
                     <tr>
-                        <td style="padding: 30px 20px;">
+                        <td style="padding: 30px 20px; background-color: #111827 !important;">
 
                             <!-- Saudação -->
                             <p style="margin: 0 0 15px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #ffffff; line-height: 1.4;">
@@ -64,12 +75,18 @@
                             <!-- Botão CTA -->
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                 <tr>
-                                    <td align="center">
-                                        <a href="https://imaginatech.com.br/acompanhar-pedido/?codigo={{order_code}}"
-                                           target="_blank"
-                                           style="display: block; width: 100%; max-width: 280px; padding: 16px 20px; background: linear-gradient(135deg, #00D4FF, #57D4CA); color: #0a0e1a; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 15px; font-weight: 700; text-decoration: none; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4); text-align: center;">
-                                            🔍 Acompanhar Pedido
-                                        </a>
+                                    <td align="center" style="text-align: center;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
+                                            <tr>
+                                                <td align="center" style="border-radius: 10px; background: linear-gradient(135deg, #00D4FF, #57D4CA);">
+                                                    <a href="https://imaginatech.com.br/acompanhar-pedido/?codigo={{order_code}}"
+                                                       target="_blank"
+                                                       style="display: inline-block; padding: 16px 40px; color: #0a0e1a; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 14px; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; text-align: center;">
+                                                        🔍 Acompanhar Pedido
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                             </table>
@@ -79,8 +96,8 @@
 
                     <!-- Informações Adicionais -->
                     <tr>
-                        <td style="padding: 0 20px 25px;">
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <td style="padding: 0 20px 25px; background-color: #111827 !important;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #1a2332 !important; border-radius: 10px;">
                                 <tr>
                                     <td style="padding: 15px;">
                                         <p style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 13px; color: #ffffff; font-weight: 600;">
@@ -116,7 +133,7 @@
 
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 25px 20px; background: rgba(0, 0, 0, 0.3); border-radius: 0 0 16px 16px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <td style="padding: 25px 20px; background-color: #0d1117 !important; border-radius: 0 0 16px 16px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
 
                             <!-- Contato WhatsApp -->
                             <p style="margin: 0 0 12px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 13px; color: #9ca3af;">
