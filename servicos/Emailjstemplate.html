@@ -3,25 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Atualização do Pedido - ImaginaTech</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Georgia, 'Times New Roman', Times, serif !important;}
+    </style>
+    <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0e1a;">
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', Times, serif; background-color: #0a0e1a; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
 
     <!-- Container Principal -->
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0e1a;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
+            <td align="center" style="padding: 20px 10px;">
 
                 <!-- Card do Email -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; background-color: #111827; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; background-color: #111827; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);">
 
                     <!-- Header com Logo -->
                     <tr>
-                        <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                            <h1 style="margin: 0; font-family: 'Trebuchet MS', Arial, sans-serif; font-size: 32px; font-weight: 700; letter-spacing: 3px; background: linear-gradient(135deg, #00D4FF, #57D4CA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        <td style="padding: 30px 20px 25px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                            <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #00D4FF;">
                                 IMAGINATECH
                             </h1>
-                            <p style="margin: 8px 0 0; font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 2px;">
+                            <p style="margin: 8px 0 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 2px;">
                                 Impressão 3D Profissional
                             </p>
                         </td>
@@ -29,26 +35,26 @@
 
                     <!-- Conteúdo Principal -->
                     <tr>
-                        <td style="padding: 40px;">
+                        <td style="padding: 30px 20px;">
 
                             <!-- Saudação -->
-                            <p style="margin: 0 0 20px; font-size: 18px; color: #ffffff;">
+                            <p style="margin: 0 0 15px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #ffffff; line-height: 1.4;">
                                 Olá, <strong style="color: #00D4FF;">{{client_name}}</strong>!
                             </p>
 
                             <!-- Mensagem Principal -->
-                            <p style="margin: 0 0 30px; font-size: 16px; color: #9ca3af; line-height: 1.6;">
+                            <p style="margin: 0 0 25px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 15px; color: #9ca3af; line-height: 1.7;">
                                 Há uma atualização no seu pedido de impressão 3D. Clique no botão abaixo para acompanhar o status em tempo real.
                             </p>
 
                             <!-- Card do Código -->
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 30px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px;">
                                 <tr>
-                                    <td style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
-                                        <p style="margin: 0 0 8px; font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                    <td style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px; padding: 18px 15px; text-align: center;">
+                                        <p style="margin: 0 0 8px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
                                             Código do Pedido
                                         </p>
-                                        <p style="margin: 0; font-size: 28px; font-weight: 700; color: #00D4FF; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+                                        <p style="margin: 0; font-size: 24px; font-weight: 700; color: #00D4FF; letter-spacing: 3px; font-family: 'Courier New', Courier, monospace;">
                                             {{order_code}}
                                         </p>
                                     </td>
@@ -61,7 +67,7 @@
                                     <td align="center">
                                         <a href="https://imaginatech.com.br/acompanhar-pedido/?codigo={{order_code}}"
                                            target="_blank"
-                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #00D4FF, #57D4CA); color: #0a0e1a; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);">
+                                           style="display: block; width: 100%; max-width: 280px; padding: 16px 20px; background: linear-gradient(135deg, #00D4FF, #57D4CA); color: #0a0e1a; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 15px; font-weight: 700; text-decoration: none; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4); text-align: center;">
                                             🔍 Acompanhar Pedido
                                         </a>
                                     </td>
@@ -73,19 +79,35 @@
 
                     <!-- Informações Adicionais -->
                     <tr>
-                        <td style="padding: 0 40px 30px;">
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 20px;">
+                        <td style="padding: 0 20px 25px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
                                 <tr>
-                                    <td style="padding: 15px 20px;">
-                                        <p style="margin: 0 0 10px; font-size: 14px; color: #ffffff; font-weight: 600;">
+                                    <td style="padding: 15px;">
+                                        <p style="margin: 0 0 10px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 13px; color: #ffffff; font-weight: 600;">
                                             ℹ️ O que você pode fazer:
                                         </p>
-                                        <ul style="margin: 0; padding-left: 20px; color: #9ca3af; font-size: 13px; line-height: 1.8;">
-                                            <li>Ver o status atual do pedido</li>
-                                            <li>Acompanhar cada etapa da produção</li>
-                                            <li>Visualizar fotos do produto</li>
-                                            <li>Acessar informações de entrega</li>
-                                        </ul>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 4px 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                                                    • Ver o status atual do pedido
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                                                    • Acompanhar cada etapa da produção
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                                                    • Visualizar fotos do produto
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 4px 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                                                    • Acessar informações de entrega
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                             </table>
@@ -94,23 +116,23 @@
 
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; background: rgba(0, 0, 0, 0.3); border-radius: 0 0 20px 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <td style="padding: 25px 20px; background: rgba(0, 0, 0, 0.3); border-radius: 0 0 16px 16px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
 
                             <!-- Contato WhatsApp -->
-                            <p style="margin: 0 0 15px; font-size: 14px; color: #9ca3af;">
+                            <p style="margin: 0 0 12px; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 13px; color: #9ca3af;">
                                 Dúvidas? Fale conosco pelo WhatsApp:
                             </p>
                             <a href="https://wa.me/5521968972539"
                                target="_blank"
-                               style="display: inline-block; padding: 10px 20px; background: #25D366; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px;">
+                               style="display: inline-block; padding: 12px 24px; background: #25D366; color: #ffffff; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px;">
                                 📱 (21) 96897-2539
                             </a>
 
                             <!-- Copyright -->
-                            <p style="margin: 20px 0 0; font-size: 12px; color: #6b7280;">
+                            <p style="margin: 18px 0 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 11px; color: #6b7280;">
                                 © 2024 ImaginaTech - Todos os direitos reservados
                             </p>
-                            <p style="margin: 5px 0 0; font-size: 11px; color: #4b5563;">
+                            <p style="margin: 5px 0 0; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 10px; color: #4b5563;">
                                 Este é um email automático, por favor não responda diretamente.
                             </p>
 
