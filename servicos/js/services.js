@@ -302,13 +302,14 @@ export async function saveService(event) {
                 name: service.client,
                 cpf: service.clientCPF,
                 email: service.clientEmail,
-                phone: service.clientPhone
+                phone: service.clientPhone,
+                orderCode: service.orderCode
             };
-            
+
             if (service.deliveryMethod === 'sedex' && service.deliveryAddress) {
                 clientData.address = service.deliveryAddress;
             }
-            
+
             await saveClientToFirestore(clientData);
         }
         

@@ -396,60 +396,155 @@ export function handleClientNameInput(event) {
 export function selectClient(clientId) {
     const client = clientsCache.find(c => c.id === clientId);
     if (!client) return;
-    
+
     document.getElementById('clientName').value = client.name || '';
     document.getElementById('clientCPF').value = client.cpf || '';
     document.getElementById('clientEmail').value = client.email || '';
     document.getElementById('clientPhone').value = client.phone || '';
-    
+
+    // Preencher último endereço salvo se existir
+    const lastAddress = client.addresses?.length > 0
+        ? client.addresses[client.addresses.length - 1]
+        : client.address;
+
+    if (lastAddress && lastAddress.cep) {
+        // Preencher campos de endereço
+        const fullNameField = document.getElementById('fullName');
+        const cepField = document.getElementById('cep');
+        const estadoField = document.getElementById('estado');
+        const cidadeField = document.getElementById('cidade');
+        const bairroField = document.getElementById('bairro');
+        const ruaField = document.getElementById('rua');
+        const numeroField = document.getElementById('numero');
+        const complementoField = document.getElementById('complemento');
+
+        if (fullNameField) fullNameField.value = lastAddress.fullName || client.name || '';
+        if (cepField) cepField.value = lastAddress.cep || '';
+        if (estadoField) estadoField.value = lastAddress.estado || '';
+        if (cidadeField) cidadeField.value = lastAddress.cidade || '';
+        if (bairroField) bairroField.value = lastAddress.bairro || '';
+        if (ruaField) ruaField.value = lastAddress.rua || '';
+        if (numeroField) numeroField.value = lastAddress.numero || '';
+        if (complementoField) complementoField.value = lastAddress.complemento || '';
+
+        showToast('✅ Dados e endereço do cliente preenchidos!', 'success');
+    } else {
+        showToast('✅ Dados do cliente preenchidos!', 'success');
+    }
+
     document.getElementById('clientSuggestions').style.display = 'none';
-    
-    showToast('✅ Dados do cliente preenchidos!', 'success');
 }
 
 export async function saveClientToFirestore(clientData) {
     if (!state.db || !clientData.name) return;
-    
+
     try {
-        const clientDoc = {
-            name: clientData.name,
-            cpf: clientData.cpf ? clientData.cpf.replace(/\D/g, '') : '',
-            email: clientData.email || '',
-            phone: clientData.phone || '',
-            address: clientData.address || null,
-            updatedAt: new Date().toISOString()
-        };
-        
+        const cpfClean = clientData.cpf ? clientData.cpf.replace(/\D/g, '') : '';
+        const emailLower = clientData.email ? clientData.email.toLowerCase().trim() : '';
+
+        // Buscar cliente existente por CPF, email ou nome
         let existingClient = null;
-        
-        if (clientData.cpf) {
-            const cpfClean = clientData.cpf.replace(/\D/g, '');
+        let existingData = null;
+
+        // 1. Buscar por CPF (mais confiável)
+        if (cpfClean) {
             existingClient = await state.db.collection('clients')
                 .where('cpf', '==', cpfClean)
                 .limit(1)
                 .get();
         }
-        
+
+        // 2. Se não encontrou por CPF, buscar por email
+        if ((!existingClient || existingClient.empty) && emailLower) {
+            existingClient = await state.db.collection('clients')
+                .where('email', '==', emailLower)
+                .limit(1)
+                .get();
+        }
+
+        // 3. Se não encontrou, buscar por nome
         if (!existingClient || existingClient.empty) {
-            const nameLower = clientData.name.toLowerCase().trim();
             existingClient = await state.db.collection('clients')
                 .where('name', '==', clientData.name)
                 .limit(1)
                 .get();
         }
-        
+
+        // Preparar dados existentes
+        if (existingClient && !existingClient.empty) {
+            existingData = existingClient.docs[0].data();
+        }
+
+        // Preparar array de orderCodes
+        let orderCodes = existingData?.orderCodes || [];
+        if (clientData.orderCode && !orderCodes.includes(clientData.orderCode)) {
+            orderCodes.push(clientData.orderCode);
+        }
+
+        // Preparar array de endereços (múltiplos endereços)
+        let addresses = existingData?.addresses || [];
+        if (clientData.address && clientData.address.cep) {
+            // Verificar se endereço já existe (por CEP + número)
+            const addressKey = `${clientData.address.cep}-${clientData.address.numero}`;
+            const existingAddressIndex = addresses.findIndex(addr =>
+                `${addr.cep}-${addr.numero}` === addressKey
+            );
+
+            const addressWithMeta = {
+                ...clientData.address,
+                addedAt: new Date().toISOString(),
+                usedInOrder: clientData.orderCode || null
+            };
+
+            if (existingAddressIndex >= 0) {
+                // Atualizar endereço existente
+                addresses[existingAddressIndex] = {
+                    ...addresses[existingAddressIndex],
+                    ...addressWithMeta,
+                    updatedAt: new Date().toISOString()
+                };
+            } else {
+                // Adicionar novo endereço
+                addresses.push(addressWithMeta);
+            }
+        }
+
+        // Montar documento do cliente preservando dados existentes
+        const clientDoc = {
+            name: clientData.name,
+            cpf: cpfClean,
+            email: emailLower,
+            phone: clientData.phone || existingData?.phone || '',
+            addresses: addresses,
+            orderCodes: orderCodes,
+            // Preservar dados do Google se existirem
+            googleUid: existingData?.googleUid || null,
+            googleEmail: existingData?.googleEmail || null,
+            googlePhotoURL: existingData?.googlePhotoURL || null,
+            // Preservar histórico de acesso
+            lastOrderTrackingAccess: existingData?.lastOrderTrackingAccess || null,
+            // Estatísticas
+            totalOrders: orderCodes.length,
+            updatedAt: new Date().toISOString()
+        };
+
+        // Manter endereço principal para compatibilidade
+        if (addresses.length > 0) {
+            clientDoc.address = addresses[addresses.length - 1];
+        }
+
         if (existingClient && !existingClient.empty) {
             const docId = existingClient.docs[0].id;
             await state.db.collection('clients').doc(docId).update(clientDoc);
-            console.log('✅ Cliente atualizado:', clientData.name);
+            console.log('✅ Cliente atualizado:', clientData.name, '| Pedidos:', orderCodes.length);
         } else {
             clientDoc.createdAt = new Date().toISOString();
             await state.db.collection('clients').add(clientDoc);
             console.log('✅ Novo cliente salvo:', clientData.name);
         }
-        
+
         await loadClientsFromFirestore();
-        
+
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
@@ -2172,6 +2267,31 @@ function renderClientItem(client) {
            </div>`
         : '';
 
+    // Addresses
+    const addresses = client.addresses || [];
+    const addressesHtml = addresses.length > 0
+        ? `<div class="client-addresses-section">
+            <div class="client-orders-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Endereços (${addresses.length})
+            </div>
+            <div class="client-addresses-list">
+                ${addresses.map((addr, idx) => `
+                    <div class="client-address-item">
+                        <strong>${addr.fullName || client.name}</strong><br>
+                        ${addr.rua}, ${addr.numero}${addr.complemento ? ' - ' + addr.complemento : ''}<br>
+                        ${addr.bairro} - ${addr.cidade}/${addr.estado}<br>
+                        CEP: ${addr.cep}
+                        ${addr.usedInOrder ? `<br><small style="color: var(--neon-blue);">Usado no pedido #${addr.usedInOrder}</small>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+           </div>`
+        : '';
+
+    // Email to search history
+    const searchEmail = client.googleEmail || client.email || '';
+
     return `
         <div class="client-item" id="client-${client.id}">
             <div class="client-item-header" onclick="toggleClientDetails('${client.id}')">
@@ -2213,6 +2333,15 @@ function renderClientItem(client) {
                 </div>
                 ` : ''}
                 ${orderCodesHtml}
+                ${addressesHtml}
+                ${searchEmail ? `
+                <div class="client-history-section">
+                    <button class="btn-view-history" onclick="event.stopPropagation(); viewClientHistory('${searchEmail}', '${escapeHtml(client.name)}')">
+                        <i class="fas fa-history"></i>
+                        Ver Histórico de Acessos
+                    </button>
+                </div>
+                ` : ''}
             </div>
         </div>
     `;
@@ -2225,6 +2354,136 @@ export function toggleClientDetails(clientId) {
     }
 }
 
+// Função para visualizar histórico de acessos do cliente
+export async function viewClientHistory(email, clientName) {
+    if (!state.db || !email) return;
+
+    try {
+        showToast('Carregando histórico...', 'info');
+
+        // Buscar todos os acessos do cliente na collection tracking_access
+        const snapshot = await state.db.collection('tracking_access')
+            .where('googleEmail', '==', email.toLowerCase())
+            .orderBy('accessedAt', 'desc')
+            .limit(50)
+            .get();
+
+        const accesses = snapshot.docs.map(doc => doc.data());
+
+        // Criar modal de histórico
+        let historyModal = document.getElementById('clientHistoryModal');
+        if (!historyModal) {
+            historyModal = document.createElement('div');
+            historyModal.id = 'clientHistoryModal';
+            historyModal.className = 'modal';
+            historyModal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-history"></i> <span id="historyClientName"></span></h2>
+                        <button class="modal-close" onclick="closeClientHistoryModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="clientHistoryContent" style="max-height: 60vh; overflow-y: auto;">
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(historyModal);
+        }
+
+        document.getElementById('historyClientName').textContent = `Histórico de ${clientName}`;
+
+        const contentDiv = document.getElementById('clientHistoryContent');
+
+        if (accesses.length === 0) {
+            contentDiv.innerHTML = `
+                <div class="no-history-message" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>Nenhum acesso registrado</p>
+                </div>
+            `;
+        } else {
+            // Agrupar por pedido
+            const byOrder = {};
+            accesses.forEach(access => {
+                const code = access.orderCode || 'sem-codigo';
+                if (!byOrder[code]) {
+                    byOrder[code] = [];
+                }
+                byOrder[code].push(access);
+            });
+
+            let html = `
+                <div class="history-summary" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border-radius: 8px;">
+                    <strong>Total de acessos:</strong> ${accesses.length}<br>
+                    <strong>Pedidos consultados:</strong> ${Object.keys(byOrder).length}
+                </div>
+            `;
+
+            // Listar todos os acessos cronologicamente
+            html += `<div class="history-list">`;
+            accesses.forEach(access => {
+                const date = new Date(access.accessedAt);
+                const formattedDate = date.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                const formattedTime = date.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div class="history-item" style="
+                        padding: 0.75rem;
+                        border-bottom: 1px solid var(--glass-border);
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <div>
+                            <span class="history-order-code" style="
+                                background: var(--neon-blue);
+                                color: white;
+                                padding: 0.2rem 0.5rem;
+                                border-radius: 4px;
+                                font-size: 0.85rem;
+                                font-weight: bold;
+                            ">#${access.orderCode || 'N/A'}</span>
+                            <span style="margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                                ${access.device || 'Desktop'}
+                            </span>
+                        </div>
+                        <div style="text-align: right; font-size: 0.85rem;">
+                            <div style="color: var(--text-primary);">${formattedDate}</div>
+                            <div style="color: var(--text-secondary);">${formattedTime}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            contentDiv.innerHTML = html;
+        }
+
+        historyModal.classList.add('active');
+
+    } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        showToast('Erro ao carregar histórico', 'error');
+    }
+}
+
+export function closeClientHistoryModal() {
+    const modal = document.getElementById('clientHistoryModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 window.openClientsModal = openClientsModal;
 window.closeClientsModal = closeClientsModal;
 window.toggleClientDetails = toggleClientDetails;
+window.viewClientHistory = viewClientHistory;
+window.closeClientHistoryModal = closeClientHistoryModal;
