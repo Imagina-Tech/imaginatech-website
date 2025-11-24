@@ -276,87 +276,142 @@ export async function loadClientsFromFirestore() {
 }
 
 async function migrateExistingClientsOnce() {
-    const migrationKey = 'imaginatech_clients_migrated_v2';
-    
+    const migrationKey = 'imaginatech_clients_migrated_v3';
+
     if (localStorage.getItem(migrationKey)) {
         console.log('✅ Migração de clientes já realizada anteriormente');
         return;
     }
-    
-    console.log('🔄 Iniciando migração de clientes existentes...');
-    
+
+    console.log('🔄 Iniciando migração completa de clientes existentes...');
+
     try {
         const servicesSnapshot = await state.db.collection('services').get();
         const clientsToMigrate = new Map();
-        
+
+        // Agrupar todos os serviços por cliente
         servicesSnapshot.forEach(doc => {
             const service = doc.data();
             if (service.client && service.client.trim()) {
                 const clientKey = service.client.toLowerCase().trim();
-                
+
                 if (!clientsToMigrate.has(clientKey)) {
                     clientsToMigrate.set(clientKey, {
                         name: service.client,
                         cpf: service.clientCPF || '',
-                        email: service.clientEmail || '',
+                        email: (service.clientEmail || '').toLowerCase(),
                         phone: service.clientPhone || '',
-                        address: service.deliveryMethod === 'sedex' && service.deliveryAddress ? service.deliveryAddress : null,
+                        addresses: [],
+                        orderCodes: [],
                         createdAt: service.createdAt || new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     });
-                } else {
-                    const existing = clientsToMigrate.get(clientKey);
-                    if (!existing.cpf && service.clientCPF) existing.cpf = service.clientCPF;
-                    if (!existing.email && service.clientEmail) existing.email = service.clientEmail;
-                    if (!existing.phone && service.clientPhone) existing.phone = service.clientPhone;
-                    if (!existing.address && service.deliveryMethod === 'sedex' && service.deliveryAddress) {
-                        existing.address = service.deliveryAddress;
+                }
+
+                const clientData = clientsToMigrate.get(clientKey);
+
+                // Adicionar orderCode
+                if (service.orderCode && !clientData.orderCodes.includes(service.orderCode)) {
+                    clientData.orderCodes.push(service.orderCode);
+                }
+
+                // Adicionar endereço se for SEDEX
+                if (service.deliveryMethod === 'sedex' && service.deliveryAddress && service.deliveryAddress.cep) {
+                    const addressKey = `${service.deliveryAddress.cep}-${service.deliveryAddress.numero}`;
+                    const existingAddr = clientData.addresses.find(a => `${a.cep}-${a.numero}` === addressKey);
+                    if (!existingAddr) {
+                        clientData.addresses.push({
+                            ...service.deliveryAddress,
+                            usedInOrder: service.orderCode,
+                            addedAt: service.createdAt || new Date().toISOString()
+                        });
                     }
                 }
+
+                // Atualizar dados vazios
+                if (!clientData.cpf && service.clientCPF) clientData.cpf = service.clientCPF;
+                if (!clientData.email && service.clientEmail) clientData.email = service.clientEmail.toLowerCase();
+                if (!clientData.phone && service.clientPhone) clientData.phone = service.clientPhone;
             }
         });
-        
+
         let migratedCount = 0;
-        
+        let updatedCount = 0;
+
         for (const [key, clientData] of clientsToMigrate) {
             let existingClient = null;
-            
-            if (clientData.cpf) {
-                const cpfClean = clientData.cpf.replace(/\D/g, '');
+            const cpfClean = clientData.cpf ? clientData.cpf.replace(/\D/g, '') : '';
+
+            // Buscar cliente existente
+            if (cpfClean) {
                 existingClient = await state.db.collection('clients')
                     .where('cpf', '==', cpfClean)
                     .limit(1)
                     .get();
             }
-            
+
             if (!existingClient || existingClient.empty) {
                 existingClient = await state.db.collection('clients')
                     .where('name', '==', clientData.name)
                     .limit(1)
                     .get();
             }
-            
+
+            const docToSave = {
+                name: clientData.name,
+                cpf: cpfClean,
+                email: clientData.email,
+                phone: clientData.phone,
+                addresses: clientData.addresses,
+                orderCodes: clientData.orderCodes,
+                totalOrders: clientData.orderCodes.length,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (clientData.addresses.length > 0) {
+                docToSave.address = clientData.addresses[clientData.addresses.length - 1];
+            }
+
             if (existingClient && !existingClient.empty) {
-                continue;
+                // Atualizar cliente existente mesclando dados
+                const existingData = existingClient.docs[0].data();
+                const existingOrderCodes = existingData.orderCodes || [];
+                const existingAddresses = existingData.addresses || [];
+
+                // Mesclar orderCodes
+                const mergedOrderCodes = [...new Set([...existingOrderCodes, ...clientData.orderCodes])];
+
+                // Mesclar addresses
+                clientData.addresses.forEach(newAddr => {
+                    const addrKey = `${newAddr.cep}-${newAddr.numero}`;
+                    if (!existingAddresses.find(a => `${a.cep}-${a.numero}` === addrKey)) {
+                        existingAddresses.push(newAddr);
+                    }
+                });
+
+                await existingClient.docs[0].ref.update({
+                    orderCodes: mergedOrderCodes,
+                    addresses: existingAddresses,
+                    totalOrders: mergedOrderCodes.length,
+                    updatedAt: new Date().toISOString()
+                });
+                updatedCount++;
+            } else {
+                // Criar novo cliente
+                docToSave.createdAt = clientData.createdAt;
+                await state.db.collection('clients').add(docToSave);
+                migratedCount++;
             }
-            
-            const docToSave = { ...clientData };
-            if (docToSave.cpf) {
-                docToSave.cpf = docToSave.cpf.replace(/\D/g, '');
-            }
-            
-            await state.db.collection('clients').add(docToSave);
-            migratedCount++;
         }
         
         localStorage.setItem(migrationKey, 'true');
-        console.log(`✅ Migração concluída: ${migratedCount} clientes migrados`);
-        
-        if (migratedCount > 0) {
+        console.log(`✅ Migração concluída: ${migratedCount} novos, ${updatedCount} atualizados`);
+
+        if (migratedCount > 0 || updatedCount > 0) {
             await loadClientsFromFirestore();
-            showToast(`✅ ${migratedCount} clientes migrados automaticamente!`, 'success');
+            showToast(`✅ Clientes sincronizados: ${migratedCount} novos, ${updatedCount} atualizados`, 'success');
         }
-        
+
     } catch (error) {
         console.error('Erro na migração de clientes:', error);
     }
