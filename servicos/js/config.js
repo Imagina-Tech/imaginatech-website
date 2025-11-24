@@ -23,7 +23,16 @@ export const firebaseConfig = {
 // ===========================
 // CONSTANTS
 // ===========================
-export const AUTHORIZED_EMAILS = ["3d3printers@gmail.com", "netrindademarcus@gmail.com", "quequell1010@gmail.com", "allanedg01@gmail.com", "igor.butter@gmail.com"];
+export const AUTHORIZED_ADMINS = [
+    { email: '3d3printers@gmail.com', name: 'ADMIN' },
+    { email: 'netrindademarcus@gmail.com', name: 'Trindade' },
+    { email: 'allanedg01@gmail.com', name: 'Gonçalves' },
+    { email: 'quequell1010@gmail.com', name: 'Raquel' },
+    { email: 'igor.butter@gmail.com', name: 'Leão' }
+];
+
+// Lista simples de emails para verificação rápida
+export const AUTHORIZED_EMAILS = AUTHORIZED_ADMINS.map(admin => admin.email);
 
 // ===========================
 // GLOBAL STATE

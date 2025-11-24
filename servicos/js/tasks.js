@@ -4,26 +4,17 @@
 // FASE 1 - MVP
 // ===========================
 
-import { state } from './config.js';
+import { state, AUTHORIZED_ADMINS } from './config.js';
 import { showToast } from './auth-ui.js';
-
-// ===========================
-// CONSTANTES
-// ===========================
-
-const AUTHORIZED_ADMINS = [
-    { email: '3d3printers@gmail.com', name: 'ADMIN' },
-    { email: 'netrindademarcus@gmail.com', name: 'Trindade' },
-    { email: 'allanedg01@gmail.com', name: 'Gonçalves' },
-    { email: 'quequell1010@gmail.com', name: 'Raquel' },
-    { email: 'igor.butter@gmail.com', name: 'Leão' }
-];
-
-const PRIORITY_CONFIG = {
-    alta: { icon: '🔴', color: '#FF0055', label: 'Alta' },
-    media: { icon: '🟡', color: '#FFD700', label: 'Média' },
-    baixa: { icon: '🟢', color: '#00FF88', label: 'Baixa' }
-};
+import {
+    escapeHtml,
+    formatDateTime,
+    formatTimeAgo,
+    formatDateTimeLocal,
+    formatFileSize,
+    isRecentAccess,
+    PRIORITY_CONFIG
+} from './utils.js';
 
 // ===========================
 // ESTADO DO SISTEMA
@@ -1202,20 +1193,10 @@ window.uploadAttachment = async function(taskId) {
 };
 
 // ===========================
-// UTILITÁRIOS FASE 2
+// UTILITÁRIOS FASE 2 (movidas para utils.js)
 // ===========================
 
-function formatDateTime(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
+// formatCommentTime usa formatTimeAgo de utils.js
 function formatCommentTime(dateString) {
     const date = new Date(dateString);
     const now = new Date();
@@ -1231,12 +1212,6 @@ function formatCommentTime(dateString) {
     if (days < 7) return `Há ${days} dias`;
 
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-}
-
-function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 // Adicionar ao estado
@@ -1376,20 +1351,7 @@ function formatDueDate(dateString) {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-function formatDateTimeLocal(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// formatDateTimeLocal e escapeHtml movidas para utils.js
 
 // ===========================
 // ADMIN ACCESS TRACKING
@@ -1476,37 +1438,7 @@ function renderAdminAccessPanel() {
     container.innerHTML = accessHTML;
 }
 
-function formatTimeAgo(dateString) {
-    if (!dateString) return 'Nunca';
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSecs < 60) return 'Agora mesmo';
-    if (diffMins < 60) return `há ${diffMins} min`;
-    if (diffHours < 24) return `há ${diffHours}h`;
-    if (diffDays === 1) return 'Ontem';
-    if (diffDays < 7) return `há ${diffDays} dias`;
-
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-}
-
-function isRecentAccess(dateString) {
-    if (!dateString) return false;
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 1000 / 60);
-
-    // Considera "online" se acessou nos últimos 15 minutos
-    return diffMins <= 15;
-}
+// formatTimeAgo e isRecentAccess movidas para utils.js
 
 // ===========================
 // CLEANUP

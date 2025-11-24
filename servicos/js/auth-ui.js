@@ -7,7 +7,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
-import { state, AUTHORIZED_EMAILS } from './config.js';
+import { state, AUTHORIZED_EMAILS, AUTHORIZED_ADMINS } from './config.js';
 import {
     startServicesListener,
     saveService,
@@ -18,6 +18,50 @@ import {
     filterServices,
     uploadFile
 } from './services.js';
+
+// Importar utilitários do utils.js
+import {
+    escapeHtml,
+    formatDate,
+    formatDateBrazil,
+    formatDaysText,
+    getDaysColor,
+    formatMoney,
+    formatFileSize,
+    formatColorName,
+    getDeliveryMethodName,
+    getDeliveryIcon,
+    getStatusLabel,
+    getStatusIcon,
+    isStatusCompleted,
+    getTodayBrazil,
+    parseDateBrazil,
+    calculateDaysRemaining,
+    formatTimeAgo,
+    isRecentAccess,
+    STATUS_ORDER,
+    PRIORITY_CONFIG
+} from './utils.js';
+
+// Re-exportar utilitários para manter compatibilidade com services.js
+export {
+    escapeHtml,
+    formatDate,
+    formatDateBrazil,
+    formatDaysText,
+    getDaysColor,
+    formatMoney,
+    formatFileSize,
+    formatColorName,
+    getDeliveryMethodName,
+    getDeliveryIcon,
+    getStatusLabel,
+    getStatusIcon,
+    isStatusCompleted,
+    getTodayBrazil,
+    parseDateBrazil,
+    calculateDaysRemaining
+};
 
 // ===========================
 // AUTHENTICATION
@@ -1943,85 +1987,8 @@ export async function buscarCEP() {
 }
 
 // ===========================
-// DATE UTILITIES
+// UTILITIES (movidas para utils.js)
 // ===========================
-export function getTodayBrazil() {
-    const now = new Date();
-    const brazilTime = new Date(now.getTime() - (now.getTimezoneOffset() + 180) * 60000);
-    brazilTime.setHours(0, 0, 0, 0);
-    return brazilTime.toISOString().split('T')[0];
-}
-
-export function parseDateBrazil(dateString) {
-    if (!dateString) return null;
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
-}
-
-export function calculateDaysRemaining(dueDate) {
-    if (!dueDate) return null;
-    const due = parseDateBrazil(dueDate);
-    const today = parseDateBrazil(getTodayBrazil());
-    return due && today ? Math.round((due - today) / 86400000) : null;
-}
-
-// ===========================
-// FORMATTING UTILITIES
-// ===========================
-export const escapeHtml = text => text ? text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : '';
-
-export const formatDaysText = days => days === null ? 'Sem prazo' : days === 0 ? 'Entrega hoje' : days === 1 ? 'Entrega amanhã' : days < 0 ? `${Math.abs(days)} dias atrás` : `${days} dias`;
-
-export const getDaysColor = days => days === null ? 'var(--text-secondary)' : days < 0 ? 'var(--neon-red)' : days === 0 ? 'var(--neon-orange)' : days <= 2 ? 'var(--neon-yellow)' : 'var(--text-secondary)';
-
-export const formatDate = dateString => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
-
-export const formatDateBrazil = dateString => {
-    if (!dateString) return 'N/A';
-    const date = parseDateBrazil(dateString);
-    return date ? date.toLocaleDateString('pt-BR') : 'N/A';
-};
-
-export const formatColorName = color => ({
-    'preto': 'Preto', 'branco': 'Branco', 'vermelho': 'Vermelho', 'azul': 'Azul',
-    'verde': 'Verde', 'amarelo': 'Amarelo', 'laranja': 'Laranja', 'roxo': 'Roxo',
-    'cinza': 'Cinza', 'transparente': 'Transparente', 'colorido': 'Colorido', 'outros': 'Outras'
-}[color] || color);
-
-export const formatMoney = value => (!value || isNaN(value)) ? '0,00' : value.toFixed(2).replace('.', ',');
-
-export const formatFileSize = bytes => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-};
-
-export const getDeliveryMethodName = method => ({
-    'retirada': 'Retirada no Local', 'sedex': 'Sedex/Correios',
-    'uber': 'Uber Flash', 'definir': 'A Definir'
-}[method] || method);
-
-export const getDeliveryIcon = method => ({
-    'retirada': 'fa-store', 'sedex': 'fa-shipping-fast',
-    'uber': 'fa-motorcycle', 'definir': 'fa-question-circle'
-}[method] || 'fa-truck');
-
-export const getStatusLabel = status => ({
-    'todos': 'Ativos', 'pendente': 'Pendentes', 'producao': 'Em Produção',
-    'concluido': 'Concluídos', 'retirada': 'Em Processo de Entrega', 'entregue': 'Entregues'
-}[status] || status);
-
-export const getStatusIcon = status => ({
-    'pendente': 'fa-clock', 'producao': 'fa-cogs', 'concluido': 'fa-check',
-    'retirada': 'fa-box-open', 'entregue': 'fa-handshake'
-}[status] || 'fa-question');
-
-export const isStatusCompleted = (currentStatus, checkStatus) => {
-    const statusOrder = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
-    return statusOrder.indexOf(currentStatus) > statusOrder.indexOf(checkStatus);
-};
 
 // ===========================
 // NOTIFICATIONS

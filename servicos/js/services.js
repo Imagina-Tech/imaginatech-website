@@ -28,11 +28,11 @@ import {
     sendEmailNotification,
     saveClientToFirestore
 } from './auth-ui.js';
+import { STATUS_ORDER } from './utils.js';
 
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
-const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
 
 export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 
@@ -174,7 +174,7 @@ export async function saveService(event) {
                 service.images = currentService.images;
                 service.imageUploadedAt = currentService.imageUploadedAt || '';
             }
-            if (!state.selectedImage && currentService.imageUrl) {
+            if (state.selectedImages.length === 0 && currentService.imageUrl) {
                 service.imageUrl = currentService.imageUrl;
             }
             
