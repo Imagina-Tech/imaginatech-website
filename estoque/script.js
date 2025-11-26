@@ -156,6 +156,29 @@ function renderFilaments() {
 
     emptyState.style.display = 'none';
     grid.innerHTML = filtered.map(filament => createFilamentCard(filament)).join('');
+
+    // Adicionar event listeners aos cards
+    attachCardEventListeners();
+}
+
+function attachCardEventListeners() {
+    const cards = document.querySelectorAll('.filament-card');
+    console.log('Anexando event listeners a', cards.length, 'cards');
+
+    cards.forEach(card => {
+        const filamentId = card.getAttribute('data-filament-id');
+        console.log('Card com ID:', filamentId);
+
+        card.addEventListener('click', function(e) {
+            const id = this.getAttribute('data-filament-id');
+            console.log('Card clicado! ID:', id);
+            if (id) {
+                openCardActionsModal(id);
+            } else {
+                console.error('Card não tem data-filament-id');
+            }
+        });
+    });
 }
 
 function createFilamentCard(filament) {
@@ -165,7 +188,7 @@ function createFilamentCard(filament) {
     const displayName = `${filament.type} ${filament.color}`;
 
     return `
-        <div class="filament-card ${outOfStock}" data-id="${filament.id}" onclick="openCardActionsModal('${filament.id}')">
+        <div class="filament-card ${outOfStock}" data-filament-id="${filament.id}">
             ${stockClass ? `<div class="stock-indicator ${stockClass}"></div>` : ''}
             <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${displayName}" class="filament-image">
             <div class="filament-info">
@@ -260,8 +283,15 @@ function openAddFilamentModal() {
 }
 
 function editFilament(id) {
+    console.log('editFilament chamado com ID:', id);
+    console.log('Buscando filamento com ID:', id, 'em', filaments.length, 'filamentos');
+
     const filament = filaments.find(f => f.id === id);
+
+    console.log('Resultado da busca:', filament);
+
     if (!filament) {
+        console.error('Filamento não encontrado com ID:', id);
         showToast('Filamento não encontrado', 'error');
         return;
     }
@@ -450,13 +480,21 @@ function closeFilamentModal() {
 // DELETE FILAMENT
 // ===========================
 async function deleteFilament(id) {
+    console.log('deleteFilament chamado com ID:', id);
+
     if (!id) {
+        console.error('ID está vazio ou undefined');
         showToast('ID do filamento não encontrado', 'error');
         return;
     }
 
+    console.log('Buscando filamento com ID:', id, 'em', filaments.length, 'filamentos');
     const filament = filaments.find(f => f.id === id);
+
+    console.log('Resultado da busca:', filament);
+
     if (!filament) {
+        console.error('Filamento não encontrado com ID:', id);
         showToast('Filamento não encontrado', 'error');
         return;
     }
@@ -638,10 +676,27 @@ function showToast(message, type = 'info') {
 // CARD ACTIONS MODAL
 // ===========================
 function openCardActionsModal(filamentId) {
+    console.log('openCardActionsModal chamado com ID:', filamentId);
+    console.log('Tipo do ID:', typeof filamentId);
+    console.log('Filamentos disponíveis:', filaments.length);
+
+    if (!filamentId) {
+        console.error('ID do filamento está vazio ou undefined');
+        showToast('ID do filamento não encontrado', 'error');
+        return;
+    }
+
     selectedFilamentId = filamentId;
+
+    // Log dos IDs disponíveis para debug
+    console.log('IDs dos filamentos:', filaments.map(f => ({ id: f.id, type: typeof f.id, name: f.type + ' ' + f.color })));
+
     const filament = filaments.find(f => f.id === filamentId);
 
+    console.log('Filamento encontrado:', filament);
+
     if (!filament) {
+        console.error('Filamento não encontrado com ID:', filamentId);
         showToast('Filamento não encontrado', 'error');
         return;
     }
@@ -725,13 +780,23 @@ async function handleAddFractional() {
 }
 
 function handleEditFilament() {
-    if (!selectedFilamentId) return;
+    console.log('handleEditFilament chamado. selectedFilamentId:', selectedFilamentId);
+    if (!selectedFilamentId) {
+        console.error('selectedFilamentId está vazio');
+        showToast('Erro: ID do filamento não selecionado', 'error');
+        return;
+    }
     closeCardActionsModal();
     editFilament(selectedFilamentId);
 }
 
 function handleDeleteFilament() {
-    if (!selectedFilamentId) return;
+    console.log('handleDeleteFilament chamado. selectedFilamentId:', selectedFilamentId);
+    if (!selectedFilamentId) {
+        console.error('selectedFilamentId está vazio');
+        showToast('Erro: ID do filamento não selecionado', 'error');
+        return;
+    }
     closeCardActionsModal();
     deleteFilament(selectedFilamentId);
 }
