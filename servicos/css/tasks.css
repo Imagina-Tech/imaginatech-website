@@ -575,18 +575,59 @@
     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
-/* Fix para dropdowns - garantir que opções sejam legíveis */
-.task-form-select option {
-    background: #1a1a2e;
-    color: #fff;
-    padding: 0.5rem;
+/* Dropdown estilizado com tema futurístico */
+.task-form-select {
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(16, 24, 39, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    font-weight: 500;
 }
 
-.task-form-select option:hover,
-.task-form-select option:checked,
+.task-form-select:hover {
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.task-form-select:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1);
+    background: linear-gradient(135deg, rgba(26, 26, 46, 1) 0%, rgba(16, 24, 39, 1) 100%);
+}
+
+.task-form-select option {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e0e0e0;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.task-form-select option:hover {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(42, 110, 167, 0.3) 100%);
+    color: var(--neon-blue);
+    box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.task-form-select option:checked {
+    background: linear-gradient(135deg, var(--neon-blue) 0%, #2A6EA7 100%);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
 .task-form-select option:focus {
-    background: #2A6EA7;
-    color: #fff;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.25) 0%, rgba(42, 110, 167, 0.35) 100%);
+    color: #ffffff;
+    outline: none;
+}
+
+.task-form-select option:disabled {
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(26, 26, 46, 0.5);
+    font-style: italic;
 }
 
 .task-form-textarea {
