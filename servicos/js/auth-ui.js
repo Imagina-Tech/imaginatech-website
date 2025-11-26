@@ -767,6 +767,11 @@ export async function openEditModal(serviceId) {
             dueDateInput.value = '';
         }
     }
+
+    const fileInDrive = document.getElementById('fileInDrive');
+    if (fileInDrive) {
+        fileInDrive.checked = service.fileInDrive === true;
+    }
     
     const filesPreview = document.getElementById('filesPreview');
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');

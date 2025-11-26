@@ -757,6 +757,22 @@ body {
 
 .info-item i { color: var(--text-secondary); font-size: 0.7rem; }
 
+.drive-badge {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(234, 67, 53, 0.15)) !important;
+    border: 1px solid rgba(66, 133, 244, 0.3);
+    box-shadow: 0 0 10px rgba(66, 133, 244, 0.2);
+}
+
+.drive-badge i {
+    color: #4285f4 !important;
+    font-size: 0.85rem !important;
+}
+
+.drive-badge span {
+    color: #4285f4;
+    font-weight: 600;
+}
+
 .btn-download {
     display: inline-flex;
     align-items: center;
