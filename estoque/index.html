@@ -253,10 +253,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="filamentName"><i class="fas fa-tag"></i> Nome do Filamento *</label>
-                            <input type="text" id="filamentName" class="form-input" required placeholder="Ex: PLA Preto Básico">
-                        </div>
-                        <div class="form-group">
                             <label for="filamentType"><i class="fas fa-cube"></i> Tipo *</label>
                             <select id="filamentType" class="form-select" required>
                                 <option value="">Selecione</option>
@@ -270,6 +266,19 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                                 <option value="ASA">ASA</option>
                                 <option value="HIPS">HIPS</option>
                                 <option value="PVA">PVA</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filamentBrand"><i class="fas fa-copyright"></i> Marca *</label>
+                            <select id="filamentBrand" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="3D LAB">3D LAB</option>
+                                <option value="3D Fila">3D Fila</option>
+                                <option value="Voolt 3D">Voolt 3D</option>
+                                <option value="Flashforge">Flashforge</option>
+                                <option value="Sethi3D">Sethi3D</option>
+                                <option value="eSUN">eSUN</option>
                                 <option value="Outros">Outros</option>
                             </select>
                         </div>
@@ -369,6 +378,45 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <button class="btn-primary" onclick="downloadPrint()">
                     <i class="fas fa-download"></i> Baixar Imagem
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Ações ao clicar no card -->
+    <div class="modal" id="cardActionsModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> O que deseja fazer?</h2>
+                <button class="modal-close" onclick="closeCardActionsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-info-summary" id="cardInfoSummary">
+                    <!-- Informações do filamento serão inseridas aqui -->
+                </div>
+                <div class="action-options">
+                    <button class="action-option-btn" onclick="handleRestock1kg()">
+                        <i class="fas fa-box"></i>
+                        <span>Recompra 1kg</span>
+                        <small>Adicionar um rolo completo de 1kg</small>
+                    </button>
+                    <button class="action-option-btn" onclick="handleAddFractional()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Adicionar Quantidade Fracionada</span>
+                        <small>Adicionar quantidade personalizada</small>
+                    </button>
+                    <button class="action-option-btn" onclick="handleEditFilament()">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar Filamento</span>
+                        <small>Modificar informações do filamento</small>
+                    </button>
+                    <button class="action-option-btn delete-option" onclick="handleDeleteFilament()">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir Filamento</span>
+                        <small>Remover permanentemente</small>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

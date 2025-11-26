@@ -40,6 +40,7 @@ let currentFilter = 'todos';
 let currentStockFilter = null;
 let selectedImage = null;
 let editingFilamentId = null;
+let selectedFilamentId = null;
 
 // ===========================
 // INITIALIZATION
@@ -161,24 +162,17 @@ function createFilamentCard(filament) {
     const weightInGrams = filament.weight * 1000;
     const stockClass = weightInGrams < 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
+    const displayName = `${filament.type} ${filament.color}`;
 
     return `
-        <div class="filament-card ${outOfStock}" data-id="${filament.id}">
+        <div class="filament-card ${outOfStock}" data-id="${filament.id}" onclick="openCardActionsModal('${filament.id}')">
             ${stockClass ? `<div class="stock-indicator ${stockClass}"></div>` : ''}
-            <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filament.name}" class="filament-image">
+            <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${displayName}" class="filament-image">
             <div class="filament-info">
                 <div class="filament-type">${filament.type}</div>
-                <div class="filament-name">${filament.name}</div>
+                <div class="filament-name">${displayName}</div>
                 <div class="filament-color">${filament.color}</div>
                 <div class="filament-weight ${weightInGrams < 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
-            </div>
-            <div class="filament-actions">
-                <button class="action-btn-small" onclick="editFilament('${filament.id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn-small delete" onclick="deleteFilament('${filament.id}')">
-                    <i class="fas fa-trash"></i>
-                </button>
             </div>
         </div>
     `;
@@ -233,6 +227,13 @@ function openAddFilamentModal() {
     selectedImage = null;
     editingFilamentId = null;
     document.getElementById('filamentModal').classList.add('active');
+
+    // Reinicializar custom selects se necessário
+    setTimeout(() => {
+        if (window.initCustomSelects) {
+            window.initCustomSelects();
+        }
+    }, 100);
 }
 
 function editFilament(id) {
@@ -241,8 +242,8 @@ function editFilament(id) {
 
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Filamento';
     document.getElementById('filamentId').value = filament.id;
-    document.getElementById('filamentName').value = filament.name;
     document.getElementById('filamentType').value = filament.type;
+    document.getElementById('filamentBrand').value = filament.brand || '';
     document.getElementById('filamentColor').value = filament.color;
     document.getElementById('filamentWeight').value = filament.weight;
     document.getElementById('filamentNotes').value = filament.notes || '';
@@ -255,6 +256,13 @@ function editFilament(id) {
 
     editingFilamentId = id;
     document.getElementById('filamentModal').classList.add('active');
+
+    // Reinicializar custom selects se necessário
+    setTimeout(() => {
+        if (window.initCustomSelects) {
+            window.initCustomSelects();
+        }
+    }, 100);
 }
 
 function previewImage(event) {
@@ -274,16 +282,49 @@ function previewImage(event) {
 async function saveFilament(event) {
     event.preventDefault();
 
-    const name = document.getElementById('filamentName').value.trim();
     const type = document.getElementById('filamentType').value;
+    const brand = document.getElementById('filamentBrand').value;
     const color = document.getElementById('filamentColor').value.trim();
     const weight = parseFloat(document.getElementById('filamentWeight').value);
     const notes = document.getElementById('filamentNotes').value.trim();
     const id = document.getElementById('filamentId').value;
 
-    if (!name || !type || !color || weight < 0) {
+    if (!type || !brand || !color || weight < 0) {
         showToast('Preencha todos os campos obrigatórios', 'error');
         return;
+    }
+
+    // Gerar nome automaticamente
+    const name = `${type} ${color}`;
+
+    // Validar duplicatas (tipo + cor + marca) - apenas para novos registros ou ao mudar esses campos
+    if (!id) {
+        const duplicate = filaments.find(f =>
+            f.type === type &&
+            f.color === color &&
+            f.brand === brand
+        );
+
+        if (duplicate) {
+            showToast(`Já existe um filamento ${type} ${color} da marca ${brand}. Use a opção de recompra para adicionar estoque.`, 'error');
+            return;
+        }
+    } else {
+        // Se estiver editando, verificar se mudou tipo/cor/marca
+        const current = filaments.find(f => f.id === id);
+        if (current && (current.type !== type || current.color !== color || current.brand !== brand)) {
+            const duplicate = filaments.find(f =>
+                f.id !== id &&
+                f.type === type &&
+                f.color === color &&
+                f.brand === brand
+            );
+
+            if (duplicate) {
+                showToast(`Já existe um filamento ${type} ${color} da marca ${brand}.`, 'error');
+                return;
+            }
+        }
     }
 
     showLoading('Salvando filamento...');
@@ -305,6 +346,7 @@ async function saveFilament(event) {
         const filamentData = {
             name,
             type,
+            brand,
             color,
             weight,
             notes,
@@ -487,6 +529,104 @@ function showToast(message, type = 'info') {
 }
 
 // ===========================
+// CARD ACTIONS MODAL
+// ===========================
+function openCardActionsModal(filamentId) {
+    selectedFilamentId = filamentId;
+    const filament = filaments.find(f => f.id === filamentId);
+
+    if (!filament) return;
+
+    const displayName = `${filament.type} ${filament.color}`;
+    const weightInGrams = (filament.weight * 1000).toFixed(0);
+
+    document.getElementById('cardInfoSummary').innerHTML = `
+        <h3>${displayName}</h3>
+        <p><strong>Marca:</strong> ${filament.brand}</p>
+        <p><strong>Estoque atual:</strong> ${weightInGrams}g</p>
+    `;
+
+    document.getElementById('cardActionsModal').classList.add('active');
+}
+
+function closeCardActionsModal() {
+    document.getElementById('cardActionsModal').classList.remove('active');
+    selectedFilamentId = null;
+}
+
+async function handleRestock1kg() {
+    if (!selectedFilamentId) return;
+
+    const filament = filaments.find(f => f.id === selectedFilamentId);
+    if (!filament) return;
+
+    const newWeight = filament.weight + 1.0; // Adiciona 1kg
+
+    try {
+        showLoading('Adicionando 1kg ao estoque...');
+        await db.collection('filaments').doc(selectedFilamentId).update({
+            weight: newWeight,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast('1kg adicionado ao estoque com sucesso!', 'success');
+        closeCardActionsModal();
+    } catch (error) {
+        console.error('Error restocking:', error);
+        showToast('Erro ao adicionar estoque', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleAddFractional() {
+    if (!selectedFilamentId) return;
+
+    const filament = filaments.find(f => f.id === selectedFilamentId);
+    if (!filament) return;
+
+    const amount = prompt('Digite a quantidade em gramas a adicionar:');
+
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        if (amount !== null) {
+            showToast('Digite uma quantidade válida', 'error');
+        }
+        return;
+    }
+
+    const amountInKg = parseFloat(amount) / 1000;
+    const newWeight = filament.weight + amountInKg;
+
+    try {
+        showLoading('Adicionando quantidade ao estoque...');
+        await db.collection('filaments').doc(selectedFilamentId).update({
+            weight: newWeight,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast(`${amount}g adicionados ao estoque com sucesso!`, 'success');
+        closeCardActionsModal();
+    } catch (error) {
+        console.error('Error adding fractional:', error);
+        showToast('Erro ao adicionar estoque', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function handleEditFilament() {
+    if (!selectedFilamentId) return;
+    closeCardActionsModal();
+    editFilament(selectedFilamentId);
+}
+
+function handleDeleteFilament() {
+    if (!selectedFilamentId) return;
+    closeCardActionsModal();
+    deleteFilament(selectedFilamentId);
+}
+
+// ===========================
 // GLOBAL FUNCTIONS FOR ONCLICK
 // ===========================
 window.signInWithGoogle = signInWithGoogle;
@@ -504,3 +644,9 @@ window.closePrintModal = closePrintModal;
 window.generateColorPrint = generateColorPrint;
 window.closePrintResultModal = closePrintResultModal;
 window.downloadPrint = downloadPrint;
+window.openCardActionsModal = openCardActionsModal;
+window.closeCardActionsModal = closeCardActionsModal;
+window.handleRestock1kg = handleRestock1kg;
+window.handleAddFractional = handleAddFractional;
+window.handleEditFilament = handleEditFilament;
+window.handleDeleteFilament = handleDeleteFilament;
