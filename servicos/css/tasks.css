@@ -575,6 +575,20 @@
     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
+/* Fix para dropdowns - garantir que opções sejam legíveis */
+.task-form-select option {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 0.5rem;
+}
+
+.task-form-select option:hover,
+.task-form-select option:checked,
+.task-form-select option:focus {
+    background: #2A6EA7;
+    color: #fff;
+}
+
 .task-form-textarea {
     resize: vertical;
     min-height: 100px;

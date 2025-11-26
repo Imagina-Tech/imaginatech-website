@@ -748,6 +748,14 @@ body {
 .form-select optgroup {
     background: #1a2332;
     color: white;
+    padding: 0.5rem;
+}
+
+.form-select option:hover,
+.form-select option:checked,
+.form-select option:focus {
+    background: #2A6EA7;
+    color: #fff;
 }
 
 .form-select optgroup {
