@@ -37,7 +37,9 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
-    line-height: 1.6;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===========================
@@ -196,12 +198,12 @@ body {
    MAIN CONTAINER
    =========================== */
 .main-container {
-    max-width: 700px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 2rem 1.5rem 3rem;
+    padding: 3rem 1.5rem 4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
     min-height: calc(100vh - 200px);
 }
 
@@ -213,8 +215,9 @@ body {
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
-    padding: 2.5rem;
+    padding: 3rem;
     text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 .success-icon {
@@ -232,41 +235,49 @@ body {
 
 .thank-you-header h1 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
     background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
 }
 
 .thank-you-header .subtitle {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
 }
 
 .thank-you-header .email-notice {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(0, 212, 255, 0.1);
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    border-radius: 10px;
-    font-size: 0.9rem;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 12px;
+    font-size: 0.95rem;
     color: var(--text-primary);
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: 1rem;
     text-align: left;
+    line-height: 1.7;
+    max-width: 100%;
 }
 
 .thank-you-header .email-notice i {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: var(--neon-blue);
     flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .thank-you-header .email-notice strong {
     color: var(--neon-blue);
+    font-weight: 600;
 }
 
 /* ===========================
@@ -333,16 +344,17 @@ body {
    =========================== */
 .next-steps {
     text-align: left;
-    margin: 2rem 0;
+    margin: 2.5rem 0 2rem;
 }
 
 .next-steps h3 {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     color: var(--neon-purple);
+    font-weight: 600;
 }
 
 .steps-list {
@@ -354,8 +366,8 @@ body {
 .step-item {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 1.25rem;
+    padding: 1.25rem;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
@@ -405,23 +417,27 @@ body {
 .step-content {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
+    flex: 1;
 }
 
 .step-content strong {
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .step-content span {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 /* ===========================
    CTA SECTION
    =========================== */
 .cta-section {
-    margin: 2rem 0;
+    margin: 2.5rem 0 2rem;
 }
 
 .btn-primary {
@@ -453,23 +469,26 @@ body {
 }
 
 .cta-hint {
-    margin-top: 0.75rem;
-    font-size: 0.85rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 /* ===========================
    CONTACT SECTION
    =========================== */
 .contact-section {
-    margin: 1.5rem 0;
-    padding-top: 1.5rem;
+    margin: 2rem 0 1.5rem;
+    padding-top: 2rem;
     border-top: 1px solid var(--glass-border);
 }
 
 .contact-section p {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
 }
 
 .btn-whatsapp {
@@ -495,15 +514,16 @@ body {
    SHARE SECTION
    =========================== */
 .share-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
     border-top: 1px solid var(--glass-border);
 }
 
 .share-section p {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
 }
 
 .share-buttons {
@@ -558,11 +578,12 @@ body {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: 15px;
-    padding: 1.5rem;
+    border-radius: 16px;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
 .newsletter-content {
@@ -577,13 +598,16 @@ body {
 }
 
 .newsletter-text h4 {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .newsletter-text p {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 .newsletter-form {
@@ -710,7 +734,7 @@ body {
    =========================== */
 @media (max-width: 768px) {
     .navbar {
-        padding: 15px;
+        padding: 1rem;
     }
 
     .logo {
@@ -722,16 +746,22 @@ body {
     }
 
     .main-container {
-        padding: 1.5rem 1rem 2rem;
+        padding: 2rem 1.25rem 3rem;
     }
 
     .thank-you-header .email-notice {
-        flex-direction: column;
-        text-align: center;
+        flex-direction: row;
+        text-align: left;
+        padding: 1.25rem;
+        gap: 0.9rem;
+    }
+
+    .thank-you-header .email-notice i {
+        font-size: 1.5rem;
     }
 
     .thank-you-card {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
     }
 
     .success-icon {
@@ -739,35 +769,89 @@ body {
     }
 
     .thank-you-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
+        line-height: 1.3;
+    }
+
+    .thank-you-header .subtitle {
+        font-size: 1.05rem;
     }
 
     .step-item {
-        padding: 0.75rem;
+        padding: 1rem;
+        gap: 1rem;
     }
 
     .step-icon {
-        width: 35px;
-        height: 35px;
+        width: 38px;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+
+    .step-content strong {
+        font-size: 0.95rem;
+    }
+
+    .step-content span {
         font-size: 0.85rem;
     }
 
+    .newsletter-card {
+        padding: 1.75rem;
+    }
+
     .newsletter-content {
-        flex-direction: column;
-        text-align: center;
+        flex-direction: row;
+        text-align: left;
     }
 
     .footer-links {
         flex-direction: column;
         gap: 1rem;
     }
+
+    .toast-container {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
 }
 
 @media (max-width: 480px) {
+    .main-container {
+        padding: 1.5rem 1rem 2.5rem;
+    }
+
+    .thank-you-card {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .thank-you-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .thank-you-header .subtitle {
+        font-size: 1rem;
+    }
+
+    .thank-you-header .email-notice {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .thank-you-header .email-notice i {
+        margin-top: 0;
+    }
+
     .summary-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+    }
+
+    .step-item {
+        padding: 0.9rem;
     }
 
     .share-buttons {
@@ -775,8 +859,22 @@ body {
     }
 
     .share-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
+        width: 42px;
+        height: 42px;
+        font-size: 1.05rem;
+    }
+
+    .newsletter-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .newsletter-form button {
+        width: 100%;
     }
 }
