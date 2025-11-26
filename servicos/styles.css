@@ -1695,14 +1695,84 @@ body {
     }
 }
 
-/* Responsividade */
+/* Responsividade e melhorias para touch/mobile */
+.custom-select-trigger,
+.custom-select-option {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 @media (max-width: 768px) {
+    .custom-select {
+        /* Garantir z-index alto em mobile */
+        z-index: 1000;
+    }
+
+    .custom-select-trigger {
+        /* Área de toque maior para mobile (mínimo 44px) */
+        min-height: 48px;
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+    }
+
     .custom-select-dropdown {
         max-height: 250px;
+        /* Melhor performance em mobile */
+        -webkit-overflow-scrolling: touch;
+        /* Z-index ainda maior para garantir que fique acima */
+        z-index: 10000;
+    }
+
+    .custom-select.open .custom-select-dropdown {
+        max-height: 280px;
     }
 
     .custom-select-option {
-        padding: 0.65rem 0.85rem;
+        /* Área de toque confortável para dedos */
+        min-height: 48px;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        /* Animação mais rápida em mobile */
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .custom-select-option:hover {
+        /* Em mobile, remover animação de padding que pode causar problemas */
+        padding-left: 1rem;
+    }
+
+    /* Checkmark maior em mobile */
+    .custom-select-option.selected::after {
+        font-size: 1.3em;
+    }
+
+    /* Scrollbar mais grossa em mobile para facilitar uso */
+    .custom-select-dropdown::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    /* Reduzir animações em mobile para melhor performance */
+    .custom-select.open .custom-select-option {
+        animation: none;
+    }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+    .custom-select-trigger {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .custom-select-option {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .custom-select.open .custom-select-dropdown {
+        max-height: 240px;
     }
 }
 

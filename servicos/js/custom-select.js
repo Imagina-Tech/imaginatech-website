@@ -74,25 +74,45 @@ class CustomSelect {
     }
 
     bindEvents() {
-        // Toggle dropdown
+        // Toggle dropdown (com suporte a touch)
         this.trigger.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             this.toggle();
         });
 
-        // Selecionar opção
+        // Prevenir double-tap zoom em iOS
+        this.trigger.addEventListener('touchend', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Selecionar opção (com suporte a touch)
         this.dropdown.addEventListener('click', (e) => {
-            if (e.target.classList.contains('custom-select-option') && !e.target.classList.contains('disabled')) {
-                this.selectOption(parseInt(e.target.dataset.index));
+            e.preventDefault();
+            const option = e.target.closest('.custom-select-option');
+            if (option && !option.classList.contains('disabled')) {
+                this.selectOption(parseInt(option.dataset.index));
             }
         });
 
-        // Fechar ao clicar fora
-        document.addEventListener('click', (e) => {
+        // Suporte a touch para seleção de opções
+        this.dropdown.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const option = e.target.closest('.custom-select-option');
+            if (option && !option.classList.contains('disabled')) {
+                this.selectOption(parseInt(option.dataset.index));
+            }
+        }, { passive: false });
+
+        // Fechar ao clicar/tocar fora
+        const closeOnOutsideClick = (e) => {
             if (!this.customSelect.contains(e.target)) {
                 this.close();
             }
-        });
+        };
+
+        document.addEventListener('click', closeOnOutsideClick);
+        document.addEventListener('touchstart', closeOnOutsideClick);
 
         // Keyboard navigation
         this.customSelect.addEventListener('keydown', (e) => {
