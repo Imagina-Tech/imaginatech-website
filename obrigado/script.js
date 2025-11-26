@@ -6,6 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initPage();
     createConfetti();
+    createFloatingParticles();
 });
 
 // ===========================
@@ -142,6 +143,46 @@ function showToast(message, type = 'info') {
         toast.style.animation = 'toast-in 0.3s ease-out reverse';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+// ===========================
+// FLOATING PARTICLES
+// ===========================
+function createFloatingParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+
+    const colors = ['#00D4FF', '#9945FF', '#00FF88', '#FFD700'];
+    const particleCount = 30;
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        const size = Math.random() * 4 + 2;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 5;
+        const duration = Math.random() * 10 + 15;
+        const opacity = Math.random() * 0.5 + 0.3;
+
+        particle.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background: ${color};
+            border-radius: 50%;
+            left: ${left}%;
+            bottom: -10px;
+            opacity: ${opacity};
+            animation: float-up ${duration}s linear infinite;
+            animation-delay: ${delay}s;
+            box-shadow: 0 0 ${size * 3}px ${color};
+            pointer-events: none;
+        `;
+
+        particlesContainer.appendChild(particle);
+    }
 }
 
 // Expor funções globalmente
