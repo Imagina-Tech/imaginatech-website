@@ -18,6 +18,7 @@ import {
     filterServices,
     uploadFile,
     loadAvailableFilaments,
+    updateMaterialDropdown,
     updateColorDropdown
 } from './services.js';
 
@@ -690,6 +691,9 @@ export async function openAddModal() {
     // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
     await loadAvailableFilaments();
 
+    // Atualizar dropdown de materiais com base no estoque
+    updateMaterialDropdown();
+
     // Configurar listener para atualizar cores quando material mudar
     const materialSelect = document.getElementById('serviceMaterial');
     if (materialSelect) {
@@ -722,10 +726,13 @@ export async function openEditModal(serviceId) {
     // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
     await loadAvailableFilaments();
 
+    // Atualizar dropdown de materiais com base no estoque
+    updateMaterialDropdown();
+
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-    
+
     Object.entries({
         serviceName: service.name,
         clientName: service.client,

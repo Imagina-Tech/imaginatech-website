@@ -62,6 +62,42 @@ export async function loadAvailableFilaments() {
 }
 
 /**
+ * Atualiza dropdown de materiais baseado nos filamentos em estoque
+ */
+export function updateMaterialDropdown() {
+    const materialSelect = document.getElementById('serviceMaterial');
+    if (!materialSelect) return;
+
+    // Filtrar apenas filamentos com estoque disponível
+    const inStock = availableFilaments.filter(f => f.weight > 0);
+
+    // Obter tipos únicos de materiais
+    const materials = [...new Set(inStock.map(f => f.type))].sort();
+
+    // Salvar valor selecionado antes de atualizar
+    const currentValue = materialSelect.value;
+
+    // Atualizar dropdown
+    materialSelect.innerHTML = '<option value="">Selecione o material</option>';
+
+    if (materials.length === 0) {
+        materialSelect.innerHTML += '<option value="" disabled>Nenhum material em estoque</option>';
+    } else {
+        materials.forEach(material => {
+            const option = document.createElement('option');
+            option.value = material;
+            option.textContent = material;
+            materialSelect.appendChild(option);
+        });
+    }
+
+    // Restaurar valor selecionado se ainda existir
+    if (currentValue && materials.includes(currentValue)) {
+        materialSelect.value = currentValue;
+    }
+}
+
+/**
  * Atualiza dropdown de cores baseado no material selecionado
  */
 export function updateColorDropdown(selectedMaterial) {
