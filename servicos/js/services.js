@@ -36,6 +36,132 @@ import { STATUS_ORDER } from './utils.js';
 
 export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 
+// ===========================
+// STOCK INTEGRATION
+// ===========================
+
+let availableFilaments = [];
+
+/**
+ * Carrega filamentos disponíveis do estoque
+ */
+export async function loadAvailableFilaments() {
+    if (!state.db) return;
+
+    try {
+        const snapshot = await state.db.collection('filaments').get();
+        availableFilaments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        return availableFilaments;
+    } catch (error) {
+        console.error('Erro ao carregar filamentos:', error);
+        return [];
+    }
+}
+
+/**
+ * Atualiza dropdown de cores baseado no material selecionado
+ */
+export function updateColorDropdown(selectedMaterial) {
+    const colorSelect = document.getElementById('serviceColor');
+    if (!colorSelect) return;
+
+    // Filtrar filamentos pelo tipo de material e que tenham estoque
+    const filtered = availableFilaments.filter(f => {
+        if (!selectedMaterial) return false;
+        if (f.type !== selectedMaterial) return false;
+        if (f.weight <= 0) return false; // Apenas com estoque
+        return true;
+    });
+
+    // Agrupar por cor (pode haver múltiplos filamentos da mesma cor)
+    const colors = [...new Set(filtered.map(f => f.color))].sort();
+
+    // Atualizar dropdown
+    colorSelect.innerHTML = '<option value="">Selecione a cor</option>';
+
+    if (colors.length === 0) {
+        colorSelect.innerHTML += '<option value="" disabled>Sem estoque disponível</option>';
+    } else {
+        colors.forEach(color => {
+            const option = document.createElement('option');
+            option.value = color.toLowerCase();
+            option.textContent = color;
+            colorSelect.appendChild(option);
+        });
+    }
+}
+
+/**
+ * Deduz material do estoque após criar serviço
+ */
+export async function deductMaterialFromStock(material, color, weightInGrams) {
+    if (!state.db || !material || !color || !weightInGrams) return;
+
+    try {
+        // Buscar filamento correspondente
+        const filament = availableFilaments.find(f =>
+            f.type === material &&
+            f.color.toLowerCase() === color.toLowerCase() &&
+            f.weight > 0
+        );
+
+        if (!filament) {
+            console.warn('Filamento não encontrado no estoque:', { material, color });
+            return;
+        }
+
+        // Converter gramas para kg
+        const weightInKg = weightInGrams / 1000;
+        const newWeight = Math.max(0, (filament.weight || 0) - weightInKg);
+
+        // Atualizar no Firestore
+        await state.db.collection('filaments').doc(filament.id).update({
+            weight: newWeight,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`✅ Estoque atualizado: ${material} ${color} - ${weightInGrams}g deduzidos`);
+        showToast(`Estoque atualizado: -${weightInGrams}g de ${material} ${color}`, 'info');
+
+        // Atualizar cache local
+        filament.weight = newWeight;
+
+    } catch (error) {
+        console.error('Erro ao deduzir material do estoque:', error);
+        showToast('⚠️ Erro ao atualizar estoque', 'warning');
+    }
+}
+
+/**
+ * Verifica se há estoque suficiente
+ */
+export function checkStockAvailability(material, color, weightInGrams) {
+    if (!material || !color || !weightInGrams) return true;
+
+    const filament = availableFilaments.find(f =>
+        f.type === material &&
+        f.color.toLowerCase() === color.toLowerCase()
+    );
+
+    if (!filament) {
+        showToast('⚠️ Material não encontrado no estoque', 'warning');
+        return false;
+    }
+
+    const weightInKg = weightInGrams / 1000;
+
+    if (filament.weight < weightInKg) {
+        const availableGrams = Math.floor(filament.weight * 1000);
+        showToast(`❌ Estoque insuficiente! Disponível: ${availableGrams}g | Necessário: ${weightInGrams}g`, 'error');
+        return false;
+    }
+
+    return true;
+}
+
 export function startServicesListener() {
     if (!state.db) return console.error('Firestore não está disponível');
     
@@ -215,7 +341,15 @@ export async function saveService(event) {
     
     if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
         return showToast('Data de entrega não pode ser anterior à data de início', 'error');
-    
+
+    // VALIDAÇÃO DE ESTOQUE (apenas para novos serviços)
+    if (!state.editingServiceId && service.material && service.color && service.weight) {
+        const hasStock = checkStockAvailability(service.material, service.color, service.weight);
+        if (!hasStock) {
+            return; // Mensagem de erro já foi mostrada pela função
+        }
+    }
+
     if (deliveryMethod === 'retirada') {
         const pickupName = document.getElementById('pickupName').value.trim();
         const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
@@ -263,11 +397,16 @@ export async function saveService(event) {
             
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
-            
+
+            // DEDUZIR MATERIAL DO ESTOQUE
+            if (service.material && service.color && service.weight) {
+                await deductMaterialFromStock(service.material, service.color, service.weight);
+            }
+
             document.getElementById('orderCodeDisplay').style.display = 'block';
             document.getElementById('orderCodeValue').textContent = service.orderCode;
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
-            
+
             const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;
             const sendEmail = document.getElementById('sendEmailOnCreate')?.checked || false;
             

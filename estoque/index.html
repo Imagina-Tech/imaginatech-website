@@ -1,0 +1,402 @@
+<!--
+==================================================
+ARQUIVO: estoque/index.html
+MÓDULO: Gestão de Estoque (Filamentos)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 1.0
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - ImaginaTech Admin</title>
+    <meta name="description" content="Gestão de estoque de filamentos - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/estoque/">
+    <meta property="og:title" content="Estoque - ImaginaTech">
+    <meta property="og:description" content="Sistema de gestão de estoque de filamentos - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Estilos base compartilhados -->
+    <link rel="stylesheet" href="/servicos/styles.css">
+    <!-- Customizações do módulo Estoque -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando estoque...</div>
+        </div>
+    </div>
+
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <div class="login-screen hidden" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <h1>ImaginaTech</h1>
+                    <p>Gestão de Estoque</p>
+                </div>
+                <div class="login-info">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>Acesso Restrito</h2>
+                    <p>Área exclusiva para funcionários autorizados</p>
+                </div>
+            </div>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="login-footer">
+                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard hidden" id="dashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Gestão de Estoque</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <a href="/servicos/" class="btn-nav">
+                        <i class="fas fa-tasks"></i>
+                        <span>Serviços</span>
+                    </a>
+                    <a href="/caixa/" class="btn-nav">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caixa</span>
+                    </a>
+                    <a href="/custo/" class="btn-nav">
+                        <i class="fas fa-calculator"></i>
+                        <span>Custo</span>
+                    </a>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="btn-text">Sair</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <!-- Header com Ações -->
+                <div class="action-bar">
+                    <h2 class="page-title">
+                        <i class="fas fa-box-open"></i>
+                        Gerenciamento de Estoque
+                    </h2>
+                    <div class="action-buttons">
+                        <button class="btn-secondary" onclick="openPrintModal()">
+                            <i class="fas fa-print"></i>
+                            Gerar Print de Cores
+                        </button>
+                        <button class="btn-primary" onclick="openAddFilamentModal()">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Filamento
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards de Estatísticas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalFilaments">0</div>
+                            <div class="stat-label">Total de Filamentos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stockOk">0</div>
+                            <div class="stat-label">Estoque OK (>800g)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stockLow">0</div>
+                            <div class="stat-label">Estoque Baixo (<600g)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalWeight">0 kg</div>
+                            <div class="stat-label">Peso Total em Estoque</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <button class="filter-btn active" onclick="filterByType('todos')">
+                            <i class="fas fa-list"></i> Todos
+                        </button>
+                        <button class="filter-btn" onclick="filterByType('PLA')">
+                            PLA
+                        </button>
+                        <button class="filter-btn" onclick="filterByType('ABS')">
+                            ABS
+                        </button>
+                        <button class="filter-btn" onclick="filterByType('PETG')">
+                            PETG
+                        </button>
+                        <button class="filter-btn" onclick="filterByType('TPU')">
+                            TPU
+                        </button>
+                        <button class="filter-btn" onclick="filterByType('outros')">
+                            <i class="fas fa-ellipsis-h"></i> Outros
+                        </button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="filter-btn" onclick="filterByStock('low')">
+                            <i class="fas fa-battery-quarter"></i> Baixo
+                        </button>
+                        <button class="filter-btn" onclick="filterByStock('ok')">
+                            <i class="fas fa-battery-full"></i> OK
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de Filamentos -->
+                <div class="filaments-grid" id="filamentsGrid">
+                    <!-- Cards dinâmicos aqui -->
+                </div>
+
+                <!-- Estado Vazio -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+                    <h3>Nenhum filamento cadastrado</h3>
+                    <p>Adicione seu primeiro filamento ao estoque</p>
+                    <button class="btn-primary" onclick="openAddFilamentModal()">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Filamento
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Adicionar/Editar Filamento -->
+    <div class="modal" id="filamentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> Adicionar Filamento</h2>
+                <button class="modal-close" onclick="closeFilamentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="filamentForm" onsubmit="saveFilament(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="filamentId">
+
+                    <!-- Upload de Imagem -->
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Foto do Rolo (PNG com fundo transparente) *</label>
+                        <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('filamentImage').click()">
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Clique para selecionar imagem</p>
+                                <small>PNG com transparência recomendado</small>
+                            </div>
+                            <img id="imagePreview" class="image-preview-img" style="display: none;" alt="Preview">
+                        </div>
+                        <input type="file" id="filamentImage" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" onchange="previewImage(event)">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filamentName"><i class="fas fa-tag"></i> Nome do Filamento *</label>
+                            <input type="text" id="filamentName" class="form-input" required placeholder="Ex: PLA Preto Básico">
+                        </div>
+                        <div class="form-group">
+                            <label for="filamentType"><i class="fas fa-cube"></i> Tipo *</label>
+                            <select id="filamentType" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="PLA">PLA</option>
+                                <option value="ABS">ABS</option>
+                                <option value="PETG">PETG</option>
+                                <option value="TPU">TPU</option>
+                                <option value="PC">PC (Policarbonato)</option>
+                                <option value="PP">PP (Polipropileno)</option>
+                                <option value="Nylon">Nylon</option>
+                                <option value="ASA">ASA</option>
+                                <option value="HIPS">HIPS</option>
+                                <option value="PVA">PVA</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filamentColor"><i class="fas fa-palette"></i> Cor *</label>
+                            <input type="text" id="filamentColor" class="form-input" required placeholder="Ex: Preto, Branco, Azul...">
+                        </div>
+                        <div class="form-group">
+                            <label for="filamentWeight"><i class="fas fa-weight"></i> Peso (kg) *</label>
+                            <input type="number" id="filamentWeight" class="form-input" step="0.001" min="0" required placeholder="1.000">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filamentNotes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <textarea id="filamentNotes" class="form-textarea" rows="2" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeFilamentModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar Filamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Gerar Print de Cores -->
+    <div class="modal" id="printModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-print"></i> Gerar Print de Cores Disponíveis</h2>
+                <button class="modal-close" onclick="closePrintModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="requiredWeight"><i class="fas fa-weight"></i> Quantidade Necessária (gramas) *</label>
+                    <input type="number" id="requiredWeight" class="form-input" min="1" placeholder="500" value="500">
+                    <small>Digite a quantidade de material que o projeto necessita</small>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-filter"></i> Filtrar por Tipo (opcional)</label>
+                    <select id="printFilterType" class="form-select">
+                        <option value="">Todos os tipos</option>
+                        <option value="PLA">PLA</option>
+                        <option value="ABS">ABS</option>
+                        <option value="PETG">PETG</option>
+                        <option value="TPU">TPU</option>
+                        <option value="PC">PC</option>
+                        <option value="PP">PP</option>
+                        <option value="Nylon">Nylon</option>
+                        <option value="ASA">ASA</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closePrintModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-primary" onclick="generateColorPrint()">
+                    <i class="fas fa-image"></i> Gerar Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Visualizar Print Gerado -->
+    <div class="modal" id="printResultModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-palette"></i> Cores Disponíveis para o Cliente</h2>
+                <button class="modal-close" onclick="closePrintResultModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="print-info">
+                    <p><strong>Quantidade necessária:</strong> <span id="printRequiredAmount">500g</span></p>
+                    <p><strong>Cores disponíveis:</strong> <span id="printAvailableCount">0</span></p>
+                </div>
+                <div class="print-preview" id="printPreview">
+                    <!-- Grid de cores disponíveis -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closePrintResultModal()">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+                <button class="btn-primary" onclick="downloadPrint()">
+                    <i class="fas fa-download"></i> Baixar Imagem
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="script.js"></script>
+
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+</body>
+</html>

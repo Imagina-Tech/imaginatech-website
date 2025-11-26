@@ -16,7 +16,9 @@ import {
     confirmStatusChange,
     renderServices,
     filterServices,
-    uploadFile
+    uploadFile,
+    loadAvailableFilaments,
+    updateColorDropdown
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -652,49 +654,74 @@ export async function saveClientToFirestore(clientData) {
 // ===========================
 // MODALS
 // ===========================
-export function openAddModal() {
+export async function openAddModal() {
     state.editingServiceId = null;
     state.selectedFiles = [];
     state.selectedImages = [];
-    
+
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
     document.getElementById('serviceForm')?.reset();
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
-    
+
     setupDateFields();
     ['filesInfo', 'imagePreview'].forEach(id => {
         const el = document.getElementById(id);
         el && (el.style.display = 'none');
     });
-    
+
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) previewContainer.innerHTML = '';
-    
+
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');
     if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
-    
+
     document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
     document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
-    
+
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
-    
+
     document.getElementById('clientSuggestions').style.display = 'none';
-    
+
     hideAllDeliveryFields();
+
+    // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
+    await loadAvailableFilaments();
+
+    // Configurar listener para atualizar cores quando material mudar
+    const materialSelect = document.getElementById('serviceMaterial');
+    if (materialSelect) {
+        materialSelect.removeEventListener('change', handleMaterialChange);
+        materialSelect.addEventListener('change', handleMaterialChange);
+    }
+
+    // Limpar dropdown de cores ao abrir
+    const colorSelect = document.getElementById('serviceColor');
+    if (colorSelect) {
+        colorSelect.innerHTML = '<option value="">Primeiro selecione o material</option>';
+    }
+
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
-export function openEditModal(serviceId) {
+function handleMaterialChange(event) {
+    const selectedMaterial = event.target.value;
+    updateColorDropdown(selectedMaterial);
+}
+
+export async function openEditModal(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) return;
-    
+
     state.editingServiceId = serviceId;
     state.selectedFiles = [];
     state.selectedImages = [];
-    
+
+    // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
+    await loadAvailableFilaments();
+
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
@@ -835,7 +862,19 @@ export function openEditModal(serviceId) {
     }
     
     document.getElementById('clientSuggestions').style.display = 'none';
-    
+
+    // INTEGRAÇÃO COM ESTOQUE: Configurar listener para material e atualizar cores
+    const materialSelect = document.getElementById('serviceMaterial');
+    if (materialSelect) {
+        materialSelect.removeEventListener('change', handleMaterialChange);
+        materialSelect.addEventListener('change', handleMaterialChange);
+
+        // Se já houver material selecionado, atualizar cores disponíveis
+        if (service.material) {
+            updateColorDropdown(service.material);
+        }
+    }
+
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
