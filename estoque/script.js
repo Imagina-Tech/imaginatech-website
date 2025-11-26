@@ -720,22 +720,33 @@ function closeCardActionsModal() {
 }
 
 async function handleRestock1kg() {
-    if (!selectedFilamentId) return;
+    if (!selectedFilamentId) {
+        showToast('Erro: ID do filamento não selecionado', 'error');
+        return;
+    }
 
-    const filament = filaments.find(f => f.id === selectedFilamentId);
-    if (!filament) return;
+    // Guardar ID em variável local
+    const filamentId = selectedFilamentId;
+
+    const filament = filaments.find(f => f.id === filamentId);
+    if (!filament) {
+        showToast('Filamento não encontrado', 'error');
+        return;
+    }
 
     const newWeight = filament.weight + 1.0; // Adiciona 1kg
 
+    // Fechar modal antes da operação
+    closeCardActionsModal();
+
     try {
         showLoading('Adicionando 1kg ao estoque...');
-        await db.collection('filaments').doc(selectedFilamentId).update({
+        await db.collection('filaments').doc(filamentId).update({
             weight: newWeight,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         showToast('1kg adicionado ao estoque com sucesso!', 'success');
-        closeCardActionsModal();
     } catch (error) {
         console.error('Error restocking:', error);
         showToast('Erro ao adicionar estoque', 'error');
@@ -745,10 +756,22 @@ async function handleRestock1kg() {
 }
 
 async function handleAddFractional() {
-    if (!selectedFilamentId) return;
+    if (!selectedFilamentId) {
+        showToast('Erro: ID do filamento não selecionado', 'error');
+        return;
+    }
 
-    const filament = filaments.find(f => f.id === selectedFilamentId);
-    if (!filament) return;
+    // Guardar ID em variável local
+    const filamentId = selectedFilamentId;
+
+    const filament = filaments.find(f => f.id === filamentId);
+    if (!filament) {
+        showToast('Filamento não encontrado', 'error');
+        return;
+    }
+
+    // Fechar modal antes do prompt para melhor UX
+    closeCardActionsModal();
 
     const amount = prompt('Digite a quantidade em gramas a adicionar:');
 
@@ -764,13 +787,12 @@ async function handleAddFractional() {
 
     try {
         showLoading('Adicionando quantidade ao estoque...');
-        await db.collection('filaments').doc(selectedFilamentId).update({
+        await db.collection('filaments').doc(filamentId).update({
             weight: newWeight,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         showToast(`${amount}g adicionados ao estoque com sucesso!`, 'success');
-        closeCardActionsModal();
     } catch (error) {
         console.error('Error adding fractional:', error);
         showToast('Erro ao adicionar estoque', 'error');
@@ -786,8 +808,11 @@ function handleEditFilament() {
         showToast('Erro: ID do filamento não selecionado', 'error');
         return;
     }
+
+    // Guardar ID em variável local ANTES de fechar o modal
+    const filamentId = selectedFilamentId;
     closeCardActionsModal();
-    editFilament(selectedFilamentId);
+    editFilament(filamentId);
 }
 
 function handleDeleteFilament() {
@@ -797,8 +822,11 @@ function handleDeleteFilament() {
         showToast('Erro: ID do filamento não selecionado', 'error');
         return;
     }
+
+    // Guardar ID em variável local ANTES de fechar o modal
+    const filamentId = selectedFilamentId;
     closeCardActionsModal();
-    deleteFilament(selectedFilamentId);
+    deleteFilament(filamentId);
 }
 
 // ===========================
