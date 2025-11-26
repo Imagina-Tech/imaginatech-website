@@ -219,35 +219,75 @@ function filterByStock(stockLevel) {
 // ADD/EDIT FILAMENT
 // ===========================
 function openAddFilamentModal() {
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Adicionar Filamento';
-    document.getElementById('filamentForm').reset();
-    document.getElementById('filamentId').value = '';
-    document.getElementById('imagePreview').style.display = 'none';
-    document.getElementById('uploadPlaceholder').style.display = 'flex';
+    // Resetar estado
     selectedImage = null;
     editingFilamentId = null;
+
+    // Limpar formulário
+    document.getElementById('filamentForm').reset();
+    document.getElementById('filamentId').value = '';
+
+    // Resetar preview de imagem
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('uploadPlaceholder').style.display = 'flex';
+
+    // Atualizar título
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Adicionar Filamento';
+
+    // Abrir modal
     document.getElementById('filamentModal').classList.add('active');
 
-    // Reinicializar custom selects se necessário
+    // Reinicializar custom selects após um pequeno delay
     setTimeout(() => {
+        // Destruir custom selects existentes
+        const existingCustomSelects = document.querySelectorAll('#filamentModal .custom-select');
+        existingCustomSelects.forEach(cs => {
+            const parent = cs.parentNode;
+            const originalSelect = cs.previousElementSibling;
+            if (originalSelect && originalSelect.tagName === 'SELECT') {
+                originalSelect.style.display = '';
+                delete originalSelect.dataset.customized;
+            }
+            cs.remove();
+        });
+
+        // Reinicializar custom selects
         if (window.initCustomSelects) {
             window.initCustomSelects();
         }
-    }, 100);
+    }, 50);
 }
 
 function editFilament(id) {
     const filament = filaments.find(f => f.id === id);
-    if (!filament) return;
+    if (!filament) {
+        showToast('Filamento não encontrado', 'error');
+        return;
+    }
 
+    // Resetar imagem primeiro
+    selectedImage = null;
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'flex';
+
+    // Preencher campos do formulário
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Filamento';
     document.getElementById('filamentId').value = filament.id;
-    document.getElementById('filamentType').value = filament.type;
-    document.getElementById('filamentBrand').value = filament.brand || '';
-    document.getElementById('filamentColor').value = filament.color;
-    document.getElementById('filamentWeight').value = filament.weight;
+
+    // Preencher selects nativos primeiro
+    const typeSelect = document.getElementById('filamentType');
+    const brandSelect = document.getElementById('filamentBrand');
+
+    typeSelect.value = filament.type || '';
+    brandSelect.value = filament.brand || '';
+
+    // Preencher campos de texto
+    document.getElementById('filamentColor').value = filament.color || '';
+    document.getElementById('filamentWeight').value = filament.weight || 0;
     document.getElementById('filamentNotes').value = filament.notes || '';
 
+    // Carregar imagem se existir
     if (filament.imageUrl) {
         document.getElementById('imagePreview').src = filament.imageUrl;
         document.getElementById('imagePreview').style.display = 'block';
@@ -255,14 +295,29 @@ function editFilament(id) {
     }
 
     editingFilamentId = id;
+
+    // Abrir modal
     document.getElementById('filamentModal').classList.add('active');
 
-    // Reinicializar custom selects se necessário
+    // Atualizar custom selects após um pequeno delay
     setTimeout(() => {
+        // Destruir custom selects existentes
+        const existingCustomSelects = document.querySelectorAll('#filamentModal .custom-select');
+        existingCustomSelects.forEach(cs => {
+            const parent = cs.parentNode;
+            const originalSelect = cs.previousElementSibling;
+            if (originalSelect && originalSelect.tagName === 'SELECT') {
+                originalSelect.style.display = '';
+                delete originalSelect.dataset.customized;
+            }
+            cs.remove();
+        });
+
+        // Reinicializar custom selects
         if (window.initCustomSelects) {
             window.initCustomSelects();
         }
-    }, 100);
+    }, 50);
 }
 
 function previewImage(event) {
@@ -300,9 +355,9 @@ async function saveFilament(event) {
     // Validar duplicatas (tipo + cor + marca) - apenas para novos registros ou ao mudar esses campos
     if (!id) {
         const duplicate = filaments.find(f =>
-            f.type === type &&
-            f.color === color &&
-            f.brand === brand
+            f.type?.toLowerCase() === type?.toLowerCase() &&
+            f.color?.toLowerCase() === color?.toLowerCase() &&
+            (f.brand || '').toLowerCase() === (brand || '').toLowerCase()
         );
 
         if (duplicate) {
@@ -312,12 +367,16 @@ async function saveFilament(event) {
     } else {
         // Se estiver editando, verificar se mudou tipo/cor/marca
         const current = filaments.find(f => f.id === id);
-        if (current && (current.type !== type || current.color !== color || current.brand !== brand)) {
+        const typeChanged = current?.type !== type;
+        const colorChanged = current?.color !== color;
+        const brandChanged = (current?.brand || '') !== (brand || '');
+
+        if (current && (typeChanged || colorChanged || brandChanged)) {
             const duplicate = filaments.find(f =>
                 f.id !== id &&
-                f.type === type &&
-                f.color === color &&
-                f.brand === brand
+                f.type?.toLowerCase() === type?.toLowerCase() &&
+                f.color?.toLowerCase() === color?.toLowerCase() &&
+                (f.brand || '').toLowerCase() === (brand || '').toLowerCase()
             );
 
             if (duplicate) {
@@ -378,21 +437,68 @@ function closeFilamentModal() {
     document.getElementById('filamentModal').classList.remove('active');
     selectedImage = null;
     editingFilamentId = null;
+
+    // Resetar formulário
+    setTimeout(() => {
+        document.getElementById('filamentForm').reset();
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('uploadPlaceholder').style.display = 'flex';
+    }, 300); // Aguardar animação de fechamento
 }
 
 // ===========================
 // DELETE FILAMENT
 // ===========================
 async function deleteFilament(id) {
-    if (!confirm('Tem certeza que deseja excluir este filamento?')) return;
+    if (!id) {
+        showToast('ID do filamento não encontrado', 'error');
+        return;
+    }
 
-    showLoading('Excluindo...');
+    const filament = filaments.find(f => f.id === id);
+    if (!filament) {
+        showToast('Filamento não encontrado', 'error');
+        return;
+    }
+
+    const displayName = `${filament.type} ${filament.color}`;
+    const confirmMessage = `Tem certeza que deseja excluir o filamento "${displayName}" da marca ${filament.brand || 'N/A'}?\n\nEsta ação não pode ser desfeita.`;
+
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    showLoading('Excluindo filamento...');
+
     try {
+        // Tentar excluir a imagem do storage se existir
+        if (filament.imageUrl && filament.imageUrl.includes('firebasestorage')) {
+            try {
+                const imageRef = storage.refFromURL(filament.imageUrl);
+                await imageRef.delete();
+            } catch (imgError) {
+                console.warn('Erro ao excluir imagem, mas continuando com exclusão do filamento:', imgError);
+            }
+        }
+
+        // Excluir o documento do Firestore
         await db.collection('filaments').doc(id).delete();
-        showToast('Filamento excluído com sucesso!', 'success');
+
+        showToast(`Filamento "${displayName}" excluído com sucesso!`, 'success');
     } catch (error) {
-        console.error('Error deleting filament:', error);
-        showToast('Erro ao excluir filamento', 'error');
+        console.error('Erro ao excluir filamento:', error);
+
+        // Mensagens de erro mais específicas
+        let errorMessage = 'Erro ao excluir filamento';
+        if (error.code === 'permission-denied') {
+            errorMessage = 'Você não tem permissão para excluir este filamento';
+        } else if (error.code === 'not-found') {
+            errorMessage = 'Filamento não encontrado no banco de dados';
+        } else if (error.message) {
+            errorMessage = `Erro: ${error.message}`;
+        }
+
+        showToast(errorMessage, 'error');
     } finally {
         hideLoading();
     }
@@ -535,14 +641,18 @@ function openCardActionsModal(filamentId) {
     selectedFilamentId = filamentId;
     const filament = filaments.find(f => f.id === filamentId);
 
-    if (!filament) return;
+    if (!filament) {
+        showToast('Filamento não encontrado', 'error');
+        return;
+    }
 
     const displayName = `${filament.type} ${filament.color}`;
     const weightInGrams = (filament.weight * 1000).toFixed(0);
+    const brand = filament.brand || 'Não especificada';
 
     document.getElementById('cardInfoSummary').innerHTML = `
         <h3>${displayName}</h3>
-        <p><strong>Marca:</strong> ${filament.brand}</p>
+        <p><strong>Marca:</strong> ${brand}</p>
         <p><strong>Estoque atual:</strong> ${weightInGrams}g</p>
     `;
 
