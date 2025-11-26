@@ -1048,3 +1048,294 @@ IMPORTANTE: Estilos base em /servicos/styles.css
         font-size: 1rem;
     }
 }
+
+/* ===========================
+   DROPDOWN CUSTOMIZADO (JavaScript)
+   =========================== */
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(16, 24, 39, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    user-select: none;
+}
+
+.custom-select-trigger:hover {
+    border-color: rgba(0, 212, 255, 0.6);
+    box-shadow:
+        0 0 20px rgba(0, 212, 255, 0.2),
+        0 4px 15px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.custom-select.open .custom-select-trigger {
+    border-color: var(--neon-blue);
+    box-shadow:
+        0 0 25px rgba(0, 212, 255, 0.4),
+        0 0 50px rgba(0, 212, 255, 0.15),
+        0 4px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(26, 26, 46, 1) 0%, rgba(16, 24, 39, 1) 100%);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.custom-select-value {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-value.placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.custom-select-arrow {
+    width: 12px;
+    height: 12px;
+    margin-left: 0.5rem;
+    color: var(--neon-blue);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s;
+    flex-shrink: 0;
+}
+
+.custom-select.open .custom-select-arrow {
+    transform: rotate(180deg);
+    color: #00ff88;
+}
+
+/* Lista de opções (dropdown) */
+.custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(16, 24, 39, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--neon-blue);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(0, 212, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+.custom-select.open .custom-select-dropdown {
+    max-height: 300px;
+    overflow-y: auto;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Scrollbar customizada para dropdown */
+.custom-select-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 8px 0;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--neon-blue), var(--neon-purple));
+    border-radius: 10px;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00ff88, var(--neon-blue));
+}
+
+/* Opções individuais */
+.custom-select-option {
+    padding: 0.75rem 1rem;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-select-option::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.2), transparent);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-option:hover::before {
+    width: 100%;
+}
+
+.custom-select-option:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--neon-blue);
+    border-left-color: var(--neon-blue);
+    padding-left: 1.25rem;
+}
+
+.custom-select-option.selected {
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.25), rgba(42, 110, 167, 0.15));
+    color: #ffffff;
+    font-weight: 600;
+    border-left-color: #00ff88;
+    box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.custom-select-option.selected::after {
+    content: '✓';
+    margin-left: auto;
+    color: #00ff88;
+    font-weight: bold;
+    font-size: 1.1em;
+    animation: checkmark-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes checkmark-appear {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+    }
+}
+
+.custom-select-option.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    font-style: italic;
+}
+
+/* Animação de entrada das opções */
+.custom-select.open .custom-select-option {
+    animation: option-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.custom-select.open .custom-select-option:nth-child(1) { animation-delay: 0.03s; }
+.custom-select.open .custom-select-option:nth-child(2) { animation-delay: 0.06s; }
+.custom-select.open .custom-select-option:nth-child(3) { animation-delay: 0.09s; }
+.custom-select.open .custom-select-option:nth-child(4) { animation-delay: 0.12s; }
+.custom-select.open .custom-select-option:nth-child(5) { animation-delay: 0.15s; }
+
+@keyframes option-slide-in {
+    0% {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsividade e melhorias para touch/mobile */
+.custom-select-trigger,
+.custom-select-option {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+@media (max-width: 768px) {
+    .custom-select {
+        z-index: 1000;
+    }
+
+    .custom-select-trigger {
+        min-height: 48px;
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .custom-select-dropdown {
+        max-height: 250px;
+        -webkit-overflow-scrolling: touch;
+        z-index: 10000;
+    }
+
+    .custom-select.open .custom-select-dropdown {
+        max-height: 280px;
+    }
+
+    .custom-select-option {
+        min-height: 48px;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .custom-select-option:hover {
+        padding-left: 1rem;
+    }
+
+    .custom-select-option.selected::after {
+        font-size: 1.3em;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    .custom-select.open .custom-select-option {
+        animation: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-select-trigger {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .custom-select-option {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .custom-select.open .custom-select-dropdown {
+        max-height: 240px;
+    }
+}
