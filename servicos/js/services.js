@@ -1168,7 +1168,8 @@ export async function updateStatus(serviceId, newStatus) {
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
-        if (hasPhone && ['producao', 'retirada', 'entregue'].includes(newStatus)) {
+        // WhatsApp apenas disponível ao mudar status para "Pronto para Retirada/Envio"
+        if (hasPhone && newStatus === 'retirada') {
             whatsappOption.style.display = 'block';
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
@@ -1538,7 +1539,6 @@ function createServiceCard(service) {
             </div>
             
             <div class="service-footer">
-                ${service.clientPhone ? `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}', '${escapeHtml(service.client || '')}')"><i class="fab fa-whatsapp"></i> Contatar</button>` : ''}
                 ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
             </div>
         </div>
