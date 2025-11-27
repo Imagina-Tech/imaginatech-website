@@ -131,17 +131,22 @@ export function updateColorDropdown(selectedMaterial) {
 }
 
 /**
- * Deduz material do estoque após criar serviço
+ * Deduz ou devolve material do estoque
+ * @param {string} material - Tipo do material
+ * @param {string} color - Cor do material
+ * @param {number} weightInGrams - Peso em gramas (positivo = deduzir, negativo = devolver)
  */
 export async function deductMaterialFromStock(material, color, weightInGrams) {
-    if (!state.db || !material || !color || !weightInGrams) return;
+    if (!state.db || !material || !color || weightInGrams === 0) return;
 
     try {
-        // Buscar filamento correspondente
+        const isReturn = weightInGrams < 0;
+        const absWeightInGrams = Math.abs(weightInGrams);
+
+        // Buscar filamento correspondente (não precisa ter estoque se for devolução)
         const filament = availableFilaments.find(f =>
             f.type === material &&
-            f.color.toLowerCase() === color.toLowerCase() &&
-            f.weight > 0
+            f.color.toLowerCase() === color.toLowerCase()
         );
 
         if (!filament) {
@@ -150,8 +155,13 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
         }
 
         // Converter gramas para kg
-        const weightInKg = weightInGrams / 1000;
-        const newWeight = Math.max(0, (filament.weight || 0) - weightInKg);
+        const weightInKg = absWeightInGrams / 1000;
+        const currentWeight = filament.weight || 0;
+
+        // Calcular novo peso (deduzir ou adicionar)
+        const newWeight = isReturn
+            ? currentWeight + weightInKg  // Devolver ao estoque
+            : Math.max(0, currentWeight - weightInKg);  // Deduzir do estoque
 
         // Atualizar no Firestore
         await state.db.collection('filaments').doc(filament.id).update({
@@ -159,14 +169,16 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log(`✅ Estoque atualizado: ${material} ${color} - ${weightInGrams}g deduzidos`);
-        showToast(`Estoque atualizado: -${weightInGrams}g de ${material} ${color}`, 'info');
+        const action = isReturn ? 'devolvidos' : 'deduzidos';
+        const symbol = isReturn ? '+' : '-';
+        console.log(`✅ Estoque atualizado: ${material} ${color} - ${absWeightInGrams}g ${action}`);
+        showToast(`Estoque atualizado: ${symbol}${absWeightInGrams}g de ${material} ${color}`, 'info');
 
         // Atualizar cache local
         filament.weight = newWeight;
 
     } catch (error) {
-        console.error('Erro ao deduzir material do estoque:', error);
+        console.error('Erro ao atualizar material do estoque:', error);
         showToast('⚠️ Erro ao atualizar estoque', 'warning');
     }
 }
@@ -380,9 +392,76 @@ export async function saveService(event) {
     if (!service.dateUndefined && service.dueDate && parseDateBrazil(service.dueDate) < parseDateBrazil(service.startDate))
         return showToast('Data de entrega não pode ser anterior à data de início', 'error');
 
-    // VALIDAÇÃO DE ESTOQUE (apenas para novos serviços)
-    if (!state.editingServiceId && service.material && service.color && service.weight) {
-        const hasStock = checkStockAvailability(service.material, service.color, service.weight);
+    // VALIDAÇÃO E AJUSTE DE ESTOQUE
+    let stockAdjustmentNeeded = false;
+    let materialToDeduct = 0;
+    let oldMaterial = null;
+    let oldColor = null;
+    let oldWeight = 0;
+
+    if (state.editingServiceId) {
+        // CASO: EDITANDO SERVIÇO EXISTENTE
+        const currentService = state.services.find(s => s.id === state.editingServiceId);
+
+        if (currentService) {
+            oldMaterial = currentService.material;
+            oldColor = currentService.color;
+            oldWeight = currentService.weight || 0;
+
+            // Verificar se material/cor/peso foram adicionados ou modificados
+            const hadMaterial = oldMaterial && oldColor && oldWeight > 0;
+            const hasMaterialNow = service.material && service.color && service.weight > 0;
+
+            if (!hadMaterial && hasMaterialNow) {
+                // CASO 1: Material foi ADICIONADO (estava vazio, agora tem)
+                stockAdjustmentNeeded = true;
+                materialToDeduct = service.weight;
+                console.log(`📦 Material adicionado na edição: ${service.material} ${service.color} - ${service.weight}g`);
+            } else if (hadMaterial && hasMaterialNow) {
+                // CASO 2: Material foi MODIFICADO
+                const materialChanged = oldMaterial !== service.material || oldColor.toLowerCase() !== service.color.toLowerCase();
+                const weightChanged = oldWeight !== service.weight;
+
+                if (materialChanged || weightChanged) {
+                    // Se o material/cor mudou completamente, devolver o antigo e deduzir o novo
+                    if (materialChanged) {
+                        // Devolver material antigo ao estoque
+                        await deductMaterialFromStock(oldMaterial, oldColor, -oldWeight); // Valor negativo = devolução
+                        // Deduzir novo material
+                        stockAdjustmentNeeded = true;
+                        materialToDeduct = service.weight;
+                        console.log(`🔄 Material modificado: ${oldMaterial} ${oldColor} → ${service.material} ${service.color}`);
+                    } else if (weightChanged) {
+                        // Apenas o peso mudou, deduzir/devolver a diferença
+                        const weightDifference = service.weight - oldWeight;
+                        if (weightDifference > 0) {
+                            stockAdjustmentNeeded = true;
+                            materialToDeduct = weightDifference;
+                            console.log(`⚖️ Peso aumentado: +${weightDifference}g de ${service.material} ${service.color}`);
+                        } else if (weightDifference < 0) {
+                            // Devolver ao estoque (diferença negativa)
+                            await deductMaterialFromStock(service.material, service.color, weightDifference);
+                            console.log(`⚖️ Peso diminuído: ${weightDifference}g devolvido ao estoque`);
+                        }
+                    }
+                }
+            } else if (hadMaterial && !hasMaterialNow) {
+                // CASO 3: Material foi REMOVIDO
+                await deductMaterialFromStock(oldMaterial, oldColor, -oldWeight); // Devolver ao estoque
+                console.log(`🔙 Material removido, devolvido ao estoque: ${oldMaterial} ${oldColor} - ${oldWeight}g`);
+            }
+        }
+    } else {
+        // CASO: CRIANDO NOVO SERVIÇO
+        if (service.material && service.color && service.weight) {
+            stockAdjustmentNeeded = true;
+            materialToDeduct = service.weight;
+        }
+    }
+
+    // Validar disponibilidade de estoque
+    if (stockAdjustmentNeeded && materialToDeduct > 0) {
+        const hasStock = checkStockAvailability(service.material, service.color, materialToDeduct);
         if (!hasStock) {
             return; // Mensagem de erro já foi mostrada pela função
         }
@@ -410,9 +489,15 @@ export async function saveService(event) {
     
     try {
         let serviceDocId = state.editingServiceId;
-        
+
         if (state.editingServiceId) {
             await state.db.collection('services').doc(state.editingServiceId).update(service);
+
+            // DEDUZIR/DEVOLVER MATERIAL DO ESTOQUE (se houve mudanças)
+            if (stockAdjustmentNeeded && materialToDeduct > 0) {
+                await deductMaterialFromStock(service.material, service.color, materialToDeduct);
+            }
+
             showToast('Serviço atualizado com sucesso!', 'success');
         } else {
             Object.assign(service, {
@@ -432,13 +517,13 @@ export async function saveService(event) {
                 packagedPhotos: [],
                 trackingCode: ''
             });
-            
+
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
 
-            // DEDUZIR MATERIAL DO ESTOQUE
-            if (service.material && service.color && service.weight) {
-                await deductMaterialFromStock(service.material, service.color, service.weight);
+            // DEDUZIR MATERIAL DO ESTOQUE (na criação)
+            if (stockAdjustmentNeeded && materialToDeduct > 0) {
+                await deductMaterialFromStock(service.material, service.color, materialToDeduct);
             }
 
             document.getElementById('orderCodeDisplay').style.display = 'block';
