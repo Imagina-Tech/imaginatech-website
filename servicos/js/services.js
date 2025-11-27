@@ -185,9 +185,12 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
 
 /**
  * Verifica se há estoque suficiente
+ * @returns {object} { hasStock: boolean, available: number, needed: number, filament: object }
  */
 export function checkStockAvailability(material, color, weightInGrams) {
-    if (!material || !color || !weightInGrams) return true;
+    if (!material || !color || !weightInGrams) {
+        return { hasStock: true, available: 0, needed: 0, filament: null };
+    }
 
     const filament = availableFilaments.find(f =>
         f.type === material &&
@@ -195,19 +198,17 @@ export function checkStockAvailability(material, color, weightInGrams) {
     );
 
     if (!filament) {
-        showToast('⚠️ Material não encontrado no estoque', 'warning');
-        return false;
+        return { hasStock: false, available: 0, needed: weightInGrams, filament: null, notFound: true };
     }
 
     const weightInKg = weightInGrams / 1000;
+    const availableGrams = Math.floor(filament.weight * 1000);
 
     if (filament.weight < weightInKg) {
-        const availableGrams = Math.floor(filament.weight * 1000);
-        showToast(`❌ Estoque insuficiente! Disponível: ${availableGrams}g | Necessário: ${weightInGrams}g`, 'error');
-        return false;
+        return { hasStock: false, available: availableGrams, needed: weightInGrams, filament };
     }
 
-    return true;
+    return { hasStock: true, available: availableGrams, needed: weightInGrams, filament };
 }
 
 export function startServicesListener() {
@@ -237,6 +238,7 @@ export function startServicesListener() {
                 observations: data.observations || '',
                 deliveryMethod: data.deliveryMethod || '',
                 status: data.status || 'pendente',
+                needsMaterialPurchase: data.needsMaterialPurchase || false,
                 files: data.files || [],
                 fileUrl: data.fileUrl || '',
                 fileName: data.fileName || '',
@@ -459,12 +461,32 @@ export async function saveService(event) {
         }
     }
 
-    // Validar disponibilidade de estoque
+    // Validar disponibilidade de estoque e marcar se precisa comprar material
+    let needsMaterialPurchase = false;
+    let stockInfo = null;
+
     if (stockAdjustmentNeeded && materialToDeduct > 0) {
-        const hasStock = checkStockAvailability(service.material, service.color, materialToDeduct);
-        if (!hasStock) {
-            return; // Mensagem de erro já foi mostrada pela função
+        stockInfo = checkStockAvailability(service.material, service.color, materialToDeduct);
+
+        if (!stockInfo.hasStock) {
+            needsMaterialPurchase = true;
+            service.needsMaterialPurchase = true;
+
+            // Avisar o usuário
+            if (stockInfo.notFound) {
+                showToast(`⚠️ Material ${service.material} ${service.color} não encontrado no estoque. Será necessário comprar!`, 'warning');
+            } else {
+                const missingAmount = stockInfo.needed - stockInfo.available;
+                showToast(`⚠️ Estoque insuficiente! Faltam ${missingAmount}g de ${service.material} ${service.color}. Será necessário comprar!`, 'warning');
+            }
+        } else {
+            // Tem estoque suficiente, remover flag se existir
+            service.needsMaterialPurchase = false;
         }
+    } else {
+        // Se não precisa ajustar estoque, manter flag existente ou false
+        const currentService = state.services.find(s => s.id === state.editingServiceId);
+        service.needsMaterialPurchase = currentService?.needsMaterialPurchase || false;
     }
 
     if (deliveryMethod === 'retirada') {
@@ -493,12 +515,16 @@ export async function saveService(event) {
         if (state.editingServiceId) {
             await state.db.collection('services').doc(state.editingServiceId).update(service);
 
-            // DEDUZIR/DEVOLVER MATERIAL DO ESTOQUE (se houve mudanças)
-            if (stockAdjustmentNeeded && materialToDeduct > 0) {
+            // DEDUZIR/DEVOLVER MATERIAL DO ESTOQUE (apenas se houver estoque suficiente)
+            if (stockAdjustmentNeeded && materialToDeduct > 0 && !needsMaterialPurchase) {
                 await deductMaterialFromStock(service.material, service.color, materialToDeduct);
             }
 
-            showToast('Serviço atualizado com sucesso!', 'success');
+            if (needsMaterialPurchase) {
+                showToast('⚠️ Serviço salvo! Lembre-se de comprar o material necessário.', 'warning');
+            } else {
+                showToast('Serviço atualizado com sucesso!', 'success');
+            }
         } else {
             Object.assign(service, {
                 createdAt: new Date().toISOString(),
@@ -515,14 +541,15 @@ export async function saveService(event) {
                 imageUploadedAt: '',
                 instagramPhoto: '',
                 packagedPhotos: [],
-                trackingCode: ''
+                trackingCode: '',
+                needsMaterialPurchase: false
             });
 
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
 
-            // DEDUZIR MATERIAL DO ESTOQUE (na criação)
-            if (stockAdjustmentNeeded && materialToDeduct > 0) {
+            // DEDUZIR MATERIAL DO ESTOQUE (apenas se houver estoque suficiente)
+            if (stockAdjustmentNeeded && materialToDeduct > 0 && !needsMaterialPurchase) {
                 await deductMaterialFromStock(service.material, service.color, materialToDeduct);
             }
 
@@ -1338,7 +1365,16 @@ function createServiceCard(service) {
                     </button>
                 </div>
             </div>
-            
+
+            ${service.needsMaterialPurchase ? `
+            <div class="material-purchase-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>COMPRAR MATERIAL PARA FAZER O SERVIÇO</span>
+                <div class="material-info-alert">
+                    ${service.material && service.color ? `${service.material} ${formatColorName(service.color)}${service.weight ? ` - ${service.weight}g` : ''}` : 'Material não especificado'}
+                </div>
+            </div>` : ''}
+
             ${service.deliveryMethod ? `
             <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                 <div class="delivery-info">
