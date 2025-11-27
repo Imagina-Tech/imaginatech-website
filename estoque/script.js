@@ -36,6 +36,7 @@ const AUTHORIZED_EMAILS = [
 // ===========================
 let db, auth, storage;
 let filaments = [];
+let pendingServices = []; // Serviços aguardando compra de material
 let currentFilter = 'todos';
 let currentStockFilter = null;
 let selectedImage = null;
@@ -103,6 +104,7 @@ function showDashboard(user) {
     document.getElementById('userName').textContent = user.displayName || user.email;
     document.getElementById('userPhoto').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`;
     updateConnectionStatus(true);
+    loadPendingServices(); // Carregar serviços aguardando material
 }
 
 function showLoginScreen() {
@@ -130,6 +132,33 @@ function loadFilaments() {
             console.error('Error loading filaments:', error);
             showToast('Erro ao carregar filamentos', 'error');
             hideLoading();
+        });
+}
+
+// ===========================
+// LOAD PENDING SERVICES
+// ===========================
+function loadPendingServices() {
+    db.collection('services')
+        .where('needsMaterialPurchase', '==', true)
+        .onSnapshot(snapshot => {
+            pendingServices = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                pendingServices.push({
+                    id: doc.id,
+                    name: data.name || 'Sem nome',
+                    client: data.client || 'Cliente não informado',
+                    material: data.material || '',
+                    color: data.color || '',
+                    weight: data.weight || 0,
+                    orderCode: data.orderCode || 'N/A'
+                });
+            });
+            console.log(`📦 ${pendingServices.length} serviços aguardando compra de material`);
+            renderFilaments(); // Re-renderizar cards com as informações atualizadas
+        }, error => {
+            console.error('Error loading pending services:', error);
         });
 }
 
@@ -187,9 +216,41 @@ function createFilamentCard(filament) {
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
     const displayName = `${filament.type} ${filament.color}`;
 
+    // Buscar serviços pendentes para este filamento
+    const servicesForThisFilament = pendingServices.filter(s =>
+        s.material && s.color &&
+        s.material.toLowerCase() === filament.type.toLowerCase() &&
+        s.color.toLowerCase() === filament.color.toLowerCase()
+    );
+
+    // Calcular quantidade total necessária
+    const totalNeeded = servicesForThisFilament.reduce((sum, s) => sum + (s.weight || 0), 0);
+    const serviceCount = servicesForThisFilament.length;
+
     return `
         <div class="filament-card ${outOfStock}" data-filament-id="${filament.id}">
             ${stockClass ? `<div class="stock-indicator ${stockClass}"></div>` : ''}
+
+            ${serviceCount > 0 ? `
+            <div class="pending-services-badge">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="badge-content">
+                    <div class="badge-title">SERVIÇOS AGUARDANDO</div>
+                    <div class="badge-details">
+                        ${serviceCount} ${serviceCount === 1 ? 'pedido' : 'pedidos'} • ${totalNeeded.toFixed(0)}g necessários
+                    </div>
+                    <div class="badge-services">
+                        ${servicesForThisFilament.map(s =>
+                            `<div class="service-item">
+                                <span class="service-code">#${s.orderCode}</span>
+                                <span class="service-name">${s.name}</span>
+                                <span class="service-weight">${s.weight}g</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+            </div>` : ''}
+
             <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${displayName}" class="filament-image">
             <div class="filament-info">
                 <div class="filament-type">${filament.type}</div>
