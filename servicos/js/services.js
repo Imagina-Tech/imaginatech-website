@@ -1519,7 +1519,6 @@ function createServiceCard(service) {
             
             <div class="service-info">
                 <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
-                ${service.clientPhone ? `<div class="info-item"><i class="fas fa-phone"></i><span>${escapeHtml(service.clientPhone)}</span></div>` : ''}
                 <div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material || 'N/A'}</span></div>
                 ${service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
                 <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>

@@ -707,9 +707,13 @@ export async function openAddModal() {
         colorSelect.innerHTML = '<option value="">Primeiro selecione o material</option>';
     }
 
-    // Habilitar campo de telefone ao criar novo serviço
+    // Exibir e habilitar campo de telefone ao criar novo serviço
     const phoneInput = document.getElementById('clientPhone');
     if (phoneInput) {
+        const phoneFormGroup = phoneInput.closest('.form-group');
+        if (phoneFormGroup) {
+            phoneFormGroup.style.display = '';
+        }
         phoneInput.disabled = false;
         phoneInput.style.cursor = '';
         phoneInput.style.opacity = '';
@@ -741,16 +745,12 @@ export async function openEditModal(serviceId) {
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
 
-    // Censurar telefone (mostrar apenas últimos 4 dígitos)
-    const censoredPhone = service.clientPhone ?
-        '**** **** ' + service.clientPhone.slice(-4) : '';
-
     Object.entries({
         serviceName: service.name,
         clientName: service.client,
         clientCPF: service.clientCPF || '',
         clientEmail: service.clientEmail,
-        clientPhone: censoredPhone,
+        clientPhone: service.clientPhone,
         serviceDescription: service.description,
         serviceMaterial: service.material,
         serviceColor: service.color,
@@ -767,12 +767,13 @@ export async function openEditModal(serviceId) {
         el && (el.value = value || '');
     });
 
-    // Desabilitar edição do campo de telefone
+    // Ocultar completamente o campo de telefone ao editar
     const phoneInput = document.getElementById('clientPhone');
     if (phoneInput) {
-        phoneInput.disabled = true;
-        phoneInput.style.cursor = 'not-allowed';
-        phoneInput.style.opacity = '0.6';
+        const phoneFormGroup = phoneInput.closest('.form-group');
+        if (phoneFormGroup) {
+            phoneFormGroup.style.display = 'none';
+        }
     }
 
     // Atualizar dropdown de cores baseado no material selecionado
