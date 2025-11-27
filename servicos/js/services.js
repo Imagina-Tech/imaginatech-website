@@ -1538,6 +1538,10 @@ function createServiceCard(service) {
             </div>
             
             <div class="service-footer">
+                ${(service.status === 'retirada' || service.status === 'entregue') && service.clientPhone ?
+                    `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}', '${escapeHtml(service.client || '')}')">
+                        <i class="fab fa-whatsapp"></i> Contatar
+                    </button>` : ''}
                 ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
             </div>
         </div>
