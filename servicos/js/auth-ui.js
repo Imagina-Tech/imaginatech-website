@@ -754,6 +754,16 @@ export async function openEditModal(serviceId) {
         const el = document.getElementById(id);
         el && (el.value = value || '');
     });
+
+    // Atualizar dropdown de cores baseado no material selecionado
+    if (service.material) {
+        updateColorDropdown(service.material);
+        // Re-definir a cor após atualizar o dropdown
+        const colorSelect = document.getElementById('serviceColor');
+        if (colorSelect && service.color) {
+            colorSelect.value = service.color;
+        }
+    }
     
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
