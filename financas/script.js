@@ -1,11 +1,11 @@
 /*
-=================================================
+==================================================
 ARQUIVO: financas/script.js
-MÓDULO: Dashboard Financeiro Pessoal
+MÓDULO: Dashboard Financeiro Pessoal Profissional
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 1.0
+VERSÃO: 2.0 - Sistema Completo com Gráficos ApexCharts
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
-=================================================
+==================================================
 */
 
 // ===========================
@@ -59,158 +59,184 @@ const EXPENSE_CATEGORIES = [
 // GLOBAL STATE
 // ===========================
 let db, auth;
-let transactions = [];
 let currentUser = null;
+let transactions = [];
+let subscriptions = [];
+let installments = [];
+let projections = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
+
+// ApexCharts instances
+let cashFlowChart = null;
 let categoryChart = null;
 let comparisonChart = null;
 
 // ===========================
-// INITIALIZATION
+// FIREBASE INITIALIZATION
 // ===========================
-document.addEventListener('DOMContentLoaded', () => {
-    initializeFirebase();
-    setupAuthListener();
-    setupEventListeners();
-});
-
-function initializeFirebase() {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        auth = firebase.auth();
-        console.log('Firebase initialized successfully');
-    } catch (error) {
-        console.error('Error initializing Firebase:', error);
-        showToast('Erro ao conectar com o servidor', 'error');
-    }
-}
+firebase.initializeApp(firebaseConfig);
+db = firebase.firestore();
+auth = firebase.auth();
 
 // ===========================
 // AUTHENTICATION
 // ===========================
-function setupAuthListener() {
-    auth.onAuthStateChanged(user => {
-        hideLoading();
-        if (user && AUTHORIZED_EMAILS.includes(user.email)) {
+auth.onAuthStateChanged(user => {
+    if (user) {
+        if (AUTHORIZED_EMAILS.includes(user.email)) {
             currentUser = user;
             showDashboard(user);
-            loadTransactions();
+            initializeDashboard();
         } else {
-            if (user) {
-                showToast('Acesso não autorizado', 'error');
-                auth.signOut();
-            }
-            showLoginScreen();
+            showToast('Acesso não autorizado!', 'error');
+            signOut();
         }
-    });
-}
+    } else {
+        showLoginScreen();
+    }
+});
 
 function signInWithGoogle() {
+    showLoading('Autenticando...');
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(error => {
-        console.error('Login error:', error);
-        showToast('Erro ao fazer login', 'error');
-    });
+    auth.signInWithPopup(provider)
+        .catch(error => {
+            hideLoading();
+            console.error('Erro no login:', error);
+            showToast('Erro ao fazer login', 'error');
+        });
 }
 
 function signOut() {
     auth.signOut().then(() => {
         showToast('Logout realizado com sucesso', 'success');
-        showLoginScreen();
+        location.reload();
     });
 }
 
-function showDashboard(user) {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    document.getElementById('userName').textContent = user.displayName || user.email;
-    document.getElementById('userEmail').textContent = user.email;
-    document.getElementById('userPhoto').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=6366F1&color=fff`;
-}
-
 function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+function showDashboard(user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('userName').textContent = user.displayName || 'Usuário';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userPhoto').src = user.photoURL || 'https://via.placeholder.com/40';
 }
 
 // ===========================
-// EVENT LISTENERS
+// INITIALIZATION
 // ===========================
-function setupEventListeners() {
-    // Transaction form
-    document.getElementById('transactionForm').addEventListener('submit', handleTransactionSubmit);
+async function initializeDashboard() {
+    showLoading('Carregando dados...');
 
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+    try {
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        if (document.getElementById('projDate')) {
+            document.getElementById('projDate').value = today;
+        }
+
+        // Populate category options
+        populateCategories();
+
+        // Load all data
+        await Promise.all([
+            loadTransactions(),
+            loadSubscriptions(),
+            loadInstallments(),
+            loadProjections()
+        ]);
+
+        // Initialize charts
+        initializeCharts();
+
+        // Update KPIs
+        updateKPIs();
+
+        hideLoading();
+        showToast('Dashboard carregado com sucesso', 'success');
+    } catch (error) {
+        hideLoading();
+        console.error('Erro ao inicializar dashboard:', error);
+        showToast('Erro ao carregar dados', 'error');
+    }
+}
+
+function populateCategories() {
+    const categorySelect = document.getElementById('category');
+    categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+    const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+    });
 }
 
 // ===========================
-// LOAD TRANSACTIONS
+// TRANSACTIONS CRUD
 // ===========================
-function loadTransactions() {
-    if (!currentUser) return;
+async function loadTransactions() {
+    try {
+        const snapshot = await db.collection('transactions')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('date', 'desc')
+            .get();
 
-    showLoading('Carregando transações...');
+        transactions = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-    db.collection('transactions')
-        .where('userId', '==', currentUser.uid)
-        .orderBy('date', 'desc')
-        .onSnapshot(snapshot => {
-            transactions = [];
-            snapshot.forEach(doc => {
-                transactions.push({ id: doc.id, ...doc.data() });
-            });
-            renderTransactions();
-            updateKPIs();
-            updateCharts();
-            hideLoading();
-        }, error => {
-            console.error('Error loading transactions:', error);
-            showToast('Erro ao carregar transações', 'error');
-            hideLoading();
-        });
+        renderTransactions();
+    } catch (error) {
+        console.error('Erro ao carregar transações:', error);
+        showToast('Erro ao carregar transações', 'error');
+    }
 }
 
-// ===========================
-// RENDER TRANSACTIONS
-// ===========================
 function renderTransactions() {
     const tbody = document.getElementById('transactionsTableBody');
     const emptyState = document.getElementById('emptyState');
 
     let filteredTransactions = transactions;
-
-    // Apply filter
-    if (currentFilter === 'income') {
-        filteredTransactions = transactions.filter(t => t.type === 'income');
-    } else if (currentFilter === 'expense') {
-        filteredTransactions = transactions.filter(t => t.type === 'expense');
+    if (currentFilter !== 'all') {
+        filteredTransactions = transactions.filter(t => t.type === currentFilter);
     }
 
     if (filteredTransactions.length === 0) {
-        tbody.style.display = 'none';
-        emptyState.style.display = 'block';
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
         return;
     }
 
-    tbody.style.display = 'table-row-group';
-    emptyState.style.display = 'none';
+    emptyState.classList.add('hidden');
 
     tbody.innerHTML = filteredTransactions.map(transaction => `
-        <tr>
-            <td>${transaction.description}</td>
+        <tr class="transaction-row ${transaction.type}">
+            <td>
+                <div class="transaction-description">
+                    <i class="fas fa-${transaction.type === 'income' ? 'arrow-up' : 'arrow-down'}"></i>
+                    <span>${transaction.description}</span>
+                </div>
+            </td>
             <td>
                 <span class="category-badge">${transaction.category}</span>
             </td>
             <td>${formatDate(transaction.date)}</td>
-            <td class="${transaction.type === 'income' ? 'value-income' : 'value-expense'}">
-                ${transaction.type === 'income' ? '+' : '-'} ${formatCurrencyDisplay(transaction.value)}
+            <td class="value ${transaction.type}">
+                ${formatCurrencyDisplay(transaction.value)}
             </td>
             <td>
-                <button class="btn-delete" onclick="deleteTransaction('${transaction.id}')" title="Excluir">
+                <button class="btn-delete" onclick="deleteTransaction('${transaction.id}')" title="Deletar">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -218,272 +244,10 @@ function renderTransactions() {
     `).join('');
 }
 
-// ===========================
-// UPDATE KPIs
-// ===========================
-function updateKPIs() {
-    const income = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.value, 0);
-
-    const expense = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.value, 0);
-
-    const balance = income - expense;
-
-    document.getElementById('totalIncome').textContent = formatCurrencyDisplay(income);
-    document.getElementById('totalExpense').textContent = formatCurrencyDisplay(expense);
-    document.getElementById('totalBalance').textContent = formatCurrencyDisplay(balance);
-}
-
-// ===========================
-// UPDATE CHARTS
-// ===========================
-function updateCharts() {
-    updateCategoryChart();
-    updateComparisonChart();
-}
-
-function updateCategoryChart() {
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-
-    // Calculate expenses by category
-    const expensesByCategory = {};
-    transactions
-        .filter(t => t.type === 'expense')
-        .forEach(t => {
-            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.value;
-        });
-
-    const labels = Object.keys(expensesByCategory);
-    const data = Object.values(expensesByCategory);
-
-    // Destroy previous chart
-    if (categoryChart) {
-        categoryChart.destroy();
-    }
-
-    // Create new chart
-    categoryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: [
-                    '#EF4444',
-                    '#F59E0B',
-                    '#10B981',
-                    '#3B82F6',
-                    '#8B5CF6',
-                    '#EC4899',
-                    '#14B8A6',
-                    '#F97316',
-                    '#6366F1'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12,
-                            family: 'Inter'
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = formatCurrencyDisplay(context.parsed);
-                            return `${label}: ${value}`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function updateComparisonChart() {
-    const ctx = document.getElementById('comparisonChart').getContext('2d');
-
-    const income = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.value, 0);
-
-    const expense = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.value, 0);
-
-    // Destroy previous chart
-    if (comparisonChart) {
-        comparisonChart.destroy();
-    }
-
-    // Create new chart
-    comparisonChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Entradas', 'Saídas'],
-            datasets: [{
-                data: [income, expense],
-                backgroundColor: ['#10B981', '#EF4444'],
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return formatCurrencyDisplay(context.parsed.y);
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'R$ ' + value.toLocaleString('pt-BR');
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// ===========================
-// TRANSACTION MODAL
-// ===========================
-function openTransactionModal() {
-    document.getElementById('transactionModal').classList.add('active');
-    document.getElementById('transactionForm').reset();
-
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
-
-    // Set default type to income
-    selectTransactionType('income');
-}
-
-function closeTransactionModal() {
-    document.getElementById('transactionModal').classList.remove('active');
-}
-
-function selectTransactionType(type) {
-    currentTransactionType = type;
-
-    // Update button states
-    document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.type === type) {
-            btn.classList.add('active');
-        }
-    });
-
-    // Update category options
-    const categorySelect = document.getElementById('category');
-    const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-
-    categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
-}
-
-// ===========================
-// HANDLE TRANSACTION SUBMIT
-// ===========================
-async function handleTransactionSubmit(e) {
-    e.preventDefault();
-
-    if (!currentUser) {
-        showToast('Usuário não autenticado', 'error');
-        return;
-    }
-
-    const description = document.getElementById('description').value.trim();
-    const valueStr = document.getElementById('value').value.replace(/\D/g, '');
-    const value = parseFloat(valueStr) / 100;
-    const category = document.getElementById('category').value;
-    const dateStr = document.getElementById('date').value;
-
-    if (!description || !value || !category || !dateStr) {
-        showToast('Preencha todos os campos', 'error');
-        return;
-    }
-
-    const transaction = {
-        userId: currentUser.uid,
-        type: currentTransactionType,
-        description,
-        value,
-        category,
-        date: dateStr,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    try {
-        showLoading('Salvando transação...');
-        await db.collection('transactions').add(transaction);
-        showToast('Transação adicionada com sucesso!', 'success');
-        closeTransactionModal();
-    } catch (error) {
-        console.error('Error adding transaction:', error);
-        showToast('Erro ao adicionar transação', 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
-// ===========================
-// DELETE TRANSACTION
-// ===========================
-async function deleteTransaction(id) {
-    if (!confirm('Tem certeza que deseja excluir esta transação?')) {
-        return;
-    }
-
-    try {
-        showLoading('Excluindo transação...');
-        await db.collection('transactions').doc(id).delete();
-        showToast('Transação excluída com sucesso!', 'success');
-    } catch (error) {
-        console.error('Error deleting transaction:', error);
-        showToast('Erro ao excluir transação', 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
-// ===========================
-// FILTER TRANSACTIONS
-// ===========================
 function filterTransactions(filter) {
     currentFilter = filter;
 
-    // Update button states
+    // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.filter === filter) {
@@ -494,65 +258,1157 @@ function filterTransactions(filter) {
     renderTransactions();
 }
 
+async function handleTransactionSubmit(e) {
+    e.preventDefault();
+
+    const description = document.getElementById('description').value.trim();
+    const valueStr = document.getElementById('value').value;
+    const category = document.getElementById('category').value;
+    const date = document.getElementById('date').value;
+
+    if (!description || !valueStr || !category || !date) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const value = parseCurrencyInput(valueStr);
+    if (value <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    showLoading('Salvando transação...');
+
+    try {
+        await db.collection('transactions').add({
+            userId: currentUser.uid,
+            type: currentTransactionType,
+            description,
+            value,
+            category,
+            date,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await loadTransactions();
+        updateKPIs();
+        updateCharts();
+        closeTransactionModal();
+        showToast('Transação adicionada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar transação:', error);
+        showToast('Erro ao salvar transação', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteTransaction(id) {
+    if (!confirm('Deseja realmente deletar esta transação?')) return;
+
+    showLoading('Deletando...');
+
+    try {
+        await db.collection('transactions').doc(id).delete();
+        await loadTransactions();
+        updateKPIs();
+        updateCharts();
+        showToast('Transação deletada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar transação:', error);
+        showToast('Erro ao deletar transação', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// SUBSCRIPTIONS CRUD
+// ===========================
+async function loadSubscriptions() {
+    try {
+        const snapshot = await db.collection('subscriptions')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        subscriptions = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        renderSubscriptions();
+    } catch (error) {
+        console.error('Erro ao carregar assinaturas:', error);
+        showToast('Erro ao carregar assinaturas', 'error');
+    }
+}
+
+function renderSubscriptions() {
+    const grid = document.getElementById('subscriptionsGrid');
+    const emptyState = document.getElementById('emptySubscriptions');
+
+    if (subscriptions.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    grid.innerHTML = subscriptions.map(sub => {
+        const nextDue = calculateNextDue(sub.dueDay);
+        return `
+            <div class="subscription-card ${sub.status}">
+                <div class="sub-header">
+                    <div>
+                        <h4>${sub.name}</h4>
+                        <span class="category-badge">${sub.category}</span>
+                    </div>
+                    <span class="status-badge ${sub.status}">
+                        ${sub.status === 'active' ? 'Ativa' : 'Inativa'}
+                    </span>
+                </div>
+                <div class="sub-body">
+                    <div class="sub-value">${formatCurrencyDisplay(sub.value)}<small>/mês</small></div>
+                    <div class="sub-due">
+                        <i class="fas fa-calendar-alt"></i>
+                        Próximo vencimento: ${nextDue}
+                    </div>
+                </div>
+                <div class="sub-actions">
+                    <button class="btn-delete-sub" onclick="deleteSubscription('${sub.id}')" title="Deletar">
+                        <i class="fas fa-trash"></i> Deletar
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function calculateNextDue(dueDay) {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    let dueDate = new Date(currentYear, currentMonth, dueDay);
+
+    if (dueDate < today) {
+        dueDate = new Date(currentYear, currentMonth + 1, dueDay);
+    }
+
+    return dueDate.toLocaleDateString('pt-BR');
+}
+
+async function handleSubscriptionSubmit(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('subName').value.trim();
+    const valueStr = document.getElementById('subValue').value;
+    const dueDay = parseInt(document.getElementById('subDueDay').value);
+    const category = document.getElementById('subCategory').value;
+    const status = document.getElementById('subStatus').value;
+
+    if (!name || !valueStr || !dueDay || !category) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    if (dueDay < 1 || dueDay > 31) {
+        showToast('Dia do vencimento deve estar entre 1 e 31', 'error');
+        return;
+    }
+
+    const value = parseCurrencyInput(valueStr);
+    if (value <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    showLoading('Salvando assinatura...');
+
+    try {
+        await db.collection('subscriptions').add({
+            userId: currentUser.uid,
+            name,
+            value,
+            dueDay,
+            category,
+            status,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await loadSubscriptions();
+        updateKPIs();
+        closeSubscriptionModal();
+        showToast('Assinatura adicionada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar assinatura:', error);
+        showToast('Erro ao salvar assinatura', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteSubscription(id) {
+    if (!confirm('Deseja realmente deletar esta assinatura?')) return;
+
+    showLoading('Deletando...');
+
+    try {
+        await db.collection('subscriptions').doc(id).delete();
+        await loadSubscriptions();
+        updateKPIs();
+        showToast('Assinatura deletada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar assinatura:', error);
+        showToast('Erro ao deletar assinatura', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// INSTALLMENTS CRUD
+// ===========================
+async function loadInstallments() {
+    try {
+        const snapshot = await db.collection('installments')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        installments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        renderInstallments();
+    } catch (error) {
+        console.error('Erro ao carregar parcelamentos:', error);
+        showToast('Erro ao carregar parcelamentos', 'error');
+    }
+}
+
+function renderInstallments() {
+    const grid = document.getElementById('installmentsGrid');
+    const emptyState = document.getElementById('emptyInstallments');
+
+    if (installments.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    grid.innerHTML = installments.map(inst => {
+        const remaining = inst.totalInstallments - inst.paidInstallments;
+        const percentage = (inst.paidInstallments / inst.totalInstallments) * 100;
+        const installmentValue = inst.totalValue / inst.totalInstallments;
+        const remainingValue = installmentValue * remaining;
+
+        return `
+            <div class="installment-card">
+                <div class="inst-header">
+                    <h4>${inst.description}</h4>
+                    <span class="inst-total">${formatCurrencyDisplay(inst.totalValue)}</span>
+                </div>
+                <div class="inst-body">
+                    <div class="inst-info">
+                        <div class="info-item">
+                            <i class="fas fa-credit-card"></i>
+                            ${inst.paidInstallments}/${inst.totalInstallments} parcelas
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            Vencimento: dia ${inst.dueDay}
+                        </div>
+                        <div class="info-item remaining">
+                            <i class="fas fa-dollar-sign"></i>
+                            Restante: ${formatCurrencyDisplay(remainingValue)}
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="progress-text">${percentage.toFixed(0)}% concluído</span>
+                    </div>
+                </div>
+                <div class="inst-actions">
+                    <input
+                        type="number"
+                        class="paid-input"
+                        value="${inst.paidInstallments}"
+                        min="0"
+                        max="${inst.totalInstallments}"
+                        onchange="updateInstallmentProgress('${inst.id}', this.value)"
+                    >
+                    <button class="btn-delete-inst" onclick="deleteInstallment('${inst.id}')" title="Deletar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function handleInstallmentSubmit(e) {
+    e.preventDefault();
+
+    const description = document.getElementById('instDescription').value.trim();
+    const totalValueStr = document.getElementById('instTotalValue').value;
+    const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value);
+    const paidInstallments = parseInt(document.getElementById('instPaidInstallments').value);
+    const dueDay = parseInt(document.getElementById('instDueDay').value);
+
+    if (!description || !totalValueStr || !totalInstallments || !dueDay) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const totalValue = parseCurrencyInput(totalValueStr);
+    if (totalValue <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    if (totalInstallments < 2 || totalInstallments > 99) {
+        showToast('Total de parcelas deve estar entre 2 e 99', 'error');
+        return;
+    }
+
+    if (paidInstallments < 0 || paidInstallments > totalInstallments) {
+        showToast('Parcelas pagas inválidas', 'error');
+        return;
+    }
+
+    if (dueDay < 1 || dueDay > 31) {
+        showToast('Dia do vencimento deve estar entre 1 e 31', 'error');
+        return;
+    }
+
+    showLoading('Salvando parcelamento...');
+
+    try {
+        await db.collection('installments').add({
+            userId: currentUser.uid,
+            description,
+            totalValue,
+            totalInstallments,
+            paidInstallments,
+            dueDay,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await loadInstallments();
+        updateKPIs();
+        closeInstallmentModal();
+        showToast('Parcelamento adicionado com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar parcelamento:', error);
+        showToast('Erro ao salvar parcelamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function updateInstallmentProgress(id, paid) {
+    const paidInstallments = parseInt(paid);
+
+    showLoading('Atualizando...');
+
+    try {
+        await db.collection('installments').doc(id).update({
+            paidInstallments
+        });
+
+        await loadInstallments();
+        updateKPIs();
+        showToast('Progresso atualizado', 'success');
+    } catch (error) {
+        console.error('Erro ao atualizar parcelamento:', error);
+        showToast('Erro ao atualizar', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteInstallment(id) {
+    if (!confirm('Deseja realmente deletar este parcelamento?')) return;
+
+    showLoading('Deletando...');
+
+    try {
+        await db.collection('installments').doc(id).delete();
+        await loadInstallments();
+        updateKPIs();
+        showToast('Parcelamento deletado com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar parcelamento:', error);
+        showToast('Erro ao deletar parcelamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// PROJECTIONS CRUD
+// ===========================
+async function loadProjections() {
+    try {
+        const snapshot = await db.collection('projections')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('date', 'asc')
+            .get();
+
+        projections = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        renderProjections();
+    } catch (error) {
+        console.error('Erro ao carregar projeções:', error);
+        showToast('Erro ao carregar projeções', 'error');
+    }
+}
+
+function renderProjections() {
+    const grid = document.getElementById('projectionsGrid');
+    const emptyState = document.getElementById('emptyProjections');
+
+    if (projections.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    grid.innerHTML = projections.map(proj => `
+        <div class="projection-card ${proj.status}">
+            <div class="proj-header">
+                <h4>${proj.description}</h4>
+                <span class="status-badge ${proj.status}">
+                    ${proj.status === 'pending' ? 'Pendente' : 'Recebido'}
+                </span>
+            </div>
+            <div class="proj-body">
+                <div class="proj-value">${formatCurrencyDisplay(proj.value)}</div>
+                <div class="proj-date">
+                    <i class="fas fa-calendar-alt"></i>
+                    ${formatDate(proj.date)}
+                </div>
+            </div>
+            <div class="proj-actions">
+                ${proj.status === 'pending' ? `
+                    <button class="btn-mark-received" onclick="updateProjectionStatus('${proj.id}', 'received')">
+                        <i class="fas fa-check"></i> Marcar como Recebido
+                    </button>
+                ` : ''}
+                <button class="btn-delete-proj" onclick="deleteProjection('${proj.id}')" title="Deletar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function handleProjectionSubmit(e) {
+    e.preventDefault();
+
+    const description = document.getElementById('projDescription').value.trim();
+    const valueStr = document.getElementById('projValue').value;
+    const date = document.getElementById('projDate').value;
+    const status = document.getElementById('projStatus').value;
+
+    if (!description || !valueStr || !date) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const value = parseCurrencyInput(valueStr);
+    if (value <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    showLoading('Salvando projeção...');
+
+    try {
+        await db.collection('projections').add({
+            userId: currentUser.uid,
+            description,
+            value,
+            date,
+            status,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await loadProjections();
+        updateKPIs();
+        closeProjectionModal();
+        showToast('Projeção adicionada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar projeção:', error);
+        showToast('Erro ao salvar projeção', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function updateProjectionStatus(id, status) {
+    showLoading('Atualizando status...');
+
+    try {
+        await db.collection('projections').doc(id).update({ status });
+        await loadProjections();
+        updateKPIs();
+        showToast('Status atualizado', 'success');
+    } catch (error) {
+        console.error('Erro ao atualizar projeção:', error);
+        showToast('Erro ao atualizar', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteProjection(id) {
+    if (!confirm('Deseja realmente deletar esta projeção?')) return;
+
+    showLoading('Deletando...');
+
+    try {
+        await db.collection('projections').doc(id).delete();
+        await loadProjections();
+        updateKPIs();
+        showToast('Projeção deletada com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar projeção:', error);
+        showToast('Erro ao deletar projeção', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// KPI CALCULATIONS
+// ===========================
+function updateKPIs() {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    // Filter transactions for current month
+    const currentMonthTransactions = transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate.getMonth() === currentMonth &&
+               transactionDate.getFullYear() === currentYear;
+    });
+
+    // Total Income (current month)
+    const totalIncome = currentMonthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Total Expense (current month)
+    const totalExpense = currentMonthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Total Balance (all time)
+    const totalBalance = transactions
+        .reduce((sum, t) => {
+            return t.type === 'income' ? sum + t.value : sum - t.value;
+        }, 0);
+
+    // Total Active Subscriptions
+    const totalSubscriptions = subscriptions
+        .filter(s => s.status === 'active')
+        .reduce((sum, s) => sum + s.value, 0);
+
+    // Total Pending Installments
+    const totalInstallments = installments.reduce((sum, inst) => {
+        const remaining = inst.totalInstallments - inst.paidInstallments;
+        const installmentValue = inst.totalValue / inst.totalInstallments;
+        return sum + (installmentValue * remaining);
+    }, 0);
+
+    // Projection for Next Month
+    const totalProjection = projections
+        .filter(p => p.status === 'pending')
+        .reduce((sum, p) => sum + p.value, 0);
+
+    // Update DOM
+    document.getElementById('totalIncome').textContent = formatCurrencyDisplay(totalIncome);
+    document.getElementById('totalExpense').textContent = formatCurrencyDisplay(totalExpense);
+    document.getElementById('totalBalance').textContent = formatCurrencyDisplay(totalBalance);
+    document.getElementById('totalSubscriptions').textContent = formatCurrencyDisplay(totalSubscriptions);
+    document.getElementById('totalInstallments').textContent = formatCurrencyDisplay(totalInstallments);
+    document.getElementById('totalProjection').textContent = formatCurrencyDisplay(totalProjection);
+}
+
+// ===========================
+// APEXCHARTS - INITIALIZATION
+// ===========================
+function initializeCharts() {
+    initializeCashFlowChart();
+    initializeCategoryChart();
+    initializeComparisonChart();
+}
+
+function updateCharts() {
+    if (cashFlowChart) updateCashFlowChart();
+    if (categoryChart) updateCategoryChart();
+    if (comparisonChart) updateComparisonChart();
+}
+
+// ===========================
+// CASH FLOW CHART
+// ===========================
+function initializeCashFlowChart() {
+    const data = getCashFlowData();
+
+    const options = {
+        series: [
+            {
+                name: 'Entradas',
+                data: data.incomes
+            },
+            {
+                name: 'Saídas',
+                data: data.expenses
+            }
+        ],
+        chart: {
+            type: 'area',
+            height: 350,
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            },
+            fontFamily: 'Inter, sans-serif'
+        },
+        colors: ['#10b981', '#ef4444'],
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                opacityFrom: 0.6,
+                opacityTo: 0.1
+            }
+        },
+        xaxis: {
+            categories: data.months,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                formatter: function (value) {
+                    return 'R$ ' + value.toFixed(0);
+                },
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 4
+        },
+        legend: {
+            show: false
+        }
+    };
+
+    cashFlowChart = new ApexCharts(document.querySelector("#cashFlowChart"), options);
+    cashFlowChart.render();
+}
+
+function updateCashFlowChart() {
+    const data = getCashFlowData();
+    cashFlowChart.updateSeries([
+        { name: 'Entradas', data: data.incomes },
+        { name: 'Saídas', data: data.expenses }
+    ]);
+}
+
+function getCashFlowData() {
+    const months = [];
+    const incomes = [];
+    const expenses = [];
+
+    // Get last 12 months
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+
+        const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
+        months.push(monthName.charAt(0).toUpperCase() + monthName.slice(1));
+
+        const monthTransactions = transactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === date.getMonth() &&
+                   transactionDate.getFullYear() === date.getFullYear();
+        });
+
+        const monthIncome = monthTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.value, 0);
+
+        const monthExpense = monthTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.value, 0);
+
+        incomes.push(monthIncome);
+        expenses.push(monthExpense);
+    }
+
+    return { months, incomes, expenses };
+}
+
+// ===========================
+// CATEGORY CHART (DONUT)
+// ===========================
+function initializeCategoryChart() {
+    const data = getCategoryData();
+
+    const options = {
+        series: data.values,
+        chart: {
+            type: 'donut',
+            height: 350,
+            fontFamily: 'Inter, sans-serif'
+        },
+        labels: data.categories,
+        colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return val.toFixed(1) + '%';
+            }
+        },
+        legend: {
+            position: 'bottom',
+            fontSize: '12px',
+            labels: {
+                colors: '#64748b'
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        name: {
+                            show: true,
+                            fontSize: '14px',
+                            color: '#1e293b'
+                        },
+                        value: {
+                            show: true,
+                            fontSize: '20px',
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            formatter: function (val) {
+                                return formatCurrencyDisplay(parseFloat(val));
+                            }
+                        },
+                        total: {
+                            show: true,
+                            label: 'Total Gastos',
+                            fontSize: '14px',
+                            color: '#64748b',
+                            formatter: function (w) {
+                                const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                return formatCurrencyDisplay(total);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    categoryChart = new ApexCharts(document.querySelector("#categoryChart"), options);
+    categoryChart.render();
+}
+
+function updateCategoryChart() {
+    const data = getCategoryData();
+    categoryChart.updateOptions({
+        labels: data.categories,
+        series: data.values
+    });
+}
+
+function getCategoryData() {
+    const categoryMap = {};
+
+    // Get current month expenses
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = new Date(t.date);
+            if (transactionDate.getMonth() === currentMonth &&
+                transactionDate.getFullYear() === currentYear) {
+                categoryMap[t.category] = (categoryMap[t.category] || 0) + t.value;
+            }
+        }
+    });
+
+    const categories = Object.keys(categoryMap);
+    const values = Object.values(categoryMap);
+
+    return { categories, values };
+}
+
+// ===========================
+// COMPARISON CHART (BARS)
+// ===========================
+function initializeComparisonChart() {
+    const data = getComparisonData();
+
+    const options = {
+        series: [
+            {
+                name: 'Valor',
+                data: data.values
+            }
+        ],
+        chart: {
+            type: 'bar',
+            height: 350,
+            fontFamily: 'Inter, sans-serif'
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                distributed: true,
+                dataLabels: {
+                    position: 'top'
+                }
+            }
+        },
+        colors: ['#10b981', '#ef4444'],
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return formatCurrencyDisplay(val);
+            },
+            offsetX: 30,
+            style: {
+                fontSize: '12px',
+                colors: ['#1e293b']
+            }
+        },
+        xaxis: {
+            categories: data.labels,
+            labels: {
+                formatter: function (value) {
+                    return 'R$ ' + value.toFixed(0);
+                },
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: ['#10b981', '#ef4444'],
+                    fontSize: '12px',
+                    fontWeight: 600
+                }
+            }
+        },
+        grid: {
+            borderColor: '#e2e8f0'
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        legend: {
+            show: false
+        }
+    };
+
+    comparisonChart = new ApexCharts(document.querySelector("#comparisonChart"), options);
+    comparisonChart.render();
+}
+
+function updateComparisonChart() {
+    const data = getComparisonData();
+    comparisonChart.updateSeries([{
+        name: 'Valor',
+        data: data.values
+    }]);
+}
+
+function getComparisonData() {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    const monthTransactions = transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate.getMonth() === currentMonth &&
+               transactionDate.getFullYear() === currentYear;
+    });
+
+    const totalIncome = monthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    const totalExpense = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    return {
+        labels: ['Entradas', 'Saídas'],
+        values: [totalIncome, totalExpense]
+    };
+}
+
+// ===========================
+// MODALS
+// ===========================
+function openTransactionModal() {
+    document.getElementById('transactionModal').classList.add('active');
+    document.getElementById('transactionForm').reset();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+    currentTransactionType = 'income';
+    selectTransactionType('income');
+}
+
+function closeTransactionModal() {
+    document.getElementById('transactionModal').classList.remove('active');
+    document.getElementById('transactionForm').reset();
+}
+
+function openSubscriptionModal() {
+    document.getElementById('subscriptionModal').classList.add('active');
+    document.getElementById('subscriptionForm').reset();
+}
+
+function closeSubscriptionModal() {
+    document.getElementById('subscriptionModal').classList.remove('active');
+    document.getElementById('subscriptionForm').reset();
+}
+
+function openInstallmentModal() {
+    document.getElementById('installmentModal').classList.add('active');
+    document.getElementById('installmentForm').reset();
+    document.getElementById('instPaidInstallments').value = 0;
+}
+
+function closeInstallmentModal() {
+    document.getElementById('installmentModal').classList.remove('active');
+    document.getElementById('installmentForm').reset();
+}
+
+function openProjectionModal() {
+    document.getElementById('projectionModal').classList.add('active');
+    document.getElementById('projectionForm').reset();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('projDate').value = today;
+}
+
+function closeProjectionModal() {
+    document.getElementById('projectionModal').classList.remove('active');
+    document.getElementById('projectionForm').reset();
+}
+
+function selectTransactionType(type) {
+    currentTransactionType = type;
+
+    // Update active button
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Update categories
+    populateCategories();
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+    }
+});
+
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
 function formatCurrency(input) {
     let value = input.value.replace(/\D/g, '');
+
+    if (value === '') {
+        input.value = '';
+        return;
+    }
+
     value = (parseInt(value) / 100).toFixed(2);
     value = value.replace('.', ',');
     value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
     input.value = value;
 }
 
 function formatCurrencyDisplay(value) {
-    return new Intl.NumberFormat('pt-BR', {
+    if (!value && value !== 0) return 'R$ 0,00';
+
+    return value.toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-    }).format(value);
+    });
+}
+
+function parseCurrencyInput(str) {
+    if (!str) return 0;
+
+    // Remove R$ and spaces
+    str = str.replace(/[R$\s]/g, '');
+
+    // Replace dots and convert comma to dot
+    str = str.replace(/\./g, '').replace(',', '.');
+
+    return parseFloat(str) || 0;
 }
 
 function formatDate(dateStr) {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
+    if (!dateStr) return '';
+
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('pt-BR');
 }
 
 function showLoading(message = 'Carregando...') {
     const overlay = document.getElementById('loadingOverlay');
     const text = overlay.querySelector('.loading-text');
     text.textContent = message;
-    overlay.style.display = 'flex';
+    overlay.classList.add('active');
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loadingOverlay').classList.remove('active');
 }
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
-    const toastMessage = toast.querySelector('.toast-message');
-    const toastIcon = toast.querySelector('.toast-icon');
+    const icon = toast.querySelector('.toast-icon');
+    const messageEl = toast.querySelector('.toast-message');
 
-    toastMessage.textContent = message;
+    // Set icon based on type
+    icon.className = 'toast-icon fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle');
+    messageEl.textContent = message;
+
+    // Set color based on type
     toast.className = 'toast ' + type;
+    toast.classList.add('active');
 
-    if (type === 'success') {
-        toastIcon.className = 'toast-icon fas fa-check-circle';
-    } else if (type === 'error') {
-        toastIcon.className = 'toast-icon fas fa-exclamation-circle';
-    }
-
-    toast.classList.add('show');
-
+    // Auto hide after 3 seconds
     setTimeout(() => {
-        toast.classList.remove('show');
+        toast.classList.remove('active');
     }, 3000);
 }
 
-// Close modal when clicking outside
-document.addEventListener('click', (e) => {
-    const modal = document.getElementById('transactionModal');
-    if (e.target === modal) {
-        closeTransactionModal();
+// ===========================
+// EVENT LISTENERS
+// ===========================
+document.addEventListener('DOMContentLoaded', () => {
+    // Transaction form submit
+    const transactionForm = document.getElementById('transactionForm');
+    if (transactionForm) {
+        transactionForm.addEventListener('submit', handleTransactionSubmit);
     }
+
+    // Subscription form submit
+    const subscriptionForm = document.getElementById('subscriptionForm');
+    if (subscriptionForm) {
+        subscriptionForm.addEventListener('submit', handleSubscriptionSubmit);
+    }
+
+    // Installment form submit
+    const installmentForm = document.getElementById('installmentForm');
+    if (installmentForm) {
+        installmentForm.addEventListener('submit', handleInstallmentSubmit);
+    }
+
+    // Projection form submit
+    const projectionForm = document.getElementById('projectionForm');
+    if (projectionForm) {
+        projectionForm.addEventListener('submit', handleProjectionSubmit);
+    }
+
+    // Enter key to submit forms
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            const form = e.target.closest('form');
+            if (form) {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
 });
+
+// ===========================
+// RESPONSIVE CHARTS
+// ===========================
+window.addEventListener('resize', () => {
+    if (cashFlowChart) cashFlowChart.updateOptions({});
+    if (categoryChart) categoryChart.updateOptions({});
+    if (comparisonChart) comparisonChart.updateOptions({});
+});
+
+console.log('Dashboard Financeiro v2.0 - Inicializado com sucesso');
