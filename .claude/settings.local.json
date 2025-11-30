@@ -13,7 +13,14 @@
       "Bash(git push:*)",
       "Bash(dir \"C:\\Users\\Trindade\\Desktop\\imaginatech-website\")",
       "Bash(dir \"C:\\Users\\Trindade\\Desktop\\imaginatech-website\" /b)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(node extract-images.js:*)",
+      "Bash(node replace-base64.js:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(if not exist \"financas\" mkdir financas)",
+      "Bash(mkdir:*)",
+      "Bash(ls -la \"C:\\Users\\Trindade\\Desktop\\imaginatech-website\\financas\"\" 2>&1 || echo \"Diretório não existe \")"
     ],
     "deny": [],
     "ask": []
