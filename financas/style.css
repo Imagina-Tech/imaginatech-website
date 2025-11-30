@@ -766,7 +766,8 @@ a:hover {
   box-shadow: var(--shadow-sm);
 }
 
-.chart-card.full-width {
+.chart-card.full-width,
+.chart-card.chart-full {
   grid-column: 1 / -1;
 }
 
@@ -775,6 +776,39 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--spacing-lg);
+}
+
+.chart-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.chart-legend {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.legend-item .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-item .dot.income {
+  background-color: var(--color-success);
+}
+
+.legend-item .dot.expense {
+  background-color: var(--color-danger);
 }
 
 .chart-title {
@@ -967,7 +1001,8 @@ a:hover {
   font-size: 0.875rem;
 }
 
-.subscription-grid {
+.subscription-grid,
+.subscriptions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
@@ -1089,7 +1124,8 @@ a:hover {
   margin-bottom: var(--spacing-2xl);
 }
 
-.installment-grid {
+.installment-grid,
+.installments-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
@@ -1218,7 +1254,8 @@ a:hover {
   margin-bottom: var(--spacing-2xl);
 }
 
-.projection-grid {
+.projection-grid,
+.projections-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
