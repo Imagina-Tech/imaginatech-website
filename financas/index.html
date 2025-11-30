@@ -1,0 +1,292 @@
+<!--
+==================================================
+ARQUIVO: financas/index.html
+MÓDULO: Dashboard Financeiro Pessoal
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 1.0
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças - ImaginaTech Admin</title>
+    <meta name="description" content="Dashboard financeiro pessoal - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/financas/">
+    <meta property="og:title" content="Finanças - ImaginaTech">
+    <meta property="og:description" content="Dashboard financeiro pessoal - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando...</div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fas fa-wallet"></i>
+                    <h1>ImaginaTech</h1>
+                    <p>Dashboard Financeiro Pessoal</p>
+                </div>
+                <div class="login-info">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>Acesso Restrito</h2>
+                    <p>Área exclusiva para funcionários autorizados</p>
+                </div>
+            </div>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="login-footer">
+                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard hidden" id="dashboard">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <i class="fas fa-wallet"></i>
+                        <h1 class="logo">Finanças Pessoais</h1>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <a href="/servicos/" class="btn-nav">
+                        <i class="fas fa-tasks"></i>
+                        <span>Serviços</span>
+                    </a>
+                    <a href="/estoque/" class="btn-nav">
+                        <i class="fas fa-box"></i>
+                        <span>Estoque</span>
+                    </a>
+                    <a href="/caixa/" class="btn-nav">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caixa</span>
+                    </a>
+                    <div class="user-menu">
+                        <img id="userPhoto" src="" alt="User" class="user-photo">
+                        <div class="user-dropdown">
+                            <div class="user-info">
+                                <span id="userName"></span>
+                                <small id="userEmail"></small>
+                            </div>
+                            <button onclick="signOut()" class="btn-logout">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- KPI Cards -->
+            <section class="kpi-section">
+                <div class="kpi-card kpi-income">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Entradas</h3>
+                        <p class="kpi-value" id="totalIncome">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card kpi-expense">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Saídas</h3>
+                        <p class="kpi-value" id="totalExpense">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card kpi-balance">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Saldo Total</h3>
+                        <p class="kpi-value" id="totalBalance">R$ 0,00</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-card">
+                    <h3>Distribuição por Categoria</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Entradas vs Saídas</h3>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Button -->
+            <button class="btn-add-transaction" onclick="openTransactionModal()">
+                <i class="fas fa-plus"></i>
+                <span>Nova Transação</span>
+            </button>
+
+            <!-- Transactions Table -->
+            <section class="transactions-section">
+                <div class="section-header">
+                    <h2>Transações Recentes</h2>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all" onclick="filterTransactions('all')">
+                            Todas
+                        </button>
+                        <button class="filter-btn" data-filter="income" onclick="filterTransactions('income')">
+                            Entradas
+                        </button>
+                        <button class="filter-btn" data-filter="expense" onclick="filterTransactions('expense')">
+                            Saídas
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- Transactions will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="emptyState">
+                        <i class="fas fa-receipt"></i>
+                        <p>Nenhuma transação encontrada</p>
+                        <small>Adicione sua primeira transação para começar</small>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>Nova Transação</h2>
+                <button class="modal-close" onclick="closeTransactionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="transactionForm" class="modal-form">
+                <div class="form-group">
+                    <label>Tipo de Transação</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-type="income" onclick="selectTransactionType('income')">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Entrada</span>
+                        </button>
+                        <button type="button" class="type-btn" data-type="expense" onclick="selectTransactionType('expense')">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>Saída</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descrição</label>
+                    <input type="text" id="description" required placeholder="Ex: Salário, Aluguel, Mercado...">
+                </div>
+
+                <div class="form-group">
+                    <label for="value">Valor</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="value" required placeholder="0,00" onkeyup="formatCurrency(this)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Categoria</label>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <!-- Options will be populated dynamically based on type -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Data</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeTransactionModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar Transação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
