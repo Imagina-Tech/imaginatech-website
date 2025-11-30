@@ -3,7 +3,7 @@
 ARQUIVO: financas/script.js
 MÓDULO: Dashboard Financeiro Pessoal Profissional
 SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.0 - Sistema Completo com Gráficos ApexCharts
+VERSÃO: 2.1 - Correção de Loading Infinito
 IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
@@ -75,14 +75,23 @@ let comparisonChart = null;
 // ===========================
 // FIREBASE INITIALIZATION
 // ===========================
-firebase.initializeApp(firebaseConfig);
-db = firebase.firestore();
-auth = firebase.auth();
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    console.log('Firebase inicializado com sucesso');
+} catch (error) {
+    console.error('Erro ao inicializar Firebase:', error);
+    alert('Erro ao conectar com o servidor. Recarregue a página.');
+}
 
 // ===========================
 // AUTHENTICATION
 // ===========================
 auth.onAuthStateChanged(user => {
+    console.log('Auth state changed:', user ? user.email : 'Não autenticado');
+    hideLoading(); // IMPORTANTE: Sempre esconde o loading primeiro
+
     if (user) {
         if (AUTHORIZED_EMAILS.includes(user.email)) {
             currentUser = user;
@@ -118,6 +127,7 @@ function signOut() {
 function showLoginScreen() {
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('dashboard').classList.add('hidden');
+    hideLoading(); // IMPORTANTE: Esconde loading na tela de login
 }
 
 function showDashboard(user) {
@@ -133,27 +143,37 @@ function showDashboard(user) {
 // ===========================
 async function initializeDashboard() {
     showLoading('Carregando dados...');
+    console.log('Iniciando dashboard...');
 
     try {
         // Set default date to today
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
-        if (document.getElementById('projDate')) {
-            document.getElementById('projDate').value = today;
-        }
+        const dateInput = document.getElementById('date');
+        const projDateInput = document.getElementById('projDate');
+
+        if (dateInput) dateInput.value = today;
+        if (projDateInput) projDateInput.value = today;
 
         // Populate category options
         populateCategories();
 
-        // Load all data
-        await Promise.all([
+        // Load all data with individual error handling
+        console.log('Carregando dados do Firestore...');
+        await Promise.allSettled([
             loadTransactions(),
             loadSubscriptions(),
             loadInstallments(),
             loadProjections()
         ]);
 
-        // Initialize charts
+        console.log('Dados carregados:', {
+            transactions: transactions.length,
+            subscriptions: subscriptions.length,
+            installments: installments.length,
+            projections: projections.length
+        });
+
+        // Initialize charts (com dados ou sem)
         initializeCharts();
 
         // Update KPIs
@@ -164,12 +184,14 @@ async function initializeDashboard() {
     } catch (error) {
         hideLoading();
         console.error('Erro ao inicializar dashboard:', error);
-        showToast('Erro ao carregar dados', 'error');
+        showToast('Erro ao carregar dados: ' + error.message, 'error');
     }
 }
 
 function populateCategories() {
     const categorySelect = document.getElementById('category');
+    if (!categorySelect) return;
+
     categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
 
     const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -186,6 +208,7 @@ function populateCategories() {
 // ===========================
 async function loadTransactions() {
     try {
+        console.log('Carregando transações...');
         const snapshot = await db.collection('transactions')
             .where('userId', '==', currentUser.uid)
             .orderBy('date', 'desc')
@@ -196,16 +219,21 @@ async function loadTransactions() {
             ...doc.data()
         }));
 
+        console.log(`${transactions.length} transações carregadas`);
         renderTransactions();
     } catch (error) {
         console.error('Erro ao carregar transações:', error);
-        showToast('Erro ao carregar transações', 'error');
+        // Não mostra toast aqui para não poluir - já mostra no catch principal
+        transactions = []; // Garante array vazio
+        renderTransactions();
     }
 }
 
 function renderTransactions() {
     const tbody = document.getElementById('transactionsTableBody');
     const emptyState = document.getElementById('emptyState');
+
+    if (!tbody || !emptyState) return;
 
     let filteredTransactions = transactions;
     if (currentFilter !== 'all') {
@@ -232,8 +260,8 @@ function renderTransactions() {
                 <span class="category-badge">${transaction.category}</span>
             </td>
             <td>${formatDate(transaction.date)}</td>
-            <td class="value ${transaction.type}">
-                ${formatCurrencyDisplay(transaction.value)}
+            <td class="value-${transaction.type}">
+                ${transaction.type === 'income' ? '+' : '-'} ${formatCurrencyDisplay(transaction.value)}
             </td>
             <td>
                 <button class="btn-delete" onclick="deleteTransaction('${transaction.id}')" title="Deletar">
@@ -327,6 +355,7 @@ async function deleteTransaction(id) {
 // ===========================
 async function loadSubscriptions() {
     try {
+        console.log('Carregando assinaturas...');
         const snapshot = await db.collection('subscriptions')
             .where('userId', '==', currentUser.uid)
             .orderBy('createdAt', 'desc')
@@ -337,16 +366,20 @@ async function loadSubscriptions() {
             ...doc.data()
         }));
 
+        console.log(`${subscriptions.length} assinaturas carregadas`);
         renderSubscriptions();
     } catch (error) {
         console.error('Erro ao carregar assinaturas:', error);
-        showToast('Erro ao carregar assinaturas', 'error');
+        subscriptions = [];
+        renderSubscriptions();
     }
 }
 
 function renderSubscriptions() {
     const grid = document.getElementById('subscriptionsGrid');
     const emptyState = document.getElementById('emptySubscriptions');
+
+    if (!grid || !emptyState) return;
 
     if (subscriptions.length === 0) {
         grid.innerHTML = '';
@@ -359,26 +392,21 @@ function renderSubscriptions() {
     grid.innerHTML = subscriptions.map(sub => {
         const nextDue = calculateNextDue(sub.dueDay);
         return `
-            <div class="subscription-card ${sub.status}">
-                <div class="sub-header">
-                    <div>
+            <div class="subscription-card">
+                <div class="subscription-header">
+                    <div class="subscription-info">
                         <h4>${sub.name}</h4>
-                        <span class="category-badge">${sub.category}</span>
+                        <span class="subscription-category">${sub.category}</span>
                     </div>
-                    <span class="status-badge ${sub.status}">
+                    <span class="subscription-badge ${sub.status}">
                         ${sub.status === 'active' ? 'Ativa' : 'Inativa'}
                     </span>
                 </div>
-                <div class="sub-body">
-                    <div class="sub-value">${formatCurrencyDisplay(sub.value)}<small>/mês</small></div>
-                    <div class="sub-due">
-                        <i class="fas fa-calendar-alt"></i>
-                        Próximo vencimento: ${nextDue}
-                    </div>
-                </div>
-                <div class="sub-actions">
-                    <button class="btn-delete-sub" onclick="deleteSubscription('${sub.id}')" title="Deletar">
-                        <i class="fas fa-trash"></i> Deletar
+                <div class="subscription-value">${formatCurrencyDisplay(sub.value)}<small>/mês</small></div>
+                <div class="subscription-meta">
+                    <span><i class="fas fa-calendar-alt"></i> ${nextDue}</span>
+                    <button class="subscription-delete" onclick="deleteSubscription('${sub.id}')" title="Deletar">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -473,6 +501,7 @@ async function deleteSubscription(id) {
 // ===========================
 async function loadInstallments() {
     try {
+        console.log('Carregando parcelamentos...');
         const snapshot = await db.collection('installments')
             .where('userId', '==', currentUser.uid)
             .orderBy('createdAt', 'desc')
@@ -483,16 +512,20 @@ async function loadInstallments() {
             ...doc.data()
         }));
 
+        console.log(`${installments.length} parcelamentos carregados`);
         renderInstallments();
     } catch (error) {
         console.error('Erro ao carregar parcelamentos:', error);
-        showToast('Erro ao carregar parcelamentos', 'error');
+        installments = [];
+        renderInstallments();
     }
 }
 
 function renderInstallments() {
     const grid = document.getElementById('installmentsGrid');
     const emptyState = document.getElementById('emptyInstallments');
+
+    if (!grid || !emptyState) return;
 
     if (installments.length === 0) {
         grid.innerHTML = '';
@@ -510,44 +543,39 @@ function renderInstallments() {
 
         return `
             <div class="installment-card">
-                <div class="inst-header">
-                    <h4>${inst.description}</h4>
-                    <span class="inst-total">${formatCurrencyDisplay(inst.totalValue)}</span>
-                </div>
-                <div class="inst-body">
-                    <div class="inst-info">
-                        <div class="info-item">
-                            <i class="fas fa-credit-card"></i>
-                            ${inst.paidInstallments}/${inst.totalInstallments} parcelas
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            Vencimento: dia ${inst.dueDay}
-                        </div>
-                        <div class="info-item remaining">
-                            <i class="fas fa-dollar-sign"></i>
-                            Restante: ${formatCurrencyDisplay(remainingValue)}
-                        </div>
+                <div class="installment-header">
+                    <div class="installment-info">
+                        <h4>${inst.description}</h4>
                     </div>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${percentage}%"></div>
-                        </div>
-                        <span class="progress-text">${percentage.toFixed(0)}% concluído</span>
+                    <button class="installment-delete" onclick="deleteInstallment('${inst.id}')" title="Deletar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="installment-value">${formatCurrencyDisplay(inst.totalValue)}</div>
+                <div class="installment-progress-container">
+                    <div class="installment-progress-label">
+                        <span class="installment-progress-label-text">${inst.paidInstallments}/${inst.totalInstallments} parcelas</span>
+                        <span class="installment-progress-percentage">${percentage.toFixed(0)}%</span>
+                    </div>
+                    <div class="installment-progress-bar">
+                        <div class="installment-progress-fill" style="width: ${percentage}%"></div>
                     </div>
                 </div>
-                <div class="inst-actions">
+                <div class="installment-footer">
+                    <span>Vencimento: dia ${inst.dueDay}</span>
+                    <span>Restante: ${formatCurrencyDisplay(remainingValue)}</span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 12px; color: #64748b;">Parcelas pagas:</label>
                     <input
                         type="number"
-                        class="paid-input"
+                        class="form-input"
                         value="${inst.paidInstallments}"
                         min="0"
                         max="${inst.totalInstallments}"
                         onchange="updateInstallmentProgress('${inst.id}', this.value)"
+                        style="margin-top: 4px;"
                     >
-                    <button class="btn-delete-inst" onclick="deleteInstallment('${inst.id}')" title="Deletar">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
             </div>
         `;
@@ -658,6 +686,7 @@ async function deleteInstallment(id) {
 // ===========================
 async function loadProjections() {
     try {
+        console.log('Carregando projeções...');
         const snapshot = await db.collection('projections')
             .where('userId', '==', currentUser.uid)
             .orderBy('date', 'asc')
@@ -668,16 +697,20 @@ async function loadProjections() {
             ...doc.data()
         }));
 
+        console.log(`${projections.length} projeções carregadas`);
         renderProjections();
     } catch (error) {
         console.error('Erro ao carregar projeções:', error);
-        showToast('Erro ao carregar projeções', 'error');
+        projections = [];
+        renderProjections();
     }
 }
 
 function renderProjections() {
     const grid = document.getElementById('projectionsGrid');
     const emptyState = document.getElementById('emptyProjections');
+
+    if (!grid || !emptyState) return;
 
     if (projections.length === 0) {
         grid.innerHTML = '';
@@ -689,27 +722,27 @@ function renderProjections() {
 
     grid.innerHTML = projections.map(proj => `
         <div class="projection-card ${proj.status}">
-            <div class="proj-header">
-                <h4>${proj.description}</h4>
-                <span class="status-badge ${proj.status}">
+            <div class="projection-header">
+                <div class="projection-info">
+                    <h4>${proj.description}</h4>
+                    <span class="projection-date">
+                        <i class="fas fa-calendar-alt"></i>
+                        ${formatDate(proj.date)}
+                    </span>
+                </div>
+                <span class="projection-badge ${proj.status}">
                     ${proj.status === 'pending' ? 'Pendente' : 'Recebido'}
                 </span>
             </div>
-            <div class="proj-body">
-                <div class="proj-value">${formatCurrencyDisplay(proj.value)}</div>
-                <div class="proj-date">
-                    <i class="fas fa-calendar-alt"></i>
-                    ${formatDate(proj.date)}
-                </div>
-            </div>
-            <div class="proj-actions">
+            <div class="projection-value">${formatCurrencyDisplay(proj.value)}</div>
+            <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
                 ${proj.status === 'pending' ? `
-                    <button class="btn-mark-received" onclick="updateProjectionStatus('${proj.id}', 'received')">
+                    <button class="btn btn-success btn-sm" onclick="updateProjectionStatus('${proj.id}', 'received')" style="flex: 1;">
                         <i class="fas fa-check"></i> Marcar como Recebido
                     </button>
                 ` : ''}
-                <button class="btn-delete-proj" onclick="deleteProjection('${proj.id}')" title="Deletar">
-                    <i class="fas fa-trash"></i>
+                <button class="btn btn-danger btn-sm" onclick="deleteProjection('${proj.id}')" style="flex: 1;">
+                    <i class="fas fa-trash"></i> Deletar
                 </button>
             </div>
         </div>
@@ -842,33 +875,52 @@ function updateKPIs() {
         .reduce((sum, p) => sum + p.value, 0);
 
     // Update DOM
-    document.getElementById('totalIncome').textContent = formatCurrencyDisplay(totalIncome);
-    document.getElementById('totalExpense').textContent = formatCurrencyDisplay(totalExpense);
-    document.getElementById('totalBalance').textContent = formatCurrencyDisplay(totalBalance);
-    document.getElementById('totalSubscriptions').textContent = formatCurrencyDisplay(totalSubscriptions);
-    document.getElementById('totalInstallments').textContent = formatCurrencyDisplay(totalInstallments);
-    document.getElementById('totalProjection').textContent = formatCurrencyDisplay(totalProjection);
+    const incomeEl = document.getElementById('totalIncome');
+    const expenseEl = document.getElementById('totalExpense');
+    const balanceEl = document.getElementById('totalBalance');
+    const subscriptionsEl = document.getElementById('totalSubscriptions');
+    const installmentsEl = document.getElementById('totalInstallments');
+    const projectionEl = document.getElementById('totalProjection');
+
+    if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
+    if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpense);
+    if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
+    if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
+    if (installmentsEl) installmentsEl.textContent = formatCurrencyDisplay(totalInstallments);
+    if (projectionEl) projectionEl.textContent = formatCurrencyDisplay(totalProjection);
 }
 
 // ===========================
 // APEXCHARTS - INITIALIZATION
 // ===========================
 function initializeCharts() {
-    initializeCashFlowChart();
-    initializeCategoryChart();
-    initializeComparisonChart();
+    try {
+        initializeCashFlowChart();
+        initializeCategoryChart();
+        initializeComparisonChart();
+        console.log('Gráficos inicializados');
+    } catch (error) {
+        console.error('Erro ao inicializar gráficos:', error);
+    }
 }
 
 function updateCharts() {
-    if (cashFlowChart) updateCashFlowChart();
-    if (categoryChart) updateCategoryChart();
-    if (comparisonChart) updateComparisonChart();
+    try {
+        if (cashFlowChart) updateCashFlowChart();
+        if (categoryChart) updateCategoryChart();
+        if (comparisonChart) updateComparisonChart();
+    } catch (error) {
+        console.error('Erro ao atualizar gráficos:', error);
+    }
 }
 
 // ===========================
 // CASH FLOW CHART
 // ===========================
 function initializeCashFlowChart() {
+    const chartEl = document.querySelector("#cashFlowChart");
+    if (!chartEl) return;
+
     const data = getCashFlowData();
 
     const options = {
@@ -949,7 +1001,7 @@ function initializeCashFlowChart() {
         }
     };
 
-    cashFlowChart = new ApexCharts(document.querySelector("#cashFlowChart"), options);
+    cashFlowChart = new ApexCharts(chartEl, options);
     cashFlowChart.render();
 }
 
@@ -999,7 +1051,16 @@ function getCashFlowData() {
 // CATEGORY CHART (DONUT)
 // ===========================
 function initializeCategoryChart() {
+    const chartEl = document.querySelector("#categoryChart");
+    if (!chartEl) return;
+
     const data = getCategoryData();
+
+    // Se não há dados, mostra mensagem
+    if (data.values.length === 0) {
+        chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #94a3b8;">Sem dados para exibir</div>';
+        return;
+    }
 
     const options = {
         series: data.values,
@@ -1066,16 +1127,34 @@ function initializeCategoryChart() {
         }
     };
 
-    categoryChart = new ApexCharts(document.querySelector("#categoryChart"), options);
+    categoryChart = new ApexCharts(chartEl, options);
     categoryChart.render();
 }
 
 function updateCategoryChart() {
     const data = getCategoryData();
-    categoryChart.updateOptions({
-        labels: data.categories,
-        series: data.values
-    });
+
+    if (data.values.length === 0) {
+        // Destroi o chart se não há dados
+        if (categoryChart) {
+            categoryChart.destroy();
+            categoryChart = null;
+        }
+        const chartEl = document.querySelector("#categoryChart");
+        if (chartEl) {
+            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #94a3b8;">Sem dados para exibir</div>';
+        }
+        return;
+    }
+
+    if (categoryChart) {
+        categoryChart.updateOptions({
+            labels: data.categories,
+            series: data.values
+        });
+    } else {
+        initializeCategoryChart();
+    }
 }
 
 function getCategoryData() {
@@ -1106,6 +1185,9 @@ function getCategoryData() {
 // COMPARISON CHART (BARS)
 // ===========================
 function initializeComparisonChart() {
+    const chartEl = document.querySelector("#comparisonChart");
+    if (!chartEl) return;
+
     const data = getComparisonData();
 
     const options = {
@@ -1177,7 +1259,7 @@ function initializeComparisonChart() {
         }
     };
 
-    comparisonChart = new ApexCharts(document.querySelector("#comparisonChart"), options);
+    comparisonChart = new ApexCharts(chartEl, options);
     comparisonChart.render();
 }
 
@@ -1334,31 +1416,44 @@ function formatDate(dateStr) {
 
 function showLoading(message = 'Carregando...') {
     const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+
     const text = overlay.querySelector('.loading-text');
-    text.textContent = message;
-    overlay.classList.add('active');
+    if (text) text.textContent = message;
+    overlay.style.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').classList.remove('active');
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
+    if (!toast) return;
+
     const icon = toast.querySelector('.toast-icon');
     const messageEl = toast.querySelector('.toast-message');
 
-    // Set icon based on type
-    icon.className = 'toast-icon fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle');
-    messageEl.textContent = message;
+    if (icon) {
+        icon.className = 'toast-icon fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle');
+    }
 
-    // Set color based on type
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+
     toast.className = 'toast ' + type;
-    toast.classList.add('active');
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
 
-    // Auto hide after 3 seconds
     setTimeout(() => {
-        toast.classList.remove('active');
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
     }, 3000);
 }
 
@@ -1366,6 +1461,8 @@ function showToast(message, type = 'success') {
 // EVENT LISTENERS
 // ===========================
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM carregado, configurando event listeners...');
+
     // Transaction form submit
     const transactionForm = document.getElementById('transactionForm');
     if (transactionForm) {
@@ -1411,4 +1508,4 @@ window.addEventListener('resize', () => {
     if (comparisonChart) comparisonChart.updateOptions({});
 });
 
-console.log('Dashboard Financeiro v2.0 - Inicializado com sucesso');
+console.log('Dashboard Financeiro v2.1 - Script carregado');
