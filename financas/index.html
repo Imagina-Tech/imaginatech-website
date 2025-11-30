@@ -82,8 +82,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             <div class="navbar-container">
                 <div class="navbar-left">
                     <div class="logo-section">
-                        <i class="fas fa-chart-line"></i>
-                        <h1 class="logo">Finanças Pessoais</h1>
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Dashboard Financeiro</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
                     </div>
                 </div>
                 <div class="navbar-right">
@@ -92,7 +96,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <span>Serviços</span>
                     </a>
                     <a href="/estoque/" class="btn-nav">
-                        <i class="fas fa-box"></i>
+                        <i class="fas fa-box-open"></i>
                         <span>Estoque</span>
                     </a>
                     <a href="/caixa/" class="btn-nav">
@@ -103,18 +107,17 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <i class="fas fa-calculator"></i>
                         <span>Custo</span>
                     </a>
-                    <div class="user-menu">
-                        <img id="userPhoto" src="" alt="User" class="user-photo">
-                        <div class="user-dropdown">
-                            <div class="user-info">
-                                <span id="userName"></span>
-                                <small id="userEmail"></small>
-                            </div>
-                            <button onclick="signOut()" class="btn-logout">
-                                <i class="fas fa-sign-out-alt"></i> Sair
-                            </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
                         </div>
                     </div>
+                    <button class="btn-logout" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="btn-text">Sair</span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -190,6 +193,26 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
             </section>
 
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="btn-action btn-transaction" onclick="openTransactionModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Nova Transação</span>
+                </button>
+                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
+                    <i class="fas fa-sync"></i>
+                    <span>Nova Assinatura</span>
+                </button>
+                <button class="btn-action btn-installment" onclick="openInstallmentModal()">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Novo Parcelamento</span>
+                </button>
+                <button class="btn-action btn-projection" onclick="openProjectionModal()">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Projeção de Salário</span>
+                </button>
+            </div>
+
             <!-- Charts Section -->
             <section class="charts-section">
                 <div class="chart-card chart-full">
@@ -213,26 +236,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div id="comparisonChart"></div>
                 </div>
             </section>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="btn-action btn-transaction" onclick="openTransactionModal()">
-                    <i class="fas fa-plus"></i>
-                    <span>Nova Transação</span>
-                </button>
-                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
-                    <i class="fas fa-sync"></i>
-                    <span>Nova Assinatura</span>
-                </button>
-                <button class="btn-action btn-installment" onclick="openInstallmentModal()">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Novo Parcelamento</span>
-                </button>
-                <button class="btn-action btn-projection" onclick="openProjectionModal()">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>Projeção de Salário</span>
-                </button>
-            </div>
 
             <!-- Subscriptions Section -->
             <section class="subscriptions-section">
