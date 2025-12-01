@@ -1623,6 +1623,128 @@ a:hover {
   min-height: 120px;
 }
 
+/* ===========================
+   DROPDOWN CUSTOMIZADO FUTURÍSTICO
+   =========================== */
+
+.form-select {
+  /* Remove aparência padrão do navegador */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Estilo base */
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(16, 24, 39, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  cursor: pointer;
+  position: relative;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  color: #ffffff;
+
+  /* Seta customizada usando gradiente */
+  background-image:
+    linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(16, 24, 39, 0.95) 100%),
+    linear-gradient(45deg, transparent 50%, #00D4FF 50%),
+    linear-gradient(135deg, #00D4FF 50%, transparent 50%);
+  background-position:
+    0 0,
+    calc(100% - 20px) calc(50% - 2px),
+    calc(100% - 15px) calc(50% - 2px);
+  background-size:
+    100% 100%,
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
+}
+
+.form-select:hover {
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.2),
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.form-select:focus {
+  border-color: #00D4FF;
+  box-shadow:
+    0 0 25px rgba(0, 212, 255, 0.4),
+    0 0 50px rgba(0, 212, 255, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(26, 26, 46, 1) 0%, rgba(16, 24, 39, 1) 100%);
+  transform: translateY(-2px);
+
+  /* Seta fica mais brilhante no focus */
+  background-image:
+    linear-gradient(135deg, rgba(26, 26, 46, 1) 0%, rgba(16, 24, 39, 1) 100%),
+    linear-gradient(45deg, transparent 50%, #00FF88 50%),
+    linear-gradient(135deg, #00FF88 50%, transparent 50%);
+  background-position:
+    0 0,
+    calc(100% - 20px) calc(50% - 2px),
+    calc(100% - 15px) calc(50% - 2px);
+  background-size:
+    100% 100%,
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+.form-select:active {
+  transform: translateY(0);
+}
+
+/* Estilização das opções (com limitações de navegador) */
+.form-select option {
+  background-color: #16213e;
+  color: #e0e0e0;
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+.form-select option:hover {
+  background-color: #1e3a5f;
+  color: #00D4FF;
+}
+
+.form-select option:checked,
+.form-select option:focus {
+  background: linear-gradient(135deg, #2A6EA7 0%, #1e5a8e 100%);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.form-select option:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(26, 26, 46, 0.5);
+  font-style: italic;
+}
+
+/* Efeito de glow quando aberto */
+.form-select:focus::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #00D4FF, #9945FF, #00D4FF);
+  border-radius: inherit;
+  opacity: 0.3;
+  z-index: -1;
+  filter: blur(8px);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
 .modal-actions {
   display: flex;
   gap: var(--spacing-md);
