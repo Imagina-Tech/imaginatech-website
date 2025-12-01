@@ -753,15 +753,15 @@ a:hover {
 .kpi-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .kpi-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
   transition: all var(--transition-base);
   cursor: pointer;
   position: relative;
@@ -792,14 +792,14 @@ a:hover {
 }
 
 .kpi-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: var(--radius-lg);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-2xl);
-  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-sm);
   font-weight: 600;
 }
 
@@ -809,10 +809,10 @@ a:hover {
 }
 
 .kpi-content h3 {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 4px;
 }
 
 .kpi-card-success .kpi-icon,
@@ -851,9 +851,9 @@ a:hover {
 }
 
 .kpi-value {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-lg);
   font-weight: 700;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 2px;
 }
 
 .kpi-label {
@@ -889,15 +889,15 @@ a:hover {
 .charts-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .chart-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1001,8 +1001,8 @@ a:hover {
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .btn-action {
@@ -1010,20 +1010,20 @@ a:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
   border: none;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
   color: #FFFFFF;
-  font-size: var(--font-size-base);
-  min-height: 140px;
+  font-size: var(--font-size-sm);
+  min-height: 90px;
 }
 
 .btn-action i {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-xl);
 }
 
 .btn-transaction {
@@ -1091,7 +1091,7 @@ a:hover {
    ======================================== */
 
 .subscriptions-section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .section-header {
@@ -1140,17 +1140,17 @@ a:hover {
 .subscriptions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .subscription-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   transition: all var(--transition-base);
   position: relative;
 }
@@ -1256,24 +1256,24 @@ a:hover {
    ======================================== */
 
 .installments-section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .installment-grid,
 .installments-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .installment-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   transition: all var(--transition-base);
 }
 
@@ -1386,24 +1386,24 @@ a:hover {
    ======================================== */
 
 .projections-section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .projection-grid,
 .projections-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .projection-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   transition: all var(--transition-base);
 }
 
@@ -1689,9 +1689,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   -moz-appearance: none;
 
   /* Estilo base */
+  padding: 0.75rem;
   background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(16, 24, 39, 0.95) 100%);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
   box-shadow:
@@ -1699,6 +1701,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-weight: 500;
   color: #ffffff;
+  font-size: 0.95rem;
 
   /* Seta customizada usando gradiente */
   background-image:
@@ -1715,6 +1718,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     5px 5px;
   background-repeat: no-repeat;
   padding-right: 2.5rem;
+
+  /* Animação suave */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-select:hover {
