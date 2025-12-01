@@ -312,76 +312,80 @@ a:hover {
 }
 
 /* ========================================
-   4. NAVBAR
+   4. NAVBAR - ESTILO IMAGINATECH
    ======================================== */
 
 .navbar {
+  background: rgba(10, 14, 26, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
   position: sticky;
   top: 0;
-  background-color: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--spacing-lg) var(--spacing-xl);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  z-index: var(--z-sticky);
-  box-shadow: var(--shadow-sm);
+  z-index: 100;
 }
 
 .navbar-container {
   max-width: 1400px;
-  width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: 20px;
 }
 
 .logo-section {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.logo-section i {
-  font-size: 1.8rem;
-  color: var(--color-primary);
+  flex-direction: column;
+  gap: 5px;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font: 900 1.5rem 'Orbitron', monospace;
+  background: linear-gradient(135deg, #00D4FF, #57D4CA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
   margin: 0;
 }
 
 .logo-subtitle {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  font-weight: 400;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-top: -5px;
+  font-weight: 600;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: var(--radius-md);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 0.85rem;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--color-success);
+  background-color: #00FF88;
   animation: pulse-dot 2s infinite;
+  box-shadow: 0 0 10px #00FF88;
 }
 
 @keyframes pulse-dot {
@@ -390,8 +394,8 @@ a:hover {
 }
 
 .connection-status span {
-  font-size: var(--font-size-sm);
-  color: var(--color-success);
+  font-size: 0.85rem;
+  color: #00FF88;
   font-weight: 500;
 }
 
@@ -411,35 +415,34 @@ a:hover {
 
 .navbar-nav a:hover,
 .navbar-nav a.active {
-  color: var(--color-neutral);
+  color: #00D4FF;
 }
 
 .navbar-right {
   display: flex;
+  gap: 15px;
   align-items: center;
-  gap: var(--spacing-lg);
 }
 
 .btn-nav {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-bg-tertiary);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
   text-decoration: none;
-  transition: all var(--transition-fast);
 }
 
 .btn-nav:hover {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  border-color: #00D4FF;
 }
 
 .btn-nav i {
@@ -453,54 +456,49 @@ a:hover {
 .user-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+  gap: 0.75rem;
 }
 
 .user-photo {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
-  transition: all var(--transition-fast);
+  border: 2px solid #00D4FF;
   object-fit: cover;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .user-name {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  line-height: 1.2;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #ffffff;
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
 }
 
 .user-dropdown {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  background: rgba(10, 14, 26, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   padding: var(--spacing-lg);
   min-width: 200px;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: all var(--transition-base);
+  transition: all 0.3s;
 }
 
 .user-menu:hover .user-dropdown {
@@ -511,45 +509,38 @@ a:hover {
 
 .user-dropdown .user-info {
   padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: var(--spacing-sm);
-  background: transparent;
-  border: none;
-  padding: 0 0 var(--spacing-sm) 0;
 }
 
 .user-dropdown .user-info span {
   display: block;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 .user-dropdown .user-info small {
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.85rem;
 }
 
 .btn-logout {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--color-danger);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  justify-content: center;
-  transition: all var(--transition-fast);
-  font-size: var(--font-size-sm);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
 .btn-logout:hover {
-  background: var(--color-danger);
-  color: #FFFFFF;
-  border-color: var(--color-danger);
-  transform: translateY(-1px);
+  color: #FF0055;
+  border-color: #FF0055;
 }
 
 .btn-logout i {
@@ -566,24 +557,132 @@ a:hover {
 
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: column;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 15px 10px;
   }
 
-  .navbar-nav {
-    flex-wrap: wrap;
-    gap: var(--spacing-lg);
+  .navbar-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .navbar-left {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .navbar-nav a span {
-    display: none;
+  .navbar-right {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .logo {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+  }
+
+  .logo-subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+  }
+
+  .connection-status {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-nav {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+    gap: 0.4rem;
+  }
+
+  .btn-nav span {
+    font-size: 0.85rem;
+  }
+
+  .user-info {
+    gap: 0.5rem;
+  }
+
+  .user-photo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .user-name {
+    font-size: 0.85rem;
+  }
+
+  .user-role {
+    font-size: 0.7rem;
+  }
+
+  .btn-logout {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-text {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 8px;
+  }
+
+  .navbar-left {
+    gap: 8px;
+  }
+
+  .navbar-right {
+    gap: 6px;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+  }
+
+  .logo-subtitle {
+    font-size: 0.6rem;
+    letter-spacing: 1.5px;
+  }
+
+  .connection-status {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .btn-nav {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    gap: 0.3rem;
+  }
+
+  .btn-nav i {
+    font-size: 0.9rem;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .user-photo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn-logout {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
   }
 }
 
