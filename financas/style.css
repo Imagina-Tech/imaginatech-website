@@ -690,29 +690,51 @@ a:hover {
   font-weight: 600;
 }
 
-.kpi-card-success .kpi-icon {
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-content h3 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.kpi-card-success .kpi-icon,
+.kpi-income .kpi-icon {
   background-color: rgba(16, 185, 129, 0.1);
   color: var(--color-success);
 }
 
-.kpi-card-danger .kpi-icon {
+.kpi-card-danger .kpi-icon,
+.kpi-expense .kpi-icon {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--color-danger);
 }
 
-.kpi-card-neutral .kpi-icon {
+.kpi-card-neutral .kpi-icon,
+.kpi-balance .kpi-icon {
   background-color: rgba(59, 130, 246, 0.1);
   color: var(--color-neutral);
 }
 
-.kpi-card-primary .kpi-icon {
+.kpi-card-primary .kpi-icon,
+.kpi-subscriptions .kpi-icon {
   background-color: rgba(139, 92, 246, 0.1);
   color: var(--color-primary);
 }
 
-.kpi-card-warning .kpi-icon {
+.kpi-card-warning .kpi-icon,
+.kpi-installments .kpi-icon {
   background-color: rgba(249, 115, 22, 0.1);
   color: var(--color-warning);
+}
+
+.kpi-projection .kpi-icon {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
 }
 
 .kpi-value {

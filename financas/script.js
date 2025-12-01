@@ -131,11 +131,15 @@ function showLoginScreen() {
 }
 
 function showDashboard(user) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').classList.remove('hidden');
-    document.getElementById('userName').textContent = user.displayName || 'Usuário';
-    document.getElementById('userEmail').textContent = user.email;
-    document.getElementById('userPhoto').src = user.photoURL || 'https://via.placeholder.com/40';
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboard = document.getElementById('dashboard');
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (dashboard) dashboard.classList.remove('hidden');
+    if (userName) userName.textContent = user.displayName || 'Usuário';
+    if (userPhoto) userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
 }
 
 // ===========================
