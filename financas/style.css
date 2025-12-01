@@ -707,12 +707,12 @@ a:hover {
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--spacing-2xl) var(--spacing-xl);
+  padding: 0.75rem 1rem;
   width: 100%;
 }
 
 .page-header {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: 0.75rem;
 }
 
 .page-title {
@@ -753,19 +753,25 @@ a:hover {
 .kpi-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .kpi-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   transition: all var(--transition-base);
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .kpi-card::before {
@@ -792,27 +798,30 @@ a:hover {
 }
 
 .kpi-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--spacing-sm);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
   font-weight: 600;
 }
 
 .kpi-content {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .kpi-content h3 {
-  font-size: var(--font-size-sm);
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--color-text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: 0.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .kpi-card-success .kpi-icon,
@@ -851,9 +860,10 @@ a:hover {
 }
 
 .kpi-value {
-  font-size: var(--font-size-lg);
+  font-size: 0.875rem;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 .kpi-label {
@@ -864,8 +874,9 @@ a:hover {
 }
 
 .kpi-subtitle {
-  font-size: var(--font-size-xs);
+  font-size: 0.625rem;
   color: var(--color-text-tertiary);
+  line-height: 1;
 }
 
 @media (max-width: 1024px) {
@@ -889,15 +900,15 @@ a:hover {
 .charts-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .chart-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -910,31 +921,33 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0.25rem;
 }
 
 .chart-header h3 {
-  font-size: var(--font-size-lg);
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .chart-legend {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: 0.5rem;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-sm);
+  gap: 0.25rem;
+  font-size: 0.65rem;
   color: var(--color-text-secondary);
 }
 
 .legend-item .dot {
-  width: 12px;
-  height: 12px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
 }
 
@@ -973,7 +986,7 @@ a:hover {
 }
 
 .chart-container {
-  height: 300px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1001,8 +1014,8 @@ a:hover {
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .btn-action {
@@ -1010,20 +1023,20 @@ a:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
+  gap: 0.25rem;
+  padding: 0.5rem;
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
   color: #FFFFFF;
-  font-size: var(--font-size-sm);
-  min-height: 90px;
+  font-size: 0.7rem;
+  min-height: 60px;
 }
 
 .btn-action i {
-  font-size: var(--font-size-xl);
+  font-size: 1rem;
 }
 
 .btn-transaction {
@@ -1091,19 +1104,21 @@ a:hover {
    ======================================== */
 
 .subscriptions-section {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0.75rem;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0.25rem;
 }
 
 .section-title {
-  font-size: var(--font-size-lg);
+  font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .section-actions {
@@ -1140,19 +1155,20 @@ a:hover {
 .subscriptions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
+  gap: 0.5rem;
 }
 
 .subscription-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0.25rem;
   transition: all var(--transition-base);
   position: relative;
+  font-size: 0.75rem;
 }
 
 .subscription-card:hover {
@@ -1211,15 +1227,15 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--spacing-md);
+  padding-top: 0.25rem;
   border-top: 1px solid var(--color-border-light);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
 .subscription-delete {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1229,7 +1245,7 @@ a:hover {
   cursor: pointer;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
-  font-size: var(--font-size-lg);
+  font-size: 0.875rem;
 }
 
 .subscription-delete:hover {
@@ -1256,25 +1272,26 @@ a:hover {
    ======================================== */
 
 .installments-section {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0.75rem;
 }
 
 .installment-grid,
 .installments-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
+  gap: 0.5rem;
 }
 
 .installment-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0.25rem;
   transition: all var(--transition-base);
+  font-size: 0.75rem;
 }
 
 .installment-card:hover {
@@ -1302,14 +1319,14 @@ a:hover {
 }
 
 .installment-progress-container {
-  padding: var(--spacing-md) 0;
+  padding: 0.25rem 0;
 }
 
 .installment-progress-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0.25rem;
   font-size: var(--font-size-sm);
 }
 
@@ -1324,7 +1341,7 @@ a:hover {
 
 .installment-progress-bar {
   width: 100%;
-  height: 8px;
+  height: 4px;
   background-color: var(--color-bg-tertiary);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1341,15 +1358,15 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--spacing-md);
+  padding-top: 0.25rem;
   border-top: 1px solid var(--color-border-light);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
 .installment-delete {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1359,7 +1376,7 @@ a:hover {
   cursor: pointer;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
-  font-size: var(--font-size-lg);
+  font-size: 0.875rem;
 }
 
 .installment-delete:hover {
@@ -1386,25 +1403,26 @@ a:hover {
    ======================================== */
 
 .projections-section {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0.75rem;
 }
 
 .projection-grid,
 .projections-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
+  gap: 0.5rem;
 }
 
 .projection-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0.25rem;
   transition: all var(--transition-base);
+  font-size: 0.75rem;
 }
 
 .projection-card:hover {
@@ -1535,7 +1553,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xl);
+  padding: 0.75rem;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -1565,18 +1583,18 @@ a:hover {
 }
 
 .modal-form {
-  padding: var(--spacing-xl);
+  padding: 0.75rem;
 }
 
 .modal-body {
-  padding: var(--spacing-xl);
+  padding: 0.75rem;
 }
 
 .modal-footer {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
+  gap: 0.5rem;
+  padding: 0.75rem;
   border-top: 1px solid var(--color-border);
   background-color: var(--color-bg-tertiary);
 }
@@ -1584,8 +1602,8 @@ a:hover {
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .form-row.full {
@@ -1595,8 +1613,8 @@ a:hover {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .form-label,
