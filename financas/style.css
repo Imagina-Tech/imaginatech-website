@@ -13,6 +13,14 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
    ======================================== */
 
 :root {
+  /* Cores Neon - ImaginaTech */
+  --neon-blue: #00D4FF;
+  --neon-red: #FF0055;
+  --neon-green: #00FF88;
+  --neon-yellow: #FFD700;
+  --neon-purple: #9945FF;
+  --neon-orange: #FF6B35;
+
   /* Cores Semânticas */
   --color-success: #10B981;
   --color-danger: #EF4444;
@@ -20,20 +28,25 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
   --color-primary: #8B5CF6;
   --color-warning: #F97316;
 
-  /* Backgrounds */
-  --color-bg-primary: #F8F9FA;
-  --color-bg-secondary: #FFFFFF;
-  --color-bg-tertiary: #F3F4F6;
+  /* Backgrounds Dark */
+  --dark-bg: #0a0e1a;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --color-bg-primary: #0a0e1a;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: rgba(255, 255, 255, 0.05);
 
-  /* Text */
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
-  --color-text-muted: #D1D5DB;
+  /* Text Dark */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-tertiary: rgba(255, 255, 255, 0.4);
+  --color-text-muted: rgba(255, 255, 255, 0.3);
 
-  /* Borders */
-  --color-border: #E5E7EB;
-  --color-border-light: #F3F4F6;
+  /* Borders Dark */
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: rgba(255, 255, 255, 0.05);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -105,9 +118,10 @@ body {
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
+  background: var(--dark-bg);
   transition: background-color var(--transition-base);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* Typography */
@@ -1585,37 +1599,78 @@ a:hover {
   margin-bottom: var(--spacing-lg);
 }
 
-.form-label {
+.form-label,
+label {
   font-weight: 500;
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .form-input,
-.form-select,
 .form-textarea {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  padding: 0.75rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: 400 0.95rem/1.5 inherit;
+  transition: all 0.3s;
 }
 
 .form-input::placeholder,
-.form-select::placeholder,
 .form-textarea::placeholder {
-  color: var(--color-text-tertiary);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .form-input:focus,
-.form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: var(--color-neutral);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="password"] {
+  padding: 0.75rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: 400 0.95rem/1.5 inherit;
+  transition: all 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="number"]::placeholder,
+input[type="password"]::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Date input styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
 
 .form-textarea {
