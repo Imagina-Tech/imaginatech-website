@@ -550,11 +550,18 @@ function renderInstallments() {
         const installmentValue = inst.totalValue / inst.totalInstallments;
         const remainingValue = installmentValue * remaining;
 
+        // Encontra o cartão associado
+        const card = creditCards.find(c => c.id === inst.cardId);
+        const cardName = card ? `${card.name} - ${card.institution}` : 'Cartão não encontrado';
+
         return `
             <div class="installment-card">
                 <div class="installment-header">
                     <div class="installment-info">
                         <h4>${inst.description}</h4>
+                        <span style="font-size: 0.7rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
+                            <i class="fas fa-credit-card"></i> ${cardName}
+                        </span>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
                         <button class="installment-delete" onclick="editInstallment('${inst.id}')" title="Editar" style="color: var(--color-neutral);">
@@ -600,6 +607,7 @@ async function handleInstallmentSubmit(e) {
     e.preventDefault();
 
     const description = document.getElementById('instDescription').value.trim();
+    const cardId = document.getElementById('instCard').value;
     const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value);
     const paidInstallments = parseInt(document.getElementById('instPaidInstallments').value);
     const dueDay = parseInt(document.getElementById('instDueDay').value);
@@ -623,7 +631,7 @@ async function handleInstallmentSubmit(e) {
         totalValue = installmentValue * totalInstallments;
     }
 
-    if (!description || !totalInstallments || !dueDay) {
+    if (!description || !cardId || !totalInstallments || !dueDay) {
         showToast('Preencha todos os campos', 'error');
         return;
     }
@@ -653,6 +661,7 @@ async function handleInstallmentSubmit(e) {
     try {
         const installmentData = {
             userId: currentUser.uid,
+            cardId,
             description,
             totalValue,
             totalInstallments,
@@ -1717,6 +1726,13 @@ function openInstallmentModal() {
     selectInstallmentValueType('total');
     // Atualiza título do modal
     document.querySelector('#installmentModal .modal-header h2').textContent = 'Novo Parcelamento';
+
+    // Preenche dropdown de cartões
+    const cardSelect = document.getElementById('instCard');
+    cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}">${card.name} - ${card.institution}</option>`
+        ).join('');
 }
 
 function closeInstallmentModal() {
@@ -1738,6 +1754,13 @@ function editInstallment(id) {
 
     // Atualiza título do modal
     document.querySelector('#installmentModal .modal-header h2').textContent = 'Editar Parcelamento';
+
+    // Preenche dropdown de cartões
+    const cardSelect = document.getElementById('instCard');
+    cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+        ).join('');
 
     // Preenche os campos
     document.getElementById('instDescription').value = installment.description;

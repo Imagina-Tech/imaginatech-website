@@ -752,7 +752,7 @@ a:hover {
 
 .top-info-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr;
+  grid-template-columns: 1fr 1fr 2fr;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   align-items: start;
@@ -781,7 +781,7 @@ a:hover {
 
 .kpi-section {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -912,14 +912,14 @@ a:hover {
 
 @media (max-width: 1200px) {
   .kpi-section {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.4rem;
   }
 }
 
 @media (max-width: 768px) {
   .kpi-section {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.4rem;
   }
 

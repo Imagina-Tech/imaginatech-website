@@ -229,24 +229,26 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </button>
             </div>
 
-            <!-- Main Chart: Fluxo de Caixa -->
+            <!-- Main Chart: Distribuição por Categoria -->
             <div class="chart-card chart-main">
                 <div class="chart-header">
-                    <h3>Fluxo de Caixa Mensal</h3>
-                    <div class="chart-legend">
-                        <span class="legend-item"><span class="dot income"></span>Entradas</span>
-                        <span class="legend-item"><span class="dot expense"></span>Saídas</span>
-                    </div>
+                    <h3>Distribuição por Categoria</h3>
                 </div>
-                <div id="cashFlowChart"></div>
+                <div id="categoryChart"></div>
             </div>
             </div>
 
             <!-- Charts Section -->
             <section class="charts-section">
                 <div class="chart-card">
-                    <h3>Distribuição por Categoria</h3>
-                    <div id="categoryChart"></div>
+                    <div class="chart-header">
+                        <h3>Fluxo de Caixa Mensal</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="dot income"></span>Entradas</span>
+                            <span class="legend-item"><span class="dot expense"></span>Saídas</span>
+                        </div>
+                    </div>
+                    <div id="cashFlowChart"></div>
                 </div>
 
                 <div class="chart-card">
@@ -509,6 +511,13 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <div class="form-group">
                     <label for="instDescription">Descrição</label>
                     <input type="text" id="instDescription" required placeholder="Ex: Notebook, Celular...">
+                </div>
+
+                <div class="form-group">
+                    <label for="instCard">Cartão de Crédito</label>
+                    <select id="instCard" class="form-select" required>
+                        <option value="">Selecione um cartão</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
