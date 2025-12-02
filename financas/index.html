@@ -479,17 +479,39 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
 
                 <div class="form-group">
+                    <label>Tipo de Valor</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-type="total" onclick="selectInstallmentValueType('total')">
+                            <i class="fas fa-calculator"></i>
+                            <span>Valor Total</span>
+                        </button>
+                        <button type="button" class="type-btn" data-type="installment" onclick="selectInstallmentValueType('installment')">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Valor da Parcela</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="totalValueGroup">
                     <label for="instTotalValue">Valor Total</label>
                     <div class="input-with-prefix">
                         <span class="prefix">R$</span>
-                        <input type="text" id="instTotalValue" required placeholder="0,00" onkeyup="formatCurrency(this)">
+                        <input type="text" id="instTotalValue" required placeholder="0,00" onkeyup="formatCurrency(this); calculateInstallmentValues();">
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="installmentValueGroup">
+                    <label for="instInstallmentValue">Valor da Parcela</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="instInstallmentValue" placeholder="0,00" onkeyup="formatCurrency(this); calculateInstallmentValues();">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="instTotalInstallments">Total de Parcelas</label>
-                        <input type="number" id="instTotalInstallments" required min="2" max="99" placeholder="12">
+                        <input type="number" id="instTotalInstallments" required min="2" max="99" placeholder="12" onchange="calculateInstallmentValues()">
                     </div>
 
                     <div class="form-group">

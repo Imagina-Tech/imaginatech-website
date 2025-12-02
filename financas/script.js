@@ -590,17 +590,34 @@ async function handleInstallmentSubmit(e) {
     e.preventDefault();
 
     const description = document.getElementById('instDescription').value.trim();
-    const totalValueStr = document.getElementById('instTotalValue').value;
     const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value);
     const paidInstallments = parseInt(document.getElementById('instPaidInstallments').value);
     const dueDay = parseInt(document.getElementById('instDueDay').value);
 
-    if (!description || !totalValueStr || !totalInstallments || !dueDay) {
+    // Pega o valor correto dependendo do tipo selecionado
+    let totalValue = 0;
+    if (installmentValueType === 'total') {
+        const totalValueStr = document.getElementById('instTotalValue').value;
+        if (!totalValueStr) {
+            showToast('Preencha o valor total', 'error');
+            return;
+        }
+        totalValue = parseCurrencyInput(totalValueStr);
+    } else {
+        const installmentValueStr = document.getElementById('instInstallmentValue').value;
+        if (!installmentValueStr) {
+            showToast('Preencha o valor da parcela', 'error');
+            return;
+        }
+        const installmentValue = parseCurrencyInput(installmentValueStr);
+        totalValue = installmentValue * totalInstallments;
+    }
+
+    if (!description || !totalInstallments || !dueDay) {
         showToast('Preencha todos os campos', 'error');
         return;
     }
 
-    const totalValue = parseCurrencyInput(totalValueStr);
     if (totalValue <= 0) {
         showToast('Valor inválido', 'error');
         return;
@@ -1331,11 +1348,82 @@ function openInstallmentModal() {
     document.getElementById('installmentModal').classList.add('active');
     document.getElementById('installmentForm').reset();
     document.getElementById('instPaidInstallments').value = 0;
+    // Define valor total como padrão
+    selectInstallmentValueType('total');
 }
 
 function closeInstallmentModal() {
     document.getElementById('installmentModal').classList.remove('active');
     document.getElementById('installmentForm').reset();
+    // Reset para valor total como padrão
+    selectInstallmentValueType('total');
+}
+
+// Variável global para rastrear o tipo de valor selecionado no parcelamento
+let installmentValueType = 'total';
+
+function selectInstallmentValueType(type) {
+    installmentValueType = type;
+
+    // Remove active de todos os botões
+    const buttons = document.querySelectorAll('#installmentModal .type-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // Adiciona active no botão clicado
+    const activeButton = document.querySelector(`#installmentModal .type-btn[data-type="${type}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Mostra/esconde os campos apropriados
+    const totalValueGroup = document.getElementById('totalValueGroup');
+    const installmentValueGroup = document.getElementById('installmentValueGroup');
+    const totalValueInput = document.getElementById('instTotalValue');
+    const installmentValueInput = document.getElementById('instInstallmentValue');
+
+    if (type === 'total') {
+        totalValueGroup.classList.remove('hidden');
+        installmentValueGroup.classList.add('hidden');
+        totalValueInput.required = true;
+        installmentValueInput.required = false;
+        installmentValueInput.value = '';
+    } else {
+        totalValueGroup.classList.add('hidden');
+        installmentValueGroup.classList.remove('hidden');
+        totalValueInput.required = false;
+        installmentValueInput.required = true;
+        totalValueInput.value = '';
+    }
+}
+
+function calculateInstallmentValues() {
+    const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value) || 0;
+
+    if (totalInstallments < 2) return;
+
+    if (installmentValueType === 'total') {
+        // Usuário digitou valor total, calcular valor da parcela
+        const totalValueStr = document.getElementById('instTotalValue').value;
+        if (!totalValueStr) return;
+
+        const totalValue = parseCurrencyInput(totalValueStr);
+        if (totalValue > 0) {
+            const installmentValue = totalValue / totalInstallments;
+            const installmentValueInput = document.getElementById('instInstallmentValue');
+            installmentValueInput.value = formatCurrencyValue(installmentValue);
+        }
+    } else {
+        // Usuário digitou valor da parcela, calcular valor total
+        const installmentValueStr = document.getElementById('instInstallmentValue').value;
+        if (!installmentValueStr) return;
+
+        const installmentValue = parseCurrencyInput(installmentValueStr);
+        if (installmentValue > 0) {
+            const totalValue = installmentValue * totalInstallments;
+            const totalValueInput = document.getElementById('instTotalValue');
+            totalValueInput.value = formatCurrencyValue(totalValue);
+        }
+    }
 }
 
 function openProjectionModal() {
@@ -1397,6 +1485,17 @@ function formatCurrencyDisplay(value) {
         style: 'currency',
         currency: 'BRL'
     });
+}
+
+function formatCurrencyValue(value) {
+    // Converte um número para o formato do input (1.234,56)
+    if (!value && value !== 0) return '';
+
+    let formatted = value.toFixed(2);
+    formatted = formatted.replace('.', ',');
+    formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    return formatted;
 }
 
 function parseCurrencyInput(str) {
