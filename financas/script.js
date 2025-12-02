@@ -171,7 +171,8 @@ async function initializeDashboard() {
             loadTransactions(),
             loadSubscriptions(),
             loadInstallments(),
-            loadProjections()
+            loadProjections(),
+            loadCreditCards()
         ]);
 
         console.log('Dados carregados:', {
@@ -871,6 +872,322 @@ async function deleteProjection(id) {
 }
 
 // ===========================
+// CREDIT CARDS - LOAD & RENDER
+// ===========================
+async function loadCreditCards() {
+    try {
+        console.log('Carregando cartões de crédito...');
+        const snapshot = await db.collection('creditCards')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        creditCards = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`${creditCards.length} cartões carregados`);
+        await loadCardExpenses();
+        renderCreditCards();
+    } catch (error) {
+        console.error('Erro ao carregar cartões:', error);
+        creditCards = [];
+        renderCreditCards();
+    }
+}
+
+async function loadCardExpenses() {
+    try {
+        const snapshot = await db.collection('cardExpenses')
+            .where('userId', '==', currentUser.uid)
+            .get();
+
+        cardExpenses = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`${cardExpenses.length} gastos de cartão carregados`);
+    } catch (error) {
+        console.error('Erro ao carregar gastos:', error);
+        cardExpenses = [];
+    }
+}
+
+function renderCreditCards() {
+    const grid = document.getElementById('creditCardsGrid');
+    const emptyState = document.getElementById('emptyCreditCards');
+
+    if (!grid || !emptyState) return;
+
+    if (creditCards.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    grid.innerHTML = creditCards.map(card => {
+        const currentBill = calculateCurrentBill(card);
+        const availableLimit = card.limit - currentBill;
+        const usagePercentage = (currentBill / card.limit) * 100;
+
+        return `
+            <div class="credit-card-item">
+                <div class="credit-card-header">
+                    <div>
+                        <div class="credit-card-name">${card.name}</div>
+                        <div class="credit-card-institution">${card.institution}</div>
+                    </div>
+                    <button class="installment-delete" onclick="deleteCreditCard('${card.id}')" title="Deletar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="credit-card-amount">${formatCurrencyDisplay(currentBill)}</div>
+                <div class="installment-progress-container">
+                    <div class="installment-progress-label">
+                        <span class="installment-progress-label-text">Limite disponível</span>
+                        <span class="installment-progress-percentage">${formatCurrencyDisplay(availableLimit)}</span>
+                    </div>
+                    <div class="installment-progress-bar">
+                        <div class="installment-progress-fill" style="width: ${Math.min(usagePercentage, 100)}%; background: linear-gradient(90deg, #3B82F6, #1E40AF);"></div>
+                    </div>
+                </div>
+                <div class="credit-card-info">
+                    <span>Fechamento: dia ${card.closingDay}</span>
+                    <span>Vencimento: dia ${card.dueDay}</span>
+                </div>
+                <div class="credit-card-actions">
+                    <button class="btn-card-action btn-add-expense" onclick="openCardExpenseModal('${card.id}')">
+                        <i class="fas fa-plus"></i> Adicionar Gasto
+                    </button>
+                    <button class="btn-card-action btn-edit-card" onclick="editCreditCard('${card.id}')">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function calculateCurrentBill(card) {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Determinar período da fatura atual
+    let billStartDate, billEndDate;
+
+    if (today.getDate() >= card.closingDay) {
+        // Período atual: dia de fechamento do mês atual até dia de fechamento do próximo mês
+        billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+        billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
+    } else {
+        // Período anterior: dia de fechamento do mês anterior até dia de fechamento do mês atual
+        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
+        billEndDate = new Date(currentYear, currentMonth, card.closingDay - 1);
+    }
+
+    // Somar gastos do período
+    const total = cardExpenses
+        .filter(expense => {
+            if (expense.cardId !== card.id) return false;
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= billStartDate && expenseDate <= billEndDate;
+        })
+        .reduce((sum, expense) => sum + expense.value, 0);
+
+    return total;
+}
+
+// ===========================
+// CREDIT CARDS - MODALS
+// ===========================
+function openCreditCardModal() {
+    editingCardId = null;
+    document.getElementById('creditCardModal').classList.add('active');
+    document.getElementById('creditCardForm').reset();
+    document.querySelector('#creditCardModal .modal-header h2').textContent = 'Novo Cartão de Crédito';
+}
+
+function closeCreditCardModal() {
+    editingCardId = null;
+    document.getElementById('creditCardModal').classList.remove('active');
+    document.getElementById('creditCardForm').reset();
+}
+
+function editCreditCard(id) {
+    const card = creditCards.find(c => c.id === id);
+    if (!card) return;
+
+    editingCardId = id;
+    document.getElementById('creditCardModal').classList.add('active');
+    document.querySelector('#creditCardModal .modal-header h2').textContent = 'Editar Cartão';
+
+    document.getElementById('cardName').value = card.name;
+    document.getElementById('cardInstitution').value = card.institution;
+    document.getElementById('cardLimit').value = formatCurrencyValue(card.limit);
+    document.getElementById('cardClosingDay').value = card.closingDay;
+    document.getElementById('cardDueDay').value = card.dueDay;
+}
+
+let selectedCardId = null;
+
+function openCardExpenseModal(cardId = null) {
+    selectedCardId = cardId;
+    document.getElementById('cardExpenseModal').classList.add('active');
+    document.getElementById('cardExpenseForm').reset();
+
+    // Preencher dropdown de cartões
+    const select = document.getElementById('expenseCard');
+    select.innerHTML = '<option value="">Selecione um cartão</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}" ${card.id === cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+        ).join('');
+
+    // Data padrão: hoje
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expenseDate').value = today;
+}
+
+function closeCardExpenseModal() {
+    selectedCardId = null;
+    document.getElementById('cardExpenseModal').classList.remove('active');
+    document.getElementById('cardExpenseForm').reset();
+}
+
+// ===========================
+// CREDIT CARDS - CRUD
+// ===========================
+async function handleCreditCardSubmit(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('cardName').value.trim();
+    const institution = document.getElementById('cardInstitution').value.trim();
+    const limitStr = document.getElementById('cardLimit').value;
+    const closingDay = parseInt(document.getElementById('cardClosingDay').value);
+    const dueDay = parseInt(document.getElementById('cardDueDay').value);
+
+    if (!name || !institution || !limitStr) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const limit = parseCurrencyInput(limitStr);
+    if (limit <= 0) {
+        showToast('Limite inválido', 'error');
+        return;
+    }
+
+    if (closingDay < 1 || closingDay > 31 || dueDay < 1 || dueDay > 31) {
+        showToast('Dias devem estar entre 1 e 31', 'error');
+        return;
+    }
+
+    showLoading(editingCardId ? 'Atualizando cartão...' : 'Salvando cartão...');
+
+    try {
+        const cardData = {
+            userId: currentUser.uid,
+            name,
+            institution,
+            limit,
+            closingDay,
+            dueDay
+        };
+
+        if (editingCardId) {
+            await db.collection('creditCards').doc(editingCardId).update({
+                ...cardData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Cartão atualizado com sucesso', 'success');
+        } else {
+            await db.collection('creditCards').add({
+                ...cardData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Cartão adicionado com sucesso', 'success');
+        }
+
+        await loadCreditCards();
+        updateKPIs();
+        closeCreditCardModal();
+    } catch (error) {
+        console.error('Erro ao salvar cartão:', error);
+        showToast('Erro ao salvar cartão', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleCardExpenseSubmit(e) {
+    e.preventDefault();
+
+    const cardId = document.getElementById('expenseCard').value;
+    const description = document.getElementById('expenseDescription').value.trim();
+    const valueStr = document.getElementById('expenseValue').value;
+    const date = document.getElementById('expenseDate').value;
+    const category = document.getElementById('expenseCategory').value;
+
+    if (!cardId || !description || !valueStr || !date || !category) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const value = parseCurrencyInput(valueStr);
+    if (value <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    showLoading('Salvando gasto...');
+
+    try {
+        await db.collection('cardExpenses').add({
+            userId: currentUser.uid,
+            cardId,
+            description,
+            value,
+            date,
+            category,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await loadCardExpenses();
+        renderCreditCards();
+        updateKPIs();
+        closeCardExpenseModal();
+        showToast('Gasto adicionado com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar gasto:', error);
+        showToast('Erro ao salvar gasto', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteCreditCard(id) {
+    if (!confirm('Deseja realmente deletar este cartão? Todos os gastos associados serão mantidos.')) return;
+
+    showLoading('Deletando...');
+
+    try {
+        await db.collection('creditCards').doc(id).delete();
+        await loadCreditCards();
+        updateKPIs();
+        showToast('Cartão deletado com sucesso', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar cartão:', error);
+        showToast('Erro ao deletar cartão', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
 // KPI CALCULATIONS
 // ===========================
 function updateKPIs() {
@@ -928,6 +1245,11 @@ function updateKPIs() {
         .filter(p => p.status === 'pending')
         .reduce((sum, p) => sum + p.value, 0);
 
+    // Total Credit Cards (current bills)
+    const totalCreditCards = creditCards.reduce((sum, card) => {
+        return sum + calculateCurrentBill(card);
+    }, 0);
+
     // Update DOM
     const incomeEl = document.getElementById('totalIncome');
     const expenseEl = document.getElementById('totalExpense');
@@ -937,6 +1259,7 @@ function updateKPIs() {
     const installmentsMonthlyEl = document.getElementById('installmentsMonthly');
     const installmentsTotalEl = document.getElementById('installmentsTotal');
     const projectionEl = document.getElementById('totalProjection');
+    const creditCardsEl = document.getElementById('totalCreditCards');
 
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpense);
@@ -949,6 +1272,7 @@ function updateKPIs() {
     if (installmentsTotalEl) installmentsTotalEl.textContent = formatCurrencyDisplay(totalInstallments);
 
     if (projectionEl) projectionEl.textContent = formatCurrencyDisplay(totalProjection);
+    if (creditCardsEl) creditCardsEl.textContent = formatCurrencyDisplay(totalCreditCards);
 }
 
 // ===========================
@@ -1658,6 +1982,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectionForm = document.getElementById('projectionForm');
     if (projectionForm) {
         projectionForm.addEventListener('submit', handleProjectionSubmit);
+    }
+
+    // Credit card form submit
+    const creditCardForm = document.getElementById('creditCardForm');
+    if (creditCardForm) {
+        creditCardForm.addEventListener('submit', handleCreditCardSubmit);
+    }
+
+    // Card expense form submit
+    const cardExpenseForm = document.getElementById('cardExpenseForm');
+    if (cardExpenseForm) {
+        cardExpenseForm.addEventListener('submit', handleCardExpenseSubmit);
     }
 
     // Enter key to submit forms
