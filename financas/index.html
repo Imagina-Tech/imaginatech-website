@@ -196,6 +196,17 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <small class="kpi-subtitle">Próximo mês</small>
                     </div>
                 </div>
+
+                <div class="kpi-card" style="border-left: 3px solid #3B82F6;">
+                    <div class="kpi-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Cartões</h3>
+                        <p class="kpi-value" id="totalCreditCards">R$ 0,00</p>
+                        <small class="kpi-subtitle">Fatura atual</small>
+                    </div>
+                </div>
             </section>
 
             <!-- Quick Actions -->
@@ -294,6 +305,24 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <i class="fas fa-calendar-alt"></i>
                     <p>Nenhuma projeção cadastrada</p>
                     <small>Adicione salários a receber</small>
+                </div>
+            </section>
+
+            <!-- Credit Cards Section -->
+            <section class="credit-cards-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-credit-card"></i> Cartões de Crédito</h2>
+                    <button class="btn-add" onclick="openCreditCardModal()">
+                        <i class="fas fa-plus"></i> Adicionar Cartão
+                    </button>
+                </div>
+                <div class="credit-cards-grid" id="creditCardsGrid">
+                    <!-- Cards will be loaded here -->
+                </div>
+                <div class="empty-state hidden" id="emptyCreditCards">
+                    <i class="fas fa-credit-card"></i>
+                    <p>Nenhum cartão cadastrado</p>
+                    <small>Adicione seus cartões de crédito</small>
                 </div>
             </section>
 

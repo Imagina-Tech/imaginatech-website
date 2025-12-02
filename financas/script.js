@@ -64,9 +64,12 @@ let transactions = [];
 let subscriptions = [];
 let installments = [];
 let projections = [];
+let creditCards = [];
+let cardExpenses = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
 let editingInstallmentId = null;
+let editingCardId = null;
 
 // ApexCharts instances
 let cashFlowChart = null;
