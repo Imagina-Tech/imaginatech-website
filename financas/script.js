@@ -66,6 +66,7 @@ let installments = [];
 let projections = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
+let editingInstallmentId = null;
 
 // ApexCharts instances
 let cashFlowChart = null;
@@ -551,9 +552,14 @@ function renderInstallments() {
                     <div class="installment-info">
                         <h4>${inst.description}</h4>
                     </div>
-                    <button class="installment-delete" onclick="deleteInstallment('${inst.id}')" title="Deletar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="installment-delete" onclick="editInstallment('${inst.id}')" title="Editar" style="color: var(--color-neutral);">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="installment-delete" onclick="deleteInstallment('${inst.id}')" title="Deletar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="installment-value">${formatCurrencyDisplay(inst.totalValue)}</div>
                 <div class="installment-progress-container">
@@ -638,23 +644,37 @@ async function handleInstallmentSubmit(e) {
         return;
     }
 
-    showLoading('Salvando parcelamento...');
+    showLoading(editingInstallmentId ? 'Atualizando parcelamento...' : 'Salvando parcelamento...');
 
     try {
-        await db.collection('installments').add({
+        const installmentData = {
             userId: currentUser.uid,
             description,
             totalValue,
             totalInstallments,
             paidInstallments,
-            dueDay,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            dueDay
+        };
+
+        if (editingInstallmentId) {
+            // Editando parcelamento existente
+            await db.collection('installments').doc(editingInstallmentId).update({
+                ...installmentData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Parcelamento atualizado com sucesso', 'success');
+        } else {
+            // Criando novo parcelamento
+            await db.collection('installments').add({
+                ...installmentData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Parcelamento adicionado com sucesso', 'success');
+        }
 
         await loadInstallments();
         updateKPIs();
         closeInstallmentModal();
-        showToast('Parcelamento adicionado com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao salvar parcelamento:', error);
         showToast('Erro ao salvar parcelamento', 'error');
@@ -883,11 +903,21 @@ function updateKPIs() {
         .filter(s => s.status === 'active')
         .reduce((sum, s) => sum + s.value, 0);
 
-    // Total Pending Installments
+    // Total Pending Installments (all remaining)
     const totalInstallments = installments.reduce((sum, inst) => {
         const remaining = inst.totalInstallments - inst.paidInstallments;
         const installmentValue = inst.totalValue / inst.totalInstallments;
         return sum + (installmentValue * remaining);
+    }, 0);
+
+    // Monthly Installments (only current month)
+    const monthlyInstallments = installments.reduce((sum, inst) => {
+        const remaining = inst.totalInstallments - inst.paidInstallments;
+        if (remaining > 0) {
+            const installmentValue = inst.totalValue / inst.totalInstallments;
+            return sum + installmentValue;
+        }
+        return sum;
     }, 0);
 
     // Projection for Next Month
@@ -901,13 +931,20 @@ function updateKPIs() {
     const balanceEl = document.getElementById('totalBalance');
     const subscriptionsEl = document.getElementById('totalSubscriptions');
     const installmentsEl = document.getElementById('totalInstallments');
+    const installmentsMonthlyEl = document.getElementById('installmentsMonthly');
+    const installmentsTotalEl = document.getElementById('installmentsTotal');
     const projectionEl = document.getElementById('totalProjection');
 
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpense);
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
     if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
-    if (installmentsEl) installmentsEl.textContent = formatCurrencyDisplay(totalInstallments);
+
+    // Atualiza o card de parcelamentos com ambos os valores
+    if (installmentsEl) installmentsEl.textContent = formatCurrencyDisplay(monthlyInstallments);
+    if (installmentsMonthlyEl) installmentsMonthlyEl.textContent = formatCurrencyDisplay(monthlyInstallments);
+    if (installmentsTotalEl) installmentsTotalEl.textContent = formatCurrencyDisplay(totalInstallments);
+
     if (projectionEl) projectionEl.textContent = formatCurrencyDisplay(totalProjection);
 }
 
@@ -1345,18 +1382,48 @@ function closeSubscriptionModal() {
 }
 
 function openInstallmentModal() {
+    editingInstallmentId = null;
     document.getElementById('installmentModal').classList.add('active');
     document.getElementById('installmentForm').reset();
     document.getElementById('instPaidInstallments').value = 0;
     // Define valor total como padrão
     selectInstallmentValueType('total');
+    // Atualiza título do modal
+    document.querySelector('#installmentModal .modal-header h2').textContent = 'Novo Parcelamento';
 }
 
 function closeInstallmentModal() {
+    editingInstallmentId = null;
     document.getElementById('installmentModal').classList.remove('active');
     document.getElementById('installmentForm').reset();
     // Reset para valor total como padrão
     selectInstallmentValueType('total');
+}
+
+function editInstallment(id) {
+    const installment = installments.find(inst => inst.id === id);
+    if (!installment) return;
+
+    editingInstallmentId = id;
+
+    // Abre o modal
+    document.getElementById('installmentModal').classList.add('active');
+
+    // Atualiza título do modal
+    document.querySelector('#installmentModal .modal-header h2').textContent = 'Editar Parcelamento';
+
+    // Preenche os campos
+    document.getElementById('instDescription').value = installment.description;
+    document.getElementById('instTotalInstallments').value = installment.totalInstallments;
+    document.getElementById('instPaidInstallments').value = installment.paidInstallments;
+    document.getElementById('instDueDay').value = installment.dueDay;
+
+    // Define como valor total e preenche
+    selectInstallmentValueType('total');
+    document.getElementById('instTotalValue').value = formatCurrencyValue(installment.totalValue);
+
+    // Calcula e mostra o valor da parcela
+    calculateInstallmentValues();
 }
 
 // Variável global para rastrear o tipo de valor selecionado no parcelamento
