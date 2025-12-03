@@ -130,10 +130,9 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar: KPI + Quick Actions in Matrix Layout -->
+            <!-- Top Bar: 7 KPIs + Quick Actions -->
             <div class="top-info-grid">
-                <!-- KPI Cards -->
-                <section class="kpi-section">
+                <!-- KPI 1: Entradas -->
                 <div class="kpi-card kpi-income">
                     <div class="kpi-icon">
                         <i class="fas fa-arrow-up"></i>
@@ -145,6 +144,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- KPI 2: Saídas -->
                 <div class="kpi-card kpi-expense">
                     <div class="kpi-icon">
                         <i class="fas fa-arrow-down"></i>
@@ -156,6 +156,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- KPI 3: Saldo -->
                 <div class="kpi-card kpi-balance">
                     <div class="kpi-icon">
                         <i class="fas fa-wallet"></i>
@@ -167,6 +168,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- KPI 4: Assinaturas -->
                 <div class="kpi-card kpi-subscriptions">
                     <div class="kpi-icon">
                         <i class="fas fa-sync"></i>
@@ -178,20 +180,21 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- KPI 5: Parcelamentos -->
                 <div class="kpi-card kpi-installments">
                     <div class="kpi-icon">
                         <i class="fas fa-credit-card"></i>
                     </div>
                     <div class="kpi-content">
-                        <h3>Parcelamentos</h3>
+                        <h3>Parcelas</h3>
                         <p class="kpi-value" id="totalInstallments">R$ 0,00</p>
-                        <small class="kpi-subtitle" style="display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
-                            <span style="font-size: 0.55rem;">Mês: <span id="installmentsMonthly" style="font-weight: 600;">R$ 0,00</span></span>
-                            <span style="font-size: 0.55rem;">Total: <span id="installmentsTotal" style="font-weight: 600;">R$ 0,00</span></span>
+                        <small class="kpi-subtitle">
+                            Mês: <span id="installmentsMonthly">R$ 0,00</span>
                         </small>
                     </div>
                 </div>
 
+                <!-- KPI 6: Projeção -->
                 <div class="kpi-card kpi-projection">
                     <div class="kpi-icon">
                         <i class="fas fa-chart-line"></i>
@@ -203,6 +206,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <!-- KPI 7: Cartões -->
                 <div class="kpi-card" style="border-left: 3px solid #3B82F6;">
                     <div class="kpi-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
                         <i class="fas fa-wallet"></i>
@@ -213,105 +217,102 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <small class="kpi-subtitle">Fatura atual</small>
                     </div>
                 </div>
-            </section>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="btn-action btn-transaction" onclick="openTransactionModal()">
-                    <i class="fas fa-plus"></i>
-                    <span>Nova Transação</span>
-                </button>
-                <button class="btn-action btn-installment" onclick="openInstallmentModal()">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Novo Parcelamento</span>
-                </button>
-                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
-                    <i class="fas fa-sync"></i>
-                    <span>Nova Assinatura</span>
-                </button>
-                <button class="btn-action btn-projection" onclick="openProjectionModal()">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>Projeção de Salário</span>
-                </button>
+                <!-- Quick Actions - Coluna vertical à direita -->
+                <div class="quick-actions">
+                    <button class="btn-action btn-transaction" onclick="openTransactionModal()">
+                        <i class="fas fa-plus"></i>
+                        <span>Transação</span>
+                    </button>
+                    <button class="btn-action btn-installment" onclick="openInstallmentModal()">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Parcela</span>
+                    </button>
+                    <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
+                        <i class="fas fa-sync"></i>
+                        <span>Assinatura</span>
+                    </button>
+                    <button class="btn-action btn-projection" onclick="openProjectionModal()">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Projeção</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Main Chart + Mini Charts Container -->
-            <div class="chart-with-mini-container">
-                <!-- Main Chart: Distribuição por Categoria -->
-                <div class="chart-card chart-main">
+            <!-- Dashboard Grid: Gráfico Principal + Mini Charts + Gauges -->
+            <div class="dashboard-main-grid">
+                <!-- GRÁFICO PRINCIPAL: Distribuição por Categoria (Esquerda, 2 linhas) -->
+                <div class="chart-main-container">
                     <div class="chart-header">
                         <h3>Distribuição por Categoria</h3>
                     </div>
-                    <div id="categoryChart"></div>
+                    <div id="categoryChart" style="flex: 1;"></div>
                 </div>
 
-                <!-- Mini Charts Section -->
-                <div class="mini-charts-sidebar">
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Meta de Economia</h4>
-                        <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                <!-- CHARTS TOP: Fluxo de Caixa + Comparativo (Linha 1, Colunas 2-3) -->
+                <div class="charts-section-top">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Fluxo de Caixa</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="dot income"></span>Entradas</span>
+                                <span class="legend-item"><span class="dot expense"></span>Saídas</span>
+                            </div>
+                        </div>
+                        <div id="cashFlowChart" style="flex: 1;"></div>
                     </div>
-                    <div id="savingsGoalChart"></div>
-                </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Limite de Gastos</h4>
-                        <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Comparativo</h3>
+                        </div>
+                        <div id="comparisonChart" style="flex: 1;"></div>
                     </div>
-                    <div id="expenseLimitChart"></div>
                 </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Crescimento Mensal</h4>
-                        <span class="mini-chart-value" id="growthValue">+0%</span>
+
+                <!-- CHARTS BOTTOM: Top Categorias + Evolução Semanal + Mini Gauges (Linha 2, Colunas 2-3) -->
+                <div class="charts-section-bottom">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Top 5 Despesas</h3>
+                        </div>
+                        <div id="topCategoriesChart" style="flex: 1;"></div>
                     </div>
-                    <div id="growthSparkline"></div>
-                </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Tendência de Gastos</h4>
-                        <span class="mini-chart-value" id="trendValue">--</span>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Evolução Semanal</h3>
+                        </div>
+                        <div id="weeklyTrendChart" style="flex: 1;"></div>
                     </div>
-                    <div id="expenseTrendSparkline"></div>
-                </div>
+
+                    <!-- Mini Gauges Container -->
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <div class="mini-chart-card">
+                            <div class="mini-chart-header">
+                                <h4>Meta Economia</h4>
+                                <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                            </div>
+                            <div id="savingsGoalChart" style="height: 80px;"></div>
+                        </div>
+
+                        <div class="mini-chart-card">
+                            <div class="mini-chart-header">
+                                <h4>Limite Gastos</h4>
+                                <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+                            </div>
+                            <div id="expenseLimitChart" style="height: 80px;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Fluxo de Caixa</h3>
-                        <div class="chart-legend">
-                            <span class="legend-item"><span class="dot income"></span>Entradas</span>
-                            <span class="legend-item"><span class="dot expense"></span>Saídas</span>
-                        </div>
-                    </div>
-                    <div id="cashFlowChart"></div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Comparativo Mensal</h3>
-                    </div>
-                    <div id="comparisonChart"></div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Top Categorias</h3>
-                    </div>
-                    <div id="topCategoriesChart"></div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Evolução Semanal</h3>
-                    </div>
-                    <div id="weeklyTrendChart"></div>
-                </div>
-            </section>
+            <!-- Hidden containers for data (mantidos para funcionalidade) -->
+            <div id="growthSparkline" style="display: none;"></div>
+            <div id="expenseTrendSparkline" style="display: none;"></div>
+            <div id="growthValue" style="display: none;"></div>
+            <div id="trendValue" style="display: none;"></div>
+            <span id="installmentsTotal" style="display: none;">R$ 0,00</span>
 
             <!-- Subscriptions Section -->
             <section class="subscriptions-section">
