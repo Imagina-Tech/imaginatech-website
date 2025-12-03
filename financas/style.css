@@ -1151,7 +1151,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
+  align-items: flex-start;
 }
 
 .btn-action {
@@ -1169,8 +1169,8 @@ a:hover {
   color: #FFFFFF;
   font-size: 0.8rem;
   aspect-ratio: 1 / 1;
-  width: 100%;
-  max-width: 50%;
+  width: 150px;
+  height: 150px;
 }
 
 .btn-action i {
@@ -1221,6 +1221,8 @@ a:hover {
   .btn-action {
     padding: 0.75rem;
     font-size: 0.8rem;
+    width: 130px;
+    height: 130px;
   }
 
   .btn-action i {
@@ -1231,11 +1233,15 @@ a:hover {
 @media (max-width: 768px) {
   .quick-actions {
     gap: 0.5rem;
+    align-items: stretch;
   }
 
   .btn-action {
     padding: 0.6rem;
     font-size: 0.75rem;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 
   .btn-action i {
@@ -1246,11 +1252,15 @@ a:hover {
 @media (max-width: 480px) {
   .quick-actions {
     gap: 0.4rem;
+    align-items: stretch;
   }
 
   .btn-action {
     padding: 0.5rem;
     font-size: 0.7rem;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 
   .btn-action i {
