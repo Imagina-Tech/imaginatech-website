@@ -1,40 +1,19 @@
-<!--
-==================================================
-ARQUIVO: financas/index.html
-MÓDULO: Dashboard Financeiro Pessoal Profissional
-SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 2.0 - Sistema Completo com Assinaturas e Parcelamentos
-IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
-==================================================
--->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças - ImaginaTech Admin</title>
-    <meta name="description" content="Dashboard financeiro pessoal profissional - ImaginaTech">
+    
     <meta name="robots" content="noindex, nofollow">
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://imaginatech.com.br/financas/">
-    <meta property="og:title" content="Finanças - ImaginaTech">
-    <meta property="og:description" content="Dashboard financeiro pessoal profissional - ImaginaTech">
-    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
-
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0a0e1a">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <!-- ApexCharts - Biblioteca Profissional de Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
-
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -42,766 +21,502 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Cosmic Background -->
+    
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
         <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Carregando...</div>
+            <div class="loading-text">Carregando Sistema...</div>
         </div>
     </div>
 
-    <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
-        <div class="login-container">
+        <div class="glass-card login-card">
             <div class="login-header">
-                <div class="login-logo">
+                <div class="logo-circle">
                     <i class="fas fa-chart-line"></i>
-                    <h1>ImaginaTech</h1>
-                    <p>Dashboard Financeiro Profissional</p>
                 </div>
-                <div class="login-info">
-                    <i class="fas fa-shield-alt"></i>
-                    <h2>Acesso Restrito</h2>
-                    <p>Área exclusiva para funcionários autorizados</p>
-                </div>
+                <h1>ImaginaTech</h1>
+                <p>Gestão Financeira Profissional</p>
             </div>
             <button class="btn-google" onclick="signInWithGoogle()">
-                <i class="fab fa-google"></i>
-                <span>Entrar com Google</span>
+                <i class="fab fa-google"></i> Acessar com Google
             </button>
-            <div class="login-footer">
-                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
-            </div>
+            <p class="footer-text">Área restrita para colaboradores</p>
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div class="dashboard hidden" id="dashboard">
-        <!-- Header -->
-        <header class="navbar">
-            <div class="navbar-container">
-                <div class="navbar-left">
-                    <div class="logo-section">
-                        <h1 class="logo">ImaginaTech</h1>
-                        <span class="logo-subtitle">Dashboard Financeiro</span>
-                    </div>
-                    <div class="connection-status" id="connectionStatus">
-                        <div class="status-dot"></div>
-                        <span id="statusText">Conectado</span>
-                    </div>
-                </div>
-                <div class="navbar-right">
-                    <a href="/servicos/" class="btn-nav">
-                        <i class="fas fa-tasks"></i>
-                        <span>Serviços</span>
-                    </a>
-                    <a href="/estoque/" class="btn-nav">
-                        <i class="fas fa-box-open"></i>
-                        <span>Estoque</span>
-                    </a>
-                    <a href="/caixa/" class="btn-nav">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Caixa</span>
-                    </a>
-                    <a href="/custo/" class="btn-nav">
-                        <i class="fas fa-calculator"></i>
-                        <span>Custo</span>
-                    </a>
-                    <div class="user-info" id="userInfo">
-                        <img id="userPhoto" class="user-photo" alt="Foto">
-                        <div class="user-details">
-                            <span class="user-name" id="userName">Carregando...</span>
-                            <span class="user-role">Administrador</span>
-                        </div>
-                    </div>
-                    <button class="btn-logout" onclick="signOut()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span class="btn-text">Sair</span>
-                    </button>
+    <div class="app-wrapper hidden" id="dashboard">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cube logo-icon"></i>
+                <div class="logo-text">
+                    <span>IMAGINA</span>TECH
                 </div>
             </div>
-        </header>
 
-        <!-- Main Content -->
+            <nav class="sidebar-menu">
+                <div class="menu-category">Módulos</div>
+                
+                <a href="/servicos/" class="menu-item">
+                    <i class="fas fa-tasks"></i> <span>Serviços</span>
+                </a>
+                <a href="/estoque/" class="menu-item">
+                    <i class="fas fa-box-open"></i> <span>Estoque</span>
+                </a>
+                <a href="/caixa/" class="menu-item">
+                    <i class="fas fa-cash-register"></i> <span>Caixa</span>
+                </a>
+                <a href="/custo/" class="menu-item">
+                    <i class="fas fa-calculator"></i> <span>Custo</span>
+                </a>
+
+                <div class="menu-category">Finanças</div>
+                <a href="#" class="menu-item active">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                </a>
+                
+                <button onclick="openTransactionModal()" class="menu-item action-item">
+                    <i class="fas fa-plus-circle"></i> <span>Nova Transação</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-mini-profile" id="userInfo">
+                    <img id="userPhoto" src="" alt="User" onerror="this.src='https://via.placeholder.com/40'">
+                    <div class="user-info-text">
+                        <span id="userName" class="name">Usuário</span>
+                        <span class="role">Admin</span>
+                    </div>
+                </div>
+                <button class="btn-logout-icon" onclick="signOut()" title="Sair">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
         <main class="main-content">
-            <!-- Top Bar: KPI + Quick Actions in Matrix Layout -->
-            <div class="top-info-grid">
-                <!-- KPI Cards -->
-                <section class="kpi-section">
-                <div class="kpi-card kpi-income">
-                    <div class="kpi-icon">
-                        <i class="fas fa-arrow-up"></i>
-                    </div>
-                    <div class="kpi-content">
-                        <h3>Entradas</h3>
-                        <p class="kpi-value" id="totalIncome">R$ 0,00</p>
-                        <small class="kpi-subtitle">Mês atual</small>
+            
+            <header class="top-header">
+                <div class="mobile-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="page-title-box">
+                    <h2>Visão Geral</h2>
+                    <div class="connection-status" id="connectionStatus">
+                        <span class="status-dot"></span> <span id="statusText">Conectado</span>
                     </div>
                 </div>
+            </header>
 
-                <div class="kpi-card kpi-expense">
-                    <div class="kpi-icon">
-                        <i class="fas fa-arrow-down"></i>
+            <div class="content-scroll">
+                
+                <section class="dashboard-row kpi-row">
+                    <div class="card kpi-card kpi-highlight">
+                        <div class="card-header-icon">
+                            <div class="icon-box orange"><i class="fas fa-wallet"></i></div>
+                            <span>Saldo Total</span>
+                        </div>
+                        <h3 id="totalBalance">R$ 0,00</h3>
+                        <div id="growthSparkline" class="sparkline-area"></div>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Saídas</h3>
-                        <p class="kpi-value" id="totalExpense">R$ 0,00</p>
-                        <small class="kpi-subtitle">Mês atual</small>
-                    </div>
-                </div>
 
-                <div class="kpi-card kpi-balance">
-                    <div class="kpi-icon">
-                        <i class="fas fa-wallet"></i>
+                    <div class="card kpi-card">
+                        <div class="card-header-icon">
+                            <div class="icon-box blue"><i class="fas fa-arrow-up"></i></div>
+                            <span>Entradas (Mês)</span>
+                        </div>
+                        <h3 id="totalIncome">R$ 0,00</h3>
+                        <small class="trend-up"><i class="fas fa-chart-line"></i> Fluxo atual</small>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Saldo</h3>
-                        <p class="kpi-value" id="totalBalance">R$ 0,00</p>
-                        <small class="kpi-subtitle">Acumulado</small>
-                    </div>
-                </div>
 
-                <div class="kpi-card kpi-subscriptions">
-                    <div class="kpi-icon">
-                        <i class="fas fa-sync"></i>
+                    <div class="card kpi-card">
+                        <div class="card-header-icon">
+                            <div class="icon-box pink"><i class="fas fa-arrow-down"></i></div>
+                            <span>Saídas (Mês)</span>
+                        </div>
+                        <h3 id="totalExpense">R$ 0,00</h3>
+                        <div id="expenseTrendSparkline" class="sparkline-area"></div>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Assinaturas</h3>
-                        <p class="kpi-value" id="totalSubscriptions">R$ 0,00</p>
-                        <small class="kpi-subtitle">/mês</small>
-                    </div>
-                </div>
+                </section>
 
-                <div class="kpi-card kpi-installments">
-                    <div class="kpi-icon">
-                        <i class="fas fa-credit-card"></i>
+                <section class="dashboard-grid-4">
+                    <div class="action-card" onclick="openInstallmentModal()">
+                        <i class="fas fa-credit-card"></i> <span>Parcelar</span>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Parcelamentos</h3>
-                        <p class="kpi-value" id="totalInstallments">R$ 0,00</p>
-                        <small class="kpi-subtitle" style="display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
-                            <span style="font-size: 0.55rem;">Mês: <span id="installmentsMonthly" style="font-weight: 600;">R$ 0,00</span></span>
-                            <span style="font-size: 0.55rem;">Total: <span id="installmentsTotal" style="font-weight: 600;">R$ 0,00</span></span>
-                        </small>
+                    <div class="action-card" onclick="openSubscriptionModal()">
+                        <i class="fas fa-sync"></i> <span>Assinar</span>
                     </div>
-                </div>
+                    <div class="action-card" onclick="openProjectionModal()">
+                        <i class="fas fa-calendar-alt"></i> <span>Projetar</span>
+                    </div>
+                    <div class="action-card" onclick="openCreditCardModal()">
+                        <i class="fas fa-plus"></i> <span>Cartão</span>
+                    </div>
+                </section>
 
-                <div class="kpi-card kpi-projection">
-                    <div class="kpi-icon">
-                        <i class="fas fa-chart-line"></i>
+                <section class="dashboard-grid-4 stats-grid">
+                    <div class="mini-stat-card">
+                        <span class="label">Assinaturas</span>
+                        <strong id="totalSubscriptions">R$ 0,00</strong>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Projeção</h3>
-                        <p class="kpi-value" id="totalProjection">R$ 0,00</p>
-                        <small class="kpi-subtitle">Próximo mês</small>
+                    <div class="mini-stat-card">
+                        <span class="label">Parcelas (Mês)</span>
+                        <strong id="installmentsMonthly">R$ 0,00</strong>
                     </div>
-                </div>
+                    <div class="mini-stat-card">
+                        <span class="label">Total Parcelado</span>
+                        <strong id="installmentsTotal">R$ 0,00</strong>
+                    </div>
+                    <div class="mini-stat-card">
+                        <span class="label">Fatura Cartões</span>
+                        <strong id="totalCreditCards">R$ 0,00</strong>
+                    </div>
+                </section>
 
-                <div class="kpi-card" style="border-left: 3px solid #3B82F6;">
-                    <div class="kpi-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
-                        <i class="fas fa-wallet"></i>
+                <section class="dashboard-row charts-row">
+                    <div class="card chart-container large">
+                        <div class="card-header">
+                            <h3>Distribuição por Categoria</h3>
+                        </div>
+                        <div id="categoryChart"></div>
                     </div>
-                    <div class="kpi-content">
-                        <h3>Cartões</h3>
-                        <p class="kpi-value" id="totalCreditCards">R$ 0,00</p>
-                        <small class="kpi-subtitle">Fatura atual</small>
-                    </div>
-                </div>
-            </section>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="btn-action btn-transaction" onclick="openTransactionModal()">
-                    <i class="fas fa-plus"></i>
-                    <span>Nova Transação</span>
-                </button>
-                <button class="btn-action btn-installment" onclick="openInstallmentModal()">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Novo Parcelamento</span>
-                </button>
-                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
-                    <i class="fas fa-sync"></i>
-                    <span>Nova Assinatura</span>
-                </button>
-                <button class="btn-action btn-projection" onclick="openProjectionModal()">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>Projeção de Salário</span>
-                </button>
-            </div>
+                    <div class="card chart-container large">
+                        <div class="card-header">
+                            <h3>Fluxo de Caixa (Anual)</h3>
+                        </div>
+                        <div id="cashFlowChart"></div>
+                    </div>
+                </section>
 
-            <!-- Main Chart: Distribuição por Categoria -->
-            <div class="chart-card chart-main">
-                <div class="chart-header">
-                    <h3>Distribuição por Categoria</h3>
-                </div>
-                <div id="categoryChart"></div>
-            </div>
-            </div>
+                <section class="dashboard-row charts-row-secondary">
+                     <div class="card chart-container medium">
+                        <div class="card-header">
+                            <h3>Comparativo</h3>
+                        </div>
+                        <div id="comparisonChart"></div>
+                    </div>
+                    <div class="card chart-container medium">
+                        <div class="card-header">
+                            <h3>Top 5 Despesas</h3>
+                        </div>
+                        <div id="topCategoriesChart"></div>
+                    </div>
+                    <div class="card chart-container medium">
+                        <div class="card-header">
+                            <h3>Evolução Semanal</h3>
+                        </div>
+                        <div id="weeklyTrendChart"></div>
+                    </div>
+                </section>
+                
+                <section class="dashboard-row mini-gauges">
+                    <div class="card gauge-card">
+                        <h4>Meta Economia</h4>
+                        <div id="savingsGoalChart"></div>
+                        <span id="savingsGoalValue">R$ 0,00</span>
+                    </div>
+                    <div class="card gauge-card">
+                        <h4>Limite Gastos</h4>
+                        <div id="expenseLimitChart"></div>
+                        <span id="expenseLimitValue">R$ 0,00</span>
+                    </div>
+                </section>
 
-            <!-- Mini Charts Section -->
-            <section class="mini-charts-section">
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Meta de Economia</h4>
-                        <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
-                    </div>
-                    <div id="savingsGoalChart"></div>
-                </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Limite de Gastos</h4>
-                        <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
-                    </div>
-                    <div id="expenseLimitChart"></div>
-                </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Crescimento Mensal</h4>
-                        <span class="mini-chart-value" id="growthValue">+0%</span>
-                    </div>
-                    <div id="growthSparkline"></div>
-                </div>
-                <div class="mini-chart-card">
-                    <div class="mini-chart-header">
-                        <h4>Tendência de Gastos</h4>
-                        <span class="mini-chart-value" id="trendValue">--</span>
-                    </div>
-                    <div id="expenseTrendSparkline"></div>
-                </div>
-            </section>
-
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Fluxo de Caixa</h3>
-                        <div class="chart-legend">
-                            <span class="legend-item"><span class="dot income"></span>Entradas</span>
-                            <span class="legend-item"><span class="dot expense"></span>Saídas</span>
+                <section class="card table-card">
+                    <div class="card-header row-between">
+                        <h3>Últimas Movimentações</h3>
+                        <div class="filter-pills">
+                            <button class="pill active" onclick="filterTransactions('all')">Todas</button>
+                            <button class="pill" onclick="filterTransactions('income')">Entradas</button>
+                            <button class="pill" onclick="filterTransactions('expense')">Saídas</button>
                         </div>
                     </div>
-                    <div id="cashFlowChart"></div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Comparativo Mensal</h3>
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Data</th>
+                                    <th>Valor</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                </tbody>
+                        </table>
+                        <div class="empty-state hidden" id="emptyState">
+                            <i class="fas fa-ghost"></i>
+                            <p>Nenhuma transação encontrada</p>
+                        </div>
                     </div>
-                    <div id="comparisonChart"></div>
-                </div>
+                </section>
+                
+                <div id="subscriptionsGrid" class="hidden-grid-data"></div>
+                <div id="creditCardsGrid" class="hidden-grid-data"></div>
+                <div id="projectionsGrid" class="hidden-grid-data"></div>
+                <div id="installmentsGrid" class="hidden-grid-data"></div>
 
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Top Categorias</h3>
-                    </div>
-                    <div id="topCategoriesChart"></div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Evolução Semanal</h3>
-                    </div>
-                    <div id="weeklyTrendChart"></div>
-                </div>
-            </section>
-
-            <!-- Subscriptions Section -->
-            <section class="subscriptions-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-sync"></i> Assinaturas Recorrentes</h2>
-                    <button class="btn-add" onclick="openSubscriptionModal()">
-                        <i class="fas fa-plus"></i> Adicionar
-                    </button>
-                </div>
-                <div class="subscriptions-grid" id="subscriptionsGrid">
-                    <!-- Subscriptions will be loaded here -->
-                </div>
-                <div class="empty-state hidden" id="emptySubscriptions">
-                    <i class="fas fa-sync"></i>
-                    <p>Nenhuma assinatura cadastrada</p>
-                    <small>Adicione Netflix, Spotify, etc.</small>
-                </div>
-            </section>
-
-            <!-- Credit Cards Section -->
-            <section class="credit-cards-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-credit-card"></i> Cartões de Crédito</h2>
-                    <button class="btn-add" onclick="openCreditCardModal()">
-                        <i class="fas fa-plus"></i> Adicionar Cartão
-                    </button>
-                </div>
-                <div class="credit-cards-grid" id="creditCardsGrid">
-                    <!-- Cards will be loaded here -->
-                </div>
-                <div class="empty-state hidden" id="emptyCreditCards">
-                    <i class="fas fa-credit-card"></i>
-                    <p>Nenhum cartão cadastrado</p>
-                    <small>Adicione seus cartões de crédito</small>
-                </div>
-            </section>
-
-            <!-- Projections Section -->
-            <section class="projections-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-calendar-alt"></i> Projeções de Receita</h2>
-                    <button class="btn-add" onclick="openProjectionModal()">
-                        <i class="fas fa-plus"></i> Adicionar
-                    </button>
-                </div>
-                <div class="projections-grid" id="projectionsGrid">
-                    <!-- Projections will be loaded here -->
-                </div>
-                <div class="empty-state hidden" id="emptyProjections">
-                    <i class="fas fa-calendar-alt"></i>
-                    <p>Nenhuma projeção cadastrada</p>
-                    <small>Adicione salários a receber</small>
-                </div>
-            </section>
-
-            <!-- Installments Section -->
-            <section class="installments-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-credit-card"></i> Parcelamentos Ativos</h2>
-                    <button class="btn-add" onclick="openInstallmentModal()">
-                        <i class="fas fa-plus"></i> Adicionar
-                    </button>
-                </div>
-                <div class="installments-grid" id="installmentsGrid">
-                    <!-- Installments will be loaded here -->
-                </div>
-                <div class="empty-state hidden" id="emptyInstallments">
-                    <i class="fas fa-credit-card"></i>
-                    <p>Nenhum parcelamento ativo</p>
-                    <small>Adicione compras parceladas</small>
-                </div>
-            </section>
-
-            <!-- Transactions Table -->
-            <section class="transactions-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-list"></i> Transações Recentes</h2>
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="all" onclick="filterTransactions('all')">
-                            Todas
-                        </button>
-                        <button class="filter-btn" data-filter="income" onclick="filterTransactions('income')">
-                            Entradas
-                        </button>
-                        <button class="filter-btn" data-filter="expense" onclick="filterTransactions('expense')">
-                            Saídas
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table class="transactions-table">
-                        <thead>
-                            <tr>
-                                <th>Descrição</th>
-                                <th>Categoria</th>
-                                <th>Data</th>
-                                <th>Valor</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTableBody">
-                            <!-- Transactions will be loaded here -->
-                        </tbody>
-                    </table>
-                    <div class="empty-state hidden" id="emptyState">
-                        <i class="fas fa-receipt"></i>
-                        <p>Nenhuma transação encontrada</p>
-                        <small>Adicione sua primeira transação</small>
-                    </div>
-                </div>
-            </section>
+                <div class="footer-spacer"></div>
+            </div>
         </main>
     </div>
 
-    <!-- Transaction Modal -->
     <div class="modal-overlay" id="transactionModal">
         <div class="modal-container">
             <div class="modal-header">
                 <h2>Nova Transação</h2>
-                <button class="modal-close" onclick="closeTransactionModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeTransactionModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="transactionForm" class="modal-form">
-                <div class="form-group">
-                    <label>Tipo de Transação</label>
-                    <div class="transaction-type-selector">
-                        <button type="button" class="type-btn active" data-type="income" onclick="selectTransactionType('income')">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>Entrada</span>
-                        </button>
-                        <button type="button" class="type-btn" data-type="expense" onclick="selectTransactionType('expense')">
-                            <i class="fas fa-arrow-down"></i>
-                            <span>Saída</span>
-                        </button>
-                    </div>
+                <div class="form-group type-toggle-group">
+                    <button type="button" class="type-btn active" data-type="income" onclick="selectTransactionType('income')">
+                        <i class="fas fa-arrow-up"></i> Entrada
+                    </button>
+                    <button type="button" class="type-btn" data-type="expense" onclick="selectTransactionType('expense')">
+                        <i class="fas fa-arrow-down"></i> Saída
+                    </button>
                 </div>
-
                 <div class="form-group">
-                    <label for="description">Descrição</label>
-                    <input type="text" id="description" required placeholder="Ex: Salário, Aluguel, Mercado...">
+                    <label>Descrição</label>
+                    <input type="text" id="description" required placeholder="Ex: Salário, Mercado...">
                 </div>
-
-                <div class="form-group">
-                    <label for="value">Valor</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
                         <input type="text" id="value" required placeholder="0,00" onkeyup="formatCurrency(this)">
                     </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="date" required>
+                    </div>
                 </div>
-
                 <div class="form-group">
-                    <label for="category">Categoria</label>
+                    <label>Categoria</label>
                     <select id="category" class="form-select" required>
-                        <option value="">Selecione uma categoria</option>
+                        <option value="">Selecione...</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="date">Data</label>
-                    <input type="date" id="date" required>
-                </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeTransactionModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeTransactionModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Subscription Modal -->
     <div class="modal-overlay" id="subscriptionModal">
         <div class="modal-container">
             <div class="modal-header">
                 <h2>Nova Assinatura</h2>
-                <button class="modal-close" onclick="closeSubscriptionModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeSubscriptionModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="subscriptionForm" class="modal-form">
                 <div class="form-group">
-                    <label for="subName">Nome do Serviço</label>
-                    <input type="text" id="subName" required placeholder="Ex: Netflix, Spotify, Adobe...">
+                    <label>Serviço</label>
+                    <input type="text" id="subName" required placeholder="Ex: Netflix">
                 </div>
-
-                <div class="form-group">
-                    <label for="subValue">Valor Mensal</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="subValue" required placeholder="0,00" onkeyup="formatCurrency(this)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="text" id="subValue" required onkeyup="formatCurrency(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Dia Venc.</label>
+                        <input type="number" id="subDueDay" required min="1" max="31">
                     </div>
                 </div>
-
                 <div class="form-group">
-                    <label for="subDueDay">Dia do Vencimento</label>
-                    <input type="number" id="subDueDay" required min="1" max="31" placeholder="1-31">
-                </div>
-
-                <div class="form-group">
-                    <label for="subCategory">Categoria</label>
+                    <label>Categoria</label>
                     <select id="subCategory" class="form-select" required>
-                        <option value="">Selecione uma categoria</option>
                         <option value="Streaming">Streaming</option>
                         <option value="Software">Software</option>
-                        <option value="Música">Música</option>
-                        <option value="Academia">Academia</option>
-                        <option value="Educação">Educação</option>
                         <option value="Outros">Outros</option>
                     </select>
                 </div>
-
                 <div class="form-group">
-                    <label for="subStatus">Status</label>
-                    <select id="subStatus" class="form-select" required>
+                    <label>Status</label>
+                    <select id="subStatus" class="form-select">
                         <option value="active">Ativa</option>
                         <option value="inactive">Inativa</option>
                     </select>
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeSubscriptionModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeSubscriptionModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Installment Modal -->
     <div class="modal-overlay" id="installmentModal">
         <div class="modal-container">
             <div class="modal-header">
                 <h2>Novo Parcelamento</h2>
-                <button class="modal-close" onclick="closeInstallmentModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeInstallmentModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="installmentForm" class="modal-form">
                 <div class="form-group">
-                    <label for="instDescription">Descrição</label>
-                    <input type="text" id="instDescription" required placeholder="Ex: Notebook, Celular...">
+                    <label>Descrição</label>
+                    <input type="text" id="instDescription" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="instCard">Cartão de Crédito</label>
-                    <select id="instCard" class="form-select" required>
-                        <option value="">Selecione um cartão</option>
-                    </select>
+                    <label>Cartão</label>
+                    <select id="instCard" class="form-select" required></select>
                 </div>
-
-                <div class="form-group">
-                    <label>Tipo de Valor</label>
-                    <div class="transaction-type-selector">
-                        <button type="button" class="type-btn active" data-type="total" onclick="selectInstallmentValueType('total')">
-                            <i class="fas fa-calculator"></i>
-                            <span>Valor Total</span>
-                        </button>
-                        <button type="button" class="type-btn" data-type="installment" onclick="selectInstallmentValueType('installment')">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Valor da Parcela</span>
-                        </button>
-                    </div>
+                 <div class="form-group type-toggle-group">
+                    <button type="button" class="type-btn active" data-type="total" onclick="selectInstallmentValueType('total')">Valor Total</button>
+                    <button type="button" class="type-btn" data-type="installment" onclick="selectInstallmentValueType('installment')">Valor da Parcela</button>
                 </div>
-
                 <div class="form-group" id="totalValueGroup">
-                    <label for="instTotalValue">Valor Total</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="instTotalValue" required placeholder="0,00" onkeyup="formatCurrency(this); calculateInstallmentValues();">
-                    </div>
+                    <label>Valor Total (R$)</label>
+                    <input type="text" id="instTotalValue" onkeyup="formatCurrency(this); calculateInstallmentValues();">
                 </div>
-
                 <div class="form-group hidden" id="installmentValueGroup">
-                    <label for="instInstallmentValue">Valor da Parcela</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="instInstallmentValue" placeholder="0,00" onkeyup="formatCurrency(this); calculateInstallmentValues();">
-                    </div>
+                    <label>Valor Parcela (R$)</label>
+                    <input type="text" id="instInstallmentValue" onkeyup="formatCurrency(this); calculateInstallmentValues();">
                 </div>
-
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="instTotalInstallments">Total de Parcelas</label>
-                        <input type="number" id="instTotalInstallments" required min="2" max="99" placeholder="12" onchange="calculateInstallmentValues()">
+                        <label>Qtd. Parcelas</label>
+                        <input type="number" id="instTotalInstallments" required min="2" onchange="calculateInstallmentValues()">
                     </div>
-
                     <div class="form-group">
-                        <label for="instPaidInstallments">Parcelas Pagas</label>
-                        <input type="number" id="instPaidInstallments" required min="0" value="0" placeholder="0">
+                        <label>Pagas</label>
+                        <input type="number" id="instPaidInstallments" value="0">
                     </div>
                 </div>
-
                 <div class="form-group">
-                    <label for="instDueDay">Dia do Vencimento</label>
-                    <input type="number" id="instDueDay" required min="1" max="31" placeholder="1-31">
+                    <label>Dia Venc.</label>
+                    <input type="number" id="instDueDay" required min="1" max="31">
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeInstallmentModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeInstallmentModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Projection Modal -->
     <div class="modal-overlay" id="projectionModal">
         <div class="modal-container">
             <div class="modal-header">
-                <h2>Nova Projeção de Receita</h2>
-                <button class="modal-close" onclick="closeProjectionModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2>Projeção</h2>
+                <button class="modal-close" onclick="closeProjectionModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="projectionForm" class="modal-form">
                 <div class="form-group">
-                    <label for="projDescription">Descrição</label>
-                    <input type="text" id="projDescription" required placeholder="Ex: Salário, Freelance...">
+                    <label>Descrição</label>
+                    <input type="text" id="projDescription" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="projValue">Valor Estimado</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="projValue" required placeholder="0,00" onkeyup="formatCurrency(this)">
-                    </div>
+                    <label>Valor (R$)</label>
+                    <input type="text" id="projValue" required onkeyup="formatCurrency(this)">
                 </div>
-
                 <div class="form-group">
-                    <label for="projDate">Data Prevista</label>
+                    <label>Data Prevista</label>
                     <input type="date" id="projDate" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="projStatus">Status</label>
-                    <select id="projStatus" class="form-select" required>
+                    <label>Status</label>
+                    <select id="projStatus" class="form-select">
                         <option value="pending">Pendente</option>
                         <option value="received">Recebido</option>
                     </select>
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeProjectionModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeProjectionModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Credit Card Modal -->
     <div class="modal-overlay" id="creditCardModal">
         <div class="modal-container">
             <div class="modal-header">
-                <h2>Novo Cartão de Crédito</h2>
-                <button class="modal-close" onclick="closeCreditCardModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2>Gerenciar Cartão</h2>
+                <button class="modal-close" onclick="closeCreditCardModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="creditCardForm" class="modal-form">
                 <div class="form-group">
-                    <label for="cardName">Nome do Cartão</label>
-                    <input type="text" id="cardName" required placeholder="Ex: Meu Visa">
+                    <label>Nome do Cartão</label>
+                    <input type="text" id="cardName" required placeholder="Ex: Nubank">
                 </div>
-
                 <div class="form-group">
-                    <label for="cardInstitution">Instituição</label>
-                    <input type="text" id="cardInstitution" required placeholder="Ex: Nubank, Itaú, Bradesco">
+                    <label>Instituição</label>
+                    <input type="text" id="cardInstitution" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="cardLimit">Limite</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="cardLimit" required placeholder="0,00" onkeyup="formatCurrency(this)">
-                    </div>
+                    <label>Limite (R$)</label>
+                    <input type="text" id="cardLimit" required onkeyup="formatCurrency(this)">
                 </div>
-
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="cardClosingDay">Dia Fechamento</label>
-                        <input type="number" id="cardClosingDay" required min="1" max="31" placeholder="1-31">
+                        <label>Dia Fech.</label>
+                        <input type="number" id="cardClosingDay" required min="1" max="31">
                     </div>
-
                     <div class="form-group">
-                        <label for="cardDueDay">Dia Vencimento</label>
-                        <input type="number" id="cardDueDay" required min="1" max="31" placeholder="1-31">
+                        <label>Dia Venc.</label>
+                        <input type="number" id="cardDueDay" required min="1" max="31">
                     </div>
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeCreditCardModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeCreditCardModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Card Expense Modal -->
     <div class="modal-overlay" id="cardExpenseModal">
         <div class="modal-container">
             <div class="modal-header">
-                <h2>Adicionar Gasto no Cartão</h2>
-                <button class="modal-close" onclick="closeCardExpenseModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2>Gasto no Cartão</h2>
+                <button class="modal-close" onclick="closeCardExpenseModal()"><i class="fas fa-times"></i></button>
             </div>
-
             <form id="cardExpenseForm" class="modal-form">
                 <div class="form-group">
-                    <label for="expenseCard">Cartão</label>
-                    <select id="expenseCard" class="form-select" required>
-                        <option value="">Selecione um cartão</option>
-                    </select>
+                    <label>Cartão</label>
+                    <select id="expenseCard" class="form-select" required></select>
                 </div>
-
                 <div class="form-group">
-                    <label for="expenseDescription">Descrição</label>
-                    <input type="text" id="expenseDescription" required placeholder="Ex: Supermercado, Restaurante...">
+                    <label>Descrição</label>
+                    <input type="text" id="expenseDescription" required>
                 </div>
-
-                <div class="form-group">
-                    <label for="expenseValue">Valor</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">R$</span>
-                        <input type="text" id="expenseValue" required placeholder="0,00" onkeyup="formatCurrency(this)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="text" id="expenseValue" required onkeyup="formatCurrency(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="expenseDate" required>
                     </div>
                 </div>
-
                 <div class="form-group">
-                    <label for="expenseDate">Data da Compra</label>
-                    <input type="date" id="expenseDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="expenseCategory">Categoria</label>
+                    <label>Categoria</label>
                     <select id="expenseCategory" class="form-select" required>
-                        <option value="">Selecione uma categoria</option>
                         <option value="Alimentação">Alimentação</option>
                         <option value="Transporte">Transporte</option>
-                        <option value="Compras">Compras</option>
-                        <option value="Lazer">Lazer</option>
-                        <option value="Saúde">Saúde</option>
-                        <option value="Educação">Educação</option>
                         <option value="Outros">Outros</option>
                     </select>
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeCardExpenseModal()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i>
-                        Salvar
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="closeCardExpenseModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div class="toast" id="toast">
         <div class="toast-content">
             <i class="toast-icon"></i>
@@ -810,21 +525,5 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     </div>
 
     <script src="script.js"></script>
-
-    <!-- Particles Animation Script -->
-    <script>
-        function createParticles() {
-            const container = document.getElementById('particles');
-            if (!container) return;
-            const count = window.innerWidth < 768 ? 15 : 30;
-            for (let i = 0; i < count; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
-                container.appendChild(particle);
-            }
-        }
-        window.addEventListener('DOMContentLoaded', createParticles);
-    </script>
 </body>
 </html>
