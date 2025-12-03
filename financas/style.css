@@ -1021,12 +1021,63 @@ a:hover {
 }
 
 /* ========================================
-   7. CHARTS SECTION
+   7. MINI CHARTS SECTION
+   ======================================== */
+
+.mini-charts-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mini-chart-card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 120px;
+}
+
+.mini-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+}
+
+.mini-chart-header h4 {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.mini-chart-value {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.mini-chart-card > div:last-child {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   8. CHARTS SECTION
    ======================================== */
 
 .charts-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
@@ -1037,18 +1088,18 @@ a:hover {
   border-radius: var(--radius-md);
   padding: 0.5rem;
   box-shadow: var(--shadow-sm);
+  height: 180px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card.chart-main {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  height: 200px;
 }
 
-.chart-card.chart-main #cashFlowChart {
+.chart-card > div:last-child {
   flex: 1;
-  min-height: 200px;
-  max-height: 250px;
+  min-height: 0;
 }
 
 .chart-header {
@@ -1146,7 +1197,7 @@ a:hover {
 }
 
 /* ========================================
-   8. QUICK ACTIONS
+   9. QUICK ACTIONS
    ======================================== */
 
 .quick-actions {
@@ -1270,7 +1321,7 @@ a:hover {
 }
 
 /* ========================================
-   9. SUBSCRIPTIONS GRID
+   10. SUBSCRIPTIONS GRID
    ======================================== */
 
 .subscriptions-section {
@@ -1452,7 +1503,7 @@ a:hover {
 }
 
 /* ========================================
-   10. INSTALLMENTS GRID
+   11. INSTALLMENTS GRID
    ======================================== */
 
 .installments-section {
@@ -1590,7 +1641,7 @@ a:hover {
 }
 
 /* ========================================
-   11. PROJECTIONS GRID
+   12. PROJECTIONS GRID
    ======================================== */
 
 .projections-section {
@@ -1598,7 +1649,7 @@ a:hover {
 }
 
 /* ========================================
-   11.5 CREDIT CARDS SECTION
+   12.5 CREDIT CARDS SECTION
    ======================================== */
 
 .credit-cards-section {
@@ -1823,7 +1874,7 @@ a:hover {
 }
 
 /* ========================================
-   12. MODALS
+   13. MODALS
    ======================================== */
 
 .modal-overlay {

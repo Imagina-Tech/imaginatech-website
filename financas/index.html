@@ -244,11 +244,43 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             </div>
             </div>
 
+            <!-- Mini Charts Section -->
+            <section class="mini-charts-section">
+                <div class="mini-chart-card">
+                    <div class="mini-chart-header">
+                        <h4>Meta de Economia</h4>
+                        <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                    </div>
+                    <div id="savingsGoalChart"></div>
+                </div>
+                <div class="mini-chart-card">
+                    <div class="mini-chart-header">
+                        <h4>Limite de Gastos</h4>
+                        <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+                    </div>
+                    <div id="expenseLimitChart"></div>
+                </div>
+                <div class="mini-chart-card">
+                    <div class="mini-chart-header">
+                        <h4>Crescimento Mensal</h4>
+                        <span class="mini-chart-value" id="growthValue">+0%</span>
+                    </div>
+                    <div id="growthSparkline"></div>
+                </div>
+                <div class="mini-chart-card">
+                    <div class="mini-chart-header">
+                        <h4>Tendência de Gastos</h4>
+                        <span class="mini-chart-value" id="trendValue">--</span>
+                    </div>
+                    <div id="expenseTrendSparkline"></div>
+                </div>
+            </section>
+
             <!-- Charts Section -->
             <section class="charts-section">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Fluxo de Caixa Mensal</h3>
+                        <h3>Fluxo de Caixa</h3>
                         <div class="chart-legend">
                             <span class="legend-item"><span class="dot income"></span>Entradas</span>
                             <span class="legend-item"><span class="dot expense"></span>Saídas</span>
@@ -258,8 +290,24 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
 
                 <div class="chart-card">
-                    <h3>Comparativo Mensal</h3>
+                    <div class="chart-header">
+                        <h3>Comparativo Mensal</h3>
+                    </div>
                     <div id="comparisonChart"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top Categorias</h3>
+                    </div>
+                    <div id="topCategoriesChart"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Evolução Semanal</h3>
+                    </div>
+                    <div id="weeklyTrendChart"></div>
                 </div>
             </section>
 

@@ -1292,6 +1292,12 @@ function initializeCharts() {
         initializeCashFlowChart();
         initializeCategoryChart();
         initializeComparisonChart();
+        initializeSavingsGoalChart();
+        initializeExpenseLimitChart();
+        initializeGrowthSparkline();
+        initializeExpenseTrendSparkline();
+        initializeTopCategoriesChart();
+        initializeWeeklyTrendChart();
         console.log('Gráficos inicializados');
     } catch (error) {
         console.error('Erro ao inicializar gráficos:', error);
@@ -2032,6 +2038,322 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================
+// MINI CHARTS - SAVINGS GOAL (RADIAL)
+// ===========================
+function initializeSavingsGoalChart() {
+    const chartEl = document.querySelector("#savingsGoalChart");
+    if (!chartEl) return;
+
+    const totalIncome = calculateTotalIncome();
+    const totalExpense = calculateTotalExpenses();
+    const saved = totalIncome - totalExpense;
+    const goal = 2000; // Meta de economia
+    const percentage = Math.min((saved / goal) * 100, 100);
+
+    const options = {
+        series: [percentage],
+        chart: {
+            type: 'radialBar',
+            height: 80,
+            sparkline: { enabled: true }
+        },
+        plotOptions: {
+            radialBar: {
+                hollow: {
+                    size: '50%'
+                },
+                dataLabels: {
+                    show: true,
+                    name: {
+                        show: false
+                    },
+                    value: {
+                        show: true,
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#fff',
+                        formatter: () => Math.round(percentage) + '%'
+                    }
+                }
+            }
+        },
+        fill: {
+            colors: ['#10b981']
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('savingsGoalValue').textContent = formatCurrencyDisplay(saved);
+}
+
+// ===========================
+// MINI CHARTS - EXPENSE LIMIT (RADIAL)
+// ===========================
+function initializeExpenseLimitChart() {
+    const chartEl = document.querySelector("#expenseLimitChart");
+    if (!chartEl) return;
+
+    const totalExpense = calculateTotalExpenses();
+    const limit = 3000; // Limite de gastos
+    const percentage = Math.min((totalExpense / limit) * 100, 100);
+
+    const options = {
+        series: [percentage],
+        chart: {
+            type: 'radialBar',
+            height: 80,
+            sparkline: { enabled: true }
+        },
+        plotOptions: {
+            radialBar: {
+                hollow: {
+                    size: '50%'
+                },
+                dataLabels: {
+                    show: true,
+                    name: {
+                        show: false
+                    },
+                    value: {
+                        show: true,
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#fff',
+                        formatter: () => Math.round(percentage) + '%'
+                    }
+                }
+            }
+        },
+        fill: {
+            colors: [percentage > 80 ? '#ef4444' : '#f97316']
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('expenseLimitValue').textContent = formatCurrencyDisplay(totalExpense);
+}
+
+// ===========================
+// MINI CHARTS - GROWTH SPARKLINE
+// ===========================
+function initializeGrowthSparkline() {
+    const chartEl = document.querySelector("#growthSparkline");
+    if (!chartEl) return;
+
+    const last6Months = [];
+    const currentDate = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthTransactions = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear();
+        });
+        const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
+        const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
+        last6Months.push(income - expense);
+    }
+
+    const growth = last6Months.length > 1 ?
+        ((last6Months[5] - last6Months[4]) / (last6Months[4] || 1)) * 100 : 0;
+
+    const options = {
+        series: [{ data: last6Months }],
+        chart: {
+            type: 'line',
+            height: 60,
+            sparkline: { enabled: true }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        colors: [growth >= 0 ? '#10b981' : '#ef4444'],
+        tooltip: {
+            enabled: false
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('growthValue').textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+}
+
+// ===========================
+// MINI CHARTS - EXPENSE TREND SPARKLINE
+// ===========================
+function initializeExpenseTrendSparkline() {
+    const chartEl = document.querySelector("#expenseTrendSparkline");
+    if (!chartEl) return;
+
+    const last7Days = [];
+    const currentDate = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() - i);
+        const dayExpenses = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'expense' &&
+                   tDate.toDateString() === date.toDateString();
+        }).reduce((sum, t) => sum + t.value, 0);
+        last7Days.push(dayExpenses);
+    }
+
+    const trend = last7Days[6] > last7Days[0] ? 'Crescente' : 'Decrescente';
+
+    const options = {
+        series: [{ data: last7Days }],
+        chart: {
+            type: 'area',
+            height: 60,
+            sparkline: { enabled: true }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        fill: {
+            opacity: 0.3
+        },
+        colors: ['#f97316'],
+        tooltip: {
+            enabled: false
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('trendValue').textContent = trend;
+}
+
+// ===========================
+// TOP CATEGORIES CHART (BAR)
+// ===========================
+function initializeTopCategoriesChart() {
+    const chartEl = document.querySelector("#topCategoriesChart");
+    if (!chartEl) return;
+
+    const data = getCategoryData();
+    const topCategories = data.categories.slice(0, 5);
+    const topValues = data.values.slice(0, 5);
+
+    const options = {
+        series: [{ name: 'Valor', data: topValues }],
+        chart: {
+            type: 'bar',
+            height: 140,
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                distributed: true,
+                barHeight: '60%'
+            }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: topCategories,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        colors: ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16'],
+        grid: {
+            borderColor: 'rgba(255,255,255,0.1)'
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+}
+
+// ===========================
+// WEEKLY TREND CHART (AREA)
+// ===========================
+function initializeWeeklyTrendChart() {
+    const chartEl = document.querySelector("#weeklyTrendChart");
+    if (!chartEl) return;
+
+    const last7Days = [];
+    const labels = [];
+    const currentDate = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() - i);
+        const dayExpenses = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'expense' &&
+                   tDate.toDateString() === date.toDateString();
+        }).reduce((sum, t) => sum + t.value, 0);
+        last7Days.push(dayExpenses);
+        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
+    }
+
+    const options = {
+        series: [{ name: 'Gastos', data: last7Days }],
+        chart: {
+            type: 'area',
+            height: 140,
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.1
+            }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: labels,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        colors: ['#8b5cf6'],
+        grid: {
+            borderColor: 'rgba(255,255,255,0.1)'
+        },
+        tooltip: {
+            y: {
+                formatter: (val) => formatCurrencyDisplay(val)
+            }
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+}
+
+// ===========================
 // RESPONSIVE CHARTS
 // ===========================
 window.addEventListener('resize', () => {
@@ -2040,4 +2362,4 @@ window.addEventListener('resize', () => {
     if (comparisonChart) comparisonChart.updateOptions({});
 });
 
-console.log('Dashboard Financeiro v2.1 - Script carregado');
+console.log('Dashboard Financeiro v2.2 - Script carregado');
