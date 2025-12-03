@@ -42,6 +42,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
@@ -215,13 +221,13 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <i class="fas fa-plus"></i>
                     <span>Nova Transação</span>
                 </button>
-                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
-                    <i class="fas fa-sync"></i>
-                    <span>Nova Assinatura</span>
-                </button>
                 <button class="btn-action btn-installment" onclick="openInstallmentModal()">
                     <i class="fas fa-credit-card"></i>
                     <span>Novo Parcelamento</span>
+                </button>
+                <button class="btn-action btn-subscription" onclick="openSubscriptionModal()">
+                    <i class="fas fa-sync"></i>
+                    <span>Nova Assinatura</span>
                 </button>
                 <button class="btn-action btn-projection" onclick="openProjectionModal()">
                     <i class="fas fa-dollar-sign"></i>
@@ -275,21 +281,21 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
             </section>
 
-            <!-- Installments Section -->
-            <section class="installments-section">
+            <!-- Credit Cards Section -->
+            <section class="credit-cards-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-credit-card"></i> Parcelamentos Ativos</h2>
-                    <button class="btn-add" onclick="openInstallmentModal()">
-                        <i class="fas fa-plus"></i> Adicionar
+                    <h2><i class="fas fa-credit-card"></i> Cartões de Crédito</h2>
+                    <button class="btn-add" onclick="openCreditCardModal()">
+                        <i class="fas fa-plus"></i> Adicionar Cartão
                     </button>
                 </div>
-                <div class="installments-grid" id="installmentsGrid">
-                    <!-- Installments will be loaded here -->
+                <div class="credit-cards-grid" id="creditCardsGrid">
+                    <!-- Cards will be loaded here -->
                 </div>
-                <div class="empty-state hidden" id="emptyInstallments">
+                <div class="empty-state hidden" id="emptyCreditCards">
                     <i class="fas fa-credit-card"></i>
-                    <p>Nenhum parcelamento ativo</p>
-                    <small>Adicione compras parceladas</small>
+                    <p>Nenhum cartão cadastrado</p>
+                    <small>Adicione seus cartões de crédito</small>
                 </div>
             </section>
 
@@ -311,21 +317,21 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
             </section>
 
-            <!-- Credit Cards Section -->
-            <section class="credit-cards-section">
+            <!-- Installments Section -->
+            <section class="installments-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-credit-card"></i> Cartões de Crédito</h2>
-                    <button class="btn-add" onclick="openCreditCardModal()">
-                        <i class="fas fa-plus"></i> Adicionar Cartão
+                    <h2><i class="fas fa-credit-card"></i> Parcelamentos Ativos</h2>
+                    <button class="btn-add" onclick="openInstallmentModal()">
+                        <i class="fas fa-plus"></i> Adicionar
                     </button>
                 </div>
-                <div class="credit-cards-grid" id="creditCardsGrid">
-                    <!-- Cards will be loaded here -->
+                <div class="installments-grid" id="installmentsGrid">
+                    <!-- Installments will be loaded here -->
                 </div>
-                <div class="empty-state hidden" id="emptyCreditCards">
+                <div class="empty-state hidden" id="emptyInstallments">
                     <i class="fas fa-credit-card"></i>
-                    <p>Nenhum cartão cadastrado</p>
-                    <small>Adicione seus cartões de crédito</small>
+                    <p>Nenhum parcelamento ativo</p>
+                    <small>Adicione compras parceladas</small>
                 </div>
             </section>
 
@@ -756,5 +762,21 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     </div>
 
     <script src="script.js"></script>
+
+    <!-- Particles Animation Script -->
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
 </body>
 </html>
