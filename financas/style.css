@@ -1024,11 +1024,17 @@ a:hover {
    7. MINI CHARTS SECTION
    ======================================== */
 
-.mini-charts-section {
+.chart-with-mini-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 2fr 1fr;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.mini-charts-sidebar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
 }
 
 .mini-chart-card {
@@ -1038,8 +1044,10 @@ a:hover {
   padding: 0.5rem;
   box-shadow: var(--shadow-sm);
   display: flex;
+  min-height: 90px;
+  max-height: 110px;
   flex-direction: column;
-  height: 120px;
+  overflow: hidden;
 }
 
 .mini-chart-header {
@@ -1091,15 +1099,18 @@ a:hover {
   height: 180px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chart-card.chart-main {
-  height: 200px;
+  height: 100%;
+  min-height: 400px;
 }
 
 .chart-card > div:last-child {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .chart-header {
@@ -1180,6 +1191,14 @@ a:hover {
 }
 
 @media (max-width: 1024px) {
+  .chart-with-mini-container {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-charts-sidebar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .charts-section {
     grid-template-columns: 1fr;
     gap: var(--spacing-md);
@@ -1191,6 +1210,10 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+  .mini-charts-sidebar {
+    grid-template-columns: 1fr;
+  }
+
   .chart-container {
     height: 250px;
   }

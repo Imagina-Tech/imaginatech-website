@@ -235,17 +235,18 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </button>
             </div>
 
-            <!-- Main Chart: Distribuição por Categoria -->
-            <div class="chart-card chart-main">
-                <div class="chart-header">
-                    <h3>Distribuição por Categoria</h3>
+            <!-- Main Chart + Mini Charts Container -->
+            <div class="chart-with-mini-container">
+                <!-- Main Chart: Distribuição por Categoria -->
+                <div class="chart-card chart-main">
+                    <div class="chart-header">
+                        <h3>Distribuição por Categoria</h3>
+                    </div>
+                    <div id="categoryChart"></div>
                 </div>
-                <div id="categoryChart"></div>
-            </div>
-            </div>
 
-            <!-- Mini Charts Section -->
-            <section class="mini-charts-section">
+                <!-- Mini Charts Section -->
+                <div class="mini-charts-sidebar">
                 <div class="mini-chart-card">
                     <div class="mini-chart-header">
                         <h4>Meta de Economia</h4>
@@ -274,7 +275,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                     <div id="expenseTrendSparkline"></div>
                 </div>
-            </section>
+                </div>
+            </div>
 
             <!-- Charts Section -->
             <section class="charts-section">

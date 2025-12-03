@@ -1336,7 +1336,7 @@ function initializeCashFlowChart() {
         ],
         chart: {
             type: 'area',
-            height: 350,
+            height: 200,
             toolbar: {
                 show: true,
                 tools: {
@@ -1466,62 +1466,44 @@ function initializeCategoryChart() {
         series: data.values,
         chart: {
             type: 'donut',
-            height: 350,
+            height: 280,
+            background: 'transparent',
             fontFamily: 'Inter, sans-serif'
         },
         labels: data.categories,
         colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
-        dataLabels: {
-            enabled: true,
-            formatter: function (val) {
-                return val.toFixed(1) + '%';
+        plotOptions: {
+            pie: {
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            color: '#fff'
+                        }
+                    }
+                }
             }
         },
         legend: {
             position: 'bottom',
-            fontSize: '12px',
             labels: {
-                colors: '#64748b'
+                colors: '#94a3b8'
+            }
+        },
+        stroke: {
+            show: false
+        },
+        dataLabels: {
+            enabled: true,
+            style: {
+                colors: ['#1e293b']
             }
         },
         tooltip: {
             y: {
                 formatter: function (value) {
                     return formatCurrencyDisplay(value);
-                }
-            }
-        },
-        plotOptions: {
-            pie: {
-                donut: {
-                    size: '65%',
-                    labels: {
-                        show: true,
-                        name: {
-                            show: true,
-                            fontSize: '14px',
-                            color: '#1e293b'
-                        },
-                        value: {
-                            show: true,
-                            fontSize: '20px',
-                            fontWeight: 600,
-                            color: '#1e293b',
-                            formatter: function (val) {
-                                return formatCurrencyDisplay(parseFloat(val));
-                            }
-                        },
-                        total: {
-                            show: true,
-                            label: 'Total Gastos',
-                            fontSize: '14px',
-                            color: '#64748b',
-                            formatter: function (w) {
-                                const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                return formatCurrencyDisplay(total);
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -1599,7 +1581,7 @@ function initializeComparisonChart() {
         ],
         chart: {
             type: 'bar',
-            height: 350,
+            height: 200,
             fontFamily: 'Inter, sans-serif'
         },
         plotOptions: {
