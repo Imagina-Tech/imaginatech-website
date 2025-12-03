@@ -134,7 +134,15 @@ function showDashboard(user) {
     const userPhotoEl = document.getElementById('userPhoto');
     
     if (userNameEl) userNameEl.textContent = user.displayName?.split(' ')[0] || 'Admin';
-    if (userPhotoEl) userPhotoEl.src = user.photoURL || 'https://via.placeholder.com/40';
+    if (userPhotoEl && user.photoURL) {
+        userPhotoEl.src = user.photoURL;
+        userPhotoEl.style.display = 'block';
+        userPhotoEl.style.width = '40px';
+        userPhotoEl.style.height = '40px';
+        userPhotoEl.style.borderRadius = '50%';
+        const placeholder = document.getElementById('userPhotoPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+    }
 }
 
 async function initializeDashboard() {
@@ -506,7 +514,12 @@ function initSparkline(selector, data, color) {
     if(!document.querySelector(selector)) return;
     new ApexCharts(document.querySelector(selector), {
         series: [{ data: data.slice(-6) }], // Last 6 months
-        chart: { type: 'line', width: 100, height: 40, sparkline: { enabled: true } },
+        chart: {
+            type: 'line',
+            width: '100%',
+            height: 50,
+            sparkline: { enabled: true }
+        },
         stroke: { curve: 'smooth', width: 2 },
         colors: [color],
         tooltip: { fixed: { enabled: false }, x: { show: false }, y: { title: { formatter: () => '' } } }

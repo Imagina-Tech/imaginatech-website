@@ -88,7 +88,10 @@
 
             <div class="sidebar-footer">
                 <div class="user-mini-profile" id="userInfo">
-                    <img id="userPhoto" src="" alt="User" onerror="this.src='https://via.placeholder.com/40'">
+                    <div class="user-avatar" id="userAvatarWrapper">
+                        <img id="userPhoto" src="" alt="User" style="display: none;">
+                        <i class="fas fa-user-circle" id="userPhotoPlaceholder" style="font-size: 40px; color: var(--neon-blue);"></i>
+                    </div>
                     <div class="user-info-text">
                         <span id="userName" class="name">Usuário</span>
                         <span class="role">Admin</span>

@@ -157,9 +157,24 @@ body {
     display: flex; align-items: center; justify-content: space-between;
 }
 .user-mini-profile { display: flex; align-items: center; gap: 12px; }
-.user-mini-profile img {
-    width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-purple);
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
+
+.user-mini-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-purple);
+    object-fit: cover;
+}
+
 .user-info-text .name { font-size: 0.9rem; font-weight: 600; display: block; }
 .user-info-text .role { font-size: 0.75rem; color: var(--text-muted); }
 .btn-logout-icon {
@@ -224,7 +239,24 @@ body {
 .sparkline-area {
     width: 100%;
     height: 50px;
+    max-height: 50px;
     margin-top: auto;
+    overflow: hidden;
+    position: relative;
+}
+
+.sparkline-area > div {
+    max-height: 50px !important;
+    overflow: hidden !important;
+}
+
+/* Garante que o ApexCharts fique contido */
+.sparkline-area .apexcharts-canvas {
+    max-height: 50px !important;
+}
+
+.sparkline-area svg {
+    max-height: 50px !important;
     overflow: hidden;
 }
 
