@@ -145,37 +145,49 @@
                     </div>
                 </section>
 
-                <section class="dashboard-grid-4">
-                    <div class="action-card" onclick="openInstallmentModal()">
-                        <i class="fas fa-credit-card"></i> <span>Parcelar</span>
+                <section class="dashboard-grid-4 action-cards-with-values">
+                    <div class="action-card-wrapper">
+                        <div class="action-card" onclick="openInstallmentModal()">
+                            <i class="fas fa-credit-card"></i> <span>Parcelar</span>
+                        </div>
+                        <div class="card-value-info">
+                            <span class="value-label">Parcelas (Mês)</span>
+                            <strong id="installmentsMonthly">R$ 0,00</strong>
+                        </div>
+                        <div class="card-value-info secondary">
+                            <span class="value-label">Total Parcelado</span>
+                            <strong id="installmentsTotal">R$ 0,00</strong>
+                        </div>
                     </div>
-                    <div class="action-card" onclick="openSubscriptionModal()">
-                        <i class="fas fa-sync"></i> <span>Assinar</span>
-                    </div>
-                    <div class="action-card" onclick="openProjectionModal()">
-                        <i class="fas fa-calendar-alt"></i> <span>Projetar</span>
-                    </div>
-                    <div class="action-card" onclick="openCreditCardModal()">
-                        <i class="fas fa-plus"></i> <span>Cartão</span>
-                    </div>
-                </section>
 
-                <section class="dashboard-grid-4 stats-grid">
-                    <div class="mini-stat-card">
-                        <span class="label">Assinaturas</span>
-                        <strong id="totalSubscriptions">R$ 0,00</strong>
+                    <div class="action-card-wrapper">
+                        <div class="action-card" onclick="openSubscriptionModal()">
+                            <i class="fas fa-sync"></i> <span>Assinar</span>
+                        </div>
+                        <div class="card-value-info">
+                            <span class="value-label">Assinaturas</span>
+                            <strong id="totalSubscriptions">R$ 0,00</strong>
+                        </div>
                     </div>
-                    <div class="mini-stat-card">
-                        <span class="label">Parcelas (Mês)</span>
-                        <strong id="installmentsMonthly">R$ 0,00</strong>
+
+                    <div class="action-card-wrapper">
+                        <div class="action-card" onclick="openProjectionModal()">
+                            <i class="fas fa-calendar-alt"></i> <span>Projetar</span>
+                        </div>
+                        <div class="card-value-info">
+                            <span class="value-label">Projeções</span>
+                            <strong id="totalProjection">R$ 0,00</strong>
+                        </div>
                     </div>
-                    <div class="mini-stat-card">
-                        <span class="label">Total Parcelado</span>
-                        <strong id="installmentsTotal">R$ 0,00</strong>
-                    </div>
-                    <div class="mini-stat-card">
-                        <span class="label">Fatura Cartões</span>
-                        <strong id="totalCreditCards">R$ 0,00</strong>
+
+                    <div class="action-card-wrapper">
+                        <div class="action-card" onclick="openCreditCardModal()">
+                            <i class="fas fa-plus"></i> <span>Cartão</span>
+                        </div>
+                        <div class="card-value-info">
+                            <span class="value-label">Fatura Cartões</span>
+                            <strong id="totalCreditCards">R$ 0,00</strong>
+                        </div>
                     </div>
                 </section>
 

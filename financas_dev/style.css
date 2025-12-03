@@ -220,24 +220,89 @@ body {
 .kpi-card h3 { font-size: 2rem; font-weight: 700; margin: 10px 0; }
 .trend-up { font-size: 0.8rem; color: var(--neon-green); display: flex; align-items: center; gap: 5px; }
 
-/* Action Cards (Botões Quadrados) */
-.action-card {
-    background: var(--bg-card); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 20px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px; cursor: pointer; transition: 0.3s; height: 120px;
+/* Sparkline gráficos dentro dos KPIs */
+.sparkline-area {
+    width: 100%;
+    height: 50px;
+    margin-top: auto;
+    overflow: hidden;
 }
-.action-card i { font-size: 1.8rem; color: var(--neon-blue); filter: drop-shadow(0 0 5px var(--neon-blue)); }
-.action-card span { font-size: 0.9rem; font-weight: 500; }
-.action-card:hover { transform: translateY(-5px); border-color: var(--neon-blue); background: rgba(0, 224, 255, 0.05); }
 
-/* Mini Stats (Resumos) */
-.mini-stat-card {
-    background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); padding: 15px;
-    text-align: center; display: flex; flex-direction: column;
+/* Action Cards com Valores (Botões + Info) */
+.action-card-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
+    overflow: hidden;
 }
-.mini-stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-.mini-stat-card strong { font-size: 1.2rem; color: #fff; margin-top: 5px; }
+
+.action-card-wrapper:hover {
+    border-color: var(--neon-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 224, 255, 0.2);
+}
+
+.action-card {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    height: 100px;
+}
+
+.action-card i {
+    font-size: 1.8rem;
+    color: var(--neon-blue);
+    filter: drop-shadow(0 0 5px var(--neon-blue));
+}
+
+.action-card span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.action-card:hover {
+    background: rgba(0, 224, 255, 0.05);
+}
+
+.card-value-info {
+    padding: 12px 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.card-value-info.secondary {
+    border-top: 1px solid var(--border-color);
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.card-value-info .value-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-value-info strong {
+    font-size: 1.1rem;
+    color: var(--neon-blue);
+    font-weight: 700;
+}
 
 /* Charts Layout */
 .chart-container { min-height: 350px; display: flex; flex-direction: column; }
