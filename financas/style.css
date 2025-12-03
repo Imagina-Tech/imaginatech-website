@@ -1086,9 +1086,9 @@ a:hover {
    ======================================== */
 
 .charts-section {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -1098,14 +1098,14 @@ a:hover {
   border-radius: var(--radius-md);
   padding: 0.5rem;
   box-shadow: var(--shadow-sm);
-  height: 250px;
+  height: 120px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .chart-card.chart-main {
-  height: 470px;
+  height: 300px;
 }
 
 .chart-card > div:last-child {
@@ -1199,18 +1199,6 @@ a:hover {
   .mini-charts-sidebar {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .charts-section {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .charts-section {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -1219,7 +1207,7 @@ a:hover {
   }
 
   .chart-container {
-    height: 250px;
+    height: 100px;
   }
 }
 
