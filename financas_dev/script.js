@@ -287,6 +287,53 @@ async function deleteTransaction(id) {
     showToast('Apagado com sucesso');
 }
 
+async function deleteSubscription(id) {
+    if(!confirm('Apagar assinatura?')) return;
+    await db.collection('subscriptions').doc(id).delete();
+    await loadSubscriptions();
+    updateKPIs();
+    showToast('Assinatura apagada com sucesso');
+}
+
+async function deleteInstallment(id) {
+    if(!confirm('Apagar parcelamento?')) return;
+    await db.collection('installments').doc(id).delete();
+    await loadInstallments();
+    updateKPIs();
+    showToast('Parcelamento apagado com sucesso');
+}
+
+async function deleteProjection(id) {
+    if(!confirm('Apagar projeção?')) return;
+    await db.collection('projections').doc(id).delete();
+    await loadProjections();
+    updateKPIs();
+    showToast('Projeção apagada com sucesso');
+}
+
+async function deleteCreditCard(id) {
+    if(!confirm('Apagar cartão?')) return;
+    // Delete all expenses associated with this card first
+    const expenses = await db.collection('cardExpenses').where('cardId', '==', id).get();
+    const batch = db.batch();
+    expenses.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    // Delete the card
+    await db.collection('creditCards').doc(id).delete();
+    await loadCreditCards();
+    updateKPIs();
+    showToast('Cartão apagado com sucesso');
+}
+
+async function deleteCardExpense(id) {
+    if(!confirm('Apagar gasto do cartão?')) return;
+    await db.collection('cardExpenses').doc(id).delete();
+    await loadCreditCards();
+    updateKPIs();
+    showToast('Gasto apagado com sucesso');
+}
+
 // --- Others Handlers (Simplified for brevity but logic maintained) ---
 async function handleSubscriptionSubmit(e) {
     e.preventDefault();
@@ -427,6 +474,11 @@ function updateKPIs() {
     // 4. Cards Bill
     const cardsTotal = creditCards.reduce((acc, card) => acc + calculateCurrentBill(card), 0);
 
+    // 5. Projections
+    const projTotal = projections
+        .filter(p => p.status === 'pending')
+        .reduce((acc, p) => acc + p.value, 0);
+
     // Update DOM
     safeSetText('totalIncome', formatCurrencyDisplay(income));
     safeSetText('totalExpense', formatCurrencyDisplay(expense));
@@ -435,6 +487,7 @@ function updateKPIs() {
     safeSetText('installmentsMonthly', formatCurrencyDisplay(instMonthly));
     safeSetText('installmentsTotal', formatCurrencyDisplay(instTotal));
     safeSetText('totalCreditCards', formatCurrencyDisplay(cardsTotal));
+    safeSetText('totalProjection', formatCurrencyDisplay(projTotal));
     
     // Mini Charts Values
     safeSetText('savingsGoalValue', formatCurrencyDisplay(income - expense));
@@ -505,7 +558,124 @@ function initializeCharts() {
         xaxis: { categories: flowData.months, labels: { style: { colors: THEME_COLORS.text } } }
     }).render();
 
-    // 3. Sparklines
+    // 3. Comparison Chart (Bar)
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const monthTrans = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+    const monthIncome = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.value, 0);
+    const monthExpense = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.value, 0);
+
+    new ApexCharts(document.querySelector("#comparisonChart"), {
+        ...commonChartOptions,
+        series: [{
+            name: 'Valor',
+            data: [monthIncome, monthExpense, monthIncome - monthExpense]
+        }],
+        chart: { type: 'bar', height: 200, background: 'transparent', toolbar: { show: false } },
+        colors: [THEME_COLORS.income, THEME_COLORS.expense, THEME_COLORS.balance],
+        xaxis: {
+            categories: ['Entradas', 'Saídas', 'Saldo'],
+            labels: { style: { colors: THEME_COLORS.text } }
+        },
+        plotOptions: {
+            bar: {
+                distributed: true,
+                borderRadius: 4
+            }
+        },
+        legend: { show: false }
+    }).render();
+
+    // 4. Top Categories Chart (Bar)
+    const topCat = getCategoryData();
+    const topCategories = topCat.labels.slice(0, 5);
+    const topValues = topCat.series.slice(0, 5);
+
+    if(topCategories.length > 0) {
+        new ApexCharts(document.querySelector("#topCategoriesChart"), {
+            ...commonChartOptions,
+            series: [{ name: 'Gasto', data: topValues }],
+            chart: { type: 'bar', height: 200, background: 'transparent', toolbar: { show: false } },
+            colors: [THEME_COLORS.expense],
+            xaxis: {
+                categories: topCategories,
+                labels: { style: { colors: THEME_COLORS.text } }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 4
+                }
+            }
+        }).render();
+    }
+
+    // 5. Weekly Trend Chart (Area)
+    new ApexCharts(document.querySelector("#weeklyTrendChart"), {
+        ...commonChartOptions,
+        series: [{ name: 'Gastos', data: flowData.expenses }],
+        chart: { type: 'area', height: 200, background: 'transparent', toolbar: { show: false } },
+        colors: [THEME_COLORS.expense],
+        fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0.1 } },
+        xaxis: {
+            categories: flowData.months,
+            labels: { style: { colors: THEME_COLORS.text } }
+        },
+        stroke: { curve: 'smooth', width: 2 }
+    }).render();
+
+    // 6. Savings Goal Chart (Radial)
+    const savingsPercent = monthIncome > 0 ? Math.min(((monthIncome - monthExpense) / monthIncome) * 100, 100) : 0;
+    new ApexCharts(document.querySelector("#savingsGoalChart"), {
+        series: [Math.max(0, savingsPercent)],
+        chart: { type: 'radialBar', height: 120, sparkline: { enabled: true } },
+        colors: [THEME_COLORS.income],
+        plotOptions: {
+            radialBar: {
+                hollow: { size: '50%' },
+                dataLabels: {
+                    show: true,
+                    name: { show: false },
+                    value: {
+                        show: true,
+                        color: '#fff',
+                        fontSize: '14px',
+                        formatter: (val) => Math.round(val) + '%'
+                    }
+                }
+            }
+        }
+    }).render();
+
+    // 7. Expense Limit Chart (Radial)
+    const expenseLimit = 5000; // Limite fixo de exemplo
+    const expensePercent = (monthExpense / expenseLimit) * 100;
+    new ApexCharts(document.querySelector("#expenseLimitChart"), {
+        series: [Math.min(expensePercent, 100)],
+        chart: { type: 'radialBar', height: 120, sparkline: { enabled: true } },
+        colors: [expensePercent > 80 ? '#FF005C' : '#00E0FF'],
+        plotOptions: {
+            radialBar: {
+                hollow: { size: '50%' },
+                dataLabels: {
+                    show: true,
+                    name: { show: false },
+                    value: {
+                        show: true,
+                        color: '#fff',
+                        fontSize: '14px',
+                        formatter: (val) => Math.round(val) + '%'
+                    }
+                }
+            }
+        }
+    }).render();
+
+    // 8. Sparklines
     initSparkline("#growthSparkline", flowData.incomes, THEME_COLORS.income);
     initSparkline("#expenseTrendSparkline", flowData.expenses, THEME_COLORS.expense);
 }
@@ -555,8 +725,15 @@ function getFlowData() {
 function updateCharts() {
     // Em uma implementação completa, chamaria .updateSeries() nas instâncias salvas
     // Para simplificar: reload simples
-    document.querySelector("#categoryChart").innerHTML = "";
-    document.querySelector("#cashFlowChart").innerHTML = "";
+    const chartIds = [
+        "#categoryChart", "#cashFlowChart", "#comparisonChart",
+        "#topCategoriesChart", "#weeklyTrendChart", "#savingsGoalChart",
+        "#expenseLimitChart"
+    ];
+    chartIds.forEach(id => {
+        const el = document.querySelector(id);
+        if(el) el.innerHTML = "";
+    });
     initializeCharts();
 }
 
