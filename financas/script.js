@@ -1200,9 +1200,11 @@ async function deleteCreditCard(id) {
 // KPI CALCULATIONS
 // ===========================
 function updateKPIs() {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    // Usar mês selecionado se disponível, senão mês atual
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+    const currentMonth = displayMonth;
+    const currentYear = displayYear;
 
     // Filter transactions for current month
     const currentMonthTransactions = transactions.filter(t => {
@@ -1249,9 +1251,13 @@ function updateKPIs() {
         return sum;
     }, 0);
 
-    // Projection for Next Month
+    // Projection for Current Month (mudado de Next Month)
     const totalProjection = projections
-        .filter(p => p.status === 'pending')
+        .filter(p => {
+            if (p.status !== 'pending') return false;
+            const projDate = new Date(p.date + 'T12:00:00');
+            return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
+        })
         .reduce((sum, p) => sum + p.value, 0);
 
     // Total Credit Cards (current bills)
