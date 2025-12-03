@@ -677,9 +677,17 @@ async function handleInstallmentSubmit(e) {
             });
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
-            // Criando novo parcelamento
+            // Criando novo parcelamento - adiciona data de início
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
+            // Se o dia já passou neste mês, começa no próximo
+            if (today.getDate() > dueDay) {
+                startDate.setMonth(startDate.getMonth() + 1);
+            }
+
             await db.collection('installments').add({
                 ...installmentData,
+                startDate: startDate.toISOString().split('T')[0],
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast('Parcelamento adicionado com sucesso', 'success');
@@ -1197,6 +1205,42 @@ async function deleteCreditCard(id) {
 }
 
 // ===========================
+// INSTALLMENT HELPER FUNCTIONS
+// ===========================
+function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
+    const remaining = installment.totalInstallments - installment.paidInstallments;
+    if (remaining <= 0) return false;
+
+    // Se não tem startDate, usa a data de criação ou assume que está ativo
+    let startDate;
+    if (installment.startDate) {
+        startDate = new Date(installment.startDate + 'T12:00:00');
+    } else if (installment.createdAt && installment.createdAt.toDate) {
+        // Para parcelas antigas sem startDate, usa a data de criação
+        startDate = installment.createdAt.toDate();
+        startDate.setDate(installment.dueDay);
+    } else {
+        // Fallback: assume que a parcela atual está ativa (parcelas muito antigas)
+        return true;
+    }
+
+    // Calcula a data da última parcela
+    const lastInstallmentDate = new Date(startDate);
+    lastInstallmentDate.setMonth(lastInstallmentDate.getMonth() + installment.totalInstallments - 1);
+
+    // Calcula a data da primeira parcela não paga
+    const firstUnpaidDate = new Date(startDate);
+    firstUnpaidDate.setMonth(firstUnpaidDate.getMonth() + installment.paidInstallments);
+
+    // Verifica se o mês alvo está entre a primeira não paga e a última
+    const targetDate = new Date(targetYear, targetMonth, 1);
+    const firstUnpaidMonth = new Date(firstUnpaidDate.getFullYear(), firstUnpaidDate.getMonth(), 1);
+    const lastInstallmentMonth = new Date(lastInstallmentDate.getFullYear(), lastInstallmentDate.getMonth(), 1);
+
+    return targetDate >= firstUnpaidMonth && targetDate <= lastInstallmentMonth;
+}
+
+// ===========================
 // KPI CALCULATIONS
 // ===========================
 function updateKPIs() {
@@ -1241,10 +1285,10 @@ function updateKPIs() {
         return sum + (installmentValue * remaining);
     }, 0);
 
-    // Monthly Installments (only current month)
+    // Monthly Installments (only current selected month)
     const monthlyInstallments = installments.reduce((sum, inst) => {
-        const remaining = inst.totalInstallments - inst.paidInstallments;
-        if (remaining > 0) {
+        // Verifica se a parcela está ativa no mês selecionado
+        if (isInstallmentActiveInMonth(inst, currentMonth, currentYear)) {
             const installmentValue = inst.totalValue / inst.totalInstallments;
             return sum + installmentValue;
         }

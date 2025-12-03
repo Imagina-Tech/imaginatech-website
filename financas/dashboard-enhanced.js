@@ -154,10 +154,17 @@ function showInstallmentsList() {
         return;
     }
 
-    const active = installments.filter(i => i.paidInstallments < i.totalInstallments);
+    // Filtra parcelas ativas no mês selecionado
+    const active = installments.filter(i => {
+        if (typeof isInstallmentActiveInMonth === 'function') {
+            return isInstallmentActiveInMonth(i, currentDisplayMonth, currentDisplayYear);
+        }
+        // Fallback para lógica antiga se a função não existir
+        return i.paidInstallments < i.totalInstallments;
+    });
 
     if (active.length === 0) {
-        content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum parcelamento ativo</p></div>';
+        content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum parcelamento ativo neste mês</p></div>';
     } else {
         content.innerHTML = active.map(i => {
             const remaining = i.totalInstallments - i.paidInstallments;
