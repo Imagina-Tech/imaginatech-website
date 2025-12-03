@@ -1413,8 +1413,8 @@ a:hover {
 
 .subscription-grid,
 .subscriptions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -1517,18 +1517,6 @@ a:hover {
   color: var(--color-danger);
 }
 
-@media (max-width: 768px) {
-  .subscription-grid,
-  .subscriptions-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .subscription-card {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-}
 
 /* ========================================
    11. INSTALLMENTS GRID
@@ -1540,8 +1528,8 @@ a:hover {
 
 .installment-grid,
 .installments-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -1651,18 +1639,6 @@ a:hover {
   color: var(--color-danger);
 }
 
-@media (max-width: 768px) {
-  .installment-grid,
-  .installments-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .installment-card {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-}
 
 /* ========================================
    12. PROJECTIONS GRID
@@ -1681,8 +1657,8 @@ a:hover {
 }
 
 .credit-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -1785,22 +1761,11 @@ a:hover {
   background: var(--color-border);
 }
 
-@media (max-width: 768px) {
-  .credit-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .credit-card-item {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-}
 
 .projection-grid,
 .projections-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -1877,18 +1842,6 @@ a:hover {
   color: var(--color-success);
 }
 
-@media (max-width: 768px) {
-  .projection-grid,
-  .projections-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .projection-card {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-}
 
 /* ========================================
    13. MODALS
