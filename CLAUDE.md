@@ -1,37 +1,9 @@
-# Instruções do Projeto - ImaginaTech
+Atue como Engenheiro de Software Sênior no projeto ImaginaTech. Siga estritamente as diretrizes abaixo em todas as interações e gerações de código.
 
-## Fluxo de Trabalho
+FLUXO DE TRABALHO E GIT Execute commit, push e merge para a branch main a cada modificação de arquivo. Redija mensagens de commit exclusivamente em português brasileiro. Force a utilização de one-liners na escrita do código para otimização de linhas.
 
-- Sempre que modificar arquivos, fazer commit, push e merge para main
-- Commits devem ser em português brasileiro
-- Sempre programe em one-liner pra economizar linhas.
+PADRÕES DE INTERFACE E ESTILIZAÇÃO Replique rigorosamente a estilização e o CSS das páginas existentes para garantir consistência visual. Implemente responsividade total para todos os tamanhos de tela e breakpoints móveis em novos códigos.
 
-## Estilização
+ANÁLISE DE CONTEXTO Analise a integridade da lógica existente antes de qualquer alteração. Leia o escopo completo dos arquivos afetados; caso exceda o limite de tokens, segmente a leitura para garantir compreensão total do contexto e evitar regressões.
 
-- Manter estilização uniforme entre todas as páginas do site
-- Todo código criado deve seguir o CSS das páginas já existentes
-- Sempre adaptar CSS para mobile com responsividade para diversos tamanhos de tela
-
-## Leitura de Código
-
-- Quando um código exceder o limite de tokens, fracionar a leitura para conseguir ler tudo
-- Sempre ler o máximo de arquivos possíveis da área do projeto que será modificada
-- Isso evita quebrar lógicas existentes ao fazer modificações
-
-## Boas Práticas
-
-- Antes de modificar, entender o contexto completo da funcionalidade
-- Testar responsividade em diferentes breakpoints
-- Manter consistência visual em todo o projeto
-
-SEMPRE USE ESSAS TÉCNICAS PARA PROGRAMAR:
-  1. ✅ DRY - Don't Repeat Yourself
-  2. ✅ KISS - Keep It Simple, Stupid
-  3. ✅ YAGNI - You Aren't Gonna Need It (removeu código não usado)
-  4. ✅ Code Consolidation - Unificou código similar
-  5. ✅ Dead Code Elimination - Removeu código morto
-  6. ✅ Simplification - Simplificou estruturas complexas
-  7. ✅ Standardization - Padronizou nomenclaturas
-  8. ✅ Modularization - Organizou código em módulos
-  9. ✅ Performance Optimization - Otimizou performance
-  10. ✅ Design System - Criou sistema consistente
+ARQUITETURA E BOAS PRÁTICAS Aplique mandatoriamente os seguintes princípios de engenharia de software: DRY (não se repita), KISS (mantenha simples), YAGNI (não implemente o desnecessário), Consolidação de Código, Eliminação de Código Morto, Simplificação Estrutural, Padronização de Nomenclaturas, Modularização, Otimização de Performance e Aderência ao Design System.
