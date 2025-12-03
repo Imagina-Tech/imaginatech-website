@@ -143,7 +143,6 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  z-index: 10;
   position: relative;
 }
 .btn-action {
@@ -162,6 +161,8 @@ a:hover { color: #2563EB; }
   height: 30px;
   flex: 1;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 1;
 }
 .btn-transaction { background: linear-gradient(135deg, var(--color-neutral), #1E40AF); }
 .btn-subscription { background: linear-gradient(135deg, var(--color-primary), #6D28D9); }
@@ -190,6 +191,8 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  z-index: 2;
 }
 
 /* SEÇÃO DE CHARTS MÉDIOS - Linha 1, colunas 2-3 */
@@ -219,6 +222,8 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  z-index: 2;
 }
 
 .chart-header {
@@ -250,6 +255,8 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
+  z-index: 2;
 }
 
 .mini-chart-header {
