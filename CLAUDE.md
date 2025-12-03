@@ -4,6 +4,7 @@
 
 - Sempre que modificar arquivos, fazer commit, push e merge para main
 - Commits devem ser em português brasileiro
+- Sempre programe em one-liner pra economizar linhas.
 
 ## Estilização
 
