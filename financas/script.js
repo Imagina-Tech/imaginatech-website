@@ -2038,14 +2038,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================
+// HELPER FUNCTIONS FOR CHARTS
+// ===========================
+function getCurrentMonthTotal(type) {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return transactions
+        .filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === type &&
+                   tDate.getMonth() === currentMonth &&
+                   tDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+}
+
+// ===========================
 // MINI CHARTS - SAVINGS GOAL (RADIAL)
 // ===========================
 function initializeSavingsGoalChart() {
     const chartEl = document.querySelector("#savingsGoalChart");
     if (!chartEl) return;
 
-    const totalIncome = calculateTotalIncome();
-    const totalExpense = calculateTotalExpenses();
+    const totalIncome = getCurrentMonthTotal('income');
+    const totalExpense = getCurrentMonthTotal('expense');
     const saved = totalIncome - totalExpense;
     const goal = 2000; // Meta de economia
     const percentage = Math.min((saved / goal) * 100, 100);
@@ -2093,7 +2111,7 @@ function initializeExpenseLimitChart() {
     const chartEl = document.querySelector("#expenseLimitChart");
     if (!chartEl) return;
 
-    const totalExpense = calculateTotalExpenses();
+    const totalExpense = getCurrentMonthTotal('expense');
     const limit = 3000; // Limite de gastos
     const percentage = Math.min((totalExpense / limit) * 100, 100);
 
