@@ -1151,6 +1151,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .btn-action {
@@ -1159,7 +1160,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 1rem;
+  padding: 0.75rem;
   border: none;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -1168,6 +1169,8 @@ a:hover {
   color: #FFFFFF;
   font-size: 0.8rem;
   aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 50%;
 }
 
 .btn-action i {
