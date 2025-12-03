@@ -1406,7 +1406,7 @@ a:hover {
 .subscription-grid,
 .subscriptions-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -1505,24 +1505,16 @@ a:hover {
   color: var(--color-danger);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .subscription-grid,
   .subscriptions-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
   .subscription-card {
     padding: 0.75rem;
     font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .subscription-grid,
-  .subscriptions-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
   }
 }
 
@@ -1537,7 +1529,7 @@ a:hover {
 .installment-grid,
 .installments-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -1643,24 +1635,16 @@ a:hover {
   color: var(--color-danger);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .installment-grid,
   .installments-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
   .installment-card {
     padding: 0.75rem;
     font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .installment-grid,
-  .installments-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
   }
 }
 
@@ -1682,7 +1666,7 @@ a:hover {
 
 .credit-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -1781,9 +1765,9 @@ a:hover {
   background: var(--color-border);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .credit-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
@@ -1793,17 +1777,10 @@ a:hover {
   }
 }
 
-@media (max-width: 768px) {
-  .credit-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-}
-
 .projection-grid,
 .projections-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -1876,24 +1853,16 @@ a:hover {
   color: var(--color-success);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .projection-grid,
   .projections-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
   .projection-card {
     padding: 0.75rem;
     font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .projection-grid,
-  .projections-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
   }
 }
 
