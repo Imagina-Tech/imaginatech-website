@@ -6,7 +6,7 @@
 - Commits devem ser em português brasileiro
 
 ## Estilização
-![alt text](image.png)
+
 - Manter estilização uniforme entre todas as páginas do site
 - Todo código criado deve seguir o CSS das páginas já existentes
 - Sempre adaptar CSS para mobile com responsividade para diversos tamanhos de tela
