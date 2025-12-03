@@ -104,10 +104,11 @@ a:hover { color: #2563EB; }
   display: grid;
   grid-template-columns: repeat(7, 1fr) 180px; /* 7 KPIs + Quick Actions */
   gap: 0.6rem;
-  height: 130px;
-  margin-bottom: 0.8rem;
+  min-height: 140px;
+  margin-bottom: 1.2rem;
   position: relative;
   z-index: 5;
+  align-items: start;
 }
 
 /* KPI CARDS - Compactos e informativos */
@@ -123,7 +124,7 @@ a:hover { color: #2563EB; }
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  height: 130px;
+  height: 140px;
 }
 .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, currentColor, transparent); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-base); }
 .kpi-card:hover { border-color: transparent; box-shadow: var(--shadow-lg); transform: translateY(-2px); }
@@ -148,6 +149,7 @@ a:hover { color: #2563EB; }
   gap: 0.6rem;
   position: relative;
   z-index: 10;
+  height: 140px;
 }
 .btn-action {
   display: flex;
@@ -162,7 +164,7 @@ a:hover { color: #2563EB; }
   transition: all var(--transition-base);
   color: #FFFFFF;
   font-size: 0.8rem;
-  height: 30px;
+  height: 32px;
   flex: 1;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   position: relative;
