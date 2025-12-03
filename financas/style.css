@@ -1148,26 +1148,26 @@ a:hover {
    ======================================== */
 
 .quick-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
 .btn-action {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 1rem;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
   border: none;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
   color: #FFFFFF;
-  font-size: 0.8rem;
-  aspect-ratio: 1 / 1;
+  font-size: 0.9rem;
+  min-height: 60px;
 }
 
 .btn-action i {
@@ -1212,13 +1212,29 @@ a:hover {
 
 @media (max-width: 1024px) {
   .quick-actions {
-    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 
   .btn-action {
-    padding: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.85rem;
+    min-height: 55px;
+  }
+
+  .btn-action i {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .quick-actions {
+    gap: 0.5rem;
+  }
+
+  .btn-action {
+    padding: 0.8rem 1rem;
     font-size: 0.8rem;
+    min-height: 50px;
   }
 
   .btn-action i {
@@ -1226,35 +1242,19 @@ a:hover {
   }
 }
 
-@media (max-width: 768px) {
-  .quick-actions {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .btn-action {
-    padding: 0.6rem;
-    font-size: 0.75rem;
-  }
-
-  .btn-action i {
-    font-size: 1rem;
-  }
-}
-
 @media (max-width: 480px) {
   .quick-actions {
-    grid-template-columns: repeat(2, 1fr);
     gap: 0.4rem;
   }
 
   .btn-action {
-    padding: 0.5rem;
-    font-size: 0.7rem;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.75rem;
+    min-height: 48px;
   }
 
   .btn-action i {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
   }
 }
 
