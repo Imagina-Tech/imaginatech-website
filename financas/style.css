@@ -96,7 +96,7 @@ a:hover { color: #2563EB; }
   overflow: hidden; /* Remove scroll da página */
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 0.8rem;
+  gap: 0;
 }
 
 /* TOP SECTION - KPIs + ACTIONS em linha única */
@@ -105,6 +105,9 @@ a:hover { color: #2563EB; }
   grid-template-columns: repeat(7, 1fr) 180px; /* 7 KPIs + Quick Actions */
   gap: 0.6rem;
   height: 130px;
+  margin-bottom: 0.8rem;
+  position: relative;
+  z-index: 5;
 }
 
 /* KPI CARDS - Compactos e informativos */
@@ -144,6 +147,7 @@ a:hover { color: #2563EB; }
   flex-direction: column;
   gap: 0.6rem;
   position: relative;
+  z-index: 10;
 }
 .btn-action {
   display: flex;
@@ -162,7 +166,7 @@ a:hover { color: #2563EB; }
   flex: 1;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }
 .btn-transaction { background: linear-gradient(135deg, var(--color-neutral), #1E40AF); }
 .btn-subscription { background: linear-gradient(135deg, var(--color-primary), #6D28D9); }
@@ -178,6 +182,8 @@ a:hover { color: #2563EB; }
   gap: 0.8rem;
   height: 100%;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 /* GRÁFICO PRINCIPAL - Ocupa 2 linhas à esquerda */
@@ -191,8 +197,6 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-  z-index: 2;
 }
 
 /* SEÇÃO DE CHARTS MÉDIOS - Linha 1, colunas 2-3 */
@@ -222,8 +226,6 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-  z-index: 2;
 }
 
 .chart-header {
@@ -255,8 +257,6 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative;
-  z-index: 2;
 }
 
 .mini-chart-header {
