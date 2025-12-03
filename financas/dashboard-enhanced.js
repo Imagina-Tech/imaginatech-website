@@ -34,7 +34,13 @@ function changeMonth(direction) {
 
     updateMonthDisplay();
 
-    // Recarregar dados do mês selecionado
+    // Recarregar TODOS os dados do mês selecionado
+    if (typeof updateKPIs === 'function') {
+        updateKPIs();
+    }
+    if (typeof updateCharts === 'function') {
+        updateCharts();
+    }
     if (typeof updateDashboard === 'function') {
         updateDashboard();
     }

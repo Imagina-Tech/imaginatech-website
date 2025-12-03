@@ -1548,16 +1548,15 @@ function updateCategoryChart() {
 function getCategoryData() {
     const categoryMap = {};
 
-    // Get current month expenses
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    // Usar mês selecionado se disponível
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
     transactions.forEach(t => {
         if (t.type === 'expense') {
             const transactionDate = new Date(t.date);
-            if (transactionDate.getMonth() === currentMonth &&
-                transactionDate.getFullYear() === currentYear) {
+            if (transactionDate.getMonth() === displayMonth &&
+                transactionDate.getFullYear() === displayYear) {
                 categoryMap[t.category] = (categoryMap[t.category] || 0) + t.value;
             }
         }
