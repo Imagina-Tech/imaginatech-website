@@ -1096,7 +1096,7 @@ a:hover {
   border-radius: var(--radius-md);
   padding: 0.5rem;
   box-shadow: var(--shadow-sm);
-  height: 180px;
+  height: 250px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

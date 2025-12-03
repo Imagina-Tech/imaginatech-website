@@ -2240,7 +2240,7 @@ function initializeTopCategoriesChart() {
         series: [{ name: 'Valor', data: topValues }],
         chart: {
             type: 'bar',
-            height: 140,
+            height: 200,
             fontFamily: 'Inter, sans-serif',
             toolbar: { show: false }
         },
@@ -2305,7 +2305,7 @@ function initializeWeeklyTrendChart() {
         series: [{ name: 'Gastos', data: last7Days }],
         chart: {
             type: 'area',
-            height: 140,
+            height: 200,
             fontFamily: 'Inter, sans-serif',
             toolbar: { show: false }
         },
