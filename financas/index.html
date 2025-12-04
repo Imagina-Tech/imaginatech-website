@@ -869,7 +869,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         <div class="modal-container">
             <div class="modal-header">
                 <h2>Cartões de Crédito</h2>
-                <button class="modal-close" onclick="closeListModal('creditCardsListModal')"><i class="fas fa-times"></i></button>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn-add" onclick="openCreditCardModal(); closeListModal('creditCardsListModal');" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-plus"></i> Adicionar Cartão
+                    </button>
+                    <button class="modal-close" onclick="closeListModal('creditCardsListModal')"><i class="fas fa-times"></i></button>
+                </div>
             </div>
             <div id="creditCardsListContent"></div>
         </div>
