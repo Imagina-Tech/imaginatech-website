@@ -576,8 +576,9 @@ function renderInstallments() {
     emptyState.classList.add('hidden');
 
     grid.innerHTML = installments.map(inst => {
-        const remaining = inst.totalInstallments - inst.currentInstallment + 1;
-        const percentage = ((inst.currentInstallment - 1) / inst.totalInstallments) * 100;
+        const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
+        const remaining = inst.totalInstallments - current + 1;
+        const percentage = ((current - 1) / inst.totalInstallments) * 100;
         const installmentValue = inst.totalValue / inst.totalInstallments;
         const remainingValue = installmentValue * remaining;
 
@@ -606,7 +607,7 @@ function renderInstallments() {
                 <div class="installment-value">${formatCurrencyDisplay(inst.totalValue)}</div>
                 <div class="installment-progress-container">
                     <div class="installment-progress-label">
-                        <span class="installment-progress-label-text">${inst.currentInstallment}/${inst.totalInstallments} parcelas</span>
+                        <span class="installment-progress-label-text">${current}/${inst.totalInstallments} parcelas</span>
                         <span class="installment-progress-percentage">${percentage.toFixed(0)}%</span>
                     </div>
                     <div class="installment-progress-bar">
@@ -622,7 +623,7 @@ function renderInstallments() {
                     <input
                         type="number"
                         class="form-input"
-                        value="${inst.currentInstallment}"
+                        value="${current}"
                         min="1"
                         max="${inst.totalInstallments}"
                         onchange="updateInstallmentProgress('${inst.id}', this.value)"
@@ -684,6 +685,7 @@ async function handleInstallmentSubmit(e) {
     showLoading(editingInstallmentId ? 'Atualizando parcelamento...' : 'Salvando parcelamento...');
 
     try {
+        const now = new Date();
         const installmentData = {
             userId: currentUser.uid,
             cardId,
@@ -701,8 +703,11 @@ async function handleInstallmentSubmit(e) {
             });
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
+            // Criar novo parcelamento - adiciona mês/ano de início
             await db.collection('installments').add({
                 ...installmentData,
+                startMonth: now.getMonth(),
+                startYear: now.getFullYear(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast('Parcelamento adicionado com sucesso', 'success');
@@ -1228,13 +1233,30 @@ async function deleteCreditCard(id) {
 // INSTALLMENT HELPER FUNCTIONS
 // ===========================
 function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
-    // Verifica se ainda há parcelas restantes
-    if (installment.currentInstallment > installment.totalInstallments) {
+    // Fallback para parcelamentos muito antigos com paidInstallments
+    const current = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
+
+    // Para parcelamentos antigos sem startMonth/startYear, sempre mostrar se current <= total
+    if (installment.startMonth === undefined || installment.startYear === undefined) {
+        return current <= installment.totalInstallments;
+    }
+
+    // Calcular quantos meses se passaram desde o início
+    const startDate = new Date(installment.startYear, installment.startMonth, 1);
+    const targetDate = new Date(targetYear, targetMonth, 1);
+    const monthsDiff = (targetYear - installment.startYear) * 12 + (targetMonth - installment.startMonth);
+
+    // Se o mês selecionado é antes do início, não mostrar
+    if (monthsDiff < 0) {
         return false;
     }
 
-    // Se tem currentInstallment, está ativo
-    return installment.currentInstallment <= installment.totalInstallments;
+    // Calcular qual parcela estaria sendo cobrada no mês selecionado
+    // Parcela atual no início + meses que se passaram
+    const calculatedInstallment = current + monthsDiff;
+
+    // Só mostrar se a parcela calculada ainda está dentro do total
+    return calculatedInstallment <= installment.totalInstallments;
 }
 
 // ===========================
@@ -1277,7 +1299,8 @@ function updateKPIs() {
 
     // Total Pending Installments (all remaining)
     const totalInstallments = installments.reduce((sum, inst) => {
-        const remaining = inst.totalInstallments - inst.currentInstallment + 1;
+        const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
+        const remaining = inst.totalInstallments - current + 1;
         const installmentValue = inst.totalValue / inst.totalInstallments;
         return sum + (installmentValue * remaining);
     }, 0);
@@ -1285,7 +1308,10 @@ function updateKPIs() {
     // Monthly Installments (only current selected month)
     const monthlyInstallments = installments.reduce((sum, inst) => {
         // Verifica se a parcela está ativa no mês selecionado
-        if (isInstallmentActiveInMonth(inst, currentMonth, currentYear)) {
+        const isActive = isInstallmentActiveInMonth(inst, currentMonth, currentYear);
+        console.log(`Parcelamento "${inst.description}": ativo=${isActive}, currentInstallment=${inst.currentInstallment}, total=${inst.totalInstallments}, startMonth=${inst.startMonth}, startYear=${inst.startYear}`);
+
+        if (isActive) {
             const installmentValue = inst.totalValue / inst.totalInstallments;
             return sum + installmentValue;
         }
