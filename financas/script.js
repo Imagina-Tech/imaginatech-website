@@ -99,6 +99,7 @@ let creditCards = [];
 let cardExpenses = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
+let editingTransactionId = null;
 let editingInstallmentId = null;
 let editingCardId = null;
 
@@ -345,24 +346,38 @@ async function handleTransactionSubmit(e) {
         return;
     }
 
-    showLoading('Salvando transação...');
+    showLoading(editingTransactionId ? 'Atualizando transação...' : 'Salvando transação...');
 
     try {
-        await db.collection('transactions').add({
+        const transactionData = {
             userId: currentUser.uid,
             type: currentTransactionType,
             description,
             value,
             category,
-            date,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            date
+        };
+
+        if (editingTransactionId) {
+            // Editando transação existente
+            await db.collection('transactions').doc(editingTransactionId).update({
+                ...transactionData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Transação atualizada com sucesso', 'success');
+        } else {
+            // Criando nova transação
+            await db.collection('transactions').add({
+                ...transactionData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Transação adicionada com sucesso', 'success');
+        }
 
         await loadTransactions();
         updateKPIs();
         updateCharts();
         closeTransactionModal();
-        showToast('Transação adicionada com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao salvar transação:', error);
         showToast('Erro ao salvar transação', 'error');
@@ -1754,17 +1769,43 @@ function getComparisonData() {
 // MODALS
 // ===========================
 function openTransactionModal() {
+    editingTransactionId = null;
     document.getElementById('transactionModal').classList.add('active');
     document.getElementById('transactionForm').reset();
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').value = today;
     currentTransactionType = 'income';
     selectTransactionType('income');
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
 
 function closeTransactionModal() {
+    editingTransactionId = null;
     document.getElementById('transactionModal').classList.remove('active');
     document.getElementById('transactionForm').reset();
+}
+
+function editTransaction(id) {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+
+    editingTransactionId = id;
+
+    // Abre o modal
+    document.getElementById('transactionModal').classList.add('active');
+
+    // Atualiza título do modal
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar Transação';
+
+    // Preenche os campos
+    document.getElementById('description').value = transaction.description;
+    document.getElementById('value').value = formatCurrencyValue(transaction.value);
+    document.getElementById('category').value = transaction.category;
+    document.getElementById('date').value = transaction.date;
+
+    // Define o tipo de transação
+    currentTransactionType = transaction.type;
+    selectTransactionType(transaction.type);
 }
 
 function openSubscriptionModal() {

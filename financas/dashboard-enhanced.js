@@ -99,6 +99,9 @@ function showTransactionsList(filterType) {
                 </div>
                 <div class="list-item-value ${t.type}">${t.type === 'income' ? '+' : '-'} ${formatCurrencyDisplay(t.value)}</div>
                 <div class="list-item-actions">
+                    <button class="btn-icon" onclick="editTransactionAndRefresh('${t.id}')" title="Editar" style="color: var(--color-neutral);">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="btn-icon danger" onclick="deleteTransactionAndRefresh('${t.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -281,8 +284,17 @@ function closeListModal(modalId) {
 }
 
 // ===========================
-// FUNÇÕES DE DELETE COM REFRESH
+// FUNÇÕES DE DELETE E EDIT COM REFRESH
 // ===========================
+async function editTransactionAndRefresh(id) {
+    if (typeof editTransaction === 'function') {
+        // Fecha o modal de lista
+        closeListModal('transactionsListModal');
+        // Abre o modal de edição
+        editTransaction(id);
+    }
+}
+
 async function deleteTransactionAndRefresh(id) {
     if (typeof deleteTransaction === 'function') {
         await deleteTransaction(id);
