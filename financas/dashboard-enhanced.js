@@ -159,22 +159,22 @@ function showInstallmentsList() {
         if (typeof isInstallmentActiveInMonth === 'function') {
             return isInstallmentActiveInMonth(i, currentDisplayMonth, currentDisplayYear);
         }
-        // Fallback para lógica antiga se a função não existir
-        return i.paidInstallments < i.totalInstallments;
+        // Fallback para lógica nova
+        return i.currentInstallment <= i.totalInstallments;
     });
 
     if (active.length === 0) {
         content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum parcelamento ativo neste mês</p></div>';
     } else {
         content.innerHTML = active.map(i => {
-            const remaining = i.totalInstallments - i.paidInstallments;
+            const remaining = i.totalInstallments - i.currentInstallment + 1;
             const installmentValue = i.totalValue / i.totalInstallments;
             return `
                 <div class="list-item">
                     <div class="list-item-info">
                         <div class="list-item-title">${i.description}</div>
                         <div class="list-item-subtitle">
-                            ${i.paidInstallments}/${i.totalInstallments} pagas • ${remaining} restantes • Vence dia ${i.dueDay}
+                            Parcela ${i.currentInstallment}/${i.totalInstallments} • ${remaining} restantes
                         </div>
                     </div>
                     <div class="list-item-value expense">${formatCurrencyDisplay(installmentValue)}/mês</div>

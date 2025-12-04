@@ -576,8 +576,8 @@ function renderInstallments() {
     emptyState.classList.add('hidden');
 
     grid.innerHTML = installments.map(inst => {
-        const remaining = inst.totalInstallments - inst.paidInstallments;
-        const percentage = (inst.paidInstallments / inst.totalInstallments) * 100;
+        const remaining = inst.totalInstallments - inst.currentInstallment + 1;
+        const percentage = ((inst.currentInstallment - 1) / inst.totalInstallments) * 100;
         const installmentValue = inst.totalValue / inst.totalInstallments;
         const remainingValue = installmentValue * remaining;
 
@@ -606,7 +606,7 @@ function renderInstallments() {
                 <div class="installment-value">${formatCurrencyDisplay(inst.totalValue)}</div>
                 <div class="installment-progress-container">
                     <div class="installment-progress-label">
-                        <span class="installment-progress-label-text">${inst.paidInstallments}/${inst.totalInstallments} parcelas</span>
+                        <span class="installment-progress-label-text">${inst.currentInstallment}/${inst.totalInstallments} parcelas</span>
                         <span class="installment-progress-percentage">${percentage.toFixed(0)}%</span>
                     </div>
                     <div class="installment-progress-bar">
@@ -614,16 +614,16 @@ function renderInstallments() {
                     </div>
                 </div>
                 <div class="installment-footer">
-                    <span>Vencimento: dia ${inst.dueDay}</span>
+                    <span>Valor da parcela: ${formatCurrencyDisplay(inst.totalValue / inst.totalInstallments)}</span>
                     <span>Restante: ${formatCurrencyDisplay(remainingValue)}</span>
                 </div>
                 <div style="margin-top: 10px;">
-                    <label style="font-size: 12px; color: #64748b;">Parcelas pagas:</label>
+                    <label style="font-size: 12px; color: #64748b;">Parcela atual:</label>
                     <input
                         type="number"
                         class="form-input"
-                        value="${inst.paidInstallments}"
-                        min="0"
+                        value="${inst.currentInstallment}"
+                        min="1"
                         max="${inst.totalInstallments}"
                         onchange="updateInstallmentProgress('${inst.id}', this.value)"
                         style="margin-top: 4px;"
@@ -640,8 +640,7 @@ async function handleInstallmentSubmit(e) {
     const description = document.getElementById('instDescription').value.trim();
     const cardId = document.getElementById('instCard').value;
     const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value);
-    const paidInstallments = parseInt(document.getElementById('instPaidInstallments').value);
-    const dueDay = parseInt(document.getElementById('instDueDay').value);
+    const currentInstallment = parseInt(document.getElementById('instCurrentInstallment').value);
 
     // Pega o valor correto dependendo do tipo selecionado
     let totalValue = 0;
@@ -662,7 +661,7 @@ async function handleInstallmentSubmit(e) {
         totalValue = installmentValue * totalInstallments;
     }
 
-    if (!description || !cardId || !totalInstallments || !dueDay) {
+    if (!description || !cardId || !totalInstallments || !currentInstallment) {
         showToast('Preencha todos os campos', 'error');
         return;
     }
@@ -677,13 +676,8 @@ async function handleInstallmentSubmit(e) {
         return;
     }
 
-    if (paidInstallments < 0 || paidInstallments > totalInstallments) {
-        showToast('Parcelas pagas inválidas', 'error');
-        return;
-    }
-
-    if (dueDay < 1 || dueDay > 31) {
-        showToast('Dia do vencimento deve estar entre 1 e 31', 'error');
+    if (currentInstallment < 1 || currentInstallment > totalInstallments) {
+        showToast('Parcela atual inválida', 'error');
         return;
     }
 
@@ -696,8 +690,7 @@ async function handleInstallmentSubmit(e) {
             description,
             totalValue,
             totalInstallments,
-            paidInstallments,
-            dueDay
+            currentInstallment
         };
 
         if (editingInstallmentId) {
@@ -708,17 +701,8 @@ async function handleInstallmentSubmit(e) {
             });
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
-            // Criando novo parcelamento - adiciona data de início
-            const today = new Date();
-            const startDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
-            // Se o dia já passou neste mês, começa no próximo
-            if (today.getDate() > dueDay) {
-                startDate.setMonth(startDate.getMonth() + 1);
-            }
-
             await db.collection('installments').add({
                 ...installmentData,
-                startDate: startDate.toISOString().split('T')[0],
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast('Parcelamento adicionado com sucesso', 'success');
@@ -735,14 +719,14 @@ async function handleInstallmentSubmit(e) {
     }
 }
 
-async function updateInstallmentProgress(id, paid) {
-    const paidInstallments = parseInt(paid);
+async function updateInstallmentProgress(id, current) {
+    const currentInstallment = parseInt(current);
 
     showLoading('Atualizando...');
 
     try {
         await db.collection('installments').doc(id).update({
-            paidInstallments
+            currentInstallment
         });
 
         await loadInstallments();
@@ -1039,7 +1023,7 @@ function calculateCurrentBill(card) {
     }
 
     // Somar gastos do período
-    const total = cardExpenses
+    const expensesTotal = cardExpenses
         .filter(expense => {
             if (expense.cardId !== card.id) return false;
             const expenseDate = new Date(expense.date);
@@ -1047,7 +1031,12 @@ function calculateCurrentBill(card) {
         })
         .reduce((sum, expense) => sum + expense.value, 0);
 
-    return total;
+    // Somar parcelas ativas deste cartão
+    const installmentsTotal = installments
+        .filter(inst => inst.cardId === card.id && inst.currentInstallment <= inst.totalInstallments)
+        .reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
+
+    return expensesTotal + installmentsTotal;
 }
 
 // ===========================
@@ -1789,7 +1778,7 @@ function openInstallmentModal() {
     editingInstallmentId = null;
     document.getElementById('installmentModal').classList.add('active');
     document.getElementById('installmentForm').reset();
-    document.getElementById('instPaidInstallments').value = 0;
+    document.getElementById('instCurrentInstallment').value = 1;
     // Define valor total como padrão
     selectInstallmentValueType('total');
     // Atualiza título do modal
@@ -1833,8 +1822,7 @@ function editInstallment(id) {
     // Preenche os campos
     document.getElementById('instDescription').value = installment.description;
     document.getElementById('instTotalInstallments').value = installment.totalInstallments;
-    document.getElementById('instPaidInstallments').value = installment.paidInstallments;
-    document.getElementById('instDueDay').value = installment.dueDay;
+    document.getElementById('instCurrentInstallment').value = installment.currentInstallment || 1;
 
     // Define como valor total e preenche
     selectInstallmentValueType('total');

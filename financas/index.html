@@ -515,14 +515,10 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
 
                     <div class="form-group">
-                        <label for="instPaidInstallments">Parcelas Pagas</label>
-                        <input type="number" id="instPaidInstallments" required min="0" value="0" placeholder="0">
+                        <label for="instCurrentInstallment">Parcela Atual</label>
+                        <input type="number" id="instCurrentInstallment" required min="1" value="1" placeholder="1">
+                        <small style="color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 0.25rem; display: block;">Número da parcela que aparece na fatura atual</small>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="instDueDay">Dia do Vencimento</label>
-                    <input type="number" id="instDueDay" required min="1" max="31" placeholder="1-31">
                 </div>
 
                 <div class="modal-actions">
