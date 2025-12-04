@@ -298,16 +298,6 @@ a:hover { color: #2563EB; }
   color: var(--neon-blue);
 }
 
-/* SEÇÕES DE DADOS (Subscriptions, Installments, etc) - REMOVIDAS DA VISUALIZAÇÃO PRINCIPAL */
-/* Mantidas no DOM para funcionalidade, mas ocultas por padrão */
-.subscriptions-section, .installments-section, .projections-section, .credit-cards-section {
-  display: none; /* Ocultar para maximizar espaço dos gráficos */
-}
-
-/* TRANSACTIONS TABLE - Agora dentro de um modal ou aba */
-.transactions-section {
-  display: none; /* Mover para modal/aba */
-}
 
 /* MODAIS & FORMULÁRIOS */
 .modal-overlay {
