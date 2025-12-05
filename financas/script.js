@@ -1084,7 +1084,12 @@ function calculateCurrentBill(card) {
         .filter(inst => inst.cardId === card.id && inst.currentInstallment <= inst.totalInstallments)
         .reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
 
-    return expensesTotal + installmentsTotal;
+    // Somar assinaturas ativas deste cartão
+    const subscriptionsTotal = subscriptions
+        .filter(sub => sub.cardId === card.id && sub.status === 'active')
+        .reduce((sum, sub) => sum + sub.value, 0);
+
+    return expensesTotal + installmentsTotal + subscriptionsTotal;
 }
 
 // ===========================
