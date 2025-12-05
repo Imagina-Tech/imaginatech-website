@@ -128,20 +128,31 @@ function showSubscriptionsList() {
     if (active.length === 0) {
         content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma assinatura ativa</p></div>';
     } else {
-        content.innerHTML = active.map(s => `
+        content.innerHTML = active.map(s => {
+            // Encontra o cartão associado
+            const card = creditCards.find(c => c.id === s.cardId);
+            const cardName = card ? `${card.name} - ${card.institution}` : '';
+
+            return `
             <div class="list-item">
                 <div class="list-item-info">
                     <div class="list-item-title">${s.name}</div>
-                    <div class="list-item-subtitle">${s.category} • Vence dia ${s.dueDay}</div>
+                    <div class="list-item-subtitle">
+                        ${s.category} • Vence dia ${s.dueDay}
+                        ${cardName ? `<br><i class="fas fa-credit-card"></i> ${cardName}` : ''}
+                    </div>
                 </div>
                 <div class="list-item-value expense">${formatCurrencyDisplay(s.value)}/mês</div>
                 <div class="list-item-actions">
+                    <button class="btn-icon" onclick="editSubscriptionAndRefresh('${s.id}')" title="Editar" style="color: var(--color-neutral);">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="btn-icon danger" onclick="deleteSubscriptionAndRefresh('${s.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     modal.classList.add('active');
@@ -302,6 +313,15 @@ async function deleteTransactionAndRefresh(id) {
     if (typeof deleteTransaction === 'function') {
         await deleteTransaction(id);
         showTransactionsList('all');
+    }
+}
+
+async function editSubscriptionAndRefresh(id) {
+    if (typeof editSubscription === 'function') {
+        // Fecha o modal de lista
+        closeListModal('subscriptionsListModal');
+        // Abre o modal de edição
+        editSubscription(id);
     }
 }
 

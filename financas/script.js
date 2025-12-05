@@ -100,6 +100,7 @@ let cardExpenses = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
 let editingTransactionId = null;
+let editingSubscriptionId = null;
 let editingInstallmentId = null;
 let editingCardId = null;
 
@@ -446,12 +447,18 @@ function renderSubscriptions() {
 
     grid.innerHTML = subscriptions.map(sub => {
         const nextDue = calculateNextDue(sub.dueDay);
+
+        // Encontra o cartão associado
+        const card = creditCards.find(c => c.id === sub.cardId);
+        const cardName = card ? `${card.name} - ${card.institution}` : '';
+
         return `
             <div class="subscription-card">
                 <div class="subscription-header">
                     <div class="subscription-info">
                         <h4>${sub.name}</h4>
                         <span class="subscription-category">${sub.category}</span>
+                        ${cardName ? `<span style="font-size: 0.7rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;"><i class="fas fa-credit-card"></i> ${cardName}</span>` : ''}
                     </div>
                     <span class="subscription-badge ${sub.status}">
                         ${sub.status === 'active' ? 'Ativa' : 'Inativa'}
@@ -460,9 +467,14 @@ function renderSubscriptions() {
                 <div class="subscription-value">${formatCurrencyDisplay(sub.value)}<small>/mês</small></div>
                 <div class="subscription-meta">
                     <span><i class="fas fa-calendar-alt"></i> ${nextDue}</span>
-                    <button class="subscription-delete" onclick="deleteSubscription('${sub.id}')" title="Deletar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="subscription-delete" onclick="editSubscription('${sub.id}')" title="Editar" style="color: var(--color-neutral);">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="subscription-delete" onclick="deleteSubscription('${sub.id}')" title="Deletar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -491,6 +503,7 @@ async function handleSubscriptionSubmit(e) {
     const dueDay = parseInt(document.getElementById('subDueDay').value);
     const category = document.getElementById('subCategory').value;
     const status = document.getElementById('subStatus').value;
+    const cardId = document.getElementById('subCard').value;
 
     if (!name || !valueStr || !dueDay || !category) {
         showToast('Preencha todos os campos', 'error');
@@ -508,23 +521,38 @@ async function handleSubscriptionSubmit(e) {
         return;
     }
 
-    showLoading('Salvando assinatura...');
+    showLoading(editingSubscriptionId ? 'Atualizando assinatura...' : 'Salvando assinatura...');
 
     try {
-        await db.collection('subscriptions').add({
+        const subscriptionData = {
             userId: currentUser.uid,
             name,
             value,
             dueDay,
             category,
             status,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            cardId: cardId || null
+        };
+
+        if (editingSubscriptionId) {
+            // Editando assinatura existente
+            await db.collection('subscriptions').doc(editingSubscriptionId).update({
+                ...subscriptionData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Assinatura atualizada com sucesso', 'success');
+        } else {
+            // Criando nova assinatura
+            await db.collection('subscriptions').add({
+                ...subscriptionData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Assinatura adicionada com sucesso', 'success');
+        }
 
         await loadSubscriptions();
         updateKPIs();
         closeSubscriptionModal();
-        showToast('Assinatura adicionada com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao salvar assinatura:', error);
         showToast('Erro ao salvar assinatura', 'error');
@@ -1809,13 +1837,50 @@ function editTransaction(id) {
 }
 
 function openSubscriptionModal() {
+    editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.add('active');
     document.getElementById('subscriptionForm').reset();
+    document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Nova Assinatura';
+
+    // Preenche dropdown de cartões
+    const cardSelect = document.getElementById('subCard');
+    cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}">${card.name} - ${card.institution}</option>`
+        ).join('');
 }
 
 function closeSubscriptionModal() {
+    editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.remove('active');
     document.getElementById('subscriptionForm').reset();
+}
+
+function editSubscription(id) {
+    const subscription = subscriptions.find(s => s.id === id);
+    if (!subscription) return;
+
+    editingSubscriptionId = id;
+
+    // Abre o modal
+    document.getElementById('subscriptionModal').classList.add('active');
+
+    // Atualiza título do modal
+    document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Editar Assinatura';
+
+    // Preenche dropdown de cartões
+    const cardSelect = document.getElementById('subCard');
+    cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+        ).join('');
+
+    // Preenche os campos
+    document.getElementById('subName').value = subscription.name;
+    document.getElementById('subValue').value = formatCurrencyValue(subscription.value);
+    document.getElementById('subDueDay').value = subscription.dueDay;
+    document.getElementById('subCategory').value = subscription.category;
+    document.getElementById('subStatus').value = subscription.status;
 }
 
 function openInstallmentModal() {
