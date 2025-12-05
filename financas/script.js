@@ -551,6 +551,7 @@ async function handleSubscriptionSubmit(e) {
         }
 
         await loadSubscriptions();
+        renderCreditCards(); // Atualiza cartões para refletir novas assinaturas
         updateKPIs();
         closeSubscriptionModal();
     } catch (error) {
@@ -569,6 +570,7 @@ async function deleteSubscription(id) {
     try {
         await db.collection('subscriptions').doc(id).delete();
         await loadSubscriptions();
+        renderCreditCards(); // Atualiza cartões para refletir remoção de assinatura
         updateKPIs();
         showToast('Assinatura deletada com sucesso', 'success');
     } catch (error) {
