@@ -44,6 +44,9 @@ function changeMonth(direction) {
     if (typeof updateDashboard === 'function') {
         updateDashboard();
     }
+    if (typeof renderCreditCards === 'function') {
+        renderCreditCards();
+    }
 }
 
 // ===========================

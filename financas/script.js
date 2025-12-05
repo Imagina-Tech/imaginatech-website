@@ -423,7 +423,6 @@ async function loadSubscriptions() {
         }));
 
         console.log(`${subscriptions.length} assinaturas carregadas`);
-        console.log('[loadSubscriptions] Assinaturas com cardId:', subscriptions.filter(s => s.cardId));
         renderSubscriptions();
     } catch (error) {
         console.error('Erro ao carregar assinaturas:', error);
@@ -534,10 +533,6 @@ async function handleSubscriptionSubmit(e) {
             status,
             cardId: cardId || null
         };
-
-        // DEBUG: Log dos dados da assinatura
-        console.log('[handleSubscriptionSubmit] Dados da assinatura:', subscriptionData);
-        console.log('[handleSubscriptionSubmit] cardId selecionado:', cardId);
 
         if (editingSubscriptionId) {
             // Editando assinatura existente
@@ -1059,22 +1054,50 @@ function renderCreditCards() {
     }).join('');
 }
 
-function calculateCurrentBill(card) {
+function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    // Usar mês/ano passados como parâmetro, ou mês selecionado no display, ou mês atual
+    const currentMonth = overrideMonth !== null ? overrideMonth :
+                        (typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth());
+    const currentYear = overrideYear !== null ? overrideYear :
+                       (typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear());
 
-    // Determinar período da fatura atual
-    let billStartDate, billEndDate;
+    // Determinar período da fatura
+    let billStartDate, billEndDate, billMonth, billYear;
 
-    if (today.getDate() >= card.closingDay) {
-        // Período atual: dia de fechamento do mês atual até dia de fechamento do próximo mês
-        billStartDate = new Date(currentYear, currentMonth, card.closingDay);
-        billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
-    } else {
-        // Período anterior: dia de fechamento do mês anterior até dia de fechamento do mês atual
+    // Se estamos navegando em um mês diferente do atual, sempre mostrar a fatura que fecha naquele mês
+    const isNavigatingDifferentMonth = (overrideMonth !== null ||
+                                        (typeof currentDisplayMonth !== 'undefined' &&
+                                         (currentDisplayMonth !== today.getMonth() || currentDisplayYear !== today.getFullYear())));
+
+    if (isNavigatingDifferentMonth) {
+        // Navegando entre meses: mostrar fatura que fecha no mês selecionado
+        billMonth = currentMonth;
+        billYear = currentYear;
+        // Período: do fechamento do mês anterior até o fechamento do mês atual
         billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
         billEndDate = new Date(currentYear, currentMonth, card.closingDay - 1);
+    } else {
+        // Mês atual: usar lógica baseada no dia de fechamento
+        if (today.getDate() >= card.closingDay) {
+            // Período atual: dia de fechamento do mês atual até dia de fechamento do próximo mês
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+            billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
+            // A fatura fecha no próximo mês
+            billMonth = currentMonth + 1;
+            billYear = currentYear;
+            if (billMonth > 11) {
+                billMonth = 0;
+                billYear++;
+            }
+        } else {
+            // Período anterior: dia de fechamento do mês anterior até dia de fechamento do mês atual
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
+            billEndDate = new Date(currentYear, currentMonth, card.closingDay - 1);
+            // A fatura fecha no mês atual
+            billMonth = currentMonth;
+            billYear = currentYear;
+        }
     }
 
     // Somar gastos do período
@@ -1086,23 +1109,33 @@ function calculateCurrentBill(card) {
         })
         .reduce((sum, expense) => sum + expense.value, 0);
 
-    // Somar parcelas ativas deste cartão
-    const installmentsTotal = installments
-        .filter(inst => inst.cardId === card.id && inst.currentInstallment <= inst.totalInstallments)
-        .reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
+    // Somar parcelas ativas deste cartão no mês da fatura
+    const installmentsFiltered = installments.filter(inst => {
+        if (inst.cardId !== card.id) return false;
+
+        // Para parcelamentos antigos sem startMonth/startYear, usar lógica antiga
+        if (inst.startMonth === undefined || inst.startYear === undefined) {
+            return inst.currentInstallment <= inst.totalInstallments;
+        }
+
+        // Calcular quantos meses se passaram desde o início do parcelamento
+        const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
+
+        // Se o mês da fatura é antes do início do parcelamento, não incluir
+        if (monthsSinceStart < 0) return false;
+
+        // Calcular qual parcela seria cobrada neste mês
+        const installmentForThisMonth = inst.currentInstallment + monthsSinceStart;
+
+        // Só incluir se a parcela calculada estiver dentro do range válido
+        return installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
+    });
+
+    const installmentsTotal = installmentsFiltered.reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
 
     // Somar assinaturas ativas deste cartão
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
-
-    // DEBUG: Log detalhado
-    console.log(`[calculateCurrentBill] Cartão: ${card.name}`);
-    console.log(`[calculateCurrentBill] Total de assinaturas globais: ${subscriptions.length}`);
-    console.log(`[calculateCurrentBill] Assinaturas filtradas para este cartão:`, subscriptionsFiltered);
-    console.log(`[calculateCurrentBill] Gastos: R$ ${expensesTotal.toFixed(2)}`);
-    console.log(`[calculateCurrentBill] Parcelas: R$ ${installmentsTotal.toFixed(2)}`);
-    console.log(`[calculateCurrentBill] Assinaturas: R$ ${subscriptionsTotal.toFixed(2)}`);
-    console.log(`[calculateCurrentBill] TOTAL: R$ ${(expensesTotal + installmentsTotal + subscriptionsTotal).toFixed(2)}`);
 
     return expensesTotal + installmentsTotal + subscriptionsTotal;
 }
