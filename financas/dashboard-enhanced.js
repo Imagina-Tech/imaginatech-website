@@ -184,6 +184,9 @@ function showInstallmentsList() {
                     </div>
                     <div class="list-item-value expense">${formatCurrencyDisplay(installmentValue)}/mês</div>
                     <div class="list-item-actions">
+                        <button class="btn-icon" onclick="editInstallmentAndRefresh('${i.id}')" title="Editar" style="color: var(--color-neutral);">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button class="btn-icon danger" onclick="deleteInstallmentAndRefresh('${i.id}')" title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -306,6 +309,15 @@ async function deleteSubscriptionAndRefresh(id) {
     if (typeof deleteSubscription === 'function') {
         await deleteSubscription(id);
         showSubscriptionsList();
+    }
+}
+
+async function editInstallmentAndRefresh(id) {
+    if (typeof editInstallment === 'function') {
+        // Fecha o modal de lista
+        closeListModal('installmentsListModal');
+        // Abre o modal de edição
+        editInstallment(id);
     }
 }
 
