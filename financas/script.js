@@ -423,6 +423,7 @@ async function loadSubscriptions() {
         }));
 
         console.log(`${subscriptions.length} assinaturas carregadas`);
+        console.log('[loadSubscriptions] Assinaturas com cardId:', subscriptions.filter(s => s.cardId));
         renderSubscriptions();
     } catch (error) {
         console.error('Erro ao carregar assinaturas:', error);
@@ -533,6 +534,10 @@ async function handleSubscriptionSubmit(e) {
             status,
             cardId: cardId || null
         };
+
+        // DEBUG: Log dos dados da assinatura
+        console.log('[handleSubscriptionSubmit] Dados da assinatura:', subscriptionData);
+        console.log('[handleSubscriptionSubmit] cardId selecionado:', cardId);
 
         if (editingSubscriptionId) {
             // Editando assinatura existente
@@ -1087,9 +1092,17 @@ function calculateCurrentBill(card) {
         .reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
 
     // Somar assinaturas ativas deste cartão
-    const subscriptionsTotal = subscriptions
-        .filter(sub => sub.cardId === card.id && sub.status === 'active')
-        .reduce((sum, sub) => sum + sub.value, 0);
+    const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
+    const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
+
+    // DEBUG: Log detalhado
+    console.log(`[calculateCurrentBill] Cartão: ${card.name}`);
+    console.log(`[calculateCurrentBill] Total de assinaturas globais: ${subscriptions.length}`);
+    console.log(`[calculateCurrentBill] Assinaturas filtradas para este cartão:`, subscriptionsFiltered);
+    console.log(`[calculateCurrentBill] Gastos: R$ ${expensesTotal.toFixed(2)}`);
+    console.log(`[calculateCurrentBill] Parcelas: R$ ${installmentsTotal.toFixed(2)}`);
+    console.log(`[calculateCurrentBill] Assinaturas: R$ ${subscriptionsTotal.toFixed(2)}`);
+    console.log(`[calculateCurrentBill] TOTAL: R$ ${(expensesTotal + installmentsTotal + subscriptionsTotal).toFixed(2)}`);
 
     return expensesTotal + installmentsTotal + subscriptionsTotal;
 }
