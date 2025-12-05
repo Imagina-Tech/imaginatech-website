@@ -180,6 +180,32 @@ function showDashboard(user) {
 }
 
 // ===========================
+// CENTRAL UPDATE FUNCTION
+// ===========================
+function updateAllDisplays() {
+    console.log('[updateAllDisplays] Atualizando todos os componentes...');
+
+    // Atualizar KPIs
+    if (typeof updateKPIs === 'function') {
+        updateKPIs();
+    }
+
+    // Atualizar gráficos
+    if (typeof updateCharts === 'function') {
+        updateCharts();
+    }
+
+    // Atualizar renderizações
+    renderTransactions();
+    renderSubscriptions();
+    renderInstallments();
+    renderProjections();
+    renderCreditCards();
+
+    console.log('[updateAllDisplays] Todos os componentes atualizados!');
+}
+
+// ===========================
 // INITIALIZATION
 // ===========================
 async function initializeDashboard() {
@@ -220,6 +246,18 @@ async function initializeDashboard() {
 
         // Update KPIs
         updateKPIs();
+
+        // Migrar parcelamentos antigos automaticamente (se necessário)
+        // Fazemos isso em background para não bloquear a interface
+        setTimeout(() => {
+            const oldInstallments = installments.filter(i =>
+                i.startMonth === undefined || i.startYear === undefined
+            );
+            if (oldInstallments.length > 0) {
+                console.log('[initializeDashboard] Detectados parcelamentos antigos, iniciando migração automática...');
+                migrateOldInstallments();
+            }
+        }, 1000);
 
         hideLoading();
         showToast('Dashboard carregado com sucesso', 'success');
@@ -376,8 +414,7 @@ async function handleTransactionSubmit(e) {
         }
 
         await loadTransactions();
-        updateKPIs();
-        updateCharts();
+        updateAllDisplays();
         closeTransactionModal();
     } catch (error) {
         console.error('Erro ao salvar transação:', error);
@@ -395,8 +432,7 @@ async function deleteTransaction(id) {
     try {
         await db.collection('transactions').doc(id).delete();
         await loadTransactions();
-        updateKPIs();
-        updateCharts();
+        updateAllDisplays();
         showToast('Transação deletada com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao deletar transação:', error);
@@ -551,8 +587,7 @@ async function handleSubscriptionSubmit(e) {
         }
 
         await loadSubscriptions();
-        renderCreditCards(); // Atualiza cartões para refletir novas assinaturas
-        updateKPIs();
+        updateAllDisplays();
         closeSubscriptionModal();
     } catch (error) {
         console.error('Erro ao salvar assinatura:', error);
@@ -570,12 +605,84 @@ async function deleteSubscription(id) {
     try {
         await db.collection('subscriptions').doc(id).delete();
         await loadSubscriptions();
-        renderCreditCards(); // Atualiza cartões para refletir remoção de assinatura
-        updateKPIs();
+        updateAllDisplays();
         showToast('Assinatura deletada com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao deletar assinatura:', error);
         showToast('Erro ao deletar assinatura', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// INSTALLMENTS - MIGRATION
+// ===========================
+async function migrateOldInstallments() {
+    showLoading('Migrando parcelamentos antigos...');
+
+    try {
+        const snapshot = await db.collection('installments')
+            .where('userId', '==', currentUser.uid)
+            .get();
+
+        const installmentsToMigrate = [];
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            // Identificar parcelamentos sem startMonth/startYear
+            if (data.startMonth === undefined || data.startYear === undefined) {
+                installmentsToMigrate.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
+        });
+
+        if (installmentsToMigrate.length === 0) {
+            showToast('Nenhum parcelamento precisa ser migrado!', 'success');
+            hideLoading();
+            return;
+        }
+
+        console.log(`[migrateOldInstallments] Encontrados ${installmentsToMigrate.length} parcelamentos para migrar`);
+
+        // Migrar cada parcelamento
+        const batch = db.batch();
+        const today = new Date();
+
+        installmentsToMigrate.forEach(inst => {
+            // Calcular o mês de início baseado em currentInstallment ou paidInstallments
+            const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
+
+            // Se a parcela atual é X, significa que começou há (X - 1) meses atrás
+            const monthsAgo = current - 1;
+
+            const startDate = new Date(today);
+            startDate.setMonth(startDate.getMonth() - monthsAgo);
+
+            const startMonth = startDate.getMonth();
+            const startYear = startDate.getFullYear();
+
+            console.log(`[migrateOldInstallments] Parcelamento "${inst.description}": currentInstallment=${current}, startMonth=${startMonth}, startYear=${startYear}`);
+
+            const docRef = db.collection('installments').doc(inst.id);
+            batch.update(docRef, {
+                startMonth,
+                startYear,
+                currentInstallment: current // Garantir que currentInstallment existe
+            });
+        });
+
+        await batch.commit();
+
+        await loadInstallments();
+        updateAllDisplays();
+
+        showToast(`${installmentsToMigrate.length} parcelamento(s) migrado(s) com sucesso!`, 'success');
+        console.log('[migrateOldInstallments] Migração concluída!');
+    } catch (error) {
+        console.error('Erro ao migrar parcelamentos:', error);
+        showToast('Erro ao migrar parcelamentos: ' + error.message, 'error');
     } finally {
         hideLoading();
     }
@@ -759,7 +866,7 @@ async function handleInstallmentSubmit(e) {
         }
 
         await loadInstallments();
-        updateKPIs();
+        updateAllDisplays();
         closeInstallmentModal();
     } catch (error) {
         console.error('Erro ao salvar parcelamento:', error);
@@ -780,7 +887,7 @@ async function updateInstallmentProgress(id, current) {
         });
 
         await loadInstallments();
-        updateKPIs();
+        updateAllDisplays();
         showToast('Progresso atualizado', 'success');
     } catch (error) {
         console.error('Erro ao atualizar parcelamento:', error);
@@ -798,7 +905,7 @@ async function deleteInstallment(id) {
     try {
         await db.collection('installments').doc(id).delete();
         await loadInstallments();
-        updateKPIs();
+        updateAllDisplays();
         showToast('Parcelamento deletado com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao deletar parcelamento:', error);
@@ -908,7 +1015,7 @@ async function handleProjectionSubmit(e) {
         });
 
         await loadProjections();
-        updateKPIs();
+        updateAllDisplays();
         closeProjectionModal();
         showToast('Projeção adicionada com sucesso', 'success');
     } catch (error) {
@@ -925,7 +1032,7 @@ async function updateProjectionStatus(id, status) {
     try {
         await db.collection('projections').doc(id).update({ status });
         await loadProjections();
-        updateKPIs();
+        updateAllDisplays();
         showToast('Status atualizado', 'success');
     } catch (error) {
         console.error('Erro ao atualizar projeção:', error);
@@ -943,7 +1050,7 @@ async function deleteProjection(id) {
     try {
         await db.collection('projections').doc(id).delete();
         await loadProjections();
-        updateKPIs();
+        updateAllDisplays();
         showToast('Projeção deletada com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao deletar projeção:', error);
@@ -1251,7 +1358,7 @@ async function handleCreditCardSubmit(e) {
         }
 
         await loadCreditCards();
-        updateKPIs();
+        updateAllDisplays();
         closeCreditCardModal();
     } catch (error) {
         console.error('Erro ao salvar cartão:', error);
@@ -1295,8 +1402,7 @@ async function handleCardExpenseSubmit(e) {
         });
 
         await loadCardExpenses();
-        renderCreditCards();
-        updateKPIs();
+        updateAllDisplays();
         closeCardExpenseModal();
         showToast('Gasto adicionado com sucesso', 'success');
     } catch (error) {
@@ -1315,7 +1421,7 @@ async function deleteCreditCard(id) {
     try {
         await db.collection('creditCards').doc(id).delete();
         await loadCreditCards();
-        updateKPIs();
+        updateAllDisplays();
         showToast('Cartão deletado com sucesso', 'success');
     } catch (error) {
         console.error('Erro ao deletar cartão:', error);
