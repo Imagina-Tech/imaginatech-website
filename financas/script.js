@@ -1441,51 +1441,19 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
 
-    return expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
-}
+    const totalBill = expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 
-// Função auxiliar para calcular todas as faturas históricas de um cartão
-function getAllHistoricalBills(card) {
-    // Encontrar a data da primeira transação/parcela/assinatura do cartão
-    const firstCardExpense = cardExpenses.filter(e => e.cardId === card.id).sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-    const firstCreditTransaction = transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'credit' && t.cardId === card.id).sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-    const firstInstallment = installments.filter(i => i.cardId === card.id).sort((a, b) => {
-        const dateA = new Date(a.startYear || 2024, a.startMonth || 0, 1);
-        const dateB = new Date(b.startYear || 2024, b.startMonth || 0, 1);
-        return dateA - dateB;
-    })[0];
+    // Log de debug para verificar cálculo
+    console.log(`[Fatura ${card.name}] Mês ${billMonth}/${billYear}:`, {
+        cardExpenses: expensesTotal,
+        creditTransactions: creditTransactionsTotal,
+        installments: installmentsTotal,
+        subscriptions: subscriptionsTotal,
+        total: totalBill,
+        installmentsCount: installmentsFiltered.length
+    });
 
-    // Se não há nenhum gasto neste cartão, retornar 0
-    if (!firstCardExpense && !firstCreditTransaction && !firstInstallment) return 0;
-
-    // Determinar a data mais antiga
-    const dates = [];
-    if (firstCardExpense) dates.push(new Date(firstCardExpense.date));
-    if (firstCreditTransaction) dates.push(new Date(firstCreditTransaction.date));
-    if (firstInstallment && firstInstallment.startYear !== undefined) {
-        dates.push(new Date(firstInstallment.startYear, firstInstallment.startMonth, 1));
-    }
-
-    const firstDate = new Date(Math.min(...dates));
-    const today = new Date();
-
-    // Calcular faturas mês a mês desde a primeira data até hoje
-    let totalBills = 0;
-    const startMonth = firstDate.getMonth();
-    const startYear = firstDate.getFullYear();
-    const endMonth = today.getMonth();
-    const endYear = today.getFullYear();
-
-    for (let year = startYear; year <= endYear; year++) {
-        const monthStart = (year === startYear) ? startMonth : 0;
-        const monthEnd = (year === endYear) ? endMonth : 11;
-
-        for (let month = monthStart; month <= monthEnd; month++) {
-            totalBills += calculateCurrentBill(card, month, year);
-        }
-    }
-
-    return totalBills;
+    return totalBill;
 }
 
 // ===========================
@@ -1733,20 +1701,70 @@ function updateKPIs() {
     // Total Expense = débito + faturas dos cartões de crédito
     const totalExpense = totalExpenseDebit + totalCreditCards;
 
-    // Total Balance (all time) - exclui despesas de crédito individuais (serão contadas nas faturas)
-    const totalBalance = transactions
-        .reduce((sum, t) => {
-            if (t.type === 'income') {
-                return sum + t.value;
-            } else if (t.type === 'expense' && t.paymentMethod !== 'credit') {
-                return sum - t.value;
-            }
-            return sum;
-        }, 0) - creditCards.reduce((sum, card) => {
-            // Subtrai todas as faturas históricas dos cartões
-            const allBills = getAllHistoricalBills(card);
-            return sum + allBills;
-        }, 0);
+    // Total Balance (all time) - cálculo CORRETO
+    // Entradas - Saídas em débito - Transações de crédito - CardExpenses - Parcelas pagas até agora
+    const totalIncomeAllTime = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    const totalDebitAllTime = transactions
+        .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    const totalCreditTransactionsAllTime = transactions
+        .filter(t => t.type === 'expense' && t.paymentMethod === 'credit')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    const totalCardExpensesAllTime = cardExpenses.reduce((sum, e) => sum + e.value, 0);
+
+    // Somar apenas parcelas que já venceram (até o mês atual)
+    const today = new Date();
+    const totalInstallmentsPaid = installments.reduce((sum, inst) => {
+        if (!inst.startMonth || !inst.startYear) return sum; // Ignorar parcelamentos antigos sem data
+
+        const monthsSinceStart = (today.getFullYear() - inst.startYear) * 12 + (today.getMonth() - inst.startMonth);
+        const paidInstallments = Math.min(monthsSinceStart + 1, inst.totalInstallments);
+        const installmentValue = inst.totalValue / inst.totalInstallments;
+
+        return sum + (installmentValue * paidInstallments);
+    }, 0);
+
+    // Somar assinaturas pagas (valor mensal * meses desde criação até hoje)
+    const totalSubscriptionsPaid = subscriptions.reduce((sum, sub) => {
+        if (!sub.createdAt || sub.status !== 'active') return sum;
+
+        const createdDate = sub.createdAt.toDate ? sub.createdAt.toDate() : new Date(sub.createdAt);
+        const monthsSinceCreation = (today.getFullYear() - createdDate.getFullYear()) * 12
+                                   + (today.getMonth() - createdDate.getMonth()) + 1;
+
+        return sum + (sub.value * Math.max(monthsSinceCreation, 0));
+    }, 0);
+
+    const totalBalance = totalIncomeAllTime
+                        - totalDebitAllTime
+                        - totalCreditTransactionsAllTime
+                        - totalCardExpensesAllTime
+                        - totalInstallmentsPaid
+                        - totalSubscriptionsPaid;
+
+    // Log de debug para verificar cálculos
+    console.log('[KPIs] Cálculos do mês:', {
+        mes: `${currentMonth + 1}/${currentYear}`,
+        entradas: totalIncome,
+        saidasDebito: totalExpenseDebit,
+        faturaCartoes: totalCreditCards,
+        saidasTotal: totalExpense,
+        saldo: totalBalance
+    });
+
+    console.log('[KPIs] Componentes do saldo:', {
+        entradasHistoricas: totalIncomeAllTime,
+        saidasDebito: totalDebitAllTime,
+        transacoesCredito: totalCreditTransactionsAllTime,
+        gastosCartao: totalCardExpensesAllTime,
+        parcelasPagas: totalInstallmentsPaid,
+        assinaturasPagas: totalSubscriptionsPaid
+    });
 
     // Total Active Subscriptions
     const totalSubscriptions = subscriptions
