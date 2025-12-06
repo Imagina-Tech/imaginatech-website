@@ -176,8 +176,10 @@ function showInstallmentsList() {
         if (typeof isInstallmentActiveInMonth === 'function') {
             return isInstallmentActiveInMonth(i, currentDisplayMonth, currentDisplayYear);
         }
-        // Fallback para lógica nova com suporte a paidInstallments antigo
-        const current = i.currentInstallment || (i.paidInstallments ? i.paidInstallments + 1 : 1);
+        // Fallback: usa calculateCurrentInstallment se disponível
+        const current = typeof calculateCurrentInstallment === 'function'
+            ? calculateCurrentInstallment(i)
+            : i.currentInstallment || (i.paidInstallments ? i.paidInstallments + 1 : 1);
         return current <= i.totalInstallments;
     });
 
@@ -185,7 +187,10 @@ function showInstallmentsList() {
         content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum parcelamento ativo neste mês</p></div>';
     } else {
         content.innerHTML = active.map(i => {
-            const current = i.currentInstallment || (i.paidInstallments ? i.paidInstallments + 1 : 1);
+            // Usa função global calculateCurrentInstallment se disponível, senão calcula aqui
+            const current = typeof calculateCurrentInstallment === 'function'
+                ? calculateCurrentInstallment(i)
+                : i.currentInstallment || (i.paidInstallments ? i.paidInstallments + 1 : 1);
             const remaining = i.totalInstallments - current + 1;
             const installmentValue = i.totalValue / i.totalInstallments;
             return `
