@@ -1413,12 +1413,20 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         })
         .reduce((sum, t) => sum + t.value, 0);
 
+    // Log detalhado do período da fatura
+    console.log(`\n📅 [FATURA ${card.name}] Calculando fatura do mês ${billMonth + 1}/${billYear}`);
+    console.log(`   Período: ${billStartDate.toLocaleDateString('pt-BR')} até ${billEndDate.toLocaleDateString('pt-BR')}`);
+    console.log(`   Dia de fechamento: ${card.closingDay}`);
+
     // Somar parcelas ativas deste cartão no mês da fatura
+    console.log(`\n💳 Analisando ${installments.filter(i => i.cardId === card.id).length} parcelamentos do cartão "${card.name}":`);
+
     const installmentsFiltered = installments.filter(inst => {
         if (inst.cardId !== card.id) return false;
 
         // Para parcelamentos antigos sem startMonth/startYear, usar lógica antiga
         if (inst.startMonth === undefined || inst.startYear === undefined) {
+            console.log(`   ⚠️ "${inst.description}": SEM DATA DE INÍCIO - usando lógica antiga`);
             return inst.currentInstallment <= inst.totalInstallments;
         }
 
@@ -1426,32 +1434,51 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
 
         // Se o mês da fatura é antes do início do parcelamento, não incluir
-        if (monthsSinceStart < 0) return false;
+        if (monthsSinceStart < 0) {
+            console.log(`   ❌ "${inst.description}": Ainda não começou (início: ${inst.startMonth + 1}/${inst.startYear})`);
+            return false;
+        }
 
         // Calcular qual parcela seria cobrada neste mês
         const installmentForThisMonth = inst.currentInstallment + monthsSinceStart;
 
-        // Só incluir se a parcela calculada estiver dentro do range válido
-        return installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
+        const installmentValue = inst.totalValue / inst.totalInstallments;
+        const isValid = installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
+
+        if (isValid) {
+            console.log(`   ✅ "${inst.description}": Parcela ${installmentForThisMonth}/${inst.totalInstallments} = R$ ${installmentValue.toFixed(2)}`);
+            console.log(`      Início: ${inst.startMonth + 1}/${inst.startYear}, Meses desde início: ${monthsSinceStart}`);
+        } else {
+            console.log(`   ❌ "${inst.description}": Parcela ${installmentForThisMonth}/${inst.totalInstallments} - FORA DO RANGE`);
+        }
+
+        return isValid;
     });
 
     const installmentsTotal = installmentsFiltered.reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
+    console.log(`\n💰 TOTAL PARCELAS: R$ ${installmentsTotal.toFixed(2)} (${installmentsFiltered.length} parcelas ativas)`);
 
     // Somar assinaturas ativas deste cartão
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
 
+    if (subscriptionsFiltered.length > 0) {
+        console.log(`\n🔄 Assinaturas ativas: ${subscriptionsFiltered.length}`);
+        subscriptionsFiltered.forEach(sub => {
+            console.log(`   ✅ "${sub.name}": R$ ${sub.value.toFixed(2)}/mês`);
+        });
+    }
+
     const totalBill = expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 
-    // Log de debug para verificar cálculo
-    console.log(`[Fatura ${card.name}] Mês ${billMonth}/${billYear}:`, {
-        cardExpenses: expensesTotal,
-        creditTransactions: creditTransactionsTotal,
-        installments: installmentsTotal,
-        subscriptions: subscriptionsTotal,
-        total: totalBill,
-        installmentsCount: installmentsFiltered.length
-    });
+    // Resumo final da fatura
+    console.log(`\n📊 ===== RESUMO DA FATURA ${card.name} - ${billMonth + 1}/${billYear} =====`);
+    console.log(`   💵 Gastos avulsos (cardExpenses): R$ ${expensesTotal.toFixed(2)}`);
+    console.log(`   💳 Compras em crédito: R$ ${creditTransactionsTotal.toFixed(2)}`);
+    console.log(`   📦 Parcelas (${installmentsFiltered.length}): R$ ${installmentsTotal.toFixed(2)}`);
+    console.log(`   🔄 Assinaturas (${subscriptionsFiltered.length}): R$ ${subscriptionsTotal.toFixed(2)}`);
+    console.log(`   🧾 TOTAL DA FATURA: R$ ${totalBill.toFixed(2)}`);
+    console.log(`========================================\n`);
 
     return totalBill;
 }
