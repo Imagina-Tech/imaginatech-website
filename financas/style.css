@@ -449,6 +449,14 @@ input:focus, select:focus {
 .type-btn.active[data-type="expense"] { background: rgba(255, 0, 92, 0.15); color: var(--neon-red); }
 .type-btn.active[data-type="total"] { background: rgba(0, 224, 255, 0.15); color: var(--neon-blue); }
 .type-btn.active[data-type="installment"] { background: rgba(255, 107, 0, 0.15); color: var(--neon-orange); }
+.type-btn.active[data-method="debit"] { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.type-btn.active[data-method="credit"] { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+/* Account Selection Modal */
+.account-option-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
 
 .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-top: 30px; }
 .btn-submit {
