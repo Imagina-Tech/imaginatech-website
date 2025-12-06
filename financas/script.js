@@ -114,6 +114,10 @@ const COMPANY_EMAIL = '3d3printers@gmail.com';
 let cashFlowChart = null;
 let categoryChart = null;
 let comparisonChart = null;
+let topCategoriesChart = null;
+let weeklyTrendChart = null;
+let savingsGoalChart = null;
+let expenseLimitChart = null;
 
 // ===========================
 // FIREBASE INITIALIZATION
@@ -1807,8 +1811,46 @@ function updateKPIs() {
 // ===========================
 // APEXCHARTS - INITIALIZATION
 // ===========================
+
+// Função para destruir todos os gráficos existentes
+function destroyAllCharts() {
+    console.log('Destruindo gráficos existentes...');
+
+    if (cashFlowChart) {
+        cashFlowChart.destroy();
+        cashFlowChart = null;
+    }
+    if (categoryChart) {
+        categoryChart.destroy();
+        categoryChart = null;
+    }
+    if (comparisonChart) {
+        comparisonChart.destroy();
+        comparisonChart = null;
+    }
+    if (topCategoriesChart) {
+        topCategoriesChart.destroy();
+        topCategoriesChart = null;
+    }
+    if (weeklyTrendChart) {
+        weeklyTrendChart.destroy();
+        weeklyTrendChart = null;
+    }
+    if (savingsGoalChart) {
+        savingsGoalChart.destroy();
+        savingsGoalChart = null;
+    }
+    if (expenseLimitChart) {
+        expenseLimitChart.destroy();
+        expenseLimitChart = null;
+    }
+}
+
 function initializeCharts() {
     try {
+        // Destruir gráficos existentes antes de criar novos
+        destroyAllCharts();
+
         initializeCashFlowChart();
         initializeCategoryChart();
         initializeComparisonChart();
@@ -2728,7 +2770,8 @@ function initializeSavingsGoalChart() {
         }
     };
 
-    new ApexCharts(chartEl, options).render();
+    savingsGoalChart = new ApexCharts(chartEl, options);
+    savingsGoalChart.render();
     document.getElementById('savingsGoalValue').textContent = formatCurrencyDisplay(saved);
 }
 
@@ -2775,7 +2818,8 @@ function initializeExpenseLimitChart() {
         }
     };
 
-    new ApexCharts(chartEl, options).render();
+    expenseLimitChart = new ApexCharts(chartEl, options);
+    expenseLimitChart.render();
     document.getElementById('expenseLimitValue').textContent = formatCurrencyDisplay(totalExpense);
 }
 
@@ -2921,7 +2965,8 @@ function initializeTopCategoriesChart() {
         }
     };
 
-    new ApexCharts(chartEl, options).render();
+    topCategoriesChart = new ApexCharts(chartEl, options);
+    topCategoriesChart.render();
 }
 
 // ===========================
@@ -2996,7 +3041,8 @@ function initializeWeeklyTrendChart() {
         }
     };
 
-    new ApexCharts(chartEl, options).render();
+    weeklyTrendChart = new ApexCharts(chartEl, options);
+    weeklyTrendChart.render();
 }
 
 // ===========================
