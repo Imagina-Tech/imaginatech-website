@@ -843,11 +843,67 @@ async function loadInstallments() {
         }));
 
         console.log(`${installments.length} parcelamentos carregados`);
+
+        // Recalcular startMonth de parcelamentos com dados inconsistentes (apenas uma vez)
+        await fixInstallmentsStartMonth();
+
         renderInstallments();
     } catch (error) {
         console.error('Erro ao carregar parcelamentos:', error);
         installments = [];
         renderInstallments();
+    }
+}
+
+// Função para corrigir startMonth de parcelamentos existentes
+async function fixInstallmentsStartMonth() {
+    try {
+        const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+        const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+        const toFix = installments.filter(inst => {
+            // Verifica se precisa correção: se startMonth está definido mas parece errado
+            if (!inst.startMonth && inst.startMonth !== 0) return false;
+            if (!inst.currentInstallment) return false;
+
+            // Recalcular o que deveria ser
+            const monthsBack = inst.currentInstallment - 1;
+            const correctStartMonth = (displayMonth - monthsBack + 12) % 12;
+
+            // Se está diferente, precisa corrigir
+            return inst.startMonth !== correctStartMonth;
+        });
+
+        if (toFix.length === 0) return;
+
+        console.log(`\n🔧 Corrigindo ${toFix.length} parcelamentos com startMonth incorreto...`);
+
+        for (const inst of toFix) {
+            const monthsBack = inst.currentInstallment - 1;
+            let startMonth = displayMonth - monthsBack;
+            let startYear = displayYear;
+
+            while (startMonth < 0) {
+                startMonth += 12;
+                startYear--;
+            }
+
+            console.log(`   Corrigindo "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${startMonth + 1}/${startYear}`);
+
+            await db.collection('installments').doc(inst.id).update({
+                startMonth,
+                startYear,
+                migratedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Atualizar no array local
+            inst.startMonth = startMonth;
+            inst.startYear = startYear;
+        }
+
+        console.log(`✅ ${toFix.length} parcelamentos corrigidos!\n`);
+    } catch (error) {
+        console.error('Erro ao corrigir parcelamentos:', error);
     }
 }
 
@@ -1014,7 +1070,10 @@ async function handleInstallmentSubmit(e) {
     showLoading(editingInstallmentId ? 'Atualizando parcelamento...' : 'Salvando parcelamento...');
 
     try {
-        const now = new Date();
+        // Usar mês selecionado na navegação ou mês atual
+        const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+        const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
         const installmentData = {
             userId: activeUserId,
             cardId,
@@ -1033,10 +1092,10 @@ async function handleInstallmentSubmit(e) {
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
             // Criar novo parcelamento - calcula mês/ano de início baseado na parcela atual
-            // Se está na parcela 5 de 5, o início foi 4 meses atrás (parcela 1 foi há 4 meses)
+            // Se está visualizando dezembro e na parcela 9, a parcela 1 foi 8 meses atrás (abril)
             const monthsBack = currentInstallment - 1;
-            let startMonth = now.getMonth() - monthsBack;
-            let startYear = now.getFullYear();
+            let startMonth = displayMonth - monthsBack;
+            let startYear = displayYear;
 
             // Ajusta ano se necessário (quando atravessa anos)
             while (startMonth < 0) {
@@ -1430,7 +1489,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
             return inst.currentInstallment <= inst.totalInstallments;
         }
 
-        // Calcular quantos meses se passaram desde o início do parcelamento
+        // Calcular quantos meses se passaram desde o início do parcelamento (parcela 1)
         const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
 
         // Se o mês da fatura é antes do início do parcelamento, não incluir
@@ -1439,8 +1498,10 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
             return false;
         }
 
-        // Calcular qual parcela seria cobrada neste mês
-        const installmentForThisMonth = inst.currentInstallment + monthsSinceStart;
+        // Calcular qual parcela está vencendo neste mês
+        // startMonth é o mês da PARCELA 1, então:
+        // parcela deste mês = 1 + meses desde o início
+        const installmentForThisMonth = 1 + monthsSinceStart;
 
         const installmentValue = inst.totalValue / inst.totalInstallments;
         const isValid = installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
