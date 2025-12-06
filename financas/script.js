@@ -1408,7 +1408,13 @@ function renderCreditCards() {
     }).join('');
 }
 
+// Contador de chamadas (para debug)
+let calculateBillCallCount = 0;
+
 function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
+    calculateBillCallCount++;
+    console.log(`\n🔍 [CHAMADA #${calculateBillCallCount}] calculateCurrentBill("${card.name}")`);
+
     const today = new Date();
     // Usar mês/ano passados como parâmetro, ou mês selecionado no display, ou mês atual
     const currentMonth = overrideMonth !== null ? overrideMonth :
@@ -1782,9 +1788,13 @@ function updateKPIs() {
         .reduce((sum, t) => sum + t.value, 0);
 
     // Total Credit Cards (current bills) - calculado antes para usar no totalExpense
+    console.log(`\n💳💳💳 Calculando TOTAL de faturas de ${creditCards.length} cartões:`);
     const totalCreditCards = creditCards.reduce((sum, card) => {
-        return sum + calculateCurrentBill(card, currentMonth, currentYear);
+        const billValue = calculateCurrentBill(card, currentMonth, currentYear);
+        console.log(`   📌 "${card.name}": R$ ${billValue.toFixed(2)}`);
+        return sum + billValue;
     }, 0);
+    console.log(`   🧾 SOMA TOTAL DAS FATURAS: R$ ${totalCreditCards.toFixed(2)}\n`);
 
     // Total Expense = débito + faturas dos cartões de crédito
     const totalExpense = totalExpenseDebit + totalCreditCards;
