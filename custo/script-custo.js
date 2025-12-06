@@ -237,8 +237,6 @@ function initializeCalculator() {
 
     // Inputs
     const printQuantityInput = document.getElementById("print-quantity");
-    const stlPriceInput = document.getElementById("stl-price");
-    const shippingCostInput = document.getElementById("shipping-cost");
     const modelNameInput = document.getElementById("model-name");
     const profitMarginInput = document.getElementById("profit-margin");
     const consumablesInput = document.getElementById("consumables");
@@ -336,8 +334,6 @@ function initializeCalculator() {
 
     function clearInputs(clearMaterial = false) {
         if (printQuantityInput) printQuantityInput.value = "1";
-        if (stlPriceInput) stlPriceInput.value = "0";
-        if (shippingCostInput) shippingCostInput.value = "0";
         // NÃO zera mais o tempo e material - conforme solicitado
         // Só limpa material se explicitamente solicitado (mudança de tipo de impressora)
         if (clearMaterial) {
@@ -455,8 +451,6 @@ function initializeCalculator() {
         const totalTimeHours = timeHours + timeMinutes / 60;
         const materialUsed = materialAmount; // Using global variable
         const printQuantity = getInputValue(printQuantityInput, 1);
-        const stlPrice = getInputValue(stlPriceInput, 0);
-        const shippingCost = getInputValue(shippingCostInput, 0);
         const profitMargin = getInputValue(profitMarginInput, 280) / 100;
         const consumables = getInputValue(consumablesInput, 2);
 
@@ -487,7 +481,7 @@ function initializeCalculator() {
 
         // Check if there's enough data
         if (currentPrinter.type === 'laser') {
-            if (materialUsed === 0 && stlPrice === 0) {
+            if (materialUsed === 0) {
                 resultsOutput.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -497,11 +491,11 @@ function initializeCalculator() {
                 return;
             }
         } else {
-            if (totalTimeHours === 0 && materialUsed === 0 && stlPrice === 0) {
+            if (totalTimeHours === 0 && materialUsed === 0) {
                 resultsOutput.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>Preencha pelo menos o tempo, material ou preço do STL</p>
+                        <p>Preencha pelo menos o tempo ou material</p>
                     </div>
                 `;
                 return;
@@ -552,15 +546,9 @@ function initializeCalculator() {
         
         // 6. Unit price without tax (with profit)
         const unitPriceNoTax = productionCostPerUnit * (1 + profitMargin);
-        
-        // 7. Batch price (WITHOUT STL yet)
-        const batchPrice = unitPriceNoTax * printQuantity;
-        
-        // 8. Total with STL (STL is added only once to final total)
-        const totalPrice = batchPrice + stlPrice;
-        
-        // 9. Total with shipping
-        const totalWithShipping = totalPrice + shippingCost;
+
+        // 7. Batch price (total price)
+        const totalPrice = unitPriceNoTax * printQuantity;
 
         // ===========================
         // DISPLAY RESULTS
@@ -599,16 +587,7 @@ function initializeCalculator() {
                     <span class="cost-value">${formatCurrency(consumables * printQuantity)}</span>
                 </div>
                 ` : ''}
-                
-                ${stlPrice > 0 ? `
-                <div class="cost-item">
-                    <span class="cost-label">
-                        <i class="fas fa-file-code"></i> STL
-                    </span>
-                    <span class="cost-value">${formatCurrency(stlPrice)}</span>
-                </div>
-                ` : ''}
-                
+
                 <div class="cost-item">
                     <span class="cost-label">
                         <i class="fas fa-exclamation-triangle"></i> Taxa de Falha (${(failureRate * 100).toFixed(0)}%)
@@ -643,13 +622,6 @@ function initializeCalculator() {
                     <span class="total-value">${formatCurrency(totalPrice)}</span>
                 </div>
                 `}
-                
-                ${shippingCost > 0 ? `
-                <div class="total-item">
-                    <span class="total-label">Total com Frete</span>
-                    <span class="total-value">${formatCurrency(totalWithShipping)}</span>
-                </div>
-                ` : ''}
             </div>
         `;
 
@@ -657,9 +629,7 @@ function initializeCalculator() {
         window.printData = {
             unitPrice: unitPriceNoTax,
             totalPrice: totalPrice,
-            totalWithShipping: totalWithShipping,
-            quantity: printQuantity,
-            hasShipping: shippingCost > 0
+            quantity: printQuantity
         };
     }
 
@@ -692,7 +662,7 @@ function initializeCalculator() {
             overflow: hidden;
         `;
 
-        const { unitPrice, totalPrice, totalWithShipping, quantity, hasShipping } = window.printData;
+        const { unitPrice, totalPrice, quantity } = window.printData;
 
         printContainer.innerHTML = `
             <!-- Background Grid -->
@@ -782,19 +752,6 @@ function initializeCalculator() {
                         <span style="font-size: 28px; font-weight: 700; color: #00FF88;
                             font-family: 'Orbitron', monospace; text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);">
                             ${formatCurrency(totalPrice)}
-                        </span>
-                    </div>
-                    ` : ''}
-
-                    ${hasShipping ? `
-                    <!-- Total with Shipping -->
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 18px; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
-                            TOTAL COM FRETE
-                        </span>
-                        <span style="font-size: 28px; font-weight: 700; color: #FFD700;
-                            font-family: 'Orbitron', monospace; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);">
-                            ${formatCurrency(totalWithShipping)}
                         </span>
                     </div>
                     ` : ''}
@@ -945,8 +902,9 @@ function initializeCalculator() {
 
     // Main inputs - recalculate in real time
     const mainInputs = [
-        printQuantityInput, stlPriceInput, shippingCostInput,
-        profitMarginInput, consumablesInput
+        printQuantityInput,
+        profitMarginInput,
+        consumablesInput
     ];
     
     mainInputs.forEach(input => {
