@@ -894,11 +894,22 @@ async function handleInstallmentSubmit(e) {
             });
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
-            // Criar novo parcelamento - adiciona mês/ano de início
+            // Criar novo parcelamento - calcula mês/ano de início baseado na parcela atual
+            // Se está na parcela 5 de 5, o início foi 4 meses atrás (parcela 1 foi há 4 meses)
+            const monthsBack = currentInstallment - 1;
+            let startMonth = now.getMonth() - monthsBack;
+            let startYear = now.getFullYear();
+
+            // Ajusta ano se necessário (quando atravessa anos)
+            while (startMonth < 0) {
+                startMonth += 12;
+                startYear--;
+            }
+
             await db.collection('installments').add({
                 ...installmentData,
-                startMonth: now.getMonth(),
-                startYear: now.getFullYear(),
+                startMonth,
+                startYear,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast('Parcelamento adicionado com sucesso', 'success');
