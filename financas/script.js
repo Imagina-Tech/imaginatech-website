@@ -99,6 +99,7 @@ let creditCards = [];
 let cardExpenses = [];
 let currentFilter = 'all';
 let currentTransactionType = 'income';
+let currentPaymentMethod = 'debit';
 let editingTransactionId = null;
 let editingSubscriptionId = null;
 let editingInstallmentId = null;
@@ -379,6 +380,15 @@ async function handleTransactionSubmit(e) {
         return;
     }
 
+    // Validar cartão de crédito se for despesa no crédito
+    if (currentTransactionType === 'expense' && currentPaymentMethod === 'credit') {
+        const cardId = document.getElementById('transactionCard').value;
+        if (!cardId) {
+            showToast('Selecione um cartão de crédito', 'error');
+            return;
+        }
+    }
+
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
         showToast('Valor inválido', 'error');
@@ -396,6 +406,14 @@ async function handleTransactionSubmit(e) {
             category,
             date
         };
+
+        // Adicionar informações de pagamento apenas para despesas
+        if (currentTransactionType === 'expense') {
+            transactionData.paymentMethod = currentPaymentMethod;
+            if (currentPaymentMethod === 'credit') {
+                transactionData.cardId = document.getElementById('transactionCard').value;
+            }
+        }
 
         if (editingTransactionId) {
             // Editando transação existente
@@ -1257,7 +1275,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         }
     }
 
-    // Somar gastos do período
+    // Somar gastos do período (cardExpenses antigos + transações de crédito)
     const expensesTotal = cardExpenses
         .filter(expense => {
             if (expense.cardId !== card.id) return false;
@@ -1265,6 +1283,15 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
             return expenseDate >= billStartDate && expenseDate <= billEndDate;
         })
         .reduce((sum, expense) => sum + expense.value, 0);
+
+    // Somar transações de crédito do período
+    const creditTransactionsTotal = transactions
+        .filter(t => {
+            if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
+            const transactionDate = new Date(t.date + 'T12:00:00');
+            return transactionDate >= billStartDate && transactionDate <= billEndDate;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
 
     // Somar parcelas ativas deste cartão no mês da fatura
     const installmentsFiltered = installments.filter(inst => {
@@ -1294,7 +1321,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
 
-    return expensesTotal + installmentsTotal + subscriptionsTotal;
+    return expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 }
 
 // ===========================
@@ -1529,15 +1556,20 @@ function updateKPIs() {
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total Expense (current month)
+    // Total Expense (current month) - exclui despesas de crédito
     const totalExpense = currentMonthTransactions
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total Balance (all time)
+    // Total Balance (all time) - exclui despesas de crédito
     const totalBalance = transactions
         .reduce((sum, t) => {
-            return t.type === 'income' ? sum + t.value : sum - t.value;
+            if (t.type === 'income') {
+                return sum + t.value;
+            } else if (t.type === 'expense' && t.paymentMethod !== 'credit') {
+                return sum - t.value;
+            }
+            return sum;
         }, 0);
 
     // Total Active Subscriptions
@@ -2008,14 +2040,19 @@ function openTransactionModal() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').value = today;
     currentTransactionType = 'income';
+    currentPaymentMethod = 'debit';
     selectTransactionType('income');
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
 
 function closeTransactionModal() {
     editingTransactionId = null;
+    currentPaymentMethod = 'debit';
     document.getElementById('transactionModal').classList.remove('active');
     document.getElementById('transactionForm').reset();
+    // Ocultar campos condicionais
+    document.getElementById('paymentMethodGroup').style.display = 'none';
+    document.getElementById('creditCardGroup').style.display = 'none';
 }
 
 function editTransaction(id) {
@@ -2039,6 +2076,17 @@ function editTransaction(id) {
     // Define o tipo de transação
     currentTransactionType = transaction.type;
     selectTransactionType(transaction.type);
+
+    // Define o método de pagamento se for despesa
+    if (transaction.type === 'expense') {
+        currentPaymentMethod = transaction.paymentMethod || 'debit';
+        selectPaymentMethod(currentPaymentMethod);
+
+        // Define o cartão se for crédito
+        if (transaction.paymentMethod === 'credit' && transaction.cardId) {
+            document.getElementById('transactionCard').value = transaction.cardId;
+        }
+    }
 }
 
 function openSubscriptionModal() {
@@ -2229,15 +2277,64 @@ function selectTransactionType(type) {
     currentTransactionType = type;
 
     // Update active button
-    document.querySelectorAll('.type-btn').forEach(btn => {
+    document.querySelectorAll('.type-btn[data-type]').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.type === type) {
             btn.classList.add('active');
         }
     });
 
+    // Show/hide payment method group (only for expenses)
+    const paymentMethodGroup = document.getElementById('paymentMethodGroup');
+    if (type === 'expense') {
+        paymentMethodGroup.style.display = 'block';
+        // Reset to debit when switching to expense
+        selectPaymentMethod('debit');
+    } else {
+        paymentMethodGroup.style.display = 'none';
+        document.getElementById('creditCardGroup').style.display = 'none';
+    }
+
     // Update categories
     populateCategories();
+}
+
+function selectPaymentMethod(method) {
+    currentPaymentMethod = method;
+
+    // Update active button
+    document.querySelectorAll('.type-btn[data-method]').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.method === method) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Show/hide credit card selector
+    const creditCardGroup = document.getElementById('creditCardGroup');
+    const transactionCardSelect = document.getElementById('transactionCard');
+
+    if (method === 'credit') {
+        creditCardGroup.style.display = 'block';
+        transactionCardSelect.required = true;
+        populateTransactionCardOptions();
+    } else {
+        creditCardGroup.style.display = 'none';
+        transactionCardSelect.required = false;
+        transactionCardSelect.value = '';
+    }
+}
+
+function populateTransactionCardOptions() {
+    const select = document.getElementById('transactionCard');
+    select.innerHTML = '<option value="">Selecione um cartão</option>';
+
+    creditCards.forEach(card => {
+        const option = document.createElement('option');
+        option.value = card.id;
+        option.textContent = `${card.name} - ${card.institution}`;
+        select.appendChild(option);
+    });
 }
 
 // Close modal when clicking outside

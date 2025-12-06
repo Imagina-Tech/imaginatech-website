@@ -354,6 +354,27 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
+                <div class="form-group" id="paymentMethodGroup" style="display: none;">
+                    <label>Método de Pagamento</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-method="debit" onclick="selectPaymentMethod('debit')">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Débito</span>
+                        </button>
+                        <button type="button" class="type-btn" data-method="credit" onclick="selectPaymentMethod('credit')">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Crédito</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="creditCardGroup" style="display: none;">
+                    <label for="transactionCard">Cartão de Crédito</label>
+                    <select id="transactionCard" class="form-select">
+                        <option value="">Selecione um cartão</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="description">Descrição</label>
                     <input type="text" id="description" required placeholder="Ex: Salário, Aluguel, Mercado...">
