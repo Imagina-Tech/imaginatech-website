@@ -713,6 +713,36 @@ async function loadInstallments() {
     }
 }
 
+// Função auxiliar para calcular a parcela atual baseada na data
+function calculateCurrentInstallment(installment) {
+    // Fallback para valor salvo ou paidInstallments (para parcelamentos antigos)
+    const savedCurrent = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
+
+    // Se não tem startMonth/startYear, usar valor salvo
+    if (installment.startMonth === undefined || installment.startYear === undefined) {
+        return savedCurrent;
+    }
+
+    // Calcular baseado na data atual
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Calcular quantos meses se passaram desde o início
+    const monthsDiff = (currentYear - installment.startYear) * 12 + (currentMonth - installment.startMonth);
+
+    // Se ainda não começou, retornar 1
+    if (monthsDiff < 0) {
+        return 1;
+    }
+
+    // Calcular parcela atual: parcela 1 no mês de início + meses que se passaram
+    const calculatedCurrent = 1 + monthsDiff;
+
+    // Não ultrapassar o total de parcelas
+    return Math.min(calculatedCurrent, installment.totalInstallments);
+}
+
 function renderInstallments() {
     const grid = document.getElementById('installmentsGrid');
     const emptyState = document.getElementById('emptyInstallments');
@@ -728,7 +758,7 @@ function renderInstallments() {
     emptyState.classList.add('hidden');
 
     grid.innerHTML = installments.map(inst => {
-        const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
+        const current = calculateCurrentInstallment(inst);
         const remaining = inst.totalInstallments - current + 1;
         const percentage = ((current - 1) / inst.totalInstallments) * 100;
         const installmentValue = inst.totalValue / inst.totalInstallments;
@@ -1435,17 +1465,13 @@ async function deleteCreditCard(id) {
 // INSTALLMENT HELPER FUNCTIONS
 // ===========================
 function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
-    // Fallback para parcelamentos muito antigos com paidInstallments
-    const current = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
-
-    // Para parcelamentos antigos sem startMonth/startYear, sempre mostrar se current <= total
+    // Para parcelamentos antigos sem startMonth/startYear, usar valor salvo
     if (installment.startMonth === undefined || installment.startYear === undefined) {
-        return current <= installment.totalInstallments;
+        const savedCurrent = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
+        return savedCurrent <= installment.totalInstallments;
     }
 
-    // Calcular quantos meses se passaram desde o início
-    const startDate = new Date(installment.startYear, installment.startMonth, 1);
-    const targetDate = new Date(targetYear, targetMonth, 1);
+    // Calcular quantos meses se passaram desde o início até o mês alvo
     const monthsDiff = (targetYear - installment.startYear) * 12 + (targetMonth - installment.startMonth);
 
     // Se o mês selecionado é antes do início, não mostrar
@@ -1454,8 +1480,8 @@ function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
     }
 
     // Calcular qual parcela estaria sendo cobrada no mês selecionado
-    // Parcela atual no início + meses que se passaram
-    const calculatedInstallment = current + monthsDiff;
+    // Parcela 1 no mês de início, então: 1 + meses que se passaram
+    const calculatedInstallment = 1 + monthsDiff;
 
     // Só mostrar se a parcela calculada ainda está dentro do total
     return calculatedInstallment <= installment.totalInstallments;
@@ -1501,7 +1527,7 @@ function updateKPIs() {
 
     // Total Pending Installments (all remaining)
     const totalInstallments = installments.reduce((sum, inst) => {
-        const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
+        const current = calculateCurrentInstallment(inst);
         const remaining = inst.totalInstallments - current + 1;
         const installmentValue = inst.totalValue / inst.totalInstallments;
         return sum + (installmentValue * remaining);
