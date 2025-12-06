@@ -35,6 +35,7 @@ let customMaterialPrice = null;
 let timeHours = 0;
 let timeMinutes = 0;
 let materialAmount = 0;
+let isCalculatorInitialized = false;
 
 // ===========================
 // AUTHENTICATION FUNCTIONS
@@ -200,6 +201,12 @@ const printerDefaults = {
 // ===========================
 
 function initializeCalculator() {
+    // Prevent multiple initializations
+    if (isCalculatorInitialized) {
+        return;
+    }
+    isCalculatorInitialized = true;
+
     // DOM Elements
     const resultsOutput = document.getElementById("results-output");
     const materialUnitSpan = document.getElementById("material-unit");
