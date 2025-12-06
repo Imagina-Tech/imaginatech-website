@@ -28,7 +28,7 @@ import {
     sendEmailNotification,
     saveClientToFirestore
 } from './auth-ui.js';
-import { STATUS_ORDER } from './utils.js';
+import { STATUS_ORDER, STATUS_ORDER_MODELAGEM, getStatusOrderForService } from './utils.js';
 
 // ===========================
 // SERVICE MANAGEMENT
@@ -277,12 +277,19 @@ export function startServicesListener() {
 
 export async function saveService(event) {
     event.preventDefault();
-    
-    if (!state.isAuthorized || !state.db || !state.currentUser) 
+
+    if (!state.isAuthorized || !state.db || !state.currentUser)
         return showToast(!state.isAuthorized ? 'Sem permissão' : 'Sistema não está pronto', 'error');
-    
+
+    // Determinar tipo de serviço primeiro
+    const serviceType = state.currentServiceType || (state.editingServiceId ?
+        state.services.find(s => s.id === state.editingServiceId)?.serviceType : null) || 'impressao';
+
+    // Validar deliveryMethod apenas para serviços de impressão
     const deliveryMethod = document.getElementById('deliveryMethod').value;
-    if (!deliveryMethod) return showToast('Selecione um método de entrega', 'error');
+    if (serviceType === 'impressao' && !deliveryMethod) {
+        return showToast('Selecione um método de entrega', 'error');
+    }
     
     const dateUndefined = document.getElementById('dateUndefined');
     const dueDateInput = document.getElementById('dueDate');
@@ -300,6 +307,10 @@ export async function saveService(event) {
         return value;
     };
     
+    // Determinar tipo de serviço (novo campo ou existente)
+    const serviceType = state.currentServiceType || (state.editingServiceId ?
+        state.services.find(s => s.id === state.editingServiceId)?.serviceType : null) || 'impressao';
+
     const service = {
         name: getFieldValue('serviceName'),
         client: getFieldValue('clientName'),
@@ -307,21 +318,29 @@ export async function saveService(event) {
         clientEmail: getFieldValue('clientEmail'),
         clientPhone: getFieldValue('clientPhone'),
         description: getFieldValue('serviceDescription'),
-        material: document.getElementById('serviceMaterial').value,
-        color: getFieldValue('serviceColor'),
         priority: document.getElementById('servicePriority').value,
         startDate: document.getElementById('startDate').value,
         dueDate: dateUndefined?.checked ? '' : (dueDateInput?.value || ''),
         dateUndefined: dateUndefined?.checked || false,
         value: getFieldValue('serviceValue', true),
-        weight: getFieldValue('serviceWeight', true),
         observations: getFieldValue('serviceObservations'),
-        deliveryMethod,
         status: document.getElementById('serviceStatus').value,
         fileInDrive: document.getElementById('fileInDrive')?.checked || false,
+        serviceType: serviceType, // Novo campo
         updatedAt: new Date().toISOString(),
         updatedBy: state.currentUser.email
     };
+
+    // Campos específicos de impressão (não aplicam para modelagem)
+    if (serviceType === 'impressao') {
+        service.material = document.getElementById('serviceMaterial').value;
+        service.color = getFieldValue('serviceColor');
+        service.weight = getFieldValue('serviceWeight', true);
+        service.deliveryMethod = deliveryMethod;
+    } else {
+        // Modelagem não tem entrega física
+        service.deliveryMethod = 'digital';
+    }
     
     if (state.editingServiceId) {
         const currentService = state.services.find(s => s.id === state.editingServiceId);
@@ -396,10 +415,18 @@ export async function saveService(event) {
 
     // ===========================
     // LÓGICA COMPLETA DE INTEGRAÇÃO COM ESTOQUE
+    // (APENAS PARA SERVIÇOS DE IMPRESSÃO)
     // ===========================
     let needsMaterialPurchase = false;
     let materialToDeduct = 0;
     let stockInfo = null;
+
+    // Pular lógica de estoque para serviços de modelagem
+    if (serviceType === 'modelagem') {
+        needsMaterialPurchase = false;
+        materialToDeduct = 0;
+    } else {
+        // Lógica de estoque para serviços de impressão
 
     if (state.editingServiceId) {
         // ========================================
@@ -606,6 +633,7 @@ export async function saveService(event) {
             }
         }
     }
+    } // Fecha o else da lógica de estoque (apenas para impressão)
 
     // Aplicar flag ao serviço
     service.needsMaterialPurchase = needsMaterialPurchase;
@@ -615,12 +643,13 @@ export async function saveService(event) {
         willDeduct: materialToDeduct > 0
     });
 
-    if (deliveryMethod === 'retirada') {
+    // Validações de entrega apenas para serviços de impressão
+    if (serviceType === 'impressao' && deliveryMethod === 'retirada') {
         const pickupName = document.getElementById('pickupName').value.trim();
         const pickupWhatsapp = document.getElementById('pickupWhatsapp').value.trim();
         if (!pickupName || !pickupWhatsapp) return showToast('Preencha todos os campos de retirada', 'error');
         service.pickupInfo = { name: pickupName, whatsapp: pickupWhatsapp };
-    } else if (deliveryMethod === 'sedex') {
+    } else if (serviceType === 'impressao' && deliveryMethod === 'sedex') {
         const fields = ['fullName', 'cpfCnpj', 'email', 'telefone', 'cep', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
         const addr = {};
         

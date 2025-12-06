@@ -656,11 +656,25 @@ export async function saveClientToFirestore(clientData) {
 // MODALS
 // ===========================
 export async function openAddModal() {
+    // Abre o modal de seleção de tipo primeiro
+    document.getElementById('serviceTypeModal').classList.add('active');
+}
+
+// Fechar modal de seleção de tipo
+export function closeServiceTypeModal() {
+    document.getElementById('serviceTypeModal').classList.remove('active');
+}
+
+// Selecionar tipo de serviço e abrir modal principal
+export async function selectServiceType(type) {
+    closeServiceTypeModal();
+
+    state.currentServiceType = type; // Armazena o tipo selecionado
     state.editingServiceId = null;
     state.selectedFiles = [];
     state.selectedImages = [];
 
-    document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Novo Serviço');
+    document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = type === 'modelagem' ? 'Novo Serviço de Modelagem' : 'Novo Serviço de Impressão');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
     document.getElementById('serviceForm')?.reset();
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
@@ -678,7 +692,7 @@ export async function openAddModal() {
     if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
 
     document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
-    document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = 'pendente');
+    document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = type === 'modelagem' ? 'modelando' : 'pendente');
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
 
     const notificationSection = document.getElementById('notificationSection');
@@ -688,23 +702,28 @@ export async function openAddModal() {
 
     hideAllDeliveryFields();
 
-    // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
-    await loadAvailableFilaments();
+    // Adaptar formulário baseado no tipo
+    adaptFormForServiceType(type);
 
-    // Atualizar dropdown de materiais com base no estoque
-    updateMaterialDropdown();
+    if (type === 'impressao') {
+        // INTEGRAÇÃO COM ESTOQUE: Carregar filamentos disponíveis
+        await loadAvailableFilaments();
 
-    // Configurar listener para atualizar cores quando material mudar
-    const materialSelect = document.getElementById('serviceMaterial');
-    if (materialSelect) {
-        materialSelect.removeEventListener('change', handleMaterialChange);
-        materialSelect.addEventListener('change', handleMaterialChange);
-    }
+        // Atualizar dropdown de materiais com base no estoque
+        updateMaterialDropdown();
 
-    // Limpar dropdown de cores ao abrir
-    const colorSelect = document.getElementById('serviceColor');
-    if (colorSelect) {
-        colorSelect.innerHTML = '<option value="">Primeiro selecione o material</option>';
+        // Configurar listener para atualizar cores quando material mudar
+        const materialSelect = document.getElementById('serviceMaterial');
+        if (materialSelect) {
+            materialSelect.removeEventListener('change', handleMaterialChange);
+            materialSelect.addEventListener('change', handleMaterialChange);
+        }
+
+        // Limpar dropdown de cores ao abrir
+        const colorSelect = document.getElementById('serviceColor');
+        if (colorSelect) {
+            colorSelect.innerHTML = '<option value="">Primeiro selecione o material</option>';
+        }
     }
 
     // Exibir e habilitar campo de telefone ao criar novo serviço
@@ -720,6 +739,40 @@ export async function openAddModal() {
     }
 
     document.getElementById('serviceModal')?.classList.add('active');
+}
+
+// Adaptar formulário baseado no tipo de serviço
+function adaptFormForServiceType(type) {
+    const materialGroup = document.getElementById('serviceMaterial')?.closest('.form-group');
+    const colorGroup = document.getElementById('serviceColor')?.closest('.form-group');
+    const weightGroup = document.getElementById('serviceWeight')?.closest('.form-group');
+    const deliveryGroup = document.getElementById('deliveryMethod')?.closest('.form-group');
+
+    if (type === 'modelagem') {
+        // Ocultar campos específicos de impressão
+        if (materialGroup) materialGroup.style.display = 'none';
+        if (colorGroup) colorGroup.style.display = 'none';
+        if (weightGroup) weightGroup.style.display = 'none';
+        if (deliveryGroup) deliveryGroup.style.display = 'none';
+
+        // Remover required dos campos ocultos
+        const materialInput = document.getElementById('serviceMaterial');
+        const deliveryInput = document.getElementById('deliveryMethod');
+        if (materialInput) materialInput.removeAttribute('required');
+        if (deliveryInput) deliveryInput.removeAttribute('required');
+    } else {
+        // Mostrar todos os campos para impressão
+        if (materialGroup) materialGroup.style.display = '';
+        if (colorGroup) colorGroup.style.display = '';
+        if (weightGroup) weightGroup.style.display = '';
+        if (deliveryGroup) deliveryGroup.style.display = '';
+
+        // Adicionar required de volta
+        const materialInput = document.getElementById('serviceMaterial');
+        const deliveryInput = document.getElementById('deliveryMethod');
+        if (materialInput) materialInput.setAttribute('required', 'required');
+        if (deliveryInput) deliveryInput.setAttribute('required', 'required');
+    }
 }
 
 function handleMaterialChange(event) {
@@ -2148,6 +2201,8 @@ export function monitorConnection() {
 window.signInWithGoogle = signInWithGoogle;
 window.signOutGlobal = signOut;
 window.openAddModal = openAddModal;
+window.closeServiceTypeModal = closeServiceTypeModal;
+window.selectServiceType = selectServiceType;
 window.openEditModal = openEditModal;
 window.closeModal = closeModal;
 window.saveService = saveService;

@@ -199,6 +199,30 @@
         </main>
     </div>
 
+    <!-- MODAL: Seleção de Tipo de Serviço -->
+    <div class="modal" id="serviceTypeModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Selecione o Tipo de Serviço</h2>
+                <button class="modal-close" onclick="closeServiceTypeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="service-type-selection">
+                <button class="service-type-btn" onclick="selectServiceType('impressao')">
+                    <i class="fas fa-print"></i>
+                    <span class="service-type-title">Serviço de Impressão</span>
+                    <span class="service-type-desc">Impressão 3D com entrega física</span>
+                </button>
+                <button class="service-type-btn" onclick="selectServiceType('modelagem')">
+                    <i class="fas fa-cube"></i>
+                    <span class="service-type-title">Serviço de Modelagem</span>
+                    <span class="service-type-desc">Modelagem 3D digital (sem impressão)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Criar/Editar Serviço -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">

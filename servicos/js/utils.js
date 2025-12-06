@@ -136,7 +136,9 @@ export const getStatusLabel = status => ({
     'producao': 'Em Produção',
     'concluido': 'Concluído',
     'retirada': 'Pronto/Postado',
-    'entregue': 'Entregue'
+    'entregue': 'Entregue',
+    'modelando': 'Modelando',
+    'modelagem_concluida': 'Concluído'
 }[status] || status);
 
 export const getStatusIcon = status => ({
@@ -144,7 +146,9 @@ export const getStatusIcon = status => ({
     'producao': 'fa-cog',
     'concluido': 'fa-check',
     'retirada': 'fa-box',
-    'entregue': 'fa-check-double'
+    'entregue': 'fa-check-double',
+    'modelando': 'fa-cube',
+    'modelagem_concluida': 'fa-check-circle'
 }[status] || 'fa-question');
 
 export const isStatusCompleted = (currentStatus, checkStatus) => {
@@ -176,10 +180,21 @@ export const STATUS = {
     PRODUCAO: 'producao',
     CONCLUIDO: 'concluido',
     RETIRADA: 'retirada',
-    ENTREGUE: 'entregue'
+    ENTREGUE: 'entregue',
+    MODELANDO: 'modelando',
+    MODELAGEM_CONCLUIDA: 'modelagem_concluida'
 };
 
+// Status para serviços de impressão
 export const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
+
+// Status para serviços de modelagem
+export const STATUS_ORDER_MODELAGEM = ['modelando', 'modelagem_concluida'];
+
+// Retorna a ordem de status baseada no tipo de serviço
+export const getStatusOrderForService = (serviceType) => {
+    return serviceType === 'modelagem' ? STATUS_ORDER_MODELAGEM : STATUS_ORDER;
+};
 
 export const PRIORITY_CONFIG = {
     urgente: { icon: '🔥', color: '#FF0055', label: 'Urgente' },
