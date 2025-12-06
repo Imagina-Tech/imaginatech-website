@@ -298,18 +298,14 @@ export async function saveService(event) {
         const element = document.getElementById(elementId);
         if (!element) return '';
         const value = element.value.trim();
-        
+
         if (isNumeric) {
             const parsed = parseFloat(value);
             return isNaN(parsed) || parsed === 0 ? '' : parsed;
         }
-        
+
         return value;
     };
-    
-    // Determinar tipo de serviço (novo campo ou existente)
-    const serviceType = state.currentServiceType || (state.editingServiceId ?
-        state.services.find(s => s.id === state.editingServiceId)?.serviceType : null) || 'impressao';
 
     const service = {
         name: getFieldValue('serviceName'),
