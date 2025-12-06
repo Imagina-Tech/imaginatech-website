@@ -714,7 +714,7 @@ async function loadInstallments() {
 }
 
 // Função auxiliar para calcular a parcela atual baseada na data
-function calculateCurrentInstallment(installment) {
+function calculateCurrentInstallment(installment, targetMonth = null, targetYear = null) {
     // Fallback para valor salvo ou paidInstallments (para parcelamentos antigos)
     const savedCurrent = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
 
@@ -723,13 +723,22 @@ function calculateCurrentInstallment(installment) {
         return savedCurrent;
     }
 
-    // Calcular baseado na data atual
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    // Usar mês/ano informado, senão usar display global, senão usar data atual
+    let refMonth, refYear;
+    if (targetMonth !== null && targetYear !== null) {
+        refMonth = targetMonth;
+        refYear = targetYear;
+    } else if (typeof currentDisplayMonth !== 'undefined' && typeof currentDisplayYear !== 'undefined') {
+        refMonth = currentDisplayMonth;
+        refYear = currentDisplayYear;
+    } else {
+        const today = new Date();
+        refMonth = today.getMonth();
+        refYear = today.getFullYear();
+    }
 
     // Calcular quantos meses se passaram desde o início
-    const monthsDiff = (currentYear - installment.startYear) * 12 + (currentMonth - installment.startMonth);
+    const monthsDiff = (refYear - installment.startYear) * 12 + (refMonth - installment.startMonth);
 
     // Se ainda não começou, retornar 1
     if (monthsDiff < 0) {
