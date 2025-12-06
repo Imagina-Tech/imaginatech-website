@@ -1701,8 +1701,7 @@ function updateKPIs() {
     // Total Expense = débito + faturas dos cartões de crédito
     const totalExpense = totalExpenseDebit + totalCreditCards;
 
-    // Total Balance (all time) - cálculo CORRETO
-    // Entradas - Saídas em débito - Transações de crédito - CardExpenses - Parcelas pagas até agora
+    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito
     const totalIncomeAllTime = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.value, 0);
@@ -1710,42 +1709,11 @@ function updateKPIs() {
     const totalDebitAllTime = transactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
-
-    const totalCreditTransactionsAllTime = transactions
-        .filter(t => t.type === 'expense' && t.paymentMethod === 'credit')
-        .reduce((sum, t) => sum + t.value, 0);
-
-    const totalCardExpensesAllTime = cardExpenses.reduce((sum, e) => sum + e.value, 0);
-
-    // Somar apenas parcelas que já venceram (até o mês atual)
-    const today = new Date();
-    const totalInstallmentsPaid = installments.reduce((sum, inst) => {
-        if (!inst.startMonth || !inst.startYear) return sum; // Ignorar parcelamentos antigos sem data
-
-        const monthsSinceStart = (today.getFullYear() - inst.startYear) * 12 + (today.getMonth() - inst.startMonth);
-        const paidInstallments = Math.min(monthsSinceStart + 1, inst.totalInstallments);
-        const installmentValue = inst.totalValue / inst.totalInstallments;
-
-        return sum + (installmentValue * paidInstallments);
-    }, 0);
-
-    // Somar assinaturas pagas (valor mensal * meses desde criação até hoje)
-    const totalSubscriptionsPaid = subscriptions.reduce((sum, sub) => {
-        if (!sub.createdAt || sub.status !== 'active') return sum;
-
-        const createdDate = sub.createdAt.toDate ? sub.createdAt.toDate() : new Date(sub.createdAt);
-        const monthsSinceCreation = (today.getFullYear() - createdDate.getFullYear()) * 12
-                                   + (today.getMonth() - createdDate.getMonth()) + 1;
-
-        return sum + (sub.value * Math.max(monthsSinceCreation, 0));
-    }, 0);
-
-    const totalBalance = totalIncomeAllTime
-                        - totalDebitAllTime
-                        - totalCreditTransactionsAllTime
-                        - totalCardExpensesAllTime
-                        - totalInstallmentsPaid
-                        - totalSubscriptionsPaid;
+    // NÃO inclui cartão de crédito porque:
+    // - Parcelas ficam no cartão (não saem da conta)
+    // - Assinaturas ficam no cartão
+    // - Você paga a FATURA total mensalmente, não cada parcela
+    const totalBalance = totalIncomeAllTime - totalDebitAllTime;
 
     // Log de debug para verificar cálculos
     console.log('[KPIs] Cálculos do mês:', {
@@ -1760,10 +1728,7 @@ function updateKPIs() {
     console.log('[KPIs] Componentes do saldo:', {
         entradasHistoricas: totalIncomeAllTime,
         saidasDebito: totalDebitAllTime,
-        transacoesCredito: totalCreditTransactionsAllTime,
-        gastosCartao: totalCardExpensesAllTime,
-        parcelasPagas: totalInstallmentsPaid,
-        assinaturasPagas: totalSubscriptionsPaid
+        saldoCalculado: totalBalance
     });
 
     // Total Active Subscriptions
