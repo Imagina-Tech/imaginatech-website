@@ -188,8 +188,8 @@ export const STATUS = {
 // Status para serviços de impressão
 export const STATUS_ORDER = ['pendente', 'producao', 'concluido', 'retirada', 'entregue'];
 
-// Status para serviços de modelagem (apenas 3 etapas)
-export const STATUS_ORDER_MODELAGEM = ['pendente', 'producao', 'concluido'];
+// Status para serviços de modelagem
+export const STATUS_ORDER_MODELAGEM = ['modelando', 'modelagem_concluida'];
 
 // Retorna a ordem de status baseada no tipo de serviço
 export const getStatusOrderForService = (serviceType) => {

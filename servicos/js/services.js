@@ -1119,9 +1119,12 @@ export async function updateStatus(serviceId, newStatus) {
         const nextAllowedStatus = statusOrder[currentIndex + 1];
 
         if (newStatus !== nextAllowedStatus) {
-            const statusNames = {
+            const statusNames = isModelagem ? {
+                'modelando': 'Modelando',
+                'modelagem_concluida': 'Concluído'
+            } : {
                 'pendente': 'Pendente',
-                'producao': isModelagem ? 'Modelando' : 'Produção',
+                'producao': 'Produção',
                 'concluido': 'Concluído',
                 'retirada': 'Processo de Entrega',
                 'entregue': 'Entregue'
@@ -1131,8 +1134,8 @@ export async function updateStatus(serviceId, newStatus) {
         }
     }
 
-    // Instagram photo requirement for concluido
-    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
+    // Instagram photo requirement for modelagem_concluida and concluido
+    if ((newStatus === 'concluido' || newStatus === 'modelagem_concluida') && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
         return;
@@ -1182,9 +1185,12 @@ export async function updateStatus(serviceId, newStatus) {
 
     state.pendingStatusUpdate = { serviceId, newStatus, service };
 
-    const statusMessages = {
+    const statusMessages = isModelagem ? {
+        'modelando': 'Iniciar Modelagem',
+        'modelagem_concluida': 'Marcar como Concluído'
+    } : {
         'pendente': 'Marcar como Pendente',
-        'producao': isModelagem ? 'Iniciar Modelagem' : 'Iniciar Produção',
+        'producao': 'Iniciar Produção',
         'concluido': 'Marcar como Concluído',
         'retirada': service.deliveryMethod === 'retirada' ? 'Pronto para Retirada' :
                    service.deliveryMethod === 'sedex' ? 'Marcar como Postado' :
@@ -1200,8 +1206,8 @@ export async function updateStatus(serviceId, newStatus) {
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
-        // WhatsApp disponível para concluído (ambos tipos) e para retirada (impressão)
-        if (hasPhone && (newStatus === 'retirada' || (newStatus === 'concluido' && isModelagem))) {
+        // WhatsApp disponível para modelagem_concluida e para retirada (impressão)
+        if (hasPhone && (newStatus === 'retirada' || newStatus === 'modelagem_concluida')) {
             whatsappOption.style.display = 'block';
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
@@ -1213,7 +1219,9 @@ export async function updateStatus(serviceId, newStatus) {
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
-        const emailStatuses = ['producao', 'concluido', 'retirada', 'entregue'];
+        const emailStatuses = isModelagem ?
+            ['modelando', 'modelagem_concluida'] :
+            ['producao', 'concluido', 'retirada', 'entregue'];
         if (hasEmail && emailStatuses.includes(newStatus)) {
             emailOption.style.display = 'block';
             const emailCheckbox = document.getElementById('sendEmailNotification');
@@ -1340,11 +1348,12 @@ export async function confirmStatusChange() {
             const allImages = [...existingImages, ...newImageUrls];
 
             const isModelagem = service.serviceType === 'modelagem';
+            const finalStatus = isModelagem ? 'modelagem_concluida' : 'concluido';
 
             await state.db.collection('services').doc(serviceId).update({
                 images: allImages,
                 instagramPhoto: newImageUrls[0].url,
-                status: 'concluido',
+                status: finalStatus,
                 completedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 updatedBy: state.currentUser.email,
@@ -1387,10 +1396,17 @@ export async function confirmStatusChange() {
         const newStatusIndex = statusOrder.indexOf(newStatus);
 
         if (newStatusIndex > currentStatusIndex) {
-            let timestampField = newStatus === 'producao' ? 'productionStartedAt' :
+            let timestampField = null;
+
+            if (isModelagem) {
+                timestampField = newStatus === 'modelando' ? 'productionStartedAt' :
+                                newStatus === 'modelagem_concluida' ? 'completedAt' : null;
+            } else {
+                timestampField = newStatus === 'producao' ? 'productionStartedAt' :
                                 newStatus === 'concluido' ? 'completedAt' :
                                 newStatus === 'retirada' ? 'readyAt' :
                                 newStatus === 'entregue' ? 'deliveredAt' : null;
+            }
 
             if (timestampField) {
                 updates[timestampField] = new Date().toISOString();
@@ -1399,8 +1415,14 @@ export async function confirmStatusChange() {
         else if (newStatusIndex < currentStatusIndex) {
             const timestampsToDelete = [];
 
-            // Para impressão, verificar todos os status
-            if (!isModelagem) {
+            if (isModelagem) {
+                if (newStatusIndex < statusOrder.indexOf('modelagem_concluida')) {
+                    timestampsToDelete.push('completedAt');
+                }
+                if (newStatusIndex < statusOrder.indexOf('modelando')) {
+                    timestampsToDelete.push('productionStartedAt');
+                }
+            } else {
                 if (newStatusIndex < statusOrder.indexOf('entregue')) {
                     timestampsToDelete.push('deliveredAt');
                 }
@@ -1411,14 +1433,12 @@ export async function confirmStatusChange() {
                         updates.postedAt = firebase.firestore.FieldValue.delete();
                     }
                 }
-            }
-
-            // Para ambos os tipos
-            if (statusOrder.includes('concluido') && newStatusIndex < statusOrder.indexOf('concluido')) {
-                timestampsToDelete.push('completedAt');
-            }
-            if (statusOrder.includes('producao') && newStatusIndex < statusOrder.indexOf('producao')) {
-                timestampsToDelete.push('productionStartedAt');
+                if (newStatusIndex < statusOrder.indexOf('concluido')) {
+                    timestampsToDelete.push('completedAt');
+                }
+                if (newStatusIndex < statusOrder.indexOf('producao')) {
+                    timestampsToDelete.push('productionStartedAt');
+                }
             }
 
             timestampsToDelete.forEach(field => {
@@ -1431,18 +1451,12 @@ export async function confirmStatusChange() {
         
         if (sendWhatsapp && service.clientPhone) {
             const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
-            let message = '';
-
-            if (newStatus === 'producao') {
-                message = isModelagem ?
-                    `Olá, ${service.client}!\n\n✅ Iniciamos a modelagem 3D!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}` :
-                    `Olá, ${service.client}!\n\n✅ Iniciamos a produção!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`;
-            } else if (newStatus === 'concluido') {
-                message = isModelagem ?
-                    `Olá, ${service.client}!\n\n✅ Modelagem concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nSeu modelo 3D está pronto!${trackingLink}` :
-                    `Olá, ${service.client}!\n\n✅ Impressão concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`;
-            } else if (newStatus === 'retirada') {
-                message = service.deliveryMethod === 'retirada' ?
+            const messages = isModelagem ? {
+                'modelando': `Olá, ${service.client}!\n\n✅ Iniciamos a modelagem 3D!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'modelagem_concluida': `Olá, ${service.client}!\n\n✅ Modelagem concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nSeu modelo 3D está pronto!${trackingLink}`
+            } : {
+                'producao': `Olá, ${service.client}!\n\n✅ Iniciamos a produção!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'retirada': service.deliveryMethod === 'retirada' ?
                     `Olá, ${service.client}!\n\n🎉 Pronto para retirada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nVenha buscar seu pedido!${trackingLink}` :
                     service.deliveryMethod === 'sedex' ?
                     `Olá, ${service.client}!\n\n📦 Postado nos Correios!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${service.trackingCode ? `\n» Rastreio: ${service.trackingCode}` : ''}${trackingLink}` :
@@ -1450,12 +1464,10 @@ export async function confirmStatusChange() {
                     `Olá, ${service.client}!\n\n📦 Postado via Uber Flash!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nEm breve chegará até você!${trackingLink}` :
                     service.deliveryMethod === 'definir' ?
                     `Olá, ${service.client}!\n\n📦 Entrega combinada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nConforme combinado com você!${trackingLink}` :
-                    `Olá, ${service.client}!\n\n📦 Em processo de entrega!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`;
-            } else if (newStatus === 'entregue') {
-                message = `Olá, ${service.client}!\n\n✅ Entregue com sucesso!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nObrigado! 😊`;
-            }
-
-            if (message) sendWhatsAppMessage(service.clientPhone, message);
+                    `Olá, ${service.client}!\n\n📦 Em processo de entrega!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'entregue': `Olá, ${service.client}!\n\n✅ Entregue com sucesso!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nObrigado! 😊`
+            };
+            messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
         }
         
         if (sendEmail && service.clientEmail) {
@@ -1478,14 +1490,11 @@ export function renderServices() {
 
     let filtered;
     if (state.currentFilter === 'todos') {
-        filtered = state.services.filter(s => {
-            // Modelagem: mostrar pendente e producao (concluido vai para histórico)
-            // Impressão: mostrar tudo exceto entregue e retirada
-            if (s.serviceType === 'modelagem') {
-                return !['concluido'].includes(s.status);
-            }
-            return !['entregue', 'retirada'].includes(s.status);
-        });
+        filtered = state.services.filter(s => !['entregue', 'retirada', 'modelagem_concluida'].includes(s.status));
+    } else if (state.currentFilter === 'producao') {
+        filtered = state.services.filter(s => s.status === 'producao' || s.status === 'modelando');
+    } else if (state.currentFilter === 'concluido') {
+        filtered = state.services.filter(s => s.status === 'concluido' || s.status === 'modelagem_concluida');
     } else {
         filtered = state.services.filter(s => s.status === state.currentFilter);
     }
@@ -1598,8 +1607,8 @@ function createServiceCard(service) {
                     <i class="fas fa-laptop-code"></i>
                     Serviço Digital
                 </div>
-                <div class="delivery-time ${service.status === 'concluido' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
-                    <i class="fas ${service.status === 'concluido' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                <div class="delivery-time ${service.status === 'modelagem_concluida' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
+                    <i class="fas ${service.status === 'modelagem_concluida' ? 'fa-check-circle' : 'fa-clock'}"></i>
                     ${daysText}
                 </div>
             </div>` : ''}
@@ -1629,7 +1638,7 @@ function createServiceCard(service) {
                     `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}', '${escapeHtml(service.client || '')}')">
                         <i class="fab fa-whatsapp"></i> Contatar
                     </button>` : ''}
-                ${!isModelagem && service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
+                ${service.deliveryMethod ? `<button class="btn-delivery" onclick="window.showDeliveryInfo('${service.id}')"><i class="fas fa-truck"></i> Ver Entrega</button>` : ''}
             </div>
         </div>
     `;
@@ -1644,20 +1653,23 @@ function createStatusTimeline(service) {
         const isCompleted = statusOrder.indexOf(service.status) > statusOrder.indexOf(status);
 
         let label;
-        if (status === 'pendente') {
-            label = 'Pendente';
-        } else if (status === 'producao') {
-            label = isModelagem ? 'Modelando' : 'Produção';
-        } else if (status === 'concluido') {
-            label = 'Concluído';
-        } else if (status === 'retirada') {
-            if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
-            else if (service.deliveryMethod === 'sedex') label = 'Postado';
-            else if (service.deliveryMethod === 'uber') label = 'Postado';
-            else if (service.deliveryMethod === 'definir') label = 'Combinado';
-            else label = 'Entrega';
-        } else if (status === 'entregue') {
-            label = 'Entregue';
+        if (isModelagem) {
+            // Labels para modelagem
+            if (status === 'modelando') label = 'Modelando';
+            else if (status === 'modelagem_concluida') label = 'Concluído';
+        } else {
+            // Labels para impressão
+            if (status === 'pendente') label = 'Pendente';
+            else if (status === 'producao') label = 'Produção';
+            else if (status === 'concluido') label = 'Concluído';
+            else if (status === 'retirada') {
+                if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
+                else if (service.deliveryMethod === 'sedex') label = 'Postado';
+                else if (service.deliveryMethod === 'uber') label = 'Postado';
+                else if (service.deliveryMethod === 'definir') label = 'Combinado';
+                else label = 'Entrega';
+            }
+            else if (status === 'entregue') label = 'Entregue';
         }
 
         return `
@@ -1677,17 +1689,10 @@ function createStatusTimeline(service) {
 
 export function updateStats() {
     const stats = {
-        active: state.services.filter(s => {
-            // Modelagem: ativo se pendente ou producao
-            // Impressão: ativo se não for entregue ou retirada
-            if (s.serviceType === 'modelagem') {
-                return !['concluido'].includes(s.status);
-            }
-            return !['entregue', 'retirada'].includes(s.status);
-        }).length,
+        active: state.services.filter(s => !['entregue', 'retirada', 'modelagem_concluida'].includes(s.status)).length,
         pendente: state.services.filter(s => s.status === 'pendente').length,
-        producao: state.services.filter(s => s.status === 'producao').length,
-        concluido: state.services.filter(s => s.status === 'concluido').length,
+        producao: state.services.filter(s => s.status === 'producao' || s.status === 'modelando').length,
+        concluido: state.services.filter(s => s.status === 'concluido' || s.status === 'modelagem_concluida').length,
         retirada: state.services.filter(s => s.status === 'retirada').length,
         entregue: state.services.filter(s => s.status === 'entregue').length
     };
