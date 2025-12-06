@@ -105,6 +105,11 @@ let editingSubscriptionId = null;
 let editingInstallmentId = null;
 let editingCardId = null;
 
+// Multi-user system
+let activeUserId = null; // ID do usuário ativo (pode ser diferente de activeUserId)
+let activeUserEmail = null; // Email do usuário ativo
+const COMPANY_EMAIL = '3d3printers@gmail.com';
+
 // ApexCharts instances
 let cashFlowChart = null;
 let categoryChart = null;
@@ -133,8 +138,8 @@ auth.onAuthStateChanged(user => {
     if (user) {
         if (AUTHORIZED_EMAILS.includes(user.email)) {
             currentUser = user;
-            showDashboard(user);
-            initializeDashboard();
+            // Mostrar modal de seleção de conta
+            showAccountSelectionModal(user);
         } else {
             showToast('Acesso não autorizado!', 'error');
             signOut();
@@ -178,6 +183,105 @@ function showDashboard(user) {
     if (dashboard) dashboard.classList.remove('hidden');
     if (userName) userName.textContent = user.displayName || 'Usuário';
     if (userPhoto) userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
+}
+
+// ===========================
+// ACCOUNT SELECTION (Multi-User System)
+// ===========================
+function showAccountSelectionModal(user) {
+    // Verificar se existe preferência salva
+    const savedAccountType = localStorage.getItem('selectedAccountType');
+
+    if (savedAccountType) {
+        // Usar conta salva automaticamente
+        selectAccount(savedAccountType);
+        return;
+    }
+
+    // Atualizar email pessoal no modal
+    document.getElementById('personalAccountEmail').textContent = user.email;
+
+    // Esconder login screen
+    document.getElementById('loginScreen').style.display = 'none';
+
+    // Mostrar modal de seleção
+    document.getElementById('accountSelectionModal').classList.add('active');
+}
+
+async function selectAccount(accountType) {
+    showLoading('Carregando dados...');
+
+    // Fechar modal
+    document.getElementById('accountSelectionModal').classList.remove('active');
+
+    if (accountType === 'company') {
+        // Acessar como conta da empresa
+        // Buscar UID da conta da empresa no Firestore
+        try {
+            const usersSnapshot = await db.collection('users')
+                .where('email', '==', COMPANY_EMAIL)
+                .limit(1)
+                .get();
+
+            if (!usersSnapshot.empty) {
+                const companyUserDoc = usersSnapshot.docs[0];
+                activeUserId = companyUserDoc.id;
+                activeUserEmail = COMPANY_EMAIL;
+            } else {
+                // Se não encontrar, usar o email como fallback
+                // Precisaremos criar um documento de usuário da empresa
+                showToast('Configurando conta da empresa...', 'info');
+                const companyUserRef = await db.collection('users').add({
+                    email: COMPANY_EMAIL,
+                    displayName: 'ImaginaTech',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                activeUserId = companyUserRef.id;
+                activeUserEmail = COMPANY_EMAIL;
+            }
+        } catch (error) {
+            console.error('Erro ao buscar conta da empresa:', error);
+            // Fallback: usar busca por userId nas collections
+            activeUserId = 'company';
+            activeUserEmail = COMPANY_EMAIL;
+        }
+    } else {
+        // Acessar como conta pessoal
+        activeUserId = activeUserId;
+        activeUserEmail = currentUser.email;
+    }
+
+    // Salvar preferência no localStorage
+    localStorage.setItem('selectedAccountType', accountType);
+
+    // Atualizar display da conta ativa
+    updateAccountDisplay(accountType);
+
+    // Mostrar dashboard e inicializar
+    showDashboard(currentUser);
+    initializeDashboard();
+}
+
+function switchAccount() {
+    // Limpar preferência salva
+    localStorage.removeItem('selectedAccountType');
+
+    // Esconder dashboard
+    document.getElementById('dashboard').classList.add('hidden');
+
+    // Mostrar modal de seleção novamente
+    showAccountSelectionModal(currentUser);
+}
+
+function updateAccountDisplay(accountType) {
+    const userRole = document.getElementById('userRole');
+    if (userRole) {
+        if (accountType === 'company') {
+            userRole.textContent = 'Caixa Interno da Empresa';
+        } else {
+            userRole.textContent = 'Conta Pessoal';
+        }
+    }
 }
 
 // ===========================
@@ -291,7 +395,7 @@ async function loadTransactions() {
     try {
         console.log('Carregando transações...');
         const snapshot = await db.collection('transactions')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .orderBy('date', 'desc')
             .get();
 
@@ -399,7 +503,7 @@ async function handleTransactionSubmit(e) {
 
     try {
         const transactionData = {
-            userId: currentUser.uid,
+            userId: activeUserId,
             type: currentTransactionType,
             description,
             value,
@@ -467,7 +571,7 @@ async function loadSubscriptions() {
     try {
         console.log('Carregando assinaturas...');
         const snapshot = await db.collection('subscriptions')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -579,7 +683,7 @@ async function handleSubscriptionSubmit(e) {
 
     try {
         const subscriptionData = {
-            userId: currentUser.uid,
+            userId: activeUserId,
             name,
             value,
             dueDay,
@@ -641,7 +745,7 @@ async function migrateOldInstallments() {
 
     try {
         const snapshot = await db.collection('installments')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .get();
 
         const installmentsToMigrate = [];
@@ -713,7 +817,7 @@ async function loadInstallments() {
     try {
         console.log('Carregando parcelamentos...');
         const snapshot = await db.collection('installments')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -896,7 +1000,7 @@ async function handleInstallmentSubmit(e) {
     try {
         const now = new Date();
         const installmentData = {
-            userId: currentUser.uid,
+            userId: activeUserId,
             cardId,
             description,
             totalValue,
@@ -990,7 +1094,7 @@ async function loadProjections() {
     try {
         console.log('Carregando projeções...');
         const snapshot = await db.collection('projections')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .orderBy('date', 'asc')
             .get();
 
@@ -1074,7 +1178,7 @@ async function handleProjectionSubmit(e) {
 
     try {
         await db.collection('projections').add({
-            userId: currentUser.uid,
+            userId: activeUserId,
             description,
             value,
             date,
@@ -1135,7 +1239,7 @@ async function loadCreditCards() {
     try {
         console.log('Carregando cartões de crédito...');
         const snapshot = await db.collection('creditCards')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -1157,7 +1261,7 @@ async function loadCreditCards() {
 async function loadCardExpenses() {
     try {
         const snapshot = await db.collection('cardExpenses')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', activeUserId)
             .get();
 
         cardExpenses = snapshot.docs.map(doc => ({
@@ -1324,6 +1428,50 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     return expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 }
 
+// Função auxiliar para calcular todas as faturas históricas de um cartão
+function getAllHistoricalBills(card) {
+    // Encontrar a data da primeira transação/parcela/assinatura do cartão
+    const firstCardExpense = cardExpenses.filter(e => e.cardId === card.id).sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+    const firstCreditTransaction = transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'credit' && t.cardId === card.id).sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+    const firstInstallment = installments.filter(i => i.cardId === card.id).sort((a, b) => {
+        const dateA = new Date(a.startYear || 2024, a.startMonth || 0, 1);
+        const dateB = new Date(b.startYear || 2024, b.startMonth || 0, 1);
+        return dateA - dateB;
+    })[0];
+
+    // Se não há nenhum gasto neste cartão, retornar 0
+    if (!firstCardExpense && !firstCreditTransaction && !firstInstallment) return 0;
+
+    // Determinar a data mais antiga
+    const dates = [];
+    if (firstCardExpense) dates.push(new Date(firstCardExpense.date));
+    if (firstCreditTransaction) dates.push(new Date(firstCreditTransaction.date));
+    if (firstInstallment && firstInstallment.startYear !== undefined) {
+        dates.push(new Date(firstInstallment.startYear, firstInstallment.startMonth, 1));
+    }
+
+    const firstDate = new Date(Math.min(...dates));
+    const today = new Date();
+
+    // Calcular faturas mês a mês desde a primeira data até hoje
+    let totalBills = 0;
+    const startMonth = firstDate.getMonth();
+    const startYear = firstDate.getFullYear();
+    const endMonth = today.getMonth();
+    const endYear = today.getFullYear();
+
+    for (let year = startYear; year <= endYear; year++) {
+        const monthStart = (year === startYear) ? startMonth : 0;
+        const monthEnd = (year === endYear) ? endMonth : 11;
+
+        for (let month = monthStart; month <= monthEnd; month++) {
+            totalBills += calculateCurrentBill(card, month, year);
+        }
+    }
+
+    return totalBills;
+}
+
 // ===========================
 // CREDIT CARDS - MODALS
 // ===========================
@@ -1412,7 +1560,7 @@ async function handleCreditCardSubmit(e) {
 
     try {
         const cardData = {
-            userId: currentUser.uid,
+            userId: activeUserId,
             name,
             institution,
             limit,
@@ -1469,7 +1617,7 @@ async function handleCardExpenseSubmit(e) {
 
     try {
         await db.collection('cardExpenses').add({
-            userId: currentUser.uid,
+            userId: activeUserId,
             cardId,
             description,
             value,
@@ -1556,12 +1704,20 @@ function updateKPIs() {
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total Expense (current month) - exclui despesas de crédito
-    const totalExpense = currentMonthTransactions
+    // Total Expense (current month) - apenas débito direto (crédito é contado na fatura do cartão)
+    const totalExpenseDebit = currentMonthTransactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total Balance (all time) - exclui despesas de crédito
+    // Total Credit Cards (current bills) - calculado antes para usar no totalExpense
+    const totalCreditCards = creditCards.reduce((sum, card) => {
+        return sum + calculateCurrentBill(card, currentMonth, currentYear);
+    }, 0);
+
+    // Total Expense = débito + faturas dos cartões de crédito
+    const totalExpense = totalExpenseDebit + totalCreditCards;
+
+    // Total Balance (all time) - exclui despesas de crédito individuais (serão contadas nas faturas)
     const totalBalance = transactions
         .reduce((sum, t) => {
             if (t.type === 'income') {
@@ -1570,6 +1726,10 @@ function updateKPIs() {
                 return sum - t.value;
             }
             return sum;
+        }, 0) - creditCards.reduce((sum, card) => {
+            // Subtrai todas as faturas históricas dos cartões
+            const allBills = getAllHistoricalBills(card);
+            return sum + allBills;
         }, 0);
 
     // Total Active Subscriptions
@@ -1606,11 +1766,6 @@ function updateKPIs() {
             return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
         })
         .reduce((sum, p) => sum + p.value, 0);
-
-    // Total Credit Cards (current bills)
-    const totalCreditCards = creditCards.reduce((sum, card) => {
-        return sum + calculateCurrentBill(card);
-    }, 0);
 
     // Update DOM
     const incomeEl = document.getElementById('totalIncome');
