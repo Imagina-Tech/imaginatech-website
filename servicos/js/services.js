@@ -1109,18 +1109,24 @@ export async function removeImageFromService(serviceId, imageIndex, imageSource,
 // ===========================
 export async function updateStatus(serviceId, newStatus) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-    
+
     const service = state.services.find(s => s.id === serviceId);
     if (!service || service.status === newStatus) return;
-    
-    const currentIndex = STATUS_ORDER.indexOf(service.status);
-    const newIndex = STATUS_ORDER.indexOf(newStatus);
-    
+
+    const isModelagem = service.serviceType === 'modelagem';
+    const statusOrder = getStatusOrderForService(service.serviceType);
+
+    const currentIndex = statusOrder.indexOf(service.status);
+    const newIndex = statusOrder.indexOf(newStatus);
+
     if (newIndex > currentIndex) {
-        const nextAllowedStatus = STATUS_ORDER[currentIndex + 1];
-        
+        const nextAllowedStatus = statusOrder[currentIndex + 1];
+
         if (newStatus !== nextAllowedStatus) {
-            const statusNames = {
+            const statusNames = isModelagem ? {
+                'modelando': 'Modelando',
+                'modelagem_concluida': 'Concluído'
+            } : {
                 'pendente': 'Pendente',
                 'producao': 'Produção',
                 'concluido': 'Concluído',
@@ -1131,55 +1137,62 @@ export async function updateStatus(serviceId, newStatus) {
             return;
         }
     }
-    
-    if (newStatus === 'concluido' && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
+
+    // Instagram photo requirement for modelagem_concluida and concluido
+    if ((newStatus === 'concluido' || newStatus === 'modelagem_concluida') && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         window.showStatusModalWithPhoto(service, newStatus);
         return;
     }
-    
-    if (newStatus === 'retirada') {
-        if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-            showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
-            return;
+
+    // Only for impressão services - delivery-related validations
+    if (!isModelagem) {
+        if (newStatus === 'retirada') {
+            if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
+                showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
+                return;
+            }
+
+            if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
+                window.showStatusModalWithPackagedPhoto(service, newStatus);
+                return;
+            }
         }
-        
-        if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
-            state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
-            window.showStatusModalWithPackagedPhoto(service, newStatus);
-            return;
+
+        if (newStatus === 'entregue') {
+            if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
+                showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
+                return;
+            }
+
+            if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
+                showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
+                return;
+            }
+        }
+
+        const currentStatusIndex = statusOrder.indexOf(service.status);
+        const newStatusIndex = statusOrder.indexOf(newStatus);
+
+        if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < statusOrder.indexOf('retirada')) {
+            if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
+                return;
+            }
+        }
+
+        if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
+            state.pendingStatusUpdate = { serviceId, newStatus, service };
+            return window.showTrackingCodeModal();
         }
     }
-    
-    if (newStatus === 'entregue') {
-        if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-            showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
-            return;
-        }
-        
-        if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
-            showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
-            return;
-        }
-    }
-    
-    const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
-    const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
-    
-    if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
-        if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
-            return;
-        }
-    }
-    
-    if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
-        state.pendingStatusUpdate = { serviceId, newStatus, service };
-        return window.showTrackingCodeModal();
-    }
-    
+
     state.pendingStatusUpdate = { serviceId, newStatus, service };
-    
-    const statusMessages = {
+
+    const statusMessages = isModelagem ? {
+        'modelando': 'Iniciar Modelagem',
+        'modelagem_concluida': 'Marcar como Concluído'
+    } : {
         'pendente': 'Marcar como Pendente',
         'producao': 'Iniciar Produção',
         'concluido': 'Marcar como Concluído',
@@ -1190,15 +1203,15 @@ export async function updateStatus(serviceId, newStatus) {
                    'Marcar Processo de Entrega',
         'entregue': 'Confirmar Entrega'
     };
-    
-    document.getElementById('statusModalMessage') && 
+
+    document.getElementById('statusModalMessage') &&
         (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
-    
+
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
-        // WhatsApp apenas disponível ao mudar status para "Pronto para Retirada/Envio"
-        if (hasPhone && newStatus === 'retirada') {
+        // WhatsApp disponível para modelagem_concluida e para retirada (impressão)
+        if (hasPhone && (newStatus === 'retirada' || newStatus === 'modelagem_concluida')) {
             whatsappOption.style.display = 'block';
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
@@ -1206,11 +1219,14 @@ export async function updateStatus(serviceId, newStatus) {
             whatsappOption.style.display = 'none';
         }
     }
-    
+
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
-        if (hasEmail && ['producao', 'concluido', 'retirada', 'entregue'].includes(newStatus)) {
+        const emailStatuses = isModelagem ?
+            ['modelando', 'modelagem_concluida'] :
+            ['producao', 'concluido', 'retirada', 'entregue'];
+        if (hasEmail && emailStatuses.includes(newStatus)) {
             emailOption.style.display = 'block';
             const emailCheckbox = document.getElementById('sendEmailNotification');
             if (emailCheckbox) emailCheckbox.checked = true;
@@ -1218,10 +1234,10 @@ export async function updateStatus(serviceId, newStatus) {
             emailOption.style.display = 'none';
         }
     }
-    
+
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) photoField.style.display = 'none';
-    
+
     document.getElementById('statusModal')?.classList.add('active');
 }
 
@@ -1321,10 +1337,10 @@ export async function confirmStatusChange() {
         try {
             showToast(`Preparando upload de ${state.pendingInstagramPhotos.length} foto(s)...`, 'info');
             const uploadResults = await uploadMultipleFiles(state.pendingInstagramPhotos, serviceId, 'instagram');
-            const newImageUrls = uploadResults.map(photoData => ({ 
-                url: photoData.url, 
-                name: photoData.name, 
-                uploadedAt: photoData.uploadedAt, 
+            const newImageUrls = uploadResults.map(photoData => ({
+                url: photoData.url,
+                name: photoData.name,
+                uploadedAt: photoData.uploadedAt,
                 isInstagram: true
             }));
 
@@ -1335,10 +1351,13 @@ export async function confirmStatusChange() {
             const existingImages = service.images || [];
             const allImages = [...existingImages, ...newImageUrls];
 
+            const isModelagem = service.serviceType === 'modelagem';
+            const finalStatus = isModelagem ? 'modelagem_concluida' : 'concluido';
+
             await state.db.collection('services').doc(serviceId).update({
                 images: allImages,
                 instagramPhoto: newImageUrls[0].url,
-                status: 'concluido',
+                status: finalStatus,
                 completedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 updatedBy: state.currentUser.email,
@@ -1351,6 +1370,12 @@ export async function confirmStatusChange() {
                 await sendEmailNotification(service);
             }
 
+            if (sendWhatsapp && service.clientPhone && isModelagem) {
+                const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
+                const message = `Olá, ${service.client}!\n\n✅ Modelagem concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nSeu modelo 3D está pronto!${trackingLink}`;
+                sendWhatsAppMessage(service.clientPhone, message);
+            }
+
             window.closeStatusModal();
             return;
         } catch (error) {
@@ -1361,46 +1386,65 @@ export async function confirmStatusChange() {
     }
     
     try {
+        const isModelagem = service.serviceType === 'modelagem';
+        const statusOrder = getStatusOrderForService(service.serviceType);
+
         const updates = {
             status: newStatus,
             updatedAt: new Date().toISOString(),
             updatedBy: state.currentUser.email,
             lastStatusChange: new Date().toISOString()
         };
-        
-        const currentStatusIndex = STATUS_ORDER.indexOf(service.status);
-        const newStatusIndex = STATUS_ORDER.indexOf(newStatus);
-        
+
+        const currentStatusIndex = statusOrder.indexOf(service.status);
+        const newStatusIndex = statusOrder.indexOf(newStatus);
+
         if (newStatusIndex > currentStatusIndex) {
-            const timestampField = newStatus === 'producao' ? 'productionStartedAt' : 
-                                  newStatus === 'concluido' ? 'completedAt' :
-                                  newStatus === 'retirada' ? 'readyAt' :
-                                  newStatus === 'entregue' ? 'deliveredAt' : null;
-            
+            let timestampField = null;
+
+            if (isModelagem) {
+                timestampField = newStatus === 'modelando' ? 'productionStartedAt' :
+                                newStatus === 'modelagem_concluida' ? 'completedAt' : null;
+            } else {
+                timestampField = newStatus === 'producao' ? 'productionStartedAt' :
+                                newStatus === 'concluido' ? 'completedAt' :
+                                newStatus === 'retirada' ? 'readyAt' :
+                                newStatus === 'entregue' ? 'deliveredAt' : null;
+            }
+
             if (timestampField) {
                 updates[timestampField] = new Date().toISOString();
             }
-        } 
+        }
         else if (newStatusIndex < currentStatusIndex) {
             const timestampsToDelete = [];
-            
-            if (newStatusIndex < STATUS_ORDER.indexOf('entregue')) {
-                timestampsToDelete.push('deliveredAt');
-            }
-            if (newStatusIndex < STATUS_ORDER.indexOf('retirada')) {
-                timestampsToDelete.push('readyAt');
-                if (service.deliveryMethod === 'sedex' && service.trackingCode) {
-                    updates.trackingCode = firebase.firestore.FieldValue.delete();
-                    updates.postedAt = firebase.firestore.FieldValue.delete();
+
+            if (isModelagem) {
+                if (newStatusIndex < statusOrder.indexOf('modelagem_concluida')) {
+                    timestampsToDelete.push('completedAt');
+                }
+                if (newStatusIndex < statusOrder.indexOf('modelando')) {
+                    timestampsToDelete.push('productionStartedAt');
+                }
+            } else {
+                if (newStatusIndex < statusOrder.indexOf('entregue')) {
+                    timestampsToDelete.push('deliveredAt');
+                }
+                if (newStatusIndex < statusOrder.indexOf('retirada')) {
+                    timestampsToDelete.push('readyAt');
+                    if (service.deliveryMethod === 'sedex' && service.trackingCode) {
+                        updates.trackingCode = firebase.firestore.FieldValue.delete();
+                        updates.postedAt = firebase.firestore.FieldValue.delete();
+                    }
+                }
+                if (newStatusIndex < statusOrder.indexOf('concluido')) {
+                    timestampsToDelete.push('completedAt');
+                }
+                if (newStatusIndex < statusOrder.indexOf('producao')) {
+                    timestampsToDelete.push('productionStartedAt');
                 }
             }
-            if (newStatusIndex < STATUS_ORDER.indexOf('concluido')) {
-                timestampsToDelete.push('completedAt');
-            }
-            if (newStatusIndex < STATUS_ORDER.indexOf('producao')) {
-                timestampsToDelete.push('productionStartedAt');
-            }
-            
+
             timestampsToDelete.forEach(field => {
                 updates[field] = firebase.firestore.FieldValue.delete();
             });
@@ -1411,7 +1455,10 @@ export async function confirmStatusChange() {
         
         if (sendWhatsapp && service.clientPhone) {
             const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
-            const messages = {
+            const messages = isModelagem ? {
+                'modelando': `Olá, ${service.client}!\n\n✅ Iniciamos a modelagem 3D!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'modelagem_concluida': `Olá, ${service.client}!\n\n✅ Modelagem concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nSeu modelo 3D está pronto!${trackingLink}`
+            } : {
                 'producao': `Olá, ${service.client}!\n\n✅ Iniciamos a produção!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
                 'retirada': service.deliveryMethod === 'retirada' ?
                     `Olá, ${service.client}!\n\n🎉 Pronto para retirada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nVenha buscar seu pedido!${trackingLink}` :
@@ -1444,11 +1491,18 @@ export function renderServices() {
     const grid = document.getElementById('servicesGrid');
     const emptyState = document.getElementById('emptyState');
     if (!grid || !emptyState) return;
-    
-    let filtered = state.currentFilter === 'todos' ? 
-        state.services.filter(s => !['entregue', 'retirada'].includes(s.status)) : 
-        state.services.filter(s => s.status === state.currentFilter);
-    
+
+    let filtered;
+    if (state.currentFilter === 'todos') {
+        filtered = state.services.filter(s => !['entregue', 'retirada', 'modelagem_concluida'].includes(s.status));
+    } else if (state.currentFilter === 'producao') {
+        filtered = state.services.filter(s => s.status === 'producao' || s.status === 'modelando');
+    } else if (state.currentFilter === 'concluido') {
+        filtered = state.services.filter(s => s.status === 'concluido' || s.status === 'modelagem_concluida');
+    } else {
+        filtered = state.services.filter(s => s.status === state.currentFilter);
+    }
+
     if (state.currentFilter === 'concluido') {
         filtered.sort((a, b) => {
             const dateA = new Date(a.completedAt || a.createdAt || 0);
@@ -1466,7 +1520,7 @@ export function renderServices() {
             const priority = { urgente: 4, alta: 3, media: 2, baixa: 1 };
             const diff = (priority[b.priority] || 0) - (priority[a.priority] || 0);
             if (diff !== 0) return diff;
-            
+
             if (a.dateUndefined !== b.dateUndefined) return a.dateUndefined ? 1 : -1;
             return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
         });
@@ -1508,12 +1562,17 @@ function createServiceCard(service) {
     
     const filesCount = (service.files && service.files.length > 0) ? service.files.length : (service.fileUrl ? 1 : 0);
     
+    const isModelagem = service.serviceType === 'modelagem';
+
     return `
-        <div class="service-card priority-${service.priority || 'media'}">
+        <div class="service-card priority-${service.priority || 'media'} ${isModelagem ? 'service-modelagem' : 'service-impressao'}">
             <div class="service-header">
                 <div class="service-title">
                     <h3>${escapeHtml(service.name || 'Sem nome')}</h3>
-                    <span class="service-code">${service.orderCode || 'N/A'}</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        ${isModelagem ? '<span class="service-type-badge modelagem"><i class="fas fa-cube"></i> Modelagem</span>' : '<span class="service-type-badge impressao"><i class="fas fa-print"></i> Impressão</span>'}
+                        <span class="service-code">${service.orderCode || 'N/A'}</span>
+                    </div>
                 </div>
                 <div class="service-actions">
                     <button class="btn-icon" onclick="window.openEditModal('${service.id}')" title="Editar">
@@ -1525,7 +1584,7 @@ function createServiceCard(service) {
                 </div>
             </div>
 
-            ${service.needsMaterialPurchase ? `
+            ${!isModelagem && service.needsMaterialPurchase ? `
             <div class="material-purchase-alert">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span>COMPRAR MATERIAL PARA FAZER O SERVIÇO</span>
@@ -1534,7 +1593,7 @@ function createServiceCard(service) {
                 </div>
             </div>` : ''}
 
-            ${service.deliveryMethod ? `
+            ${!isModelagem && service.deliveryMethod ? `
             <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                 <div class="delivery-info">
                     <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
@@ -1545,14 +1604,26 @@ function createServiceCard(service) {
                     ${daysText}
                 </div>
             </div>` : ''}
+
+            ${isModelagem ? `
+            <div class="delivery-badge">
+                <div class="delivery-info">
+                    <i class="fas fa-laptop-code"></i>
+                    Serviço Digital
+                </div>
+                <div class="delivery-time ${service.status === 'modelagem_concluida' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
+                    <i class="fas ${service.status === 'modelagem_concluida' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                    ${daysText}
+                </div>
+            </div>` : ''}
             
             <div class="service-info">
                 <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
-                <div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material || 'N/A'}</span></div>
-                ${service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
+                ${!isModelagem && service.material ? `<div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material}</span></div>` : ''}
+                ${!isModelagem && service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
                 <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
                 ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
-                ${service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
+                ${!isModelagem && service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
                 ${filesCount > 0 ? `<div class="info-item"><button class="btn-download" onclick="window.showServiceFiles('${service.id}')" title="Ver Arquivos"><i class="fas fa-file"></i><span>${filesCount} ${filesCount > 1 ? 'Arquivos' : 'Arquivo'}</span></button></div>` : ''}
                 ${service.fileInDrive ? `<div class="info-item drive-badge"><i class="fab fa-google-drive"></i><span>Arquivo no Drive</span></div>` : ''}
                 ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="window.showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
@@ -1578,26 +1649,36 @@ function createServiceCard(service) {
 }
 
 function createStatusTimeline(service) {
-    return ['pendente', 'producao', 'concluido', 'retirada', 'entregue'].map(status => {
+    const isModelagem = service.serviceType === 'modelagem';
+    const statusOrder = isModelagem ? STATUS_ORDER_MODELAGEM : STATUS_ORDER;
+
+    return statusOrder.map(status => {
         const isActive = service.status === status;
-        const isCompleted = isStatusCompleted(service.status, status);
-        
+        const isCompleted = statusOrder.indexOf(service.status) > statusOrder.indexOf(status);
+
         let label;
-        if (status === 'pendente') label = 'Pendente';
-        else if (status === 'producao') label = 'Produção';
-        else if (status === 'concluido') label = 'Concluído';
-        else if (status === 'retirada') {
-            if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
-            else if (service.deliveryMethod === 'sedex') label = 'Postado';
-            else if (service.deliveryMethod === 'uber') label = 'Postado';
-            else if (service.deliveryMethod === 'definir') label = 'Combinado';
-            else label = 'Entrega';
+        if (isModelagem) {
+            // Labels para modelagem
+            if (status === 'modelando') label = 'Modelando';
+            else if (status === 'modelagem_concluida') label = 'Concluído';
+        } else {
+            // Labels para impressão
+            if (status === 'pendente') label = 'Pendente';
+            else if (status === 'producao') label = 'Produção';
+            else if (status === 'concluido') label = 'Concluído';
+            else if (status === 'retirada') {
+                if (service.deliveryMethod === 'retirada') label = 'Para Retirar';
+                else if (service.deliveryMethod === 'sedex') label = 'Postado';
+                else if (service.deliveryMethod === 'uber') label = 'Postado';
+                else if (service.deliveryMethod === 'definir') label = 'Combinado';
+                else label = 'Entrega';
+            }
+            else if (status === 'entregue') label = 'Entregue';
         }
-        else if (status === 'entregue') label = 'Entregue';
-        
+
         return `
             <div class="timeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-                <button class="step-button" 
+                <button class="step-button"
                         onclick="window.updateStatusGlobal('${service.id}', '${status}')"
                         ${isActive ? 'disabled' : ''}>
                     <span class="step-icon">
@@ -1612,14 +1693,14 @@ function createStatusTimeline(service) {
 
 export function updateStats() {
     const stats = {
-        active: state.services.filter(s => !['entregue', 'retirada'].includes(s.status)).length,
+        active: state.services.filter(s => !['entregue', 'retirada', 'modelagem_concluida'].includes(s.status)).length,
         pendente: state.services.filter(s => s.status === 'pendente').length,
-        producao: state.services.filter(s => s.status === 'producao').length,
-        concluido: state.services.filter(s => s.status === 'concluido').length,
+        producao: state.services.filter(s => s.status === 'producao' || s.status === 'modelando').length,
+        concluido: state.services.filter(s => s.status === 'concluido' || s.status === 'modelagem_concluida').length,
         retirada: state.services.filter(s => s.status === 'retirada').length,
         entregue: state.services.filter(s => s.status === 'entregue').length
     };
-    
+
     Object.entries({
         'stat-active': stats.active,
         'stat-pending': stats.pendente,
