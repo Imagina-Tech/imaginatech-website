@@ -233,8 +233,9 @@ a:hover { color: #2563EB; }
   grid-column: 2 / 4;
   grid-row: 2;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 0.8fr;
   gap: 0.8rem;
+  align-items: stretch;
 }
 
 /* CHART CARDS GENÉRICOS */
@@ -246,6 +247,8 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  height: 100%;
 }
 
 .chart-header {
@@ -269,6 +272,14 @@ a:hover { color: #2563EB; }
 .legend-item .dot.expense { background-color: var(--color-danger); }
 
 /* MINI CHARTS ESPECÍFICOS */
+.mini-gauges-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  height: 100%;
+  min-height: 0;
+}
+
 .mini-chart-card {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
@@ -277,6 +288,8 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 0;
+  flex: 1;
 }
 
 .mini-chart-header {
