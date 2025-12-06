@@ -279,7 +279,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
-    padding: 20px;
+    padding: 12px 20px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -416,12 +416,12 @@ body {
 }
 
 .material-btn {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 8px;
+    border-radius: 6px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -444,11 +444,11 @@ body {
 }
 
 .custom-price-field {
-    margin-top: 15px;
-    padding: 15px;
+    margin-top: 10px;
+    padding: 10px;
     background: rgba(153, 69, 255, 0.05);
     border: 1px solid rgba(153, 69, 255, 0.3);
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 /* ===========================
@@ -462,12 +462,12 @@ body {
 }
 
 .printer-btn {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 8px;
+    border-radius: 6px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -496,17 +496,17 @@ body {
 
 .control-with-buttons {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
 }
 
 .display-box {
     flex: 1;
-    min-width: 200px;
-    padding: 25px;
+    min-width: 150px;
+    padding: 15px;
     background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(87, 212, 202, 0.1));
     border: 2px solid var(--neon-blue);
-    border-radius: 15px;
+    border-radius: 10px;
     position: relative;
 }
 
@@ -514,12 +514,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     font-family: 'Orbitron', monospace;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--neon-blue);
-    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
 }
 
 .material-display {
@@ -528,10 +528,10 @@ body {
     justify-content: center;
     gap: 4px;
     font-family: 'Orbitron', monospace;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--neon-purple);
-    text-shadow: 0 0 20px rgba(153, 69, 255, 0.5);
+    text-shadow: 0 0 15px rgba(153, 69, 255, 0.5);
 }
 
 /* Material display box with purple border */
@@ -560,19 +560,19 @@ body {
 }
 
 .increment-btn {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--glass-border);
-    border-radius: 8px;
+    border-radius: 6px;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     white-space: nowrap;
 }
 
@@ -603,13 +603,13 @@ body {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 30px 20px;
+    padding: 15px 20px;
 }
 
 .calculator-wrapper {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
-    gap: 30px;
+    gap: 15px;
 }
 
 .form-column {
@@ -619,7 +619,7 @@ body {
 .results-column {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
 }
 
 /* ===========================
@@ -633,8 +633,8 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 25px;
+    border-radius: 15px;
+    padding: 15px;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -669,17 +669,17 @@ body {
 
 .form-header,
 .results-header {
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .form-title,
 .results-title {
     font-family: 'Orbitron', monospace;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     color: var(--neon-blue);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .results-title {
@@ -691,40 +691,40 @@ body {
    =========================== */
 
 .form-section {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .form-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 5px;
     color: rgba(255, 255, 255, 0.8);
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .form-label i {
     color: var(--neon-blue);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .form-input,
 .form-select {
     width: 100%;
-    padding: 12px 15px;
+    padding: 8px 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: white;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: all 0.3s ease;
 }
 
@@ -905,13 +905,13 @@ body {
 }
 
 .cost-breakdown {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .cost-item {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 6px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.3s ease;
 }
@@ -946,15 +946,15 @@ body {
 .divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
-    margin: 20px 0;
+    margin: 12px 0;
 }
 
 .total-section {
     background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
     border: 1px solid var(--neon-green);
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 20px;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
     animation: pulse-glow 3s infinite;
 }
 
@@ -1040,8 +1040,8 @@ body {
 
 .btn-print {
     width: 100%;
-    padding: 15px 24px;
-    font-size: 1.1rem;
+    padding: 12px 20px;
+    font-size: 1rem;
     font-weight: 600;
     border: none;
     border-radius: 50px;
@@ -1049,13 +1049,13 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     transition: all 0.3s ease;
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, var(--neon-purple), #B845FF);
     color: white;
     box-shadow: 0 4px 20px rgba(153, 69, 255, 0.3);
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .btn-print:hover {
@@ -1094,15 +1094,16 @@ body {
    =========================== */
 
 .footer {
-    margin-top: 50px;
-    padding: 20px;
+    margin-top: 20px;
+    padding: 15px;
     text-align: center;
     border-top: 1px solid var(--glass-border);
     color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
 }
 
 .footer-links {
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .footer-links a {
