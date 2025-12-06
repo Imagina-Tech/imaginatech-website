@@ -3368,6 +3368,126 @@ input[type="file"]::file-selector-button {
 }
 
 /* ===========================
+   BADGES DE TIPO DE SERVIÇO
+   =========================== */
+.service-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.service-type-badge.modelagem {
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.2), rgba(153, 69, 255, 0.1));
+    border: 1px solid var(--neon-purple);
+    color: var(--neon-purple);
+}
+
+.service-type-badge.impressao {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.1));
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+}
+
+.service-type-badge i {
+    font-size: 0.85rem;
+}
+
+/* Diferenciação visual dos cards */
+/* Card de Impressão - Estilo padrão */
+.service-card.service-impressao {
+    border-left: 3px solid var(--neon-blue);
+}
+
+/* Card de Modelagem - Aparência Futurística */
+.service-card.service-modelagem {
+    border-left: 3px solid var(--neon-purple);
+    background: linear-gradient(135deg,
+        rgba(153, 69, 255, 0.05) 0%,
+        rgba(21, 22, 43, 0.95) 50%,
+        rgba(153, 69, 255, 0.03) 100%);
+    border: 1px solid rgba(153, 69, 255, 0.3);
+    box-shadow:
+        0 0 20px rgba(153, 69, 255, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de brilho animado no topo do card */
+.service-card.service-modelagem::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg,
+        transparent,
+        var(--neon-purple),
+        transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    50%, 100% { left: 100%; }
+}
+
+/* Brilho sutil ao passar o mouse */
+.service-card.service-modelagem:hover {
+    border-color: rgba(153, 69, 255, 0.5);
+    box-shadow:
+        0 0 30px rgba(153, 69, 255, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Badge de serviço digital com efeito neon */
+.service-card.service-modelagem .delivery-badge {
+    background: linear-gradient(135deg,
+        rgba(153, 69, 255, 0.15),
+        rgba(153, 69, 255, 0.05));
+    border: 1px solid rgba(153, 69, 255, 0.4);
+    box-shadow: 0 0 10px rgba(153, 69, 255, 0.1);
+}
+
+.service-card.service-modelagem .delivery-info i {
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px rgba(153, 69, 255, 0.5);
+}
+
+/* Timeline com estilo futurístico para modelagem */
+.service-card.service-modelagem .timeline-step .step-icon {
+    background: linear-gradient(135deg,
+        rgba(153, 69, 255, 0.2),
+        rgba(153, 69, 255, 0.05));
+    border-color: rgba(153, 69, 255, 0.4);
+}
+
+.service-card.service-modelagem .timeline-step.active .step-icon,
+.service-card.service-modelagem .timeline-step.completed .step-icon {
+    background: var(--neon-purple);
+    box-shadow: 0 0 15px rgba(153, 69, 255, 0.6);
+}
+
+/* Badge de tipo de serviço com brilho */
+.service-card.service-modelagem .service-type-badge.modelagem {
+    background: linear-gradient(135deg,
+        rgba(153, 69, 255, 0.3),
+        rgba(153, 69, 255, 0.1));
+    border: 1px solid var(--neon-purple);
+    color: var(--neon-purple);
+    text-shadow: 0 0 5px rgba(153, 69, 255, 0.5);
+    box-shadow: 0 0 10px rgba(153, 69, 255, 0.2);
+}
+
+/* ===========================
    MODAL DE SELEÇÃO DE TIPO
    =========================== */
 .service-type-selection {
