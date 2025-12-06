@@ -216,39 +216,51 @@ async function selectAccount(accountType) {
 
     if (accountType === 'company') {
         // Acessar como conta da empresa
-        // Buscar UID da conta da empresa no Firestore
+        // Buscar UID da conta da empresa no systemConfig
         try {
-            const usersSnapshot = await db.collection('users')
-                .where('email', '==', COMPANY_EMAIL)
-                .limit(1)
-                .get();
+            const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
 
-            if (!usersSnapshot.empty) {
-                const companyUserDoc = usersSnapshot.docs[0];
-                activeUserId = companyUserDoc.id;
+            if (configDoc.exists) {
+                // Usar UID salvo na configuração
+                activeUserId = configDoc.data().userId;
                 activeUserEmail = COMPANY_EMAIL;
+                console.log('Usando UID da empresa do systemConfig:', activeUserId);
             } else {
-                // Se não encontrar, usar o email como fallback
-                // Precisaremos criar um documento de usuário da empresa
-                showToast('Configurando conta da empresa...', 'info');
-                const companyUserRef = await db.collection('users').add({
-                    email: COMPANY_EMAIL,
-                    displayName: 'ImaginaTech',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                activeUserId = companyUserRef.id;
-                activeUserEmail = COMPANY_EMAIL;
+                // Se não existe configuração, criar automaticamente
+                // Isso só acontecerá quando 3d3printers@gmail.com fizer login
+                if (currentUser.email === COMPANY_EMAIL) {
+                    showToast('Configurando conta da empresa pela primeira vez...', 'info');
+                    await db.collection('systemConfig').doc('companyAccount').set({
+                        userId: currentUser.uid,
+                        email: COMPANY_EMAIL,
+                        displayName: 'ImaginaTech - Caixa Interno',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: currentUser.email
+                    });
+                    activeUserId = currentUser.uid;
+                    activeUserEmail = COMPANY_EMAIL;
+                    console.log('Configuração da empresa criada com UID:', activeUserId);
+                } else {
+                    // Admin tentando acessar empresa, mas configuração não existe
+                    showToast('Conta da empresa ainda não foi configurada. Entre primeiro com 3d3printers@gmail.com', 'error');
+                    // Voltar para seleção
+                    localStorage.removeItem('selectedAccountType');
+                    showAccountSelectionModal(currentUser);
+                    hideLoading();
+                    return;
+                }
             }
         } catch (error) {
             console.error('Erro ao buscar conta da empresa:', error);
-            // Fallback: usar busca por userId nas collections
-            activeUserId = 'company';
-            activeUserEmail = COMPANY_EMAIL;
+            showToast('Erro ao acessar conta da empresa', 'error');
+            hideLoading();
+            return;
         }
     } else {
         // Acessar como conta pessoal
-        activeUserId = activeUserId;
+        activeUserId = currentUser.uid;
         activeUserEmail = currentUser.email;
+        console.log('Usando conta pessoal com UID:', activeUserId);
     }
 
     // Salvar preferência no localStorage
