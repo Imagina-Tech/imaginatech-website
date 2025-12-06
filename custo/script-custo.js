@@ -218,6 +218,8 @@ function initializeCalculator() {
     // Time controls
     const timeHoursDisplay = document.getElementById("time-hours-display");
     const timeMinutesDisplay = document.getElementById("time-minutes-display");
+    const btnAdd24h = document.getElementById("btn-add-24h");
+    const btnSub24h = document.getElementById("btn-sub-24h");
     const btnAdd1h = document.getElementById("btn-add-1h");
     const btnSub1h = document.getElementById("btn-sub-1h");
     const btnAdd15m = document.getElementById("btn-add-15m");
@@ -894,6 +896,12 @@ function initializeCalculator() {
     });
 
     // Time control buttons
+    if (btnAdd24h) {
+        btnAdd24h.addEventListener("click", () => addTime(24, 0));
+    }
+    if (btnSub24h) {
+        btnSub24h.addEventListener("click", () => addTime(-24, 0));
+    }
     if (btnAdd1h) {
         btnAdd1h.addEventListener("click", () => addTime(1, 0));
     }
