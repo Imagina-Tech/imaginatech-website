@@ -61,9 +61,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         <div class="login-container">
             <div class="login-header">
                 <div class="login-logo">
-                    <i class="fas fa-chart-line"></i>
                     <h1>ImaginaTech</h1>
-                    <p>Dashboard Financeiro Profissional</p>
+                    <p>Painel Administrativo</p>
                 </div>
                 <div class="login-info">
                     <i class="fas fa-shield-alt"></i>
@@ -76,7 +75,39 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <span>Entrar com Google</span>
             </button>
             <div class="login-footer">
-                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
+                <p class="footer-text">Cliente? Acompanhe seu pedido:</p>
+                <a href="https://imaginatech.com.br" class="client-link" target="_blank">
+                    <i class="fas fa-cube"></i>
+                    Portal do Cliente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Selection Modal -->
+    <div class="modal-overlay" id="accountSelectionModal">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Selecione a Conta</h2>
+            </div>
+            <div class="modal-form" style="gap: 1rem; display: flex; flex-direction: column;">
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Escolha qual conta você deseja acessar:
+                </p>
+                <button class="account-option-btn" onclick="selectAccount('company')" style="width: 100%; padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 224, 255, 0.1), rgba(0, 149, 255, 0.1)); border: 2px solid rgba(0, 224, 255, 0.3); border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-building" style="font-size: 1.5rem; color: var(--neon-blue);"></i>
+                    <div style="text-align: left; flex: 1;">
+                        <div style="font-size: 1.1rem; margin-bottom: 0.25rem;">Caixa Interno da Empresa</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">3d3printers@gmail.com</div>
+                    </div>
+                </button>
+                <button class="account-option-btn" onclick="selectAccount('personal')" style="width: 100%; padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 255, 148, 0.1), rgba(0, 200, 100, 0.1)); border: 2px solid rgba(0, 255, 148, 0.3); border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-user" style="font-size: 1.5rem; color: var(--neon-green);"></i>
+                    <div style="text-align: left; flex: 1;">
+                        <div style="font-size: 1.1rem; margin-bottom: 0.25rem;">Minha Conta Pessoal</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);" id="personalAccountEmail">seu@email.com</div>
+                    </div>
+                </button>
             </div>
         </div>
     </div>
@@ -129,9 +160,13 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <img id="userPhoto" class="user-photo" alt="Foto">
                         <div class="user-details">
                             <span class="user-name" id="userName">Carregando...</span>
-                            <span class="user-role">Administrador</span>
+                            <span class="user-role" id="userRole">Administrador</span>
                         </div>
                     </div>
+                    <button class="btn-nav" onclick="switchAccount()" title="Trocar de conta">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Trocar Conta</span>
+                    </button>
                     <button class="btn-logout" onclick="signOut()">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="btn-text">Sair</span>
