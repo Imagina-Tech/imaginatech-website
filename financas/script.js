@@ -316,13 +316,6 @@ function updateAllDisplays() {
         updateCharts();
     }
 
-    // Atualizar renderizações
-    renderTransactions();
-    renderSubscriptions();
-    renderInstallments();
-    renderProjections();
-    renderCreditCards();
-
     console.log('[updateAllDisplays] Todos os componentes atualizados!');
 }
 
@@ -421,70 +414,11 @@ async function loadTransactions() {
         }));
 
         console.log(`${transactions.length} transações carregadas`);
-        renderTransactions();
     } catch (error) {
         console.error('Erro ao carregar transações:', error);
         // Não mostra toast aqui para não poluir - já mostra no catch principal
         transactions = []; // Garante array vazio
-        renderTransactions();
     }
-}
-
-function renderTransactions() {
-    const tbody = document.getElementById('transactionsTableBody');
-    const emptyState = document.getElementById('emptyState');
-
-    if (!tbody || !emptyState) return;
-
-    let filteredTransactions = transactions;
-    if (currentFilter !== 'all') {
-        filteredTransactions = transactions.filter(t => t.type === currentFilter);
-    }
-
-    if (filteredTransactions.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
-    emptyState.classList.add('hidden');
-
-    tbody.innerHTML = filteredTransactions.map(transaction => `
-        <tr class="transaction-row ${transaction.type}">
-            <td>
-                <div class="transaction-description">
-                    <i class="fas fa-${transaction.type === 'income' ? 'arrow-up' : 'arrow-down'}"></i>
-                    <span>${transaction.description}</span>
-                </div>
-            </td>
-            <td>
-                <span class="category-badge">${transaction.category}</span>
-            </td>
-            <td>${formatDate(transaction.date)}</td>
-            <td class="value-${transaction.type}">
-                ${transaction.type === 'income' ? '+' : '-'} ${formatCurrencyDisplay(transaction.value)}
-            </td>
-            <td>
-                <button class="btn-delete" onclick="deleteTransaction('${transaction.id}')" title="Deletar">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function filterTransactions(filter) {
-    currentFilter = filter;
-
-    // Update active button
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.filter === filter) {
-            btn.classList.add('active');
-        }
-    });
-
-    renderTransactions();
 }
 
 async function handleTransactionSubmit(e) {
@@ -597,62 +531,10 @@ async function loadSubscriptions() {
         }));
 
         console.log(`${subscriptions.length} assinaturas carregadas`);
-        renderSubscriptions();
     } catch (error) {
         console.error('Erro ao carregar assinaturas:', error);
         subscriptions = [];
-        renderSubscriptions();
     }
-}
-
-function renderSubscriptions() {
-    const grid = document.getElementById('subscriptionsGrid');
-    const emptyState = document.getElementById('emptySubscriptions');
-
-    if (!grid || !emptyState) return;
-
-    if (subscriptions.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
-    emptyState.classList.add('hidden');
-
-    grid.innerHTML = subscriptions.map(sub => {
-        const nextDue = calculateNextDue(sub.dueDay);
-
-        // Encontra o cartão associado
-        const card = creditCards.find(c => c.id === sub.cardId);
-        const cardName = card ? `${card.name} - ${card.institution}` : '';
-
-        return `
-            <div class="subscription-card">
-                <div class="subscription-header">
-                    <div class="subscription-info">
-                        <h4>${sub.name}</h4>
-                        <span class="subscription-category">${sub.category}</span>
-                        ${cardName ? `<span style="font-size: 0.7rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;"><i class="fas fa-credit-card"></i> ${cardName}</span>` : ''}
-                    </div>
-                    <span class="subscription-badge ${sub.status}">
-                        ${sub.status === 'active' ? 'Ativa' : 'Inativa'}
-                    </span>
-                </div>
-                <div class="subscription-value">${formatCurrencyDisplay(sub.value)}<small>/mês</small></div>
-                <div class="subscription-meta">
-                    <span><i class="fas fa-calendar-alt"></i> ${nextDue}</span>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="subscription-delete" onclick="editSubscription('${sub.id}')" title="Editar" style="color: var(--color-neutral);">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="subscription-delete" onclick="deleteSubscription('${sub.id}')" title="Deletar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
 }
 
 function calculateNextDue(dueDay) {
@@ -846,12 +728,9 @@ async function loadInstallments() {
 
         // Recalcular startMonth de parcelamentos com dados inconsistentes (apenas uma vez)
         await fixInstallmentsStartMonth();
-
-        renderInstallments();
     } catch (error) {
         console.error('Erro ao carregar parcelamentos:', error);
         installments = [];
-        renderInstallments();
     }
 }
 
@@ -944,80 +823,6 @@ function calculateCurrentInstallment(installment, targetMonth = null, targetYear
 
     // Não ultrapassar o total de parcelas
     return Math.min(calculatedCurrent, installment.totalInstallments);
-}
-
-function renderInstallments() {
-    const grid = document.getElementById('installmentsGrid');
-    const emptyState = document.getElementById('emptyInstallments');
-
-    if (!grid || !emptyState) return;
-
-    if (installments.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
-    emptyState.classList.add('hidden');
-
-    grid.innerHTML = installments.map(inst => {
-        const current = calculateCurrentInstallment(inst);
-        const remaining = inst.totalInstallments - current + 1;
-        const percentage = ((current - 1) / inst.totalInstallments) * 100;
-        const installmentValue = inst.totalValue / inst.totalInstallments;
-        const remainingValue = installmentValue * remaining;
-
-        // Encontra o cartão associado
-        const card = creditCards.find(c => c.id === inst.cardId);
-        const cardName = card ? `${card.name} - ${card.institution}` : 'Cartão não encontrado';
-
-        return `
-            <div class="installment-card">
-                <div class="installment-header">
-                    <div class="installment-info">
-                        <h4>${inst.description}</h4>
-                        <span style="font-size: 0.7rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
-                            <i class="fas fa-credit-card"></i> ${cardName}
-                        </span>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="installment-delete" onclick="editInstallment('${inst.id}')" title="Editar" style="color: var(--color-neutral);">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="installment-delete" onclick="deleteInstallment('${inst.id}')" title="Deletar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="installment-value">${formatCurrencyDisplay(inst.totalValue)}</div>
-                <div class="installment-progress-container">
-                    <div class="installment-progress-label">
-                        <span class="installment-progress-label-text">${current}/${inst.totalInstallments} parcelas</span>
-                        <span class="installment-progress-percentage">${percentage.toFixed(0)}%</span>
-                    </div>
-                    <div class="installment-progress-bar">
-                        <div class="installment-progress-fill" style="width: ${percentage}%"></div>
-                    </div>
-                </div>
-                <div class="installment-footer">
-                    <span>Valor da parcela: ${formatCurrencyDisplay(inst.totalValue / inst.totalInstallments)}</span>
-                    <span>Restante: ${formatCurrencyDisplay(remainingValue)}</span>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label style="font-size: 12px; color: #64748b;">Parcela atual:</label>
-                    <input
-                        type="number"
-                        class="form-input"
-                        value="${current}"
-                        min="1"
-                        max="${inst.totalInstallments}"
-                        onchange="updateInstallmentProgress('${inst.id}', this.value)"
-                        style="margin-top: 4px;"
-                    >
-                </div>
-            </div>
-        `;
-    }).join('');
 }
 
 async function handleInstallmentSubmit(e) {
@@ -1179,55 +984,10 @@ async function loadProjections() {
         }));
 
         console.log(`${projections.length} projeções carregadas`);
-        renderProjections();
     } catch (error) {
         console.error('Erro ao carregar projeções:', error);
         projections = [];
-        renderProjections();
     }
-}
-
-function renderProjections() {
-    const grid = document.getElementById('projectionsGrid');
-    const emptyState = document.getElementById('emptyProjections');
-
-    if (!grid || !emptyState) return;
-
-    if (projections.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
-    emptyState.classList.add('hidden');
-
-    grid.innerHTML = projections.map(proj => `
-        <div class="projection-card ${proj.status}">
-            <div class="projection-header">
-                <div class="projection-info">
-                    <h4>${proj.description}</h4>
-                    <span class="projection-date">
-                        <i class="fas fa-calendar-alt"></i>
-                        ${formatDate(proj.date)}
-                    </span>
-                </div>
-                <span class="projection-badge ${proj.status}">
-                    ${proj.status === 'pending' ? 'Pendente' : 'Recebido'}
-                </span>
-            </div>
-            <div class="projection-value">${formatCurrencyDisplay(proj.value)}</div>
-            <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-                ${proj.status === 'pending' ? `
-                    <button class="btn btn-success btn-sm" onclick="updateProjectionStatus('${proj.id}', 'received')" style="flex: 1;">
-                        <i class="fas fa-check"></i> Marcar como Recebido
-                    </button>
-                ` : ''}
-                <button class="btn btn-danger btn-sm" onclick="deleteProjection('${proj.id}')" style="flex: 1;">
-                    <i class="fas fa-trash"></i> Deletar
-                </button>
-            </div>
-        </div>
-    `).join('');
 }
 
 async function handleProjectionSubmit(e) {
@@ -1325,11 +1085,9 @@ async function loadCreditCards() {
 
         console.log(`${creditCards.length} cartões carregados`);
         await loadCardExpenses();
-        renderCreditCards();
     } catch (error) {
         console.error('Erro ao carregar cartões:', error);
         creditCards = [];
-        renderCreditCards();
     }
 }
 
@@ -1349,66 +1107,6 @@ async function loadCardExpenses() {
         console.error('Erro ao carregar gastos:', error);
         cardExpenses = [];
     }
-}
-
-function renderCreditCards() {
-    const grid = document.getElementById('creditCardsGrid');
-    const emptyState = document.getElementById('emptyCreditCards');
-
-    if (!grid || !emptyState) return;
-
-    if (creditCards.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
-    emptyState.classList.add('hidden');
-
-    grid.innerHTML = creditCards.map(card => {
-        const currentBill = calculateCurrentBill(card);
-        const availableLimit = card.limit - currentBill;
-        const usagePercentage = (currentBill / card.limit) * 100;
-
-        return `
-            <div class="credit-card-item">
-                <div class="credit-card-header">
-                    <div>
-                        <div class="credit-card-name">${card.name}</div>
-                        <div class="credit-card-institution">${card.institution}</div>
-                    </div>
-                    <button class="installment-delete" onclick="deleteCreditCard('${card.id}')" title="Deletar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                <div class="credit-card-amount">${formatCurrencyDisplay(currentBill)}</div>
-                <div class="installment-progress-container">
-                    <div class="installment-progress-label">
-                        <span class="installment-progress-label-text">Limite disponível</span>
-                        <span class="installment-progress-percentage">${formatCurrencyDisplay(availableLimit)}</span>
-                    </div>
-                    <div class="installment-progress-bar">
-                        <div class="installment-progress-fill" style="width: ${Math.min(usagePercentage, 100)}%; background: linear-gradient(90deg, #3B82F6, #1E40AF);"></div>
-                    </div>
-                </div>
-                <div class="credit-card-info">
-                    <span>Fechamento: dia ${card.closingDay}</span>
-                    <span>Vencimento: dia ${card.dueDay}</span>
-                </div>
-                <div class="credit-card-actions">
-                    <button class="btn-card-action btn-view-details" onclick="showCardBillDetails('${card.id}')" style="flex: 1;">
-                        <i class="fas fa-list"></i> Ver Detalhes
-                    </button>
-                    <button class="btn-card-action btn-add-expense" onclick="openCardExpenseModal('${card.id}')">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <button class="btn-card-action btn-edit-card" onclick="editCreditCard('${card.id}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
 }
 
 // Contador de chamadas (para debug)
