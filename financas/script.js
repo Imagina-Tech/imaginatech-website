@@ -1389,12 +1389,12 @@ function showCardBillDetails(cardId) {
     const subscriptionsTotal = activeSubscriptions.reduce((sum, sub) => sum + sub.value, 0);
     const grandTotal = creditTotal + installmentsTotal + subscriptionsTotal;
 
-    // Montar o HTML do modal
+    // Montar o HTML do modal em 3 colunas
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
 
     let html = `
-        <div style="margin-bottom: 1.5rem;">
+        <div style="margin-bottom: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
                 <div>
                     <div style="font-size: 0.875rem; color: var(--text-muted);">Total da Fatura</div>
@@ -1406,107 +1406,73 @@ function showCardBillDetails(cardId) {
                 </div>
             </div>
         </div>
-    `;
 
-    // Seção de Compras no Crédito
-    if (creditTransactions.length > 0) {
-        html += `
-            <div style="margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-credit-card" style="color: #3b82f6;"></i>
-                    Compras no Crédito (${creditTransactions.length})
-                    <span style="margin-left: auto; font-size: 0.875rem; color: #3b82f6;">${formatCurrencyDisplay(creditTotal)}</span>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <!-- Coluna 1: Compras no Crédito -->
+            <div style="display: flex; flex-direction: column;">
+                <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                    <i class="fas fa-credit-card"></i>
+                    Compras (${creditTransactions.length})
+                    <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(creditTotal)}</span>
                 </h3>
-                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
-                    ${creditTransactions.map(t => `
-                        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight: 500; color: #fff;">${t.description}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(t.date).toLocaleDateString('pt-BR')} • ${t.category}</div>
-                            </div>
-                            <div style="font-weight: 600; color: #3b82f6;">${formatCurrencyDisplay(t.value)}</div>
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow-y: auto; flex: 1; max-height: 400px;">
+                    ${creditTransactions.length > 0 ? creditTransactions.map(t => `
+                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
+                            <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">${t.description}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')}</div>
+                            <div style="font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${formatCurrencyDisplay(t.value)}</div>
                         </div>
-                    `).join('')}
+                    `).join('') : '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma compra</div>'}
                 </div>
             </div>
-        `;
-    }
 
-    // Seção de Parcelamentos
-    if (activeInstallments.length > 0) {
-        html += `
-            <div style="margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-calendar-alt" style="color: #f59e0b;"></i>
-                    Parcelamentos (${activeInstallments.length})
-                    <span style="margin-left: auto; font-size: 0.875rem; color: #f59e0b;">${formatCurrencyDisplay(installmentsTotal)}</span>
+            <!-- Coluna 2: Parcelamentos -->
+            <div style="display: flex; flex-direction: column;">
+                <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                    <i class="fas fa-calendar-alt"></i>
+                    Parcelas (${activeInstallments.length})
+                    <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(installmentsTotal)}</span>
                 </h3>
-                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
-                    ${activeInstallments.map(inst => {
-                        // Calcular número da parcela atual
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow-y: auto; flex: 1; max-height: 400px;">
+                    ${activeInstallments.length > 0 ? activeInstallments.map(inst => {
                         let currentInstallmentNum;
                         if (inst.startMonth !== undefined && inst.startYear !== undefined) {
                             const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
                             currentInstallmentNum = 1 + monthsSinceStart;
                         } else {
-                            // Para parcelamentos antigos, usar currentInstallment
                             currentInstallmentNum = inst.currentInstallment || 1;
                         }
-
-                        // Calcular valor da parcela
                         const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
-
-                        // Categoria (pode não existir em parcelamentos antigos)
-                        const category = inst.category || '';
-
                         return `
-                            <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: 500; color: #fff;">${inst.description}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Parcela ${currentInstallmentNum}/${inst.totalInstallments}${category ? ' • ' + category : ''}</div>
-                                </div>
-                                <div style="font-weight: 600; color: #f59e0b;">${formatCurrencyDisplay(installmentValue)}</div>
+                            <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
+                                <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">${inst.description}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">Parcela ${currentInstallmentNum}/${inst.totalInstallments}</div>
+                                <div style="font-weight: 600; color: #f59e0b; font-size: 0.875rem;">${formatCurrencyDisplay(installmentValue)}</div>
                             </div>
                         `;
-                    }).join('')}
+                    }).join('') : '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma parcela</div>'}
                 </div>
             </div>
-        `;
-    }
 
-    // Seção de Assinaturas
-    if (activeSubscriptions.length > 0) {
-        html += `
-            <div style="margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-sync-alt" style="color: #8b5cf6;"></i>
-                    Assinaturas Recorrentes (${activeSubscriptions.length})
-                    <span style="margin-left: auto; font-size: 0.875rem; color: #8b5cf6;">${formatCurrencyDisplay(subscriptionsTotal)}</span>
+            <!-- Coluna 3: Assinaturas -->
+            <div style="display: flex; flex-direction: column;">
+                <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                    <i class="fas fa-sync-alt"></i>
+                    Assinaturas (${activeSubscriptions.length})
+                    <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(subscriptionsTotal)}</span>
                 </h3>
-                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
-                    ${activeSubscriptions.map(sub => `
-                        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight: 500; color: #fff;">${sub.name}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">${sub.category}</div>
-                            </div>
-                            <div style="font-weight: 600; color: #8b5cf6;">${formatCurrencyDisplay(sub.value)}</div>
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow-y: auto; flex: 1; max-height: 400px;">
+                    ${activeSubscriptions.length > 0 ? activeSubscriptions.map(sub => `
+                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
+                            <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">${sub.name}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${sub.category}</div>
+                            <div style="font-weight: 600; color: #8b5cf6; font-size: 0.875rem;">${formatCurrencyDisplay(sub.value)}</div>
                         </div>
-                    `).join('')}
+                    `).join('') : '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma assinatura</div>'}
                 </div>
             </div>
-        `;
-    }
-
-    // Se não houver nenhum item
-    if (creditTransactions.length === 0 && activeInstallments.length === 0 && activeSubscriptions.length === 0) {
-        html += `
-            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                <p>Nenhum lançamento nesta fatura</p>
-            </div>
-        `;
-    }
+        </div>
+    `;
 
     document.getElementById('cardBillDetailsContent').innerHTML = html;
     document.getElementById('cardBillDetailsModal').classList.add('active');
@@ -2264,6 +2230,14 @@ function openTransactionModal() {
     currentPaymentMethod = 'debit';
     selectTransactionType('income');
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
+}
+
+// Função genérica para fechar modais
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function closeTransactionModal() {

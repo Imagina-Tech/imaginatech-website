@@ -405,7 +405,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                 <div class="form-group" id="creditCardGroup" style="display: none;">
                     <label for="transactionCard">Cartão de Crédito</label>
-                    <select id="transactionCard" class="form-select">
+                    <select id="transactionCard" class="form-select" data-conditional="true">
                         <option value="">Selecione um cartão</option>
                     </select>
                 </div>
@@ -492,7 +492,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                 <div class="form-group">
                     <label for="subCard">Cartão (Opcional)</label>
-                    <select id="subCard" class="form-select">
+                    <select id="subCard" class="form-select" data-optional="true">
                         <option value="">Sem cartão</option>
                     </select>
                 </div>
@@ -830,12 +830,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
     <!-- Modal de Detalhes da Fatura do Cartão -->
     <div class="modal-overlay" id="cardBillDetailsModal">
-        <div class="modal-container" style="max-width: 700px;">
+        <div class="modal-container" style="max-width: 1200px; width: 95%;">
             <div class="modal-header">
                 <h2 id="cardBillDetailsTitle">Detalhes da Fatura</h2>
                 <button class="modal-close" onclick="closeModal('cardBillDetailsModal')"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-form" id="cardBillDetailsContent" style="max-height: 70vh; overflow-y: auto;">
+            <div class="modal-form" id="cardBillDetailsContent">
                 <!-- Conteúdo será preenchido dinamicamente -->
             </div>
         </div>
