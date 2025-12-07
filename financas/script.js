@@ -461,12 +461,10 @@ async function handleTransactionSubmit(e) {
             date
         };
 
-        // Adicionar informações de pagamento apenas para despesas
-        if (currentTransactionType === 'expense') {
-            transactionData.paymentMethod = currentPaymentMethod;
-            if (currentPaymentMethod === 'credit') {
-                transactionData.cardId = document.getElementById('transactionCard').value;
-            }
+        // Adicionar informações de pagamento (para despesas e reembolsos no crédito)
+        transactionData.paymentMethod = currentPaymentMethod;
+        if (currentPaymentMethod === 'credit') {
+            transactionData.cardId = document.getElementById('transactionCard').value;
         }
 
         if (editingTransactionId) {
@@ -1701,9 +1699,9 @@ function updateKPIs() {
                transactionDate.getFullYear() === currentYear;
     });
 
-    // Total Income (current month)
+    // Total Income (current month) - exclui reembolsos no crédito
     const totalIncome = currentMonthTransactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
     // Total Expense (current month) - apenas débito direto (crédito é contado na fatura do cartão)
@@ -1723,9 +1721,9 @@ function updateKPIs() {
     // Total Expense = débito + faturas dos cartões de crédito
     const totalExpense = totalExpenseDebit + totalCreditCards;
 
-    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito
+    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito (exclui reembolsos no crédito)
     const totalIncomeAllTime = transactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
     const totalDebitAllTime = transactions

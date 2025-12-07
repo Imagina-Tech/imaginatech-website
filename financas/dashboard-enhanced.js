@@ -91,6 +91,11 @@ function showTransactionsList(filterType) {
             return match && t.type === 'expense' && t.paymentMethod !== 'credit';
         }
 
+        // Se for filtro de income, excluir reembolsos no crédito (eles aparecem no modal do cartão)
+        if (filterType === 'income') {
+            return match && t.type === 'income' && t.paymentMethod !== 'credit';
+        }
+
         return filterType === 'all' ? match : (match && t.type === filterType);
     });
 
