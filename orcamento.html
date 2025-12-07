@@ -487,18 +487,22 @@
             letter-spacing: 0.2rem;
         }
 
-        .budget-frame-container {
+        .budget-content-container {
             background: white;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .budget-frame {
+        .budget-content {
             width: 100%;
-            min-height: 80vh;
-            border: none;
-            display: block;
+            min-height: 50vh;
+        }
+
+        /* Estilos para integrar o orçamento */
+        .budget-content .container {
+            max-width: 100%;
+            margin: 0;
         }
 
         /* LOADING */
@@ -710,8 +714,8 @@
                         <span>Voltar</span>
                     </button>
                 </div>
-                <div class="budget-frame-container">
-                    <iframe id="budgetFrame" class="budget-frame"></iframe>
+                <div class="budget-content-container">
+                    <div id="budgetContent" class="budget-content"></div>
                 </div>
             </div>
         </div>
@@ -749,7 +753,7 @@
         const btnSearch = document.getElementById('btnSearch');
         const errorMessage = document.getElementById('errorMessage');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const budgetFrame = document.getElementById('budgetFrame');
+        const budgetContent = document.getElementById('budgetContent');
         const displayCode = document.getElementById('displayCode');
 
         // ==================== FUNÇÕES ====================
@@ -819,36 +823,56 @@
         }
 
         // Carregar orçamento
-        function loadBudget(code) {
+        async function loadBudget(code) {
             loadingOverlay.classList.add('active');
 
             const budgetPath = BUDGETS[code];
             displayCode.textContent = code;
 
-            // Simular delay para melhor UX
-            setTimeout(() => {
-                budgetFrame.src = budgetPath;
+            try {
+                // Fazer fetch do HTML do orçamento
+                const response = await fetch(budgetPath);
 
-                // Aguardar iframe carregar
-                budgetFrame.onload = () => {
-                    loadingOverlay.classList.remove('active');
-                    welcomeScreen.classList.add('hidden');
-                    budgetViewer.classList.add('active');
+                if (!response.ok) {
+                    throw new Error('Orçamento não encontrado');
+                }
 
-                    // Atualizar URL sem recarregar
-                    const newUrl = `${window.location.pathname}?code=${code}`;
-                    window.history.pushState({ code }, '', newUrl);
-                };
+                const htmlText = await response.text();
 
-                // Fallback se iframe não carregar
-                setTimeout(() => {
-                    if (loadingOverlay.classList.contains('active')) {
-                        loadingOverlay.classList.remove('active');
-                        welcomeScreen.classList.add('hidden');
-                        budgetViewer.classList.add('active');
-                    }
-                }, 3000);
-            }, 500);
+                // Criar um parser para extrair conteúdo
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+
+                // Extrair os estilos do head
+                const styles = doc.querySelectorAll('style');
+                let stylesHtml = '';
+                styles.forEach(style => {
+                    stylesHtml += style.outerHTML;
+                });
+
+                // Extrair o conteúdo do body
+                const bodyContent = doc.body.innerHTML;
+
+                // Injetar estilos e conteúdo
+                budgetContent.innerHTML = stylesHtml + bodyContent;
+
+                // Mostrar visualizador
+                loadingOverlay.classList.remove('active');
+                welcomeScreen.classList.add('hidden');
+                budgetViewer.classList.add('active');
+
+                // Atualizar URL sem recarregar
+                const newUrl = `${window.location.pathname}?code=${code}`;
+                window.history.pushState({ code }, '', newUrl);
+
+                // Scroll suave para o topo
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('Erro ao carregar orçamento:', error);
+                loadingOverlay.classList.remove('active');
+                showError('Erro ao carregar orçamento');
+            }
         }
 
         // Mostrar erro
@@ -867,10 +891,13 @@
             budgetViewer.classList.remove('active');
             welcomeScreen.classList.remove('hidden');
             budgetCodeInput.value = '';
-            budgetFrame.src = '';
+            budgetContent.innerHTML = '';
 
             // Limpar URL
             window.history.pushState({}, '', window.location.pathname);
+
+            // Scroll suave para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Verificar URL ao carregar página
