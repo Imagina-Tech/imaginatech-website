@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            min-height: 100vh;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(64, 224, 208, 0.1);
+            border-radius: 50%;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo .tech {
+            color: #40E0D0;
+        }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .info-item {
+            color: white;
+        }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: clamp(18px, 3.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+        }
+        
+        .service-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: clamp(13px, 2vw, 14px);
+        }
+        
+        .material-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .material-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .material-card.recommended {
+            border-color: #40E0D0;
+            box-shadow: 0 0 20px rgba(64, 224, 208, 0.2);
+        }
+        
+        .material-card.recommended::before {
+            content: '⭐ RECOMENDADO';
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #40E0D0;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .material-name {
+            font-size: clamp(16px, 2.5vw, 18px);
+            font-weight: 600;
+            color: #1a2332;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .material-features {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .material-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .material-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-label {
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: clamp(16px, 3vw, 18px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .pricing-tables {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+        }
+        
+        .price-table.recommended {
+            border: 2px solid #40E0D0;
+            background: rgba(64, 224, 208, 0.1);
+        }
+        
+        .price-table-title {
+            color: #40E0D0;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            line-height: 1.3;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-row:last-child {
+            border-bottom: none;
+        }
+        
+        .quantity {
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: clamp(12px, 2vw, 14px);
+            flex-shrink: 0;
+        }
+        
+        .price-info {
+            text-align: right;
+            flex: 1;
+            margin-left: 10px;
+        }
+        
+        .unit-price {
+            color: white;
+            display: block;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: clamp(11px, 1.8vw, 13px);
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item {
+            display: flex;
+            align-items: start;
+        }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .process-icon::before {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .process-text {
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-info {
+            margin-bottom: 20px;
+            font-size: clamp(12px, 2vw, 13px);
+            line-height: 1.6;
+        }
+        
+        .contact-info {
+            color: #40E0D0;
+            font-size: clamp(11px, 1.8vw, 12px);
+            line-height: 1.6;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%);
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .highlight-box.exclusive {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border-left: 4px solid #FFD700;
+        }
+        
+        .highlight-text {
+            color: #1a2332;
+            font-size: clamp(12px, 2vw, 14px);
+            line-height: 1.6;
+        }
+        
+        .recommendation-badge {
+            background: #40E0D0;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(64, 224, 208, 0.3);
+            font-size: clamp(12px, 2.2vw, 14px);
+            line-height: 1.4;
+        }
+        
+        /* Mobile Responsiveness */
+        @media screen and (max-width: 768px) {
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header::before {
+                width: 200px;
+                height: 200px;
+                top: -30%;
+                right: -20%;
+            }
+            
+            .doc-title {
+                line-height: 1.2;
+                margin-bottom: 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                margin-bottom: 30px;
+            }
+            
+            .service-box {
+                padding: 15px;
+            }
+            
+            .material-comparison {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .material-card {
+                padding: 15px;
+            }
+            
+            .material-card:hover {
+                transform: none;
+            }
+            
+            .pricing-section {
+                padding: 20px 15px;
+            }
+            
+            .pricing-tables {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .price-table {
+                padding: 15px;
+            }
+            
+            .price-row {
+                padding: 10px 5px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .price-info {
+                margin-left: 0;
+                margin-top: 8px;
+                text-align: left;
+                width: 100%;
+            }
+            
+            .unit-price {
+                margin-bottom: 4px;
+            }
+            
+            .process-features {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .highlight-box {
+                padding: 12px;
+            }
+            
+            .recommendation-badge {
+                padding: 10px;
+                margin: 15px 0;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+                padding-bottom: 8px;
+            }
+            
+            .service-detail br {
+                display: inline;
+            }
+            
+            .footer {
+                padding: 20px 15px;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+            
+            .material-card:hover {
+                transform: none;
+            }
+            
+            .header {
+                padding: 30px;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            .pricing-tables {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .material-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        /* Landscape mobile */
+        @media screen and (max-width: 896px) and (orientation: landscape) {
+            .header {
+                padding: 20px 25px;
+            }
+            
+            .content {
+                padding: 25px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .material-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .pricing-tables {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        /* Ultra-wide screens */
+        @media screen and (min-width: 1400px) {
+            .container {
+                max-width: 1200px;
+            }
+            
+            body {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO PARA IMPRESSÃO 3D</div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Data</div>
+                    <div class="info-value">09 de Setembro de 2025</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Orçamento Nº</div>
+                    <div class="info-value">43750-2025-09-09</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Validade</div>
+                    <div class="info-value">14 dias</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Projeto</div>
+                    <div class="info-value">Caixas Personalizadas 3D</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title">DETALHES DO SERVIÇO</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">IMPRESSÃO 3D DE CAIXAS CUSTOMIZADAS</div>
+                    <div class="service-detail"><strong>Dimensões:</strong> 12cm x 12cm (base) x 30cm (altura)</div>
+                    <div class="service-detail"><strong>Formato:</strong> Paralelepípedo retangular</div>
+                    <div class="service-detail"><strong>Tecnologia:</strong> Impressão FDM (Modelagem por Deposição Fundida)</div>
+                    <div class="service-detail"><strong>Cor:</strong> Preto</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Padrão FDM com camadas de 0,2 a 1mm de resolução conforme ajuste fino do projeto</div>
+                </div>
+                
+                <div class="highlight-box exclusive">
+                    <div class="highlight-text">
+                        <strong>📐 MODELAGEM 3D E DIREITOS AUTORAIS EXCLUSIVOS</strong><br><br>
+                        • A modelagem 3D da caixa será desenvolvida por nossa equipe técnica especializada com base nas especificações do projeto<br>
+                        • O arquivo somente será enviado para produção após aprovação formal das medidas pelo cliente<br>
+                        • O cliente receberá os direitos autorais completos e exclusivos sobre o arquivo 3D<br>
+                        • Garantia de exclusividade total - prevenção contra réplicas não autorizadas<br>
+                        • Entrega do arquivo STL original ao término do projeto para uso exclusivo do cliente
+                    </div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">SOBRE O PROCESSO FDM</div>
+                    <div class="process-features">
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Alta precisão dimensional com tolerância de ±0.2mm</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Peças robustas e funcionais para uso profissional</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Produção escalável para grandes volumes</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Controle de qualidade em cada etapa do processo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">OPÇÕES DE MATERIAL</h2>
+                
+                <div class="recommendation-badge">
+                    ⭐ A IMAGINATECH RECOMENDA: ASA - MÁXIMA DURABILIDADE E RESISTÊNCIA
+                </div>
+                
+                <div class="material-comparison">
+                    <div class="material-card">
+                        <div class="material-name">ABS PREMIUM</div>
+                        <ul class="material-features">
+                            <li><span class="feature-label">Resistência UV:</span> Boa com aditivos/tratamentos</li>
+                            <li><span class="feature-label">Resistência ao Impacto:</span> Excelente absorção de choques</li>
+                            <li><span class="feature-label">Estabilidade de Cor:</span> Boa em curto/médio prazo</li>
+                            <li><span class="feature-label">Durabilidade Externa:</span> 2-5 anos com proteção adequada</li>
+                            <li><span class="feature-label">Resistência Térmica:</span> Boa (-20°C a 80°C)</li>
+                            <li><span class="feature-label">Resistência Química:</span> Muito boa para óleos e graxas</li>
+                            <li><span class="feature-label">Rigidez Estrutural:</span> Alta resistência mecânica</li>
+                            <li><span class="feature-label">Resistência à Umidade:</span> Boa com tratamento</li>
+                            <li><span class="feature-label">Custo-Benefício:</span> Excelente para uso moderado</li>
+                            <li><span class="feature-label">Vida Útil Externa:</span> 3-5 anos (protegido)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="material-card recommended">
+                        <div class="material-name">ASA</div>
+                        <ul class="material-features">
+                            <li><span class="feature-label">Resistência UV:</span> Excelente nativamente</li>
+                            <li><span class="feature-label">Resistência ao Impacto:</span> Mantém excelente resistência por anos</li>
+                            <li><span class="feature-label">Estabilidade de Cor:</span> Superior - cores vibrantes permanentes</li>
+                            <li><span class="feature-label">Durabilidade Externa:</span> 10+ anos em exposição direta</li>
+                            <li><span class="feature-label">Resistência Térmica:</span> Ótima (-40°C a 100°C)</li>
+                            <li><span class="feature-label">Resistência Química:</span> Excelente para óleos e intempéries</li>
+                            <li><span class="feature-label">Rigidez Estrutural:</span> Alta resistência mantida ao longo do tempo</li>
+                            <li><span class="feature-label">Resistência à Umidade:</span> Excelente sem necessidade de tratamento</li>
+                            <li><span class="feature-label">Custo-Benefício:</span> Ideal para aplicações críticas externas</li>
+                            <li><span class="feature-label">Vida Útil Externa:</span> 15-20 anos (exposição total)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <div class="highlight-text">
+                        <strong>⭐ POR QUE A IMAGINATECH RECOMENDA O ASA?</strong><br><br>
+                        Após análise técnica detalhada do seu projeto, nossa equipe de especialistas recomenda fortemente o uso do ASA. Este material oferece resistência UV nativa superior, mantém suas propriedades mecânicas intactas ao longo dos anos e garante que suas peças permanecerão com aparência e funcionalidade impecáveis mesmo após exposição prolongada a condições adversas. O ASA representa o melhor investimento a longo prazo, eliminando necessidade de substituições frequentes e garantindo a satisfação duradoura com o produto final.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">TABELA DE PREÇOS</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">VALORES POR MATERIAL E QUANTIDADE</div>
+                    
+                    <div class="pricing-tables">
+                        <div class="price-table">
+                            <div class="price-table-title">ABS PREMIUM PRETO</div>
+                            <div class="price-row">
+                                <span class="quantity">1 unidade</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 94,65</span>
+                                </div>
+                            </div>
+                            <div class="price-row">
+                                <span class="quantity">10 unidades</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 85,60/un</span>
+                                    <span class="total-price">Total: R$ 856,00</span>
+                                </div>
+                            </div>
+                            <div class="price-row">
+                                <span class="quantity">500 unidades</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 79,21/un</span>
+                                    <span class="total-price">Total: R$ 39.605,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="price-table recommended">
+                            <div class="price-table-title">⭐ ASA PRETO (RECOMENDADO)</div>
+                            <div class="price-row">
+                                <span class="quantity">1 unidade</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 151,30</span>
+                                </div>
+                            </div>
+                            <div class="price-row">
+                                <span class="quantity">10 unidades</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 140,98/un</span>
+                                    <span class="total-price">Total: R$ 1.409,80</span>
+                                </div>
+                            </div>
+                            <div class="price-row">
+                                <span class="quantity">500 unidades</span>
+                                <div class="price-info">
+                                    <span class="unit-price">R$ 116,73/un</span>
+                                    <span class="total-price">Total: R$ 58.365,00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Prazo de Produção:</strong> 
+                        <br>• 1 unidade: 4 dias úteis
+                        <br>• 10 unidades: 9 dias úteis
+                        <br>• 500 unidades: A combinar (entregas parciais disponíveis)
+                    </div>
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 50% de entrada + 50% na entrega</div>
+                    <div class="service-detail"><strong>Métodos Aceitos:</strong> PIX, Transferência Bancária (TED) e Cartão de Crédito</div>
+                    <div class="service-detail"><strong>Frete:</strong> A calcular conforme localização (consulte condições)</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação</div>
+                    <div class="service-detail"><strong>Documentação Fiscal:</strong> Nota fiscal eletrônica incluída</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa<br>
+                Rio de Janeiro - RJ, CEP: 21931577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539<br>
+                E-mail: 3d3printers@gmail.com<br>
+                <br>
+                Agradecemos a oportunidade de apresentar esta proposta.<br>
+                Estamos à disposição para esclarecer quaisquer dúvidas.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

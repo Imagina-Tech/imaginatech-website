@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- 
+    ==================================================
+    ARQUIVO: orcamento-trofeu.html
+    MÓDULO: Orçamento Personalizado
+    SISTEMA: ImaginaTech - Gestão de Impressão 3D
+    VERSÃO: 1.0
+    DATA: 17/11/2025
+    IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+    ==================================================
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Troféu RECONHECE+</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            color: #333;
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .scroll-animate {
+            opacity: 0;
+            transition: all 0.8s ease-out;
+        }
+        
+        .scroll-animate.active {
+            opacity: 1;
+        }
+        
+        .fade-up {
+            transform: translateY(30px);
+        }
+        
+        .fade-up.active {
+            transform: translateY(0);
+        }
+        
+        .slide-left {
+            transform: translateX(-30px);
+        }
+        
+        .slide-left.active {
+            transform: translateX(0);
+        }
+        
+        .slide-right {
+            transform: translateX(30px);
+        }
+        
+        .slide-right.active {
+            transform: translateX(0);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(64, 224, 208, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -15%;
+            width: 250px;
+            height: 250px;
+            background: rgba(64, 224, 208, 0.08);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            color: white;
+            animation: slideInLeft 1s ease-out;
+        }
+        
+        .logo .tech {
+            color: #40E0D0;
+        }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+            animation: slideInRight 1s ease-out;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-item {
+            color: white;
+            animation: fadeInUp 1s ease-out;
+            animation-fill-mode: backwards;
+        }
+        
+        .info-item:nth-child(1) { animation-delay: 0.1s; }
+        .info-item:nth-child(2) { animation-delay: 0.2s; }
+        .info-item:nth-child(3) { animation-delay: 0.3s; }
+        .info-item:nth-child(4) { animation-delay: 0.4s; }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: clamp(18px, 3.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: #1a2332;
+            transition: width 0.5s ease-out;
+        }
+        
+        .section-title.active::after {
+            width: 100px;
+        }
+        
+        .service-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .service-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: clamp(13px, 2vw, 14px);
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: clamp(16px, 3vw, 18px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #40E0D0;
+            margin: 0 auto;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        
+        .price-table-title {
+            color: #40E0D0;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            line-height: 1.3;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        
+        .price-row:hover {
+            transform: translateX(5px);
+            background: rgba(64, 224, 208, 0.05);
+        }
+        
+        .price-row:last-child {
+            border-bottom: none;
+        }
+        
+        .quantity {
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: clamp(12px, 2vw, 14px);
+            flex-shrink: 0;
+        }
+        
+        .price-info {
+            text-align: right;
+            flex: 1;
+            margin-left: 10px;
+        }
+        
+        .unit-price {
+            color: white;
+            display: block;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: clamp(11px, 1.8vw, 13px);
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item {
+            display: flex;
+            align-items: start;
+            transition: transform 0.3s ease;
+        }
+        
+        .process-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .process-item:hover .process-icon {
+            transform: scale(1.2);
+        }
+        
+        .process-icon::before {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .process-text {
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+            margin-top: auto;
+        }
+        
+        .footer-info {
+            margin-bottom: 20px;
+            font-size: clamp(12px, 2vw, 13px);
+            line-height: 1.6;
+        }
+        
+        .contact-info {
+            color: #40E0D0;
+            font-size: clamp(11px, 1.8vw, 12px);
+            line-height: 1.6;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%);
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .highlight-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(64, 224, 208, 0.2);
+        }
+        
+        .highlight-box.warning {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border-left: 4px solid #FF6B6B;
+        }
+        
+        .highlight-box.info {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+            border-left: 4px solid #3498db;
+        }
+        
+        .highlight-text {
+            color: #1a2332;
+            font-size: clamp(12px, 2vw, 14px);
+            line-height: 1.6;
+        }
+        
+        .signature-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .signature-text {
+            color: #555;
+            font-size: clamp(12px, 2vw, 14px);
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .signature-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .signature-box {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .signature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #333;
+            margin-bottom: 10px;
+            height: 60px;
+        }
+        
+        .signature-label {
+            color: #1a2332;
+            font-weight: 600;
+            font-size: clamp(12px, 2vw, 14px);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .signature-details {
+            color: #666;
+            font-size: clamp(11px, 1.8vw, 12px);
+            line-height: 2;
+        }
+        
+        .signature-details p {
+            margin: 8px 0;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .header { padding: 25px 20px; }
+            .info-grid { grid-template-columns: 1fr; gap: 12px; padding: 15px; }
+            .content { padding: 20px; }
+            .section { margin-bottom: 30px; }
+            .service-box { padding: 15px; }
+            .pricing-section { padding: 20px 15px; }
+            .price-table { padding: 15px; }
+            .price-row { padding: 10px 5px; flex-direction: column; align-items: flex-start; }
+            .price-info { margin-left: 0; margin-top: 8px; text-align: left; width: 100%; }
+            .process-features { grid-template-columns: 1fr; gap: 12px; }
+            .highlight-box { padding: 12px; }
+            .signature-boxes { grid-template-columns: 1fr; gap: 20px; }
+            .signature-section { padding: 20px 15px; }
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            @page {
+                size: A4;
+                margin: 8mm;
+            }
+            html, body { 
+                width: 100%;
+                background: white !important; 
+                font-size: 10pt !important; 
+            }
+            .container { 
+                max-width: 100% !important; 
+                box-shadow: none !important;
+            }
+            .header { padding: 15px !important; }
+            .content { padding: 10px !important; }
+            .section { margin-bottom: 20px !important; page-break-inside: avoid !important; }
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO: TROFÉU RECONHECE+</div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Data</div>
+                    <div class="info-value">17 de Novembro de 2025</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Orçamento Nº</div>
+                    <div class="info-value">43752-2025-11-17</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Validade</div>
+                    <div class="info-value">7 dias</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Projeto</div>
+                    <div class="info-value">Troféu RECONHECE+</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">DETALHES DO SERVIÇO</h2>
+                <div class="service-box">
+                    <div class="service-title">IMPRESSÃO 3D DE TROFÉUS PERSONALIZADOS - RECONHECE+</div>
+                    <div class="service-detail"><strong>Modelo:</strong> Troféu RECONHECE+ - Design exclusivo personalizado.</div>
+                    <div class="service-detail"><strong>Material:</strong> PLA Gold Premium (Dourado com acabamento metálico).</div>
+                    <div class="service-detail"><strong>Tecnologia:</strong> Impressão FDM (Modelagem por Deposição Fundida).</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Resolução otimizada com tratamento de superfície.</div>
+                    <div class="service-detail"><strong>Dimensões:</strong> 18cm (largura) x 20cm (altura) x 5.5cm (espessura da base).</div>
+                    <div class="service-detail"><strong>Base:</strong> Base personalizada com gravação do logo/texto RECONHECE+.</div>
+                </div>
+            </div>
+
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">MODELO DE REFERÊNCIA</h2>
+                <div style="border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 10px; background: #f9f9f9;">
+                    <img id="modelImage" style="max-width: 100%; height: auto; display: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto;">
+                    <p id="noImageText" style="color: #aaa; margin: 20px 0; font-size: 14px;">
+                        📷 Para adicionar a imagem do modelo:<br>
+                        Abra o código HTML e cole seu código base64 na área indicada no script
+                    </p>
+                    <p style="color: #999; margin-top: 10px; font-size: 12px;">(Modelo de referência para produção)</p>
+                </div>
+            </div>
+
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">PROCESSO DE DESENVOLVIMENTO</h2>
+                
+                <div class="highlight-box scroll-animate slide-right">
+                    <div class="highlight-text">
+                        <strong>🎯 ETAPAS DE PRODUÇÃO</strong><br><br>
+                        <strong>1. Modelagem 3D Customizada:</strong><br>
+                        Criação do modelo digital do troféu RECONHECE+ em 1 dia útil após confirmação do pagamento.<br><br>
+                        
+                        <strong>2. Aprovação Virtual:</strong><br>
+                        Apresentação do modelo 3D renderizado para aprovação antes da produção física.<br><br>
+                        
+                        <strong>3. Unidade de Teste:</strong><br>
+                        Produção de 01 unidade teste em até 5 dias úteis para avaliação e aprovação final.<br><br>
+                        
+                        <strong>4. Produção em Série:</strong><br>
+                        Após aprovação, produção completa com entrega até 17/11/2025.<br><br>
+                        
+                        <strong>5. Flexibilidade Pós-Contrato:</strong><br>
+                        Após assinatura do contrato, modificações no design são permitidas desde que não alterem significativamente a quantidade de material utilizado (variação máxima de 15% no volume).
+                    </div>
+                </div>
+                
+                <div class="process-info scroll-animate fade-up">
+                    <div class="process-title">CARACTERÍSTICAS DO PLA GOLD</div>
+                    <div class="process-features">
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Acabamento dourado metálico de alta qualidade</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Material ecológico e biodegradável</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Excelente durabilidade para troféus decorativos</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Permite detalhes finos e acabamento premium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">TABELA DE PREÇOS</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">INVESTIMENTO - TROFÉU RECONHECE+ (PLA GOLD)</div>
+                    
+                    <div class="price-table">
+                        <div class="price-table-title">PREÇOS POR VOLUME DE PRODUÇÃO</div>
+                        <div class="price-row">
+                            <span class="quantity">50 Unidades</span>
+                            <div class="price-info">
+                                <span class="unit-price">50x R$ 106,35</span>
+                                <span class="total-price">R$ 5.317,50</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">100+ Unidades</span>
+                            <div class="price-info">
+                                <span class="unit-price">Consultar desconto especial</span>
+                                <span class="total-price">ORÇAMENTO PERSONALIZADO</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.8); font-size: 13px;">
+                        <em>* Unidade de teste gratuita mediante aceite de contrato</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 50% de entrada + 50% na entrega do pedido.</div>
+                    <div class="service-detail"><strong>Métodos Aceitos:</strong> PIX, Cartão de Crédito e Transferência Bancária.</div>
+                    <div class="service-detail"><strong>Prazo de Produção:</strong> 
+                        <br>&nbsp;&nbsp;• Modelagem 3D: 1 dia útil após pagamento
+                        <br>&nbsp;&nbsp;• Peça teste: 5 dias úteis após aprovação do modelo
+                        <br>&nbsp;&nbsp;• Produção em série: Entrega até 17/11/2025
+                    </div>
+                    <div class="service-detail"><strong>Entrega:</strong> Retirada no local ou entrega a combinar.</div>
+                    <div class="service-detail"><strong>Modificações:</strong> Permitidas após contrato, desde que não alterem significativamente o consumo de material (máx. 15% de variação).</div>
+                </div>
+                
+                <div class="highlight-box info" style="margin-top: 20px;">
+                    <div class="highlight-text" style="font-size: 12px; color: #666;">
+                        <em>Nota: O processo FDM pode apresentar linhas sutis entre camadas, característica natural da tecnologia de impressão 3D. Aplicamos pós-processamento para minimizar estas marcas.</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">PROPRIEDADE INTELECTUAL</h2>
+                
+                <div class="highlight-box warning">
+                    <div class="highlight-text">
+                        <strong>⚖️ TERMOS DE PROPRIEDADE DO MODELO 3D</strong><br><br>
+                        <strong>1. DESENVOLVIMENTO EXCLUSIVO:</strong><br>
+                        O modelo 3D do troféu RECONHECE+ será desenvolvido exclusivamente para este projeto.<br><br>
+                        
+                        <strong>2. DIREITOS AUTORAIS:</strong><br>
+                        A ImaginaTech mantém os direitos sobre o processo de modelagem e técnicas utilizadas. O design conceitual do troféu permanece como propriedade compartilhada.<br><br>
+                        
+                        <strong>3. PRODUÇÃO FUTURA:</strong><br>
+                        Recomendamos que produções futuras sejam realizadas conosco para garantir consistência e qualidade.<br><br>
+                        
+                        A aceitação deste orçamento implica concordância com os termos acima.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section scroll-animate fade-up">
+                <h2 class="section-title">ACEITE E ASSINATURAS</h2>
+                
+                <div class="signature-section">
+                    <div class="signature-text">
+                        Declaro ter lido e concordado com todos os termos e condições apresentados neste orçamento, 
+                        incluindo as condições de pagamento, prazos de produção e termos de propriedade intelectual.
+                    </div>
+                    
+                    <div class="signature-boxes">
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">CONTRATANTE</div>
+                            <div class="signature-details">
+                                <p>Nome: _________________________________</p>
+                                <p>CPF/CNPJ: _____________________________</p>
+                                <p>Data: ____/____/________</p>
+                            </div>
+                        </div>
+                        
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">IMAGINATECH</div>
+                            <div class="signature-details">
+                                <p>Representante: Marcus Vinicius de Freitas Trindade</p>
+                                <p>CNPJ: 62.043.082/0001-09</p>
+                                <p>Data: 17/11/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer scroll-animate fade-up">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa<br>
+                Rio de Janeiro - RJ, CEP: 21931577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539<br>
+                E-mail: 3d3printers@gmail.com<br>
+                Site: imaginatech.com.br<br>
+                <br>
+                Agradecemos a oportunidade de apresentar esta proposta.<br>
+                Estamos à disposição para esclarecer quaisquer dúvidas.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // =====================================================
+        // COLE SUA IMAGEM BASE64 AQUI
+        // =====================================================
+        // Instruções: 
+        // 1. Cole seu código base64 completo entre as aspas abaixo
+        // 2. O código deve começar com data:image/jpeg;base64, ou data:image/png;base64,
+        // 3. Exemplo: const IMAGE_BASE64 = "data:image/jpeg;base64,/9j/4AAQ...";
+        
+        const IMAGE_BASE64 = "MANTENHA AQUI ASSIM POIS VOU COLAR A IMAGEM"; // <-- COLE SEU CÓDIGO BASE64 AQUI
+        
+        // =====================================================
+        // FIM DA ÁREA DE INSERÇÃO DA IMAGEM
+        // =====================================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carregar imagem automaticamente se base64 estiver presente
+            if (IMAGE_BASE64 && IMAGE_BASE64.startsWith('data:image/')) {
+                const modelImage = document.getElementById('modelImage');
+                const noImageText = document.getElementById('noImageText');
+                if (modelImage && noImageText) {
+                    modelImage.src = IMAGE_BASE64;
+                    modelImage.style.display = 'block';
+                    noImageText.style.display = 'none';
+                }
+            }
+            
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.scroll-animate, .section-title').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

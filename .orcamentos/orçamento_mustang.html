@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Distribuidor Mustang</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            min-height: 100vh;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            animation: slideDown 0.8s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        .fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(64, 224, 208, 0.1);
+            border-radius: 50%;
+            animation: pulse 4s infinite ease-in-out;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            color: white;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .logo .tech {
+            color: #40E0D0;
+            display: inline-block;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 1.2s ease-out;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 1.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-item {
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        
+        .info-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .section.visible {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: clamp(18px, 3.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #40E0D0, #1a2332);
+            animation: expandWidth 1s ease-out forwards;
+        }
+        
+        @keyframes expandWidth {
+            to {
+                width: 100%;
+            }
+        }
+        
+        .service-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(64, 224, 208, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .service-box:hover::before {
+            left: 100%;
+        }
+        
+        .service-box:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(64, 224, 208, 0.2);
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: clamp(13px, 2vw, 14px);
+        }
+        
+        .images-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .image-box {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .product-image {
+            width: 100%;
+            max-width: 350px;
+            height: 400px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .placeholder-image {
+            width: 100%;
+            max-width: 350px;
+            height: 400px;
+            background: linear-gradient(135deg, #2d3e50 0%, #1a2332 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .placeholder-image::before {
+            content: '?';
+            font-size: 80px;
+            color: #40E0D0;
+            font-weight: 700;
+            opacity: 0.5;
+        }
+        
+        .placeholder-image::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(64, 224, 208, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        .image-caption {
+            margin-top: 10px;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .image-caption strong {
+            color: #1a2332;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: clamp(16px, 3vw, 18px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .price-comparison {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .price-comparison-title {
+            color: white;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .price-items {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .price-item {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(64, 224, 208, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .price-item:hover {
+            background: rgba(64, 224, 208, 0.05);
+            transform: translateX(5px);
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .price-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: clamp(13px, 2vw, 14px);
+            font-weight: 500;
+        }
+        
+        .price-value {
+            font-size: clamp(16px, 2.5vw, 18px);
+            font-weight: 600;
+            color: #40E0D0;
+        }
+        
+        .total-highlight {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(64, 224, 208, 0.2);
+        }
+        
+        .total-label {
+            color: white;
+            font-size: clamp(14px, 2.2vw, 16px);
+            font-weight: 600;
+        }
+        
+        .total-value {
+            font-size: clamp(20px, 3vw, 24px);
+            font-weight: 700;
+            color: #40E0D0;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .process-info:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item {
+            display: flex;
+            align-items: start;
+            transition: transform 0.3s ease;
+        }
+        
+        .process-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .process-item:hover .process-icon {
+            background: #1a2332;
+            transform: scale(1.2);
+        }
+        
+        .process-icon::before {
+            content: '✔';
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .process-text {
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-info {
+            margin-bottom: 20px;
+            font-size: clamp(12px, 2vw, 13px);
+            line-height: 1.6;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .contact-info {
+            color: #40E0D0;
+            font-size: clamp(11px, 1.8vw, 12px);
+            line-height: 1.6;
+            animation: fadeInUp 1.2s ease-out;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%);
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(64, 224, 208, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .highlight-box:hover::before {
+            left: 100%;
+        }
+        
+        .highlight-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(64, 224, 208, 0.2);
+        }
+        
+        .highlight-box.exclusive {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border-left: 4px solid #FFD700;
+        }
+        
+        .highlight-box.exclusive::before {
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+        }
+        
+        .highlight-text {
+            color: #1a2332;
+            font-size: clamp(12px, 2vw, 14px);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .recommendation-badge {
+            background: #40E0D0;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(64, 224, 208, 0.3);
+            font-size: clamp(12px, 2.2vw, 14px);
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+        
+        .recommendation-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(64, 224, 208, 0.4);
+        }
+        
+        /* Mobile Responsiveness */
+        @media screen and (max-width: 768px) {
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header::before {
+                width: 200px;
+                height: 200px;
+                top: -30%;
+                right: -20%;
+            }
+            
+            .doc-title {
+                line-height: 1.2;
+                margin-bottom: 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                margin-bottom: 30px;
+            }
+            
+            .service-box {
+                padding: 15px;
+            }
+            
+            .service-box:hover {
+                transform: translateX(5px);
+            }
+            
+            .images-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .process-features {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .highlight-box {
+                padding: 12px;
+            }
+            
+            .recommendation-badge {
+                padding: 10px;
+                margin: 15px 0;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+                padding-bottom: 8px;
+            }
+            
+            .service-detail br {
+                display: inline;
+            }
+            
+            .footer {
+                padding: 20px 15px;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+            
+            .header {
+                padding: 30px;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            @keyframes none {
+                0% { }
+                100% { }
+            }
+            
+            * {
+                animation: none !important;
+            }
+        }
+        
+        /* Landscape mobile */
+        @media screen and (max-width: 896px) and (orientation: landscape) {
+            .header {
+                padding: 20px 25px;
+            }
+            
+            .content {
+                padding: 25px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .process-features {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        /* Ultra-wide screens */
+        @media screen and (min-width: 1400px) {
+            .container {
+                max-width: 1200px;
+            }
+            
+            body {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO PARA IMPRESSÃO 3D</div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Data</div>
+                    <div class="info-value">10 de Setembro de 2025</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Orçamento Nº</div>
+                    <div class="info-value">IMT-2025-09-DST-0847</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Validade</div>
+                    <div class="info-value">2 dias</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Projeto</div>
+                    <div class="info-value">Distribuidor de Ignição Mustang</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="section fade-in">
+                <h2 class="section-title">DETALHES DO SERVIÇO</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">RÉPLICA DE DISTRIBUIDOR DE IGNIÇÃO MUSTANG - MINIATURA COLECIONÁVEL</div>
+                    <div class="service-detail"><strong>Produto:</strong> Miniatura detalhada de distribuidor de ignição automotivo modelo Mustang</div>
+                    <div class="service-detail"><strong>Dimensões:</strong> 15cm de altura + base circular preta de apoio</div>
+                    <div class="service-detail"><strong>Finalidade:</strong> Brinde corporativo colecionável de alta qualidade</div>
+                    <div class="service-detail"><strong>Cores:</strong> Vermelho e cinza, reproduzindo fielmente o modelo original</div>
+                    <div class="service-detail"><strong>Quantidade:</strong> 150 unidades</div>
+                </div>
+                
+                <div class="images-container">
+                    <div class="image-box">
+                        <!-- ⚠️ ATENÇÃO: COLE SEU CÓDIGO BASE64 ABAIXO ⚠️ -->
+                        <!-- APAGUE ESTA LINHA E A DE BAIXO, E COLE O BASE64 AQUI -->
+                        <img src="ANEXE A IMAGEM BASE64 AQUI"
+                             class="product-image">
+                        <!-- ⚠️ FIM DA ÁREA DE COLAGEM DO BASE64 ⚠️ -->
+                        <p class="image-caption">
+                            <strong>Referência Original</strong>
+                            Produto que servirá de base para modelagem 3D
+                        </p>
+                    </div>
+                    
+                    <div class="image-box">
+                        <div class="placeholder-image"></div>
+                        <p class="image-caption">
+                            <strong>Modelo 3D em Desenvolvimento</strong>
+                            Prévia digital será apresentada para aprovação antes do início da produção
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="highlight-box exclusive">
+                    <div class="highlight-text">
+                        <strong>🔥 MODELAGEM 3D EXCLUSIVA SEM CUSTO ADICIONAL</strong><br><br>
+                        • Desenvolvimento do modelo 3D baseado nas imagens fornecidas<br>
+                        • Serviço de modelagem TOTALMENTE GRATUITO<br>
+                        • Cliente receberá todos os direitos sobre o modelo digital<br>
+                        • Liberdade total para uso, venda e adequações futuras<br>
+                        • Produção iniciará apenas após aprovação do modelo pelo contratante
+                    </div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">PROCESSO DE PRODUÇÃO PROFISSIONAL</div>
+                    <div class="process-features">
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Modelagem 3D detalhada com base nas referências visuais</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Envio de prévia digital para aprovação antes da produção</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Impressão em alta resolução com acabamento profissional</div>
+                        </div>
+                        <div class="process-item">
+                            <div class="process-icon"></div>
+                            <div class="process-text">Controle de qualidade individual em cada peça produzida</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section fade-in">
+                <h2 class="section-title">MATERIAL DE IMPRESSÃO</h2>
+                
+                <div class="recommendation-badge">
+                    ⭐ MATERIAL SELECIONADO: ABS PREMIUM
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">ABS PREMIUM - ESPECIFICAÇÕES TÉCNICAS</div>
+                    <div class="service-detail"><strong>Resistência Superior:</strong> Material de engenharia com excelente resistência mecânica, ideal para peças que exigem durabilidade e precisão dimensional</div>
+                    <div class="service-detail"><strong>Acabamento Profissional:</strong> Superfície lisa e uniforme com excelente aderência de camadas, proporcionando detalhes nítidos e aparência premium</div>
+                    <div class="service-detail"><strong>Estabilidade Térmica:</strong> Suporta temperaturas de até 80°C sem deformação, garantindo integridade da peça em diversas condições ambientais</div>
+                    <div class="service-detail"><strong>Cores Vibrantes:</strong> Pigmentação de alta qualidade nas cores vermelho e cinza, com excelente retenção de cor e resistência a UV</div>
+                    <div class="service-detail"><strong>Versatilidade:</strong> Material ideal para brindes corporativos, permitindo pintura, colagem e outros acabamentos posteriores se desejado</div>
+                </div>
+                
+                <div class="highlight-box">
+                    <div class="highlight-text">
+                        <strong>⭐ POR QUE ABS PREMIUM É A ESCOLHA IDEAL?</strong><br><br>
+                        O ABS Premium combina resistência excepcional com acabamento estético superior, tornando-se a escolha perfeita para miniaturas colecionáveis. Sua durabilidade garante que o brinde manterá sua qualidade por anos, agregando valor à marca e criando uma experiência memorável para quem recebe. A precisão dimensional do material permite reproduzir todos os detalhes técnicos do distribuidor de ignição com fidelidade impressionante.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section fade-in">
+                <h2 class="section-title">TABELA DE PREÇOS</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">VALORES DO PROJETO</div>
+                    
+                    <div class="price-comparison">
+                        <div class="price-comparison-title">Distribuidor de Ignição Mustang - Miniatura 15cm</div>
+                        
+                        <div class="price-items">
+                            <div class="price-item">
+                                <div class="price-row">
+                                    <span class="price-label">Valor unitário (1 peça)</span>
+                                    <span class="price-value">R$ 156,90</span>
+                                </div>
+                            </div>
+                            
+                            <div class="price-item">
+                                <div class="price-row">
+                                    <span class="price-label">Valor unitário (lote de 150 peças)</span>
+                                    <span class="price-value">R$ 108,37</span>
+                                </div>
+                            </div>
+                            
+                            <div class="price-item">
+                                <div class="total-highlight">
+                                    <div class="price-row">
+                                        <span class="total-label">VALOR TOTAL (150 unidades)</span>
+                                        <span class="total-value">R$ 16.255,50</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section fade-in">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Prazo de Entrega:</strong> 
+                        <br>• 150 unidades: Até 25 de setembro de 2025
+                        <br>• Produção iniciará após aprovação do modelo pelo cliente
+                    </div>
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 50% na aprovação do pedido + 50% na entrega</div>
+                    <div class="service-detail"><strong>Métodos Aceitos:</strong> PIX, TED, Cartão de Crédito (até 3x sem juros)</div>
+                    <div class="service-detail"><strong>Frete:</strong> A combinar conforme localidade de entrega</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação</div>
+                    <div class="service-detail"><strong>Documentação Fiscal:</strong> Nota Fiscal Eletrônica (NF-e) emitida na entrega</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa<br>
+                Rio de Janeiro - RJ, CEP: 21931577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539<br>
+                E-mail: 3d3printers@gmail.com<br>
+                <br>
+                Agradecemos a oportunidade de apresentar esta proposta.<br>
+                Estamos à disposição para esclarecer quaisquer dúvidas.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Animação de scroll para fazer os elementos aparecerem
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        // Observar todas as seções
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Adicionar classe fade-in aos elementos iniciais
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    el.style.opacity = '1';
+                });
+            }, 100);
+        });
+    </script>
+</body>
+</html>

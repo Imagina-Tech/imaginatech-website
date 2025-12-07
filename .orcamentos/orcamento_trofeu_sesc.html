@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Trofeu Sesc</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e9ecef;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo .tech { color: #40E0D0; }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-item { color: white; }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value { font-size: 13px; line-height: 1.5; }
+        
+        .content { padding: 40px; }
+        
+        .section { margin-bottom: 40px; }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+        }
+        
+        .service-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #40E0D0;
+            max-width: 600px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-row:last-child { border-bottom: none; }
+        
+        .quantity { font-weight: 600; font-size: 14px; }
+        
+        .price-info { text-align: right; flex: 1; margin-left: 10px; }
+        
+        .unit-price { color: white; display: block; font-size: 14px; }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item { display: flex; align-items: start; }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .process-icon::before { content: '✓'; color: white; font-weight: bold; font-size: 12px; }
+        
+        .process-text { font-size: 13px; color: #555; line-height: 1.4; }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-info { margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        
+        .contact-info { color: #40E0D0; font-size: 12px; line-height: 1.6; }
+        
+        .highlight-box {
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .highlight-box.warning { border-left-color: #FF6B6B; }
+        
+        .highlight-box.info { border-left-color: #3498db; }
+        
+        .highlight-text { color: #1a2332; font-size: 14px; line-height: 1.6; }
+        
+        .signature-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .signature-text {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .signature-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .signature-box {
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .signature-line {
+            border-bottom: 1.5px solid #333;
+            margin-bottom: 10px;
+            height: 60px;
+        }
+        
+        .signature-label {
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .signature-details { 
+            color: #666; 
+            font-size: 12px; 
+            line-height: 2;
+        }
+        
+        .signature-details p { margin: 8px 0; }
+        
+        @media screen and (max-width: 768px) {
+            body { background: white; }
+            .container { margin: 0; box-shadow: none; }
+            .header { padding: 25px 20px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .content { padding: 20px; }
+            .process-features { grid-template-columns: 1fr; }
+            .signature-boxes { grid-template-columns: 1fr; }
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            @page { size: A4; margin: 1.5cm; }
+            body { background: white !important; font-size: 10pt !important; }
+            .container { max-width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+            .section, .service-box, .highlight-box, .pricing-section, .signature-section {
+                page-break-inside: avoid;
+            }
+            .header { background: #f0f0f0 !important; padding: 20px !important; }
+            .logo, .doc-title, .info-item { color: #000 !important; }
+            .pricing-section { background: #f5f5f5 !important; }
+            .footer { background: #f0f0f0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO: TROFEU SESC</div>
+            
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Data</div><div class="info-value">07 de Novembro de 2025</div></div>
+                <div class="info-item"><div class="info-label">Orçamento Nº</div><div class="info-value">43758-2025-11-07</div></div>
+                <div class="info-item"><div class="info-label">Validade</div><div class="info-value">1 dia</div></div>
+                <div class="info-item"><div class="info-label">Projeto</div><div class="info-value">Trofeu Sesc - 40 Unidades</div></div>
+            </div>
+        </header>
+        
+        <main class="content">
+            <section class="section">
+                <h2 class="section-title">DETALHES DO SERVIÇO</h2>
+                <div class="service-box">
+                    <div class="service-title">IMPRESSÃO 3D DE TROFEUS PERSONALIZADOS SESC</div>
+                    <div class="service-detail"><strong>Modelo:</strong> Trofeu Sesc - Arquivos fornecidos pelo cliente.</div>
+                    <div class="service-detail"><strong>Material Parte Superior:</strong> PLA V-Silk Gold (Dourado com acabamento sedoso metálico).</div>
+                    <div class="service-detail"><strong>Material Base:</strong> PLA Preto (Alta qualidade e acabamento fosco).</div>
+                    <div class="service-detail"><strong>Tecnologia:</strong> Impressão FDM (Modelagem por Deposição Fundida).</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Resolução otimizada conforme orientações do cliente.</div>
+                    <div class="service-detail"><strong>Quantidade Total:</strong> 40 unidades.</div>
+                    <div class="service-detail"><strong>Origem do Projeto:</strong> Arquivos 3D e especificações de materiais fornecidos pelo cliente.</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>📁 ARQUIVOS FORNECIDOS PELO CLIENTE</strong><br><br>
+                        • O cliente forneceu os arquivos 3D completos para produção<br>
+                        • As especificações de materiais foram definidas pelo cliente<br>
+                        • A ImaginaTech é responsável exclusivamente pela execução da impressão 3D<br>
+                        • O design e propriedade intelectual pertencem ao cliente
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">ESPECIFICAÇÕES TÉCNICAS DOS MATERIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">PLA V-SILK GOLD (PARTE SUPERIOR DO TROFEU)</div>
+                    <div class="service-detail"><strong>Aparência:</strong> Acabamento dourado sedoso com brilho metálico elegante.</div>
+                    <div class="service-detail"><strong>Acabamento Visual:</strong> Superfície lisa com reflexos metálicos sofisticados, ideal para premiações.</div>
+                    <div class="service-detail"><strong>Resistência Mecânica:</strong> PLA de qualidade premium com boa resistência estrutural.</div>
+                    <div class="service-detail"><strong>Detalhamento:</strong> Excelente reprodução de detalhes finos e texturas.</div>
+                    <div class="service-detail"><strong>Durabilidade:</strong> Material estável para uso interno, resistente a deformações.</div>
+                    <div class="service-detail"><strong>Aplicação:</strong> Perfeito para troféus decorativos de alto padrão visual.</div>
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">PLA PRETO (BASE DO TROFEU)</div>
+                    <div class="service-detail"><strong>Aparência:</strong> Preto fosco sólido com acabamento profissional.</div>
+                    <div class="service-detail"><strong>Estabilidade:</strong> Base robusta que garante equilíbrio e sustentação do trofeu.</div>
+                    <div class="service-detail"><strong>Contraste Visual:</strong> O preto da base realça o dourado da parte superior.</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Superfície uniforme e lisa sem imperfeições visíveis.</div>
+                    <div class="service-detail"><strong>Resistência:</strong> Material de alta qualidade com excelente resistência mecânica.</div>
+                    <div class="service-detail"><strong>Aplicação:</strong> Base estrutural que confere elegância e sofisticação ao conjunto.</div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">BENEFÍCIOS DA COMBINAÇÃO DE MATERIAIS</div>
+                    <div class="process-features">
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Contraste visual elegante entre dourado e preto</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Acabamento premium digno de premiações</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Estabilidade estrutural garantida pela base em PLA</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Durabilidade para uso decorativo de longo prazo</div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">INVESTIMENTO</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">VALOR TOTAL DO PROJETO</div>
+                    
+                    <div class="price-table">
+                        <div class="price-row">
+                            <span class="quantity">40 Unidades</span>
+                            <div class="price-info">
+                                <span class="unit-price">40x R$ 144,02</span>
+                                <span class="total-price">R$ 5.760,80</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">Valor Unitário</span>
+                            <div class="price-info">
+                                <span class="unit-price">R$ 144,02/unidade</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #40E0D0; margin-top: 10px; padding-top: 15px;">
+                            <span class="quantity" style="color: #40E0D0; font-size: 15px;">TOTAL</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #40E0D0; font-size: 17px; font-weight: 700;">R$ 5.760,80</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.8); font-size: 13px;">
+                        <em>* Arquivos 3D fornecidos pelo cliente</em>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 50% de entrada (R$ 2.880,40) + 50% na entrega (R$ 2.880,40).</div>
+                    <div class="service-detail"><strong>Métodos Aceitos:</strong> PIX, Cartão de Crédito e Transferência Bancária.</div>
+                    <div class="service-detail"><strong>Prazo de Entrega:</strong> Até 18/11/2025.</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação.</div>
+                    <div class="service-detail"><strong>Documentação Fiscal:</strong> Nota fiscal eletrônica incluída.</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>📦 OPÇÕES DE ENTREGA</strong><br><br>
+                        O cliente pode escolher entre as seguintes modalidades de entrega:<br><br>
+                        <strong>1. SEDEX (Correios) - GRÁTIS:</strong><br>
+                        • Sem custo adicional<br>
+                        • Prazo: 2 a 3 dias úteis após postagem<br>
+                        • Rastreamento disponível<br><br>
+                        <strong>2. UBER FLASH - GRÁTIS:</strong><br>
+                        • Sem custo adicional<br>
+                        • Entrega rápida no mesmo dia (conforme disponibilidade)<br><br>
+                        <strong>3. RETIRADA NO LOCAL:</strong><br>
+                        • GRATUITA<br>
+                        • Endereço: Rua Luis Bayer, 25, Portuguesa - Rio de Janeiro - RJ<br>
+                        • Horário: A combinar
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">PROPRIEDADE INTELECTUAL</h2>
+                
+                <div class="highlight-box">
+                    <div class="highlight-text">
+                        <strong>⚖️ RECONHECIMENTO DE AUTORIA</strong><br><br>
+                        <strong>1. ARQUIVOS FORNECIDOS PELO CLIENTE:</strong><br>
+                        • Os arquivos 3D foram fornecidos pelo cliente<br>
+                        • O design e propriedade intelectual pertencem ao cliente<br>
+                        • A ImaginaTech atua exclusivamente como prestadora de serviços de impressão 3D<br><br>
+                        <strong>2. ESCOPO DE RESPONSABILIDADE:</strong><br>
+                        • A ImaginaTech não detém direitos sobre o design do trofeu<br>
+                        • Nossa responsabilidade limita-se à qualidade da impressão e acabamento<br>
+                        • O cliente é livre para reproduzir o modelo com outros fornecedores<br><br>
+                        <strong>3. CONFIDENCIALIDADE:</strong><br>
+                        • Os arquivos fornecidos serão tratados com confidencialidade<br>
+                        • Não divulgaremos o projeto a terceiros sem autorização<br>
+                        • Arquivos serão deletados após conclusão do projeto, se solicitado
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">ACEITE E ASSINATURAS</h2>
+                
+                <div class="signature-section">
+                    <div class="signature-text">
+                        Declaro ter lido e concordado com todos os termos e condições apresentados neste orçamento.
+                    </div>
+                    
+                    <div class="signature-boxes">
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">CONTRATANTE</div>
+                            <div class="signature-details">
+                                <p>Nome: _________________________________</p>
+                                <p>CPF/CNPJ: _____________________________</p>
+                                <p>Data: ____/____/________</p>
+                            </div>
+                        </div>
+                        
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">IMAGINATECH</div>
+                            <div class="signature-details">
+                                <p>Representante: Marcus Vinicius de F. Trindade</p>
+                                <p>CNPJ: 62.043.082/0001-09</p>
+                                <p>Data: 07/11/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa - Rio de Janeiro - RJ, CEP: 21931-577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539 | E-mail: 3d3printers@gmail.com<br>
+                Agradecemos a oportunidade e ficamos à disposição.
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

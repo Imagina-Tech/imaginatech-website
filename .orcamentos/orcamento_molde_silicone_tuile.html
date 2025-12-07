@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Moldes de Silicone para Tuile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e9ecef;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo .tech { color: #40E0D0; }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-item { color: white; }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value { font-size: 13px; line-height: 1.5; }
+        
+        .content { padding: 40px; }
+        
+        .section { margin-bottom: 40px; }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+        }
+        
+        .service-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #40E0D0;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        .price-table-title {
+            color: #40E0D0;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-row:last-child { border-bottom: none; }
+        
+        .quantity { font-weight: 600; font-size: 14px; }
+        
+        .price-info { text-align: right; flex: 1; margin-left: 10px; }
+        
+        .unit-price { color: white; display: block; font-size: 14px; }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item { display: flex; align-items: start; }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .process-icon::before { content: '✓'; color: white; font-weight: bold; font-size: 12px; }
+        
+        .process-text { font-size: 13px; color: #555; line-height: 1.4; }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-info { margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        
+        .contact-info { color: #40E0D0; font-size: 12px; line-height: 1.6; }
+        
+        .highlight-box {
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .highlight-box.warning { border-left-color: #FF6B6B; }
+        
+        .highlight-box.info { border-left-color: #3498db; }
+        
+        .highlight-box.success { border-left-color: #2ecc71; }
+        
+        .highlight-text { color: #1a2332; font-size: 14px; line-height: 1.6; }
+        
+        .signature-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .signature-text {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .signature-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .signature-box {
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .signature-line {
+            border-bottom: 1.5px solid #333;
+            margin-bottom: 10px;
+            height: 60px;
+        }
+        
+        .signature-label {
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .signature-details { color: #666; font-size: 12px; line-height: 2; }
+        
+        .signature-details p { margin: 8px 0; }
+        
+        @media screen and (max-width: 768px) {
+            body { background: white; }
+            .container { margin: 0; box-shadow: none; }
+            .header { padding: 25px 20px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .content { padding: 20px; }
+            .process-features { grid-template-columns: 1fr; }
+            .signature-boxes { grid-template-columns: 1fr; }
+            .price-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .price-info {
+                text-align: left;
+                margin-left: 0;
+            }
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            @page { size: A4; margin: 1.5cm; }
+            body { background: white !important; font-size: 10pt !important; }
+            .container { max-width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+            .section, .service-box, .highlight-box, .pricing-section { page-break-inside: avoid; }
+            .header { background: #f0f0f0 !important; padding: 20px !important; }
+            .logo, .doc-title, .info-item { color: #000 !important; }
+            .pricing-section { background: #f5f5f5 !important; }
+            .footer { background: #f0f0f0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO: MOLDES DE SILICONE PARA TUILE</div>
+            
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Data</div><div class="info-value">19 de Novembro de 2025</div></div>
+                <div class="info-item"><div class="info-label">Orçamento Nº</div><div class="info-value">43758-2025-11-19</div></div>
+                <div class="info-item"><div class="info-label">Validade</div><div class="info-value">30 dias</div></div>
+                <div class="info-item"><div class="info-label">Segmento</div><div class="info-value">Alimentício / Restaurantes</div></div>
+            </div>
+        </header>
+        
+        <main class="content">
+            <section class="section">
+                <h2 class="section-title">SOBRE O PRODUTO</h2>
+                
+                <div class="highlight-box" style="border-left-color: #FFD700; background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%);">
+                    <div class="highlight-text">
+                        <strong>⭐ NOSSO DIFERENCIAL: CUSTOMIZAÇÃO TOTAL</strong><br><br>
+                        O mercado oferece moldes de silicone genéricos para tuile, mas <strong>SOMENTE A IMAGINATECH</strong> produz moldes 100% personalizados de acordo com sua necessidade:<br><br>
+                        ✓ <strong>Formato do seu jeito:</strong> Circular, oval, retangular, coração, estrela, logo da empresa ou qualquer desenho que imaginar<br>
+                        ✓ <strong>Tamanho sob medida:</strong> De 3cm até 15cm (ou mais), conforme sua receita<br>
+                        ✓ <strong>Exclusividade:</strong> Seu restaurante terá moldes únicos que nenhum concorrente possui<br>
+                        ✓ <strong>Identidade visual:</strong> Tuiles com a marca do seu estabelecimento<br>
+                        ✓ <strong>Criatividade sem limites:</strong> Formas temáticas, sazonais ou assinatura do chef<br><br>
+                        <em>→ Transforme tuiles comuns em elementos exclusivos da sua apresentação gastronômica!</em>
+                    </div>
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">MOLDES DE SILICONE PROFISSIONAL PARA TUILE</div>
+                    <div class="service-detail"><strong>Aplicação:</strong> Produção de tuiles (biscoitos finos) em restaurantes, confeitarias e cozinhas profissionais.</div>
+                    <div class="service-detail"><strong>Material:</strong> Silicone alimentício de alta qualidade certificado.</div>
+                    <div class="service-detail"><strong>Dimensões:</strong> 6cm x 6cm (formato padrão) ou <strong>customizável conforme seu projeto</strong>.</div>
+                    <div class="service-detail"><strong>Resistência Térmica:</strong> Suporta até 250°C sem deformação.</div>
+                    <div class="service-detail"><strong>Certificação:</strong> FISPQ (Ficha de Informação de Segurança de Produto Químico) será fornecida.</div>
+                    <div class="service-detail"><strong>Pedido Mínimo:</strong> 12 unidades (independente do formato).</div>
+                    <div class="service-detail"><strong>Customização:</strong> Qualquer formato, tamanho e desenho que você imaginar!</div>
+                </div>
+                
+                <div class="highlight-box success">
+                    <div class="highlight-text">
+                        <strong>✓ CERTIFICAÇÃO E SEGURANÇA ALIMENTAR</strong><br><br>
+                        • FISPQ completa será anexada ao pedido<br>
+                        • Silicone próprio para contato direto com alimentos<br>
+                        • Resistência térmica comprovada até 250°C<br>
+                        • Material atóxico e livre de substâncias nocivas<br>
+                        • Aprovado para uso em ambientes profissionais<br>
+                        • Fácil higienização e manutenção
+                    </div>
+                </div>
+                
+                <div class="service-box" style="background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%); border-left-color: #FFD700;">
+                    <div class="service-title" style="color: #1a2332; margin-bottom: 20px;">🎨 EXEMPLOS DE CUSTOMIZAÇÕES POSSÍVEIS</div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <strong style="color: #1a2332; display: block; margin-bottom: 8px;">🏢 Identidade Visual</strong>
+                            <span style="font-size: 13px; color: #555;">Logo do restaurante, monograma, símbolo exclusivo da casa</span>
+                        </div>
+                        <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <strong style="color: #1a2332; display: block; margin-bottom: 8px;">🌟 Formas Clássicas</strong>
+                            <span style="font-size: 13px; color: #555;">Coração, estrela, flor, folha, concha, gota</span>
+                        </div>
+                        <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <strong style="color: #1a2332; display: block; margin-bottom: 8px;">📐 Geométricos</strong>
+                            <span style="font-size: 13px; color: #555;">Hexágono, círculo, oval, retângulo, triângulo</span>
+                        </div>
+                        <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <strong style="color: #1a2332; display: block; margin-bottom: 8px;">🎭 Temáticos</strong>
+                            <span style="font-size: 13px; color: #555;">Natal, Páscoa, Halloween, bodas, eventos corporativos</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed #FFD700;">
+                        <strong style="color: #1a2332; display: block; margin-bottom: 8px;">💡 Sugestão Especial:</strong>
+                        <span style="font-size: 13px; color: #555; line-height: 1.6;">
+                            Muitos restaurantes fine dining estão criando tuiles com o logo gravado para acompanhar sobremesas e drinks, transformando um simples biscoito em elemento de branding memorável. <strong>Seu cliente leva para casa a memória visual da experiência!</strong>
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">SISTEMA DE PRODUÇÃO - MATRIZ + MOLDES</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">COMO FUNCIONA O PROCESSO DE FABRICAÇÃO CUSTOMIZADA</div>
+                    <div class="service-detail"><strong>Etapa 1 - Briefing e Design:</strong> Você nos envia o desenho, logo ou ideia do formato desejado. Nossa equipe técnica desenvolve o modelo 3D personalizado.</div>
+                    <div class="service-detail"><strong>Etapa 2 - Matriz em Impressão 3D:</strong> Criamos uma matriz física em impressão 3D com as dimensões e formato exatos solicitados. Esta matriz serve como molde base.</div>
+                    <div class="service-detail"><strong>Etapa 3 - Aprovação:</strong> Enviamos foto da matriz para aprovação antes de produzir os moldes de silicone.</div>
+                    <div class="service-detail"><strong>Etapa 4 - Produção dos Moldes:</strong> Utilizando a matriz aprovada, produzimos os moldes de silicone alimentício na quantidade solicitada.</div>
+                    <div class="service-detail"><strong>Etapa 5 - Arquivo da Matriz:</strong> A matriz fica arquivada permanentemente para pedidos futuros sem custo adicional de desenvolvimento.</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>💡 IMPORTANTE: CUSTO DA MATRIZ CUSTOMIZADA</strong><br><br>
+                        <strong>DESENVOLVIMENTO DE FORMATO EXCLUSIVO:</strong><br>
+                        • Custo único de R$ 45,00 por formato/desenho personalizado<br>
+                        • Inclui modelagem 3D do seu design<br>
+                        • Produção da matriz física em impressão 3D<br>
+                        • Matriz arquivada permanentemente para reposições<br>
+                        • Cobrado apenas uma vez por formato<br><br>
+                        <strong>PEDIDOS FUTUROS DO MESMO FORMATO:</strong><br>
+                        • Não há cobrança adicional de matriz<br>
+                        • Paga-se apenas o valor dos moldes de silicone<br>
+                        • Mantemos a matriz arquivada por tempo indeterminado<br><br>
+                        <strong>EXEMPLO PRÁTICO DE RESTAURANTE:</strong><br>
+                        1º Pedido (logo do restaurante em formato oval 8x5cm): R$ 45,00 (matriz) + moldes de silicone<br>
+                        2º Pedido (reposição mesmo logo oval): Apenas valor dos moldes (sem custo de matriz)<br>
+                        3º Pedido (novo formato: estrela 6cm para menu de Natal): R$ 45,00 (nova matriz) + moldes de silicone<br>
+                        4º Pedido (reposição estrela): Apenas valor dos moldes (sem custo de matriz)<br><br>
+                        <strong>→ Você paga a matriz apenas 1 vez por formato e pode fazer quantas reposições quiser!</strong>
+                    </div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">VANTAGENS DO SISTEMA</div>
+                    <div class="process-features">
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Matriz arquivada para reposições futuras</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Sem custo de matriz em pedidos recorrentes</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Possibilidade de múltiplos formatos personalizados</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Produção escalável conforme demanda</div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">ESPECIFICAÇÕES TÉCNICAS</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">CARACTERÍSTICAS DO SILICONE ALIMENTÍCIO</div>
+                    <div class="service-detail"><strong>Composição:</strong> Silicone platina de grau alimentício 100% atóxico.</div>
+                    <div class="service-detail"><strong>Temperatura de Operação:</strong> -40°C a +250°C (uso contínuo).</div>
+                    <div class="service-detail"><strong>Flexibilidade:</strong> Alta elasticidade para fácil desmoldagem sem danificar o produto.</div>
+                    <div class="service-detail"><strong>Durabilidade:</strong> Resistente a lavagens frequentes e uso intensivo.</div>
+                    <div class="service-detail"><strong>Antiaderente:</strong> Superfície naturalmente antiaderente, dispensa uso de óleo ou manteiga.</div>
+                    <div class="service-detail"><strong>Higienização:</strong> Pode ser lavado em lava-louças profissional.</div>
+                    <div class="service-detail"><strong>Vida Útil:</strong> Mínimo de 2 anos em uso profissional contínuo.</div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">BENEFÍCIOS DA CUSTOMIZAÇÃO PARA SEU RESTAURANTE</div>
+                    <div class="process-features">
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Tuiles exclusivos que nenhum concorrente possui</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Reforço da identidade visual da marca</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Elemento de branding na apresentação dos pratos</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Possibilidade de coleções sazonais exclusivas</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Padronização perfeita com seu design</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Diferenciação premium no mercado gastronômico</div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">TABELA DE PREÇOS</h2>
+                
+                <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%); padding: 20px; border-radius: 10px; border-left: 4px solid #FFD700; margin-bottom: 25px;">
+                    <div style="color: #1a2332; font-size: 15px; line-height: 1.7;">
+                        <strong style="font-size: 16px;">⚡ VALORES INCLUEM CUSTOMIZAÇÃO TOTAL</strong><br><br>
+                        Os preços abaixo já contemplam moldes de silicone feitos <strong>sob medida</strong> para seu projeto:<br>
+                        → Qualquer formato que você desenhar<br>
+                        → Qualquer tamanho que você precisar<br>
+                        → Logo, símbolo ou design exclusivo do seu restaurante<br><br>
+                        <em>Você não está comprando um molde genérico, está criando um produto único!</em>
+                    </div>
+                </div>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">INVESTIMENTO - MOLDES DE SILICONE PARA TUILE</div>
+                    
+                    <div class="price-table">
+                        <div class="price-table-title">PRIMEIRA COMPRA (FORMATO NOVO)</div>
+                        <div class="price-row">
+                            <span class="quantity">Desenvolvimento de Matriz 3D</span>
+                            <div class="price-info">
+                                <span class="unit-price">R$ 45,00</span>
+                                <span class="total-price">Custo único por formato</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">12 Moldes de Silicone</span>
+                            <div class="price-info">
+                                <span class="unit-price">12x R$ 47,85</span>
+                                <span class="total-price">R$ 574,20</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #40E0D0; margin-top: 10px; padding-top: 15px;">
+                            <span class="quantity" style="color: #40E0D0; font-size: 15px;">TOTAL 1º PEDIDO</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #40E0D0; font-size: 17px; font-weight: 700;">R$ 619,20</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-table" style="border-color: #2ecc71; background: rgba(46, 204, 113, 0.1);">
+                        <div class="price-table-title" style="color: #2ecc71;">PEDIDOS FUTUROS (MESMA ARTE)</div>
+                        <div class="price-row">
+                            <span class="quantity">Desenvolvimento de Matriz 3D</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="text-decoration: line-through; opacity: 0.6;">R$ 45,00</span>
+                                <span class="total-price" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71;">R$ 0,00 (Sem custo)</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">12 Moldes de Silicone</span>
+                            <div class="price-info">
+                                <span class="unit-price">12x R$ 47,85</span>
+                                <span class="total-price">R$ 574,20</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #2ecc71; margin-top: 10px; padding-top: 15px;">
+                            <span class="quantity" style="color: #2ecc71; font-size: 15px;">TOTAL REPOSIÇÃO</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #2ecc71; font-size: 17px; font-weight: 700;">R$ 574,20</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-table" style="border-color: #FFD700; background: rgba(255, 215, 0, 0.1); margin-top: 20px;">
+                        <div class="price-table-title" style="color: #FFD700;">⭐ LOTE ECONÔMICO - 24 UNIDADES</div>
+                        <div class="price-row">
+                            <span class="quantity">Desenvolvimento de Matriz 3D</span>
+                            <div class="price-info">
+                                <span class="unit-price">R$ 45,00</span>
+                                <span class="total-price">Custo único por formato</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">24 Moldes de Silicone</span>
+                            <div class="price-info">
+                                <span class="unit-price">24x R$ 44,96</span>
+                                <span class="total-price">R$ 1.079,04</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="background: rgba(255, 215, 0, 0.15); margin: 10px -8px 0 -8px; padding: 12px 16px;">
+                            <span class="quantity" style="font-size: 13px;">Economia vs. 12 unidades:</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="font-size: 13px; color: #FFD700;">R$ 2,89 por molde (6% desconto)</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #FFD700; margin-top: 10px; padding-top: 15px;">
+                            <span class="quantity" style="color: #FFD700; font-size: 15px;">TOTAL 1º PEDIDO (24un)</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #FFD700; font-size: 17px; font-weight: 700;">R$ 1.124,04</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        <div style="text-align: center; color: white; font-size: 14px; line-height: 1.8;">
+                            <strong>VALORES UNITÁRIOS:</strong><br>
+                            • Matriz 3D (primeira vez): R$ 45,00/formato<br>
+                            • Molde de Silicone (12 unidades): R$ 47,85/unidade<br>
+                            • Molde de Silicone (24+ unidades): R$ 44,96/unidade<br>
+                            • Pedido mínimo: 12 unidades
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <div class="highlight-text">
+                        <strong>📊 EXEMPLOS REAIS DE IMPLEMENTAÇÃO</strong><br><br>
+                        <strong>Caso 1 - Bistrô Boutique (formato logo circular 7cm):</strong><br>
+                        • 1º Pedido: 12 moldes customizados com logo = R$ 619,20<br>
+                        • Após 3 meses: Reposição de 12 moldes = R$ 574,20<br>
+                        • Após 6 meses: 24 moldes para expandir produção = R$ 1.079,04<br>
+                        → Investimento total em 6 meses: R$ 2.272,44<br><br>
+                        <strong>Caso 2 - Restaurante Fine Dining (2 formatos exclusivos):</strong><br>
+                        • Formato A - Logo oval 8x5cm (12 moldes): R$ 619,20<br>
+                        • Formato B - Estrela 6 pontas 6cm (12 moldes): R$ 619,20<br>
+                        • Reposição Formato A (24 moldes): R$ 1.079,04<br>
+                        → Total: R$ 2.317,44 para 48 moldes de 2 designs exclusivos<br><br>
+                        <strong>Caso 3 - Confeitaria (coleção sazonal):</strong><br>
+                        • Natal: Formato estrela (12 moldes) = R$ 619,20<br>
+                        • Páscoa: Formato coelho (12 moldes) = R$ 619,20<br>
+                        • Dia dos Namorados: Formato coração (12 moldes) = R$ 619,20<br>
+                        → 3 coleções exclusivas = R$ 1.857,60<br>
+                        → Reposições futuras sem custo de matriz!
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">POR QUE ESCOLHER A IMAGINATECH?</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 10px; border-left: 4px solid #FF6B6B;">
+                        <strong style="color: #1a2332; display: block; margin-bottom: 12px; font-size: 15px;">❌ MOLDES GENÉRICOS DO MERCADO</strong>
+                        <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 13px; line-height: 1.8;">
+                            <li>Formatos limitados e padronizados</li>
+                            <li>Mesmo design que a concorrência usa</li>
+                            <li>Tamanhos fixos sem flexibilidade</li>
+                            <li>Zero personalização</li>
+                            <li>Sem identidade visual da marca</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%); padding: 20px; border-radius: 10px; border-left: 4px solid #40E0D0;">
+                        <strong style="color: #1a2332; display: block; margin-bottom: 12px; font-size: 15px;">✅ MOLDES IMAGINATECH</strong>
+                        <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px; line-height: 1.8;">
+                            <li><strong>100% customizável</strong> - seu design</li>
+                            <li><strong>Exclusivo</strong> - só você tem</li>
+                            <li><strong>Qualquer tamanho</strong> que precisar</li>
+                            <li><strong>Logo e branding</strong> incluídos</li>
+                            <li><strong>Diferenciação</strong> no mercado</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="highlight-box" style="border-left-color: #40E0D0; background: linear-gradient(135deg, rgba(64, 224, 208, 0.15) 0%, rgba(64, 224, 208, 0.08) 100%);">
+                    <div class="highlight-text">
+                        <strong>🎯 O VALOR NÃO ESTÁ NO SILICONE, ESTÁ NA EXCLUSIVIDADE</strong><br><br>
+                        Qualquer um pode comprar um molde genérico. Mas quando seu cliente vê um tuile com o logo do seu restaurante, ele lembra da <strong>EXPERIÊNCIA</strong> que teve. Isso é branding gastronômico. Isso é diferenciação. Isso é o que a ImaginaTech entrega.<br><br>
+                        <em>→ Transformamos um simples biscoito em um cartão de visitas comestível do seu negócio!</em>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 100% antecipado para primeira compra (PIX ou Cartão de Crédito).</div>
+                    <div class="service-detail"><strong>Parcelamento:</strong> Até 3x sem juros no cartão de crédito.</div>
+                    <div class="service-detail"><strong>Pedido Mínimo:</strong> 12 unidades por pedido.</div>
+                    <div class="service-detail"><strong>Prazo de Produção:</strong> A definir após confirmação do pedido (depende da quantidade e disponibilidade de matriz).</div>
+                    <div class="service-detail"><strong>Entrega:</strong> Sedex ou transportadora (frete calculado conforme localização).</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação.</div>
+                    <div class="service-detail"><strong>Documentação:</strong> Nota fiscal + FISPQ do silicone alimentício.</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>🚚 POLÍTICA DE ENTREGA</strong><br><br>
+                        • Frete calculado conforme CEP de destino<br>
+                        • Embalagem reforçada para proteção durante transporte<br>
+                        • Código de rastreamento fornecido<br>
+                        • Possibilidade de retirada em nossa sede (sem custo de frete)
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">GARANTIAS E SUPORTE</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Consultoria de Design:</strong> Ajudamos você a definir o melhor formato e tamanho para sua aplicação.</div>
+                    <div class="service-detail"><strong>Desenvolvimento 3D:</strong> Nossa equipe técnica transforma sua ideia em modelo 3D profissional.</div>
+                    <div class="service-detail"><strong>Aprovação Prévia:</strong> Você aprova o design antes da produção dos moldes.</div>
+                    <div class="service-detail"><strong>Garantia de Qualidade:</strong> Todos os moldes passam por inspeção rigorosa antes do envio.</div>
+                    <div class="service-detail"><strong>Substituição:</strong> Moldes com defeitos de fabricação são substituídos sem custo adicional.</div>
+                    <div class="service-detail"><strong>Suporte Técnico:</strong> Orientações sobre uso, conservação e melhores práticas.</div>
+                    <div class="service-detail"><strong>Arquivo Permanente:</strong> Mantemos arquivo da sua matriz por tempo indeterminado para reposições.</div>
+                    <div class="service-detail"><strong>Novos Formatos:</strong> Criamos quantos formatos exclusivos você precisar (R$ 45,00 por formato novo).</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>🤝 PARCERIA DE LONGO PRAZO</strong><br><br>
+                        Nosso objetivo não é vender moldes, é criar uma parceria onde sua marca se destaca através de apresentações exclusivas. Estamos aqui para ajudar seu restaurante a criar experiências memoráveis, uma tuile customizada por vez.
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">ACEITE E ASSINATURAS</h2>
+                
+                <div class="signature-section">
+                    <div class="signature-text">
+                        Declaro ter lido e concordado com todos os termos e condições apresentados neste orçamento.
+                    </div>
+                    
+                    <div class="signature-boxes">
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">CONTRATANTE</div>
+                            <div class="signature-details">
+                                <p>Nome: _________________________________</p>
+                                <p>CPF/CNPJ: _____________________________</p>
+                                <p>Data: ____/____/________</p>
+                            </div>
+                        </div>
+                        
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">IMAGINATECH</div>
+                            <div class="signature-details">
+                                <p>Representante: Marcus Vinicius de F. Trindade</p>
+                                <p>CNPJ: 62.043.082/0001-09</p>
+                                <p>Data: 19/11/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa - Rio de Janeiro - RJ, CEP: 21931-577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539 | E-mail: 3d3printers@gmail.com<br>
+                Agradecemos a oportunidade e ficamos à disposição.
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
