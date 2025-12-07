@@ -740,20 +740,42 @@ async function fixInstallmentsStartMonth() {
         const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
         const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
+        console.log(`\n🔍 [MIGRAÇÃO] Verificando parcelamentos... (ref: mês ${displayMonth + 1}/${displayYear})`);
+
         const toFix = installments.filter(inst => {
             // Verifica se precisa correção: se startMonth está definido mas parece errado
-            if (!inst.startMonth && inst.startMonth !== 0) return false;
+            if (inst.startMonth === undefined && inst.startMonth !== 0) return false;
             if (!inst.currentInstallment) return false;
+            if (!inst.totalInstallments) return false;
 
             // Recalcular o que deveria ser
             const monthsBack = inst.currentInstallment - 1;
-            const correctStartMonth = (displayMonth - monthsBack + 12) % 12;
+            let correctStartMonth = displayMonth - monthsBack;
+            let correctStartYear = displayYear;
+
+            while (correctStartMonth < 0) {
+                correctStartMonth += 12;
+                correctStartYear--;
+            }
+            while (correctStartMonth > 11) {
+                correctStartMonth -= 12;
+                correctStartYear++;
+            }
 
             // Se está diferente, precisa corrigir
-            return inst.startMonth !== correctStartMonth;
+            const needsFix = (inst.startMonth !== correctStartMonth || inst.startYear !== correctStartYear);
+
+            if (needsFix) {
+                console.log(`   🔧 "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${correctStartMonth + 1}/${correctStartYear} (parcela ${inst.currentInstallment}/${inst.totalInstallments})`);
+            }
+
+            return needsFix;
         });
 
-        if (toFix.length === 0) return;
+        if (toFix.length === 0) {
+            console.log(`   ✅ Todos os parcelamentos estão corretos!\n`);
+            return;
+        }
 
         console.log(`\n🔧 Corrigindo ${toFix.length} parcelamentos com startMonth incorreto...`);
 
@@ -1126,12 +1148,11 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     // Determinar período da fatura
     let billStartDate, billEndDate, billMonth, billYear;
 
-    // Se estamos navegando em um mês diferente do atual, sempre mostrar a fatura que fecha naquele mês
-    const isNavigatingDifferentMonth = (overrideMonth !== null ||
-                                        (typeof currentDisplayMonth !== 'undefined' &&
-                                         (currentDisplayMonth !== today.getMonth() || currentDisplayYear !== today.getFullYear())));
+    // Se há navegação de mês (currentDisplayMonth definido OU overrideMonth passado),
+    // sempre usar a lógica de navegação, independente do dia atual
+    const isNavigating = (overrideMonth !== null || typeof currentDisplayMonth !== 'undefined');
 
-    if (isNavigatingDifferentMonth) {
+    if (isNavigating) {
         // Navegando entre meses: mostrar fatura ABERTA (sendo construída) no mês selecionado
         // Esta é a fatura DO MÊS visualizado, que fecha no mês seguinte
         billStartDate = new Date(currentYear, currentMonth, card.closingDay);
@@ -1309,12 +1330,12 @@ function showCardBillDetails(cardId) {
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
 
     // Calcular período da fatura (mesmo cálculo do calculateCurrentBill)
-    const isNavigatingDifferentMonth = (typeof currentDisplayMonth !== 'undefined' &&
-                                        (currentDisplayMonth !== today.getMonth() || currentDisplayYear !== today.getFullYear()));
+    // Se currentDisplayMonth está definido, sempre usar lógica de navegação
+    const isNavigating = (typeof currentDisplayMonth !== 'undefined');
 
     let billStartDate, billEndDate, billMonth, billYear;
 
-    if (isNavigatingDifferentMonth) {
+    if (isNavigating) {
         billStartDate = new Date(currentYear, currentMonth, card.closingDay);
         billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
         billMonth = currentMonth;
