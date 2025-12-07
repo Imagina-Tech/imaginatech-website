@@ -233,6 +233,17 @@
             box-shadow: 0 4px 15px rgba(37, 211, 102, 0.5);
         }
 
+        .btn-nav.btn-back {
+            background: rgba(255, 0, 85, 0.1);
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+        }
+
+        .btn-nav.btn-back:hover {
+            background: var(--neon-red);
+            color: white;
+        }
+
         /* MAIN CONTENT */
         .main-content {
             flex: 1;
@@ -246,6 +257,291 @@
             padding: 0 2rem;
             width: 100%;
             overflow-x: hidden;
+        }
+
+        /* WELCOME SCREEN */
+        .welcome-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 200px);
+            padding: 2rem 0;
+        }
+
+        .welcome-screen.hidden {
+            display: none;
+        }
+
+        .welcome-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow-glow);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .welcome-header h2 {
+            font: 700 2rem/1.2 'Orbitron', sans-serif;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .code-input-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .code-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .code-input-wrapper {
+            position: relative;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.3rem;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .code-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .code-input.error {
+            border-color: var(--neon-red);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            border-radius: 8px;
+            color: var(--neon-red);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        .btn-search {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font: 600 1rem 'Inter', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            margin-top: 1.5rem;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-search:active {
+            transform: translateY(0);
+        }
+
+        .btn-search:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .info-box-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--neon-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .info-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* BUDGET VIEWER */
+        .budget-viewer {
+            display: none;
+        }
+
+        .budget-viewer.active {
+            display: block;
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .budget-info h3 {
+            font: 700 1.5rem 'Orbitron', sans-serif;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .budget-code {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .budget-code strong {
+            color: var(--neon-blue);
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.2rem;
+        }
+
+        .budget-frame-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .budget-frame {
+            width: 100%;
+            min-height: 80vh;
+            border: none;
+            display: block;
+        }
+
+        /* LOADING */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 212, 255, 0.2);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            color: var(--neon-blue);
+            font-size: 0.9rem;
+            animation: pulseFade 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseFade {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         /* RESPONSIVE */
@@ -272,6 +568,14 @@
                 font-size: 0.75rem;
                 padding: 0.4rem 0.8rem;
             }
+            .welcome-card {
+                padding: 2rem 1.5rem;
+            }
+            .budget-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
         }
 
         @media (max-width: 480px) {
@@ -287,10 +591,25 @@
                 width: 6px;
                 height: 6px;
             }
+            .welcome-card {
+                padding: 1.5rem 1rem;
+            }
+            .code-input {
+                font-size: 1.2rem;
+                letter-spacing: 0.2rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando orçamento...</div>
+        </div>
+    </div>
+
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
         <div class="particles" id="particles"></div>
@@ -327,11 +646,114 @@
 
     <main class="main-content">
         <div class="container">
-            <!-- Conteúdo do orçamento será adicionado aqui -->
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-card">
+                    <div class="welcome-header">
+                        <div class="welcome-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h2>Visualizar Orçamento</h2>
+                        <p>Digite o código de 5 dígitos para acessar</p>
+                    </div>
+
+                    <div class="code-input-container">
+                        <label for="budgetCode" class="code-label">
+                            <i class="fas fa-hashtag"></i>
+                            Código do Orçamento
+                        </label>
+                        <div class="code-input-wrapper">
+                            <input
+                                type="text"
+                                id="budgetCode"
+                                class="code-input"
+                                placeholder="00000"
+                                maxlength="5"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div class="error-message" id="errorMessage">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Código inválido. Verifique e tente novamente.
+                        </div>
+                    </div>
+
+                    <button class="btn-search" id="btnSearch">
+                        <i class="fas fa-search"></i>
+                        <span>Buscar Orçamento</span>
+                    </button>
+
+                    <div class="info-box">
+                        <div class="info-box-title">
+                            <i class="fas fa-info-circle"></i>
+                            Como funciona?
+                        </div>
+                        <p>
+                            O código do orçamento foi enviado junto com o orçamento.
+                            Digite o código de 5 dígitos para visualizar os detalhes completos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Viewer -->
+            <div class="budget-viewer" id="budgetViewer">
+                <div class="budget-header">
+                    <div class="budget-info">
+                        <h3>Orçamento ImaginaTech</h3>
+                        <div class="budget-code">
+                            Código: <strong id="displayCode">00000</strong>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-back" onclick="backToSearch()">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Voltar</span>
+                    </button>
+                </div>
+                <div class="budget-frame-container">
+                    <iframe id="budgetFrame" class="budget-frame"></iframe>
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
+        // ==================== MAPEAMENTO DE ORÇAMENTOS ====================
+        const BUDGETS = {
+            '10001': '.orcamentos/orcamento_joao.html',
+            '10002': '.orcamentos/orcamento_rodrigo.html',
+            '10003': '.orcamentos/orcamento_torre.html',
+            '10004': '.orcamentos/orcamento_trofeu_sesc.html',
+            '10005': '.orcamentos/orcamento_juanv1.html',
+            '10006': '.orcamentos/orcamento_reconhece+.html',
+            '10007': '.orcamentos/orcamento_molde_silicone_atualizado.html',
+            '10008': '.orcamentos/orcamento_molde_silicone_tuile.html',
+            '10009': '.orcamentos/orcamento_molde_silicone_vfinal.html',
+            '10010': '.orcamentos/orcamento_imaginatech_caixa.html',
+            '10011': '.orcamentos/primeiro_aditivo_vibra.html',
+            '10012': '.orcamentos/vibrahtml.html',
+            '10013': '.orcamentos/orçamento_gota.html',
+            '10014': '.orcamentos/orçamento_mustang.html',
+            '10015': '.orcamentos/Orçamento_âncorav1.html',
+            '10016': '.orcamentos/ORÇAMENTO_FINAL.html',
+            '10017': '.orcamentos/orcamento.html',
+            '10018': '.orcamentos/orçamento.html',
+            '10019': '.orcamentos/orcamento1',
+            '10020': '.orcamentos/!DOCTYPE.html'
+        };
+
+        // ==================== ELEMENTOS DO DOM ====================
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const budgetViewer = document.getElementById('budgetViewer');
+        const budgetCodeInput = document.getElementById('budgetCode');
+        const btnSearch = document.getElementById('btnSearch');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const budgetFrame = document.getElementById('budgetFrame');
+        const displayCode = document.getElementById('displayCode');
+
+        // ==================== FUNÇÕES ====================
+
         // Criar partículas no background
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
@@ -361,13 +783,139 @@
             }
         }
 
-        // Event listeners para conexão
+        // Validar código (apenas números, 5 dígitos)
+        function validateCode(code) {
+            return /^\d{5}$/.test(code) && BUDGETS.hasOwnProperty(code);
+        }
+
+        // Formatar input (apenas números)
+        function formatCodeInput(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+
+            // Remover erro ao digitar
+            if (budgetCodeInput.classList.contains('error')) {
+                budgetCodeInput.classList.remove('error');
+                errorMessage.classList.remove('show');
+            }
+        }
+
+        // Buscar orçamento
+        function searchBudget() {
+            const code = budgetCodeInput.value.trim();
+
+            if (!code) {
+                showError('Digite um código válido');
+                return;
+            }
+
+            if (!validateCode(code)) {
+                showError('Código não encontrado');
+                budgetCodeInput.classList.add('error');
+                return;
+            }
+
+            loadBudget(code);
+        }
+
+        // Carregar orçamento
+        function loadBudget(code) {
+            loadingOverlay.classList.add('active');
+
+            const budgetPath = BUDGETS[code];
+            displayCode.textContent = code;
+
+            // Simular delay para melhor UX
+            setTimeout(() => {
+                budgetFrame.src = budgetPath;
+
+                // Aguardar iframe carregar
+                budgetFrame.onload = () => {
+                    loadingOverlay.classList.remove('active');
+                    welcomeScreen.classList.add('hidden');
+                    budgetViewer.classList.add('active');
+
+                    // Atualizar URL sem recarregar
+                    const newUrl = `${window.location.pathname}?code=${code}`;
+                    window.history.pushState({ code }, '', newUrl);
+                };
+
+                // Fallback se iframe não carregar
+                setTimeout(() => {
+                    if (loadingOverlay.classList.contains('active')) {
+                        loadingOverlay.classList.remove('active');
+                        welcomeScreen.classList.add('hidden');
+                        budgetViewer.classList.add('active');
+                    }
+                }, 3000);
+            }, 500);
+        }
+
+        // Mostrar erro
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            budgetCodeInput.classList.add('error');
+
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        // Voltar para busca
+        function backToSearch() {
+            budgetViewer.classList.remove('active');
+            welcomeScreen.classList.remove('hidden');
+            budgetCodeInput.value = '';
+            budgetFrame.src = '';
+
+            // Limpar URL
+            window.history.pushState({}, '', window.location.pathname);
+        }
+
+        // Verificar URL ao carregar página
+        function checkURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (code && validateCode(code)) {
+                budgetCodeInput.value = code;
+                loadBudget(code);
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+
+        // Input formatting
+        budgetCodeInput.addEventListener('input', formatCodeInput);
+
+        // Enter key to search
+        budgetCodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBudget();
+            }
+        });
+
+        // Search button
+        btnSearch.addEventListener('click', searchBudget);
+
+        // Connection status
         window.addEventListener('online', updateConnectionStatus);
         window.addEventListener('offline', updateConnectionStatus);
 
-        // Inicializar
+        // Browser back button
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.code) {
+                loadBudget(e.state.code);
+            } else {
+                backToSearch();
+            }
+        });
+
+        // ==================== INICIALIZAÇÃO ====================
         createParticles();
         updateConnectionStatus();
+        checkURLParams();
     </script>
 </body>
 </html>
