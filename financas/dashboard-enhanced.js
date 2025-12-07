@@ -293,6 +293,9 @@ function showCreditCardsList() {
                 </div>
                 <div class="list-item-value expense">${formatCurrencyDisplay(bill)}</div>
                 <div class="list-item-actions">
+                    <button class="btn-icon" onclick="closeListModal('creditCardsListModal'); showCardBillDetails('${card.id}');" title="Ver Detalhes" style="color: var(--color-neutral);">
+                        <i class="fas fa-list"></i>
+                    </button>
                     <button class="btn-icon danger" onclick="deleteCreditCardAndRefresh('${card.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
