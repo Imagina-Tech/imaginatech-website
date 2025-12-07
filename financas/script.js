@@ -1432,16 +1432,12 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 
     if (isNavigatingDifferentMonth) {
         // Navegando entre meses: mostrar fatura ABERTA (sendo construída) no mês selecionado
-        // Esta é a fatura que fecha no MÊS SEGUINTE
+        // Esta é a fatura DO MÊS visualizado, que fecha no mês seguinte
         billStartDate = new Date(currentYear, currentMonth, card.closingDay);
         billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
-        // A fatura fecha no próximo mês
-        billMonth = currentMonth + 1;
+        // A fatura É DO MÊS visualizado (ex: fatura de dezembro que fecha em janeiro)
+        billMonth = currentMonth;
         billYear = currentYear;
-        if (billMonth > 11) {
-            billMonth = 0;
-            billYear++;
-        }
     } else {
         // Mês atual: usar lógica baseada no dia de fechamento
         if (today.getDate() >= card.closingDay) {
