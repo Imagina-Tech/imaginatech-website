@@ -130,13 +130,6 @@
             align-items: center;
         }
 
-        #navNormalButtons,
-        #navBudgetButtons {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
         .budget-code-nav {
             display: flex;
             align-items: center;
@@ -274,6 +267,11 @@
             flex: 1;
             padding: 2rem 0;
             min-height: calc(100vh - 100px);
+        }
+
+        /* Remove padding quando visualizando orçamento */
+        .budget-viewer.active {
+            margin-top: -2rem;
         }
 
         .container {
@@ -570,12 +568,6 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
-            #navNormalButtons,
-            #navBudgetButtons {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
             .btn-nav {
                 flex: 1;
                 min-width: calc(50% - 5px);
@@ -649,33 +641,25 @@
                 </div>
             </div>
             <div class="navbar-right">
-                <div id="navNormalButtons">
-                    <a href="/" class="btn-nav">
-                        <i class="fas fa-home"></i>
-                        <span>Início</span>
-                    </a>
-                    <a href="/acompanhar-pedido" class="btn-nav">
-                        <i class="fas fa-search"></i>
-                        <span>Acompanhar Pedido</span>
-                    </a>
-                    <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>WhatsApp</span>
-                    </a>
+                <div class="budget-code-nav" id="budgetCodeDisplay" style="display: none;">
+                    Código: <strong id="displayCodeNav">00000</strong>
                 </div>
-                <div id="navBudgetButtons" style="display: none;">
-                    <div class="budget-code-nav">
-                        Código: <strong id="displayCodeNav">00000</strong>
-                    </div>
-                    <button class="btn-nav btn-back" onclick="backToSearch()">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Voltar</span>
-                    </button>
-                    <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>WhatsApp</span>
-                    </a>
-                </div>
+                <a href="/" class="btn-nav">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="/acompanhar-pedido" class="btn-nav">
+                    <i class="fas fa-search"></i>
+                    <span>Acompanhar Pedido</span>
+                </a>
+                <button class="btn-nav btn-back" id="btnBackToSearch" style="display: none;" onclick="backToSearch()">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Voltar</span>
+                </button>
+                <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </a>
             </div>
         </div>
     </header>
@@ -775,8 +759,8 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const budgetContent = document.getElementById('budgetContent');
         const displayCodeNav = document.getElementById('displayCodeNav');
-        const navNormalButtons = document.getElementById('navNormalButtons');
-        const navBudgetButtons = document.getElementById('navBudgetButtons');
+        const budgetCodeDisplay = document.getElementById('budgetCodeDisplay');
+        const btnBackToSearch = document.getElementById('btnBackToSearch');
 
         // ==================== FUNÇÕES ====================
 
@@ -878,9 +862,9 @@
                 // Injetar estilos e conteúdo
                 budgetContent.innerHTML = stylesHtml + bodyContent;
 
-                // Trocar botões da navbar
-                navNormalButtons.style.display = 'none';
-                navBudgetButtons.style.display = 'flex';
+                // Mostrar código e botão voltar na navbar
+                budgetCodeDisplay.style.display = 'flex';
+                btnBackToSearch.style.display = 'flex';
 
                 // Mostrar visualizador
                 loadingOverlay.classList.remove('active');
@@ -914,9 +898,9 @@
 
         // Voltar para busca
         function backToSearch() {
-            // Trocar botões da navbar de volta
-            navNormalButtons.style.display = 'flex';
-            navBudgetButtons.style.display = 'none';
+            // Esconder código e botão voltar na navbar
+            budgetCodeDisplay.style.display = 'none';
+            btnBackToSearch.style.display = 'none';
 
             // Restaurar telas
             budgetViewer.classList.remove('active');
