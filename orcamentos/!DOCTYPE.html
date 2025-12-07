@@ -1,0 +1,42 @@
+@echo OFF
+echo ======================================================
+echo Iniciando o script de backup do repositorio...
+echo ======================================================
+
+:: --- CONFIGURACOES - Caminhos preenchidos para voce ---
+
+:: O caminho para o seu repositorio local.
+set REPO_PATH="C:\Users\Trindade\Desktop\imaginatech-website"
+
+:: A pasta onde todos os backups serao salvos.
+set BACKUP_DRIVE="C:\Users\Trindade\Desktop\ScriptBackup"
+
+:: --- FIM DAS CONFIGURACOES ---
+
+
+echo.
+echo 1/4 - Acessando a pasta do repositorio:
+echo %REPO_PATH%
+cd /d %REPO_PATH%
+
+echo.
+echo 2/4 - Atualizando o repositorio com a versao mais recente do GitHub...
+git pull
+
+echo.
+echo 3/4 - Criando o nome da pasta de backup com a data de hoje...
+set DATE_STAMP=%date:~6,4%-%date:~3,2%-%date:~0,2%
+set BACKUP_PATH=%BACKUP_DRIVE%\%DATE_STAMP%
+
+echo    A pasta de backup de hoje sera: %BACKUP_PATH%
+
+echo.
+echo 4/4 - Copiando os arquivos...
+xcopy %REPO_PATH% %BACKUP_PATH% /E /I /H /Y /exclude:exclude_list.txt
+
+echo.
+echo ======================================================
+echo      Backup concluido com sucesso!
+echo ======================================================
+
+timeout /t 10

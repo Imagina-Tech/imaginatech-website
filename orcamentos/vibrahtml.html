@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primeiro Aditivo Contratual - ImaginaTech | Vibra Energia</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e9ecef;
+            color: #333;
+            font-size: 14px; /* Leve redução para caber melhor na impressão */
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px 40px;
+            position: relative;
+            overflow: hidden;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo .tech { color: #40E0D0; }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-item { color: white; }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        
+        .info-value { font-size: 12px; line-height: 1.4; }
+        
+        .content { padding: 40px; }
+        
+        .section { margin-bottom: 30px; }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #40E0D0;
+            page-break-after: avoid; /* Mantém o título junto com o conteúdo seguinte */
+        }
+        
+        .service-box {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #40E0D0;
+            page-break-inside: avoid; /* Evita quebra dentro do box */
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .service-detail {
+            margin-bottom: 8px;
+            color: #555;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        
+        .pricing-section {
+            background: #1a2332; /* Removido gradiente para garantir impressão solida se preferir, ou manter */
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            page-break-inside: avoid;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #40E0D0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-row:last-child { border-bottom: none; }
+        
+        .quantity { font-weight: 600; font-size: 13px; }
+        
+        .price-info { text-align: right; flex: 1; margin-left: 10px; }
+        
+        .unit-price { color: white; display: block; font-size: 13px; }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+        }
+        
+        .footer {
+            background: #1a2332;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .footer-info { margin-bottom: 10px; font-size: 12px; line-height: 1.4; }
+        
+        .contact-info { color: #40E0D0; font-size: 11px; line-height: 1.4; }
+        
+        .highlight-box {
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            page-break-inside: avoid; /* Crucial para não quebrar caixas */
+        }
+        
+        .highlight-box.warning { border-left-color: #FF6B6B; background: #fff5f5; }
+        .highlight-box.info { border-left-color: #3498db; background: #e8f4f8; }
+        .highlight-box.success { border-left-color: #2ecc71; background: #e8f8f5; }
+        
+        .highlight-text { color: #1a2332; font-size: 13px; line-height: 1.5; }
+        
+        .signature-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            page-break-inside: avoid; /* Mantém assinaturas juntas */
+        }
+        
+        .signature-text {
+            color: #555;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            text-align: justify;
+            font-style: italic;
+        }
+        
+        .signature-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .signature-box {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .signature-line {
+            border-bottom: 1.5px solid #333;
+            margin-bottom: 10px;
+            height: 40px;
+        }
+        
+        .signature-label {
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .signature-details { color: #666; font-size: 11px; line-height: 1.8; }
+        .signature-details p { margin: 4px 0; }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .comparison-table th {
+            background: #f8f9fa;
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .comparison-table td { color: #555; font-size: 12px; }
+        .comparison-table tr:last-child td { border-bottom: 2px solid #40E0D0; }
+        
+        /* OTIMIZAÇÃO PARA IMPRESSÃO */
+        @media print {
+            @page {
+                size: A4;
+                margin: 1cm 1.5cm; /* Margens controladas pelo navegador */
+            }
+            
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            
+            /* Remove fundos escuros se o usuário não marcar 'gráficos de plano de fundo', 
+               mas forçamos com print-color-adjust acima. Se ainda assim falhar, o texto deve ser legível. */
+            
+            .header, .footer {
+                page-break-inside: avoid;
+            }
+            
+            .content {
+                padding: 10px 0 !important;
+            }
+            
+            /* Garante que seções possam quebrar entre si, mas não o conteúdo interno */
+            .section {
+                page-break-inside: auto;
+                margin-bottom: 25px;
+            }
+            
+            .service-box, .highlight-box, .pricing-section, .signature-section, table, tr, img {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .section-title {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            /* Esconde elementos desnecessários na impressão se houvesse links ou botões */
+            a { text-decoration: none; color: inherit; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">PRIMEIRO ADITIVO CONTRATUAL | VIBRA ENERGIA</div>
+            
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Data do Aditivo</div><div class="info-value">20 de Novembro de 2025</div></div>
+                <div class="info-item"><div class="info-label">Aditivo Nº</div><div class="info-value">43758-2025-11-10-AD01</div></div>
+                <div class="info-item"><div class="info-label">Contrato Original</div><div class="info-value">Orçamento Nº 43758-2025-11-10</div></div>
+                <div class="info-item"><div class="info-label">Projeto</div><div class="info-value">Troféu RECONHECE+</div></div>
+            </div>
+        </header>
+        
+        <main class="content">
+            <section class="section">
+                <h2 class="section-title">OBJETO DO ADITIVO</h2>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>📋 REFERÊNCIA AO CONTRATO ORIGINAL</strong><br><br>
+                        Este documento constitui o <strong>PRIMEIRO ADITIVO CONTRATUAL</strong> ao Orçamento/Contrato nº <strong>43758-2025-11-10</strong>, firmado em 10 de novembro de 2025 entre <strong>VIBRA ENERGIA S.A.</strong> (CONTRATANTE) e <strong>IMAGINATECH - CNPJ 62.043.082/0001-09</strong> (CONTRATADA).<br><br>
+                        
+                        <strong>Objeto Original:</strong> Fornecimento de 40 (quarenta) troféus RECONHECE+ em PLA Gold Premium.<br>
+                        <strong>Valor Original:</strong> R$ 4.254,00 (quatro mil, duzentos e cinquenta e quatro reais).
+                    </div>
+                </div>
+                
+                <div class="highlight-box warning">
+                    <div class="highlight-text">
+                        <strong>⚠️ CONTEXTO DA MODIFICAÇÃO E CUSTOS INCORRIDOS</strong><br><br>
+                        Em razão da aprovação formal da unidade teste em <strong>18/11/2025</strong>, a CONTRATADA iniciou imediatamente a produção em série para cumprimento do prazo contratual de entrega em 24/11/2025.<br><br>
+                        
+                        No dia <strong>19/11/2025, ao fim da tarde</strong>, a CONTRATANTE solicitou modificação no projeto (remoção da lâmpada interna), momento em que <strong>8 (oito) unidades completas já haviam sido produzidas</strong> conforme especificação original aprovada.<br><br>
+                        
+                        <strong>Custos Incorridos pela CONTRATADA:</strong><br>
+                        • Material (PLA Gold Premium) para 8 unidades completas<br>
+                        • Tempo de impressão 3D em máquinas especializadas<br>
+                        • Energia elétrica e insumos de produção<br>
+                        • Mão de obra técnica especializada<br><br>
+                        
+                        <strong>Acordo Estabelecido:</strong> Para evitar desperdício de recursos e em boa-fé negocial, as partes acordaram que a CONTRATANTE receberá as 8 unidades já produzidas (especificação original com lâmpada) mediante pagamento adicional de R$ 850,80, complementando assim o pedido para 48 unidades totais.<br><br>
+                        
+                        <strong>Fundamento Legal:</strong> Princípios da boa-fé objetiva (Art. 422 CC), vedação ao enriquecimento sem causa (Art. 884 CC) e teoria da imprevisão nos contratos (Art. 478 CC).
+                    </div>
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">JUSTIFICATIVA TÉCNICA E CRONOLOGIA DOS FATOS</div>
+                    <div class="service-detail"><strong>18/11/2025:</strong> Aprovação formal da unidade teste pela CONTRATANTE.</div>
+                    <div class="service-detail"><strong>19/11/2025 (fim da tarde):</strong> Solicitação de modificação no projeto pela CONTRATANTE.</div>
+                    <div class="service-detail"><strong>Modificação Solicitada:</strong> Remoção da lâmpada interna do troféu.</div>
+                    <div class="service-detail"><strong>Situação Encontrada:</strong> No momento da solicitação, 8 (oito) unidades completas já haviam sido produzidas conforme especificação original aprovada (com lâmpada interna).</div>
+                    <div class="service-detail"><strong>Acordo Estabelecido:</strong> A CONTRATANTE receberá 40 (quarenta) troféus com a nova especificação (sem lâmpada interna) + 8 (oito) troféus com a especificação original aprovada (com lâmpada interna), mediante pagamento adicional de R$ 850,80 referente às 8 unidades já produzidas.</div>
+                    <div class="service-detail"><strong>Fundamentação Contratual:</strong> Cláusula 5 do contrato original que permite modificações pós-aprovação, desde que acordadas entre as partes e respeitando os custos de produção já incorridos.</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">ALTERAÇÕES CONTRATUAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">COMPOSIÇÃO DA ENTREGA</div>
+                    <div class="service-detail"><strong>40 Unidades - Nova Especificação (sem lâmpada interna):</strong></div>
+                    <div class="service-detail" style="margin-left: 20px;">• Material: PLA Gold Premium</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Dimensões: 18cm x 20cm x 5.5cm</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Design: Conforme modificação aprovada em 19/11/2025</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Valor unitário: R$ 106,35</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Subtotal: R$ 4.254,00 (conforme contrato original)</div>
+                    
+                    <div class="service-detail" style="margin-top: 15px;"><strong>8 Unidades - Especificação Original (com lâmpada interna):</strong></div>
+                    <div class="service-detail" style="margin-left: 20px;">• Material: PLA Gold Premium</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Dimensões: 18cm x 20cm x 5.5cm</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Design: Conforme aprovação inicial de 18/11/2025 (com lâmpada interna)</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Valor unitário: R$ 106,35</div>
+                    <div class="service-detail" style="margin-left: 20px;">• Subtotal: R$ 850,80 (valor deste aditivo)</div>
+                    
+                    <div class="service-detail" style="margin-top: 15px; font-weight: 600; color: #1a2332;"><strong>Valor Total da Entrega:</strong> R$ 5.104,80</div>
+                </div>
+                
+                <div class="highlight-box success">
+                    <div class="highlight-text">
+                        <strong>✓ COMPARATIVO CONTRATUAL</strong>
+                    </div>
+                </div>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Contrato Original</th>
+                            <th>Este Aditivo</th>
+                            <th>Novo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Quantidade</strong></td>
+                            <td>40 unidades<br><small>(nova especificação)</small></td>
+                            <td>+ 8 unidades<br><small>(especificação original)</small></td>
+                            <td><strong>48 unidades</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Especificação</strong></td>
+                            <td>Sem lâmpada interna<br><small>(conforme modificação 19/11)</small></td>
+                            <td>Com lâmpada interna<br><small>(conforme aprovação 18/11)</small></td>
+                            <td>2 versões</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valor Unitário</strong></td>
+                            <td>R$ 106,35</td>
+                            <td>R$ 106,35</td>
+                            <td>R$ 106,35</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valor Total</strong></td>
+                            <td>R$ 4.254,00</td>
+                            <td>+ R$ 850,80</td>
+                            <td><strong>R$ 5.104,80</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>% de Acréscimo</strong></td>
+                            <td>-</td>
+                            <td>20%</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="highlight-box warning">
+                    <div class="highlight-text">
+                        <strong>⚖️ FUNDAMENTAÇÃO LEGAL</strong><br><br>
+                        Nos termos do Art. 65, §1º da Lei 8.666/93 (aplicável por analogia a contratos privados) e conforme Cláusula 5 do contrato original, o acréscimo de <strong>20% (vinte por cento)</strong> está dentro do limite permitido para aditivos contratuais, não caracterizando alteração substancial do objeto contratado.
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">INVESTIMENTO ADICIONAL</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">VALORES DESTE ADITIVO</div>
+                    
+                    <div class="price-table">
+                        <div class="price-row">
+                            <span class="quantity">8 Unidades Adicionais</span>
+                            <div class="price-info">
+                                <span class="unit-price">8x R$ 106,35</span>
+                                <span class="total-price">R$ 850,80</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #40E0D0; padding-top: 15px; margin-top: 10px;">
+                            <span class="quantity" style="color: #40E0D0; font-size: 15px;">VALOR CONTRATUAL TOTAL</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #40E0D0; font-size: 17px; font-weight: 700;">R$ 5.104,80</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.85); font-size: 13px; line-height: 1.6;">
+                        <em>* Original: R$ 4.254,00 + Aditivo: R$ 850,80 = Total: R$ 5.104,80</em>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">CONDIÇÕES DESTE ADITIVO</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">CLÁUSULAS MANTIDAS DO CONTRATO ORIGINAL</div>
+                    <div class="service-detail"><strong>Forma de Pagamento:</strong> 100% em 30 (trinta) dias após entrega mediante emissão de Nota Fiscal.</div>
+                    <div class="service-detail"><strong>Prazo de Entrega:</strong> <strong>24/11/2025</strong> (mantido - produção conjunta com pedido original).</div>
+                    <div class="service-detail"><strong>Local de Entrega:</strong> Conforme acordado no contrato original.</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação.</div>
+                    <div class="service-detail"><strong>Material:</strong> PLA Gold Premium conforme especificações técnicas originais.</div>
+                    <div class="service-detail"><strong>Documentação Fiscal:</strong> As 8 unidades adicionais serão incluídas na mesma NF-e do pedido original ou em NF-e complementar, conforme procedimento do financeiro da CONTRATANTE.</div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>📅 CRONOGRAMA E COMPOSIÇÃO DA ENTREGA</strong><br><br>
+                        Como as 8 unidades com especificação original já estavam concluídas e as 40 unidades com nova especificação estão em produção conjunta, o prazo de entrega <strong>permanece inalterado</strong>:<br><br>
+                        
+                        • <strong>Entrega total:</strong> 24/11/2025<br>
+                        &nbsp;&nbsp;→ 40 troféus sem lâmpada interna (nova especificação)<br>
+                        &nbsp;&nbsp;→ 8 troféus com lâmpada interna (especificação original)<br><br>
+                        
+                        • <strong>Vencimento:</strong> 24/12/2025 (30 DDL sobre o valor total de R$ 5.104,80)<br><br>
+                        
+                        <strong>Observação:</strong> Ambas as versões possuem a mesma qualidade, material (PLA Gold Premium) e dimensões, diferindo apenas pela presença ou ausência da lâmpada interna decorativa.
+                    </div>
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">CLÁUSULAS ESPECÍFICAS DESTE ADITIVO</div>
+                    <div class="service-detail"><strong>1. COMPOSIÇÃO DA ENTREGA:</strong> A CONTRATANTE declara estar ciente e de acordo em receber 48 (quarenta e oito) troféus, sendo 40 (quarenta) unidades conforme nova especificação sem lâmpada interna e 8 (oito) unidades conforme especificação original com lâmpada interna, ambas produzidas em PLA Gold Premium com as demais características técnicas mantidas.</div>
+                    <div class="service-detail"><strong>2. APROVAÇÃO EXPRESSA:</strong> A CONTRATANTE manifesta expressamente sua concordância em receber as 8 (oito) unidades com lâmpada interna (especificação original aprovada em 18/11/2025), reconhecendo que tais unidades já estavam concluídas quando da solicitação de modificação em 19/11/2025.</div>
+                    <div class="service-detail"><strong>3. INCIDÊNCIA DE ENCARGOS:</strong> Todas as cláusulas de inadimplência, multas, juros e correção monetária previstas no contrato original aplicam-se integralmente ao valor deste aditivo.</div>
+                    <div class="service-detail"><strong>4. PROPRIEDADE INTELECTUAL:</strong> As cláusulas de propriedade intelectual do contrato original estendem-se às 8 unidades com especificação original.</div>
+                    <div class="service-detail"><strong>5. INDIVISIBILIDADE:</strong> Este aditivo constitui parte indivisível e inseparável do contrato original, não podendo ser executado isoladamente.</div>
+                    <div class="service-detail"><strong>6. RATIFICAÇÃO:</strong> Permanecem em pleno vigor todas as demais cláusulas e condições do contrato original não expressamente modificadas por este aditivo.</div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">DISPOSIÇÕES FINAIS</h2>
+                
+                <div class="highlight-box warning">
+                    <div class="highlight-text">
+                        <strong>📋 FUNDAMENTO LEGAL E VINCULAÇÃO</strong><br><br>
+                        
+                        <strong>1. NATUREZA JURÍDICA:</strong><br>
+                        Este aditivo tem natureza contratual plena, vinculando as partes nos mesmos termos do contrato original, constituindo documento hábil para todas as medidas legais cabíveis.<br><br>
+                        
+                        <strong>2. LEGISLAÇÃO APLICÁVEL:</strong><br>
+                        • Lei 10.406/02 (Código Civil) - Arts. 421 a 480<br>
+                        • Cláusulas e condições do Orçamento nº 43758-2025-11-10<br>
+                        • Lei 8.666/93 - Art. 65 (aplicável por analogia)<br><br>
+                        
+                        <strong>3. FORO:</strong><br>
+                        Mantém-se o foro eleito no contrato original: Comarca do Rio de Janeiro - RJ.<br><br>
+                        
+                        <strong>4. VIGÊNCIA:</strong><br>
+                        Este aditivo entra em vigor na data de sua assinatura e encerra-se com o cumprimento integral das obrigações pactuadas.<br><br>
+                        
+                        <strong>5. FACULDADE DE ACEITE:</strong><br>
+                        A CONTRATANTE tem até 3 (três) dias úteis para aceitar ou recusar este aditivo. Decorrido o prazo sem manifestação, este aditivo será considerado sem efeito, mantendo-se apenas o contrato original.
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">ACEITE E ASSINATURAS</h2>
+                
+                <div class="signature-section">
+                    <div class="signature-text">
+                        Declaro ter lido e concordado com TODOS os termos e condições apresentados neste PRIMEIRO ADITIVO CONTRATUAL, reconhecendo que este documento constitui parte integrante e inseparável do Contrato Original nº 43758-2025-11-10. <strong>Declaro estar CIENTE e DE ACORDO em receber 48 (quarenta e oito) troféus, sendo 40 unidades sem lâmpada interna (nova especificação) e 8 unidades com lâmpada interna (especificação original aprovada em 18/11/2025)</strong>, aplicando-se a ambas as versões todas as cláusulas, penalidades e condições estabelecidas no contrato original.
+                    </div>
+                    
+                    <div class="signature-boxes">
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">VIBRA ENERGIA S.A.</div>
+                            <div class="signature-details">
+                                <p>Representante Legal: _____________________</p>
+                                <p>CNPJ: _____________________________</p>
+                                <p>CPF Representante: ____________________</p>
+                                <p>Data: ____/____/________</p>
+                            </div>
+                        </div>
+                        
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">IMAGINATECH</div>
+                            <div class="signature-details">
+                                <p>Representante: Marcus Vinicius de F. Trindade</p>
+                                <p>CNPJ: 62.043.082/0001-09</p>
+                                <p>Data: 20/11/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa - Rio de Janeiro - RJ, CEP: 21931-577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539 | E-mail: contato@imaginatech.com.br / 3d3printers@gmail.com<br>
+                Este documento é um anexo legal.
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
