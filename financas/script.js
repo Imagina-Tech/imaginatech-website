@@ -1470,6 +1470,18 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         .reduce((sum, expense) => sum + expense.value, 0);
 
     // Somar transações de crédito do período
+    const allCreditTransactions = transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'credit');
+
+    console.log(`\n💰 [DEBUG TRANSAÇÕES CRÉDITO] Total de transações de crédito: ${allCreditTransactions.length}`);
+    allCreditTransactions.forEach(t => {
+        const tDate = new Date(t.date + 'T12:00:00');
+        const matchesCard = t.cardId === card.id;
+        const inPeriod = tDate >= billStartDate && tDate <= billEndDate;
+        console.log(`   ${matchesCard && inPeriod ? '✅' : '❌'} "${t.description}": R$ ${t.value.toFixed(2)} em ${tDate.toLocaleDateString('pt-BR')}`);
+        console.log(`      cardId: ${t.cardId} ${matchesCard ? '✅' : `❌ (esperado: ${card.id})`}`);
+        console.log(`      Período: ${inPeriod ? '✅' : `❌ (fora de ${billStartDate.toLocaleDateString('pt-BR')} - ${billEndDate.toLocaleDateString('pt-BR')})`}`);
+    });
+
     const creditTransactionsTotal = transactions
         .filter(t => {
             if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
@@ -1478,8 +1490,10 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         })
         .reduce((sum, t) => sum + t.value, 0);
 
+    console.log(`   💵 TOTAL TRANSAÇÕES CRÉDITO INCLUÍDAS: R$ ${creditTransactionsTotal.toFixed(2)}\n`);
+
     // Log detalhado do período da fatura
-    console.log(`\n📅 [FATURA ${card.name}] Calculando fatura do mês ${billMonth + 1}/${billYear}`);
+    console.log(`📅 [FATURA ${card.name}] Calculando fatura do mês ${billMonth + 1}/${billYear}`);
     console.log(`   Período: ${billStartDate.toLocaleDateString('pt-BR')} até ${billEndDate.toLocaleDateString('pt-BR')}`);
     console.log(`   Dia de fechamento: ${card.closingDay}`);
 
