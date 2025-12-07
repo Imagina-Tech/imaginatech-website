@@ -115,6 +115,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         .navbar-left {
@@ -151,7 +152,6 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            text-decoration: none;
         }
 
         .logo {
@@ -258,6 +258,17 @@
 
         .btn-nav.btn-back:hover {
             background: var(--neon-red);
+            color: white;
+        }
+
+        .btn-nav.btn-print {
+            background: rgba(64, 224, 208, 0.1);
+            color: var(--neon-blue);
+            border-color: var(--neon-blue);
+        }
+
+        .btn-nav.btn-print:hover {
+            background: var(--neon-blue);
             color: white;
         }
 
@@ -403,6 +414,39 @@
             75% { transform: translateX(10px); }
         }
 
+        .password-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.2rem;
+            transition: all 0.3s;
+            font-family: 'Orbitron', monospace;
+            margin-top: 1rem;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .password-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+            letter-spacing: normal;
+        }
+
+        .password-input.error {
+            border-color: var(--neon-red);
+            animation: shake 0.5s;
+        }
+
         .error-message {
             display: none;
             margin-top: 0.75rem;
@@ -497,6 +541,13 @@
             min-height: calc(100vh - 80px);
         }
 
+        /* Adiciona sombra para transição suave entre orçamento branco e grid azul */
+        .budget-content .container {
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.3),
+                        0 0 100px rgba(0, 212, 255, 0.2),
+                        0 20px 60px rgba(0, 0, 0, 0.4) !important;
+        }
+
         /* LOADING */
         .loading-overlay {
             position: fixed;
@@ -538,6 +589,30 @@
         @keyframes pulseFade {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        /* Estilos de impressão - esconde navbar */
+        @media print {
+            .navbar,
+            .cosmic-bg,
+            .particles,
+            .grid-lines {
+                display: none !important;
+            }
+
+            body.viewing-budget .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .budget-viewer {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .budget-content .container {
+                box-shadow: none !important;
+            }
         }
 
         /* RESPONSIVE */
@@ -648,6 +723,10 @@
                     <i class="fas fa-search"></i>
                     <span>Acompanhar Pedido</span>
                 </a>
+                <button class="btn-nav btn-print" id="btnPrintBudget" style="display: none;" onclick="printBudget()">
+                    <i class="fas fa-print"></i>
+                    <span>Imprimir</span>
+                </button>
                 <button class="btn-nav btn-back" id="btnBackToSearch" style="display: none;" onclick="backToSearch()">
                     <i class="fas fa-arrow-left"></i>
                     <span>Voltar</span>
@@ -685,6 +764,15 @@
                                 class="code-input"
                                 placeholder="00000"
                                 maxlength="5"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div class="code-input-wrapper" id="passwordContainer" style="display: none;">
+                            <input
+                                type="password"
+                                id="budgetPassword"
+                                class="password-input"
+                                placeholder="Digite a senha"
                                 autocomplete="off"
                             >
                         </div>
@@ -747,10 +835,37 @@
             '10126': 'orcamentos/orcamento_xterra.html'
         };
 
+        // Mapeamento de senhas para cada orçamento
+        const PASSWORDS = {
+            '10001': 'admincodeimgna25',
+            '10002': 'admincodeimgna25',
+            '10003': 'admincodeimgna25',
+            '10004': 'admincodeimgna25',
+            '10005': 'admincodeimgna25',
+            '10006': 'admincodeimgna25',
+            '10007': 'admincodeimgna25',
+            '10008': 'admincodeimgna25',
+            '10009': 'admincodeimgna25',
+            '10010': 'admincodeimgna25',
+            '10011': 'admincodeimgna25',
+            '10012': 'admincodeimgna25',
+            '10013': 'admincodeimgna25',
+            '10014': 'admincodeimgna25',
+            '10015': 'admincodeimgna25',
+            '10016': 'admincodeimgna25',
+            '10017': 'admincodeimgna25',
+            '10018': 'admincodeimgna25',
+            '10019': 'admincodeimgna25',
+            '10020': 'admincodeimgna25',
+            '10126': 'xterra2025'
+        };
+
         // ==================== ELEMENTOS DO DOM ====================
         const welcomeScreen = document.getElementById('welcomeScreen');
         const budgetViewer = document.getElementById('budgetViewer');
         const budgetCodeInput = document.getElementById('budgetCode');
+        const budgetPasswordInput = document.getElementById('budgetPassword');
+        const passwordContainer = document.getElementById('passwordContainer');
         const btnSearch = document.getElementById('btnSearch');
         const errorMessage = document.getElementById('errorMessage');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -758,6 +873,11 @@
         const displayCodeNav = document.getElementById('displayCodeNav');
         const budgetCodeDisplay = document.getElementById('budgetCodeDisplay');
         const btnBackToSearch = document.getElementById('btnBackToSearch');
+        const btnPrintBudget = document.getElementById('btnPrintBudget');
+
+        // Estado atual
+        let currentCode = null;
+        let passwordValidated = false;
 
         // ==================== FUNÇÕES ====================
 
@@ -807,9 +927,10 @@
             }
         }
 
-        // Buscar orçamento
+        // Buscar orçamento (verifica código e pede senha)
         function searchBudget() {
             const code = budgetCodeInput.value.trim();
+            const password = budgetPasswordInput.value.trim();
 
             if (!code) {
                 showError('Digite um código válido');
@@ -819,9 +940,37 @@
             if (!validateCode(code)) {
                 showError('Código não encontrado');
                 budgetCodeInput.classList.add('error');
+                passwordContainer.style.display = 'none';
+                currentCode = null;
+                passwordValidated = false;
                 return;
             }
 
+            // Se código é válido mas senha ainda não foi mostrada
+            if (!passwordValidated && passwordContainer.style.display === 'none') {
+                currentCode = code;
+                passwordContainer.style.display = 'block';
+                budgetPasswordInput.focus();
+                btnSearch.innerHTML = '<i class="fas fa-unlock"></i><span>Acessar Orçamento</span>';
+                return;
+            }
+
+            // Validar senha
+            if (!password) {
+                showError('Digite a senha para acessar');
+                budgetPasswordInput.classList.add('error');
+                return;
+            }
+
+            if (password !== PASSWORDS[code]) {
+                showError('Senha incorreta');
+                budgetPasswordInput.classList.add('error');
+                budgetPasswordInput.value = '';
+                return;
+            }
+
+            // Senha correta - carregar orçamento
+            passwordValidated = true;
             loadBudget(code);
         }
 
@@ -865,9 +1014,10 @@
                 // Injetar estilos e conteúdo
                 budgetContent.innerHTML = stylesHtml + bodyContent;
 
-                // Mostrar código e botão voltar na navbar
+                // Mostrar código, botão voltar e botão imprimir na navbar
                 budgetCodeDisplay.style.display = 'flex';
                 btnBackToSearch.style.display = 'flex';
+                btnPrintBudget.style.display = 'flex';
 
                 // Adicionar classe ao body para indicar visualização
                 document.body.classList.add('viewing-budget');
@@ -904,9 +1054,10 @@
 
         // Voltar para busca
         function backToSearch() {
-            // Esconder código e botão voltar na navbar
+            // Esconder código, botão voltar e botão imprimir na navbar
             budgetCodeDisplay.style.display = 'none';
             btnBackToSearch.style.display = 'none';
+            btnPrintBudget.style.display = 'none';
 
             // Remover classe do body
             document.body.classList.remove('viewing-budget');
@@ -915,13 +1066,25 @@
             budgetViewer.classList.remove('active');
             welcomeScreen.classList.remove('hidden');
             budgetCodeInput.value = '';
+            budgetPasswordInput.value = '';
+            passwordContainer.style.display = 'none';
             budgetContent.innerHTML = '';
+            btnSearch.innerHTML = '<i class="fas fa-search"></i><span>Buscar Orçamento</span>';
+
+            // Resetar estado
+            currentCode = null;
+            passwordValidated = false;
 
             // Limpar URL
             window.history.pushState({}, '', window.location.pathname);
 
             // Scroll suave para o topo
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Função de impressão (imprime apenas o orçamento, sem navbar)
+        function printBudget() {
+            window.print();
         }
 
         // Verificar URL ao carregar página
@@ -931,7 +1094,11 @@
 
             if (code && validateCode(code)) {
                 budgetCodeInput.value = code;
-                loadBudget(code);
+                // Mostrar campo de senha imediatamente
+                currentCode = code;
+                passwordContainer.style.display = 'block';
+                btnSearch.innerHTML = '<i class="fas fa-unlock"></i><span>Acessar Orçamento</span>';
+                budgetPasswordInput.focus();
             }
         }
 
@@ -944,6 +1111,21 @@
         budgetCodeInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 searchBudget();
+            }
+        });
+
+        // Enter key na senha
+        budgetPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBudget();
+            }
+        });
+
+        // Limpar erro ao digitar senha
+        budgetPasswordInput.addEventListener('input', () => {
+            if (budgetPasswordInput.classList.contains('error')) {
+                budgetPasswordInput.classList.remove('error');
+                errorMessage.classList.remove('show');
             }
         });
 
@@ -967,6 +1149,24 @@
         createParticles();
         updateConnectionStatus();
         checkURLParams();
+
+        // Log para debug da navbar
+        console.log('=== DEBUG NAVBAR ===');
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            const styles = window.getComputedStyle(navbar);
+            console.log('Navbar padding:', styles.padding);
+            console.log('Navbar height:', styles.height);
+            console.log('Navbar box-sizing:', styles.boxSizing);
+        }
+        const navContainer = document.querySelector('.navbar-container');
+        if (navContainer) {
+            const styles = window.getComputedStyle(navContainer);
+            console.log('Container gap:', styles.gap);
+            console.log('Container flex-wrap:', styles.flexWrap);
+            console.log('Container height:', styles.height);
+        }
+        console.log('===================');
     </script>
 </body>
 </html>

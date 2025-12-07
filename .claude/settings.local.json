@@ -4,7 +4,14 @@
       "Bash(git push:*)",
       "Bash(git commit:*)",
       "Bash(git add:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(for id in creditCardsGrid emptyCreditCards installmentsGrid emptyInstallments subscriptionsGrid emptySubscriptions projectionsGrid emptyProjections transactionsTableBody emptyState)",
+      "Bash(do echo -n \"$id: \")",
+      "Bash(done)",
+      "Bash(git pull:*)",
+      "Bash(ls:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
