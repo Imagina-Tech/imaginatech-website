@@ -1396,11 +1396,14 @@ function renderCreditCards() {
                     <span>Vencimento: dia ${card.dueDay}</span>
                 </div>
                 <div class="credit-card-actions">
+                    <button class="btn-card-action btn-view-details" onclick="showCardBillDetails('${card.id}')" style="flex: 1;">
+                        <i class="fas fa-list"></i> Ver Detalhes
+                    </button>
                     <button class="btn-card-action btn-add-expense" onclick="openCardExpenseModal('${card.id}')">
-                        <i class="fas fa-plus"></i> Adicionar Gasto
+                        <i class="fas fa-plus"></i>
                     </button>
                     <button class="btn-card-action btn-edit-card" onclick="editCreditCard('${card.id}')">
-                        <i class="fas fa-edit"></i> Editar
+                        <i class="fas fa-edit"></i>
                     </button>
                 </div>
             </div>
@@ -1594,6 +1597,180 @@ function editCreditCard(id) {
     document.getElementById('cardLimit').value = formatCurrencyValue(card.limit);
     document.getElementById('cardClosingDay').value = card.closingDay;
     document.getElementById('cardDueDay').value = card.dueDay;
+}
+
+function showCardBillDetails(cardId) {
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const today = new Date();
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
+
+    // Calcular período da fatura (mesmo cálculo do calculateCurrentBill)
+    const isNavigatingDifferentMonth = (typeof currentDisplayMonth !== 'undefined' &&
+                                        (currentDisplayMonth !== today.getMonth() || currentDisplayYear !== today.getFullYear()));
+
+    let billStartDate, billEndDate, billMonth, billYear;
+
+    if (isNavigatingDifferentMonth) {
+        billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+        billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
+        billMonth = currentMonth;
+        billYear = currentYear;
+    } else {
+        if (today.getDate() >= card.closingDay) {
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+            billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
+            billMonth = currentMonth + 1;
+            billYear = currentYear;
+            if (billMonth > 11) {
+                billMonth = 0;
+                billYear++;
+            }
+        } else {
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
+            billEndDate = new Date(currentYear, currentMonth, card.closingDay - 1);
+            billMonth = currentMonth;
+            billYear = currentYear;
+        }
+    }
+
+    // Coletar todas as transações de crédito do período
+    const creditTransactions = transactions.filter(t => {
+        if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
+        const transactionDate = new Date(t.date + 'T12:00:00');
+        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+    });
+
+    // Coletar parcelas do período
+    const activeInstallments = installments.filter(inst => {
+        if (inst.cardId !== card.id) return false;
+        if (inst.startMonth === undefined || inst.startYear === undefined) {
+            return inst.currentInstallment <= inst.totalInstallments;
+        }
+        const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
+        if (monthsSinceStart < 0) return false;
+        const installmentForThisMonth = 1 + monthsSinceStart;
+        return installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
+    });
+
+    // Coletar assinaturas ativas
+    const activeSubscriptions = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
+
+    // Calcular totais
+    const creditTotal = creditTransactions.reduce((sum, t) => sum + t.value, 0);
+    const installmentsTotal = activeInstallments.reduce((sum, inst) => sum + inst.installmentValue, 0);
+    const subscriptionsTotal = activeSubscriptions.reduce((sum, sub) => sum + sub.value, 0);
+    const grandTotal = creditTotal + installmentsTotal + subscriptionsTotal;
+
+    // Montar o HTML do modal
+    const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
+
+    let html = `
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Total da Fatura</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${formatCurrencyDisplay(grandTotal)}</div>
+                </div>
+                <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
+                    <div>Período: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
+                    <div>Vencimento: ${card.dueDay}/${billMonth === 11 ? '01' : String(billMonth + 2).padStart(2, '0')}</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Seção de Compras no Crédito
+    if (creditTransactions.length > 0) {
+        html += `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-credit-card" style="color: #3b82f6;"></i>
+                    Compras no Crédito (${creditTransactions.length})
+                    <span style="margin-left: auto; font-size: 0.875rem; color: #3b82f6;">${formatCurrencyDisplay(creditTotal)}</span>
+                </h3>
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
+                    ${creditTransactions.map(t => `
+                        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500; color: #fff;">${t.description}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(t.date).toLocaleDateString('pt-BR')} • ${t.category}</div>
+                            </div>
+                            <div style="font-weight: 600; color: #3b82f6;">${formatCurrencyDisplay(t.value)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Seção de Parcelamentos
+    if (activeInstallments.length > 0) {
+        html += `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-calendar-alt" style="color: #f59e0b;"></i>
+                    Parcelamentos (${activeInstallments.length})
+                    <span style="margin-left: auto; font-size: 0.875rem; color: #f59e0b;">${formatCurrencyDisplay(installmentsTotal)}</span>
+                </h3>
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
+                    ${activeInstallments.map(inst => {
+                        const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
+                        const currentInstallmentNum = 1 + monthsSinceStart;
+                        return `
+                            <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; color: #fff;">${inst.description}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Parcela ${currentInstallmentNum}/${inst.totalInstallments} • ${inst.category}</div>
+                                </div>
+                                <div style="font-weight: 600; color: #f59e0b;">${formatCurrencyDisplay(inst.installmentValue)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Seção de Assinaturas
+    if (activeSubscriptions.length > 0) {
+        html += `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-sync-alt" style="color: #8b5cf6;"></i>
+                    Assinaturas Recorrentes (${activeSubscriptions.length})
+                    <span style="margin-left: auto; font-size: 0.875rem; color: #8b5cf6;">${formatCurrencyDisplay(subscriptionsTotal)}</span>
+                </h3>
+                <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
+                    ${activeSubscriptions.map(sub => `
+                        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500; color: #fff;">${sub.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${sub.category}</div>
+                            </div>
+                            <div style="font-weight: 600; color: #8b5cf6;">${formatCurrencyDisplay(sub.value)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Se não houver nenhum item
+    if (creditTransactions.length === 0 && activeInstallments.length === 0 && activeSubscriptions.length === 0) {
+        html += `
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>Nenhum lançamento nesta fatura</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('cardBillDetailsContent').innerHTML = html;
+    document.getElementById('cardBillDetailsModal').classList.add('active');
 }
 
 let selectedCardId = null;

@@ -471,6 +471,13 @@ input:focus, select:focus {
     padding: 14px; border-radius: 12px; cursor: pointer; transition: 0.3s;
 }
 .btn-cancel:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.btn-add {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff; border: none; padding: 14px;
+    border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer;
+    transition: 0.3s; display: flex; align-items: center; gap: 0.5rem;
+}
+.btn-add:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4); }
 
 .input-with-prefix {
   position: relative;

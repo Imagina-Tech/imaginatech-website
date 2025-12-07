@@ -88,6 +88,12 @@ function showTransactionsList(filterType) {
     const filtered = transactions.filter(t => {
         const d = new Date(t.date + 'T12:00:00');
         const match = d.getMonth() === currentDisplayMonth && d.getFullYear() === currentDisplayYear;
+
+        // Se for filtro de expenses, excluir transações de crédito (elas aparecem no modal do cartão)
+        if (filterType === 'expense') {
+            return match && t.type === 'expense' && t.paymentMethod !== 'credit';
+        }
+
         return filterType === 'all' ? match : (match && t.type === filterType);
     });
 

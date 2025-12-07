@@ -828,6 +828,19 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
+    <!-- Modal de Detalhes da Fatura do Cartão -->
+    <div class="modal-overlay" id="cardBillDetailsModal">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="cardBillDetailsTitle">Detalhes da Fatura</h2>
+                <button class="modal-close" onclick="closeModal('cardBillDetailsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-form" id="cardBillDetailsContent">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script src="dashboard-enhanced.js"></script>
 
