@@ -1431,12 +1431,17 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
                                          (currentDisplayMonth !== today.getMonth() || currentDisplayYear !== today.getFullYear())));
 
     if (isNavigatingDifferentMonth) {
-        // Navegando entre meses: mostrar fatura que fecha no mês selecionado
-        billMonth = currentMonth;
+        // Navegando entre meses: mostrar fatura ABERTA (sendo construída) no mês selecionado
+        // Esta é a fatura que fecha no MÊS SEGUINTE
+        billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+        billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay - 1);
+        // A fatura fecha no próximo mês
+        billMonth = currentMonth + 1;
         billYear = currentYear;
-        // Período: do fechamento do mês anterior até o fechamento do mês atual
-        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
-        billEndDate = new Date(currentYear, currentMonth, card.closingDay - 1);
+        if (billMonth > 11) {
+            billMonth = 0;
+            billYear++;
+        }
     } else {
         // Mês atual: usar lógica baseada no dia de fechamento
         if (today.getDate() >= card.closingDay) {
