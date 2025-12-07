@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Troféus em Acrílico</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e9ecef;
+            color: #333;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo .tech { color: #40E0D0; }
+        
+        .doc-title {
+            color: #40E0D0;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-item { color: white; }
+        
+        .info-label {
+            color: #40E0D0;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value { font-size: 13px; line-height: 1.5; }
+        
+        .content { padding: 40px; }
+        
+        .section { margin-bottom: 40px; }
+        
+        .section-title {
+            color: #1a2332;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #40E0D0;
+        }
+        
+        .service-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #40E0D0;
+        }
+        
+        .service-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .service-detail {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .pricing-title {
+            color: #40E0D0;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .price-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #40E0D0;
+            max-width: 600px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-row:last-child { border-bottom: none; }
+        
+        .quantity { font-weight: 600; font-size: 14px; }
+        
+        .price-info { text-align: right; flex: 1; margin-left: 10px; }
+        
+        .unit-price { color: white; display: block; font-size: 14px; }
+        
+        .total-price {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-top: 5px;
+            color: #40E0D0;
+            font-weight: 600;
+        }
+        
+        .process-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .process-title {
+            color: #1a2332;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .process-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .process-item { display: flex; align-items: start; }
+        
+        .process-icon {
+            width: 25px;
+            height: 25px;
+            background: #40E0D0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .process-icon::before { content: '✓'; color: white; font-weight: bold; font-size: 12px; }
+        
+        .process-text { font-size: 13px; color: #555; line-height: 1.4; }
+        
+        .footer {
+            background: #1a2332;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-info { margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        
+        .contact-info { color: #40E0D0; font-size: 12px; line-height: 1.6; }
+        
+        .highlight-box {
+            border-left: 4px solid #40E0D0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .highlight-box.warning { border-left-color: #FF6B6B; }
+        
+        .highlight-box.info { border-left-color: #3498db; }
+        
+        .highlight-box.success { border-left-color: #2ecc71; }
+        
+        .highlight-text { color: #1a2332; font-size: 14px; line-height: 1.6; }
+        
+        .signature-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            overflow-x: hidden;
+        }
+        
+        .signature-text {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .signature-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        .signature-box {
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            min-width: 0;
+            overflow-x: hidden;
+        }
+        
+        .signature-line {
+            border-bottom: 1.5px solid #333;
+            margin-bottom: 10px;
+            height: 60px;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .signature-label {
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+        
+        .signature-details { 
+            color: #666; 
+            font-size: 12px; 
+            line-height: 2;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .signature-details p { 
+            margin: 8px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        @media screen and (max-width: 768px) {
+            body { 
+                background: white;
+                font-size: 14px;
+            }
+            .container { 
+                margin: 0; 
+                box-shadow: none;
+                width: 100%;
+            }
+            .header { 
+                padding: 20px 15px;
+            }
+            .logo {
+                font-size: 24px;
+            }
+            .doc-title {
+                font-size: 18px;
+                line-height: 1.3;
+            }
+            .info-grid { 
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+            .content { 
+                padding: 15px;
+            }
+            .section { 
+                margin-bottom: 25px;
+            }
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            .service-box,
+            .highlight-box,
+            .process-info { 
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            .process-features { 
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .signature-boxes { 
+                grid-template-columns: 1fr;
+                gap: 20px;
+                width: 100%;
+                margin-top: 20px;
+            }
+            .signature-box {
+                padding: 15px;
+            }
+            .price-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .price-info {
+                text-align: left;
+                margin-left: 0;
+            }
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            @page { size: A4; margin: 1.5cm; }
+            body { background: white !important; font-size: 10pt !important; }
+            .container { max-width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+            .section, .service-box, .highlight-box, .pricing-section { page-break-inside: avoid; }
+            .header { background: #f0f0f0 !important; padding: 20px !important; }
+            .logo, .doc-title, .info-item { color: #000 !important; }
+            .pricing-section { background: #f5f5f5 !important; }
+            .footer { background: #f0f0f0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">Imagina<span class="tech">Tech</span></div>
+            </div>
+            
+            <div class="doc-title">ORÇAMENTO: TROFÉUS EM ACRÍLICO CRISTAL</div>
+            
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Data</div><div class="info-value">26 de Novembro de 2025</div></div>
+                <div class="info-item"><div class="info-label">Orçamento Nº</div><div class="info-value">43759-2025-11-26</div></div>
+                <div class="info-item"><div class="info-label">Validade</div><div class="info-value">3 dias</div></div>
+                <div class="info-item"><div class="info-label">Projeto</div><div class="info-value">Troféus em Acrílico Cristal UV</div></div>
+            </div>
+        </header>
+        
+        <main class="content">
+            <section class="section">
+                <h2 class="section-title">DETALHES DO SERVIÇO</h2>
+                
+                <div class="service-box">
+                    <div class="service-title">TROFÉU PEQUENO EM ACRÍLICO CRISTAL (40 UNIDADES)</div>
+                    <div class="service-detail"><strong>Parte Superior:</strong> Acrílico cristal de alta transparência</div>
+                    <div class="service-detail"><strong>Dimensões Superior:</strong> 10cm (largura) x 6cm (altura) x 4mm (espessura)</div>
+                    <div class="service-detail"><strong>Impressão UV:</strong> Logo do cliente em alta definição - proporção 8cm x 4,3cm</div>
+                    <div class="service-detail"><strong>Base Inferior:</strong> Acrílico cristal ou fumê (a escolher)</div>
+                    <div class="service-detail"><strong>Dimensões Base:</strong> 12cm (largura) x 6cm (profundidade) x 4mm (espessura)</div>
+                    <div class="service-detail"><strong>Tecnologia:</strong> Impressão UV digital em alta definição com cura LED</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Polimento profissional nas bordas + limpeza técnica</div>
+                </div>
+                
+                <div class="service-box">
+                    <div class="service-title">TROFÉU GRANDE EM ACRÍLICO CRISTAL (10 UNIDADES)</div>
+                    <div class="service-detail"><strong>Parte Superior:</strong> Acrílico cristal de alta transparência</div>
+                    <div class="service-detail"><strong>Dimensões Superior:</strong> 15cm (largura) x 10cm (altura) x 6mm (espessura)</div>
+                    <div class="service-detail"><strong>Impressão UV:</strong> Logo do cliente em alta definição - proporção 13cm x 7cm</div>
+                    <div class="service-detail"><strong>Base Inferior:</strong> Acrílico cristal ou fumê (a escolher)</div>
+                    <div class="service-detail"><strong>Dimensões Base:</strong> 17cm (largura) x 6cm (profundidade) x 6mm (espessura)</div>
+                    <div class="service-detail"><strong>Tecnologia:</strong> Impressão UV digital em alta definição com cura LED</div>
+                    <div class="service-detail"><strong>Acabamento:</strong> Polimento profissional nas bordas + limpeza técnica</div>
+                </div>
+                
+                <div class="highlight-box success">
+                    <div class="highlight-text">
+                        <strong>✅ ARTE APROVADA E PRONTA PARA PRODUÇÃO</strong><br><br>
+                        • Logo recebida e ajustada para impressão UV<br>
+                        • Arquivo técnico otimizado em alta resolução<br>
+                        • Cores e proporções validadas<br>
+                        • Projeto pronto para iniciar produção imediatamente
+                    </div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <div class="highlight-text">
+                        <strong>🎨 PROCESSO DE IMPRESSÃO UV</strong><br><br>
+                        • Impressão direta sobre acrílico com tecnologia UV-LED<br>
+                        • Alta resistência a riscos e desgaste<br>
+                        • Cores vibrantes e permanentes<br>
+                        • Definição fotográfica de alta qualidade<br>
+                        • Secagem instantânea por cura LED<br>
+                        • Durabilidade superior a 10 anos
+                    </div>
+                </div>
+                
+                <div class="process-info">
+                    <div class="process-title">CARACTERÍSTICAS DO ACRÍLICO CRISTAL</div>
+                    <div class="process-features">
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Transparência cristalina superior a 92%</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Alta resistência a impactos e quedas</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Não amarela com o tempo</div></div>
+                        <div class="process-item"><div class="process-icon"></div><div class="process-text">Acabamento profissional premium</div></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">INVESTIMENTO</h2>
+                
+                <div class="pricing-section">
+                    <div class="pricing-title">VALORES DO PROJETO</div>
+                    
+                    <div class="price-table">
+                        <div class="price-row">
+                            <span class="quantity">40 Troféus Pequenos</span>
+                            <div class="price-info">
+                                <span class="unit-price">40x R$ 73,13</span>
+                                <span class="total-price">R$ 2.925,00</span>
+                            </div>
+                        </div>
+                        <div class="price-row">
+                            <span class="quantity">10 Troféus Grandes</span>
+                            <div class="price-info">
+                                <span class="unit-price">10x R$ 137,20</span>
+                                <span class="total-price">R$ 1.372,00</span>
+                            </div>
+                        </div>
+                        <div class="price-row" style="border-top: 2px solid #40E0D0; margin-top: 10px; padding-top: 15px;">
+                            <span class="quantity" style="color: #40E0D0; font-size: 15px;">VALOR TOTAL</span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #40E0D0; font-size: 17px; font-weight: 700;">R$ 4.297,00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        <div style="text-align: center; color: white; font-size: 14px; line-height: 1.8;">
+                            <strong>INCLUSO NO VALOR:</strong><br>
+                            • Tratamento do arquivo de impressão<br>
+                            • Impressão UV em alta definição<br>
+                            • Polimento profissional das bordas<br>
+                            • Montagem e limpeza técnica<br>
+                            • Embalagem individual de proteção
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
+                
+                <div class="service-box">
+                    <div class="service-detail"><strong>Valor Total:</strong> R$ 4.297,00</div>
+                    <div class="service-detail"><strong>Métodos de Pagamento:</strong> PIX, Transferência Bancária (TED) ou Cartão de Crédito (parcelamento disponível).</div>
+                    <div class="service-detail"><strong>Prazo de Entrega:</strong> Até 12 de dezembro de 2025.</div>
+                    <div class="service-detail"><strong>Entrega:</strong> Sedex, transportadora ou retirada local (frete a calcular).</div>
+                    <div class="service-detail"><strong>Garantia:</strong> 90 dias contra defeitos de fabricação.</div>
+                    <div class="service-detail"><strong>Documentação Fiscal:</strong> Nota Fiscal de Serviço (NFS-e) emitida.</div>
+                </div>
+                
+                <div class="highlight-box">
+                    <div class="highlight-text">
+                        <strong>📋 PRÓXIMOS PASSOS</strong><br><br>
+                        <strong>1.</strong> Confirmação do orçamento pelo cliente<br>
+                        <strong>2.</strong> Escolha da cor da base (cristal ou fumê)<br>
+                        <strong>3.</strong> Início da produção<br>
+                        <strong>4.</strong> Controle de qualidade individual<br>
+                        <strong>5.</strong> Embalagem e proteção das peças<br>
+                        <strong>6.</strong> Entrega até 12/12/2025
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">DIFERENCIAIS IMAGINATECH</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%); padding: 20px; border-radius: 10px; border-left: 4px solid #40E0D0;">
+                        <strong style="color: #1a2332; display: block; margin-bottom: 12px; font-size: 15px;">✓ QUALIDADE PREMIUM</strong>
+                        <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px; line-height: 1.8;">
+                            <li>Acrílico cristal importado de primeira linha</li>
+                            <li>Impressão UV com tecnologia LED</li>
+                            <li>Polimento profissional manual</li>
+                            <li>Inspeção 100% das peças</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%); padding: 20px; border-radius: 10px; border-left: 4px solid #40E0D0;">
+                        <strong style="color: #1a2332; display: block; margin-bottom: 12px; font-size: 15px;">✓ EXPERIÊNCIA</strong>
+                        <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px; line-height: 1.8;">
+                            <li>Especialistas em impressão UV</li>
+                            <li>Portfólio com diversos projetos</li>
+                            <li>Atendimento personalizado</li>
+                            <li>Suporte técnico completo</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h2 class="section-title">ACEITE E ASSINATURAS</h2>
+                
+                <div class="signature-section">
+                    <div class="signature-text">
+                        Declaro ter lido e concordado com todos os termos e condições apresentados neste orçamento.
+                    </div>
+                    
+                    <div class="signature-boxes">
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">CONTRATANTE</div>
+                            <div class="signature-details">
+                                <p>Nome: _________________________________</p>
+                                <p>CPF/CNPJ: _____________________________</p>
+                                <p>Data: ____/____/________</p>
+                            </div>
+                        </div>
+                        
+                        <div class="signature-box">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">IMAGINATECH</div>
+                            <div class="signature-details">
+                                <p>Representante: Marcus Vinicius de F. Trindade</p>
+                                <p>CNPJ: 62.043.082/0001-09</p>
+                                <p>Data: 26/11/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <strong>ImaginaTech - Impressões 3D</strong><br>
+                Rua Luis Bayer, 25, Portuguesa - Rio de Janeiro - RJ, CEP: 21931-577
+            </div>
+            <div class="contact-info">
+                Telefone: +55 (21) 96897-2539 | E-mail: 3d3printers@gmail.com<br>
+                Agradecemos a oportunidade e ficamos à disposição.
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
