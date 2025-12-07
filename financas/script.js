@@ -1238,7 +1238,10 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         return isValid;
     });
 
-    const installmentsTotal = installmentsFiltered.reduce((sum, inst) => sum + (inst.totalValue / inst.totalInstallments), 0);
+    const installmentsTotal = installmentsFiltered.reduce((sum, inst) => {
+        const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
+        return sum + installmentValue;
+    }, 0);
     console.log(`\n💰 TOTAL PARCELAS: R$ ${installmentsTotal.toFixed(2)} (${installmentsFiltered.length} parcelas ativas)`);
 
     // Somar assinaturas ativas deste cartão
@@ -1358,7 +1361,10 @@ function showCardBillDetails(cardId) {
 
     // Calcular totais
     const creditTotal = creditTransactions.reduce((sum, t) => sum + t.value, 0);
-    const installmentsTotal = activeInstallments.reduce((sum, inst) => sum + inst.installmentValue, 0);
+    const installmentsTotal = activeInstallments.reduce((sum, inst) => {
+        const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
+        return sum + installmentValue;
+    }, 0);
     const subscriptionsTotal = activeSubscriptions.reduce((sum, sub) => sum + sub.value, 0);
     const grandTotal = creditTotal + installmentsTotal + subscriptionsTotal;
 
@@ -1416,15 +1422,29 @@ function showCardBillDetails(cardId) {
                 </h3>
                 <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
                     ${activeInstallments.map(inst => {
-                        const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
-                        const currentInstallmentNum = 1 + monthsSinceStart;
+                        // Calcular número da parcela atual
+                        let currentInstallmentNum;
+                        if (inst.startMonth !== undefined && inst.startYear !== undefined) {
+                            const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
+                            currentInstallmentNum = 1 + monthsSinceStart;
+                        } else {
+                            // Para parcelamentos antigos, usar currentInstallment
+                            currentInstallmentNum = inst.currentInstallment || 1;
+                        }
+
+                        // Calcular valor da parcela
+                        const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
+
+                        // Categoria (pode não existir em parcelamentos antigos)
+                        const category = inst.category || '';
+
                         return `
                             <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <div style="font-weight: 500; color: #fff;">${inst.description}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Parcela ${currentInstallmentNum}/${inst.totalInstallments} • ${inst.category}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Parcela ${currentInstallmentNum}/${inst.totalInstallments}${category ? ' • ' + category : ''}</div>
                                 </div>
-                                <div style="font-weight: 600; color: #f59e0b;">${formatCurrencyDisplay(inst.installmentValue)}</div>
+                                <div style="font-weight: 600; color: #f59e0b;">${formatCurrencyDisplay(installmentValue)}</div>
                             </div>
                         `;
                     }).join('')}
