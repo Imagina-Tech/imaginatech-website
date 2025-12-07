@@ -434,8 +434,8 @@ async function handleTransactionSubmit(e) {
         return;
     }
 
-    // Validar cartão de crédito se for despesa no crédito
-    if (currentTransactionType === 'expense' && currentPaymentMethod === 'credit') {
+    // Validar cartão de crédito se for transação no crédito (tanto saída quanto entrada/reembolso)
+    if (currentPaymentMethod === 'credit') {
         const cardId = document.getElementById('transactionCard').value;
         if (!cardId) {
             showToast('Selecione um cartão de crédito', 'error');
@@ -1192,28 +1192,33 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         })
         .reduce((sum, expense) => sum + expense.value, 0);
 
-    // Somar transações de crédito do período
-    const allCreditTransactions = transactions.filter(t => t.type === 'expense' && t.paymentMethod === 'credit');
+    // Somar transações de crédito do período (saídas e reembolsos)
+    const allCreditTransactions = transactions.filter(t => t.paymentMethod === 'credit');
 
     console.log(`\n💰 [DEBUG TRANSAÇÕES CRÉDITO] Total de transações de crédito: ${allCreditTransactions.length}`);
     allCreditTransactions.forEach(t => {
         const tDate = new Date(t.date + 'T12:00:00');
         const matchesCard = t.cardId === card.id;
         const inPeriod = tDate >= billStartDate && tDate <= billEndDate;
-        console.log(`   ${matchesCard && inPeriod ? '✅' : '❌'} "${t.description}": R$ ${t.value.toFixed(2)} em ${tDate.toLocaleDateString('pt-BR')}`);
+        const typeIcon = t.type === 'income' ? '💚' : '💰';
+        console.log(`   ${matchesCard && inPeriod ? '✅' : '❌'} ${typeIcon} "${t.description}": ${t.type === 'income' ? '-' : '+'}R$ ${t.value.toFixed(2)} em ${tDate.toLocaleDateString('pt-BR')}`);
         console.log(`      cardId: ${t.cardId} ${matchesCard ? '✅' : `❌ (esperado: ${card.id})`}`);
         console.log(`      Período: ${inPeriod ? '✅' : `❌ (fora de ${billStartDate.toLocaleDateString('pt-BR')} - ${billEndDate.toLocaleDateString('pt-BR')})`}`);
     });
 
+    // Calcular total: saídas somam, entradas (reembolsos) subtraem
     const creditTransactionsTotal = transactions
         .filter(t => {
-            if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
+            if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
             const transactionDate = new Date(t.date + 'T12:00:00');
             return transactionDate >= billStartDate && transactionDate <= billEndDate;
         })
-        .reduce((sum, t) => sum + t.value, 0);
+        .reduce((sum, t) => {
+            // Expense soma, income subtrai (reembolso)
+            return sum + (t.type === 'expense' ? t.value : -t.value);
+        }, 0);
 
-    console.log(`   💵 TOTAL TRANSAÇÕES CRÉDITO INCLUÍDAS: R$ ${creditTransactionsTotal.toFixed(2)}\n`);
+    console.log(`   💵 TOTAL TRANSAÇÕES CRÉDITO (com reembolsos): R$ ${creditTransactionsTotal.toFixed(2)}\n`);
 
     // Log detalhado do período da fatura
     console.log(`📅 [FATURA ${card.name}] Calculando fatura do mês ${billMonth + 1}/${billYear}`);
@@ -1358,9 +1363,15 @@ function showCardBillDetails(cardId) {
         }
     }
 
-    // Coletar todas as transações de crédito do período
-    const creditTransactions = transactions.filter(t => {
+    // Coletar todas as transações de crédito do período (separar compras e reembolsos)
+    const creditExpenses = transactions.filter(t => {
         if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
+        const transactionDate = new Date(t.date + 'T12:00:00');
+        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+    });
+
+    const creditRefunds = transactions.filter(t => {
+        if (t.type !== 'income' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
         return transactionDate >= billStartDate && transactionDate <= billEndDate;
     });
@@ -1381,13 +1392,14 @@ function showCardBillDetails(cardId) {
     const activeSubscriptions = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
 
     // Calcular totais
-    const creditTotal = creditTransactions.reduce((sum, t) => sum + t.value, 0);
+    const creditExpensesTotal = creditExpenses.reduce((sum, t) => sum + t.value, 0);
+    const creditRefundsTotal = creditRefunds.reduce((sum, t) => sum + t.value, 0);
     const installmentsTotal = activeInstallments.reduce((sum, inst) => {
         const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
         return sum + installmentValue;
     }, 0);
     const subscriptionsTotal = activeSubscriptions.reduce((sum, sub) => sum + sub.value, 0);
-    const grandTotal = creditTotal + installmentsTotal + subscriptionsTotal;
+    const grandTotal = creditExpensesTotal - creditRefundsTotal + installmentsTotal + subscriptionsTotal;
 
     // Montar o HTML do modal em 3 colunas
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -1408,21 +1420,36 @@ function showCardBillDetails(cardId) {
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-            <!-- Coluna 1: Compras no Crédito -->
+            <!-- Coluna 1: Compras e Reembolsos -->
             <div style="display: flex; flex-direction: column;">
                 <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
                     <i class="fas fa-credit-card"></i>
-                    Compras (${creditTransactions.length})
-                    <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(creditTotal)}</span>
+                    Compras (${creditExpenses.length}) ${creditRefunds.length > 0 ? `• Reembolsos (${creditRefunds.length})` : ''}
+                    <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(creditExpensesTotal - creditRefundsTotal)}</span>
                 </h3>
                 <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow-y: auto; flex: 1; max-height: 400px;">
-                    ${creditTransactions.length > 0 ? creditTransactions.map(t => `
-                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
-                            <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">${t.description}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')}</div>
-                            <div style="font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${formatCurrencyDisplay(t.value)}</div>
-                        </div>
-                    `).join('') : '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma compra</div>'}
+                    ${creditExpenses.length === 0 && creditRefunds.length === 0
+                        ? '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma transação</div>'
+                        : `
+                            ${creditExpenses.map(t => `
+                                <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
+                                    <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">${t.description}</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')}</div>
+                                    <div style="font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${formatCurrencyDisplay(t.value)}</div>
+                                </div>
+                            `).join('')}
+                            ${creditRefunds.map(t => `
+                                <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border); background: rgba(16, 185, 129, 0.05);">
+                                    <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                        <i class="fas fa-undo" style="color: #10b981; font-size: 0.7rem; margin-right: 0.25rem;"></i>
+                                        ${t.description}
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')} • Reembolso</div>
+                                    <div style="font-weight: 600; color: #10b981; font-size: 0.875rem;">- ${formatCurrencyDisplay(t.value)}</div>
+                                </div>
+                            `).join('')}
+                        `
+                    }
                 </div>
             </div>
 
@@ -2272,15 +2299,13 @@ function editTransaction(id) {
     currentTransactionType = transaction.type;
     selectTransactionType(transaction.type);
 
-    // Define o método de pagamento se for despesa
-    if (transaction.type === 'expense') {
-        currentPaymentMethod = transaction.paymentMethod || 'debit';
-        selectPaymentMethod(currentPaymentMethod);
+    // Define o método de pagamento (tanto para entrada quanto para saída)
+    currentPaymentMethod = transaction.paymentMethod || 'debit';
+    selectPaymentMethod(currentPaymentMethod);
 
-        // Define o cartão se for crédito
-        if (transaction.paymentMethod === 'credit' && transaction.cardId) {
-            document.getElementById('transactionCard').value = transaction.cardId;
-        }
+    // Define o cartão se for crédito
+    if (transaction.paymentMethod === 'credit' && transaction.cardId) {
+        document.getElementById('transactionCard').value = transaction.cardId;
     }
 }
 
@@ -2479,16 +2504,11 @@ function selectTransactionType(type) {
         }
     });
 
-    // Show/hide payment method group (only for expenses)
+    // Sempre mostrar método de pagamento (para reembolsos em cartão também)
     const paymentMethodGroup = document.getElementById('paymentMethodGroup');
-    if (type === 'expense') {
-        paymentMethodGroup.style.display = 'block';
-        // Reset to debit when switching to expense
-        selectPaymentMethod('debit');
-    } else {
-        paymentMethodGroup.style.display = 'none';
-        document.getElementById('creditCardGroup').style.display = 'none';
-    }
+    paymentMethodGroup.style.display = 'block';
+    // Reset to debit quando trocar de tipo
+    selectPaymentMethod('debit');
 
     // Update categories
     populateCategories();
