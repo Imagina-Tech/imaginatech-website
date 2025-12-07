@@ -3,269 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- SEO Meta Tags -->
-    <title>Orçamento - ImaginaTech | Impressão 3D</title>
+    <title>Orçamento - ImaginaTech</title>
     <meta name="description" content="Visualize seu orçamento personalizado da ImaginaTech - Impressão 3D de qualidade.">
     <meta name="robots" content="noindex, nofollow">
 
-    <!-- Favicons -->
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/orcamento/">
+    <meta property="og:title" content="Orçamento - ImaginaTech">
+    <meta property="og:description" content="Visualize seu orçamento personalizado de impressão 3D">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
-        /* ==================== RESET E VARIÁVEIS ==================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* ROOT VARIABLES */
         :root {
+            --primary-blue: #2A6EA7;
+            --secondary-blue: #57D4CA;
+            --neon-blue: #00D4FF;
+            --neon-red: #FF0055;
+            --neon-green: #00FF88;
             --dark-bg: #0a0e1a;
-            --card-bg: rgba(20, 26, 45, 0.95);
-            --neon-blue: #00d4ff;
-            --secondary-blue: #00a8e8;
-            --neon-red: #ff0055;
+            --card-bg: #111827;
+            --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-secondary: #9ca3af;
+            --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.3);
+            --gradient-primary: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
         }
 
+        /* RESET & BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
+            font: 400 16px/1.6 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--dark-bg);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
-        /* ==================== BACKGROUND EFFECTS ==================== */
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--dark-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        /* BACKGROUND EFFECTS */
         .cosmic-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             z-index: -1;
-            overflow: hidden;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 50%, #0a0e1a 100%);
+            pointer-events: none;
         }
 
         .grid-lines {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+            inset: 0;
+            background: linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
             background-size: 50px 50px;
-            animation: grid-move 20s linear infinite;
+            animation: grid-move 10s linear infinite;
         }
 
-        @keyframes grid-move {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+        @keyframes grid-move { to { transform: translate(50px, 50px); } }
+
+        .particles { position: absolute; inset: 0; overflow: hidden; }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s infinite linear;
         }
 
-        /* ==================== NAVIGATION ==================== */
+        @keyframes float {
+            from { transform: translateY(100vh); }
+            to { transform: translateY(-100px) translateX(100px); }
+        }
+
+        /* NAVBAR */
         .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 20px 50px;
             background: rgba(10, 14, 26, 0.95);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
-            z-index: 1000;
-            transition: all 0.3s ease;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .nav-container {
+        .navbar-container {
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
         .logo-section {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 5px;
             text-decoration: none;
         }
 
-        .logo-img {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            border: 2px solid var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-        }
-
-        .logo-text {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.4rem;
-            font-weight: 700;
+        .logo {
+            font: 900 1.5rem 'Orbitron', monospace;
             background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
         }
 
-        .nav-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+        .logo-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: -5px;
+            font-weight: 600;
         }
 
         .btn-nav {
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
-            border: 2px solid transparent;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
         }
 
-        .btn-track-order {
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--neon-blue);
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
             border-color: var(--neon-blue);
         }
 
-        .btn-track-order:hover {
-            background: var(--neon-blue);
-            color: var(--dark-bg);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-whatsapp {
+        .btn-nav.btn-whatsapp {
             background: rgba(37, 211, 102, 0.1);
             color: #25d366;
             border-color: #25d366;
         }
 
-        .btn-whatsapp:hover {
+        .btn-nav.btn-whatsapp:hover {
             background: #25d366;
             color: white;
-            box-shadow: 0 0 20px rgba(37, 211, 102, 0.5);
-            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.5);
         }
 
-        /* ==================== MAIN CONTENT ==================== */
+        /* MAIN CONTENT */
         .main-content {
-            padding-top: 120px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex: 1;
+            padding: 2rem 0;
+            min-height: calc(100vh - 100px);
         }
 
-        .content-wrapper {
-            max-width: 1200px;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
             width: 100%;
-            padding: 40px 20px;
+            overflow-x: hidden;
         }
 
-        /* ==================== RESPONSIVE ==================== */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .navbar {
-                padding: 15px 20px;
-            }
-
-            .nav-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .btn-nav {
-                padding: 10px 20px;
-                font-size: 0.9rem;
+            .navbar { padding: 15px; }
+            .navbar-container { flex-direction: column; }
+            .navbar-left, .navbar-right {
                 width: 100%;
                 justify-content: center;
             }
-
-            .logo-text {
-                font-size: 1.2rem;
+            .navbar-right {
+                flex-wrap: wrap;
+                gap: 10px;
             }
-
-            .logo-img {
-                width: 40px;
-                height: 40px;
+            .btn-nav {
+                flex: 1;
+                min-width: calc(50% - 5px);
+                justify-content: center;
             }
         }
 
         @media (max-width: 480px) {
-            .navbar {
-                padding: 15px 15px;
-            }
-
-            .logo-section {
-                gap: 10px;
-            }
-
-            .logo-text {
-                font-size: 1rem;
-            }
-
-            .logo-img {
-                width: 35px;
-                height: 35px;
-            }
-
-            .btn-nav {
-                font-size: 0.85rem;
-                padding: 8px 16px;
-            }
+            .logo { font-size: 1.2rem; }
+            .logo-subtitle { font-size: 0.6rem; }
+            .btn-nav { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
+            .container { padding: 0 1rem; }
         }
     </style>
 </head>
 <body>
-    <!-- Background Effects -->
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="logo-section">
-                <img src="imaginatech_logo.jpeg" alt="ImaginaTech Logo" class="logo-img">
-                <span class="logo-text">ImaginaTech</span>
-            </a>
-            <div class="nav-actions">
-                <a href="/acompanhar-pedido" class="btn-nav btn-track-order">
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <a href="/" class="logo-section">
+                    <h1 class="logo">ImaginaTech</h1>
+                    <span class="logo-subtitle">Orçamento</span>
+                </a>
+            </div>
+            <div class="navbar-right">
+                <a href="/" class="btn-nav">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="/acompanhar-pedido" class="btn-nav">
                     <i class="fas fa-search"></i>
-                    Acompanhar Pedido
+                    <span>Acompanhar Pedido</span>
                 </a>
                 <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
                     <i class="fab fa-whatsapp"></i>
-                    WhatsApp
+                    <span>WhatsApp</span>
                 </a>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <div class="content-wrapper">
+        <div class="container">
             <!-- Conteúdo do orçamento será adicionado aqui -->
         </div>
     </main>
+
+    <script>
+        // Criar partículas no background
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        createParticles();
+    </script>
 </body>
 </html>
