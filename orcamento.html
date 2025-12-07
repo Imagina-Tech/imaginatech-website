@@ -130,6 +130,31 @@
             align-items: center;
         }
 
+        #navNormalButtons,
+        #navBudgetButtons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .budget-code-nav {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .budget-code-nav strong {
+            color: var(--neon-blue);
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.15rem;
+            margin-left: 0.5rem;
+        }
+
         .logo-section {
             display: flex;
             flex-direction: column;
@@ -457,34 +482,6 @@
             display: block;
         }
 
-        .budget-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .budget-info h3 {
-            font: 700 1.2rem 'Orbitron', sans-serif;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.25rem;
-        }
-
-        .budget-code {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .budget-code strong {
-            color: var(--neon-blue);
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 0.15rem;
-        }
-
         .budget-content-container {
             width: 100%;
             margin: 0;
@@ -573,10 +570,21 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
+            #navNormalButtons,
+            #navBudgetButtons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
             .btn-nav {
                 flex: 1;
                 min-width: calc(50% - 5px);
                 justify-content: center;
+            }
+            .budget-code-nav {
+                width: 100%;
+                justify-content: center;
+                font-size: 0.8rem;
             }
             .connection-status {
                 font-size: 0.75rem;
@@ -584,11 +592,6 @@
             }
             .welcome-card {
                 padding: 2rem 1.5rem;
-            }
-            .budget-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
             }
         }
 
@@ -611,6 +614,10 @@
             .code-input {
                 font-size: 1.2rem;
                 letter-spacing: 0.2rem;
+            }
+            .budget-code-nav {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
             }
         }
     </style>
@@ -642,18 +649,33 @@
                 </div>
             </div>
             <div class="navbar-right">
-                <a href="/" class="btn-nav">
-                    <i class="fas fa-home"></i>
-                    <span>Início</span>
-                </a>
-                <a href="/acompanhar-pedido" class="btn-nav">
-                    <i class="fas fa-search"></i>
-                    <span>Acompanhar Pedido</span>
-                </a>
-                <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i>
-                    <span>WhatsApp</span>
-                </a>
+                <div id="navNormalButtons">
+                    <a href="/" class="btn-nav">
+                        <i class="fas fa-home"></i>
+                        <span>Início</span>
+                    </a>
+                    <a href="/acompanhar-pedido" class="btn-nav">
+                        <i class="fas fa-search"></i>
+                        <span>Acompanhar Pedido</span>
+                    </a>
+                    <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                </div>
+                <div id="navBudgetButtons" style="display: none;">
+                    <div class="budget-code-nav">
+                        Código: <strong id="displayCodeNav">00000</strong>
+                    </div>
+                    <button class="btn-nav btn-back" onclick="backToSearch()">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Voltar</span>
+                    </button>
+                    <a href="https://wa.me/5521968972539" target="_blank" class="btn-nav btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -713,20 +735,6 @@
 
         <!-- Budget Viewer -->
         <div class="budget-viewer" id="budgetViewer">
-            <div class="container">
-                <div class="budget-header">
-                    <div class="budget-info">
-                        <h3>Orçamento ImaginaTech</h3>
-                        <div class="budget-code">
-                            Código: <strong id="displayCode">00000</strong>
-                        </div>
-                    </div>
-                    <button class="btn-nav btn-back" onclick="backToSearch()">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Voltar</span>
-                    </button>
-                </div>
-            </div>
             <div class="budget-content-container">
                 <div id="budgetContent" class="budget-content"></div>
             </div>
@@ -766,7 +774,9 @@
         const errorMessage = document.getElementById('errorMessage');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const budgetContent = document.getElementById('budgetContent');
-        const displayCode = document.getElementById('displayCode');
+        const displayCodeNav = document.getElementById('displayCodeNav');
+        const navNormalButtons = document.getElementById('navNormalButtons');
+        const navBudgetButtons = document.getElementById('navBudgetButtons');
 
         // ==================== FUNÇÕES ====================
 
@@ -839,7 +849,7 @@
             loadingOverlay.classList.add('active');
 
             const budgetPath = BUDGETS[code];
-            displayCode.textContent = code;
+            displayCodeNav.textContent = code;
 
             try {
                 // Fazer fetch do HTML do orçamento
@@ -867,6 +877,10 @@
 
                 // Injetar estilos e conteúdo
                 budgetContent.innerHTML = stylesHtml + bodyContent;
+
+                // Trocar botões da navbar
+                navNormalButtons.style.display = 'none';
+                navBudgetButtons.style.display = 'flex';
 
                 // Mostrar visualizador
                 loadingOverlay.classList.remove('active');
@@ -900,6 +914,11 @@
 
         // Voltar para busca
         function backToSearch() {
+            // Trocar botões da navbar de volta
+            navNormalButtons.style.display = 'flex';
+            navBudgetButtons.style.display = 'none';
+
+            // Restaurar telas
             budgetViewer.classList.remove('active');
             welcomeScreen.classList.remove('hidden');
             budgetCodeInput.value = '';
