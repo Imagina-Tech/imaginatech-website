@@ -461,48 +461,58 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .budget-info h3 {
-            font: 700 1.5rem 'Orbitron', sans-serif;
+            font: 700 1.2rem 'Orbitron', sans-serif;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .budget-code {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .budget-code strong {
             color: var(--neon-blue);
             font-family: 'Orbitron', monospace;
-            letter-spacing: 0.2rem;
+            letter-spacing: 0.15rem;
         }
 
         .budget-content-container {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background: #e9ecef;
         }
 
         .budget-content {
             width: 100%;
-            min-height: 50vh;
+            min-height: 70vh;
         }
 
-        /* Estilos para integrar o orçamento */
+        /* Estilos para integrar o orçamento em full page */
+        .budget-content body {
+            margin: 0 !important;
+            background: transparent !important;
+        }
+
         .budget-content .container {
-            max-width: 100%;
-            margin: 0;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        }
+
+        /* Força largura máxima dos orçamentos */
+        .budget-content > .container {
+            max-width: 1200px !important;
+            margin: 0 auto !important;
         }
 
         /* LOADING */
@@ -649,8 +659,8 @@
     </header>
 
     <main class="main-content">
+        <!-- Welcome Screen -->
         <div class="container">
-            <!-- Welcome Screen -->
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-card">
                     <div class="welcome-header">
@@ -699,9 +709,11 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Budget Viewer -->
-            <div class="budget-viewer" id="budgetViewer">
+        <!-- Budget Viewer -->
+        <div class="budget-viewer" id="budgetViewer">
+            <div class="container">
                 <div class="budget-header">
                     <div class="budget-info">
                         <h3>Orçamento ImaginaTech</h3>
@@ -714,9 +726,9 @@
                         <span>Voltar</span>
                     </button>
                 </div>
-                <div class="budget-content-container">
-                    <div id="budgetContent" class="budget-content"></div>
-                </div>
+            </div>
+            <div class="budget-content-container">
+                <div id="budgetContent" class="budget-content"></div>
             </div>
         </div>
     </main>
