@@ -155,6 +155,51 @@
             font-weight: 600;
         }
 
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.1);
+                box-shadow: 0 0 0 4px rgba(0, 255, 136, 0);
+            }
+        }
+
+        .connection-status.offline .status-dot {
+            background: var(--neon-red);
+            animation: none;
+        }
+
+        .connection-status.offline {
+            border-color: rgba(255, 0, 85, 0.3);
+            background: rgba(255, 0, 85, 0.1);
+        }
+
         .btn-nav {
             display: flex;
             align-items: center;
@@ -207,11 +252,14 @@
         @media (max-width: 768px) {
             .navbar { padding: 15px; }
             .navbar-container { flex-direction: column; }
-            .navbar-left, .navbar-right {
+            .navbar-left {
                 width: 100%;
                 justify-content: center;
+                flex-wrap: wrap;
             }
             .navbar-right {
+                width: 100%;
+                justify-content: center;
                 flex-wrap: wrap;
                 gap: 10px;
             }
@@ -220,6 +268,10 @@
                 min-width: calc(50% - 5px);
                 justify-content: center;
             }
+            .connection-status {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -227,6 +279,14 @@
             .logo-subtitle { font-size: 0.6rem; }
             .btn-nav { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
             .container { padding: 0 1rem; }
+            .connection-status {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.6rem;
+            }
+            .status-dot {
+                width: 6px;
+                height: 6px;
+            }
         }
     </style>
 </head>
@@ -243,6 +303,10 @@
                     <h1 class="logo">ImaginaTech</h1>
                     <span class="logo-subtitle">Orçamento</span>
                 </a>
+                <div class="connection-status" id="connectionStatus">
+                    <div class="status-dot"></div>
+                    <span id="statusText">Conectado</span>
+                </div>
             </div>
             <div class="navbar-right">
                 <a href="/" class="btn-nav">
@@ -283,7 +347,27 @@
             }
         }
 
+        // Monitorar status de conexão
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('statusText');
+
+            if (navigator.onLine) {
+                statusElement.classList.remove('offline');
+                statusText.textContent = 'Conectado';
+            } else {
+                statusElement.classList.add('offline');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        // Event listeners para conexão
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        // Inicializar
         createParticles();
+        updateConnectionStatus();
     </script>
 </body>
 </html>
