@@ -7,7 +7,6 @@
     <meta name="description" content="Visualize seu orçamento personalizado da ImaginaTech - Impressão 3D de qualidade.">
     <meta name="robots" content="noindex, nofollow">
 
-    <!-- Open Graph / WhatsApp Preview -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://imaginatech.com.br/orcamento/">
     <meta property="og:title" content="Orçamento - ImaginaTech">
@@ -148,16 +147,16 @@
             margin-left: 0.5rem;
         }
 
+        /* --- CORREÇÃO 1: LOGO SEM SUBLINHADO/COR ROXA --- */
         .logo-section {
             display: flex;
             flex-direction: column;
             gap: 5px;
-            text-decoration: none !important; /* Remove o sublinhado */
-            color: inherit; /* Mantém a cor original e evita o roxo */
+            text-decoration: none !important;
+            color: inherit;
             cursor: pointer;
         }
 
-        /* Garante que o link nunca mude de cor */
         a.logo-section,
         a.logo-section:visited,
         a.logo-section:hover,
@@ -165,6 +164,7 @@
             text-decoration: none;
             color: inherit;
         }
+        /* ----------------------------------------------- */
 
         .logo {
             font: 900 1.5rem 'Orbitron', monospace;
@@ -295,11 +295,6 @@
         .budget-viewer.active {
             margin-top: -2rem;
             padding-top: 0;
-        }
-
-        /* Quando estiver visualizando orçamento, remover padding do main */
-        body.viewing-budget .main-content {
-            padding: 0;
         }
 
         .container {
@@ -532,13 +527,16 @@
             line-height: 1.6;
         }
 
-        /* BUDGET VIEWER */
+        /* --- CORREÇÃO 2: GAP (ESPAÇAMENTO) DO VISUALIZADOR --- */
         .budget-viewer {
             display: none;
+            width: 100%; /* Garante largura total */
         }
 
         .budget-viewer.active {
             display: block;
+            margin-top: 0 !important; /* Força margem zero */
+            padding-top: 0 !important;
         }
 
         .budget-content-container {
@@ -548,12 +546,7 @@
             background: transparent;
         }
 
-        .budget-content {
-            width: 100%;
-            min-height: calc(100vh - 80px);
-        }
-
-        /* Adiciona sombra para transição suave entre orçamento branco e grid azul */
+        /* Esta regra afeta o .container que vem DENTRO do orçamento carregado via HTML */
         .budget-content .container {
             margin-top: 0 !important; /* Remove os 20px originais do arquivo de orçamento */
             box-shadow: 0 0 50px rgba(0, 212, 255, 0.3),
@@ -566,6 +559,7 @@
             padding-top: 0 !important;
             margin-top: 0 !important;
         }
+        /* ------------------------------------------------ */
 
         /* LOADING */
         .loading-overlay {
@@ -723,7 +717,6 @@
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -777,7 +770,6 @@
     </header>
 
     <main class="main-content">
-        <!-- Welcome Screen -->
         <div class="container">
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-card">
@@ -838,7 +830,6 @@
             </div>
         </div>
 
-        <!-- Budget Viewer -->
         <div class="budget-viewer" id="budgetViewer">
             <div class="budget-content-container">
                 <div id="budgetContent" class="budget-content"></div>
