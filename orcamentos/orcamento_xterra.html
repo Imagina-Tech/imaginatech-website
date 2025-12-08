@@ -160,41 +160,58 @@
             text-align: center;
         }
 
+        /* Estilos da nova tabela regressiva */
         .price-table {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
-            padding: 20px;
-            border: 2px solid #40E0D0;
-            max-width: 600px;
+            padding: 0;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            max-width: 650px;
             margin: 0 auto;
             backdrop-filter: blur(10px);
+            overflow: hidden;
         }
 
         .price-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 8px;
+            padding: 15px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
         }
 
         .price-row:last-child { border-bottom: none; }
 
-        .quantity { font-weight: 600; font-size: 14px; }
+        .price-row:hover { background: rgba(255, 255, 255, 0.05); }
 
-        .price-info { text-align: right; flex: 1; margin-left: 10px; }
+        .price-row.featured {
+            background: rgba(64, 224, 208, 0.15);
+            border: 2px solid #40E0D0;
+            margin: -2px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
 
-        .unit-price { color: white; display: block; font-size: 14px; }
+        .quantity { font-weight: 500; font-size: 15px; display: flex; align-items: center; color: white; }
 
-        .total-price {
-            display: inline-block;
-            background: rgba(64, 224, 208, 0.2);
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 13px;
-            margin-top: 5px;
-            color: #40E0D0;
-            font-weight: 600;
+        .price-info { text-align: right; }
+
+        .unit-price { color: white; display: block; font-size: 16px; font-weight: 600; }
+        
+        .total-ref { font-size: 11px; opacity: 0.7; font-weight: 300; display: block; color: white;}
+
+        .badge-best {
+            background: #40E0D0;
+            color: #1a2332;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .process-info {
@@ -372,19 +389,11 @@
                 padding: 20px 15px;
             }
             .price-table {
-                padding: 15px;
+                padding: 0;
                 max-width: 100%;
             }
             .price-row {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 8px;
-                gap: 8px;
-            }
-            .price-info {
-                text-align: left;
-                margin-left: 0;
-                width: 100%;
+                padding: 15px 10px;
             }
             .signature-boxes {
                 grid-template-columns: 1fr;
@@ -420,8 +429,12 @@
             .signature-section {
                 page-break-inside: avoid;
             }
-            .section-title {
-                page-break-after: avoid;
+            .price-row.featured {
+                border: 2px solid #333 !important;
+            }
+            .badge-best {
+                color: black !important;
+                border: 1px solid black;
             }
         }
     </style>
@@ -436,8 +449,8 @@
             <div class="doc-title">ORÇAMENTO: CHAVEIROS NFC XTERRA</div>
 
             <div class="info-grid">
-                <div class="info-item"><div class="info-label">Data</div><div class="info-value">07 de Dezembro de 2025</div></div>
-                <div class="info-item"><div class="info-label">Orçamento Nº</div><div class="info-value">10126-2025-12-07</div></div>
+                <div class="info-item"><div class="info-label">Data</div><div class="info-value">08 de Dezembro de 2025</div></div>
+                <div class="info-item"><div class="info-label">Orçamento Nº</div><div class="info-value">10126-2025-12-08</div></div>
                 <div class="info-item"><div class="info-label">Validade</div><div class="info-value">30 dias</div></div>
                 <div class="info-item"><div class="info-label">Projeto</div><div class="info-value">Chaveiros Personalizados com Tag NFC</div></div>
             </div>
@@ -448,7 +461,6 @@
                 <h2 class="section-title">DETALHES DO PRODUTO</h2>
                 <div class="service-box">
                     <div class="service-title">CHAVEIRO PERSONALIZADO COM TAG NFC INTEGRADA</div>
-                    <div class="service-detail"><strong>Quantidade Total:</strong> 2.700 unidades</div>
                     <div class="service-detail"><strong>Material:</strong> ABS Premium nas cores Vermelho e Branco</div>
                     <div class="service-detail"><strong>Tecnologia:</strong> Impressão 3D FDM (Fused Deposition Modeling)</div>
                     <div class="service-detail"><strong>Tecnologia NFC:</strong> Tag NFC NTAG213/215 integrada internamente</div>
@@ -507,36 +519,50 @@
             </section>
 
             <section class="section">
-                <h2 class="section-title">INVESTIMENTO</h2>
+                <h2 class="section-title">INVESTIMENTO E ESCALA DE PREÇOS</h2>
 
                 <div class="pricing-section">
-                    <div class="pricing-title">VALOR TOTAL DO PROJETO</div>
+                    <div class="pricing-title">VALORES PROGRESSIVOS</div>
 
                     <div class="price-table">
                         <div class="price-row">
-                            <span class="quantity">Preço Unitário</span>
+                            <span class="quantity">200 Unidades</span>
                             <div class="price-info">
-                                <span class="unit-price">R$ 3,74 por unidade</span>
-                                <span class="total-price">Inclui chaveiro + NFC + argola</span>
+                                <span class="unit-price">R$ 5,11 / un</span>
+                                <span class="total-ref">Total: R$ 1.022,00</span>
                             </div>
                         </div>
+
                         <div class="price-row">
-                            <span class="quantity">2.700 Unidades</span>
+                            <span class="quantity">500 Unidades</span>
                             <div class="price-info">
-                                <span class="unit-price">2.700 × R$ 3,74</span>
-                                <span class="total-price">R$ 10.098,00</span>
+                                <span class="unit-price">R$ 4,64 / un</span>
+                                <span class="total-ref">Total: R$ 2.320,00</span>
                             </div>
                         </div>
-                        <div class="price-row" style="border-top: 2px solid #40E0D0; margin-top: 10px; padding-top: 15px;">
-                            <span class="quantity" style="color: #40E0D0; font-size: 15px;">VALOR TOTAL</span>
+
+                        <div class="price-row">
+                            <span class="quantity">1.500 Unidades</span>
                             <div class="price-info">
-                                <span class="unit-price" style="color: #40E0D0; font-size: 17px; font-weight: 700;">R$ 10.098,00</span>
+                                <span class="unit-price">R$ 4,12 / un</span>
+                                <span class="total-ref">Total: R$ 6.180,00</span>
+                            </div>
+                        </div>
+
+                        <div class="price-row featured">
+                            <span class="quantity">
+                                3.000 Unidades 
+                                <span class="badge-best">MELHOR PREÇO</span>
+                            </span>
+                            <div class="price-info">
+                                <span class="unit-price" style="color: #40E0D0; font-size: 18px; font-weight: 700;">R$ 3,78 / un</span>
+                                <span class="total-ref" style="opacity: 0.9; color: #ccc;">Total: R$ 11.340,00</span>
                             </div>
                         </div>
                     </div>
 
-                    <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.8); font-size: 13px;">
-                        <em>* Valor inclui chaveiro personalizado + tag NFC configurada + argola metálica + montagem completa</em>
+                    <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.7); font-size: 13px;">
+                        <em>* Para outras quantidades, favor consultar nossa equipe.</em>
                     </div>
                 </div>
             </section>
@@ -545,7 +571,7 @@
                 <h2 class="section-title">CONDIÇÕES COMERCIAIS</h2>
 
                 <div class="service-box">
-                    <div class="service-detail"><strong>Prazo de Produção:</strong> 18 dias após aprovação</div>
+                    <div class="service-detail"><strong>Prazo de Produção:</strong> 18 dias úteis para lote de 3.000 unidades (outras quantidades sob consulta)</div>
                     <div class="service-detail"><strong>Método de Entrega:</strong> A combinar (podendo ser entrega local, envio ou retirada)</div>
                     <div class="service-detail"><strong>Forma de Pagamento:</strong> A combinar (flexibilidade para parcelamento)</div>
                     <div class="service-detail"><strong>Emissão de Nota Fiscal:</strong> <strong style="color: #40E0D0;">SIM - Possibilidade de faturamento para CNPJ com nota fiscal eletrônica</strong></div>
@@ -600,7 +626,7 @@
                             <div class="signature-details">
                                 <p>Representante: Marcus Vinicius de F. Trindade</p>
                                 <p>CNPJ: 62.043.082/0001-09</p>
-                                <p>Data: 07/12/2025</p>
+                                <p>Data: 08/12/2025</p>
                             </div>
                         </div>
                     </div>
