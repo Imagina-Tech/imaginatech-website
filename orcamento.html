@@ -147,7 +147,7 @@
             margin-left: 0.5rem;
         }
 
-        /* --- CORREÇÃO 1: LOGO SEM SUBLINHADO/COR ROXA --- */
+        /* LOGO FIX */
         .logo-section {
             display: flex;
             flex-direction: column;
@@ -164,7 +164,6 @@
             text-decoration: none;
             color: inherit;
         }
-        /* ----------------------------------------------- */
 
         .logo {
             font: 900 1.5rem 'Orbitron', monospace;
@@ -291,10 +290,10 @@
             min-height: calc(100vh - 100px);
         }
 
-        /* Remove todo padding/margin quando visualizando orçamento */
-        .budget-viewer.active {
-            margin-top: -2rem;
-            padding-top: 0;
+        /* GAP CORRECTION: Quando visualizando, remover padding */
+        body.viewing-budget .main-content {
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .container {
@@ -527,15 +526,15 @@
             line-height: 1.6;
         }
 
-        /* --- CORREÇÃO 2: GAP (ESPAÇAMENTO) DO VISUALIZADOR --- */
+        /* BUDGET VIEWER - CORRIGIDO */
         .budget-viewer {
             display: none;
-            width: 100%; /* Garante largura total */
+            width: 100%;
         }
 
         .budget-viewer.active {
             display: block;
-            margin-top: 0 !important; /* Força margem zero */
+            margin-top: 0 !important;
             padding-top: 0 !important;
         }
 
@@ -546,20 +545,10 @@
             background: transparent;
         }
 
-        /* Esta regra afeta o .container que vem DENTRO do orçamento carregado via HTML */
-        .budget-content .container {
-            margin-top: 0 !important; /* Remove os 20px originais do arquivo de orçamento */
-            box-shadow: 0 0 50px rgba(0, 212, 255, 0.3),
-                        0 0 100px rgba(0, 212, 255, 0.2),
-                        0 20px 60px rgba(0, 0, 0, 0.4) !important;
+        .budget-content {
+            width: 100%;
+            min-height: calc(100vh - 80px);
         }
-        
-        /* Garante que o main-content zere o padding */
-        body.viewing-budget .main-content {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-        }
-        /* ------------------------------------------------ */
 
         /* LOADING */
         .loading-overlay {
@@ -604,7 +593,7 @@
             50% { opacity: 0.5; }
         }
 
-        /* Estilos de impressão - esconde navbar */
+        /* Estilos de impressão */
         @media print {
             .navbar,
             .cosmic-bg,
@@ -628,91 +617,28 @@
             }
         }
 
-        /* RESPONSIVE - Desktop First */
+        /* RESPONSIVE */
         @media (max-width: 1200px) {
-            .navbar-right {
-                gap: 12px;
-            }
-            .btn-nav {
-                padding: 0.5rem 0.9rem;
-                font-size: 0.85rem;
-            }
+            .navbar-right { gap: 12px; }
+            .btn-nav { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
         }
 
         @media (max-width: 992px) {
-            .navbar-right {
-                gap: 10px;
-            }
+            .navbar-right { gap: 10px; }
         }
 
         @media (max-width: 768px) {
-            .navbar {
-                padding: 15px 10px;
-            }
-            .navbar-container {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .navbar-left {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            .navbar-right {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .btn-nav {
-                padding: 0.5rem 0.8rem;
-                font-size: 0.85rem;
-                gap: 0.4rem;
-            }
-            .budget-code-nav {
-                width: 100%;
-                justify-content: center;
-                font-size: 0.8rem;
-            }
-            .connection-status {
-                font-size: 0.75rem;
-                padding: 0.4rem 0.8rem;
-            }
-            .welcome-card {
-                padding: 2rem 1.5rem;
-            }
+            .navbar { padding: 15px 10px; }
+            .navbar-container { flex-direction: column; gap: 1rem; }
+            .navbar-left, .navbar-right { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .btn-nav { padding: 0.5rem 0.8rem; font-size: 0.85rem; }
+            .welcome-card { padding: 2rem 1.5rem; }
         }
 
         @media (max-width: 480px) {
             .navbar { padding: 12px 8px; }
             .logo { font-size: 1.2rem; }
-            .logo-subtitle { font-size: 0.6rem; }
-            .btn-nav {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.6rem;
-                gap: 0.3rem;
-            }
-            .container { padding: 0 1rem; }
-            .connection-status {
-                font-size: 0.7rem;
-                padding: 0.3rem 0.6rem;
-            }
-            .status-dot {
-                width: 6px;
-                height: 6px;
-            }
-            .welcome-card {
-                padding: 1.5rem 1rem;
-            }
-            .code-input {
-                font-size: 1.2rem;
-                letter-spacing: 0.2rem;
-            }
-            .budget-code-nav {
-                font-size: 0.75rem;
-                padding: 0.4rem 0.8rem;
-            }
+            .welcome-card { padding: 1.5rem 1rem; }
         }
     </style>
 </head>
@@ -838,7 +764,6 @@
     </main>
 
     <script>
-        // ==================== MAPEAMENTO DE ORÇAMENTOS ====================
         const BUDGETS = {
             '10001': 'orcamentos/orcamento_joao.html',
             '10002': 'orcamentos/orcamento_rodrigo.html',
@@ -860,10 +785,10 @@
             '10018': 'orcamentos/orçamento.html',
             '10019': 'orcamentos/orcamento1',
             '10020': 'orcamentos/!DOCTYPE.html',
-            '10126': 'orcamentos/orcamento_xterra.html'
+            '10126': 'orcamentos/orcamento_xterra.html',
+            '10021': 'orcamentos/orcamento_aerogerador_final_v3.html'
         };
 
-        // Mapeamento de senhas para cada orçamento
         const PASSWORDS = {
             '10001': 'admincodeimgna25',
             '10002': 'admincodeimgna25',
@@ -885,10 +810,10 @@
             '10018': 'admincodeimgna25',
             '10019': 'admincodeimgna25',
             '10020': 'admincodeimgna25',
-            '10126': 'xterra2025'
+            '10126': 'xterra2025',
+            '10021': 'admincodeimgna25'
         };
 
-        // ==================== ELEMENTOS DO DOM ====================
         const welcomeScreen = document.getElementById('welcomeScreen');
         const budgetViewer = document.getElementById('budgetViewer');
         const budgetCodeInput = document.getElementById('budgetCode');
@@ -903,17 +828,12 @@
         const btnBackToSearch = document.getElementById('btnBackToSearch');
         const btnPrintBudget = document.getElementById('btnPrintBudget');
 
-        // Estado atual
         let currentCode = null;
         let passwordValidated = false;
 
-        // ==================== FUNÇÕES ====================
-
-        // Criar partículas no background
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
             if (!particlesContainer) return;
-
             for (let i = 0; i < 30; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
@@ -924,11 +844,9 @@
             }
         }
 
-        // Monitorar status de conexão
         function updateConnectionStatus() {
             const statusElement = document.getElementById('connectionStatus');
             const statusText = document.getElementById('statusText');
-
             if (navigator.onLine) {
                 statusElement.classList.remove('offline');
                 statusText.textContent = 'Conectado';
@@ -938,24 +856,19 @@
             }
         }
 
-        // Validar código (apenas números, 5 dígitos)
         function validateCode(code) {
             return /^\d{5}$/.test(code) && BUDGETS.hasOwnProperty(code);
         }
 
-        // Formatar input (apenas números)
         function formatCodeInput(e) {
             const value = e.target.value.replace(/\D/g, '');
             e.target.value = value;
-
-            // Remover erro ao digitar
             if (budgetCodeInput.classList.contains('error')) {
                 budgetCodeInput.classList.remove('error');
                 errorMessage.classList.remove('show');
             }
         }
 
-        // Buscar orçamento (verifica código e pede senha)
         function searchBudget() {
             const code = budgetCodeInput.value.trim();
             const password = budgetPasswordInput.value.trim();
@@ -974,7 +887,6 @@
                 return;
             }
 
-            // Se código é válido mas senha ainda não foi mostrada
             if (!passwordValidated && passwordContainer.style.display === 'none') {
                 currentCode = code;
                 passwordContainer.style.display = 'block';
@@ -983,7 +895,6 @@
                 return;
             }
 
-            // Validar senha
             if (!password) {
                 showError('Digite a senha para acessar');
                 budgetPasswordInput.classList.add('error');
@@ -997,12 +908,10 @@
                 return;
             }
 
-            // Senha correta - carregar orçamento
             passwordValidated = true;
             loadBudget(code);
         }
 
-        // Carregar orçamento
         async function loadBudget(code) {
             loadingOverlay.classList.add('active');
 
@@ -1010,56 +919,61 @@
             displayCodeNav.textContent = code;
 
             try {
-                // Fazer fetch do HTML do orçamento
                 const response = await fetch(budgetPath);
-
-                if (!response.ok) {
-                    throw new Error('Orçamento não encontrado');
-                }
+                if (!response.ok) throw new Error('Orçamento não encontrado');
 
                 const htmlText = await response.text();
-
-                // Criar um parser para extrair conteúdo
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
 
-                // Extrair os estilos do head
                 const styles = doc.querySelectorAll('style');
                 let stylesHtml = '';
                 styles.forEach(style => {
                     stylesHtml += style.outerHTML;
                 });
 
-                // Extrair o conteúdo do body
                 const bodyContent = doc.body.innerHTML;
 
-                // Modificar estilos para remover fundo cinza e deixar transparente
                 stylesHtml = stylesHtml.replace(/background:\s*#e9ecef;/gi, 'background: transparent;');
                 stylesHtml = stylesHtml.replace(/body\s*\{([^}]*)\}/gi, function(match) {
                     return match.replace(/background:[^;]+;/gi, 'background: transparent;');
                 });
 
-                // Injetar estilos e conteúdo
+                // === INJEÇÃO DE CSS PARA CORRIGIR O GAP (MARGEM) ===
+                stylesHtml += `
+                    <style>
+                        /* CSS FORÇADO VIA JAVASCRIPT */
+                        /* Zera margens do container carregado */
+                        .container {
+                            margin-top: 0 !important;
+                            margin-bottom: 0 !important;
+                            border-top-left-radius: 0 !important;
+                            border-top-right-radius: 0 !important;
+                            box-shadow: 0 0 50px rgba(0, 212, 255, 0.3) !important;
+                        }
+                        /* Remove margens e padding do body carregado */
+                        body, html {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            background: transparent !important;
+                        }
+                    </style>
+                `;
+
                 budgetContent.innerHTML = stylesHtml + bodyContent;
 
-                // Mostrar código, botão voltar e botão imprimir na navbar
                 budgetCodeDisplay.style.display = 'flex';
                 btnBackToSearch.style.display = 'flex';
                 btnPrintBudget.style.display = 'flex';
-
-                // Adicionar classe ao body para indicar visualização
                 document.body.classList.add('viewing-budget');
 
-                // Mostrar visualizador
                 loadingOverlay.classList.remove('active');
                 welcomeScreen.classList.add('hidden');
                 budgetViewer.classList.add('active');
 
-                // Atualizar URL sem recarregar
                 const newUrl = `${window.location.pathname}?code=${code}`;
                 window.history.pushState({ code }, '', newUrl);
 
-                // Scroll suave para o topo
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch (error) {
@@ -1069,28 +983,18 @@
             }
         }
 
-        // Mostrar erro
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.classList.add('show');
             budgetCodeInput.classList.add('error');
-
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 3000);
+            setTimeout(() => { errorMessage.classList.remove('show'); }, 3000);
         }
 
-        // Voltar para busca
         function backToSearch() {
-            // Esconder código, botão voltar e botão imprimir na navbar
             budgetCodeDisplay.style.display = 'none';
             btnBackToSearch.style.display = 'none';
             btnPrintBudget.style.display = 'none';
-
-            // Remover classe do body
             document.body.classList.remove('viewing-budget');
-
-            // Restaurar telas
             budgetViewer.classList.remove('active');
             welcomeScreen.classList.remove('hidden');
             budgetCodeInput.value = '';
@@ -1098,31 +1002,19 @@
             passwordContainer.style.display = 'none';
             budgetContent.innerHTML = '';
             btnSearch.innerHTML = '<i class="fas fa-search"></i><span>Buscar Orçamento</span>';
-
-            // Resetar estado
             currentCode = null;
             passwordValidated = false;
-
-            // Limpar URL
             window.history.pushState({}, '', window.location.pathname);
-
-            // Scroll suave para o topo
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Função de impressão (imprime apenas o orçamento, sem navbar)
-        function printBudget() {
-            window.print();
-        }
+        function printBudget() { window.print(); }
 
-        // Verificar URL ao carregar página
         function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
-
             if (code && validateCode(code)) {
                 budgetCodeInput.value = code;
-                // Mostrar campo de senha imediatamente
                 currentCode = code;
                 passwordContainer.style.display = 'block';
                 btnSearch.innerHTML = '<i class="fas fa-unlock"></i><span>Acessar Orçamento</span>';
@@ -1130,71 +1022,26 @@
             }
         }
 
-        // ==================== EVENT LISTENERS ====================
-
-        // Input formatting
         budgetCodeInput.addEventListener('input', formatCodeInput);
-
-        // Enter key to search
-        budgetCodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                searchBudget();
-            }
-        });
-
-        // Enter key na senha
-        budgetPasswordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                searchBudget();
-            }
-        });
-
-        // Limpar erro ao digitar senha
+        budgetCodeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBudget(); });
+        budgetPasswordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBudget(); });
         budgetPasswordInput.addEventListener('input', () => {
             if (budgetPasswordInput.classList.contains('error')) {
                 budgetPasswordInput.classList.remove('error');
                 errorMessage.classList.remove('show');
             }
         });
-
-        // Search button
         btnSearch.addEventListener('click', searchBudget);
-
-        // Connection status
         window.addEventListener('online', updateConnectionStatus);
         window.addEventListener('offline', updateConnectionStatus);
-
-        // Browser back button
         window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.code) {
-                loadBudget(e.state.code);
-            } else {
-                backToSearch();
-            }
+            if (e.state && e.state.code) loadBudget(e.state.code);
+            else backToSearch();
         });
 
-        // ==================== INICIALIZAÇÃO ====================
         createParticles();
         updateConnectionStatus();
         checkURLParams();
-
-        // Log para debug da navbar
-        console.log('=== DEBUG NAVBAR ===');
-        const navbar = document.querySelector('.navbar');
-        if (navbar) {
-            const styles = window.getComputedStyle(navbar);
-            console.log('Navbar padding:', styles.padding);
-            console.log('Navbar height:', styles.height);
-            console.log('Navbar box-sizing:', styles.boxSizing);
-        }
-        const navContainer = document.querySelector('.navbar-container');
-        if (navContainer) {
-            const styles = window.getComputedStyle(navContainer);
-            console.log('Container gap:', styles.gap);
-            console.log('Container flex-wrap:', styles.flexWrap);
-            console.log('Container height:', styles.height);
-        }
-        console.log('===================');
     </script>
 </body>
 </html>
