@@ -152,6 +152,18 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            text-decoration: none !important; /* Remove o sublinhado */
+            color: inherit; /* Mantém a cor original e evita o roxo */
+            cursor: pointer;
+        }
+
+        /* Garante que o link nunca mude de cor */
+        a.logo-section,
+        a.logo-section:visited,
+        a.logo-section:hover,
+        a.logo-section:active {
+            text-decoration: none;
+            color: inherit;
         }
 
         .logo {
@@ -543,9 +555,16 @@
 
         /* Adiciona sombra para transição suave entre orçamento branco e grid azul */
         .budget-content .container {
+            margin-top: 0 !important; /* Remove os 20px originais do arquivo de orçamento */
             box-shadow: 0 0 50px rgba(0, 212, 255, 0.3),
                         0 0 100px rgba(0, 212, 255, 0.2),
                         0 20px 60px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        /* Garante que o main-content zere o padding */
+        body.viewing-budget .main-content {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
         }
 
         /* LOADING */
@@ -615,9 +634,27 @@
             }
         }
 
-        /* RESPONSIVE */
+        /* RESPONSIVE - Desktop First */
+        @media (max-width: 1200px) {
+            .navbar-right {
+                gap: 12px;
+            }
+            .btn-nav {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .navbar-right {
+                gap: 10px;
+            }
+        }
+
         @media (max-width: 768px) {
-            .navbar { padding: 15px 10px; }
+            .navbar {
+                padding: 15px 10px;
+            }
             .navbar-container {
                 flex-direction: column;
                 gap: 1rem;
@@ -632,7 +669,7 @@
                 width: 100%;
                 justify-content: center;
                 flex-wrap: wrap;
-                gap: 10px;
+                gap: 8px;
             }
             .btn-nav {
                 padding: 0.5rem 0.8rem;
