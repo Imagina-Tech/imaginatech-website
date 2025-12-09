@@ -1296,7 +1296,14 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     const transactionsInPeriod = transactions.filter(t => {
         if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
-        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+
+        if (isNavigating) {
+            // Ao navegar, mostrar apenas transações do mês visualizado
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+        } else {
+            // Modo real-time: usar o período da fatura
+            return transactionDate >= billStartDate && transactionDate <= billEndDate;
+        }
     });
 
     const creditTransactionsTotal = transactionsInPeriod.reduce((sum, t) => {
