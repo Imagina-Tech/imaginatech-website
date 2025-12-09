@@ -34,6 +34,12 @@ function changeMonth(direction) {
 
     updateMonthDisplay();
 
+    // Fechar qualquer modal aberto para garantir que dados sejam atualizados
+    const cardBillDetailsModal = document.getElementById('cardBillDetailsModal');
+    if (cardBillDetailsModal) {
+        cardBillDetailsModal.classList.remove('active');
+    }
+
     // Recarregar TODOS os dados do mês selecionado
     if (typeof updateKPIs === 'function') {
         updateKPIs();
