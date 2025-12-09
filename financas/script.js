@@ -473,7 +473,10 @@ async function handleTransactionSubmit(e) {
 
         let billStartDate, billEndDate;
 
-        if (typeof currentDisplayMonth !== 'undefined') {
+        // Verificar se está navegando para um mês diferente do atual
+        const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
+
+        if (isNavigating) {
             // Navegando: fatura aberta no mês visualizado
             let prevMonth = currentMonth - 1;
             let prevYear = currentYear;
@@ -1227,9 +1230,9 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     // Determinar período da fatura
     let billStartDate, billEndDate, billMonth, billYear;
 
-    // Se há navegação de mês (currentDisplayMonth definido OU overrideMonth passado),
-    // sempre usar a lógica de navegação, independente do dia atual
-    const isNavigating = (overrideMonth !== null || typeof currentDisplayMonth !== 'undefined');
+    // Se está navegando para um mês DIFERENTE do mês atual
+    // Comparar o mês/ano calculados com o dia de hoje
+    const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
     if (isNavigating) {
         // Navegando entre meses: mostrar fatura ABERTA no mês visualizado
@@ -1420,8 +1423,8 @@ function showCardBillDetails(cardId) {
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
 
     // Calcular período da fatura (mesmo cálculo do calculateCurrentBill)
-    // Se currentDisplayMonth está definido, sempre usar lógica de navegação
-    const isNavigating = (typeof currentDisplayMonth !== 'undefined');
+    // Se está navegando para um mês diferente do atual
+    const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
     let billStartDate, billEndDate, billMonth, billYear;
 
@@ -2711,9 +2714,11 @@ function updateDefaultDateForCard(cardId) {
 
     let billStartDate;
 
-    // Se está navegando entre meses
-    if (typeof currentDisplayMonth !== 'undefined') {
-        // Fatura aberta: DIA (closingDay+1) do mês anterior até fechamento do mês atual
+    // Se está navegando para um mês diferente do atual
+    const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
+
+    if (isNavigating) {
+        // Navegando: Fatura aberta é DIA (closingDay+1) do mês anterior até fechamento do mês visualizado
         let prevMonth = currentMonth - 1;
         let prevYear = currentYear;
         if (prevMonth < 0) {
