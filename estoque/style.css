@@ -449,10 +449,25 @@
 }
 
 #filamentModal .form-select,
-#filamentModal .form-input {
-    pointer-events: auto;
-    cursor: text;
-    width: 100%;
+#filamentModal .form-input,
+#filamentModal .form-textarea {
+    pointer-events: auto !important;
+    cursor: text !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+/* Garantir que inputs de cor sejam acessíveis */
+#filamentColor {
+    pointer-events: auto !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Garantir que inputs numéricos sejam acessíveis */
+#filamentWeight {
+    pointer-events: auto !important;
 }
 
 /* ===========================
