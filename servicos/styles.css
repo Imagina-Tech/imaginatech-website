@@ -1530,6 +1530,11 @@ body {
 .custom-select {
     position: relative;
     width: 100%;
+    z-index: 1;
+}
+
+.custom-select.open {
+    z-index: 99999;
 }
 
 .custom-select-trigger {
@@ -1620,7 +1625,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
+    z-index: 1;
 }
 
 .custom-select.open .custom-select-dropdown {
@@ -1628,6 +1633,7 @@ body {
     overflow-y: auto;
     opacity: 1;
     transform: translateY(0);
+    z-index: 99999;
 }
 
 /* Scrollbar customizada para dropdown */
@@ -1755,8 +1761,11 @@ body {
 
 @media (max-width: 768px) {
     .custom-select {
-        /* Garantir z-index alto em mobile */
-        z-index: 1000;
+        position: relative;
+    }
+
+    .custom-select.open {
+        z-index: 99999;
     }
 
     .custom-select-trigger {
@@ -1770,12 +1779,13 @@ body {
         max-height: 250px;
         /* Melhor performance em mobile */
         -webkit-overflow-scrolling: touch;
-        /* Z-index ainda maior para garantir que fique acima */
-        z-index: 10000;
+        /* Z-index baixo para deixar espaço */
+        z-index: 1;
     }
 
     .custom-select.open .custom-select-dropdown {
         max-height: 280px;
+        z-index: 99999;
     }
 
     .custom-select-option {
@@ -1810,6 +1820,10 @@ body {
 
 /* Ajustes para telas muito pequenas */
 @media (max-width: 480px) {
+    .custom-select.open {
+        z-index: 99999;
+    }
+
     .custom-select-trigger {
         padding: 1rem;
         font-size: 0.9rem;
@@ -1822,6 +1836,7 @@ body {
 
     .custom-select.open .custom-select-dropdown {
         max-height: 240px;
+        z-index: 99999;
     }
 }
 
