@@ -435,10 +435,18 @@ async function handleTransactionSubmit(e) {
     }
 
     // Validar cartão de crédito se for transação no crédito (tanto saída quanto entrada/reembolso)
+    let selectedCardId = null;
     if (currentPaymentMethod === 'credit') {
-        const cardId = document.getElementById('transactionCard').value;
-        if (!cardId) {
+        selectedCardId = document.getElementById('transactionCard').value;
+        if (!selectedCardId) {
             showToast('Selecione um cartão de crédito', 'error');
+            return;
+        }
+        // Validar que o cartão existe
+        const cardExists = creditCards.find(c => c.id === selectedCardId);
+        if (!cardExists) {
+            console.error('❌ Cartão selecionado não encontrado:', selectedCardId);
+            showToast('Cartão inválido. Recarregue a página e tente novamente', 'error');
             return;
         }
     }
@@ -463,12 +471,14 @@ async function handleTransactionSubmit(e) {
 
         // Adicionar informações de pagamento (para despesas e reembolsos no crédito)
         transactionData.paymentMethod = currentPaymentMethod;
-        if (currentPaymentMethod === 'credit') {
-            transactionData.cardId = document.getElementById('transactionCard').value;
+        if (currentPaymentMethod === 'credit' && selectedCardId) {
+            transactionData.cardId = selectedCardId;
+            console.log(`📝 [handleTransactionSubmit] Salvando transação no cartão:`, selectedCardId, 'Nome:', creditCards.find(c => c.id === selectedCardId)?.name);
         }
 
         if (editingTransactionId) {
             // Editando transação existente
+            console.log(`✏️ Atualizando transação ID: ${editingTransactionId}`);
             await db.collection('transactions').doc(editingTransactionId).update({
                 ...transactionData,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -476,6 +486,7 @@ async function handleTransactionSubmit(e) {
             showToast('Transação atualizada com sucesso', 'success');
         } else {
             // Criando nova transação
+            console.log(`✨ Criando nova transação:`, { description, type: currentTransactionType, paymentMethod: currentPaymentMethod, cardId: selectedCardId });
             await db.collection('transactions').add({
                 ...transactionData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2251,8 +2262,16 @@ function openTransactionModal() {
     document.getElementById('transactionForm').reset();
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').value = today;
+
+    // Reset payment method state
     currentTransactionType = 'income';
     currentPaymentMethod = 'debit';
+
+    // Reset credit card dropdown explicitly
+    const transactionCardSelect = document.getElementById('transactionCard');
+    transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
+    transactionCardSelect.value = '';
+
     selectTransactionType('income');
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
@@ -2530,10 +2549,15 @@ function selectPaymentMethod(method) {
     if (method === 'credit') {
         creditCardGroup.style.display = 'block';
         transactionCardSelect.required = true;
+        // Always repopulate with fresh data
         populateTransactionCardOptions();
+        // Reset selection to empty (force user to choose)
+        transactionCardSelect.value = '';
     } else {
         creditCardGroup.style.display = 'none';
         transactionCardSelect.required = false;
+        // Clear dropdown when switching away from credit
+        transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
         transactionCardSelect.value = '';
     }
 }
@@ -2542,12 +2566,26 @@ function populateTransactionCardOptions() {
     const select = document.getElementById('transactionCard');
     select.innerHTML = '<option value="">Selecione um cartão</option>';
 
+    // Debug: Log card data before populating
+    console.log('📋 [populateTransactionCardOptions] Cartões disponíveis:', creditCards.map(c => ({ id: c.id, name: c.name })));
+
+    if (!creditCards || creditCards.length === 0) {
+        console.warn('⚠️ Nenhum cartão disponível para seleção');
+        return;
+    }
+
     creditCards.forEach(card => {
+        if (!card.id || !card.name) {
+            console.error('❌ Cartão inválido:', card);
+            return;
+        }
         const option = document.createElement('option');
         option.value = card.id;
-        option.textContent = `${card.name} - ${card.institution}`;
+        option.textContent = `${card.name}${card.institution ? ' - ' + card.institution : ''}`;
         select.appendChild(option);
     });
+
+    console.log('✅ Dropdown preenchido com', select.options.length - 1, 'cartões');
 }
 
 // Close modal when clicking outside
