@@ -276,7 +276,7 @@ function showCreditCardsList() {
     }
 
     content.innerHTML = creditCards.map(card => {
-        const bill = calculateCurrentBill ? calculateCurrentBill(card) : 0;
+        const bill = calculateCurrentBill ? calculateCurrentBill(card, currentDisplayMonth, currentDisplayYear) : 0;
         const percentage = card.limit > 0 ? (bill / card.limit) * 100 : 0;
         return `
             <div class="list-item">
