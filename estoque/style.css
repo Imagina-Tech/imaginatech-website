@@ -371,6 +371,26 @@
     padding: 1rem;
     max-height: calc(95vh - 200px);
     overflow-y: auto;
+    overflow-x: visible;
+}
+
+/* Garantir que dropdowns não sejam cortados */
+#filamentModal .custom-select {
+    position: relative !important;
+    z-index: 10;
+}
+
+#filamentModal .custom-select.open {
+    position: relative !important;
+    z-index: 100;
+}
+
+#filamentModal .custom-select.open .custom-select-dropdown {
+    position: fixed !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 100001 !important;
 }
 
 #filamentModal .form-group {
@@ -521,6 +541,30 @@
     #filamentModal .form-input,
     #filamentModal .form-textarea {
         font-size: 16px;
+        min-height: 44px;
+    }
+
+    /* Melhorar custom select em tablet */
+    #filamentModal .custom-select {
+        position: relative;
+        z-index: 10;
+    }
+
+    #filamentModal .custom-select.open {
+        z-index: 100;
+    }
+
+    #filamentModal .custom-select-dropdown {
+        position: fixed !important;
+        z-index: 99999 !important;
+        width: 90% !important;
+        left: 5% !important;
+        right: 5% !important;
+        max-height: 300px !important;
+    }
+
+    #filamentModal .custom-select.open .custom-select-dropdown {
+        z-index: 100001 !important;
     }
 }
 
@@ -583,7 +627,39 @@
     #filamentModal .form-select,
     #filamentModal .form-input {
         font-size: 16px;
-        min-height: 44px;
+        min-height: 48px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Custom select mobile */
+    #filamentModal .custom-select-trigger {
+        min-height: 48px;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #filamentModal .custom-select-dropdown {
+        position: fixed !important;
+        max-height: 250px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 99999 !important;
+    }
+
+    #filamentModal .custom-select.open .custom-select-dropdown {
+        max-height: 280px !important;
+        z-index: 100001 !important;
+    }
+
+    #filamentModal .custom-select-option {
+        min-height: 48px;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
     }
 
     .modal-content {
@@ -593,6 +669,8 @@
 
     #filamentModal .modal-body {
         padding: 0.75rem;
+        overflow: visible !important;
+        overflow-y: auto;
     }
 }
 
