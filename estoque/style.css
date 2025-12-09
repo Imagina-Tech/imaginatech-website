@@ -365,13 +365,16 @@
 #filamentModal .modal-content {
     max-height: 95vh;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 #filamentModal .modal-body {
     padding: 1rem;
-    max-height: calc(95vh - 200px);
+    flex: 1;
     overflow-y: auto;
     overflow-x: visible;
+    min-height: 0;
 }
 
 /* Garantir que dropdowns não sejam cortados */
@@ -395,21 +398,32 @@
 
 #filamentModal .form-group {
     margin-bottom: 0.75rem;
+    width: 100%;
+    pointer-events: auto;
 }
 
 #filamentModal .form-row {
     gap: 0.75rem;
     display: flex;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 #filamentModal .form-row > .form-group {
     flex: 1;
     min-width: 150px;
+    width: auto;
 }
 
 #filamentModal .form-textarea {
     min-height: 60px;
+}
+
+#filamentModal .form-select,
+#filamentModal .form-input {
+    pointer-events: auto;
+    cursor: text;
+    width: 100%;
 }
 
 /* ===========================
@@ -548,23 +562,35 @@
     #filamentModal .custom-select {
         position: relative;
         z-index: 10;
+        width: 100%;
     }
 
     #filamentModal .custom-select.open {
         z-index: 100;
     }
 
+    #filamentModal .custom-select-trigger {
+        min-height: 44px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     #filamentModal .custom-select-dropdown {
         position: fixed !important;
         z-index: 99999 !important;
-        width: 90% !important;
-        left: 5% !important;
-        right: 5% !important;
+        width: 85% !important;
+        left: 7.5% !important;
+        right: auto !important;
         max-height: 300px !important;
     }
 
     #filamentModal .custom-select.open .custom-select-dropdown {
         z-index: 100001 !important;
+    }
+
+    #filamentModal .modal-body {
+        max-height: none !important;
+        overflow: visible;
     }
 }
 
@@ -614,6 +640,36 @@
         width: 100%;
     }
 
+    /* Modal responsivo em mobile */
+    .modal {
+        padding: 0.5rem !important;
+    }
+
+    .modal-content {
+        max-width: 100% !important;
+        max-height: 95vh !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #filamentModal .modal-content {
+        max-height: 95vh !important;
+    }
+
+    #filamentModal .modal-header {
+        padding: 1rem 0.75rem;
+    }
+
+    #filamentModal .modal-body {
+        padding: 0.75rem !important;
+        max-height: none !important;
+        overflow: visible;
+    }
+
+    #filamentModal .modal-footer {
+        padding: 0.75rem;
+    }
+
     /* Formulários extra compactos para mobile */
     #filamentModal .form-row {
         flex-direction: column;
@@ -622,10 +678,12 @@
 
     #filamentModal .form-group {
         margin-bottom: 0.5rem;
+        width: 100%;
     }
 
     #filamentModal .form-select,
-    #filamentModal .form-input {
+    #filamentModal .form-input,
+    #filamentModal .form-textarea {
         font-size: 16px;
         min-height: 48px;
         width: 100%;
@@ -633,6 +691,11 @@
     }
 
     /* Custom select mobile */
+    #filamentModal .custom-select {
+        position: relative !important;
+        width: 100%;
+    }
+
     #filamentModal .custom-select-trigger {
         min-height: 48px;
         padding: 0.9rem 1rem;
@@ -643,16 +706,14 @@
 
     #filamentModal .custom-select-dropdown {
         position: fixed !important;
-        max-height: 250px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        left: 0 !important;
-        right: 0 !important;
+        max-height: 50vh !important;
+        width: calc(100% - 1.5rem) !important;
+        left: 0.75rem !important;
+        right: 0.75rem !important;
         z-index: 99999 !important;
     }
 
     #filamentModal .custom-select.open .custom-select-dropdown {
-        max-height: 280px !important;
         z-index: 100001 !important;
     }
 
@@ -662,15 +723,9 @@
         font-size: 0.95rem;
     }
 
-    .modal-content {
-        max-width: 95vw;
-        margin: 0 auto;
-    }
-
-    #filamentModal .modal-body {
-        padding: 0.75rem;
-        overflow: visible !important;
-        overflow-y: auto;
+    #filamentModal .image-upload-area {
+        min-height: 100px;
+        max-height: 100px;
     }
 }
 
