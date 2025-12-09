@@ -1210,14 +1210,15 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     if (isNavigating) {
         // Navegando entre meses: mostrar fatura que está sendo construída no mês visualizado
         // Lógica correta de cartão de crédito:
-        // Se visualiza dezembro (mês 11), mostra fatura de 21/novembro até 20/dezembro
-        // Se visualiza janeiro (mês 0), mostra fatura de 21/dezembro até 20/janeiro
-        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1); // 21 do mês anterior
-        billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // 20 do mês visualizado
+        // Fatura: DIA (closingDay+1) do mês anterior até DIA FECHAMENTO do mês visualizado
+        // Se visualiza dezembro (mês 11) com closingDay 20: 21/novembro até 20/dezembro
+        // Se visualiza dezembro (mês 11) com closingDay 2: 03/novembro até 02/dezembro
+        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);    // Dia após fechamento anterior
+        billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // Dia de fechamento do mês visualizado
 
         // Ajustar se estiver em janeiro (mês 0)
         if (currentMonth === 0) {
-            billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // 21 de dezembro do ano anterior
+            billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia após fechamento no dezembro anterior
         }
 
         billMonth = currentMonth;
@@ -1225,23 +1226,23 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     } else {
         // Mês atual (real-time): usar lógica baseada no dia de fechamento
         // Se hoje é 09/12 e fechamento é 20: fatura aberta é de 21/11 até 20/12
-        // Se hoje é 25/12 e fechamento é 20: fatura aberta é de 21/12 até 20/01
+        // Se hoje é 09/12 e fechamento é 2: fatura aberta é de 03/12 até 02/01 (já passou!)
 
         if (today.getDate() < card.closingDay) {
-            // Ainda estamos no período: 21/(mês-1) até 20/mês
-            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1); // 21 do mês anterior
-            billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // 20 deste mês
+            // Ainda estamos no período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);    // Dia após fechamento anterior
+            billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // Dia de fechamento deste mês
             billMonth = currentMonth;
             billYear = currentYear;
 
             // Ajustar se estiver em janeiro
             if (currentMonth === 0) {
-                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // 21 de dezembro do ano anterior
+                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia após fechamento no dezembro anterior
             }
         } else {
-            // Já passou do fechamento: 21/mês até 20/(mês+1)
-            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);      // 21 deste mês
-            billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay);        // 20 do próximo mês
+            // Já passou do fechamento: DIA (closingDay+1)/mês até dia_fechamento/(mês+1)
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);      // Dia após fechamento deste mês
+            billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay);        // Dia de fechamento do próximo mês
             billMonth = currentMonth + 1;
             billYear = currentYear;
 
@@ -2672,26 +2673,26 @@ function updateDefaultDateForCard(cardId) {
 
     // Se está navegando entre meses
     if (typeof currentDisplayMonth !== 'undefined') {
-        // Período: 21/(mês-1) até 20/mês
-        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1); // 21 do mês anterior
+        // Período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
+        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1); // Dia após fechamento anterior
         if (currentMonth === 0) {
-            billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dezembro do ano anterior
+            billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia após fechamento no dezembro anterior
         }
     } else {
         // Usando lógica do mês atual
         if (today.getDate() < card.closingDay) {
-            // Ainda no período: 21/(mês-1) até 20/mês
+            // Ainda no período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
             billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
             if (currentMonth === 0) {
                 billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1);
             }
         } else {
-            // Já passou do fechamento: 21/mês até 20/(mês+1)
+            // Já passou do fechamento: DIA (closingDay+1)/mês até dia_fechamento/(mês+1)
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
         }
     }
 
-    // Usar primeira data válida do período (dia depois do fechamento anterior)
+    // Usar primeira data válida do período (dia após o fechamento anterior)
     const defaultDate = billStartDate.toISOString().split('T')[0];
     document.getElementById('date').value = defaultDate;
 
