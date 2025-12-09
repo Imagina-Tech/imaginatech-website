@@ -153,6 +153,7 @@ auth.onAuthStateChanged(user => {
     }
 });
 
+// 🔐 Autentica usuário via Google OAuth
 function signInWithGoogle() {
     showLoading('Autenticando...');
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -164,6 +165,7 @@ function signInWithGoogle() {
         });
 }
 
+// 🔐 Realiza logout do usuário
 function signOut() {
     auth.signOut().then(() => {
         showToast('Logout realizado com sucesso', 'success');
@@ -171,12 +173,14 @@ function signOut() {
     });
 }
 
+// 🎨 Exibe tela de login
 function showLoginScreen() {
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('dashboard').classList.add('hidden');
     hideLoading(); // IMPORTANTE: Esconde loading na tela de login
 }
 
+// 🎨 Exibe dashboard principal após autenticação
 function showDashboard(user) {
     const loginScreen = document.getElementById('loginScreen');
     const dashboard = document.getElementById('dashboard');
@@ -192,6 +196,7 @@ function showDashboard(user) {
 // ===========================
 // ACCOUNT SELECTION (Multi-User System)
 // ===========================
+// 🎨 Abre modal para seleção entre conta pessoal e empresarial
 function showAccountSelectionModal(user) {
     // Verificar se existe preferência salva
     const savedAccountType = localStorage.getItem('selectedAccountType');
@@ -212,6 +217,7 @@ function showAccountSelectionModal(user) {
     document.getElementById('accountSelectionModal').classList.add('active');
 }
 
+// 🔐 Seleciona e carrega dados da conta escolhida (pessoal ou empresa)
 async function selectAccount(accountType) {
     showLoading('Carregando dados...');
 
@@ -278,6 +284,7 @@ async function selectAccount(accountType) {
     initializeDashboard();
 }
 
+// 🔄 Alterna entre contas (pessoal/empresa)
 function switchAccount() {
     // Limpar preferência salva
     localStorage.removeItem('selectedAccountType');
@@ -289,6 +296,7 @@ function switchAccount() {
     showAccountSelectionModal(currentUser);
 }
 
+// 🎨 Atualiza nome da conta exibida na interface
 function updateAccountDisplay(accountType) {
     const userRole = document.getElementById('userRole');
     if (userRole) {
@@ -303,6 +311,7 @@ function updateAccountDisplay(accountType) {
 // ===========================
 // CENTRAL UPDATE FUNCTION
 // ===========================
+// 🔄 Atualiza todos os componentes da interface (KPIs e gráficos)
 function updateAllDisplays() {
     console.log('[updateAllDisplays] Atualizando todos os componentes...');
 
@@ -322,6 +331,7 @@ function updateAllDisplays() {
 // ===========================
 // INITIALIZATION
 // ===========================
+// 🔄 Inicializa dashboard e carrega todos os dados do Firestore
 async function initializeDashboard() {
     showLoading('Carregando dados...');
     console.log('Iniciando dashboard...');
@@ -382,6 +392,7 @@ async function initializeDashboard() {
     }
 }
 
+// 📝 Popula dropdown de categorias com base no tipo de transação
 function populateCategories() {
     const categorySelect = document.getElementById('category');
     if (!categorySelect) return;
@@ -400,6 +411,7 @@ function populateCategories() {
 // ===========================
 // TRANSACTIONS CRUD
 // ===========================
+// 🗄️ Carrega todas as transações do Firestore
 async function loadTransactions() {
     try {
         console.log('Carregando transações...');
@@ -421,6 +433,7 @@ async function loadTransactions() {
     }
 }
 
+// 📲 Processa envio do formulário de transação (criar/editar)
 async function handleTransactionSubmit(e) {
     e.preventDefault();
 
@@ -560,6 +573,7 @@ async function handleTransactionSubmit(e) {
     }
 }
 
+// 🗄️ Deleta uma transação do Firestore
 async function deleteTransaction(id) {
     if (!confirm('Deseja realmente deletar esta transação?')) return;
 
@@ -581,6 +595,7 @@ async function deleteTransaction(id) {
 // ===========================
 // SUBSCRIPTIONS CRUD
 // ===========================
+// 🗄️ Carrega todas as assinaturas do Firestore
 async function loadSubscriptions() {
     try {
         console.log('Carregando assinaturas...');
@@ -601,20 +616,7 @@ async function loadSubscriptions() {
     }
 }
 
-function calculateNextDue(dueDay) {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    let dueDate = new Date(currentYear, currentMonth, dueDay);
-
-    if (dueDate < today) {
-        dueDate = new Date(currentYear, currentMonth + 1, dueDay);
-    }
-
-    return dueDate.toLocaleDateString('pt-BR');
-}
-
+// 📲 Processa envio do formulário de assinatura (criar/editar)
 async function handleSubscriptionSubmit(e) {
     e.preventDefault();
 
@@ -681,6 +683,7 @@ async function handleSubscriptionSubmit(e) {
     }
 }
 
+// 🗄️ Deleta uma assinatura do Firestore
 async function deleteSubscription(id) {
     if (!confirm('Deseja realmente deletar esta assinatura?')) return;
 
@@ -702,6 +705,7 @@ async function deleteSubscription(id) {
 // ===========================
 // INSTALLMENTS - MIGRATION
 // ===========================
+// 🔄 Migra parcelamentos antigos adicionando startMonth e startYear
 async function migrateOldInstallments() {
     showLoading('Migrando parcelamentos antigos...');
 
@@ -775,6 +779,7 @@ async function migrateOldInstallments() {
 // ===========================
 // INSTALLMENTS CRUD
 // ===========================
+// 🗄️ Carrega todos os parcelamentos do Firestore
 async function loadInstallments() {
     try {
         console.log('Carregando parcelamentos...');
@@ -798,7 +803,7 @@ async function loadInstallments() {
     }
 }
 
-// Função para corrigir startMonth de parcelamentos existentes
+// 🔄 Corrige startMonth de parcelamentos com dados inconsistentes
 async function fixInstallmentsStartMonth() {
     try {
         const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
@@ -872,7 +877,7 @@ async function fixInstallmentsStartMonth() {
     }
 }
 
-// Função auxiliar para calcular a parcela atual baseada na data
+// 🔄 Calcula qual parcela está ativa baseada no mês/ano de referência
 function calculateCurrentInstallment(installment, targetMonth = null, targetYear = null) {
     // Fallback para valor salvo ou paidInstallments (para parcelamentos antigos)
     const savedCurrent = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
@@ -911,6 +916,7 @@ function calculateCurrentInstallment(installment, targetMonth = null, targetYear
     return Math.min(calculatedCurrent, installment.totalInstallments);
 }
 
+// 📲 Processa envio do formulário de parcelamento (criar/editar)
 async function handleInstallmentSubmit(e) {
     e.preventDefault();
 
@@ -1014,6 +1020,7 @@ async function handleInstallmentSubmit(e) {
     }
 }
 
+// 🔄 Atualiza progresso da parcela atual de um parcelamento
 async function updateInstallmentProgress(id, current) {
     const currentInstallment = parseInt(current);
 
@@ -1035,6 +1042,7 @@ async function updateInstallmentProgress(id, current) {
     }
 }
 
+// 🗄️ Deleta um parcelamento do Firestore
 async function deleteInstallment(id) {
     if (!confirm('Deseja realmente deletar este parcelamento?')) return;
 
@@ -1056,6 +1064,7 @@ async function deleteInstallment(id) {
 // ===========================
 // PROJECTIONS CRUD
 // ===========================
+// 🗄️ Carrega todas as projeções do Firestore
 async function loadProjections() {
     try {
         console.log('Carregando projeções...');
@@ -1076,6 +1085,7 @@ async function loadProjections() {
     }
 }
 
+// 📲 Processa envio do formulário de projeção
 async function handleProjectionSubmit(e) {
     e.preventDefault();
 
@@ -1119,6 +1129,7 @@ async function handleProjectionSubmit(e) {
     }
 }
 
+// 🔄 Atualiza status de uma projeção
 async function updateProjectionStatus(id, status) {
     showLoading('Atualizando status...');
 
@@ -1135,6 +1146,7 @@ async function updateProjectionStatus(id, status) {
     }
 }
 
+// 🗄️ Deleta uma projeção do Firestore
 async function deleteProjection(id) {
     if (!confirm('Deseja realmente deletar esta projeção?')) return;
 
@@ -1156,6 +1168,7 @@ async function deleteProjection(id) {
 // ===========================
 // CREDIT CARDS - LOAD & RENDER
 // ===========================
+// 🗄️ Carrega todos os cartões de crédito do Firestore
 async function loadCreditCards() {
     try {
         console.log('Carregando cartões de crédito...');
@@ -1177,6 +1190,7 @@ async function loadCreditCards() {
     }
 }
 
+// 🗄️ Carrega gastos avulsos de cartões de crédito
 async function loadCardExpenses() {
     try {
         const snapshot = await db.collection('cardExpenses')
@@ -1198,6 +1212,7 @@ async function loadCardExpenses() {
 // Contador de chamadas (para debug)
 let calculateBillCallCount = 0;
 
+// 🔄 Calcula valor total da fatura do cartão para o mês especificado
 function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     calculateBillCallCount++;
     console.log(`\n🔍 [CHAMADA #${calculateBillCallCount}] calculateCurrentBill("${card.name}")`);
@@ -1383,6 +1398,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 // ===========================
 // CREDIT CARDS - MODALS
 // ===========================
+// 🎨 Abre modal para adicionar/editar cartão de crédito
 function openCreditCardModal() {
     editingCardId = null;
     document.getElementById('creditCardModal').classList.add('active');
@@ -1390,27 +1406,14 @@ function openCreditCardModal() {
     document.querySelector('#creditCardModal .modal-header h2').textContent = 'Novo Cartão de Crédito';
 }
 
+// 🎨 Fecha modal de cartão de crédito
 function closeCreditCardModal() {
     editingCardId = null;
     document.getElementById('creditCardModal').classList.remove('active');
     document.getElementById('creditCardForm').reset();
 }
 
-function editCreditCard(id) {
-    const card = creditCards.find(c => c.id === id);
-    if (!card) return;
-
-    editingCardId = id;
-    document.getElementById('creditCardModal').classList.add('active');
-    document.querySelector('#creditCardModal .modal-header h2').textContent = 'Editar Cartão';
-
-    document.getElementById('cardName').value = card.name;
-    document.getElementById('cardInstitution').value = card.institution;
-    document.getElementById('cardLimit').value = formatCurrencyValue(card.limit);
-    document.getElementById('cardClosingDay').value = card.closingDay;
-    document.getElementById('cardDueDay').value = card.dueDay;
-}
-
+// 🎨 Exibe detalhes completos da fatura do cartão em modal
 function showCardBillDetails(cardId) {
     const card = creditCards.find(c => c.id === cardId);
     if (!card) return;
@@ -1611,32 +1614,10 @@ function showCardBillDetails(cardId) {
 
 let selectedCardId = null;
 
-function openCardExpenseModal(cardId = null) {
-    selectedCardId = cardId;
-    document.getElementById('cardExpenseModal').classList.add('active');
-    document.getElementById('cardExpenseForm').reset();
-
-    // Preencher dropdown de cartões
-    const select = document.getElementById('expenseCard');
-    select.innerHTML = '<option value="">Selecione um cartão</option>' +
-        creditCards.map(card =>
-            `<option value="${card.id}" ${card.id === cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
-        ).join('');
-
-    // Data padrão: hoje
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('expenseDate').value = today;
-}
-
-function closeCardExpenseModal() {
-    selectedCardId = null;
-    document.getElementById('cardExpenseModal').classList.remove('active');
-    document.getElementById('cardExpenseForm').reset();
-}
-
 // ===========================
 // CREDIT CARDS - CRUD
 // ===========================
+// 📲 Processa envio do formulário de cartão de crédito
 async function handleCreditCardSubmit(e) {
     e.preventDefault();
 
@@ -1699,6 +1680,7 @@ async function handleCreditCardSubmit(e) {
     }
 }
 
+// 📲 Processa envio de gasto avulso no cartão (sistema antigo)
 async function handleCardExpenseSubmit(e) {
     e.preventDefault();
 
@@ -1744,6 +1726,7 @@ async function handleCardExpenseSubmit(e) {
     }
 }
 
+// 🗄️ Deleta um cartão de crédito do Firestore
 async function deleteCreditCard(id) {
     if (!confirm('Deseja realmente deletar este cartão? Todos os gastos associados serão mantidos.')) return;
 
@@ -1765,6 +1748,7 @@ async function deleteCreditCard(id) {
 // ===========================
 // INSTALLMENT HELPER FUNCTIONS
 // ===========================
+// 🔄 Verifica se um parcelamento está ativo em determinado mês
 function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
     // Para parcelamentos antigos sem startMonth/startYear, usar valor salvo
     if (installment.startMonth === undefined || installment.startYear === undefined) {
@@ -1791,6 +1775,7 @@ function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
 // ===========================
 // KPI CALCULATIONS
 // ===========================
+// 🔄 Atualiza todos os indicadores (KPIs) do dashboard
 function updateKPIs() {
     // Usar mês selecionado se disponível, senão mês atual
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
@@ -1921,7 +1906,7 @@ function updateKPIs() {
 // APEXCHARTS - INITIALIZATION
 // ===========================
 
-// Função para destruir todos os gráficos existentes
+// 🔄 Destrói todas as instâncias de gráficos antes de recriar
 function destroyAllCharts() {
     console.log('Destruindo gráficos existentes...');
 
@@ -1955,6 +1940,7 @@ function destroyAllCharts() {
     }
 }
 
+// 🔄 Inicializa todos os gráficos do dashboard
 function initializeCharts() {
     try {
         // Destruir gráficos existentes antes de criar novos
@@ -1975,6 +1961,7 @@ function initializeCharts() {
     }
 }
 
+// 🔄 Atualiza dados de todos os gráficos existentes
 function updateCharts() {
     try {
         if (cashFlowChart) updateCashFlowChart();
@@ -1988,6 +1975,7 @@ function updateCharts() {
 // ===========================
 // CASH FLOW CHART
 // ===========================
+// 🎨 Cria gráfico de fluxo de caixa (entradas vs saídas)
 function initializeCashFlowChart() {
     const chartEl = document.querySelector("#cashFlowChart");
     if (!chartEl) return;
@@ -2076,6 +2064,7 @@ function initializeCashFlowChart() {
     cashFlowChart.render();
 }
 
+// 🔄 Atualiza dados do gráfico de fluxo de caixa
 function updateCashFlowChart() {
     const data = getCashFlowData();
     cashFlowChart.updateSeries([
@@ -2084,6 +2073,7 @@ function updateCashFlowChart() {
     ]);
 }
 
+// 📊 Obtém dados de entradas e saídas dos últimos 6 meses
 function getCashFlowData() {
     const months = [];
     const incomes = [];
@@ -2121,6 +2111,7 @@ function getCashFlowData() {
 // ===========================
 // CATEGORY CHART (DONUT)
 // ===========================
+// 🎨 Cria gráfico de pizza com distribuição de despesas por categoria
 function initializeCategoryChart() {
     const chartEl = document.querySelector("#categoryChart");
     if (!chartEl) return;
@@ -2184,6 +2175,7 @@ function initializeCategoryChart() {
     categoryChart.render();
 }
 
+// 🔄 Atualiza dados do gráfico de categorias
 function updateCategoryChart() {
     const data = getCategoryData();
 
@@ -2210,6 +2202,7 @@ function updateCategoryChart() {
     }
 }
 
+// 📊 Obtém dados de despesas agrupadas por categoria do mês atual
 function getCategoryData() {
     const categoryMap = {};
 
@@ -2236,6 +2229,7 @@ function getCategoryData() {
 // ===========================
 // COMPARISON CHART (BARS)
 // ===========================
+// 🎨 Cria gráfico de barras comparando receitas e despesas mensais
 function initializeComparisonChart() {
     const chartEl = document.querySelector("#comparisonChart");
     if (!chartEl) return;
@@ -2315,6 +2309,7 @@ function initializeComparisonChart() {
     comparisonChart.render();
 }
 
+// 🔄 Atualiza dados do gráfico de comparação
 function updateComparisonChart() {
     const data = getComparisonData();
     comparisonChart.updateSeries([{
@@ -2323,6 +2318,7 @@ function updateComparisonChart() {
     }]);
 }
 
+// 📊 Obtém dados de comparação entre receitas e despesas por mês
 function getComparisonData() {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
@@ -2351,6 +2347,7 @@ function getComparisonData() {
 // ===========================
 // MODALS
 // ===========================
+// 🎨 Abre modal para adicionar nova transação
 function openTransactionModal() {
     editingTransactionId = null;
     document.getElementById('transactionModal').classList.add('active');
@@ -2371,7 +2368,7 @@ function openTransactionModal() {
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
 
-// Função genérica para fechar modais
+// 🎨 Fecha qualquer modal pelo ID
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -2379,6 +2376,7 @@ function closeModal(modalId) {
     }
 }
 
+// 🎨 Fecha modal de transação e reseta formulário
 function closeTransactionModal() {
     editingTransactionId = null;
     currentPaymentMethod = 'debit';
@@ -2389,6 +2387,7 @@ function closeTransactionModal() {
     document.getElementById('creditCardGroup').style.display = 'none';
 }
 
+// 🎨 Abre modal para editar transação existente
 function editTransaction(id) {
     const transaction = transactions.find(t => t.id === id);
     if (!transaction) return;
@@ -2421,6 +2420,7 @@ function editTransaction(id) {
     }
 }
 
+// 🎨 Abre modal para adicionar nova assinatura
 function openSubscriptionModal() {
     editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.add('active');
@@ -2435,12 +2435,14 @@ function openSubscriptionModal() {
         ).join('');
 }
 
+// 🎨 Fecha modal de assinatura
 function closeSubscriptionModal() {
     editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.remove('active');
     document.getElementById('subscriptionForm').reset();
 }
 
+// 🎨 Abre modal para editar assinatura existente
 function editSubscription(id) {
     const subscription = subscriptions.find(s => s.id === id);
     if (!subscription) return;
@@ -2468,6 +2470,7 @@ function editSubscription(id) {
     document.getElementById('subStatus').value = subscription.status;
 }
 
+// 🎨 Abre modal para adicionar novo parcelamento
 function openInstallmentModal() {
     editingInstallmentId = null;
     document.getElementById('installmentModal').classList.add('active');
@@ -2486,6 +2489,7 @@ function openInstallmentModal() {
         ).join('');
 }
 
+// 🎨 Fecha modal de parcelamento
 function closeInstallmentModal() {
     editingInstallmentId = null;
     document.getElementById('installmentModal').classList.remove('active');
@@ -2494,6 +2498,7 @@ function closeInstallmentModal() {
     selectInstallmentValueType('total');
 }
 
+// 🎨 Abre modal para editar parcelamento existente
 function editInstallment(id) {
     const installment = installments.find(inst => inst.id === id);
     if (!installment) return;
@@ -2529,6 +2534,7 @@ function editInstallment(id) {
 // Variável global para rastrear o tipo de valor selecionado no parcelamento
 let installmentValueType = 'total';
 
+// 📝 Alterna entre entrada de valor total ou valor por parcela
 function selectInstallmentValueType(type) {
     installmentValueType = type;
 
@@ -2563,6 +2569,7 @@ function selectInstallmentValueType(type) {
     }
 }
 
+// 🔄 Calcula e exibe valor por parcela baseado no valor total
 function calculateInstallmentValues() {
     const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value) || 0;
 
@@ -2593,6 +2600,7 @@ function calculateInstallmentValues() {
     }
 }
 
+// 🎨 Abre modal para adicionar nova projeção
 function openProjectionModal() {
     document.getElementById('projectionModal').classList.add('active');
     document.getElementById('projectionForm').reset();
@@ -2600,11 +2608,13 @@ function openProjectionModal() {
     document.getElementById('projDate').value = today;
 }
 
+// 🎨 Fecha modal de projeção
 function closeProjectionModal() {
     document.getElementById('projectionModal').classList.remove('active');
     document.getElementById('projectionForm').reset();
 }
 
+// 📝 Alterna tipo de transação (entrada/saída) e atualiza categorias
 function selectTransactionType(type) {
     currentTransactionType = type;
 
@@ -2626,6 +2636,7 @@ function selectTransactionType(type) {
     populateCategories();
 }
 
+// 📝 Alterna método de pagamento (débito/crédito) e exibe campos apropriados
 function selectPaymentMethod(method) {
     currentPaymentMethod = method;
 
@@ -2657,6 +2668,7 @@ function selectPaymentMethod(method) {
     }
 }
 
+// 📝 Popula dropdown de cartões no formulário de transação
 function populateTransactionCardOptions() {
     const select = document.getElementById('transactionCard');
     select.innerHTML = '<option value="">Selecione um cartão</option>';
@@ -2683,8 +2695,7 @@ function populateTransactionCardOptions() {
     console.log('✅ Dropdown preenchido com', select.options.length - 1, 'cartões');
 }
 
-// Função para atualizar data padrão quando cartão é selecionado
-// Usa a mesma lógica correta de período de fatura
+// 📝 Sugere data padrão baseada no período da fatura do cartão selecionado
 function updateDefaultDateForCard(cardId) {
     if (!cardId) {
         // Se nenhum cartão selecionado, usar hoje
@@ -2748,21 +2759,7 @@ document.addEventListener('click', (e) => {
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
-function formatCurrency(input) {
-    let value = input.value.replace(/\D/g, '');
-
-    if (value === '') {
-        input.value = '';
-        return;
-    }
-
-    value = (parseInt(value) / 100).toFixed(2);
-    value = value.replace('.', ',');
-    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
-    input.value = value;
-}
-
+// 📝 Formata valor numérico para exibição (R$ 1.234,56)
 function formatCurrencyDisplay(value) {
     if (!value && value !== 0) return 'R$ 0,00';
 
@@ -2772,6 +2769,7 @@ function formatCurrencyDisplay(value) {
     });
 }
 
+// 📝 Formata valor numérico para input (1234.56)
 function formatCurrencyValue(value) {
     // Converte um número para o formato do input (1.234,56)
     if (!value && value !== 0) return '';
@@ -2783,6 +2781,7 @@ function formatCurrencyValue(value) {
     return formatted;
 }
 
+// 📝 Converte string formatada (1.234,56) para número
 function parseCurrencyInput(str) {
     if (!str) return 0;
 
@@ -2795,6 +2794,7 @@ function parseCurrencyInput(str) {
     return parseFloat(str) || 0;
 }
 
+// 📝 Formata string de data para exibição local
 function formatDate(dateStr) {
     if (!dateStr) return '';
 
@@ -2802,6 +2802,7 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('pt-BR');
 }
 
+// 🎨 Exibe overlay de carregamento com mensagem personalizada
 function showLoading(message = 'Carregando...') {
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay) return;
@@ -2811,11 +2812,13 @@ function showLoading(message = 'Carregando...') {
     overlay.style.display = 'flex';
 }
 
+// 🎨 Esconde overlay de carregamento
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.style.display = 'none';
 }
 
+// 🎨 Exibe notificação toast temporária (sucesso/erro/info)
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -2902,6 +2905,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===========================
 // HELPER FUNCTIONS FOR CHARTS
 // ===========================
+// 🔄 Calcula total de entradas ou saídas do mês atual
 function getCurrentMonthTotal(type) {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
@@ -2920,6 +2924,7 @@ function getCurrentMonthTotal(type) {
 // ===========================
 // MINI CHARTS - SAVINGS GOAL (RADIAL)
 // ===========================
+// 🎨 Cria gráfico radial de progresso de meta de economia
 function initializeSavingsGoalChart() {
     const chartEl = document.querySelector("#savingsGoalChart");
     if (!chartEl) return;
@@ -2970,6 +2975,7 @@ function initializeSavingsGoalChart() {
 // ===========================
 // MINI CHARTS - EXPENSE LIMIT (RADIAL)
 // ===========================
+// 🎨 Cria gráfico radial de limite de despesas
 function initializeExpenseLimitChart() {
     const chartEl = document.querySelector("#expenseLimitChart");
     if (!chartEl) return;
@@ -3018,6 +3024,7 @@ function initializeExpenseLimitChart() {
 // ===========================
 // MINI CHARTS - GROWTH SPARKLINE
 // ===========================
+// 🎨 Cria mini gráfico de linha de crescimento de receitas
 function initializeGrowthSparkline() {
     const chartEl = document.querySelector("#growthSparkline");
     if (!chartEl) return;
@@ -3063,6 +3070,7 @@ function initializeGrowthSparkline() {
 // ===========================
 // MINI CHARTS - EXPENSE TREND SPARKLINE
 // ===========================
+// 🎨 Cria mini gráfico de linha de tendência de despesas
 function initializeExpenseTrendSparkline() {
     const chartEl = document.querySelector("#expenseTrendSparkline");
     if (!chartEl) return;
@@ -3110,6 +3118,7 @@ function initializeExpenseTrendSparkline() {
 // ===========================
 // TOP CATEGORIES CHART (BAR)
 // ===========================
+// 🎨 Cria gráfico de barras com top 5 categorias de despesas
 function initializeTopCategoriesChart() {
     const chartEl = document.querySelector("#topCategoriesChart");
     if (!chartEl) return;
@@ -3164,6 +3173,7 @@ function initializeTopCategoriesChart() {
 // ===========================
 // WEEKLY TREND CHART (AREA)
 // ===========================
+// 🎨 Cria gráfico de área com despesas diárias da última semana
 function initializeWeeklyTrendChart() {
     const chartEl = document.querySelector("#weeklyTrendChart");
     if (!chartEl) return;
@@ -3466,7 +3476,7 @@ class CustomSelect {
     }
 }
 
-// Inicializar todos os selects customizados
+// 📝 Inicializa componentes de select personalizados para todos os dropdowns
 function initCustomSelects() {
     const selects = document.querySelectorAll('.form-select, select');
     selects.forEach(select => {
