@@ -1293,47 +1293,38 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         .reduce((sum, expense) => sum + expense.value, 0);
 
     // Somar transações de crédito do período (saídas e reembolsos)
-    const allCreditTransactions = transactions.filter(t => t.paymentMethod === 'credit');
-
-    console.log(`\n💰 [DEBUG TRANSAÇÕES CRÉDITO] Total de transações de crédito: ${allCreditTransactions.length}`);
-    allCreditTransactions.forEach(t => {
-        const tDate = new Date(t.date + 'T12:00:00');
-        const matchesCard = t.cardId === card.id;
-        const inPeriod = tDate >= billStartDate && tDate <= billEndDate;
-        const typeIcon = t.type === 'income' ? '💚' : '💰';
-        console.log(`   ${matchesCard && inPeriod ? '✅' : '❌'} ${typeIcon} "${t.description}": ${t.type === 'income' ? '-' : '+'}R$ ${t.value.toFixed(2)} em ${tDate.toLocaleDateString('pt-BR')}`);
-        console.log(`      cardId: ${t.cardId} ${matchesCard ? '✅' : `❌ (esperado: ${card.id})`}`);
-        console.log(`      Período: ${inPeriod ? '✅' : `❌ (fora de ${billStartDate.toLocaleDateString('pt-BR')} - ${billEndDate.toLocaleDateString('pt-BR')})`}`);
+    const transactionsInPeriod = transactions.filter(t => {
+        if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
+        const transactionDate = new Date(t.date + 'T12:00:00');
+        return transactionDate >= billStartDate && transactionDate <= billEndDate;
     });
 
-    // Calcular total: saídas somam, entradas (reembolsos) subtraem
-    const creditTransactionsTotal = transactions
-        .filter(t => {
-            if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
-            const transactionDate = new Date(t.date + 'T12:00:00');
-            return transactionDate >= billStartDate && transactionDate <= billEndDate;
-        })
-        .reduce((sum, t) => {
-            // Expense soma, income subtrai (reembolso)
-            return sum + (t.type === 'expense' ? t.value : -t.value);
-        }, 0);
+    const creditTransactionsTotal = transactionsInPeriod.reduce((sum, t) => {
+        // Expense soma, income subtrai (reembolso)
+        return sum + (t.type === 'expense' ? t.value : -t.value);
+    }, 0);
 
-    console.log(`   💵 TOTAL TRANSAÇÕES CRÉDITO (com reembolsos): R$ ${creditTransactionsTotal.toFixed(2)}\n`);
+    // Log das transações incluídas
+    if (transactionsInPeriod.length > 0) {
+        console.log(`   Transações no período: ${transactionsInPeriod.length}`);
+        transactionsInPeriod.forEach(t => {
+            const tDate = new Date(t.date + 'T12:00:00');
+            console.log(`     ${t.type === 'expense' ? '+' : '-'} ${t.description} em ${tDate.toLocaleDateString('pt-BR')}`);
+        });
+    }
 
-    // Log detalhado do período da fatura
-    console.log(`📅 [FATURA ${card.name}] Calculando fatura do mês ${billMonth + 1}/${billYear}`);
+    // Log simples do período e dados da fatura
+    console.log(`📅 [FATURA ${card.name}] Mês: ${billMonth + 1}/${billYear}`);
     console.log(`   Período: ${billStartDate.toLocaleDateString('pt-BR')} até ${billEndDate.toLocaleDateString('pt-BR')}`);
-    console.log(`   Dia de fechamento: ${card.closingDay}`);
+    console.log(`   isNavigating: ${isNavigating}`);
+    console.log(`   Transações de crédito incluídas: R$ ${creditTransactionsTotal.toFixed(2)}`);
 
     // Somar parcelas ativas deste cartão no mês da fatura
-    console.log(`\n💳 Analisando ${installments.filter(i => i.cardId === card.id).length} parcelamentos do cartão "${card.name}":`);
-
     const installmentsFiltered = installments.filter(inst => {
         if (inst.cardId !== card.id) return false;
 
         // Para parcelamentos antigos sem startMonth/startYear, usar lógica antiga
         if (inst.startMonth === undefined || inst.startYear === undefined) {
-            console.log(`   ⚠️ "${inst.description}": SEM DATA DE INÍCIO - usando lógica antiga`);
             return inst.currentInstallment <= inst.totalInstallments;
         }
 
@@ -1342,7 +1333,6 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 
         // Se o mês da fatura é antes do início do parcelamento, não incluir
         if (monthsSinceStart < 0) {
-            console.log(`   ❌ "${inst.description}": Ainda não começou (início: ${inst.startMonth + 1}/${inst.startYear})`);
             return false;
         }
 
@@ -1354,13 +1344,6 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         const installmentValue = inst.totalValue / inst.totalInstallments;
         const isValid = installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
 
-        if (isValid) {
-            console.log(`   ✅ "${inst.description}": Parcela ${installmentForThisMonth}/${inst.totalInstallments} = R$ ${installmentValue.toFixed(2)}`);
-            console.log(`      Início: ${inst.startMonth + 1}/${inst.startYear}, Meses desde início: ${monthsSinceStart}`);
-        } else {
-            console.log(`   ❌ "${inst.description}": Parcela ${installmentForThisMonth}/${inst.totalInstallments} - FORA DO RANGE`);
-        }
-
         return isValid;
     });
 
@@ -1368,29 +1351,17 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
         return sum + installmentValue;
     }, 0);
-    console.log(`\n💰 TOTAL PARCELAS: R$ ${installmentsTotal.toFixed(2)} (${installmentsFiltered.length} parcelas ativas)`);
 
     // Somar assinaturas ativas deste cartão
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
 
-    if (subscriptionsFiltered.length > 0) {
-        console.log(`\n🔄 Assinaturas ativas: ${subscriptionsFiltered.length}`);
-        subscriptionsFiltered.forEach(sub => {
-            console.log(`   ✅ "${sub.name}": R$ ${sub.value.toFixed(2)}/mês`);
-        });
-    }
-
     const totalBill = expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 
     // Resumo final da fatura
-    console.log(`\n📊 ===== RESUMO DA FATURA ${card.name} - ${billMonth + 1}/${billYear} =====`);
-    console.log(`   💵 Gastos avulsos (cardExpenses): R$ ${expensesTotal.toFixed(2)}`);
-    console.log(`   💳 Compras em crédito: R$ ${creditTransactionsTotal.toFixed(2)}`);
-    console.log(`   📦 Parcelas (${installmentsFiltered.length}): R$ ${installmentsTotal.toFixed(2)}`);
-    console.log(`   🔄 Assinaturas (${subscriptionsFiltered.length}): R$ ${subscriptionsTotal.toFixed(2)}`);
-    console.log(`   🧾 TOTAL DA FATURA: R$ ${totalBill.toFixed(2)}`);
-    console.log(`========================================\n`);
+    console.log(`   Parcelas: R$ ${installmentsTotal.toFixed(2)} (${installmentsFiltered.length})`);
+    console.log(`   Assinaturas: R$ ${subscriptionsTotal.toFixed(2)} (${subscriptionsFiltered.length})`);
+    console.log(`   TOTAL FATURA: R$ ${totalBill.toFixed(2)}`);
 
     return totalBill;
 }
