@@ -74,45 +74,80 @@ class CustomSelect {
     }
 
     bindEvents() {
-        // Toggle dropdown (com suporte a touch)
-        this.trigger.addEventListener('click', (e) => {
+        // Toggle dropdown com suporte a click e touch
+        const handleTriggerInteraction = (e) => {
+            // Ignorar se já foi processado por outro evento
+            if (e.pointerType === 'touch' && e.type === 'click') return;
+
             e.preventDefault();
             e.stopPropagation();
             this.toggle();
-        });
+        };
 
-        // Prevenir double-tap zoom em iOS
-        this.trigger.addEventListener('touchend', (e) => {
-            e.preventDefault();
+        this.trigger.addEventListener('click', handleTriggerInteraction);
+        this.trigger.addEventListener('touchend', handleTriggerInteraction, { passive: false });
+
+        // Suporte a pointer events (fallback)
+        this.trigger.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'touch') {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         }, { passive: false });
 
-        // Selecionar opção (com suporte a touch)
+        // Selecionar opção com click
         this.dropdown.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const option = e.target.closest('.custom-select-option');
             if (option && !option.classList.contains('disabled')) {
                 this.selectOption(parseInt(option.dataset.index));
             }
         });
 
-        // Suporte a touch para seleção de opções
-        this.dropdown.addEventListener('touchend', (e) => {
+        // Selecionar opção com touch (mais confiável que touchend sozinho)
+        this.dropdown.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const option = e.target.closest('.custom-select-option');
             if (option && !option.classList.contains('disabled')) {
+                option.classList.add('touch-active');
+            }
+        }, { passive: false });
+
+        this.dropdown.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const option = document.querySelector('.custom-select-option.touch-active');
+            if (option && !option.classList.contains('disabled')) {
+                option.classList.remove('touch-active');
                 this.selectOption(parseInt(option.dataset.index));
             }
         }, { passive: false });
 
-        // Fechar ao clicar/tocar fora
+        // Suporte a pointer events como fallback
+        this.dropdown.addEventListener('pointerup', (e) => {
+            if (e.pointerType === 'touch') {
+                const option = e.target.closest('.custom-select-option');
+                if (option && !option.classList.contains('disabled')) {
+                    this.selectOption(parseInt(option.dataset.index));
+                }
+            }
+        }, { passive: false });
+
+        // Fechar ao clicar/tocar fora - versão melhorada
         const closeOnOutsideClick = (e) => {
+            // Não fechar se clicou dentro do select
             if (!this.customSelect.contains(e.target)) {
-                this.close();
+                // Aguardar um pouco para evitar conflitos com touchend
+                setTimeout(() => {
+                    if (this.isOpen) {
+                        this.close();
+                    }
+                }, 100);
             }
         };
 
         document.addEventListener('click', closeOnOutsideClick);
-        document.addEventListener('touchstart', closeOnOutsideClick);
+        document.addEventListener('touchend', closeOnOutsideClick, true);
 
         // Keyboard navigation
         this.customSelect.addEventListener('keydown', (e) => {

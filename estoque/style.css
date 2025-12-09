@@ -379,6 +379,13 @@
 
 #filamentModal .form-row {
     gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#filamentModal .form-row > .form-group {
+    flex: 1;
+    min-width: 150px;
 }
 
 #filamentModal .form-textarea {
@@ -499,6 +506,22 @@
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 0.75rem;
     }
+
+    /* Melhorias para formulários mobile */
+    #filamentModal .form-row {
+        flex-direction: column;
+    }
+
+    #filamentModal .form-row > .form-group {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    #filamentModal .form-select,
+    #filamentModal .form-input,
+    #filamentModal .form-textarea {
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -545,6 +568,31 @@
 
     .action-buttons button {
         width: 100%;
+    }
+
+    /* Formulários extra compactos para mobile */
+    #filamentModal .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    #filamentModal .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    #filamentModal .form-select,
+    #filamentModal .form-input {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .modal-content {
+        max-width: 95vw;
+        margin: 0 auto;
+    }
+
+    #filamentModal .modal-body {
+        padding: 0.75rem;
     }
 }
 
@@ -910,9 +958,17 @@
     -webkit-user-select: none;
 }
 
+/* Estado de toque para mobile */
+.custom-select-option.touch-active {
+    background: rgba(0, 212, 255, 0.25);
+    color: var(--neon-blue);
+    border-left-color: var(--neon-blue);
+}
+
 @media (max-width: 768px) {
     .custom-select {
         z-index: 1000;
+        position: relative;
     }
 
     .custom-select-trigger {
@@ -922,9 +978,14 @@
     }
 
     .custom-select-dropdown {
+        position: absolute;
         max-height: 250px;
         -webkit-overflow-scrolling: touch;
-        z-index: 10000;
+        z-index: 10001;
+        width: 100%;
+        box-sizing: border-box;
+        left: 0;
+        right: 0;
     }
 
     .custom-select.open .custom-select-dropdown {
@@ -956,17 +1017,42 @@
 }
 
 @media (max-width: 480px) {
+    .custom-select {
+        position: relative;
+    }
+
     .custom-select-trigger {
         padding: 1rem;
         font-size: 0.9rem;
+        min-height: 48px;
     }
 
     .custom-select-option {
         padding: 1rem;
         font-size: 0.9rem;
+        min-height: 44px;
+    }
+
+    .custom-select-dropdown {
+        position: absolute;
+        z-index: 10001;
+        width: 100%;
+        box-sizing: border-box;
+        left: 0;
+        right: 0;
+        max-height: 240px;
+        -webkit-overflow-scrolling: touch;
     }
 
     .custom-select.open .custom-select-dropdown {
-        max-height: 240px;
+        max-height: 260px;
+    }
+
+    .custom-select-option:hover {
+        padding-left: 1rem;
+    }
+
+    .custom-select-option.touch-active {
+        background: rgba(0, 212, 255, 0.25);
     }
 }
