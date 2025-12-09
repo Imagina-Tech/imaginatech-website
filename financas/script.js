@@ -452,7 +452,7 @@ async function handleTransactionSubmit(e) {
         }
 
         // ⚠️ Validar se a data está dentro do período da fatura
-        // Lógica correta: Se fechamento é 20, período é 21/(mês-1) até 20/mês
+        // Fatura aberta: DIA (closingDay+1) do mês visualizado até DIA FECHAMENTO do mês seguinte
         const transactionDate = new Date(date + 'T12:00:00');
         const today = new Date();
         const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
@@ -461,25 +461,34 @@ async function handleTransactionSubmit(e) {
         let billStartDate, billEndDate;
 
         if (typeof currentDisplayMonth !== 'undefined') {
-            // Navegando: período é 21/(mês-1) até 20/mês
-            billStartDate = new Date(currentYear, currentMonth - 1, selectedCard.closingDay + 1);
-            billEndDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
-            if (currentMonth === 0) {
-                billStartDate = new Date(currentYear - 1, 11, selectedCard.closingDay + 1);
+            // Navegando: fatura aberta no mês visualizado
+            billStartDate = new Date(currentYear, currentMonth, selectedCard.closingDay + 1);
+            let nextMonth = currentMonth + 1;
+            let nextYear = currentYear;
+            if (nextMonth > 11) {
+                nextMonth = 0;
+                nextYear++;
             }
+            billEndDate = new Date(nextYear, nextMonth, selectedCard.closingDay);
         } else {
             // Mês atual: verificar se já passou do fechamento
             if (today.getDate() < selectedCard.closingDay) {
-                // Ainda no período: 21/(mês-1) até 20/mês
+                // Fatura aberta é do mês atual
                 billStartDate = new Date(currentYear, currentMonth - 1, selectedCard.closingDay + 1);
                 billEndDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
                 if (currentMonth === 0) {
                     billStartDate = new Date(currentYear - 1, 11, selectedCard.closingDay + 1);
                 }
             } else {
-                // Já passou do fechamento: 21/mês até 20/(mês+1)
+                // Fatura aberta é do próximo mês
                 billStartDate = new Date(currentYear, currentMonth, selectedCard.closingDay + 1);
-                billEndDate = new Date(currentYear, currentMonth + 1, selectedCard.closingDay);
+                let nextMonth = currentMonth + 1;
+                let nextYear = currentYear;
+                if (nextMonth > 11) {
+                    nextMonth = 0;
+                    nextYear++;
+                }
+                billEndDate = new Date(nextYear, nextMonth, selectedCard.closingDay);
             }
         }
 
@@ -2353,10 +2362,10 @@ function openTransactionModal() {
     currentTransactionType = 'income';
     currentPaymentMethod = 'debit';
 
-    // Reset credit card dropdown explicitly
+    // Reset credit card dropdown explicitly and populate with cards
     const transactionCardSelect = document.getElementById('transactionCard');
-    transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
     transactionCardSelect.value = '';
+    populateTransactionCardOptions();
 
     selectTransactionType('income');
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
@@ -2696,26 +2705,23 @@ function updateDefaultDateForCard(cardId) {
 
     // Se está navegando entre meses
     if (typeof currentDisplayMonth !== 'undefined') {
-        // Período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
-        billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1); // Dia após fechamento anterior
-        if (currentMonth === 0) {
-            billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia após fechamento no dezembro anterior
-        }
+        // Fatura aberta: DIA (closingDay+1) do mês visualizado até fechamento do mês seguinte
+        billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
     } else {
         // Usando lógica do mês atual
         if (today.getDate() < card.closingDay) {
-            // Ainda no período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
+            // Fatura aberta é do mês atual
             billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
             if (currentMonth === 0) {
                 billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1);
             }
         } else {
-            // Já passou do fechamento: DIA (closingDay+1)/mês até dia_fechamento/(mês+1)
+            // Fatura aberta é do próximo mês
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
         }
     }
 
-    // Usar primeira data válida do período (dia após o fechamento anterior)
+    // Usar primeira data válida do período
     const defaultDate = billStartDate.toISOString().split('T')[0];
     document.getElementById('date').value = defaultDate;
 
