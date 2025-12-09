@@ -436,6 +436,7 @@ async function handleTransactionSubmit(e) {
 
     // Validar cartão de crédito se for transação no crédito (tanto saída quanto entrada/reembolso)
     let selectedCardId = null;
+    let selectedCard = null;
     if (currentPaymentMethod === 'credit') {
         selectedCardId = document.getElementById('transactionCard').value;
         if (!selectedCardId) {
@@ -443,11 +444,44 @@ async function handleTransactionSubmit(e) {
             return;
         }
         // Validar que o cartão existe
-        const cardExists = creditCards.find(c => c.id === selectedCardId);
-        if (!cardExists) {
+        selectedCard = creditCards.find(c => c.id === selectedCardId);
+        if (!selectedCard) {
             console.error('❌ Cartão selecionado não encontrado:', selectedCardId);
             showToast('Cartão inválido. Recarregue a página e tente novamente', 'error');
             return;
+        }
+
+        // ⚠️ Validar se a data está dentro do período da fatura
+        const transactionDate = new Date(date + 'T12:00:00');
+        const today = new Date();
+        const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
+        const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
+
+        let billStartDate, billEndDate;
+        if (typeof currentDisplayMonth !== 'undefined') {
+            billStartDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
+            billEndDate = new Date(currentYear, currentMonth + 1, selectedCard.closingDay - 1);
+        } else {
+            if (today.getDate() >= selectedCard.closingDay) {
+                billStartDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
+                billEndDate = new Date(currentYear, currentMonth + 1, selectedCard.closingDay - 1);
+            } else {
+                billStartDate = new Date(currentYear, currentMonth - 1, selectedCard.closingDay);
+                billEndDate = new Date(currentYear, currentMonth, selectedCard.closingDay - 1);
+            }
+        }
+
+        // Avisar se a data está fora do período
+        if (transactionDate < billStartDate || transactionDate > billEndDate) {
+            const startStr = billStartDate.toLocaleDateString('pt-BR');
+            const endStr = billEndDate.toLocaleDateString('pt-BR');
+            const warningMsg = `⚠️ ATENÇÃO: A data (${new Date(date).toLocaleDateString('pt-BR')}) está FORA do período da fatura de "${selectedCard.name}" (${startStr} a ${endStr}). A transação não aparecerá na fatura deste mês! Deseja continuar?`;
+
+            console.warn(`⚠️ [DATA FORA DO PERÍODO] Transação de ${date} para cartão "${selectedCard.name}"`);
+
+            if (!confirm(warningMsg)) {
+                return;
+            }
         }
     }
 
@@ -2587,6 +2621,54 @@ function populateTransactionCardOptions() {
 
     console.log('✅ Dropdown preenchido com', select.options.length - 1, 'cartões');
 }
+
+// Função para atualizar data padrão quando cartão é selecionado
+function updateDefaultDateForCard(cardId) {
+    if (!cardId) {
+        // Se nenhum cartão selecionado, usar hoje
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        return;
+    }
+
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    // Calcular o período da fatura deste cartão
+    const today = new Date();
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
+
+    let billStartDate;
+
+    // Se está navegando entre meses
+    if (typeof currentDisplayMonth !== 'undefined') {
+        billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+    } else {
+        // Usando lógica do mês atual
+        if (today.getDate() >= card.closingDay) {
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay);
+        } else {
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay);
+        }
+    }
+
+    // Usar primeira data válida do período (closingDay do mês)
+    const defaultDate = billStartDate.toISOString().split('T')[0];
+    document.getElementById('date').value = defaultDate;
+
+    console.log(`📅 [updateDefaultDateForCard] Cartão "${card.name}" - Período começa em: ${defaultDate}`);
+}
+
+// Adicionar event listener ao dropdown de cartões
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'transactionCard') {
+        const cardId = e.target.value;
+        if (cardId) {
+            updateDefaultDateForCard(cardId);
+        }
+    }
+}, true);
 
 // Close modal when clicking outside
 document.addEventListener('click', (e) => {
