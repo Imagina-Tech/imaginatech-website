@@ -362,112 +362,35 @@
 }
 
 /* Ajustes específicos para o modal de filamento */
-#filamentModal {
-    padding: 1rem !important;
-}
-
 #filamentModal .modal-content {
-    max-height: calc(100vh - 2rem);
+    max-width: 700px;
+    max-height: 90vh;
     overflow-y: auto;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-#filamentModal form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
 }
 
 #filamentModal .modal-body {
     padding: 1rem;
+    max-height: calc(90vh - 200px);
     overflow-y: auto;
-    overflow-x: hidden;
-    flex: 1;
-    width: 100%;
-}
-
-/* Modal header e footer */
-#filamentModal .modal-header {
-    flex-shrink: 0;
-    padding: 1.5rem 1rem;
-    border-bottom: 1px solid var(--glass-border);
-}
-
-#filamentModal .modal-footer {
-    flex-shrink: 0;
-    padding: 1rem;
-    border-top: 1px solid var(--glass-border);
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
-
-/* Garantir que dropdowns não sejam cortados */
-#filamentModal .custom-select {
-    position: relative !important;
-    z-index: 10;
-}
-
-#filamentModal .custom-select.open {
-    position: relative !important;
-    z-index: 100;
-}
-
-#filamentModal .custom-select.open .custom-select-dropdown {
-    position: fixed !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    z-index: 100001 !important;
 }
 
 #filamentModal .form-group {
     margin-bottom: 0.75rem;
-    width: 100%;
-    pointer-events: auto;
 }
 
 #filamentModal .form-row {
     gap: 0.75rem;
     display: flex;
     flex-wrap: wrap;
-    width: 100%;
 }
 
 #filamentModal .form-row > .form-group {
     flex: 1;
     min-width: 150px;
-    width: auto;
 }
 
 #filamentModal .form-textarea {
     min-height: 60px;
-}
-
-#filamentModal .form-select,
-#filamentModal .form-input,
-#filamentModal .form-textarea {
-    pointer-events: auto !important;
-    cursor: text !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    display: block !important;
-}
-
-/* Garantir que inputs de cor sejam acessíveis */
-#filamentColor {
-    pointer-events: auto !important;
-    -webkit-user-select: text !important;
-    user-select: text !important;
-}
-
-/* Garantir que inputs numéricos sejam acessíveis */
-#filamentWeight {
-    pointer-events: auto !important;
 }
 
 /* ===========================
@@ -1164,6 +1087,32 @@
 }
 
 @media (max-width: 768px) {
+    #filamentModal .modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+
+    #filamentModal .modal-body {
+        max-height: calc(95vh - 180px);
+    }
+
+    /* Melhorias para formulários mobile */
+    #filamentModal .form-row {
+        flex-direction: column;
+    }
+
+    #filamentModal .form-row > .form-group {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    #filamentModal .form-select,
+    #filamentModal .form-input,
+    #filamentModal .form-textarea {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
     .custom-select {
         position: relative;
     }
@@ -1198,27 +1147,38 @@
         min-height: 48px;
         padding: 0.9rem 1rem;
         font-size: 0.95rem;
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .custom-select-option:hover {
-        padding-left: 1rem;
-    }
-
-    .custom-select-option.selected::after {
-        font-size: 1.3em;
     }
 
     .custom-select-dropdown::-webkit-scrollbar {
         width: 12px;
     }
-
-    .custom-select.open .custom-select-option {
-        animation: none;
-    }
 }
 
 @media (max-width: 480px) {
+    /* Modal em mobile */
+    #filamentModal {
+        padding: 0.5rem !important;
+    }
+
+    #filamentModal .modal-content {
+        max-width: 100%;
+        max-height: calc(100vh - 1rem);
+    }
+
+    #filamentModal .modal-body {
+        max-height: calc(100vh - 180px - 1rem);
+    }
+
+    /* Formulários em mobile */
+    #filamentModal .form-select,
+    #filamentModal .form-input,
+    #filamentModal .form-textarea {
+        font-size: 16px;
+        min-height: 48px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     .custom-select {
         position: relative;
     }
@@ -1231,6 +1191,8 @@
         padding: 1rem;
         font-size: 0.9rem;
         min-height: 48px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .custom-select-option {

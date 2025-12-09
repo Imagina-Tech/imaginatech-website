@@ -87,13 +87,6 @@ class CustomSelect {
         this.trigger.addEventListener('click', handleTriggerInteraction);
         this.trigger.addEventListener('touchend', handleTriggerInteraction, { passive: false });
 
-        // Reposicionar dropdown ao redimensionar a janela
-        window.addEventListener('resize', () => {
-            if (this.isOpen) {
-                this.positionDropdown();
-            }
-        });
-
         // Suporte a pointer events (fallback)
         this.trigger.addEventListener('pointerdown', (e) => {
             if (e.pointerType === 'touch') {
@@ -193,38 +186,10 @@ class CustomSelect {
         this.customSelect.classList.add('open');
         this.trigger.setAttribute('aria-expanded', 'true');
 
-        // Posicionar dropdown corretamente em mobile
-        setTimeout(() => {
-            this.positionDropdown();
-        }, 50);
-
         // Scroll para opção selecionada
         const selectedOption = this.dropdown.querySelector('.selected');
         if (selectedOption) {
             selectedOption.scrollIntoView({ block: 'nearest' });
-        }
-    }
-
-    positionDropdown() {
-        // Se o dropdown está usando position: fixed (mobile), calcular posição correta
-        if (this.dropdown.style.position === 'fixed' || window.getComputedStyle(this.dropdown).position === 'fixed') {
-            const triggerRect = this.trigger.getBoundingClientRect();
-            const isMobile = window.innerWidth <= 480;
-
-            if (isMobile) {
-                // Em mobile, usar full width com margens
-                this.dropdown.style.width = 'calc(100% - 1.5rem)';
-                this.dropdown.style.left = '0.75rem';
-                this.dropdown.style.right = '0.75rem';
-            } else {
-                // Em tablet, alinhar com o trigger
-                this.dropdown.style.width = this.trigger.offsetWidth + 'px';
-                this.dropdown.style.left = triggerRect.left + 'px';
-                this.dropdown.style.right = 'auto';
-            }
-
-            // Posicionar abaixo do trigger
-            this.dropdown.style.top = (triggerRect.bottom + 5) + 'px';
         }
     }
 

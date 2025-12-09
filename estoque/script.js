@@ -321,26 +321,6 @@ function openAddFilamentModal() {
 
     // Abrir modal
     document.getElementById('filamentModal').classList.add('active');
-
-    // Reinicializar custom selects após um pequeno delay
-    setTimeout(() => {
-        // Destruir custom selects existentes
-        const existingCustomSelects = document.querySelectorAll('#filamentModal .custom-select');
-        existingCustomSelects.forEach(cs => {
-            const parent = cs.parentNode;
-            const originalSelect = cs.previousElementSibling;
-            if (originalSelect && originalSelect.tagName === 'SELECT') {
-                originalSelect.style.display = '';
-                delete originalSelect.dataset.customized;
-            }
-            cs.remove();
-        });
-
-        // Reinicializar custom selects
-        if (window.initCustomSelects) {
-            window.initCustomSelects();
-        }
-    }, 50);
 }
 
 function editFilament(id) {
@@ -389,26 +369,6 @@ function editFilament(id) {
 
     // Abrir modal
     document.getElementById('filamentModal').classList.add('active');
-
-    // Atualizar custom selects após um pequeno delay
-    setTimeout(() => {
-        // Destruir custom selects existentes
-        const existingCustomSelects = document.querySelectorAll('#filamentModal .custom-select');
-        existingCustomSelects.forEach(cs => {
-            const parent = cs.parentNode;
-            const originalSelect = cs.previousElementSibling;
-            if (originalSelect && originalSelect.tagName === 'SELECT') {
-                originalSelect.style.display = '';
-                delete originalSelect.dataset.customized;
-            }
-            cs.remove();
-        });
-
-        // Reinicializar custom selects
-        if (window.initCustomSelects) {
-            window.initCustomSelects();
-        }
-    }, 50);
 }
 
 function previewImage(event) {
