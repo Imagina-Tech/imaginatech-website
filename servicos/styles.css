@@ -2732,11 +2732,23 @@ input[type="file"]::file-selector-button {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
         gap: 1rem; 
     }
-    .services-grid { 
-        grid-template-columns: 1fr; 
-        padding: 0 0.5rem; 
+    .services-grid {
+        grid-template-columns: 1fr;
+        padding: 0 0.5rem;
     }
-    
+
+    /* Form row responsivo */
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
     /* Modal responsivo mobile */
     .modal {
         padding: 0;
@@ -2851,12 +2863,19 @@ input[type="file"]::file-selector-button {
     }
     
     /* Forms mobile */
-    .form-grid { 
+    .form-grid {
         grid-template-columns: 1fr;
         padding: 1rem;
     }
-    .form-row { 
-        grid-template-columns: 1fr; 
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px;
+        min-height: 44px;
     }
     
     /* Upload Progress mobile */
