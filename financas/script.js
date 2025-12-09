@@ -1270,16 +1270,16 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         } else {
             // Já passou do fechamento: DIA (closingDay+1)/mês até dia_fechamento/(mês+1)
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);      // Dia após fechamento deste mês
-            billEndDate = new Date(currentYear, currentMonth + 1, card.closingDay);        // Dia de fechamento do próximo mês
-            billMonth = currentMonth + 1;
-            billYear = currentYear;
-
-            // Ajustar se passar de dezembro
-            if (billMonth > 11) {
-                billMonth = 0;
-                billYear++;
-                billEndDate = new Date(billYear, billMonth, card.closingDay);
+            let nextMonth = currentMonth + 1;
+            let nextYear = currentYear;
+            if (nextMonth > 11) {
+                nextMonth = 0;
+                nextYear++;
             }
+            billEndDate = new Date(nextYear, nextMonth, card.closingDay);        // Dia de fechamento do próximo mês
+            // billMonth é SEMPRE o mês atual para cálculo de parcelamentos
+            billMonth = currentMonth;
+            billYear = currentYear;
         }
     }
 
@@ -1443,7 +1443,7 @@ function showCardBillDetails(cardId) {
         billYear = currentYear;
     } else {
         if (today.getDate() >= card.closingDay) {
-            // Fatura aberta é do próximo mês
+            // Fatura aberta é do próximo mês (período), mas billMonth é sempre currentMonth
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
             let nextMonth = currentMonth + 1;
             let nextYear = currentYear;
@@ -1452,12 +1452,9 @@ function showCardBillDetails(cardId) {
                 nextYear++;
             }
             billEndDate = new Date(nextYear, nextMonth, card.closingDay);
-            billMonth = currentMonth + 1;
+            // billMonth é SEMPRE o mês atual para cálculo de parcelamentos
+            billMonth = currentMonth;
             billYear = currentYear;
-            if (billMonth > 11) {
-                billMonth = 0;
-                billYear++;
-            }
         } else {
             // Fatura aberta é do mês atual
             billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
