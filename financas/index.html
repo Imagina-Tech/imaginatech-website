@@ -340,7 +340,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- CHARTS BOTTOM: Top Categorias + Evolução Semanal + Mini Gauges (Linha 2, Colunas 2-3) -->
+                <!-- CHARTS BOTTOM: Top Categorias + Evolução Semanal (Linha 2, Colunas 2-3) -->
                 <div class="charts-section-bottom">
                     <div class="chart-card">
                         <div class="chart-header">
@@ -355,34 +355,34 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                         <div id="weeklyTrendChart" style="flex: 1;"></div>
                     </div>
+                </div>
 
-                    <!-- Mini Gauges Container -->
-                    <div class="mini-gauges-container">
-                        <div class="mini-chart-card">
-                            <div class="mini-chart-header">
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <h4>Meta Economia</h4>
-                                    <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
-                                        <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
-                                    </button>
-                                </div>
-                                <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                <!-- Mini Gauges Container - Coluna 4, ocupa 2 linhas -->
+                <div class="mini-gauges-container">
+                    <div class="mini-chart-card">
+                        <div class="mini-chart-header">
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <h4>Meta Economia</h4>
+                                <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
+                                    <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
+                                </button>
                             </div>
-                            <div id="savingsGoalChart" style="flex: 1; min-height: 70px;"></div>
+                            <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
                         </div>
+                        <div id="savingsGoalChart" style="flex: 1; min-height: 50px;"></div>
+                    </div>
 
-                        <div class="mini-chart-card">
-                            <div class="mini-chart-header">
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <h4>Limite Gastos</h4>
-                                    <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
-                                        <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
-                                    </button>
-                                </div>
-                                <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+                    <div class="mini-chart-card">
+                        <div class="mini-chart-header">
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <h4>Limite Gastos</h4>
+                                <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
+                                    <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
+                                </button>
                             </div>
-                            <div id="expenseLimitChart" style="flex: 1; min-height: 70px;"></div>
+                            <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
                         </div>
+                        <div id="expenseLimitChart" style="flex: 1; min-height: 50px;"></div>
                     </div>
                 </div>
             </div>
