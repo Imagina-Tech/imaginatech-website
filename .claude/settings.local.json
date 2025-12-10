@@ -11,7 +11,9 @@
       "Bash(done)",
       "Bash(git pull:*)",
       "Bash(ls:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(for func in changeMonth closeListModal openKPIList createParticles)",
+      "Bash(do echo -n \"$func: \")"
     ],
     "deny": [],
     "ask": []

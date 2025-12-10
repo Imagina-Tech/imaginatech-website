@@ -1162,54 +1162,88 @@ async function updateProjectionStatus(id, newStatus) {
         }
 
         const oldStatus = projection.status;
+        console.log(`[Projeção Status] ID: ${id}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
 
         // Se marcando como "received", criar transação de entrada
         if (newStatus === 'received' && oldStatus !== 'received') {
-            // Verificar se já existe transação vinculada a esta projeção
-            const existingTransaction = transactions.find(t =>
-                t.description === projection.description &&
-                t.type === 'income' &&
-                t.date === projection.date &&
-                t.value === projection.value
-            );
+            console.log(`[Projeção] Procurando transação vinculada a: "${projection.description}"`);
 
+            // Verificar se já existe transação vinculada a esta projeção
+            // Preferir procurar por projectionId se houver
+            let existingTransaction = transactions.find(t => t.projectionId === id);
+
+            // Fallback: procurar por descrição, data, valor e categoria
             if (!existingTransaction) {
+                existingTransaction = transactions.find(t =>
+                    t.type === 'income' &&
+                    t.category === 'Projeção Recebida' &&
+                    t.date === projection.date &&
+                    t.value === projection.value &&
+                    (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
+                );
+            }
+
+            if (existingTransaction) {
+                console.log(`[Projeção] Transação já existe: ${existingTransaction.id}`);
+            } else {
+                console.log(`[Projeção] Criando nova transação de entrada para: "${projection.description}"`);
+
                 // Criar nova transação de entrada
-                await db.collection('transactions').add({
+                // IMPORTANTE: Explicitar paymentMethod e cardId como null para evitar contar em faturas de crédito
+                const newTransaction = {
                     userId: activeUserId,
                     type: 'income',
-                    description: projection.description,
+                    description: `[Projeção] ${projection.description}`,
                     value: projection.value,
                     category: 'Projeção Recebida',
                     date: projection.date,
                     paymentMethod: 'debit',
+                    cardId: null,  // EXPLICITAR: não é transação de crédito
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     projectionId: id  // Link para rastrear a origem
-                });
+                };
+
+                const docRef = await db.collection('transactions').add(newTransaction);
+                console.log(`[Projeção] Transação criada com sucesso: ${docRef.id}`);
             }
         }
         // Se marcando como "pending", remover transação vinculada (se houver)
         else if (newStatus === 'pending' && oldStatus === 'received') {
+            console.log(`[Projeção] Procurando transação vinculada para deletar`);
+
             // Procurar e deletar transação vinculada
-            const linkedTransaction = transactions.find(t =>
-                t.projectionId === id ||
-                (t.description === projection.description &&
-                 t.type === 'income' &&
-                 t.date === projection.date &&
-                 t.value === projection.value &&
-                 t.category === 'Projeção Recebida')
-            );
+            // Preferir procurar por projectionId se houver
+            let linkedTransaction = transactions.find(t => t.projectionId === id);
+
+            // Fallback: procurar por descrição, data, valor e categoria
+            if (!linkedTransaction) {
+                linkedTransaction = transactions.find(t =>
+                    t.type === 'income' &&
+                    t.category === 'Projeção Recebida' &&
+                    t.date === projection.date &&
+                    t.value === projection.value &&
+                    (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
+                );
+            }
 
             if (linkedTransaction) {
+                console.log(`[Projeção] Deletando transação: ${linkedTransaction.id}`);
                 await db.collection('transactions').doc(linkedTransaction.id).delete();
+            } else {
+                console.log(`[Projeção] Nenhuma transação vinculada encontrada`);
             }
         }
 
         // Atualizar status da projeção
+        console.log(`[Projeção] Atualizando status no Firestore para: ${newStatus}`);
         await db.collection('projections').doc(id).update({ status: newStatus });
 
+        // Recarregar dados e atualizar displays
+        console.log(`[Projeção] Recarregando dados...`);
         await loadTransactions();
         await loadProjections();
+
+        console.log(`[Projeção] Atualizando KPIs...`);
         updateAllDisplays();
 
         const message = newStatus === 'received'
