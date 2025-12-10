@@ -43,6 +43,35 @@ export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLM
 let availableFilaments = [];
 
 /**
+ * Encontra TODOS os filamentos que correspondem a material + cor
+ * Retorna ordenado por quantidade de estoque (maior primeiro)
+ * @param {string} material - Tipo do material
+ * @param {string} color - Cor do material
+ * @returns {Array} Array de filamentos correspondentes, ordenado por estoque
+ */
+export function findAllMatchingFilaments(material, color) {
+    const matches = availableFilaments.filter(f =>
+        f.type === material &&
+        f.color.toLowerCase() === color.toLowerCase() &&
+        f.weight > 0 // Apenas com estoque
+    );
+
+    // Ordenar por quantidade de estoque (maior primeiro)
+    return matches.sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * Encontra o MELHOR filamento (maior estoque) que corresponde a material + cor
+ * @param {string} material - Tipo do material
+ * @param {string} color - Cor do material
+ * @returns {Object} Filamento com mais estoque, ou null se não encontrar
+ */
+export function findBestFilament(material, color) {
+    const matches = findAllMatchingFilaments(material, color);
+    return matches.length > 0 ? matches[0] : null;
+}
+
+/**
  * Carrega filamentos disponíveis do estoque
  */
 export async function loadAvailableFilaments() {
@@ -112,8 +141,18 @@ export function updateColorDropdown(selectedMaterial) {
         return true;
     });
 
-    // Agrupar por cor (pode haver múltiplos filamentos da mesma cor)
-    const colors = [...new Set(filtered.map(f => f.color))].sort();
+    // Agrupar por cor e encontrar melhor marca para cada cor
+    const colorMap = new Map();
+    filtered.forEach(f => {
+        const color = f.color;
+        if (!colorMap.has(color)) {
+            colorMap.set(color, []);
+        }
+        colorMap.get(color).push(f);
+    });
+
+    // Ordenar cores alfabeticamente
+    const colors = Array.from(colorMap.keys()).sort();
 
     // Atualizar dropdown
     colorSelect.innerHTML = '<option value="">Selecione a cor</option>';
@@ -122,9 +161,17 @@ export function updateColorDropdown(selectedMaterial) {
         colorSelect.innerHTML += '<option value="" disabled>Sem estoque disponível</option>';
     } else {
         colors.forEach(color => {
+            // Encontrar a marca com mais estoque para esta cor
+            const brands = colorMap.get(color);
+            const bestBrand = brands.reduce((best, current) =>
+                current.weight > best.weight ? current : best
+            );
+
+            const brandInfo = brands.length > 1 ? ` (${bestBrand.brand || 'S/marca'} - ${(bestBrand.weight * 1000).toFixed(0)}g)` : '';
+
             const option = document.createElement('option');
             option.value = color.toLowerCase();
-            option.textContent = color;
+            option.textContent = `${color}${brandInfo}`;
             colorSelect.appendChild(option);
         });
     }
@@ -143,11 +190,19 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
         const isReturn = weightInGrams < 0;
         const absWeightInGrams = Math.abs(weightInGrams);
 
-        // Buscar filamento correspondente (não precisa ter estoque se for devolução)
-        const filament = availableFilaments.find(f =>
-            f.type === material &&
-            f.color.toLowerCase() === color.toLowerCase()
-        );
+        // Encontrar o MELHOR filamento (maior estoque) entre todas as marcas
+        // Se for devolução, usar o primeiro encontrado (order não importa)
+        let filament;
+        if (isReturn) {
+            // Para devolução, buscar qualquer filamento correspondente
+            filament = availableFilaments.find(f =>
+                f.type === material &&
+                f.color.toLowerCase() === color.toLowerCase()
+            );
+        } else {
+            // Para dedução, buscar o que tem mais estoque
+            filament = findBestFilament(material, color);
+        }
 
         if (!filament) {
             console.warn('Filamento não encontrado no estoque:', { material, color });
@@ -192,10 +247,8 @@ export function checkStockAvailability(material, color, weightInGrams) {
         return { hasStock: true, available: 0, needed: 0, filament: null };
     }
 
-    const filament = availableFilaments.find(f =>
-        f.type === material &&
-        f.color.toLowerCase() === color.toLowerCase()
-    );
+    // Encontrar o MELHOR filamento (maior estoque) entre todas as marcas
+    const filament = findBestFilament(material, color);
 
     if (!filament) {
         return { hasStock: false, available: 0, needed: weightInGrams, filament: null, notFound: true };
