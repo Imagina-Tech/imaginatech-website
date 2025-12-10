@@ -236,21 +236,63 @@ function showProjectionsList() {
     const modal = document.getElementById('projectionsListModal');
     const content = document.getElementById('projectionsListContent');
 
-    if (!projections || projections.length === 0) {
-        content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma projeção cadastrada</p></div>';
-        modal.classList.add('active');
-        return;
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Projeções de receita do mês
+    const monthProj = projections ? projections.filter(p => {
+        const d = new Date(p.date + 'T12:00:00');
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }) : [];
+
+    // Correção 7: Calcular projeção de saídas (faturas não pagas)
+    const unpaidBillsTotal = creditCards ? creditCards.reduce((sum, card) => {
+        const billValue = typeof calculateCurrentBill === 'function'
+            ? calculateCurrentBill(card, currentMonth, currentYear) : 0;
+        const isPaid = typeof isBillPaid === 'function'
+            ? isBillPaid(card.id, currentMonth, currentYear) : false;
+        return sum + (isPaid ? 0 : billValue);
+    }, 0) : 0;
+
+    // Construir HTML com duas seções: Projeção de Saídas + Projeções de Receita
+    let html = '';
+
+    // Seção: Projeção de Saídas (faturas a pagar)
+    if (creditCards && creditCards.length > 0) {
+        html += `
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px;">
+                <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #ef4444; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-down"></i> Projeção de Saídas
+                </h3>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #ef4444; margin-bottom: 0.5rem;">
+                    ${formatCurrencyDisplay(unpaidBillsTotal)}
+                </div>
+                <small style="color: var(--text-muted);">Faturas de cartão a pagar este mês</small>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+                    ${creditCards.map(card => {
+                        const billValue = typeof calculateCurrentBill === 'function'
+                            ? calculateCurrentBill(card, currentMonth, currentYear) : 0;
+                        const isPaid = typeof isBillPaid === 'function'
+                            ? isBillPaid(card.id, currentMonth, currentYear) : false;
+                        if (billValue === 0) return '';
+                        return `<div style="margin-bottom: 0.25rem;">${card.name}: ${formatCurrencyDisplay(billValue)} ${isPaid ? '<span style="color: #10b981;">(pago)</span>' : ''}</div>`;
+                    }).join('')}
+                </div>
+            </div>
+        `;
     }
 
-    const monthProj = projections.filter(p => {
-        const d = new Date(p.date + 'T12:00:00');
-        return d.getMonth() === currentDisplayMonth && d.getFullYear() === currentDisplayYear;
-    });
+    // Seção: Projeções de Receita
+    html += `
+        <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-arrow-up"></i> Projeções de Receita
+        </h3>
+    `;
 
     if (monthProj.length === 0) {
-        content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma projeção para este mês</p></div>';
+        html += '<div class="empty-state" style="padding: 1rem;"><i class="fas fa-inbox"></i><p>Nenhuma projeção de receita para este mês</p></div>';
     } else {
-        content.innerHTML = monthProj.map(p => `
+        html += monthProj.map(p => `
             <div class="list-item">
                 <div class="list-item-info">
                     <div class="list-item-title">${p.description}</div>
@@ -260,7 +302,7 @@ function showProjectionsList() {
                 </div>
                 <div class="list-item-value income">${formatCurrencyDisplay(p.value)}</div>
                 <div class="list-item-actions">
-                    <button class="btn-icon" onclick="editProjectionAndRefresh('${p.id}')" title="Editar">
+                    <button class="btn-icon" onclick="editProjectionAndRefresh('${p.id}')" title="Editar" style="color: var(--color-neutral);">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn-icon ${p.status === 'pending' ? 'success' : 'warning'}" onclick="toggleProjectionStatus('${p.id}', '${p.status}')" title="${p.status === 'pending' ? 'Marcar como Recebido' : 'Marcar como Pendente'}">
@@ -274,6 +316,7 @@ function showProjectionsList() {
         `).join('');
     }
 
+    content.innerHTML = html;
     modal.classList.add('active');
 }
 

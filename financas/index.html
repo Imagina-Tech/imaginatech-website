@@ -42,6 +42,15 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link rel="stylesheet" href="style.css?v=2024120304">
 </head>
 <body>
+    <!-- Mobile Block Screen -->
+    <div class="mobile-block" id="mobileBlock">
+        <div class="mobile-block-content">
+            <i class="fas fa-desktop"></i>
+            <h1>ESSE DASHBOARD É ACESSÍVEL APENAS EM COMPUTADORES</h1>
+            <p>Por favor, acesse este sistema em um computador ou notebook para uma melhor experiência.</p>
+        </div>
+    </div>
+
     <!-- Cosmic Background -->
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
@@ -199,8 +208,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="kpi-content">
                         <h3>Saídas</h3>
                         <p class="kpi-value" id="totalExpense">R$ 0,00</p>
-                        <p class="kpi-projection" id="totalExpenseProjection" style="font-size: 0.75rem; color: #f59e0b; margin: 0;">+ R$ 0,00</p>
-                        <small class="kpi-subtitle">Atual • <span style="color: #f59e0b;">Projeção cartões</span></small>
+                        <p class="kpi-projection" id="totalExpenseProjection" style="font-size: 0.7rem; color: #f59e0b; margin: 0;">= R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #f59e0b;">Total projetado</span></small>
                     </div>
                 </div>
 
@@ -212,7 +221,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="kpi-content">
                         <h3>Saldo</h3>
                         <p class="kpi-value" id="totalBalance">R$ 0,00</p>
-                        <small class="kpi-subtitle">Acumulado (- investimentos)</small>
+                        <p class="kpi-projection" id="balanceProjection" style="font-size: 0.7rem; color: #3b82f6; margin: 0;">Proj: R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #3b82f6;">Projeção</span></small>
                     </div>
                 </div>
 

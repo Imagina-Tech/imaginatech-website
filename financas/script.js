@@ -1956,17 +1956,33 @@ function showCardBillDetails(cardId) {
         }
     }
 
-    // Coletar todas as transações de crédito do período (separar compras e reembolsos)
+    // Correção 8: Filtrar transações pelo mês correto quando navegando
     const creditExpenses = transactions.filter(t => {
         if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
-        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+
+        if (isNavigating) {
+            // Ao navegar, mostrar apenas transações do mês visualizado
+            return transactionDate.getMonth() === currentMonth &&
+                   transactionDate.getFullYear() === currentYear;
+        } else {
+            // Modo real-time: usar período da fatura
+            return transactionDate >= billStartDate && transactionDate <= billEndDate;
+        }
     });
 
     const creditRefunds = transactions.filter(t => {
         if (t.type !== 'income' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
-        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+
+        if (isNavigating) {
+            // Ao navegar, mostrar apenas transações do mês visualizado
+            return transactionDate.getMonth() === currentMonth &&
+                   transactionDate.getFullYear() === currentYear;
+        } else {
+            // Modo real-time: usar período da fatura
+            return transactionDate >= billStartDate && transactionDate <= billEndDate;
+        }
     });
 
     // Coletar parcelas do período
@@ -2427,13 +2443,22 @@ function updateKPIs() {
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
 
     // Card de Saídas com dois valores
+    // Correção 3: Projeção mostra total = atual + não pago
+    const totalExpenseTotal = totalExpenseActual + totalUnpaidBills;
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpenseActual);
     if (expenseProjectionEl) {
-        expenseProjectionEl.textContent = `+ ${formatCurrencyDisplay(totalExpenseProjection)}`;
-        expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
+        expenseProjectionEl.textContent = `= ${formatCurrencyDisplay(totalExpenseTotal)}`;
+        expenseProjectionEl.style.display = totalUnpaidBills > 0 ? 'block' : 'none';
     }
 
+    // Correção 6: Projeção de saldo = saldo atual - faturas não pagas
+    const balanceProjection = totalBalance - totalUnpaidBills;
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
+    const balanceProjectionEl = document.getElementById('balanceProjection');
+    if (balanceProjectionEl) {
+        balanceProjectionEl.textContent = `Proj: ${formatCurrencyDisplay(balanceProjection)}`;
+        balanceProjectionEl.style.display = totalUnpaidBills > 0 ? 'block' : 'none';
+    }
     if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
 
     // Atualiza o card de parcelamentos com ambos os valores
@@ -3537,8 +3562,34 @@ function initializeSavingsGoalChart() {
     const chartEl = document.querySelector("#savingsGoalChart");
     if (!chartEl) return;
 
-    const totalIncome = getCurrentMonthTotal('income');
-    const totalExpense = getCurrentMonthTotal('expense');
+    // Correção 5: Considerar faturas de cartão nas saídas
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Calcular entradas do mês (excluindo crédito)
+    const totalIncome = transactions
+        .filter(t => {
+            const d = new Date(t.date);
+            return t.type === 'income' && t.paymentMethod !== 'credit' &&
+                   d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Calcular saídas em débito do mês
+    const totalExpenseDebit = transactions
+        .filter(t => {
+            const d = new Date(t.date);
+            return t.type === 'expense' && t.paymentMethod !== 'credit' &&
+                   d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Incluir faturas de cartão (pagas e não pagas) no total de saídas
+    const totalCreditCards = creditCards.reduce((sum, card) => {
+        return sum + calculateCurrentBill(card, currentMonth, currentYear);
+    }, 0);
+
+    const totalExpense = totalExpenseDebit + totalCreditCards;
     const saved = totalIncome - totalExpense;
     const goal = userSettings.savingsGoal || 2000; // Meta de economia configurável
     const percentage = goal > 0 ? Math.min(Math.max((saved / goal) * 100, 0), 100) : 0;

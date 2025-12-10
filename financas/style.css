@@ -34,7 +34,7 @@ VERSÃO: 3.0 - Layout Dashboard Otimizado Desktop
 /* BASE */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-body { font-family: var(--font-family); font-size: var(--font-size-base); line-height: var(--line-height-normal); color: var(--color-text-primary); background: var(--dark-bg); transition: background-color var(--transition-base); overflow-x: hidden; min-height: 100vh; }
+body { font-family: var(--font-family); font-size: var(--font-size-base); line-height: var(--line-height-normal); color: var(--color-text-primary); background: var(--dark-bg); transition: background-color var(--transition-base); overflow: hidden; min-height: 100vh; max-height: 100vh; }
 h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: var(--line-height-tight); color: var(--color-text-primary); }
 h1 { font-size: var(--font-size-3xl); } h2 { font-size: var(--font-size-2xl); } h3 { font-size: var(--font-size-xl); } h4 { font-size: var(--font-size-lg); } h5, h6 { font-size: var(--font-size-base); }
 p { color: var(--color-text-secondary); line-height: var(--line-height-normal); }
@@ -103,7 +103,8 @@ a:hover { color: #2563EB; }
 .main-content {
   max-width: 100%;
   height: calc(100vh - 63px); /* Altura fixa = 100vh - navbar */
-  padding: 0.7rem 1.2rem 0.5rem;
+  max-height: calc(100vh - 63px);
+  padding: 0.5rem 1rem 0.4rem;
   overflow: hidden; /* Remove scroll da página */
   display: grid;
   grid-template-rows: auto 1fr;
@@ -116,8 +117,8 @@ a:hover { color: #2563EB; }
   display: grid;
   grid-template-columns: repeat(8, 1fr) 180px; /* 8 KPIs + Quick Actions matriz 2x2 */
   gap: 0.5rem;
-  height: 130px;
-  margin-bottom: 0.6rem;
+  height: 115px;
+  margin-bottom: 0.5rem;
   position: relative;
   z-index: 5;
   align-items: start;
@@ -128,7 +129,7 @@ a:hover { color: #2563EB; }
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 0.6rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -136,7 +137,7 @@ a:hover { color: #2563EB; }
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  height: 130px;
+  height: 115px;
 }
 .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, currentColor, transparent); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-base); }
 .kpi-card:hover { border-color: transparent; box-shadow: var(--shadow-lg); transform: translateY(-2px); }
@@ -160,10 +161,10 @@ a:hover { color: #2563EB; }
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   grid-template-rows: 1fr 1fr !important;
-  gap: 0.5rem;
+  gap: 0.4rem;
   position: relative;
   z-index: 10;
-  height: 130px;
+  height: 115px;
   width: 100%;
 }
 .btn-action {
@@ -915,4 +916,111 @@ input:focus, select:focus {
     .custom-select.open .custom-select-dropdown {
         max-height: 240px;
     }
+}
+
+/* ===========================
+   MOBILE BLOCK SCREEN
+   =========================== */
+.mobile-block {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--dark-bg);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 2rem;
+}
+
+.mobile-block-content {
+  max-width: 400px;
+}
+
+.mobile-block-content i {
+  font-size: 4rem;
+  color: var(--neon-blue);
+  margin-bottom: 2rem;
+  display: block;
+}
+
+.mobile-block-content h1 {
+  font-size: 1.3rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.mobile-block-content p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+  .mobile-block {
+    display: flex !important;
+  }
+
+  .dashboard,
+  .login-screen,
+  #accountSelectionModal {
+    display: none !important;
+  }
+}
+
+/* ===========================
+   MODAL SCROLLBAR FIX
+   =========================== */
+.modal-list .modal-container {
+  overflow: hidden;
+}
+
+.modal-list .modal-container > div:not(.modal-header) {
+  max-height: calc(80vh - 100px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Scrollbar customizada dentro dos modais */
+.modal-container *::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-container *::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.modal-container *::-webkit-scrollbar-thumb {
+  background: var(--color-text-tertiary);
+  border-radius: 3px;
+}
+
+.modal-container *::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ===========================
+   DESKTOP SCROLL FIX (REFORÇO)
+   =========================== */
+@media (min-width: 1025px) {
+  html {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  .dashboard {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard .main-content {
+    flex: 1;
+    min-height: 0;
+  }
 }
