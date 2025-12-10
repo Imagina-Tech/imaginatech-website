@@ -50,6 +50,23 @@ function changeMonth(direction) {
     if (typeof updateDashboard === 'function') {
         updateDashboard();
     }
+
+    // Reinicializar mini-charts após navegação
+    if (typeof savingsGoalChart !== 'undefined' && savingsGoalChart) {
+        savingsGoalChart.destroy();
+        savingsGoalChart = null;
+    }
+    if (typeof initializeSavingsGoalChart === 'function') {
+        initializeSavingsGoalChart();
+    }
+
+    if (typeof expenseLimitChart !== 'undefined' && expenseLimitChart) {
+        expenseLimitChart.destroy();
+        expenseLimitChart = null;
+    }
+    if (typeof initializeExpenseLimitChart === 'function') {
+        initializeExpenseLimitChart();
+    }
 }
 
 // ===========================

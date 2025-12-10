@@ -2696,8 +2696,8 @@ function initializeCategoryChart() {
     const options = {
         series: data.values,
         chart: {
-            type: 'donut',
-            height: 280,
+            type: 'pie',
+            height: '100%',
             background: 'transparent',
             fontFamily: 'Inter, sans-serif'
         },
@@ -2705,30 +2705,46 @@ function initializeCategoryChart() {
         colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
         plotOptions: {
             pie: {
-                donut: {
-                    labels: {
-                        show: true,
-                        total: {
-                            show: true,
-                            color: '#fff'
-                        }
-                    }
+                offsetY: 0,
+                customScale: 0.85,
+                dataLabels: {
+                    offset: -5,
+                    minAngleToShowLabel: 10
                 }
             }
         },
         legend: {
-            position: 'bottom',
+            show: true,
+            position: 'right',
+            fontSize: '10px',
             labels: {
                 colors: '#94a3b8'
+            },
+            itemMargin: {
+                vertical: 2
+            },
+            formatter: function(seriesName, opts) {
+                return seriesName.length > 12 ? seriesName.substring(0, 12) + '...' : seriesName;
             }
         },
         stroke: {
-            show: false
+            width: 1,
+            colors: ['#1e293b']
         },
         dataLabels: {
             enabled: true,
+            formatter: function(val, opts) {
+                return val.toFixed(0) + '%';
+            },
             style: {
-                colors: ['#1e293b']
+                fontSize: '10px',
+                fontWeight: 600,
+                colors: ['#fff']
+            },
+            dropShadow: {
+                enabled: true,
+                blur: 2,
+                opacity: 0.8
             }
         },
         tooltip: {
@@ -2737,7 +2753,16 @@ function initializeCategoryChart() {
                     return formatCurrencyDisplay(value);
                 }
             }
-        }
+        },
+        responsive: [{
+            breakpoint: 1400,
+            options: {
+                legend: {
+                    position: 'bottom',
+                    fontSize: '9px'
+                }
+            }
+        }]
     };
 
     categoryChart = new ApexCharts(chartEl, options);
@@ -2814,15 +2839,17 @@ function initializeComparisonChart() {
         ],
         chart: {
             type: 'bar',
-            height: 200,
-            fontFamily: 'Inter, sans-serif'
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
         },
         plotOptions: {
             bar: {
                 horizontal: true,
                 distributed: true,
+                barHeight: '55%',
                 dataLabels: {
-                    position: 'top'
+                    position: 'center'
                 }
             }
         },
@@ -2832,23 +2859,25 @@ function initializeComparisonChart() {
             formatter: function (val) {
                 return formatCurrencyDisplay(val);
             },
-            offsetX: 30,
+            offsetX: 0,
             style: {
-                fontSize: '12px',
-                colors: ['#1e293b']
+                fontSize: '13px',
+                fontWeight: 700,
+                colors: ['#fff']
+            },
+            dropShadow: {
+                enabled: true,
+                blur: 2,
+                opacity: 0.5
             }
         },
         xaxis: {
             categories: data.labels,
             labels: {
-                formatter: function (value) {
-                    return 'R$ ' + value.toFixed(0);
-                },
-                style: {
-                    colors: '#64748b',
-                    fontSize: '12px'
-                }
-            }
+                show: false
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
         },
         yaxis: {
             labels: {
@@ -2860,14 +2889,10 @@ function initializeComparisonChart() {
             }
         },
         grid: {
-            borderColor: '#e2e8f0'
+            show: false
         },
         tooltip: {
-            y: {
-                formatter: function (value) {
-                    return formatCurrencyDisplay(value);
-                }
-            }
+            enabled: false
         },
         legend: {
             show: false
@@ -2889,9 +2914,9 @@ function updateComparisonChart() {
 
 // 📊 Obtém dados de comparação entre receitas e despesas por mês
 function getComparisonData() {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    // Usar mês selecionado se disponível
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
     const monthTransactions = transactions.filter(t => {
         const transactionDate = new Date(t.date);
