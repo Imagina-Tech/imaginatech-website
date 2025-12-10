@@ -104,6 +104,7 @@ let editingTransactionId = null;
 let editingSubscriptionId = null;
 let editingInstallmentId = null;
 let editingCardId = null;
+let editingProjectionId = null;
 
 // Multi-user system
 let activeUserId = null; // ID do usuário ativo (pode ser diferente de activeUserId)
@@ -1108,22 +1109,38 @@ async function handleProjectionSubmit(e) {
         return;
     }
 
-    showLoading('Salvando projeção...');
+    showLoading(editingProjectionId ? 'Atualizando projeção...' : 'Salvando projeção...');
 
     try {
-        await db.collection('projections').add({
-            userId: activeUserId,
-            description,
-            value,
-            date,
-            status,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        if (editingProjectionId) {
+            // Atualizar projeção existente
+            await db.collection('projections').doc(editingProjectionId).update({
+                description,
+                value,
+                date,
+                status
+            });
 
-        await loadProjections();
-        updateAllDisplays();
-        closeProjectionModal();
-        showToast('Projeção adicionada com sucesso', 'success');
+            await loadProjections();
+            updateAllDisplays();
+            closeProjectionModal();
+            showToast('Projeção atualizada com sucesso', 'success');
+        } else {
+            // Criar nova projeção
+            await db.collection('projections').add({
+                userId: activeUserId,
+                description,
+                value,
+                date,
+                status,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await loadProjections();
+            updateAllDisplays();
+            closeProjectionModal();
+            showToast('Projeção adicionada com sucesso', 'success');
+        }
     } catch (error) {
         console.error('Erro ao salvar projeção:', error);
         showToast('Erro ao salvar projeção', 'error');
@@ -2577,14 +2594,38 @@ function calculateInstallmentValues() {
 
 // 🎨 Abre modal para adicionar nova projeção
 function openProjectionModal() {
+    editingProjectionId = null;
     document.getElementById('projectionModal').classList.add('active');
     document.getElementById('projectionForm').reset();
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova Projeção';
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('projDate').value = today;
+    document.getElementById('projStatus').value = 'pending';
+}
+
+// 🎨 Abre modal para editar projeção existente
+function editProjection(id) {
+    const projection = projections.find(p => p.id === id);
+    if (!projection) return;
+
+    editingProjectionId = id;
+
+    // Abre o modal
+    document.getElementById('projectionModal').classList.add('active');
+
+    // Atualiza título do modal
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Editar Projeção';
+
+    // Preenche os campos
+    document.getElementById('projDescription').value = projection.description;
+    document.getElementById('projValue').value = formatCurrencyValue(projection.value);
+    document.getElementById('projDate').value = projection.date;
+    document.getElementById('projStatus').value = projection.status || 'pending';
 }
 
 // 🎨 Fecha modal de projeção
 function closeProjectionModal() {
+    editingProjectionId = null;
     document.getElementById('projectionModal').classList.remove('active');
     document.getElementById('projectionForm').reset();
 }

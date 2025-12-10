@@ -255,11 +255,17 @@ function showProjectionsList() {
                 <div class="list-item-info">
                     <div class="list-item-title">${p.description}</div>
                     <div class="list-item-subtitle">
-                        ${formatDate(p.date)} • ${p.status === 'pending' ? 'Pendente' : 'Recebido'}
+                        ${formatDate(p.date)} • <span class="status-badge ${p.status === 'pending' ? 'pending' : 'received'}">${p.status === 'pending' ? 'Pendente' : 'Recebido'}</span>
                     </div>
                 </div>
                 <div class="list-item-value income">${formatCurrencyDisplay(p.value)}</div>
                 <div class="list-item-actions">
+                    <button class="btn-icon" onclick="editProjectionAndRefresh('${p.id}')" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon ${p.status === 'pending' ? 'success' : 'warning'}" onclick="toggleProjectionStatus('${p.id}', '${p.status}')" title="${p.status === 'pending' ? 'Marcar como Recebido' : 'Marcar como Pendente'}">
+                        <i class="fas ${p.status === 'pending' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                    </button>
                     <button class="btn-icon danger" onclick="deleteProjectionAndRefresh('${p.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -373,9 +379,27 @@ async function deleteInstallmentAndRefresh(id) {
     }
 }
 
+async function editProjectionAndRefresh(id) {
+    if (typeof editProjection === 'function') {
+        // Fecha o modal de lista
+        closeListModal('projectionsListModal');
+        // Abre o modal de edição
+        editProjection(id);
+    }
+}
+
 async function deleteProjectionAndRefresh(id) {
     if (typeof deleteProjection === 'function') {
         await deleteProjection(id);
+        showProjectionsList();
+    }
+}
+
+async function toggleProjectionStatus(id, currentStatus) {
+    if (typeof updateProjectionStatus === 'function') {
+        // Alterna entre pending e received
+        const newStatus = currentStatus === 'pending' ? 'received' : 'pending';
+        await updateProjectionStatus(id, newStatus);
         showProjectionsList();
     }
 }
