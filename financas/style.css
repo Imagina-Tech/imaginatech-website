@@ -72,7 +72,7 @@ a:hover { color: #2563EB; }
 .login-header { text-align: center; margin-bottom: var(--spacing-2xl); }
 
 /* NAVBAR */
-.navbar { background: rgba(10,14,26,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 14px 20px; position: sticky; top: 0; z-index: 100; }
+.navbar { background: rgba(10,14,26,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 14px 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 63px; box-sizing: border-box; }
 .navbar-container { max-width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .navbar-left { display: flex; align-items: center; gap: 20px; }
 
@@ -99,16 +99,14 @@ a:hover { color: #2563EB; }
 .btn-logout { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
 .btn-logout:hover { color: #FF0055; border-color: #FF0055; }
 
-/* LAYOUT PRINCIPAL OTIMIZADO - GRID 12 COLUNAS */
+/* LAYOUT PRINCIPAL OTIMIZADO - FLEXBOX */
 .main-content {
   max-width: 100%;
-  height: calc(100vh - 63px); /* Altura fixa = 100vh - navbar */
-  max-height: calc(100vh - 63px);
-  padding: 0.4rem 1rem 0.3rem;
-  overflow: hidden; /* Sem scroll */
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 0;
+  height: 100vh;
+  padding: 63px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
 }
 
@@ -117,8 +115,10 @@ a:hover { color: #2563EB; }
   display: grid;
   grid-template-columns: repeat(8, 1fr) 180px; /* 8 KPIs + Quick Actions matriz 2x2 */
   gap: 0.4rem;
-  height: 100px;
-  margin-bottom: 0.3rem;
+  height: auto;
+  min-height: 85px;
+  flex-shrink: 0; /* Não deixa encolher demais */
+  margin-bottom: 0.5rem;
   position: relative;
   z-index: 1;
   align-items: start;
@@ -137,7 +137,8 @@ a:hover { color: #2563EB; }
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  height: 100px;
+  height: 100%;
+  min-height: 85px;
 }
 .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, currentColor, transparent); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-base); }
 .kpi-card:hover { border-color: transparent; box-shadow: var(--shadow-lg); transform: translateY(-2px); }
@@ -164,7 +165,8 @@ a:hover { color: #2563EB; }
   gap: 0.3rem;
   position: relative;
   z-index: 1;
-  height: 100px;
+  height: 100%;
+  min-height: 85px;
   width: 100%;
 }
 .btn-action {
@@ -204,11 +206,11 @@ a:hover { color: #2563EB; }
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: 0.8fr 1fr 1fr 0.6fr; /* Categoria | Charts médios | Gauges */
-  grid-template-rows: 1fr 1fr; /* 2 linhas */
+  grid-template-rows: repeat(2, minmax(0, 1fr)); /* minmax(0, 1fr) permite encolher */
   gap: 0.5rem;
-  height: 100%;
-  min-height: 0;
-  max-height: 100%;
+  flex: 1; /* Ocupa todo o espaço restante abaixo dos KPIs */
+  min-height: 0; /* Crucial para permitir encolhimento */
+  width: 100%;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -218,14 +220,6 @@ a:hover { color: #2563EB; }
 .chart-main-container {
   grid-column: 1;
   grid-row: 1 / 3;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  max-height: 100%;
 }
 
 /* SEÇÃO DE CHARTS MÉDIOS - Linha 1, colunas 2-3 */
@@ -258,14 +252,27 @@ a:hover { color: #2563EB; }
   overflow: hidden;
   min-height: 0;
   height: 100%;
-  max-height: 100%;
 }
 
-.chart-header {
+/* GRÁFICO PRINCIPAL - container */
+.chart-main-container {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+.chart-header, .mini-chart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.25rem; /* Reduzido para dar espaço ao gráfico */
+  flex-shrink: 0; /* Impede que o header seja esmagado */
 }
 .chart-header h3 {
   font-size: 0.85rem;
@@ -307,11 +314,20 @@ a:hover { color: #2563EB; }
   overflow: hidden;
 }
 
-.mini-chart-header {
+/* Garantir que os containers dos gráficos ocupem o resto do card */
+#cashFlowChart,
+#categoryChart,
+#comparisonChart,
+#topCategoriesChart,
+#weeklyTrendChart,
+#savingsGoalChart,
+#expenseLimitChart {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.4rem;
+  justify-content: center;
 }
 .mini-chart-header h4 {
   font-size: 0.7rem;
@@ -1032,4 +1048,28 @@ input:focus, select:focus {
     flex: 1;
     min-height: 0;
   }
+}
+
+/* ===========================
+   MEDIA QUERY PARA TELAS BAIXAS (Notebooks)
+   =========================== */
+@media (max-height: 800px) {
+  .main-content {
+    padding-top: 55px;
+    padding-bottom: 0.25rem;
+  }
+  .navbar { height: 55px; padding: 5px 20px; }
+  .logo { font-size: 1rem; }
+
+  .top-info-grid {
+    min-height: 75px;
+  }
+  .kpi-card, .quick-actions {
+    min-height: 75px;
+    padding: 0.25rem;
+  }
+  .kpi-icon { width: 20px; height: 20px; font-size: 0.75rem; margin-bottom: 0.1rem; }
+  .kpi-value { font-size: 0.85rem; }
+
+  .chart-header h3 { font-size: 0.75rem; }
 }

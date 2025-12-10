@@ -2564,7 +2564,8 @@ function initializeCashFlowChart() {
         ],
         chart: {
             type: 'area',
-            height: 200,
+            height: '100%',
+            parentHeightOffset: 0,
             toolbar: {
                 show: true,
                 tools: {
@@ -2576,7 +2577,8 @@ function initializeCashFlowChart() {
                     reset: true
                 }
             },
-            fontFamily: 'Inter, sans-serif'
+            fontFamily: 'Inter, sans-serif',
+            redrawOnParentResize: true
         },
         colors: ['#10b981', '#ef4444'],
         dataLabels: {
