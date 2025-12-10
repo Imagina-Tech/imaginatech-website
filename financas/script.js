@@ -2752,6 +2752,26 @@ function formatCurrencyDisplay(value) {
     });
 }
 
+// 📝 Formata input de moeda conforme o usuário digita (onkeyup event)
+function formatCurrency(inputElement) {
+    // Remove tudo que não for número
+    let value = inputElement.value.replace(/\D/g, '');
+
+    if (!value) {
+        inputElement.value = '';
+        return;
+    }
+
+    // Converte para número e divide por 100 (para adicionar os centavos)
+    let numValue = parseInt(value, 10) / 100;
+
+    // Formata para moeda brasileira
+    inputElement.value = numValue.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 // 📝 Formata valor numérico para input (1234.56)
 function formatCurrencyValue(value) {
     // Converte um número para o formato do input (1.234,56)
