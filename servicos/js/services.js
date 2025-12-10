@@ -1687,7 +1687,7 @@ function createServiceCard(service) {
             </div>
             
             <div class="service-footer">
-                ${(service.status === 'retirada' || service.status === 'entregue') && service.clientPhone ?
+                ${(service.status === 'concluido' || service.status === 'retirada' || service.status === 'entregue') && service.clientPhone ?
                     `<button class="btn-whatsapp" onclick="window.contactClient('${escapeHtml(service.clientPhone)}', '${escapeHtml(service.name || '')}', '${service.orderCode || 'N/A'}', '${escapeHtml(service.client || '')}')">
                         <i class="fab fa-whatsapp"></i> Contatar
                     </button>` : ''}

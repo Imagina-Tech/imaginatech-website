@@ -2086,17 +2086,35 @@ export function copyClientDataToDelivery() {
     const clientCPF = document.getElementById('clientCPF')?.value.trim();
     const clientEmail = document.getElementById('clientEmail')?.value.trim();
     const clientPhone = document.getElementById('clientPhone')?.value.trim();
-    
+
     if (!clientName && !clientCPF && !clientEmail && !clientPhone) {
         return showToast('Preencha os dados do cliente primeiro', 'warning');
     }
-    
+
     if (clientName) document.getElementById('fullName').value = clientName;
     if (clientCPF) document.getElementById('cpfCnpj').value = clientCPF;
     if (clientEmail) document.getElementById('email').value = clientEmail;
     if (clientPhone) document.getElementById('telefone').value = clientPhone;
-    
+
     showToast('✅ Dados copiados para a entrega!', 'success');
+}
+
+/**
+ * Copia dados do cliente para os campos de retirada
+ * Preenche: Nome de quem vai retirar e WhatsApp de contato
+ */
+export function copyClientDataToPickup() {
+    const clientName = document.getElementById('clientName')?.value.trim();
+    const clientPhone = document.getElementById('clientPhone')?.value.trim();
+
+    if (!clientName && !clientPhone) {
+        return showToast('Preencha o nome ou telefone do cliente primeiro', 'warning');
+    }
+
+    if (clientName) document.getElementById('pickupName').value = clientName;
+    if (clientPhone) document.getElementById('pickupWhatsapp').value = clientPhone;
+
+    showToast('✅ Dados do cliente copiados para retirada!', 'success');
 }
 
 export async function buscarCEP() {
@@ -2243,6 +2261,7 @@ window.selectClient = selectClient;
 window.formatCPF = formatCPF;
 window.formatCPFCNPJ = formatCPFCNPJ;
 window.copyClientDataToDelivery = copyClientDataToDelivery;
+window.copyClientDataToPickup = copyClientDataToPickup;
 window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
     const { removeFileFromService } = await import('./services.js');
     await removeFileFromService(serviceId, fileIndex, fileUrl);
