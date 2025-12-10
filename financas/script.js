@@ -1150,17 +1150,75 @@ async function handleProjectionSubmit(e) {
 }
 
 // 🔄 Atualiza status de uma projeção
-async function updateProjectionStatus(id, status) {
+// Quando marca como "received", cria uma transação de entrada correspondente
+async function updateProjectionStatus(id, newStatus) {
     showLoading('Atualizando status...');
 
     try {
-        await db.collection('projections').doc(id).update({ status });
+        const projection = projections.find(p => p.id === id);
+        if (!projection) {
+            showToast('Projeção não encontrada', 'error');
+            return;
+        }
+
+        const oldStatus = projection.status;
+
+        // Se marcando como "received", criar transação de entrada
+        if (newStatus === 'received' && oldStatus !== 'received') {
+            // Verificar se já existe transação vinculada a esta projeção
+            const existingTransaction = transactions.find(t =>
+                t.description === projection.description &&
+                t.type === 'income' &&
+                t.date === projection.date &&
+                t.value === projection.value
+            );
+
+            if (!existingTransaction) {
+                // Criar nova transação de entrada
+                await db.collection('transactions').add({
+                    userId: activeUserId,
+                    type: 'income',
+                    description: projection.description,
+                    value: projection.value,
+                    category: 'Projeção Recebida',
+                    date: projection.date,
+                    paymentMethod: 'debit',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    projectionId: id  // Link para rastrear a origem
+                });
+            }
+        }
+        // Se marcando como "pending", remover transação vinculada (se houver)
+        else if (newStatus === 'pending' && oldStatus === 'received') {
+            // Procurar e deletar transação vinculada
+            const linkedTransaction = transactions.find(t =>
+                t.projectionId === id ||
+                (t.description === projection.description &&
+                 t.type === 'income' &&
+                 t.date === projection.date &&
+                 t.value === projection.value &&
+                 t.category === 'Projeção Recebida')
+            );
+
+            if (linkedTransaction) {
+                await db.collection('transactions').doc(linkedTransaction.id).delete();
+            }
+        }
+
+        // Atualizar status da projeção
+        await db.collection('projections').doc(id).update({ status: newStatus });
+
+        await loadTransactions();
         await loadProjections();
         updateAllDisplays();
-        showToast('Status atualizado', 'success');
+
+        const message = newStatus === 'received'
+            ? 'Projeção marcada como recebida! Transação de entrada criada.'
+            : 'Projeção marcada como pendente. Transação removida.';
+        showToast(message, 'success');
     } catch (error) {
         console.error('Erro ao atualizar projeção:', error);
-        showToast('Erro ao atualizar', 'error');
+        showToast('Erro ao atualizar status', 'error');
     } finally {
         hideLoading();
     }
