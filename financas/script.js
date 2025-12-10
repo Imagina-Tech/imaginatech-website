@@ -105,6 +105,19 @@ let editingSubscriptionId = null;
 let editingInstallmentId = null;
 let editingCardId = null;
 let editingProjectionId = null;
+let editingInvestmentId = null;
+
+// Credit card payments tracking
+let creditCardPayments = [];
+
+// Investments
+let investments = [];
+
+// User settings (meta economia, limite gastos)
+let userSettings = {
+    savingsGoal: 2000,
+    expenseLimit: 3000
+};
 
 // Multi-user system
 let activeUserId = null; // ID do usuário ativo (pode ser diferente de activeUserId)
@@ -356,14 +369,19 @@ async function initializeDashboard() {
             loadSubscriptions(),
             loadInstallments(),
             loadProjections(),
-            loadCreditCards()
+            loadCreditCards(),
+            loadCreditCardPayments(),
+            loadInvestments(),
+            loadUserSettings()
         ]);
 
         console.log('Dados carregados:', {
             transactions: transactions.length,
             subscriptions: subscriptions.length,
             installments: installments.length,
-            projections: projections.length
+            projections: projections.length,
+            creditCardPayments: creditCardPayments.length,
+            investments: investments.length
         });
 
         // Initialize charts (com dados ou sem)
@@ -1089,6 +1107,390 @@ async function loadProjections() {
     }
 }
 
+// ===========================
+// CREDIT CARD PAYMENTS - LOAD
+// ===========================
+async function loadCreditCardPayments() {
+    try {
+        console.log('Carregando pagamentos de faturas...');
+        const snapshot = await db.collection('creditCardPayments')
+            .where('userId', '==', activeUserId)
+            .get();
+
+        creditCardPayments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`${creditCardPayments.length} pagamentos de fatura carregados`);
+    } catch (error) {
+        console.error('Erro ao carregar pagamentos de faturas:', error);
+        creditCardPayments = [];
+    }
+}
+
+// Verifica se uma fatura específica está paga
+function isBillPaid(cardId, month, year) {
+    return creditCardPayments.find(p =>
+        p.cardId === cardId &&
+        p.month === month &&
+        p.year === year
+    );
+}
+
+// Marca uma fatura como paga (cria transação automática)
+async function markBillAsPaid(cardId, month, year, billAmount) {
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card) {
+        showToast('Cartão não encontrado', 'error');
+        return;
+    }
+
+    // Verifica se já está paga
+    if (isBillPaid(cardId, month, year)) {
+        showToast('Esta fatura já está marcada como paga', 'warning');
+        return;
+    }
+
+    showLoading('Registrando pagamento...');
+
+    try {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+
+        // 1. Criar transação de débito automática
+        const transactionRef = await db.collection('transactions').add({
+            userId: activeUserId,
+            type: 'expense',
+            description: `Pagamento Fatura ${card.name} - ${monthNames[month]}/${year}`,
+            value: billAmount,
+            category: 'Fatura Cartão',
+            date: todayStr,
+            paymentMethod: 'debit',
+            cardId: null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Criar registro de pagamento
+        await db.collection('creditCardPayments').add({
+            userId: activeUserId,
+            cardId: cardId,
+            month: month,
+            year: year,
+            paidAmount: billAmount,
+            paidDate: todayStr,
+            billAmount: billAmount,
+            transactionId: transactionRef.id,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 3. Recarregar dados
+        await loadTransactions();
+        await loadCreditCardPayments();
+        updateAllDisplays();
+
+        showToast('Fatura marcada como paga! Transação de débito criada.', 'success');
+
+        // Fechar e reabrir modal para atualizar
+        document.getElementById('cardBillDetailsModal').classList.remove('active');
+        setTimeout(() => showCardBillDetails(cardId), 300);
+
+    } catch (error) {
+        console.error('Erro ao marcar fatura como paga:', error);
+        showToast('Erro ao registrar pagamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Desfaz pagamento de fatura
+async function unmarkBillAsPaid(paymentId) {
+    if (!confirm('Deseja realmente desfazer este pagamento? A transação de débito será removida.')) {
+        return;
+    }
+
+    const payment = creditCardPayments.find(p => p.id === paymentId);
+    if (!payment) {
+        showToast('Pagamento não encontrado', 'error');
+        return;
+    }
+
+    showLoading('Removendo pagamento...');
+
+    try {
+        // 1. Deletar transação vinculada
+        if (payment.transactionId) {
+            await db.collection('transactions').doc(payment.transactionId).delete();
+        }
+
+        // 2. Deletar registro de pagamento
+        await db.collection('creditCardPayments').doc(paymentId).delete();
+
+        // 3. Recarregar dados
+        await loadTransactions();
+        await loadCreditCardPayments();
+        updateAllDisplays();
+
+        showToast('Pagamento desfeito! Transação removida.', 'success');
+
+        // Fechar e reabrir modal para atualizar
+        const cardId = payment.cardId;
+        document.getElementById('cardBillDetailsModal').classList.remove('active');
+        setTimeout(() => showCardBillDetails(cardId), 300);
+
+    } catch (error) {
+        console.error('Erro ao desfazer pagamento:', error);
+        showToast('Erro ao remover pagamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// INVESTMENTS - LOAD
+// ===========================
+async function loadInvestments() {
+    try {
+        console.log('Carregando investimentos...');
+        const snapshot = await db.collection('investments')
+            .where('userId', '==', activeUserId)
+            .orderBy('date', 'desc')
+            .get();
+
+        investments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`${investments.length} investimentos carregados`);
+    } catch (error) {
+        console.error('Erro ao carregar investimentos:', error);
+        investments = [];
+    }
+}
+
+// ===========================
+// USER SETTINGS - LOAD
+// ===========================
+async function loadUserSettings() {
+    try {
+        console.log('Carregando configurações do usuário...');
+        const doc = await db.collection('userSettings').doc(activeUserId).get();
+
+        if (doc.exists) {
+            userSettings = { ...userSettings, ...doc.data() };
+        }
+
+        console.log('Configurações carregadas:', userSettings);
+    } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        // Mantém valores padrão
+    }
+}
+
+async function saveUserSettings(newSettings) {
+    try {
+        await db.collection('userSettings').doc(activeUserId).set({
+            ...userSettings,
+            ...newSettings,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        userSettings = { ...userSettings, ...newSettings };
+        showToast('Configurações salvas!', 'success');
+        return true;
+    } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        showToast('Erro ao salvar configurações', 'error');
+        return false;
+    }
+}
+
+// ===========================
+// INVESTMENTS - CRUD & MODAL
+// ===========================
+function openInvestmentsModal() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('investmentDate').value = today;
+    document.getElementById('investmentName').value = '';
+    document.getElementById('investmentValue').value = '';
+    editingInvestmentId = null;
+
+    renderInvestmentsList();
+    document.getElementById('investmentsModal').classList.add('active');
+}
+
+function closeInvestmentsModal() {
+    document.getElementById('investmentsModal').classList.remove('active');
+    editingInvestmentId = null;
+}
+
+function renderInvestmentsList() {
+    const listEl = document.getElementById('investmentsList');
+    const totalEl = document.getElementById('investmentsTotalDisplay');
+
+    const total = investments.reduce((sum, inv) => sum + inv.value, 0);
+    if (totalEl) totalEl.textContent = formatCurrencyDisplay(total);
+
+    if (!investments || investments.length === 0) {
+        listEl.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-piggy-bank"></i>
+                <p>Nenhum investimento cadastrado</p>
+            </div>
+        `;
+        return;
+    }
+
+    listEl.innerHTML = investments.map(inv => `
+        <div class="list-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--color-bg-tertiary); border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--color-border);">
+            <div>
+                <div style="font-weight: 500; color: #fff;">${inv.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${formatDate(inv.date)}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="font-weight: 600; color: #10B981;">${formatCurrencyDisplay(inv.value)}</div>
+                <button class="btn-icon" onclick="editInvestment('${inv.id}')" title="Editar" style="color: var(--color-neutral);">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon danger" onclick="deleteInvestment('${inv.id}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function handleInvestmentSubmit(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('investmentName').value.trim();
+    const valueStr = document.getElementById('investmentValue').value;
+    const date = document.getElementById('investmentDate').value;
+
+    if (!name || !valueStr || !date) {
+        showToast('Preencha todos os campos', 'error');
+        return;
+    }
+
+    const value = parseCurrencyInput(valueStr);
+    if (value <= 0) {
+        showToast('Valor inválido', 'error');
+        return;
+    }
+
+    showLoading(editingInvestmentId ? 'Atualizando...' : 'Salvando...');
+
+    try {
+        if (editingInvestmentId) {
+            await db.collection('investments').doc(editingInvestmentId).update({
+                name,
+                value,
+                date,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Investimento atualizado!', 'success');
+        } else {
+            await db.collection('investments').add({
+                userId: activeUserId,
+                name,
+                value,
+                date,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('Investimento adicionado!', 'success');
+        }
+
+        // Limpar formulário
+        document.getElementById('investmentName').value = '';
+        document.getElementById('investmentValue').value = '';
+        document.getElementById('investmentDate').value = new Date().toISOString().split('T')[0];
+        editingInvestmentId = null;
+
+        await loadInvestments();
+        renderInvestmentsList();
+        updateAllDisplays();
+
+    } catch (error) {
+        console.error('Erro ao salvar investimento:', error);
+        showToast('Erro ao salvar investimento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function editInvestment(id) {
+    const inv = investments.find(i => i.id === id);
+    if (!inv) return;
+
+    document.getElementById('investmentName').value = inv.name;
+    document.getElementById('investmentValue').value = inv.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('investmentDate').value = inv.date;
+    editingInvestmentId = id;
+}
+
+async function deleteInvestment(id) {
+    if (!confirm('Deseja realmente excluir este investimento?')) return;
+
+    showLoading('Excluindo...');
+
+    try {
+        await db.collection('investments').doc(id).delete();
+        await loadInvestments();
+        renderInvestmentsList();
+        updateAllDisplays();
+        showToast('Investimento excluído!', 'success');
+    } catch (error) {
+        console.error('Erro ao excluir investimento:', error);
+        showToast('Erro ao excluir investimento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===========================
+// SETTINGS MODAL
+// ===========================
+function openSettingsModal() {
+    // Preencher com valores atuais
+    document.getElementById('savingsGoalInput').value = userSettings.savingsGoal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('expenseLimitInput').value = userSettings.expenseLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').classList.remove('active');
+}
+
+async function handleSettingsSubmit(e) {
+    e.preventDefault();
+
+    const savingsGoalStr = document.getElementById('savingsGoalInput').value;
+    const expenseLimitStr = document.getElementById('expenseLimitInput').value;
+
+    const savingsGoal = parseCurrencyInput(savingsGoalStr);
+    const expenseLimit = parseCurrencyInput(expenseLimitStr);
+
+    if (savingsGoal <= 0 || expenseLimit <= 0) {
+        showToast('Valores inválidos', 'error');
+        return;
+    }
+
+    showLoading('Salvando...');
+
+    const success = await saveUserSettings({ savingsGoal, expenseLimit });
+
+    if (success) {
+        closeSettingsModal();
+        initializeCharts(); // Atualizar gráficos com novos valores
+    }
+
+    hideLoading();
+}
+
 // 📲 Processa envio do formulário de projeção
 async function handleProjectionSubmit(e) {
     e.preventDefault();
@@ -1596,16 +1998,33 @@ function showCardBillDetails(cardId) {
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
 
+    // Verificar se a fatura está paga
+    const billPayment = isBillPaid(cardId, billMonth, billYear);
+    const isPaid = !!billPayment;
+
     let html = `
         <div style="margin-bottom: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: ${isPaid ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)'}; border-radius: 12px; border: 1px solid ${isPaid ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)'};">
                 <div>
-                    <div style="font-size: 0.875rem; color: var(--text-muted);">Total da Fatura</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${formatCurrencyDisplay(grandTotal)}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                        Total da Fatura
+                        ${isPaid ? `<span style="background: #10b981; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">PAGO</span>` : ''}
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: ${isPaid ? '#10b981' : '#3b82f6'};">${formatCurrencyDisplay(grandTotal)}</div>
                 </div>
-                <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
-                    <div>Período: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
-                    <div>Vencimento: ${card.dueDay}/${billMonth === 11 ? '01' : String(billMonth + 2).padStart(2, '0')}</div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                    <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
+                        <div>Período: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
+                        <div>Vencimento: ${card.dueDay}/${billMonth === 11 ? '01' : String(billMonth + 2).padStart(2, '0')}</div>
+                    </div>
+                    ${grandTotal > 0 ? (isPaid
+                        ? `<button onclick="unmarkBillAsPaid('${billPayment.id}')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                            <i class="fas fa-undo"></i> Desfazer Pagamento
+                           </button>`
+                        : `<button onclick="markBillAsPaid('${cardId}', ${billMonth}, ${billYear}, ${grandTotal})" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                            <i class="fas fa-check"></i> Pagar Fatura
+                           </button>`
+                    ) : ''}
                 </div>
             </div>
         </div>
@@ -1880,6 +2299,7 @@ function updateKPIs() {
         .reduce((sum, t) => sum + t.value, 0);
 
     // Total Expense (current month) - apenas débito direto (crédito é contado na fatura do cartão)
+    // NOTA: Isso já inclui pagamentos de fatura (que são transações de débito automáticas)
     const totalExpenseDebit = currentMonthTransactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
@@ -1893,10 +2313,31 @@ function updateKPIs() {
     }, 0);
     console.log(`   🧾 SOMA TOTAL DAS FATURAS: R$ ${totalCreditCards.toFixed(2)}\n`);
 
-    // Total Expense = débito + faturas dos cartões de crédito
-    const totalExpense = totalExpenseDebit + totalCreditCards;
+    // Calcular faturas pagas e não pagas do mês atual
+    const paidBillsThisMonth = creditCardPayments.filter(p =>
+        p.month === currentMonth && p.year === currentYear
+    );
+    const totalPaidBills = paidBillsThisMonth.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
 
-    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito (exclui reembolsos no crédito)
+    // Faturas não pagas = Total das faturas - Faturas que já foram pagas
+    // Calculamos para cada cartão se a fatura do mês está paga
+    const totalUnpaidBills = creditCards.reduce((sum, card) => {
+        const billValue = calculateCurrentBill(card, currentMonth, currentYear);
+        const isPaid = isBillPaid(card.id, currentMonth, currentYear);
+        return sum + (isPaid ? 0 : billValue);
+    }, 0);
+
+    // Total Expense = débito (saídas efetivas)
+    // Saídas Efetivas = débito direto (já inclui pagamentos de faturas via transação automática)
+    const totalExpenseActual = totalExpenseDebit;
+
+    // Projeção de Saída = faturas não pagas (o que vai sair quando pagar os cartões)
+    const totalExpenseProjection = totalUnpaidBills;
+
+    // Total geral de saídas (atual + projeção)
+    const totalExpense = totalExpenseActual + totalExpenseProjection;
+
+    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito - Investimentos
     const totalIncomeAllTime = transactions
         .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
@@ -1904,25 +2345,34 @@ function updateKPIs() {
     const totalDebitAllTime = transactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
-    // NÃO inclui cartão de crédito porque:
-    // - Parcelas ficam no cartão (não saem da conta)
-    // - Assinaturas ficam no cartão
-    // - Você paga a FATURA total mensalmente, não cada parcela
-    const totalBalance = totalIncomeAllTime - totalDebitAllTime;
+
+    // Total de investimentos
+    const totalInvestments = investments.reduce((sum, inv) => sum + inv.value, 0);
+
+    // SALDO = Entradas - Saídas(débito) - Investimentos
+    // NOTA: As saídas de débito já incluem pagamentos de fatura (via transação automática)
+    // Então o saldo desconta automaticamente quando a fatura é paga
+    const totalBalance = totalIncomeAllTime - totalDebitAllTime - totalInvestments;
 
     // Log de debug para verificar cálculos
     console.log('[KPIs] Cálculos do mês:', {
         mes: `${currentMonth + 1}/${currentYear}`,
         entradas: totalIncome,
         saidasDebito: totalExpenseDebit,
+        saidasEfetivas: totalExpenseActual,
+        projecaoSaidas: totalExpenseProjection,
         faturaCartoes: totalCreditCards,
+        faturasPagas: totalPaidBills,
+        faturasNaoPagas: totalUnpaidBills,
         saidasTotal: totalExpense,
+        investimentos: totalInvestments,
         saldo: totalBalance
     });
 
     console.log('[KPIs] Componentes do saldo:', {
         entradasHistoricas: totalIncomeAllTime,
         saidasDebito: totalDebitAllTime,
+        investimentos: totalInvestments,
         saldoCalculado: totalBalance
     });
 
@@ -1964,6 +2414,7 @@ function updateKPIs() {
     // Update DOM
     const incomeEl = document.getElementById('totalIncome');
     const expenseEl = document.getElementById('totalExpense');
+    const expenseProjectionEl = document.getElementById('totalExpenseProjection');
     const balanceEl = document.getElementById('totalBalance');
     const subscriptionsEl = document.getElementById('totalSubscriptions');
     const installmentsEl = document.getElementById('totalInstallments');
@@ -1971,9 +2422,17 @@ function updateKPIs() {
     const installmentsTotalEl = document.getElementById('installmentsTotal');
     const projectionEl = document.getElementById('totalProjection');
     const creditCardsEl = document.getElementById('totalCreditCards');
+    const investmentsEl = document.getElementById('totalInvestments');
 
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
-    if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpense);
+
+    // Card de Saídas com dois valores
+    if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpenseActual);
+    if (expenseProjectionEl) {
+        expenseProjectionEl.textContent = `+ ${formatCurrencyDisplay(totalExpenseProjection)}`;
+        expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
+    }
+
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
     if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
 
@@ -1984,6 +2443,7 @@ function updateKPIs() {
 
     if (projectionEl) projectionEl.textContent = formatCurrencyDisplay(totalProjection);
     if (creditCardsEl) creditCardsEl.textContent = formatCurrencyDisplay(totalCreditCards);
+    if (investmentsEl) investmentsEl.textContent = formatCurrencyDisplay(totalInvestments);
 }
 
 // ===========================
@@ -3026,6 +3486,18 @@ document.addEventListener('DOMContentLoaded', () => {
         cardExpenseForm.addEventListener('submit', handleCardExpenseSubmit);
     }
 
+    // Investment form submit
+    const investmentForm = document.getElementById('investmentForm');
+    if (investmentForm) {
+        investmentForm.addEventListener('submit', handleInvestmentSubmit);
+    }
+
+    // Settings form submit
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', handleSettingsSubmit);
+    }
+
     // Enter key to submit forms
     document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
@@ -3068,8 +3540,8 @@ function initializeSavingsGoalChart() {
     const totalIncome = getCurrentMonthTotal('income');
     const totalExpense = getCurrentMonthTotal('expense');
     const saved = totalIncome - totalExpense;
-    const goal = 2000; // Meta de economia
-    const percentage = Math.min((saved / goal) * 100, 100);
+    const goal = userSettings.savingsGoal || 2000; // Meta de economia configurável
+    const percentage = goal > 0 ? Math.min(Math.max((saved / goal) * 100, 0), 100) : 0;
 
     const options = {
         series: [percentage],
@@ -3099,13 +3571,18 @@ function initializeSavingsGoalChart() {
             }
         },
         fill: {
-            colors: ['#10b981']
+            colors: [saved >= goal ? '#10b981' : '#f59e0b'] // Verde se atingiu meta, laranja se não
         }
     };
 
     savingsGoalChart = new ApexCharts(chartEl, options);
     savingsGoalChart.render();
-    document.getElementById('savingsGoalValue').textContent = formatCurrencyDisplay(saved);
+
+    // Mostra quanto economizou e a meta
+    const valueEl = document.getElementById('savingsGoalValue');
+    if (valueEl) {
+        valueEl.innerHTML = `${formatCurrencyDisplay(saved)} <small style="color: var(--text-muted); font-size: 0.65rem;">/ ${formatCurrencyDisplay(goal)}</small>`;
+    }
 }
 
 // ===========================
@@ -3117,8 +3594,16 @@ function initializeExpenseLimitChart() {
     if (!chartEl) return;
 
     const totalExpense = getCurrentMonthTotal('expense');
-    const limit = 3000; // Limite de gastos
-    const percentage = Math.min((totalExpense / limit) * 100, 100);
+    const limit = userSettings.expenseLimit || 3000; // Limite de gastos configurável
+    const percentage = limit > 0 ? Math.min((totalExpense / limit) * 100, 100) : 0;
+
+    // Cores baseadas em porcentagem: verde < 60%, laranja 60-80%, vermelho > 80%
+    let fillColor = '#10b981'; // verde
+    if (percentage > 80) {
+        fillColor = '#ef4444'; // vermelho
+    } else if (percentage > 60) {
+        fillColor = '#f59e0b'; // laranja
+    }
 
     const options = {
         series: [percentage],
@@ -3148,13 +3633,18 @@ function initializeExpenseLimitChart() {
             }
         },
         fill: {
-            colors: [percentage > 80 ? '#ef4444' : '#f97316']
+            colors: [fillColor]
         }
     };
 
     expenseLimitChart = new ApexCharts(chartEl, options);
     expenseLimitChart.render();
-    document.getElementById('expenseLimitValue').textContent = formatCurrencyDisplay(totalExpense);
+
+    // Mostra quanto gastou e o limite
+    const valueEl = document.getElementById('expenseLimitValue');
+    if (valueEl) {
+        valueEl.innerHTML = `${formatCurrencyDisplay(totalExpense)} <small style="color: var(--text-muted); font-size: 0.65rem;">/ ${formatCurrencyDisplay(limit)}</small>`;
+    }
 }
 
 // ===========================

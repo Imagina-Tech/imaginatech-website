@@ -177,7 +177,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar: 7 KPIs + Quick Actions -->
+            <!-- Top Bar: 8 KPIs + Quick Actions -->
             <div class="top-info-grid">
                 <!-- KPI 1: Entradas -->
                 <div class="kpi-card kpi-income" onclick="openKPIList('income')" style="cursor: pointer;" title="Clique para ver detalhes">
@@ -191,7 +191,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- KPI 2: Saídas -->
+                <!-- KPI 2: Saídas (atual + projeção) -->
                 <div class="kpi-card kpi-expense" onclick="openKPIList('expense')" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="kpi-icon">
                         <i class="fas fa-arrow-down"></i>
@@ -199,7 +199,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="kpi-content">
                         <h3>Saídas</h3>
                         <p class="kpi-value" id="totalExpense">R$ 0,00</p>
-                        <small class="kpi-subtitle">Mês atual • Clique para detalhes</small>
+                        <p class="kpi-projection" id="totalExpenseProjection" style="font-size: 0.75rem; color: #f59e0b; margin: 0;">+ R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #f59e0b;">Projeção cartões</span></small>
                     </div>
                 </div>
 
@@ -211,11 +212,23 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="kpi-content">
                         <h3>Saldo</h3>
                         <p class="kpi-value" id="totalBalance">R$ 0,00</p>
-                        <small class="kpi-subtitle">Acumulado</small>
+                        <small class="kpi-subtitle">Acumulado (- investimentos)</small>
                     </div>
                 </div>
 
-                <!-- KPI 4: Assinaturas -->
+                <!-- KPI 4: Investimentos -->
+                <div class="kpi-card kpi-investments" onclick="openInvestmentsModal()" style="cursor: pointer;" title="Clique para gerenciar investimentos">
+                    <div class="kpi-icon" style="background-color: rgba(16, 185, 129, 0.1); color: #10B981;">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Investimentos</h3>
+                        <p class="kpi-value" id="totalInvestments">R$ 0,00</p>
+                        <small class="kpi-subtitle">Total aplicado • Clique para gerenciar</small>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Assinaturas -->
                 <div class="kpi-card kpi-subscriptions" onclick="openKPIList('subscriptions')" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="kpi-icon">
                         <i class="fas fa-sync"></i>
@@ -337,7 +350,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <div class="mini-gauges-container">
                         <div class="mini-chart-card">
                             <div class="mini-chart-header">
-                                <h4>Meta Economia</h4>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <h4>Meta Economia</h4>
+                                    <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
+                                        <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
+                                    </button>
+                                </div>
                                 <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
                             </div>
                             <div id="savingsGoalChart" style="height: 80px;"></div>
@@ -345,7 +363,12 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                         <div class="mini-chart-card">
                             <div class="mini-chart-header">
-                                <h4>Limite Gastos</h4>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <h4>Limite Gastos</h4>
+                                    <button onclick="openSettingsModal()" style="background: none; border: none; cursor: pointer; padding: 0.15rem; color: var(--text-muted); opacity: 0.6;" title="Configurar metas">
+                                        <i class="fas fa-cog" style="font-size: 0.6rem;"></i>
+                                    </button>
+                                </div>
                                 <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
                             </div>
                             <div id="expenseLimitChart" style="height: 80px;"></div>
@@ -838,6 +861,94 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             <div class="modal-form" id="cardBillDetailsContent">
                 <!-- Conteúdo será preenchido dinamicamente -->
             </div>
+        </div>
+    </div>
+
+    <!-- Investments Modal -->
+    <div class="modal-overlay" id="investmentsModal">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-piggy-bank" style="color: #10B981; margin-right: 0.5rem;"></i> Investimentos</h2>
+                <button class="modal-close" onclick="closeInvestmentsModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-form">
+                <!-- Total Investido -->
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Total Investido</div>
+                    <div id="investmentsTotalDisplay" style="font-size: 1.75rem; font-weight: 700; color: #10B981;">R$ 0,00</div>
+                </div>
+
+                <!-- Formulário para novo investimento -->
+                <form id="investmentForm" style="margin-bottom: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 120px 120px auto; gap: 0.75rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentName" style="font-size: 0.75rem;">Nome</label>
+                            <input type="text" id="investmentName" required placeholder="Ex: Tesouro Selic, CDB...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentValue" style="font-size: 0.75rem;">Valor (R$)</label>
+                            <input type="text" id="investmentValue" required placeholder="0,00" onkeyup="formatCurrency(this)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentDate" style="font-size: 0.75rem;">Data</label>
+                            <input type="date" id="investmentDate" required>
+                        </div>
+                        <button type="submit" class="btn-submit" style="height: 42px; padding: 0 1rem;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Lista de Investimentos -->
+                <div style="max-height: 350px; overflow-y: auto;">
+                    <div id="investmentsList">
+                        <div class="empty-state">
+                            <i class="fas fa-piggy-bank"></i>
+                            <p>Nenhum investimento cadastrado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (Meta de Economia / Limite de Gastos) -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-container" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog" style="color: #00D4FF; margin-right: 0.5rem;"></i> Configurações</h2>
+                <button class="modal-close" onclick="closeSettingsModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="settingsForm" class="modal-form">
+                <div class="form-group">
+                    <label for="savingsGoalInput">
+                        <i class="fas fa-bullseye" style="color: #10b981;"></i> Meta de Economia Mensal
+                    </label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="savingsGoalInput" required placeholder="2.000,00" onkeyup="formatCurrency(this)">
+                    </div>
+                    <small style="color: var(--text-muted);">Quanto você quer economizar por mês</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseLimitInput">
+                        <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Limite de Gastos Mensal
+                    </label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="expenseLimitInput" required placeholder="3.000,00" onkeyup="formatCurrency(this)">
+                    </div>
+                    <small style="color: var(--text-muted);">Máximo que você quer gastar por mês</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeSettingsModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
