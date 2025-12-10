@@ -215,6 +215,7 @@ function createFilamentCard(filament) {
     const stockClass = weightInGrams < 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
     const displayName = `${filament.type} ${filament.color}`;
+    const brand = filament.brand || 'Não especificada';
 
     // Buscar serviços pendentes para este filamento
     const servicesForThisFilament = pendingServices.filter(s =>
@@ -255,6 +256,7 @@ function createFilamentCard(filament) {
             <div class="filament-info">
                 <div class="filament-type">${filament.type}</div>
                 <div class="filament-name">${displayName}</div>
+                <div class="filament-brand"><i class="fas fa-copyright"></i> ${brand}</div>
                 <div class="filament-color">${filament.color}</div>
                 <div class="filament-weight ${weightInGrams < 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
             </div>
