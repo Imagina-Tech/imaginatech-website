@@ -3623,7 +3623,7 @@ function initializeSavingsGoalChart() {
         series: [percentage],
         chart: {
             type: 'radialBar',
-            height: 80,
+            height: '100%',
             sparkline: { enabled: true }
         },
         plotOptions: {
@@ -3685,7 +3685,7 @@ function initializeExpenseLimitChart() {
         series: [percentage],
         chart: {
             type: 'radialBar',
-            height: 80,
+            height: '100%',
             sparkline: { enabled: true }
         },
         plotOptions: {
@@ -3833,7 +3833,7 @@ function initializeTopCategoriesChart() {
         series: [{ name: 'Valor', data: topValues }],
         chart: {
             type: 'bar',
-            height: 200,
+            height: '100%',
             fontFamily: 'Inter, sans-serif',
             toolbar: { show: false }
         },
@@ -3900,7 +3900,7 @@ function initializeWeeklyTrendChart() {
         series: [{ name: 'Gastos', data: last7Days }],
         chart: {
             type: 'area',
-            height: 200,
+            height: '100%',
             fontFamily: 'Inter, sans-serif',
             toolbar: { show: false }
         },

@@ -105,7 +105,7 @@ a:hover { color: #2563EB; }
   height: calc(100vh - 63px); /* Altura fixa = 100vh - navbar */
   max-height: calc(100vh - 63px);
   padding: 0.5rem 1rem 0.4rem;
-  overflow: hidden; /* Remove scroll da página */
+  overflow-y: auto; /* Permitir scroll se necessário */
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0;
@@ -206,8 +206,8 @@ a:hover { color: #2563EB; }
   grid-template-columns: 1.2fr 1fr 1fr; /* Gráfico Principal menor | Mini Charts | Mini Gauges */
   grid-template-rows: 1fr 1fr; /* 2 linhas */
   gap: 0.5rem;
-  height: calc(100% - 5px);
-  overflow: hidden;
+  min-height: calc(100% - 5px);
+  overflow: visible;
   position: relative;
   z-index: 1;
 }
@@ -252,7 +252,7 @@ a:hover { color: #2563EB; }
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   min-height: 0;
   height: 100%;
 }
@@ -294,7 +294,7 @@ a:hover { color: #2563EB; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 0;
+  min-height: 100px;
   flex: 1;
 }
 
