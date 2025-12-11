@@ -487,7 +487,7 @@ a:hover { color: #2563EB; }
     padding-right: 8px;
     margin-right: -8px;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) transparent;
+    scrollbar-color: #4a5568 transparent;
 }
 
 .modal-form::-webkit-scrollbar {
@@ -500,12 +500,12 @@ a:hover { color: #2563EB; }
 }
 
 .modal-form::-webkit-scrollbar-thumb {
-    background: var(--color-primary);
+    background: #4a5568;
     border-radius: 3px;
 }
 
 .modal-form::-webkit-scrollbar-thumb:hover {
-    background: var(--color-secondary);
+    background: #718096;
 }
 
 /* FORMULÁRIOS */
