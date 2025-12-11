@@ -103,7 +103,7 @@ a:hover { color: #2563EB; }
 .main-content {
   max-width: 100%;
   height: 100vh;
-  padding: 63px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed */
+  padding: 75px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed */
   overflow: hidden;
   display: flex;
   flex-direction: column;
