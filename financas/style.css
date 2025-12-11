@@ -103,7 +103,7 @@ a:hover { color: #2563EB; }
 .main-content {
   max-width: 100%;
   height: 100vh;
-  padding: 90px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed + espaço extra */
+  padding: 82px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed + espaço extra */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1145,7 +1145,7 @@ input:focus, select:focus {
    =========================== */
 @media (max-height: 800px) {
   .main-content {
-    padding-top: 70px;
+    padding-top: 62px;
     padding-bottom: 0.25rem;
   }
   .navbar { height: 55px; padding: 5px 20px; }
