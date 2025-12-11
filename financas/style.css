@@ -1000,6 +1000,27 @@ input:focus, select:focus {
    =========================== */
 .modal-list .modal-container {
   overflow: hidden;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-list .modal-container .modal-header {
+  flex-shrink: 0;
+}
+
+/* Containers de conteúdo específicos dos modais de lista */
+#subscriptionsListContent,
+#installmentsListContent,
+#projectionsListContent,
+#creditCardsListContent,
+#investmentsListContent,
+#transactionsListContent {
+  max-height: calc(80vh - 120px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-tertiary) transparent;
 }
 
 .modal-list .modal-container > div:not(.modal-header) {
@@ -1016,6 +1037,7 @@ input:focus, select:focus {
 .modal-container *::-webkit-scrollbar-track {
   background: transparent;
   margin: 8px 0;
+  border-radius: 3px;
 }
 
 .modal-container *::-webkit-scrollbar-thumb {
@@ -1025,6 +1047,45 @@ input:focus, select:focus {
 
 .modal-container *::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
+}
+
+/* Containers específicos - scrollbar mais visível */
+#subscriptionsListContent::-webkit-scrollbar,
+#installmentsListContent::-webkit-scrollbar,
+#projectionsListContent::-webkit-scrollbar,
+#creditCardsListContent::-webkit-scrollbar,
+#investmentsListContent::-webkit-scrollbar,
+#transactionsListContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+#subscriptionsListContent::-webkit-scrollbar-track,
+#installmentsListContent::-webkit-scrollbar-track,
+#projectionsListContent::-webkit-scrollbar-track,
+#creditCardsListContent::-webkit-scrollbar-track,
+#investmentsListContent::-webkit-scrollbar-track,
+#transactionsListContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+#subscriptionsListContent::-webkit-scrollbar-thumb,
+#installmentsListContent::-webkit-scrollbar-thumb,
+#projectionsListContent::-webkit-scrollbar-thumb,
+#creditCardsListContent::-webkit-scrollbar-thumb,
+#investmentsListContent::-webkit-scrollbar-thumb,
+#transactionsListContent::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+#subscriptionsListContent::-webkit-scrollbar-thumb:hover,
+#installmentsListContent::-webkit-scrollbar-thumb:hover,
+#projectionsListContent::-webkit-scrollbar-thumb:hover,
+#creditCardsListContent::-webkit-scrollbar-thumb:hover,
+#investmentsListContent::-webkit-scrollbar-thumb:hover,
+#transactionsListContent::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
 }
 
 /* ===========================

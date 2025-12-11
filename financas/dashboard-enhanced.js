@@ -256,13 +256,17 @@ function showProjectionsList() {
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
-    // Projeções de receita do mês
+    // Filtrar projeções do mês
     const monthProj = projections ? projections.filter(p => {
         const d = new Date(p.date + 'T12:00:00');
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     }) : [];
 
-    // Correção 7: Calcular projeção de saídas (faturas não pagas)
+    // Separar projeções de entrada e saída
+    const incomeProj = monthProj.filter(p => !p.type || p.type === 'income');
+    const expenseProj = monthProj.filter(p => p.type === 'expense');
+
+    // Calcular projeção de saídas (faturas não pagas)
     const unpaidBillsTotal = creditCards ? creditCards.reduce((sum, card) => {
         const billValue = typeof calculateCurrentBill === 'function'
             ? calculateCurrentBill(card, currentMonth, currentYear) : 0;
@@ -271,58 +275,106 @@ function showProjectionsList() {
         return sum + (isPaid ? 0 : billValue);
     }, 0) : 0;
 
-    // Construir HTML com duas seções: Projeção de Saídas + Projeções de Receita
+    // Total de projeções de saída pendentes
+    const pendingExpenseProjections = expenseProj
+        .filter(p => p.status === 'pending')
+        .reduce((sum, p) => sum + p.value, 0);
+
+    // Construir HTML com seções separadas
     let html = '';
 
-    // Seção: Projeção de Saídas (faturas a pagar)
-    if (creditCards && creditCards.length > 0) {
+    // Seção: Projeção de Saídas (faturas a pagar + projeções de saída)
+    const totalPendingExpenses = unpaidBillsTotal + pendingExpenseProjections;
+    if (totalPendingExpenses > 0 || expenseProj.length > 0) {
         html += `
             <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px;">
                 <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #ef4444; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-arrow-down"></i> Projeção de Saídas
+                    <i class="fas fa-arrow-down"></i> Projeções de Saída
                 </h3>
                 <div style="font-size: 1.25rem; font-weight: 700; color: #ef4444; margin-bottom: 0.5rem;">
-                    ${formatCurrencyDisplay(unpaidBillsTotal)}
+                    ${formatCurrencyDisplay(totalPendingExpenses)}
                 </div>
-                <small style="color: var(--text-muted);">Faturas de cartão a pagar este mês</small>
-                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
-                    ${creditCards.map(card => {
-                        const billValue = typeof calculateCurrentBill === 'function'
-                            ? calculateCurrentBill(card, currentMonth, currentYear) : 0;
-                        const isPaid = typeof isBillPaid === 'function'
-                            ? isBillPaid(card.id, currentMonth, currentYear) : false;
-                        if (billValue === 0) return '';
-                        return `<div style="margin-bottom: 0.25rem;">${card.name}: ${formatCurrencyDisplay(billValue)} ${isPaid ? '<span style="color: #10b981;">(pago)</span>' : ''}</div>`;
-                    }).join('')}
-                </div>
-            </div>
+                <small style="color: var(--text-muted);">Total pendente este mês</small>
         `;
+
+        // Faturas de cartão
+        if (creditCards && creditCards.length > 0 && unpaidBillsTotal > 0) {
+            html += `
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                    <small style="color: var(--text-muted); font-weight: 600;">Faturas de Cartão:</small>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                        ${creditCards.map(card => {
+                            const billValue = typeof calculateCurrentBill === 'function'
+                                ? calculateCurrentBill(card, currentMonth, currentYear) : 0;
+                            const isPaid = typeof isBillPaid === 'function'
+                                ? isBillPaid(card.id, currentMonth, currentYear) : false;
+                            if (billValue === 0) return '';
+                            return `<div style="margin-bottom: 0.25rem;">${card.name}: ${formatCurrencyDisplay(billValue)} ${isPaid ? '<span style="color: #10b981;">(pago)</span>' : ''}</div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+
+        // Lista de projeções de saída manuais
+        if (expenseProj.length > 0) {
+            html += expenseProj.map(p => {
+                const statusLabel = p.status === 'pending' ? 'Pendente' : 'Pago';
+                const actionLabel = p.status === 'pending' ? 'Marcar como Pago' : 'Marcar como Pendente';
+                return `
+                <div class="list-item" style="border-left: 3px solid #ef4444;">
+                    <div class="list-item-info">
+                        <div class="list-item-title">${p.description}</div>
+                        <div class="list-item-subtitle">
+                            ${formatDate(p.date)} • <span class="status-badge ${p.status === 'pending' ? 'pending' : 'received'}">${statusLabel}</span>
+                        </div>
+                    </div>
+                    <div class="list-item-value expense">- ${formatCurrencyDisplay(p.value)}</div>
+                    <div class="list-item-actions">
+                        <button class="btn-icon" onclick="editProjectionAndRefresh('${p.id}')" title="Editar" style="color: var(--color-neutral);">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon ${p.status === 'pending' ? 'success' : 'warning'}" onclick="toggleProjectionStatus('${p.id}', '${p.status}')" title="${actionLabel}">
+                            <i class="fas ${p.status === 'pending' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                        </button>
+                        <button class="btn-icon danger" onclick="deleteProjectionAndRefresh('${p.id}')" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
     }
 
-    // Seção: Projeções de Receita
+    // Seção: Projeções de Entrada (Receita)
     html += `
-        <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-arrow-up"></i> Projeções de Receita
+        <h3 style="font-size: 0.875rem; margin: 1.5rem 0 0.75rem 0; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-arrow-up"></i> Projeções de Entrada
         </h3>
     `;
 
-    if (monthProj.length === 0) {
-        html += '<div class="empty-state" style="padding: 1rem;"><i class="fas fa-inbox"></i><p>Nenhuma projeção de receita para este mês</p></div>';
+    if (incomeProj.length === 0) {
+        html += '<div class="empty-state" style="padding: 1rem;"><i class="fas fa-inbox"></i><p>Nenhuma projeção de entrada para este mês</p></div>';
     } else {
-        html += monthProj.map(p => `
-            <div class="list-item">
+        html += incomeProj.map(p => {
+            const statusLabel = p.status === 'pending' ? 'Pendente' : 'Recebido';
+            const actionLabel = p.status === 'pending' ? 'Marcar como Recebido' : 'Marcar como Pendente';
+            return `
+            <div class="list-item" style="border-left: 3px solid #10b981;">
                 <div class="list-item-info">
                     <div class="list-item-title">${p.description}</div>
                     <div class="list-item-subtitle">
-                        ${formatDate(p.date)} • <span class="status-badge ${p.status === 'pending' ? 'pending' : 'received'}">${p.status === 'pending' ? 'Pendente' : 'Recebido'}</span>
+                        ${formatDate(p.date)} • <span class="status-badge ${p.status === 'pending' ? 'pending' : 'received'}">${statusLabel}</span>
                     </div>
                 </div>
-                <div class="list-item-value income">${formatCurrencyDisplay(p.value)}</div>
+                <div class="list-item-value income">+ ${formatCurrencyDisplay(p.value)}</div>
                 <div class="list-item-actions">
                     <button class="btn-icon" onclick="editProjectionAndRefresh('${p.id}')" title="Editar" style="color: var(--color-neutral);">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon ${p.status === 'pending' ? 'success' : 'warning'}" onclick="toggleProjectionStatus('${p.id}', '${p.status}')" title="${p.status === 'pending' ? 'Marcar como Recebido' : 'Marcar como Pendente'}">
+                    <button class="btn-icon ${p.status === 'pending' ? 'success' : 'warning'}" onclick="toggleProjectionStatus('${p.id}', '${p.status}')" title="${actionLabel}">
                         <i class="fas ${p.status === 'pending' ? 'fa-check-circle' : 'fa-clock'}"></i>
                     </button>
                     <button class="btn-icon danger" onclick="deleteProjectionAndRefresh('${p.id}')" title="Excluir">
@@ -330,7 +382,7 @@ function showProjectionsList() {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     content.innerHTML = html;

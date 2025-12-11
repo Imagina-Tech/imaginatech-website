@@ -106,6 +106,7 @@ let editingInstallmentId = null;
 let editingCardId = null;
 let editingProjectionId = null;
 let editingInvestmentId = null;
+let currentProjectionType = 'income'; // Tipo de projeção: 'income' ou 'expense'
 
 // Credit card payments tracking
 let creditCardPayments = [];
@@ -1499,6 +1500,7 @@ async function handleProjectionSubmit(e) {
     const valueStr = document.getElementById('projValue').value;
     const date = document.getElementById('projDate').value;
     const status = document.getElementById('projStatus').value;
+    const type = currentProjectionType; // 'income' ou 'expense'
 
     if (!description || !valueStr || !date) {
         showToast('Preencha todos os campos', 'error');
@@ -1520,7 +1522,8 @@ async function handleProjectionSubmit(e) {
                 description,
                 value,
                 date,
-                status
+                status,
+                type
             });
 
             await loadProjections();
@@ -1535,6 +1538,7 @@ async function handleProjectionSubmit(e) {
                 value,
                 date,
                 status,
+                type,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
@@ -1552,7 +1556,7 @@ async function handleProjectionSubmit(e) {
 }
 
 // 🔄 Atualiza status de uma projeção
-// Quando marca como "received", cria uma transação de entrada correspondente
+// Quando marca como "received", cria uma transação correspondente (entrada ou despesa)
 async function updateProjectionStatus(id, newStatus) {
     showLoading('Atualizando status...');
 
@@ -1564,21 +1568,23 @@ async function updateProjectionStatus(id, newStatus) {
         }
 
         const oldStatus = projection.status;
-        console.log(`[Projeção Status] ID: ${id}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
+        const projType = projection.type || 'income'; // default: income para projeções antigas
+        console.log(`[Projeção Status] ID: ${id}, Tipo: ${projType}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
 
-        // Se marcando como "received", criar transação de entrada
+        // Se marcando como "received" (ou "pago" para expense), criar transação
         if (newStatus === 'received' && oldStatus !== 'received') {
             console.log(`[Projeção] Procurando transação vinculada a: "${projection.description}"`);
 
             // Verificar se já existe transação vinculada a esta projeção
-            // Preferir procurar por projectionId se houver
             let existingTransaction = transactions.find(t => t.projectionId === id);
 
             // Fallback: procurar por descrição, data, valor e categoria
             if (!existingTransaction) {
+                const expectedType = projType === 'income' ? 'income' : 'expense';
+                const expectedCategory = projType === 'income' ? 'Projeção Recebida' : 'Projeção Paga';
                 existingTransaction = transactions.find(t =>
-                    t.type === 'income' &&
-                    t.category === 'Projeção Recebida' &&
+                    t.type === expectedType &&
+                    t.category === expectedCategory &&
                     t.date === projection.date &&
                     t.value === projection.value &&
                     (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
@@ -1588,25 +1594,40 @@ async function updateProjectionStatus(id, newStatus) {
             if (existingTransaction) {
                 console.log(`[Projeção] Transação já existe: ${existingTransaction.id}`);
             } else {
-                console.log(`[Projeção] Criando nova transação de entrada para: "${projection.description}"`);
-
-                // Criar nova transação de entrada
-                // IMPORTANTE: Explicitar paymentMethod e cardId como null para evitar contar em faturas de crédito
-                const newTransaction = {
-                    userId: activeUserId,
-                    type: 'income',
-                    description: `[Projeção] ${projection.description}`,
-                    value: projection.value,
-                    category: 'Projeção Recebida',
-                    date: projection.date,
-                    paymentMethod: 'debit',
-                    cardId: null,  // EXPLICITAR: não é transação de crédito
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    projectionId: id  // Link para rastrear a origem
-                };
-
-                const docRef = await db.collection('transactions').add(newTransaction);
-                console.log(`[Projeção] Transação criada com sucesso: ${docRef.id}`);
+                // Criar nova transação baseada no tipo da projeção
+                if (projType === 'income') {
+                    console.log(`[Projeção] Criando nova transação de ENTRADA para: "${projection.description}"`);
+                    const newTransaction = {
+                        userId: activeUserId,
+                        type: 'income',
+                        description: `[Projeção] ${projection.description}`,
+                        value: projection.value,
+                        category: 'Projeção Recebida',
+                        date: projection.date,
+                        paymentMethod: 'debit',
+                        cardId: null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        projectionId: id
+                    };
+                    const docRef = await db.collection('transactions').add(newTransaction);
+                    console.log(`[Projeção] Transação de entrada criada com sucesso: ${docRef.id}`);
+                } else {
+                    console.log(`[Projeção] Criando nova transação de SAÍDA para: "${projection.description}"`);
+                    const newTransaction = {
+                        userId: activeUserId,
+                        type: 'expense',
+                        description: `[Projeção] ${projection.description}`,
+                        value: projection.value,
+                        category: 'Projeção Paga',
+                        date: projection.date,
+                        paymentMethod: 'debit',
+                        cardId: null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        projectionId: id
+                    };
+                    const docRef = await db.collection('transactions').add(newTransaction);
+                    console.log(`[Projeção] Transação de despesa criada com sucesso: ${docRef.id}`);
+                }
             }
         }
         // Se marcando como "pending", remover transação vinculada (se houver)
@@ -1614,14 +1635,15 @@ async function updateProjectionStatus(id, newStatus) {
             console.log(`[Projeção] Procurando transação vinculada para deletar`);
 
             // Procurar e deletar transação vinculada
-            // Preferir procurar por projectionId se houver
             let linkedTransaction = transactions.find(t => t.projectionId === id);
 
             // Fallback: procurar por descrição, data, valor e categoria
             if (!linkedTransaction) {
+                const expectedType = projType === 'income' ? 'income' : 'expense';
+                const expectedCategory = projType === 'income' ? 'Projeção Recebida' : 'Projeção Paga';
                 linkedTransaction = transactions.find(t =>
-                    t.type === 'income' &&
-                    t.category === 'Projeção Recebida' &&
+                    t.type === expectedType &&
+                    t.category === expectedCategory &&
                     t.date === projection.date &&
                     t.value === projection.value &&
                     (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
@@ -1648,9 +1670,16 @@ async function updateProjectionStatus(id, newStatus) {
         console.log(`[Projeção] Atualizando KPIs...`);
         updateAllDisplays();
 
-        const message = newStatus === 'received'
-            ? 'Projeção marcada como recebida! Transação de entrada criada.'
-            : 'Projeção marcada como pendente. Transação removida.';
+        let message;
+        if (projType === 'income') {
+            message = newStatus === 'received'
+                ? 'Projeção marcada como recebida! Transação de entrada criada.'
+                : 'Projeção marcada como pendente. Transação removida.';
+        } else {
+            message = newStatus === 'received'
+                ? 'Projeção marcada como paga! Transação de despesa criada.'
+                : 'Projeção marcada como pendente. Transação removida.';
+        }
         showToast(message, 'success');
     } catch (error) {
         console.error('Erro ao atualizar projeção:', error);
@@ -2343,12 +2372,22 @@ function updateKPIs() {
         return sum + (isPaid ? 0 : billValue);
     }, 0);
 
+    // Projeções de saída pendentes do mês atual
+    const pendingExpenseProjections = projections
+        .filter(p => {
+            if (p.status !== 'pending') return false;
+            if (p.type !== 'expense') return false; // Apenas projeções de saída
+            const projDate = new Date(p.date + 'T12:00:00');
+            return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + p.value, 0);
+
     // Total Expense = débito (saídas efetivas)
     // Saídas Efetivas = débito direto (já inclui pagamentos de faturas via transação automática)
     const totalExpenseActual = totalExpenseDebit;
 
-    // Projeção de Saída = faturas não pagas (o que vai sair quando pagar os cartões)
-    const totalExpenseProjection = totalUnpaidBills;
+    // Projeção de Saída = faturas não pagas + projeções de saída pendentes
+    const totalExpenseProjection = totalUnpaidBills + pendingExpenseProjections;
 
     // Total geral de saídas (atual + projeção)
     const totalExpense = totalExpenseActual + totalExpenseProjection;
@@ -2377,6 +2416,7 @@ function updateKPIs() {
         saidasDebito: totalExpenseDebit,
         saidasEfetivas: totalExpenseActual,
         projecaoSaidas: totalExpenseProjection,
+        projecoesSaidaPendentes: pendingExpenseProjections,
         faturaCartoes: totalCreditCards,
         faturasPagas: totalPaidBills,
         faturasNaoPagas: totalUnpaidBills,
@@ -2443,21 +2483,21 @@ function updateKPIs() {
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
 
     // Card de Saídas com dois valores
-    // Correção 3: Projeção mostra total = atual + não pago
-    const totalExpenseTotal = totalExpenseActual + totalUnpaidBills;
+    // Correção 3: Projeção mostra total = atual + faturas não pagas + projeções de saída pendentes
+    const totalExpenseTotal = totalExpenseActual + totalUnpaidBills + pendingExpenseProjections;
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpenseActual);
     if (expenseProjectionEl) {
         expenseProjectionEl.textContent = `= ${formatCurrencyDisplay(totalExpenseTotal)}`;
-        expenseProjectionEl.style.display = totalUnpaidBills > 0 ? 'block' : 'none';
+        expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
     }
 
-    // Correção 6: Projeção de saldo = saldo atual - faturas não pagas
-    const balanceProjection = totalBalance - totalUnpaidBills;
+    // Correção 6: Projeção de saldo = saldo atual - faturas não pagas - projeções de saída pendentes
+    const balanceProjection = totalBalance - totalUnpaidBills - pendingExpenseProjections;
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
     const balanceProjectionEl = document.getElementById('balanceProjection');
     if (balanceProjectionEl) {
         balanceProjectionEl.textContent = `Proj: ${formatCurrencyDisplay(balanceProjection)}`;
-        balanceProjectionEl.style.display = totalUnpaidBills > 0 ? 'block' : 'none';
+        balanceProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
     }
     if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
 
@@ -2533,9 +2573,13 @@ function initializeCharts() {
 // 🔄 Atualiza dados de todos os gráficos existentes
 function updateCharts() {
     try {
+        console.log('[updateCharts] Atualizando todos os gráficos...');
         if (cashFlowChart) updateCashFlowChart();
         if (categoryChart) updateCategoryChart();
         if (comparisonChart) updateComparisonChart();
+        if (topCategoriesChart) updateTopCategoriesChart();
+        if (weeklyTrendChart) updateWeeklyTrendChart();
+        console.log('[updateCharts] Gráficos atualizados!');
     } catch (error) {
         console.error('Erro ao atualizar gráficos:', error);
     }
@@ -2638,21 +2682,34 @@ function initializeCashFlowChart() {
 // 🔄 Atualiza dados do gráfico de fluxo de caixa
 function updateCashFlowChart() {
     const data = getCashFlowData();
+    // Atualizar tanto as séries quanto as categorias do eixo X
+    cashFlowChart.updateOptions({
+        xaxis: {
+            categories: data.months
+        }
+    });
     cashFlowChart.updateSeries([
         { name: 'Entradas', data: data.incomes },
         { name: 'Saídas', data: data.expenses }
     ]);
 }
 
-// 📊 Obtém dados de entradas e saídas dos últimos 6 meses
+// 📊 Obtém dados de entradas e saídas dos últimos 12 meses (baseado no mês selecionado)
 function getCashFlowData() {
     const months = [];
     const incomes = [];
     const expenses = [];
 
-    // Get last 12 months
+    // Usar mês/ano selecionado como referência (em vez da data atual)
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Criar data de referência baseada no mês selecionado
+    const referenceDate = new Date(displayYear, displayMonth, 1);
+
+    // Get last 12 months from the selected month
     for (let i = 11; i >= 0; i--) {
-        const date = new Date();
+        const date = new Date(referenceDate);
         date.setMonth(date.getMonth() - i);
 
         const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
@@ -3199,12 +3256,15 @@ function calculateInstallmentValues() {
 // 🎨 Abre modal para adicionar nova projeção
 function openProjectionModal() {
     editingProjectionId = null;
+    currentProjectionType = 'income';
     document.getElementById('projectionModal').classList.add('active');
     document.getElementById('projectionForm').reset();
     document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova Projeção';
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('projDate').value = today;
     document.getElementById('projStatus').value = 'pending';
+    // Reset tipo para entrada
+    selectProjectionType('income');
 }
 
 // 🎨 Abre modal para editar projeção existente
@@ -3225,13 +3285,44 @@ function editProjection(id) {
     document.getElementById('projValue').value = formatCurrencyValue(projection.value);
     document.getElementById('projDate').value = projection.date;
     document.getElementById('projStatus').value = projection.status || 'pending';
+
+    // Seleciona o tipo correto (default: income para projeções antigas)
+    const projType = projection.type || 'income';
+    selectProjectionType(projType);
 }
 
 // 🎨 Fecha modal de projeção
 function closeProjectionModal() {
     editingProjectionId = null;
+    currentProjectionType = 'income';
     document.getElementById('projectionModal').classList.remove('active');
     document.getElementById('projectionForm').reset();
+}
+
+// 📝 Alterna tipo de projeção (entrada/saída) e atualiza labels
+function selectProjectionType(type) {
+    currentProjectionType = type;
+
+    // Update active button dentro do modal de projeção
+    document.querySelectorAll('#projectionForm .type-btn[data-type]').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Atualiza label do status baseado no tipo
+    const statusSelect = document.getElementById('projStatus');
+    if (statusSelect) {
+        const options = statusSelect.options;
+        if (type === 'income') {
+            options[0].textContent = 'Pendente';
+            options[1].textContent = 'Recebido';
+        } else {
+            options[0].textContent = 'Pendente';
+            options[1].textContent = 'Pago';
+        }
+    }
 }
 
 // 📝 Alterna tipo de transação (entrada/saída) e atualiza categorias
@@ -3877,29 +3968,15 @@ function initializeTopCategoriesChart() {
 // ===========================
 // WEEKLY TREND CHART (AREA)
 // ===========================
-// 🎨 Cria gráfico de área com despesas diárias da última semana
+// 🎨 Cria gráfico de área com despesas diárias da última semana do mês selecionado
 function initializeWeeklyTrendChart() {
     const chartEl = document.querySelector("#weeklyTrendChart");
     if (!chartEl) return;
 
-    const last7Days = [];
-    const labels = [];
-    const currentDate = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date(currentDate);
-        date.setDate(date.getDate() - i);
-        const dayExpenses = transactions.filter(t => {
-            const tDate = new Date(t.date);
-            return t.type === 'expense' &&
-                   tDate.toDateString() === date.toDateString();
-        }).reduce((sum, t) => sum + t.value, 0);
-        last7Days.push(dayExpenses);
-        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
-    }
+    const data = getWeeklyTrendData();
 
     const options = {
-        series: [{ name: 'Gastos', data: last7Days }],
+        series: [{ name: 'Gastos', data: data.values }],
         chart: {
             type: 'area',
             height: '100%',
@@ -3920,7 +3997,7 @@ function initializeWeeklyTrendChart() {
         },
         dataLabels: { enabled: false },
         xaxis: {
-            categories: labels,
+            categories: data.labels,
             labels: {
                 style: {
                     colors: '#64748b',
@@ -3942,7 +4019,9 @@ function initializeWeeklyTrendChart() {
         },
         tooltip: {
             y: {
-                formatter: (val) => formatCurrencyDisplay(val)
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
             }
         }
     };
@@ -3950,6 +4029,61 @@ function initializeWeeklyTrendChart() {
     weeklyTrendChart = new ApexCharts(chartEl, options);
     weeklyTrendChart.render();
 }
+
+// 📊 Obtém dados de despesas diárias da última semana do mês selecionado
+function getWeeklyTrendData() {
+    const last7Days = [];
+    const labels = [];
+
+    // Usar mês/ano selecionado como referência
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Pegar o último dia do mês selecionado
+    const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
+    const referenceDate = lastDayOfMonth;
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(referenceDate);
+        date.setDate(date.getDate() - i);
+        const dayExpenses = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'expense' &&
+                   tDate.toDateString() === date.toDateString();
+        }).reduce((sum, t) => sum + t.value, 0);
+        last7Days.push(dayExpenses);
+        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
+    }
+
+    return { values: last7Days, labels: labels };
+}
+
+// 🔄 Atualiza dados do gráfico de evolução semanal
+function updateWeeklyTrendChart() {
+    if (!weeklyTrendChart) return;
+    const data = getWeeklyTrendData();
+    weeklyTrendChart.updateOptions({
+        xaxis: {
+            categories: data.labels
+        }
+    });
+    weeklyTrendChart.updateSeries([{ name: 'Gastos', data: data.values }]);
+}
+
+// 🔄 Atualiza dados do gráfico de top categorias
+function updateTopCategoriesChart() {
+    if (!topCategoriesChart) return;
+    const data = getCategoryData();
+    const topCategories = data.categories.slice(0, 5);
+    const topValues = data.values.slice(0, 5);
+    topCategoriesChart.updateOptions({
+        xaxis: {
+            categories: topCategories
+        }
+    });
+    topCategoriesChart.updateSeries([{ name: 'Valor', data: topValues }]);
+}
+
 
 // ===========================
 // RESPONSIVE CHARTS
