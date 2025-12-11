@@ -103,7 +103,7 @@ a:hover { color: #2563EB; }
 .main-content {
   max-width: 100%;
   height: 100vh;
-  padding: 75px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed */
+  padding: 90px 1rem 0.5rem 1rem; /* Padding top compensa a navbar fixed + espaço extra */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -216,10 +216,15 @@ a:hover { color: #2563EB; }
   z-index: 1;
 }
 
-/* GRÁFICO PRINCIPAL - Ocupa 2 linhas à esquerda (reduzido) */
-.chart-main-container {
+/* GRÁFICOS DA COLUNA ESQUERDA - Cada um em uma linha */
+.chart-category {
   grid-column: 1;
-  grid-row: 1 / 3;
+  grid-row: 1;
+}
+
+.chart-payment-method {
+  grid-column: 1;
+  grid-row: 2;
 }
 
 /* SEÇÃO DE CHARTS MÉDIOS - Linha 1, colunas 2-3 */
@@ -254,18 +259,6 @@ a:hover { color: #2563EB; }
   height: 100%;
 }
 
-/* GRÁFICO PRINCIPAL - container */
-.chart-main-container {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  height: 100%;
-  min-height: 0;
-}
 
 .chart-header, .mini-chart-header {
   display: flex;
@@ -321,7 +314,8 @@ a:hover { color: #2563EB; }
 #topCategoriesChart,
 #weeklyTrendChart,
 #savingsGoalChart,
-#expenseLimitChart {
+#expenseLimitChart,
+#paymentMethodChart {
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -613,9 +607,13 @@ input:focus, select:focus {
     grid-template-columns: 1.5fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
   }
-  .chart-main-container {
+  .chart-category {
     grid-column: 1;
-    grid-row: 1 / 3;
+    grid-row: 1;
+  }
+  .chart-payment-method {
+    grid-column: 1;
+    grid-row: 2;
   }
   .charts-section-top {
     grid-column: 2;
@@ -639,14 +637,14 @@ input:focus, select:focus {
   }
   .dashboard-main-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto;
     height: auto;
   }
   .main-content {
     height: auto;
     overflow-y: auto;
   }
-  .chart-main-container, .charts-section-top, .charts-section-bottom {
+  .chart-category, .chart-payment-method, .charts-section-top, .charts-section-bottom {
     grid-column: 1;
     grid-row: auto;
   }
@@ -1147,7 +1145,7 @@ input:focus, select:focus {
    =========================== */
 @media (max-height: 800px) {
   .main-content {
-    padding-top: 55px;
+    padding-top: 70px;
     padding-bottom: 0.25rem;
   }
   .navbar { height: 55px; padding: 5px 20px; }

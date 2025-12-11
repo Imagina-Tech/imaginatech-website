@@ -311,12 +311,20 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
             <!-- Dashboard Grid: Gráfico Principal + Mini Charts + Gauges -->
             <div class="dashboard-main-grid">
-                <!-- GRÁFICO PRINCIPAL: Distribuição por Categoria (Esquerda, 2 linhas) -->
-                <div class="chart-main-container">
+                <!-- GRÁFICO: Distribuição por Categoria (Esquerda, Linha 1) -->
+                <div class="chart-card chart-category">
                     <div class="chart-header">
                         <h3>Distribuição por Categoria</h3>
                     </div>
                     <div id="categoryChart" style="flex: 1;"></div>
+                </div>
+
+                <!-- GRÁFICO: Análise de Pagamentos (Esquerda, Linha 2) -->
+                <div class="chart-card chart-payment-method">
+                    <div class="chart-header">
+                        <h3>Análise de Pagamentos</h3>
+                    </div>
+                    <div id="paymentMethodChart" style="flex: 1;"></div>
                 </div>
 
                 <!-- CHARTS TOP: Fluxo de Caixa + Comparativo (Linha 1, Colunas 2-3) -->

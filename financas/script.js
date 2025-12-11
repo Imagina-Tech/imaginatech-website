@@ -133,6 +133,7 @@ let topCategoriesChart = null;
 let weeklyTrendChart = null;
 let savingsGoalChart = null;
 let expenseLimitChart = null;
+let paymentMethodChart = null;
 
 // ===========================
 // FIREBASE INITIALIZATION
@@ -2527,6 +2528,10 @@ function destroyAllCharts() {
         categoryChart.destroy();
         categoryChart = null;
     }
+    if (paymentMethodChart) {
+        paymentMethodChart.destroy();
+        paymentMethodChart = null;
+    }
     if (comparisonChart) {
         comparisonChart.destroy();
         comparisonChart = null;
@@ -2557,6 +2562,7 @@ function initializeCharts() {
 
         initializeCashFlowChart();
         initializeCategoryChart();
+        initializePaymentMethodChart();
         initializeComparisonChart();
         initializeSavingsGoalChart();
         initializeExpenseLimitChart();
@@ -2574,11 +2580,12 @@ function initializeCharts() {
 function updateCharts() {
     try {
         console.log('[updateCharts] Atualizando todos os gráficos...');
-        if (cashFlowChart) updateCashFlowChart();
-        if (categoryChart) updateCategoryChart();
-        if (comparisonChart) updateComparisonChart();
-        if (topCategoriesChart) updateTopCategoriesChart();
-        if (weeklyTrendChart) updateWeeklyTrendChart();
+        updateCashFlowChart();
+        updateCategoryChart();
+        updatePaymentMethodChart();
+        updateComparisonChart();
+        updateTopCategoriesChart();
+        updateWeeklyTrendChart();
         console.log('[updateCharts] Gráficos atualizados!');
     } catch (error) {
         console.error('Erro ao atualizar gráficos:', error);
@@ -2831,6 +2838,7 @@ function initializeCategoryChart() {
 // 🔄 Atualiza dados do gráfico de categorias
 function updateCategoryChart() {
     const data = getCategoryData();
+    const chartEl = document.querySelector("#categoryChart");
 
     if (data.values.length === 0) {
         // Destroi o chart se não há dados
@@ -2838,21 +2846,26 @@ function updateCategoryChart() {
             categoryChart.destroy();
             categoryChart = null;
         }
-        const chartEl = document.querySelector("#categoryChart");
         if (chartEl) {
-            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #94a3b8;">Sem dados para exibir</div>';
+            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
         }
         return;
     }
 
-    if (categoryChart) {
-        categoryChart.updateOptions({
-            labels: data.categories,
-            series: data.values
-        });
-    } else {
+    // Se há dados mas gráfico não existe, limpa o elemento e recria
+    if (!categoryChart) {
+        if (chartEl) {
+            chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
+        }
         initializeCategoryChart();
+        return;
     }
+
+    // Atualiza gráfico existente
+    categoryChart.updateOptions({
+        labels: data.categories,
+        series: data.values
+    });
 }
 
 // 📊 Obtém dados de despesas agrupadas por categoria do mês atual
@@ -2877,6 +2890,170 @@ function getCategoryData() {
     const values = Object.values(categoryMap);
 
     return { categories, values };
+}
+
+// ===========================
+// PAYMENT METHOD CHART (POLAR AREA)
+// ===========================
+// 🎨 Cria gráfico polar area com análise de métodos de pagamento
+function initializePaymentMethodChart() {
+    const chartEl = document.querySelector("#paymentMethodChart");
+    if (!chartEl) return;
+
+    const data = getPaymentMethodData();
+
+    // Se não há dados, mostra mensagem
+    if (data.values.every(v => v === 0)) {
+        chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
+        return;
+    }
+
+    const options = {
+        series: data.values,
+        chart: {
+            type: 'polarArea',
+            height: '100%',
+            background: 'transparent',
+            fontFamily: 'Inter, sans-serif'
+        },
+        labels: data.labels,
+        colors: ['#22c55e', '#3b82f6', '#f59e0b'],
+        plotOptions: {
+            polarArea: {
+                rings: {
+                    strokeWidth: 1,
+                    strokeColor: 'rgba(255,255,255,0.1)'
+                },
+                spokes: {
+                    strokeWidth: 1,
+                    connectorColors: 'rgba(255,255,255,0.1)'
+                }
+            }
+        },
+        stroke: {
+            width: 1,
+            colors: ['#1e293b']
+        },
+        fill: {
+            opacity: 0.8
+        },
+        legend: {
+            show: true,
+            position: 'bottom',
+            fontSize: '10px',
+            labels: {
+                colors: '#94a3b8'
+            },
+            markers: {
+                width: 10,
+                height: 10
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        yaxis: {
+            show: false
+        },
+        responsive: [{
+            breakpoint: 1400,
+            options: {
+                legend: {
+                    fontSize: '9px'
+                }
+            }
+        }]
+    };
+
+    paymentMethodChart = new ApexCharts(chartEl, options);
+    paymentMethodChart.render();
+}
+
+// 🔄 Atualiza dados do gráfico de métodos de pagamento
+function updatePaymentMethodChart() {
+    const data = getPaymentMethodData();
+    const chartEl = document.querySelector("#paymentMethodChart");
+
+    if (data.values.every(v => v === 0)) {
+        // Destroi o chart se não há dados
+        if (paymentMethodChart) {
+            paymentMethodChart.destroy();
+            paymentMethodChart = null;
+        }
+        if (chartEl) {
+            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
+        }
+        return;
+    }
+
+    // Se há dados mas gráfico não existe, limpa o elemento e recria
+    if (!paymentMethodChart) {
+        if (chartEl) {
+            chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
+        }
+        initializePaymentMethodChart();
+        return;
+    }
+
+    // Atualiza gráfico existente
+    paymentMethodChart.updateOptions({
+        labels: data.labels,
+        series: data.values
+    });
+}
+
+// 📊 Obtém dados de métodos de pagamento do mês atual
+function getPaymentMethodData() {
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    let debitTotal = 0;
+    let creditTotal = 0;
+    let pixDinheiroTotal = 0;
+
+    // Transações do mês
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = new Date(t.date);
+            if (transactionDate.getMonth() === displayMonth &&
+                transactionDate.getFullYear() === displayYear) {
+                if (t.paymentMethod === 'credit') {
+                    creditTotal += t.value;
+                } else if (t.paymentMethod === 'debit') {
+                    debitTotal += t.value;
+                } else {
+                    // Transações sem método definido são consideradas Pix/Dinheiro
+                    pixDinheiroTotal += t.value;
+                }
+            }
+        }
+    });
+
+    // Adicionar valores de cartões de crédito (parcelamentos e assinaturas)
+    if (typeof creditCards !== 'undefined' && creditCards.length > 0) {
+        creditCards.forEach(card => {
+            if (typeof calculateCurrentBill === 'function') {
+                const billValue = calculateCurrentBill(card, displayMonth, displayYear);
+                creditTotal += billValue;
+            }
+        });
+    }
+
+    return {
+        labels: ['Débito/Pix', 'Crédito', 'Dinheiro'],
+        values: [
+            Math.round((debitTotal + pixDinheiroTotal) * 100) / 100,
+            Math.round(creditTotal * 100) / 100,
+            0 // Poderia ser expandido para incluir dinheiro separadamente
+        ]
+    };
 }
 
 // ===========================
@@ -4091,6 +4268,7 @@ function updateTopCategoriesChart() {
 window.addEventListener('resize', () => {
     if (cashFlowChart) cashFlowChart.updateOptions({});
     if (categoryChart) categoryChart.updateOptions({});
+    if (paymentMethodChart) paymentMethodChart.updateOptions({});
     if (comparisonChart) comparisonChart.updateOptions({});
 });
 
