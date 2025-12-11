@@ -2903,10 +2903,17 @@ function initializePaymentMethodChart() {
     const data = getPaymentMethodData();
 
     // Se não há dados, mostra mensagem
-    if (data.values.every(v => v === 0)) {
+    if (!data.hasData || data.values.length === 0) {
         chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
         return;
     }
+
+    // Mapear cores para cada tipo de pagamento
+    const colorMap = {
+        'Débito/Pix': '#22c55e',
+        'Crédito': '#3b82f6'
+    };
+    const colors = data.labels.map(label => colorMap[label] || '#94a3b8');
 
     const options = {
         series: data.values,
@@ -2917,7 +2924,7 @@ function initializePaymentMethodChart() {
             fontFamily: 'Inter, sans-serif'
         },
         labels: data.labels,
-        colors: ['#22c55e', '#3b82f6', '#f59e0b'],
+        colors: colors,
         plotOptions: {
             polarArea: {
                 rings: {
@@ -2981,7 +2988,7 @@ function updatePaymentMethodChart() {
     const data = getPaymentMethodData();
     const chartEl = document.querySelector("#paymentMethodChart");
 
-    if (data.values.every(v => v === 0)) {
+    if (!data.hasData || data.values.length === 0) {
         // Destroi o chart se não há dados
         if (paymentMethodChart) {
             paymentMethodChart.destroy();
@@ -3002,11 +3009,13 @@ function updatePaymentMethodChart() {
         return;
     }
 
-    // Atualiza gráfico existente
-    paymentMethodChart.updateOptions({
-        labels: data.labels,
-        series: data.values
-    });
+    // Atualiza gráfico existente - destruir e recriar para evitar problemas com labels dinâmicos
+    paymentMethodChart.destroy();
+    paymentMethodChart = null;
+    if (chartEl) {
+        chartEl.innerHTML = '';
+    }
+    initializePaymentMethodChart();
 }
 
 // 📊 Obtém dados de métodos de pagamento do mês atual
@@ -3046,13 +3055,19 @@ function getPaymentMethodData() {
         });
     }
 
+    // Preparar valores - filtrar apenas os que têm valor > 0
+    const allData = [
+        { label: 'Débito/Pix', value: Math.round((debitTotal + pixDinheiroTotal) * 100) / 100 },
+        { label: 'Crédito', value: Math.round(creditTotal * 100) / 100 }
+    ];
+
+    // Filtrar apenas valores positivos para evitar erro de altura negativa no gráfico
+    const filteredData = allData.filter(d => d.value > 0);
+
     return {
-        labels: ['Débito/Pix', 'Crédito', 'Dinheiro'],
-        values: [
-            Math.round((debitTotal + pixDinheiroTotal) * 100) / 100,
-            Math.round(creditTotal * 100) / 100,
-            0 // Poderia ser expandido para incluir dinheiro separadamente
-        ]
+        labels: filteredData.map(d => d.label),
+        values: filteredData.map(d => d.value),
+        hasData: filteredData.length > 0
     };
 }
 
