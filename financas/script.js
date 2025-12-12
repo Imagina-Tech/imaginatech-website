@@ -4689,3 +4689,119 @@ if (document.readyState === 'loading') {
 // Exportar para uso global
 window.initCustomSelects = initCustomSelects;
 window.CustomSelect = CustomSelect;
+
+// ===========================
+// FUNÇÃO ADMINISTRATIVA - LIMPAR DADOS
+// ===========================
+/**
+ * 🧹 Função administrativa para limpar todos os dados da conta da empresa
+ * ATENÇÃO: Esta função DELETARÁ permanentemente todos os dados!
+ * Para executar, abra o console do navegador e digite: cleanCompanyData()
+ */
+async function cleanCompanyData() {
+    try {
+        // 1. Buscar UID da empresa
+        console.log('🔍 Buscando UID da conta da empresa...');
+        const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
+
+        if (!configDoc.exists) {
+            console.error('❌ Configuração da empresa não encontrada!');
+            return;
+        }
+
+        const companyUserId = configDoc.data().userId;
+        console.log('✅ UID da empresa encontrado:', companyUserId);
+
+        // 2. Confirmar ação
+        const confirmation = confirm(
+            '⚠️ ATENÇÃO: Esta ação irá DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
+            'Serão deletados:\n' +
+            '• Transações\n' +
+            '• Assinaturas\n' +
+            '• Parcelamentos\n' +
+            '• Projeções\n' +
+            '• Cartões de crédito\n' +
+            '• Despesas de cartão\n' +
+            '• Pagamentos de cartão\n' +
+            '• Investimentos\n\n' +
+            'Deseja continuar?'
+        );
+
+        if (!confirmation) {
+            console.log('❌ Operação cancelada pelo usuário');
+            return;
+        }
+
+        // 3. Segundo nível de confirmação
+        const finalConfirmation = prompt(
+            'Digite "DELETAR TUDO" para confirmar a exclusão permanente de todos os dados da empresa:'
+        );
+
+        if (finalConfirmation !== 'DELETAR TUDO') {
+            console.log('❌ Confirmação inválida. Operação cancelada.');
+            return;
+        }
+
+        console.log('🧹 Iniciando limpeza dos dados...');
+        showLoading('Limpando dados da empresa...');
+
+        // 4. Deletar dados de cada coleção
+        const collections = [
+            'transactions',
+            'subscriptions',
+            'installments',
+            'projections',
+            'creditCards',
+            'cardExpenses',
+            'creditCardPayments',
+            'investments'
+        ];
+
+        let totalDeleted = 0;
+
+        for (const collectionName of collections) {
+            console.log(`🗑️ Deletando ${collectionName}...`);
+
+            const snapshot = await db.collection(collectionName)
+                .where('userId', '==', companyUserId)
+                .get();
+
+            const batch = db.batch();
+            let count = 0;
+
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+                count++;
+            });
+
+            if (count > 0) {
+                await batch.commit();
+                console.log(`✅ ${count} documento(s) deletado(s) de ${collectionName}`);
+                totalDeleted += count;
+            } else {
+                console.log(`ℹ️ Nenhum documento encontrado em ${collectionName}`);
+            }
+        }
+
+        hideLoading();
+
+        console.log(`✅ Limpeza concluída! Total de ${totalDeleted} documento(s) deletado(s).`);
+        showToast(`✅ Limpeza concluída! ${totalDeleted} registros removidos.`, 'success');
+
+        // 5. Recarregar dashboard
+        setTimeout(() => {
+            console.log('🔄 Recarregando dashboard...');
+            location.reload();
+        }, 2000);
+
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Erro ao limpar dados:', error);
+        showToast('Erro ao limpar dados: ' + error.message, 'error');
+    }
+}
+
+// Exportar função para console
+window.cleanCompanyData = cleanCompanyData;
+console.log('✅ Função administrativa carregada: cleanCompanyData()');
+console.log('📝 Para limpar os dados da empresa, digite no console: cleanCompanyData()');
