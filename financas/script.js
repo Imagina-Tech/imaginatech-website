@@ -4716,6 +4716,7 @@ async function cleanCompanyData() {
         const confirmation = confirm(
             '⚠️ ATENÇÃO: Esta ação irá DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
             'Serão deletados:\n' +
+            '• Serviços\n' +
             '• Transações\n' +
             '• Assinaturas\n' +
             '• Parcelamentos\n' +
@@ -4747,6 +4748,7 @@ async function cleanCompanyData() {
 
         // 4. Deletar dados de cada coleção
         const collections = [
+            'services',
             'transactions',
             'subscriptions',
             'installments',
