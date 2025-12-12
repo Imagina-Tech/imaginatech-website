@@ -1,0 +1,2147 @@
+﻿/*
+==================================================
+ARQUIVO: financas/finance-ui.js
+MÃ“DULO: UI - GrÃ¡ficos ApexCharts, Modais e Event Listeners
+SISTEMA: ImaginaTech - GestÃ£o de ImpressÃ£o 3D
+VERSÃƒO: 3.0 - RefatoraÃ§Ã£o Modular
+IMPORTANTE: NÃƒO REMOVER ESTE CABEÃ‡ALHO DE IDENTIFICAÃ‡ÃƒO
+==================================================
+*/
+}
+
+// ===========================
+// APEXCHARTS - INITIALIZATION
+// ===========================
+
+// ðŸ”„ DestrÃ³i todas as instÃ¢ncias de grÃ¡ficos antes de recriar
+function destroyAllCharts() {
+    console.log('Destruindo grÃ¡ficos existentes...');
+
+    if (cashFlowChart) {
+        cashFlowChart.destroy();
+        cashFlowChart = null;
+    }
+    if (categoryChart) {
+        categoryChart.destroy();
+        categoryChart = null;
+    }
+    if (paymentMethodChart) {
+        paymentMethodChart.destroy();
+        paymentMethodChart = null;
+    }
+    if (comparisonChart) {
+        comparisonChart.destroy();
+        comparisonChart = null;
+    }
+    if (topCategoriesChart) {
+        topCategoriesChart.destroy();
+        topCategoriesChart = null;
+    }
+    if (weeklyTrendChart) {
+        weeklyTrendChart.destroy();
+        weeklyTrendChart = null;
+    }
+    if (savingsGoalChart) {
+        savingsGoalChart.destroy();
+        savingsGoalChart = null;
+    }
+    if (expenseLimitChart) {
+        expenseLimitChart.destroy();
+        expenseLimitChart = null;
+    }
+}
+
+// ðŸ”„ Inicializa todos os grÃ¡ficos do dashboard
+function initializeCharts() {
+    try {
+        // Destruir grÃ¡ficos existentes antes de criar novos
+        destroyAllCharts();
+
+        initializeCashFlowChart();
+        initializeCategoryChart();
+        initializePaymentMethodChart();
+        initializeComparisonChart();
+        initializeSavingsGoalChart();
+        initializeExpenseLimitChart();
+        initializeGrowthSparkline();
+        initializeExpenseTrendSparkline();
+        initializeTopCategoriesChart();
+        initializeWeeklyTrendChart();
+        console.log('GrÃ¡ficos inicializados');
+    } catch (error) {
+        console.error('Erro ao inicializar grÃ¡ficos:', error);
+    }
+}
+
+// ðŸ”„ Atualiza dados de todos os grÃ¡ficos existentes
+function updateCharts() {
+    try {
+        console.log('[updateCharts] Atualizando todos os grÃ¡ficos...');
+        updateCashFlowChart();
+        updateCategoryChart();
+        updatePaymentMethodChart();
+        updateComparisonChart();
+        updateTopCategoriesChart();
+        updateWeeklyTrendChart();
+        console.log('[updateCharts] GrÃ¡ficos atualizados!');
+    } catch (error) {
+        console.error('Erro ao atualizar grÃ¡ficos:', error);
+    }
+}
+
+// ===========================
+// CASH FLOW CHART
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico de fluxo de caixa (entradas vs saÃ­das)
+function initializeCashFlowChart() {
+    const chartEl = document.querySelector("#cashFlowChart");
+    if (!chartEl) return;
+
+    const data = getCashFlowData();
+
+    const options = {
+        series: [
+            {
+                name: 'Entradas',
+                data: data.incomes
+            },
+            {
+                name: 'SaÃ­das',
+                data: data.expenses
+            }
+        ],
+        chart: {
+            type: 'area',
+            height: '100%',
+            parentHeightOffset: 0,
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            },
+            fontFamily: 'Inter, sans-serif',
+            redrawOnParentResize: true
+        },
+        colors: ['#10b981', '#ef4444'],
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                opacityFrom: 0.6,
+                opacityTo: 0.1
+            }
+        },
+        xaxis: {
+            categories: data.months,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                formatter: function (value) {
+                    return 'R$ ' + value.toFixed(0);
+                },
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 4
+        },
+        legend: {
+            show: false
+        }
+    };
+
+    cashFlowChart = new ApexCharts(chartEl, options);
+    cashFlowChart.render();
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de fluxo de caixa
+function updateCashFlowChart() {
+    const data = getCashFlowData();
+    // Atualizar tanto as sÃ©ries quanto as categorias do eixo X
+    cashFlowChart.updateOptions({
+        xaxis: {
+            categories: data.months
+        }
+    });
+    cashFlowChart.updateSeries([
+        { name: 'Entradas', data: data.incomes },
+        { name: 'SaÃ­das', data: data.expenses }
+    ]);
+}
+
+// ðŸ“Š ObtÃ©m dados de entradas e saÃ­das dos Ãºltimos 12 meses (baseado no mÃªs selecionado)
+function getCashFlowData() {
+    const months = [];
+    const incomes = [];
+    const expenses = [];
+
+    // Usar mÃªs/ano selecionado como referÃªncia (em vez da data atual)
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Criar data de referÃªncia baseada no mÃªs selecionado
+    const referenceDate = new Date(displayYear, displayMonth, 1);
+
+    // Get last 12 months from the selected month
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date(referenceDate);
+        date.setMonth(date.getMonth() - i);
+
+        const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
+        months.push(monthName.charAt(0).toUpperCase() + monthName.slice(1));
+
+        const monthTransactions = transactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === date.getMonth() &&
+                   transactionDate.getFullYear() === date.getFullYear();
+        });
+
+        const monthIncome = monthTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.value, 0);
+
+        const monthExpense = monthTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.value, 0);
+
+        incomes.push(monthIncome);
+        expenses.push(monthExpense);
+    }
+
+    return { months, incomes, expenses };
+}
+
+// ===========================
+// CATEGORY CHART (DONUT)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico de pizza com distribuiÃ§Ã£o de despesas por categoria
+function initializeCategoryChart() {
+    const chartEl = document.querySelector("#categoryChart");
+    if (!chartEl) return;
+
+    const data = getCategoryData();
+
+    // Se nÃ£o hÃ¡ dados, mostra mensagem
+    if (data.values.length === 0) {
+        chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #94a3b8;">Sem dados para exibir</div>';
+        return;
+    }
+
+    const options = {
+        series: data.values,
+        chart: {
+            type: 'pie',
+            height: '100%',
+            background: 'transparent',
+            fontFamily: 'Inter, sans-serif'
+        },
+        labels: data.categories,
+        colors: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
+        plotOptions: {
+            pie: {
+                offsetY: 0,
+                customScale: 0.85,
+                dataLabels: {
+                    offset: -5,
+                    minAngleToShowLabel: 10
+                }
+            }
+        },
+        legend: {
+            show: true,
+            position: 'right',
+            fontSize: '10px',
+            labels: {
+                colors: '#94a3b8'
+            },
+            itemMargin: {
+                vertical: 2
+            },
+            formatter: function(seriesName, opts) {
+                return seriesName.length > 12 ? seriesName.substring(0, 12) + '...' : seriesName;
+            }
+        },
+        stroke: {
+            width: 1,
+            colors: ['#1e293b']
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val, opts) {
+                return val.toFixed(0) + '%';
+            },
+            style: {
+                fontSize: '10px',
+                fontWeight: 600,
+                colors: ['#fff']
+            },
+            dropShadow: {
+                enabled: true,
+                blur: 2,
+                opacity: 0.8
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        responsive: [{
+            breakpoint: 1400,
+            options: {
+                legend: {
+                    position: 'bottom',
+                    fontSize: '9px'
+                }
+            }
+        }]
+    };
+
+    categoryChart = new ApexCharts(chartEl, options);
+    categoryChart.render();
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de categorias
+function updateCategoryChart() {
+    const data = getCategoryData();
+    const chartEl = document.querySelector("#categoryChart");
+
+    if (data.values.length === 0) {
+        // Destroi o chart se nÃ£o hÃ¡ dados
+        if (categoryChart) {
+            categoryChart.destroy();
+            categoryChart = null;
+        }
+        if (chartEl) {
+            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
+        }
+        return;
+    }
+
+    // Se hÃ¡ dados mas grÃ¡fico nÃ£o existe, limpa o elemento e recria
+    if (!categoryChart) {
+        if (chartEl) {
+            chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
+        }
+        initializeCategoryChart();
+        return;
+    }
+
+    // Atualiza grÃ¡fico existente
+    categoryChart.updateOptions({
+        labels: data.categories,
+        series: data.values
+    });
+}
+
+// ðŸ“Š ObtÃ©m dados de despesas agrupadas por categoria do mÃªs atual
+function getCategoryData() {
+    const categoryMap = {};
+
+    // Usar mÃªs selecionado se disponÃ­vel
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = new Date(t.date);
+            if (transactionDate.getMonth() === displayMonth &&
+                transactionDate.getFullYear() === displayYear) {
+                categoryMap[t.category] = (categoryMap[t.category] || 0) + t.value;
+            }
+        }
+    });
+
+    const categories = Object.keys(categoryMap);
+    const values = Object.values(categoryMap);
+
+    return { categories, values };
+}
+
+// ===========================
+// PAYMENT METHOD CHART (POLAR AREA)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico polar area com anÃ¡lise de mÃ©todos de pagamento
+function initializePaymentMethodChart() {
+    const chartEl = document.querySelector("#paymentMethodChart");
+    if (!chartEl) return;
+
+    const data = getPaymentMethodData();
+
+    // Se nÃ£o hÃ¡ dados, mostra mensagem
+    if (!data.hasData || data.values.length === 0) {
+        chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
+        return;
+    }
+
+    // Mapear cores para cada tipo de pagamento
+    const colorMap = {
+        'DÃ©bito/Pix': '#22c55e',
+        'CrÃ©dito': '#3b82f6'
+    };
+    const colors = data.labels.map(label => colorMap[label] || '#94a3b8');
+
+    const options = {
+        series: data.values,
+        chart: {
+            type: 'polarArea',
+            height: '100%',
+            background: 'transparent',
+            fontFamily: 'Inter, sans-serif'
+        },
+        labels: data.labels,
+        colors: colors,
+        plotOptions: {
+            polarArea: {
+                rings: {
+                    strokeWidth: 1,
+                    strokeColor: 'rgba(255,255,255,0.1)'
+                },
+                spokes: {
+                    strokeWidth: 1,
+                    connectorColors: 'rgba(255,255,255,0.1)'
+                }
+            }
+        },
+        stroke: {
+            width: 1,
+            colors: ['#1e293b']
+        },
+        fill: {
+            opacity: 0.8
+        },
+        legend: {
+            show: true,
+            position: 'bottom',
+            fontSize: '10px',
+            labels: {
+                colors: '#94a3b8'
+            },
+            markers: {
+                width: 10,
+                height: 10
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        },
+        yaxis: {
+            show: false
+        },
+        responsive: [{
+            breakpoint: 1400,
+            options: {
+                legend: {
+                    fontSize: '9px'
+                }
+            }
+        }]
+    };
+
+    paymentMethodChart = new ApexCharts(chartEl, options);
+    paymentMethodChart.render();
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de mÃ©todos de pagamento
+function updatePaymentMethodChart() {
+    const data = getPaymentMethodData();
+    const chartEl = document.querySelector("#paymentMethodChart");
+
+    if (!data.hasData || data.values.length === 0) {
+        // Destroi o chart se nÃ£o hÃ¡ dados
+        if (paymentMethodChart) {
+            paymentMethodChart.destroy();
+            paymentMethodChart = null;
+        }
+        if (chartEl) {
+            chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
+        }
+        return;
+    }
+
+    // Se hÃ¡ dados mas grÃ¡fico nÃ£o existe, limpa o elemento e recria
+    if (!paymentMethodChart) {
+        if (chartEl) {
+            chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
+        }
+        initializePaymentMethodChart();
+        return;
+    }
+
+    // Atualiza grÃ¡fico existente - destruir e recriar para evitar problemas com labels dinÃ¢micos
+    paymentMethodChart.destroy();
+    paymentMethodChart = null;
+    if (chartEl) {
+        chartEl.innerHTML = '';
+    }
+    initializePaymentMethodChart();
+}
+
+// ðŸ“Š ObtÃ©m dados de mÃ©todos de pagamento do mÃªs atual
+function getPaymentMethodData() {
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    let debitTotal = 0;
+    let creditTotal = 0;
+    let pixDinheiroTotal = 0;
+
+    // TransaÃ§Ãµes do mÃªs
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = new Date(t.date);
+            if (transactionDate.getMonth() === displayMonth &&
+                transactionDate.getFullYear() === displayYear) {
+                if (t.paymentMethod === 'credit') {
+                    creditTotal += t.value;
+                } else if (t.paymentMethod === 'debit') {
+                    debitTotal += t.value;
+                } else {
+                    // TransaÃ§Ãµes sem mÃ©todo definido sÃ£o consideradas Pix/Dinheiro
+                    pixDinheiroTotal += t.value;
+                }
+            }
+        }
+    });
+
+    // Adicionar valores de cartÃµes de crÃ©dito (parcelamentos e assinaturas)
+    if (typeof creditCards !== 'undefined' && creditCards.length > 0) {
+        creditCards.forEach(card => {
+            if (typeof calculateCurrentBill === 'function') {
+                const billValue = calculateCurrentBill(card, displayMonth, displayYear);
+                creditTotal += billValue;
+            }
+        });
+    }
+
+    // Preparar valores - filtrar apenas os que tÃªm valor > 0
+    const allData = [
+        { label: 'DÃ©bito/Pix', value: Math.round((debitTotal + pixDinheiroTotal) * 100) / 100 },
+        { label: 'CrÃ©dito', value: Math.round(creditTotal * 100) / 100 }
+    ];
+
+    // Filtrar apenas valores positivos para evitar erro de altura negativa no grÃ¡fico
+    const filteredData = allData.filter(d => d.value > 0);
+
+    return {
+        labels: filteredData.map(d => d.label),
+        values: filteredData.map(d => d.value),
+        hasData: filteredData.length > 0
+    };
+}
+
+// ===========================
+// COMPARISON CHART (BARS)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico de barras comparando receitas e despesas mensais
+function initializeComparisonChart() {
+    const chartEl = document.querySelector("#comparisonChart");
+    if (!chartEl) return;
+
+    const data = getComparisonData();
+
+    const options = {
+        series: [
+            {
+                name: 'Valor',
+                data: data.values
+            }
+        ],
+        chart: {
+            type: 'bar',
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                distributed: true,
+                barHeight: '55%',
+                dataLabels: {
+                    position: 'center'
+                }
+            }
+        },
+        colors: ['#10b981', '#ef4444'],
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return formatCurrencyDisplay(val);
+            },
+            offsetX: 0,
+            style: {
+                fontSize: '13px',
+                fontWeight: 700,
+                colors: ['#fff']
+            },
+            dropShadow: {
+                enabled: true,
+                blur: 2,
+                opacity: 0.5
+            }
+        },
+        xaxis: {
+            categories: data.labels,
+            labels: {
+                show: false
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: ['#10b981', '#ef4444'],
+                    fontSize: '12px',
+                    fontWeight: 600
+                }
+            }
+        },
+        grid: {
+            show: false
+        },
+        tooltip: {
+            enabled: false
+        },
+        legend: {
+            show: false
+        }
+    };
+
+    comparisonChart = new ApexCharts(chartEl, options);
+    comparisonChart.render();
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de comparaÃ§Ã£o
+function updateComparisonChart() {
+    const data = getComparisonData();
+    comparisonChart.updateSeries([{
+        name: 'Valor',
+        data: data.values
+    }]);
+}
+
+// ðŸ“Š ObtÃ©m dados de comparaÃ§Ã£o entre receitas e despesas por mÃªs
+function getComparisonData() {
+    // Usar mÃªs selecionado se disponÃ­vel
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    const monthTransactions = transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate.getMonth() === currentMonth &&
+               transactionDate.getFullYear() === currentYear;
+    });
+
+    const totalIncome = monthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    const totalExpense = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.value, 0);
+
+    return {
+        labels: ['Entradas', 'SaÃ­das'],
+        values: [totalIncome, totalExpense]
+    };
+}
+
+// ===========================
+// MODALS
+// ===========================
+// ðŸŽ¨ Abre modal para adicionar nova transaÃ§Ã£o
+function openTransactionModal() {
+    editingTransactionId = null;
+    document.getElementById('transactionModal').classList.add('active');
+    document.getElementById('transactionForm').reset();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+
+    // Reset payment method state
+    currentTransactionType = 'income';
+    currentPaymentMethod = 'debit';
+
+    // Reset credit card dropdown explicitly and populate with cards
+    const transactionCardSelect = document.getElementById('transactionCard');
+    transactionCardSelect.value = '';
+    populateTransactionCardOptions();
+
+    selectTransactionType('income');
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova TransaÃ§Ã£o';
+}
+
+// ðŸŽ¨ Fecha qualquer modal pelo ID
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// ðŸŽ¨ Fecha modal de transaÃ§Ã£o e reseta formulÃ¡rio
+function closeTransactionModal() {
+    editingTransactionId = null;
+    currentPaymentMethod = 'debit';
+    document.getElementById('transactionModal').classList.remove('active');
+    document.getElementById('transactionForm').reset();
+    // Ocultar campos condicionais
+    document.getElementById('paymentMethodGroup').style.display = 'none';
+    document.getElementById('creditCardGroup').style.display = 'none';
+}
+
+// ðŸŽ¨ Abre modal para editar transaÃ§Ã£o existente
+function editTransaction(id) {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+
+    editingTransactionId = id;
+
+    // Abre o modal
+    document.getElementById('transactionModal').classList.add('active');
+
+    // Atualiza tÃ­tulo do modal
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar TransaÃ§Ã£o';
+
+    // Preenche os campos
+    document.getElementById('description').value = transaction.description;
+    document.getElementById('value').value = formatCurrencyValue(transaction.value);
+    document.getElementById('category').value = transaction.category;
+    document.getElementById('date').value = transaction.date;
+
+    // Define o tipo de transaÃ§Ã£o
+    currentTransactionType = transaction.type;
+    selectTransactionType(transaction.type);
+
+    // Define o mÃ©todo de pagamento (tanto para entrada quanto para saÃ­da)
+    currentPaymentMethod = transaction.paymentMethod || 'debit';
+    selectPaymentMethod(currentPaymentMethod);
+
+    // Define o cartÃ£o se for crÃ©dito
+    if (transaction.paymentMethod === 'credit' && transaction.cardId) {
+        document.getElementById('transactionCard').value = transaction.cardId;
+    }
+}
+
+// ðŸŽ¨ Abre modal para adicionar nova assinatura
+function openSubscriptionModal() {
+    editingSubscriptionId = null;
+    document.getElementById('subscriptionModal').classList.add('active');
+    document.getElementById('subscriptionForm').reset();
+    document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Nova Assinatura';
+
+    // Preenche dropdown de cartÃµes
+    const cardSelect = document.getElementById('subCard');
+    cardSelect.innerHTML = '<option value="">Sem cartÃ£o</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}">${card.name} - ${card.institution}</option>`
+        ).join('');
+}
+
+// ðŸŽ¨ Fecha modal de assinatura
+function closeSubscriptionModal() {
+    editingSubscriptionId = null;
+    document.getElementById('subscriptionModal').classList.remove('active');
+    document.getElementById('subscriptionForm').reset();
+}
+
+// ðŸŽ¨ Abre modal para editar assinatura existente
+function editSubscription(id) {
+    const subscription = subscriptions.find(s => s.id === id);
+    if (!subscription) return;
+
+    editingSubscriptionId = id;
+
+    // Abre o modal
+    document.getElementById('subscriptionModal').classList.add('active');
+
+    // Atualiza tÃ­tulo do modal
+    document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Editar Assinatura';
+
+    // Preenche dropdown de cartÃµes
+    const cardSelect = document.getElementById('subCard');
+    cardSelect.innerHTML = '<option value="">Sem cartÃ£o</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+        ).join('');
+
+    // Preenche os campos
+    document.getElementById('subName').value = subscription.name;
+    document.getElementById('subValue').value = formatCurrencyValue(subscription.value);
+    document.getElementById('subDueDay').value = subscription.dueDay;
+    document.getElementById('subCategory').value = subscription.category;
+    document.getElementById('subStatus').value = subscription.status;
+}
+
+// ðŸŽ¨ Abre modal para adicionar novo parcelamento
+function openInstallmentModal() {
+    editingInstallmentId = null;
+    document.getElementById('installmentModal').classList.add('active');
+    document.getElementById('installmentForm').reset();
+    document.getElementById('instCurrentInstallment').value = 1;
+    // Define valor total como padrÃ£o
+    selectInstallmentValueType('total');
+    // Atualiza tÃ­tulo do modal
+    document.querySelector('#installmentModal .modal-header h2').textContent = 'Novo Parcelamento';
+
+    // Preenche dropdown de cartÃµes
+    const cardSelect = document.getElementById('instCard');
+    cardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}">${card.name} - ${card.institution}</option>`
+        ).join('');
+}
+
+// ðŸŽ¨ Fecha modal de parcelamento
+function closeInstallmentModal() {
+    editingInstallmentId = null;
+    document.getElementById('installmentModal').classList.remove('active');
+    document.getElementById('installmentForm').reset();
+    // Reset para valor total como padrÃ£o
+    selectInstallmentValueType('total');
+}
+
+// ðŸŽ¨ Abre modal para editar parcelamento existente
+function editInstallment(id) {
+    const installment = installments.find(inst => inst.id === id);
+    if (!installment) return;
+
+    editingInstallmentId = id;
+
+    // Abre o modal
+    document.getElementById('installmentModal').classList.add('active');
+
+    // Atualiza tÃ­tulo do modal
+    document.querySelector('#installmentModal .modal-header h2').textContent = 'Editar Parcelamento';
+
+    // Preenche dropdown de cartÃµes
+    const cardSelect = document.getElementById('instCard');
+    cardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>' +
+        creditCards.map(card =>
+            `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+        ).join('');
+
+    // Preenche os campos
+    document.getElementById('instDescription').value = installment.description;
+    document.getElementById('instTotalInstallments').value = installment.totalInstallments;
+    document.getElementById('instCurrentInstallment').value = installment.currentInstallment || 1;
+
+    // Define como valor total e preenche
+    selectInstallmentValueType('total');
+    document.getElementById('instTotalValue').value = formatCurrencyValue(installment.totalValue);
+
+    // Calcula e mostra o valor da parcela
+    calculateInstallmentValues();
+}
+
+// VariÃ¡vel global para rastrear o tipo de valor selecionado no parcelamento
+let installmentValueType = 'total';
+
+// ðŸ“ Alterna entre entrada de valor total ou valor por parcela
+function selectInstallmentValueType(type) {
+    installmentValueType = type;
+
+    // Remove active de todos os botÃµes
+    const buttons = document.querySelectorAll('#installmentModal .type-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // Adiciona active no botÃ£o clicado
+    const activeButton = document.querySelector(`#installmentModal .type-btn[data-type="${type}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Mostra/esconde os campos apropriados
+    const totalValueGroup = document.getElementById('totalValueGroup');
+    const installmentValueGroup = document.getElementById('installmentValueGroup');
+    const totalValueInput = document.getElementById('instTotalValue');
+    const installmentValueInput = document.getElementById('instInstallmentValue');
+
+    if (type === 'total') {
+        totalValueGroup.classList.remove('hidden');
+        installmentValueGroup.classList.add('hidden');
+        totalValueInput.required = true;
+        installmentValueInput.required = false;
+        installmentValueInput.value = '';
+    } else {
+        totalValueGroup.classList.add('hidden');
+        installmentValueGroup.classList.remove('hidden');
+        totalValueInput.required = false;
+        installmentValueInput.required = true;
+        totalValueInput.value = '';
+    }
+}
+
+// ðŸ”„ Calcula e exibe valor por parcela baseado no valor total
+function calculateInstallmentValues() {
+    const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value) || 0;
+
+    if (totalInstallments < 2) return;
+
+    if (installmentValueType === 'total') {
+        // UsuÃ¡rio digitou valor total, calcular valor da parcela
+        const totalValueStr = document.getElementById('instTotalValue').value;
+        if (!totalValueStr) return;
+
+        const totalValue = parseCurrencyInput(totalValueStr);
+        if (totalValue > 0) {
+            const installmentValue = totalValue / totalInstallments;
+            const installmentValueInput = document.getElementById('instInstallmentValue');
+            installmentValueInput.value = formatCurrencyValue(installmentValue);
+        }
+    } else {
+        // UsuÃ¡rio digitou valor da parcela, calcular valor total
+        const installmentValueStr = document.getElementById('instInstallmentValue').value;
+        if (!installmentValueStr) return;
+
+        const installmentValue = parseCurrencyInput(installmentValueStr);
+        if (installmentValue > 0) {
+            const totalValue = installmentValue * totalInstallments;
+            const totalValueInput = document.getElementById('instTotalValue');
+            totalValueInput.value = formatCurrencyValue(totalValue);
+        }
+    }
+}
+
+// ðŸŽ¨ Abre modal para adicionar nova projeÃ§Ã£o
+function openProjectionModal() {
+    editingProjectionId = null;
+    currentProjectionType = 'income';
+    document.getElementById('projectionModal').classList.add('active');
+    document.getElementById('projectionForm').reset();
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova ProjeÃ§Ã£o';
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('projDate').value = today;
+    document.getElementById('projStatus').value = 'pending';
+    // Reset tipo para entrada
+    selectProjectionType('income');
+}
+
+// ðŸŽ¨ Abre modal para editar projeÃ§Ã£o existente
+function editProjection(id) {
+    const projection = projections.find(p => p.id === id);
+    if (!projection) return;
+
+    editingProjectionId = id;
+
+    // Abre o modal
+    document.getElementById('projectionModal').classList.add('active');
+
+    // Atualiza tÃ­tulo do modal
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Editar ProjeÃ§Ã£o';
+
+    // Preenche os campos
+    document.getElementById('projDescription').value = projection.description;
+    document.getElementById('projValue').value = formatCurrencyValue(projection.value);
+    document.getElementById('projDate').value = projection.date;
+    document.getElementById('projStatus').value = projection.status || 'pending';
+
+    // Seleciona o tipo correto (default: income para projeÃ§Ãµes antigas)
+    const projType = projection.type || 'income';
+    selectProjectionType(projType);
+}
+
+// ðŸŽ¨ Fecha modal de projeÃ§Ã£o
+function closeProjectionModal() {
+    editingProjectionId = null;
+    currentProjectionType = 'income';
+    document.getElementById('projectionModal').classList.remove('active');
+    document.getElementById('projectionForm').reset();
+}
+
+// ðŸ“ Alterna tipo de projeÃ§Ã£o (entrada/saÃ­da) e atualiza labels
+function selectProjectionType(type) {
+    currentProjectionType = type;
+
+    // Update active button dentro do modal de projeÃ§Ã£o
+    document.querySelectorAll('#projectionForm .type-btn[data-type]').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Atualiza label do status baseado no tipo
+    const statusSelect = document.getElementById('projStatus');
+    if (statusSelect) {
+        const options = statusSelect.options;
+        if (type === 'income') {
+            options[0].textContent = 'Pendente';
+            options[1].textContent = 'Recebido';
+        } else {
+            options[0].textContent = 'Pendente';
+            options[1].textContent = 'Pago';
+        }
+    }
+}
+
+// ðŸ“ Alterna tipo de transaÃ§Ã£o (entrada/saÃ­da) e atualiza categorias
+function selectTransactionType(type) {
+    currentTransactionType = type;
+
+    // Update active button
+    document.querySelectorAll('.type-btn[data-type]').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Sempre mostrar mÃ©todo de pagamento (para reembolsos em cartÃ£o tambÃ©m)
+    const paymentMethodGroup = document.getElementById('paymentMethodGroup');
+    paymentMethodGroup.style.display = 'block';
+    // Reset to debit quando trocar de tipo
+    selectPaymentMethod('debit');
+
+    // Update categories
+    populateCategories();
+}
+
+// ðŸ“ Alterna mÃ©todo de pagamento (dÃ©bito/crÃ©dito) e exibe campos apropriados
+function selectPaymentMethod(method) {
+    currentPaymentMethod = method;
+
+    // Update active button
+    document.querySelectorAll('.type-btn[data-method]').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.method === method) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Show/hide credit card selector
+    const creditCardGroup = document.getElementById('creditCardGroup');
+    const transactionCardSelect = document.getElementById('transactionCard');
+
+    if (method === 'credit') {
+        creditCardGroup.style.display = 'block';
+        transactionCardSelect.required = true;
+        // Always repopulate with fresh data
+        populateTransactionCardOptions();
+        // Reset selection to empty (force user to choose)
+        transactionCardSelect.value = '';
+    } else {
+        creditCardGroup.style.display = 'none';
+        transactionCardSelect.required = false;
+        // Clear dropdown when switching away from credit
+        transactionCardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>';
+        transactionCardSelect.value = '';
+    }
+}
+
+// ðŸ“ Popula dropdown de cartÃµes no formulÃ¡rio de transaÃ§Ã£o
+function populateTransactionCardOptions() {
+    const select = document.getElementById('transactionCard');
+    select.innerHTML = '<option value="">Selecione um cartÃ£o</option>';
+
+    // Debug: Log card data before populating
+    console.log('ðŸ“‹ [populateTransactionCardOptions] CartÃµes disponÃ­veis:', creditCards.map(c => ({ id: c.id, name: c.name })));
+
+    if (!creditCards || creditCards.length === 0) {
+        console.warn('âš ï¸ Nenhum cartÃ£o disponÃ­vel para seleÃ§Ã£o');
+        return;
+    }
+
+    creditCards.forEach(card => {
+        if (!card.id || !card.name) {
+            console.error('âŒ CartÃ£o invÃ¡lido:', card);
+            return;
+        }
+        const option = document.createElement('option');
+        option.value = card.id;
+        option.textContent = `${card.name}${card.institution ? ' - ' + card.institution : ''}`;
+        select.appendChild(option);
+    });
+
+    console.log('âœ… Dropdown preenchido com', select.options.length - 1, 'cartÃµes');
+}
+
+// ðŸ“ Sugere data padrÃ£o baseada no perÃ­odo da fatura do cartÃ£o selecionado
+function updateDefaultDateForCard(cardId) {
+    if (!cardId) {
+        // Se nenhum cartÃ£o selecionado, usar hoje
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        return;
+    }
+
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    // Calcular o perÃ­odo da fatura deste cartÃ£o
+    const today = new Date();
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
+
+    let billStartDate;
+
+    // Se estÃ¡ navegando para um mÃªs diferente do atual
+    const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
+
+    if (isNavigating) {
+        // Navegando: Fatura aberta Ã© DIA (closingDay+1) do mÃªs anterior atÃ© fechamento do mÃªs visualizado
+        let prevMonth = currentMonth - 1;
+        let prevYear = currentYear;
+        if (prevMonth < 0) {
+            prevMonth = 11;
+            prevYear--;
+        }
+        billStartDate = new Date(prevYear, prevMonth, card.closingDay + 1);
+    } else {
+        // Usando lÃ³gica do mÃªs atual
+        if (today.getDate() < card.closingDay) {
+            // Fatura aberta Ã© do mÃªs atual
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
+            if (currentMonth === 0) {
+                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1);
+            }
+        } else {
+            // Fatura aberta Ã© do prÃ³ximo mÃªs
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
+        }
+    }
+
+    // Usar primeira data vÃ¡lida do perÃ­odo
+    const defaultDate = billStartDate.toISOString().split('T')[0];
+    document.getElementById('date').value = defaultDate;
+
+    console.log(`ðŸ“… [updateDefaultDateForCard] CartÃ£o "${card.name}" - PerÃ­odo comeÃ§a em: ${defaultDate}`);
+}
+
+// Adicionar event listener ao dropdown de cartÃµes
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'transactionCard') {
+        const cardId = e.target.value;
+        if (cardId) {
+            updateDefaultDateForCard(cardId);
+        }
+    }
+}, true);
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+    }
+});
+
+// ===========================
+// UTILITY FUNCTIONS
+// ===========================
+// ðŸ“ Formata valor numÃ©rico para exibiÃ§Ã£o (R$ 1.234,56)
+function formatCurrencyDisplay(value) {
+    if (!value && value !== 0) return 'R$ 0,00';
+
+    return value.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
+}
+
+// ðŸ“ Formata input de moeda conforme o usuÃ¡rio digita (onkeyup event)
+function formatCurrency(inputElement) {
+    // Remove tudo que nÃ£o for nÃºmero
+    let value = inputElement.value.replace(/\D/g, '');
+
+    if (!value) {
+        inputElement.value = '';
+        return;
+    }
+
+    // Converte para nÃºmero e divide por 100 (para adicionar os centavos)
+    let numValue = parseInt(value, 10) / 100;
+
+    // Formata para moeda brasileira
+    inputElement.value = numValue.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// ðŸ“ Formata valor numÃ©rico para input (1234.56)
+function formatCurrencyValue(value) {
+    // Converte um nÃºmero para o formato do input (1.234,56)
+    if (!value && value !== 0) return '';
+
+    let formatted = value.toFixed(2);
+    formatted = formatted.replace('.', ',');
+    formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    return formatted;
+}
+
+// ðŸ“ Converte string formatada (1.234,56) para nÃºmero
+function parseCurrencyInput(str) {
+    if (!str) return 0;
+
+    // Remove R$ and spaces
+    str = str.replace(/[R$\s]/g, '');
+
+    // Replace dots and convert comma to dot
+    str = str.replace(/\./g, '').replace(',', '.');
+
+    return parseFloat(str) || 0;
+}
+
+// ðŸ“ Formata string de data para exibiÃ§Ã£o local
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('pt-BR');
+}
+
+// ðŸŽ¨ Exibe overlay de carregamento com mensagem personalizada
+function showLoading(message = 'Carregando...') {
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+
+    const text = overlay.querySelector('.loading-text');
+    if (text) text.textContent = message;
+    overlay.style.display = 'flex';
+}
+
+// ðŸŽ¨ Esconde overlay de carregamento
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// ðŸŽ¨ Exibe notificaÃ§Ã£o toast temporÃ¡ria (sucesso/erro/info)
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    const icon = toast.querySelector('.toast-icon');
+    const messageEl = toast.querySelector('.toast-message');
+
+    if (icon) {
+        icon.className = 'toast-icon fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle');
+    }
+
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+
+    toast.className = 'toast ' + type;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
+    }, 3000);
+}
+
+// ===========================
+// EVENT LISTENERS
+// ===========================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM carregado, configurando event listeners...');
+
+    // Transaction form submit
+    const transactionForm = document.getElementById('transactionForm');
+    if (transactionForm) {
+        transactionForm.addEventListener('submit', handleTransactionSubmit);
+    }
+
+    // Subscription form submit
+    const subscriptionForm = document.getElementById('subscriptionForm');
+    if (subscriptionForm) {
+        subscriptionForm.addEventListener('submit', handleSubscriptionSubmit);
+    }
+
+    // Installment form submit
+    const installmentForm = document.getElementById('installmentForm');
+    if (installmentForm) {
+        installmentForm.addEventListener('submit', handleInstallmentSubmit);
+    }
+
+    // Projection form submit
+    const projectionForm = document.getElementById('projectionForm');
+    if (projectionForm) {
+        projectionForm.addEventListener('submit', handleProjectionSubmit);
+    }
+
+    // Credit card form submit
+    const creditCardForm = document.getElementById('creditCardForm');
+    if (creditCardForm) {
+        creditCardForm.addEventListener('submit', handleCreditCardSubmit);
+    }
+
+    // Card expense form submit
+    const cardExpenseForm = document.getElementById('cardExpenseForm');
+    if (cardExpenseForm) {
+        cardExpenseForm.addEventListener('submit', handleCardExpenseSubmit);
+    }
+
+    // Investment form submit
+    const investmentForm = document.getElementById('investmentForm');
+    if (investmentForm) {
+        investmentForm.addEventListener('submit', handleInvestmentSubmit);
+    }
+
+    // Settings form submit
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', handleSettingsSubmit);
+    }
+
+    // Enter key to submit forms
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            const form = e.target.closest('form');
+            if (form) {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+});
+
+// ===========================
+// HELPER FUNCTIONS FOR CHARTS
+// ===========================
+// ðŸ”„ Calcula total de entradas ou saÃ­das do mÃªs atual
+function getCurrentMonthTotal(type) {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return transactions
+        .filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === type &&
+                   tDate.getMonth() === currentMonth &&
+                   tDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+}
+
+// ===========================
+// MINI CHARTS - SAVINGS GOAL (RADIAL)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico radial de progresso de meta de economia
+function initializeSavingsGoalChart() {
+    const chartEl = document.querySelector("#savingsGoalChart");
+    if (!chartEl) return;
+
+    // CorreÃ§Ã£o 5: Considerar faturas de cartÃ£o nas saÃ­das
+    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Calcular entradas do mÃªs (excluindo crÃ©dito)
+    const totalIncome = transactions
+        .filter(t => {
+            const d = new Date(t.date);
+            return t.type === 'income' && t.paymentMethod !== 'credit' &&
+                   d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Calcular saÃ­das em dÃ©bito do mÃªs
+    const totalExpenseDebit = transactions
+        .filter(t => {
+            const d = new Date(t.date);
+            return t.type === 'expense' && t.paymentMethod !== 'credit' &&
+                   d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.value, 0);
+
+    // Incluir faturas de cartÃ£o (pagas e nÃ£o pagas) no total de saÃ­das
+    const totalCreditCards = creditCards.reduce((sum, card) => {
+        return sum + calculateCurrentBill(card, currentMonth, currentYear);
+    }, 0);
+
+    const totalExpense = totalExpenseDebit + totalCreditCards;
+    const saved = totalIncome - totalExpense;
+    const goal = userSettings.savingsGoal || 2000; // Meta de economia configurÃ¡vel
+    const percentage = goal > 0 ? Math.min(Math.max((saved / goal) * 100, 0), 100) : 0;
+
+    const options = {
+        series: [percentage],
+        chart: {
+            type: 'radialBar',
+            height: '100%',
+            sparkline: { enabled: true }
+        },
+        plotOptions: {
+            radialBar: {
+                hollow: {
+                    size: '50%'
+                },
+                dataLabels: {
+                    show: true,
+                    name: {
+                        show: false
+                    },
+                    value: {
+                        show: true,
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#fff',
+                        formatter: () => Math.round(percentage) + '%'
+                    }
+                }
+            }
+        },
+        fill: {
+            colors: [saved >= goal ? '#10b981' : '#f59e0b'] // Verde se atingiu meta, laranja se nÃ£o
+        }
+    };
+
+    savingsGoalChart = new ApexCharts(chartEl, options);
+    savingsGoalChart.render();
+
+    // Mostra quanto economizou e a meta
+    const valueEl = document.getElementById('savingsGoalValue');
+    if (valueEl) {
+        valueEl.innerHTML = `${formatCurrencyDisplay(saved)} <small style="color: var(--text-muted); font-size: 0.65rem;">/ ${formatCurrencyDisplay(goal)}</small>`;
+    }
+}
+
+// ===========================
+// MINI CHARTS - EXPENSE LIMIT (RADIAL)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico radial de limite de despesas
+function initializeExpenseLimitChart() {
+    const chartEl = document.querySelector("#expenseLimitChart");
+    if (!chartEl) return;
+
+    const totalExpense = getCurrentMonthTotal('expense');
+    const limit = userSettings.expenseLimit || 3000; // Limite de gastos configurÃ¡vel
+    const percentage = limit > 0 ? Math.min((totalExpense / limit) * 100, 100) : 0;
+
+    // Cores baseadas em porcentagem: verde < 60%, laranja 60-80%, vermelho > 80%
+    let fillColor = '#10b981'; // verde
+    if (percentage > 80) {
+        fillColor = '#ef4444'; // vermelho
+    } else if (percentage > 60) {
+        fillColor = '#f59e0b'; // laranja
+    }
+
+    const options = {
+        series: [percentage],
+        chart: {
+            type: 'radialBar',
+            height: '100%',
+            sparkline: { enabled: true }
+        },
+        plotOptions: {
+            radialBar: {
+                hollow: {
+                    size: '50%'
+                },
+                dataLabels: {
+                    show: true,
+                    name: {
+                        show: false
+                    },
+                    value: {
+                        show: true,
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#fff',
+                        formatter: () => Math.round(percentage) + '%'
+                    }
+                }
+            }
+        },
+        fill: {
+            colors: [fillColor]
+        }
+    };
+
+    expenseLimitChart = new ApexCharts(chartEl, options);
+    expenseLimitChart.render();
+
+    // Mostra quanto gastou e o limite
+    const valueEl = document.getElementById('expenseLimitValue');
+    if (valueEl) {
+        valueEl.innerHTML = `${formatCurrencyDisplay(totalExpense)} <small style="color: var(--text-muted); font-size: 0.65rem;">/ ${formatCurrencyDisplay(limit)}</small>`;
+    }
+}
+
+// ===========================
+// MINI CHARTS - GROWTH SPARKLINE
+// ===========================
+// ðŸŽ¨ Cria mini grÃ¡fico de linha de crescimento de receitas
+function initializeGrowthSparkline() {
+    const chartEl = document.querySelector("#growthSparkline");
+    if (!chartEl) return;
+
+    const last6Months = [];
+    const currentDate = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthTransactions = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear();
+        });
+        const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
+        const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
+        last6Months.push(income - expense);
+    }
+
+    const growth = last6Months.length > 1 ?
+        ((last6Months[5] - last6Months[4]) / (last6Months[4] || 1)) * 100 : 0;
+
+    const options = {
+        series: [{ data: last6Months }],
+        chart: {
+            type: 'line',
+            height: 60,
+            sparkline: { enabled: true }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        colors: [growth >= 0 ? '#10b981' : '#ef4444'],
+        tooltip: {
+            enabled: false
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('growthValue').textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+}
+
+// ===========================
+// MINI CHARTS - EXPENSE TREND SPARKLINE
+// ===========================
+// ðŸŽ¨ Cria mini grÃ¡fico de linha de tendÃªncia de despesas
+function initializeExpenseTrendSparkline() {
+    const chartEl = document.querySelector("#expenseTrendSparkline");
+    if (!chartEl) return;
+
+    const last7Days = [];
+    const currentDate = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() - i);
+        const dayExpenses = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'expense' &&
+                   tDate.toDateString() === date.toDateString();
+        }).reduce((sum, t) => sum + t.value, 0);
+        last7Days.push(dayExpenses);
+    }
+
+    const trend = last7Days[6] > last7Days[0] ? 'Crescente' : 'Decrescente';
+
+    const options = {
+        series: [{ data: last7Days }],
+        chart: {
+            type: 'area',
+            height: 60,
+            sparkline: { enabled: true }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        fill: {
+            opacity: 0.3
+        },
+        colors: ['#f97316'],
+        tooltip: {
+            enabled: false
+        }
+    };
+
+    new ApexCharts(chartEl, options).render();
+    document.getElementById('trendValue').textContent = trend;
+}
+
+// ===========================
+// TOP CATEGORIES CHART (BAR)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico de barras com top 5 categorias de despesas
+function initializeTopCategoriesChart() {
+    const chartEl = document.querySelector("#topCategoriesChart");
+    if (!chartEl) return;
+
+    const data = getCategoryData();
+    const topCategories = data.categories.slice(0, 5);
+    const topValues = data.values.slice(0, 5);
+
+    const options = {
+        series: [{ name: 'Valor', data: topValues }],
+        chart: {
+            type: 'bar',
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                distributed: true,
+                barHeight: '60%'
+            }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: topCategories,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        colors: ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16'],
+        grid: {
+            borderColor: 'rgba(255,255,255,0.1)'
+        }
+    };
+
+    topCategoriesChart = new ApexCharts(chartEl, options);
+    topCategoriesChart.render();
+}
+
+// ===========================
+// WEEKLY TREND CHART (AREA)
+// ===========================
+// ðŸŽ¨ Cria grÃ¡fico de Ã¡rea com despesas diÃ¡rias da Ãºltima semana do mÃªs selecionado
+function initializeWeeklyTrendChart() {
+    const chartEl = document.querySelector("#weeklyTrendChart");
+    if (!chartEl) return;
+
+    const data = getWeeklyTrendData();
+
+    const options = {
+        series: [{ name: 'Gastos', data: data.values }],
+        chart: {
+            type: 'area',
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false }
+        },
+        stroke: {
+            width: 2,
+            curve: 'smooth'
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.1
+            }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: data.labels,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '10px'
+                }
+            }
+        },
+        colors: ['#8b5cf6'],
+        grid: {
+            borderColor: 'rgba(255,255,255,0.1)'
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return formatCurrencyDisplay(value);
+                }
+            }
+        }
+    };
+
+    weeklyTrendChart = new ApexCharts(chartEl, options);
+    weeklyTrendChart.render();
+}
+
+// ðŸ“Š ObtÃ©m dados de despesas diÃ¡rias da Ãºltima semana do mÃªs selecionado
+function getWeeklyTrendData() {
+    const last7Days = [];
+    const labels = [];
+
+    // Usar mÃªs/ano selecionado como referÃªncia
+    const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+    const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+
+    // Pegar o Ãºltimo dia do mÃªs selecionado
+    const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
+    const referenceDate = lastDayOfMonth;
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(referenceDate);
+        date.setDate(date.getDate() - i);
+        const dayExpenses = transactions.filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'expense' &&
+                   tDate.toDateString() === date.toDateString();
+        }).reduce((sum, t) => sum + t.value, 0);
+        last7Days.push(dayExpenses);
+        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
+    }
+
+    return { values: last7Days, labels: labels };
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de evoluÃ§Ã£o semanal
+function updateWeeklyTrendChart() {
+    if (!weeklyTrendChart) return;
+    const data = getWeeklyTrendData();
+    weeklyTrendChart.updateOptions({
+        xaxis: {
+            categories: data.labels
+        }
+    });
+    weeklyTrendChart.updateSeries([{ name: 'Gastos', data: data.values }]);
+}
+
+// ðŸ”„ Atualiza dados do grÃ¡fico de top categorias
+function updateTopCategoriesChart() {
+    if (!topCategoriesChart) return;
+    const data = getCategoryData();
+    const topCategories = data.categories.slice(0, 5);
+    const topValues = data.values.slice(0, 5);
+    topCategoriesChart.updateOptions({
+        xaxis: {
+            categories: topCategories
+        }
+    });
+    topCategoriesChart.updateSeries([{ name: 'Valor', data: topValues }]);
+}
+
+
+// ===========================
+// RESPONSIVE CHARTS
+// ===========================
+window.addEventListener('resize', () => {
+    if (cashFlowChart) cashFlowChart.updateOptions({});
+    if (categoryChart) categoryChart.updateOptions({});
+    if (paymentMethodChart) paymentMethodChart.updateOptions({});
+    if (comparisonChart) comparisonChart.updateOptions({});
+});
+
+console.log('Dashboard Financeiro v2.2 - Script carregado');
+
+// ===========================
+// DROPDOWN CUSTOMIZADO
+// ===========================
+class CustomSelect {
+    constructor(selectElement) {
+        this.selectElement = selectElement;
+        this.selectedIndex = selectElement.selectedIndex;
+        this.isOpen = false;
+        this.init();
+    }
+
+    init() {
+        // Criar estrutura customizada
+        this.createCustomSelect();
+        this.bindEvents();
+
+        // Esconder select original
+        this.selectElement.style.display = 'none';
+
+        // Adicionar apÃ³s o select original
+        this.selectElement.parentNode.insertBefore(this.customSelect, this.selectElement.nextSibling);
+
+        // Sincronizar valor inicial
+        this.updateSelected();
+    }
+
+    createCustomSelect() {
+        // Container principal
+        this.customSelect = document.createElement('div');
+        this.customSelect.className = 'custom-select';
+
+        // Trigger (botÃ£o que abre/fecha)
+        this.trigger = document.createElement('div');
+        this.trigger.className = 'custom-select-trigger';
+        this.trigger.innerHTML = `
+            <span class="custom-select-value">Selecione...</span>
+            <svg class="custom-select-arrow" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
+
+        // Lista de opÃ§Ãµes
+        this.dropdown = document.createElement('div');
+        this.dropdown.className = 'custom-select-dropdown';
+
+        // Criar opÃ§Ãµes
+        const options = Array.from(this.selectElement.options);
+        options.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'custom-select-option';
+            optionElement.textContent = option.textContent;
+            optionElement.dataset.value = option.value;
+            optionElement.dataset.index = index;
+
+            if (option.disabled) {
+                optionElement.classList.add('disabled');
+            }
+
+            if (option.selected) {
+                optionElement.classList.add('selected');
+            }
+
+            this.dropdown.appendChild(optionElement);
+        });
+
+        this.customSelect.appendChild(this.trigger);
+        this.customSelect.appendChild(this.dropdown);
+    }
+
+    bindEvents() {
+        // Toggle dropdown
+        this.trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggle();
+        });
+
+        // Selecionar opÃ§Ã£o
+        this.dropdown.addEventListener('click', (e) => {
+            e.preventDefault();
+            const option = e.target.closest('.custom-select-option');
+            if (option && !option.classList.contains('disabled')) {
+                this.selectOption(parseInt(option.dataset.index));
+            }
+        });
+
+        // Fechar ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!this.customSelect.contains(e.target)) {
+                this.close();
+            }
+        });
+
+        // Keyboard navigation
+        this.customSelect.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggle();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.navigateOptions(1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.navigateOptions(-1);
+            } else if (e.key === 'Escape') {
+                this.close();
+            }
+        });
+
+        // Observar mudanÃ§as no select original
+        const observer = new MutationObserver(() => {
+            this.updateDropdownOptions();
+        });
+        observer.observe(this.selectElement, { childList: true, subtree: true });
+
+        // Observar mudanÃ§as de valor
+        this.selectElement.addEventListener('change', () => {
+            this.updateSelected();
+        });
+    }
+
+    toggle() {
+        this.isOpen ? this.close() : this.open();
+    }
+
+    open() {
+        this.isOpen = true;
+        this.customSelect.classList.add('open');
+        this.trigger.setAttribute('aria-expanded', 'true');
+
+        // Scroll para opÃ§Ã£o selecionada
+        const selectedOption = this.dropdown.querySelector('.selected');
+        if (selectedOption) {
+            selectedOption.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    close() {
+        this.isOpen = false;
+        this.customSelect.classList.remove('open');
+        this.trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    selectOption(index) {
+        this.selectedIndex = index;
+        this.selectElement.selectedIndex = index;
+
+        // Disparar evento change
+        const event = new Event('change', { bubbles: true });
+        this.selectElement.dispatchEvent(event);
+
+        this.updateSelected();
+        this.close();
+    }
+
+    updateSelected() {
+        const selectedOption = this.selectElement.options[this.selectElement.selectedIndex];
+        const valueSpan = this.trigger.querySelector('.custom-select-value');
+
+        if (selectedOption) {
+            valueSpan.textContent = selectedOption.textContent;
+            valueSpan.classList.remove('placeholder');
+        } else {
+            valueSpan.textContent = 'Selecione...';
+            valueSpan.classList.add('placeholder');
+        }
+
+        // Atualizar classe selected nas opÃ§Ãµes
+        this.dropdown.querySelectorAll('.custom-select-option').forEach((opt, index) => {
+            opt.classList.toggle('selected', index === this.selectElement.selectedIndex);
+        });
+    }
+
+    updateDropdownOptions() {
+        // Recriar lista de opÃ§Ãµes quando o select original muda
+        this.dropdown.innerHTML = '';
+
+        const options = Array.from(this.selectElement.options);
+        options.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'custom-select-option';
+            optionElement.textContent = option.textContent;
+            optionElement.dataset.value = option.value;
+            optionElement.dataset.index = index;
+
+            if (option.disabled) {
+                optionElement.classList.add('disabled');
+            }
+
+            if (index === this.selectElement.selectedIndex) {
+                optionElement.classList.add('selected');
+            }
+
+            this.dropdown.appendChild(optionElement);
+        });
+
+        this.updateSelected();
+    }
+
+    navigateOptions(direction) {
+        const options = Array.from(this.dropdown.querySelectorAll('.custom-select-option:not(.disabled)'));
+        const currentIndex = options.findIndex(opt => opt.classList.contains('selected'));
+        let newIndex = currentIndex + direction;
+
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex >= options.length) newIndex = options.length - 1;
+
+        if (options[newIndex]) {
+            const actualIndex = parseInt(options[newIndex].dataset.index);
+            this.selectOption(actualIndex);
+
+            if (this.isOpen) {
+                options[newIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }
+}
+
+// ðŸ“ Inicializa componentes de select personalizados para todos os dropdowns
+function initCustomSelects() {
+    const selects = document.querySelectorAll('.form-select, select');
+    selects.forEach(select => {
+        if (!select.dataset.customized) {
+            new CustomSelect(select);
+            select.dataset.customized = 'true';
+        }
+    });
+}
+
+// Auto-inicializar quando o DOM estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCustomSelects);
+} else {
+    initCustomSelects();
+}
+
+// Exportar para uso global
+window.initCustomSelects = initCustomSelects;
+window.CustomSelect = CustomSelect;
+
+// ===========================
+// FUNÃ‡ÃƒO ADMINISTRATIVA - LIMPAR DADOS
+// ===========================
+/**
+ * ðŸ§¹ FunÃ§Ã£o administrativa para limpar todos os dados da conta da empresa
+ * ATENÃ‡ÃƒO: Esta funÃ§Ã£o DELETARÃ permanentemente todos os dados!
+ * Para executar, abra o console do navegador e digite: cleanCompanyData()
+ */
+async function cleanCompanyData() {
+    try {
+        // 1. Buscar UID da empresa
+        console.log('ðŸ” Buscando UID da conta da empresa...');
+        const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
+
+        if (!configDoc.exists) {
+            console.error('âŒ ConfiguraÃ§Ã£o da empresa nÃ£o encontrada!');
+            return;
+        }
+
+        const companyUserId = configDoc.data().userId;
+        console.log('âœ… UID da empresa encontrado:', companyUserId);
+
+        // 2. Confirmar aÃ§Ã£o
+        const confirmation = confirm(
+            'âš ï¸ ATENÃ‡ÃƒO: Esta aÃ§Ã£o irÃ¡ DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
+            'SerÃ£o deletados:\n' +
+            'â€¢ ServiÃ§os\n' +
+            'â€¢ TransaÃ§Ãµes\n' +
+            'â€¢ Assinaturas\n' +
+            'â€¢ Parcelamentos\n' +
+            'â€¢ ProjeÃ§Ãµes\n' +
+            'â€¢ CartÃµes de crÃ©dito\n' +
+            'â€¢ Despesas de cartÃ£o\n' +
+            'â€¢ Pagamentos de cartÃ£o\n' +
+            'â€¢ Investimentos\n\n' +
+            'Deseja continuar?'
+        );
+
+        if (!confirmation) {
+            console.log('âŒ OperaÃ§Ã£o cancelada pelo usuÃ¡rio');
+            return;
+        }
+
+        // 3. Segundo nÃ­vel de confirmaÃ§Ã£o
+        const finalConfirmation = prompt(
+            'Digite "DELETAR TUDO" para confirmar a exclusÃ£o permanente de todos os dados da empresa:'
+        );
+
+        if (finalConfirmation !== 'DELETAR TUDO') {
+            console.log('âŒ ConfirmaÃ§Ã£o invÃ¡lida. OperaÃ§Ã£o cancelada.');
+            return;
+        }
+
+        console.log('ðŸ§¹ Iniciando limpeza dos dados...');
+        showLoading('Limpando dados da empresa...');
+
+        // 4. Deletar dados de cada coleÃ§Ã£o
+        const collections = [
+            'services',
+            'transactions',
+            'subscriptions',
+            'installments',
+            'projections',
+            'creditCards',
+            'cardExpenses',
+            'creditCardPayments',
+            'investments'
+        ];
+
+        let totalDeleted = 0;
+
+        for (const collectionName of collections) {
+            console.log(`ðŸ—‘ï¸ Deletando ${collectionName}...`);
+
+            const snapshot = await db.collection(collectionName)
+                .where('userId', '==', companyUserId)
+                .get();
+
+            const batch = db.batch();
+            let count = 0;
+
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+                count++;
+            });
+
+            if (count > 0) {
+                await batch.commit();
+                console.log(`âœ… ${count} documento(s) deletado(s) de ${collectionName}`);
+                totalDeleted += count;
+            } else {
+                console.log(`â„¹ï¸ Nenhum documento encontrado em ${collectionName}`);
+            }
+        }
+
+        hideLoading();
+
+        console.log(`âœ… Limpeza concluÃ­da! Total de ${totalDeleted} documento(s) deletado(s).`);
+        showToast(`âœ… Limpeza concluÃ­da! ${totalDeleted} registros removidos.`, 'success');
+
+        // 5. Recarregar dashboard
+        setTimeout(() => {
+            console.log('ðŸ”„ Recarregando dashboard...');
+            location.reload();
+        }, 2000);
+
+    } catch (error) {
+        hideLoading();
+        console.error('âŒ Erro ao limpar dados:', error);
+        showToast('Erro ao limpar dados: ' + error.message, 'error');
+    }
+}
+
+// Exportar funÃ§Ã£o para console
+window.cleanCompanyData = cleanCompanyData;
+console.log('âœ… FunÃ§Ã£o administrativa carregada: cleanCompanyData()');
+console.log('ðŸ“ Para limpar os dados da empresa, digite no console: cleanCompanyData()');
+
+console.log('âœ… Finance UI v3.0 - Loaded');

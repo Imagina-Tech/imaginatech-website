@@ -1,0 +1,440 @@
+/*
+==================================================
+ARQUIVO: financas/finance-core.js
+MÓDULO: Core - Configuração, Autenticação e Estado Global
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 3.0 - Refatoração Modular
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+*/
+
+// ===========================
+// FIREBASE CONFIGURATION
+// ===========================
+const firebaseConfig = {
+    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+    authDomain: "imaginatech-servicos.firebaseapp.com",
+    projectId: "imaginatech-servicos",
+    storageBucket: "imaginatech-servicos.firebasestorage.app",
+    messagingSenderId: "321455309872",
+    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+};
+
+// ===========================
+// AUTHORIZED USERS
+// ===========================
+const AUTHORIZED_EMAILS = [
+    '3d3printers@gmail.com',
+    'netrindademarcus@gmail.com',
+    'allanedg01@gmail.com',
+    'quequell1010@gmail.com',
+    'igor.butter@gmail.com'
+];
+
+// ===========================
+// CATEGORIES
+// ===========================
+const INCOME_CATEGORIES = [
+    'Salário',
+    'Freelance',
+    'Vendas',
+    'Investimentos',
+    'Bonificação',
+    'Outros'
+];
+
+const EXPENSE_CATEGORIES = [
+    'Alimentação',
+    'Supermercado',
+    'Restaurantes',
+    'Transporte',
+    'Combustível',
+    'Uber/Taxi',
+    'Moradia',
+    'Aluguel',
+    'Condomínio',
+    'Água',
+    'Luz',
+    'Internet',
+    'Gás',
+    'IPTU',
+    'Saúde',
+    'Plano de Saúde',
+    'Farmácia',
+    'Consultas',
+    'Educação',
+    'Cursos',
+    'Livros',
+    'Material Escolar',
+    'Lazer',
+    'Streaming',
+    'Cinema',
+    'Viagens',
+    'Compras',
+    'Roupas',
+    'Eletrônicos',
+    'Casa e Decoração',
+    'Beleza e Cuidados',
+    'Pet',
+    'Serviços',
+    'Academia',
+    'Seguros',
+    'Investimentos',
+    'Presentes',
+    'Doações',
+    'Impostos',
+    'Outros'
+];
+
+// ===========================
+// GLOBAL STATE
+// ===========================
+let db, auth;
+let currentUser = null;
+let transactions = [];
+let subscriptions = [];
+let installments = [];
+let projections = [];
+let creditCards = [];
+let cardExpenses = [];
+let currentFilter = 'all';
+let currentTransactionType = 'income';
+let currentPaymentMethod = 'debit';
+let editingTransactionId = null;
+let editingSubscriptionId = null;
+let editingInstallmentId = null;
+let editingCardId = null;
+let editingProjectionId = null;
+let editingInvestmentId = null;
+let currentProjectionType = 'income'; // Tipo de projeção: 'income' ou 'expense'
+
+// Credit card payments tracking
+let creditCardPayments = [];
+
+// Investments
+let investments = [];
+
+// Services
+let services = [];
+
+// User settings (meta economia, limite gastos)
+let userSettings = {
+    savingsGoal: 2000,
+    expenseLimit: 3000
+};
+
+// Multi-user system
+let activeUserId = null; // ID do usuário ativo (pode ser diferente de activeUserId)
+let activeUserEmail = null; // Email do usuário ativo
+const COMPANY_EMAIL = '3d3printers@gmail.com';
+
+// ApexCharts instances
+let cashFlowChart = null;
+let categoryChart = null;
+let comparisonChart = null;
+let topCategoriesChart = null;
+let weeklyTrendChart = null;
+let savingsGoalChart = null;
+let expenseLimitChart = null;
+let paymentMethodChart = null;
+
+// ===========================
+// FIREBASE INITIALIZATION
+// ===========================
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    console.log('Firebase inicializado com sucesso');
+} catch (error) {
+    console.error('Erro ao inicializar Firebase:', error);
+    alert('Erro ao conectar com o servidor. Recarregue a página.');
+}
+
+// ===========================
+// AUTHENTICATION
+// ===========================
+auth.onAuthStateChanged(user => {
+    console.log('Auth state changed:', user ? user.email : 'Não autenticado');
+    hideLoading(); // IMPORTANTE: Sempre esconde o loading primeiro
+
+    if (user) {
+        if (AUTHORIZED_EMAILS.includes(user.email)) {
+            currentUser = user;
+            // Mostrar modal de seleção de conta
+            showAccountSelectionModal(user);
+        } else {
+            showToast('Acesso não autorizado!', 'error');
+            signOut();
+        }
+    } else {
+        showLoginScreen();
+    }
+});
+
+// 🔐 Autentica usuário via Google OAuth
+function signInWithGoogle() {
+    showLoading('Autenticando...');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+        .catch(error => {
+            hideLoading();
+            console.error('Erro no login:', error);
+            showToast('Erro ao fazer login', 'error');
+        });
+}
+
+// 🔐 Realiza logout do usuário
+function signOut() {
+    auth.signOut().then(() => {
+        showToast('Logout realizado com sucesso', 'success');
+        location.reload();
+    });
+}
+
+// 🎨 Exibe tela de login
+function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('dashboard').classList.add('hidden');
+    hideLoading(); // IMPORTANTE: Esconde loading na tela de login
+}
+
+// 🎨 Exibe dashboard principal após autenticação
+function showDashboard(user) {
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboard = document.getElementById('dashboard');
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (dashboard) dashboard.classList.remove('hidden');
+    if (userName) userName.textContent = user.displayName || 'Usuário';
+    if (userPhoto) userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
+}
+
+// ===========================
+// ACCOUNT SELECTION (Multi-User System)
+// ===========================
+// 🎨 Abre modal para seleção entre conta pessoal e empresarial
+function showAccountSelectionModal(user) {
+    // Verificar se existe preferência salva
+    const savedAccountType = localStorage.getItem('selectedAccountType');
+
+    if (savedAccountType) {
+        // Usar conta salva automaticamente
+        selectAccount(savedAccountType);
+        return;
+    }
+
+    // Atualizar email pessoal no modal
+    document.getElementById('personalAccountEmail').textContent = user.email;
+
+    // Esconder login screen
+    document.getElementById('loginScreen').style.display = 'none';
+
+    // Mostrar modal de seleção
+    document.getElementById('accountSelectionModal').classList.add('active');
+}
+
+// 🔐 Seleciona e carrega dados da conta escolhida (pessoal ou empresa)
+async function selectAccount(accountType) {
+    showLoading('Carregando dados...');
+
+    // Fechar modal
+    document.getElementById('accountSelectionModal').classList.remove('active');
+
+    if (accountType === 'company') {
+        // Acessar como conta da empresa
+        // Buscar UID da conta da empresa no systemConfig
+        try {
+            const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
+
+            if (configDoc.exists) {
+                // Usar UID salvo na configuração
+                activeUserId = configDoc.data().userId;
+                activeUserEmail = COMPANY_EMAIL;
+                console.log('Usando UID da empresa do systemConfig:', activeUserId);
+            } else {
+                // Se não existe configuração, criar automaticamente
+                // Isso só acontecerá quando 3d3printers@gmail.com fizer login
+                if (currentUser.email === COMPANY_EMAIL) {
+                    showToast('Configurando conta da empresa pela primeira vez...', 'info');
+                    await db.collection('systemConfig').doc('companyAccount').set({
+                        userId: currentUser.uid,
+                        email: COMPANY_EMAIL,
+                        displayName: 'ImaginaTech - Caixa Interno',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: currentUser.email
+                    });
+                    activeUserId = currentUser.uid;
+                    activeUserEmail = COMPANY_EMAIL;
+                    console.log('Configuração da empresa criada com UID:', activeUserId);
+                } else {
+                    // Admin tentando acessar empresa, mas configuração não existe
+                    showToast('Conta da empresa ainda não foi configurada. Entre primeiro com 3d3printers@gmail.com', 'error');
+                    // Voltar para seleção
+                    localStorage.removeItem('selectedAccountType');
+                    showAccountSelectionModal(currentUser);
+                    hideLoading();
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao buscar conta da empresa:', error);
+            showToast('Erro ao acessar conta da empresa', 'error');
+            hideLoading();
+            return;
+        }
+    } else {
+        // Acessar como conta pessoal
+        activeUserId = currentUser.uid;
+        activeUserEmail = currentUser.email;
+        console.log('Usando conta pessoal com UID:', activeUserId);
+    }
+
+    // Salvar preferência no localStorage
+    localStorage.setItem('selectedAccountType', accountType);
+
+    // Atualizar display da conta ativa
+    updateAccountDisplay(accountType);
+
+    // Mostrar dashboard e inicializar
+    showDashboard(currentUser);
+    initializeDashboard();
+}
+
+// 🔄 Alterna entre contas (pessoal/empresa)
+function switchAccount() {
+    // Limpar preferência salva
+    localStorage.removeItem('selectedAccountType');
+
+    // Esconder dashboard
+    document.getElementById('dashboard').classList.add('hidden');
+
+    // Mostrar modal de seleção novamente
+    showAccountSelectionModal(currentUser);
+}
+
+// 🎨 Atualiza nome da conta exibida na interface
+function updateAccountDisplay(accountType) {
+    const userRole = document.getElementById('userRole');
+    if (userRole) {
+        if (accountType === 'company') {
+            userRole.textContent = 'Caixa Interno da Empresa';
+        } else {
+            userRole.textContent = 'Conta Pessoal';
+        }
+    }
+}
+
+// ===========================
+// CENTRAL UPDATE FUNCTION
+// ===========================
+// 🔄 Atualiza todos os componentes da interface (KPIs e gráficos)
+function updateAllDisplays() {
+    console.log('[updateAllDisplays] Atualizando todos os componentes...');
+
+    // Atualizar KPIs
+    if (typeof updateKPIs === 'function') {
+        updateKPIs();
+    }
+
+    // Atualizar gráficos
+    if (typeof updateCharts === 'function') {
+        updateCharts();
+    }
+
+    console.log('[updateAllDisplays] Todos os componentes atualizados!');
+}
+
+// ===========================
+// INITIALIZATION
+// ===========================
+// 🔄 Inicializa dashboard e carrega todos os dados do Firestore
+async function initializeDashboard() {
+    showLoading('Carregando dados...');
+    console.log('Iniciando dashboard...');
+
+    try {
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('date');
+        const projDateInput = document.getElementById('projDate');
+
+        if (dateInput) dateInput.value = today;
+        if (projDateInput) projDateInput.value = today;
+
+        // Populate category options
+        populateCategories();
+
+        // Load all data with individual error handling
+        console.log('Carregando dados do Firestore...');
+        await Promise.allSettled([
+            loadTransactions(),
+            loadSubscriptions(),
+            loadInstallments(),
+            loadProjections(),
+            loadCreditCards(),
+            loadCreditCardPayments(),
+            loadInvestments(),
+            loadUserSettings(),
+            loadServices()
+        ]);
+
+        // Iniciar listener de serviços em tempo real
+        startServicesListener();
+
+        console.log('Dados carregados:', {
+            transactions: transactions.length,
+            subscriptions: subscriptions.length,
+            installments: installments.length,
+            projections: projections.length,
+            creditCardPayments: creditCardPayments.length,
+            services: services.length,
+            investments: investments.length
+        });
+
+        // Initialize charts (com dados ou sem)
+        initializeCharts();
+
+        // Update KPIs
+        updateKPIs();
+
+        // Migrar parcelamentos antigos automaticamente (se necessário)
+        // Fazemos isso em background para não bloquear a interface
+        setTimeout(() => {
+            const oldInstallments = installments.filter(i =>
+                i.startMonth === undefined || i.startYear === undefined
+            );
+            if (oldInstallments.length > 0) {
+                console.log('[initializeDashboard] Detectados parcelamentos antigos, iniciando migração automática...');
+                migrateOldInstallments();
+            }
+        }, 1000);
+
+        hideLoading();
+        showToast('Dashboard carregado com sucesso', 'success');
+    } catch (error) {
+        hideLoading();
+        console.error('Erro ao inicializar dashboard:', error);
+        showToast('Erro ao carregar dados: ' + error.message, 'error');
+    }
+}
+
+// 📝 Popula dropdown de categorias com base no tipo de transação
+function populateCategories() {
+    const categorySelect = document.getElementById('category');
+    if (!categorySelect) return;
+
+    categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+    const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+    });
+}
+
+console.log('✅ Finance Core v3.0 - Loaded');
