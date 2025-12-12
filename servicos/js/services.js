@@ -30,6 +30,9 @@ import {
 } from './auth-ui.js';
 import { STATUS_ORDER, STATUS_ORDER_MODELAGEM, getStatusOrderForService } from './utils.js';
 
+// UID da empresa (conta que recebe as transações financeiras)
+const COMPANY_USER_ID = 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
+
 // ===========================
 // SERVICE MANAGEMENT
 // ===========================
@@ -270,7 +273,6 @@ export function startServicesListener() {
     state.servicesListener?.();
 
     state.servicesListener = state.db.collection('services')
-        .where('userId', '==', state.currentUser.uid)
         .onSnapshot(snapshot => {
         state.services = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -728,8 +730,8 @@ export async function saveService(event) {
 
             // Não sobrescrever userId se já existe
             if (!updateData.userId) {
-                updateData.userId = state.currentUser.uid;
-                updateData.companyId = state.currentUser.uid;
+                updateData.userId = COMPANY_USER_ID;
+                updateData.companyId = COMPANY_USER_ID;
             }
 
             await state.db.collection('services').doc(state.editingServiceId).update(updateData);
@@ -750,8 +752,8 @@ export async function saveService(event) {
             Object.assign(service, {
                 createdAt: new Date().toISOString(),
                 createdBy: state.currentUser.email,
-                userId: state.currentUser.uid,
-                companyId: state.currentUser.uid,
+                userId: COMPANY_USER_ID,
+                companyId: COMPANY_USER_ID,
                 orderCode: generateOrderCode(),
                 serviceId: 'SRV-' + Date.now(),
                 files: [],
