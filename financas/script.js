@@ -500,12 +500,6 @@ async function createTransactionFromService(service) {
             return;
         }
 
-        // Só criar transação se status for 'entregue' ou 'retirada'
-        if (service.status !== 'entregue' && service.status !== 'retirada') {
-            console.log('Serviço ainda não entregue, ignorando:', service.id, service.status);
-            return;
-        }
-
         // Verificar se já existe transação para este serviço
         const existingTransactions = await db.collection('transactions')
             .where('userId', '==', activeUserId)
@@ -517,6 +511,15 @@ async function createTransactionFromService(service) {
             return;
         }
 
+        // Extrair data do serviço (usar createdAt que está em formato ISO)
+        let transactionDate;
+        if (service.createdAt) {
+            // createdAt está em formato ISO, extrair apenas a data
+            transactionDate = service.createdAt.split('T')[0];
+        } else {
+            transactionDate = new Date().toISOString().split('T')[0];
+        }
+
         // Criar transação de entrada
         const transactionData = {
             userId: activeUserId,
@@ -524,7 +527,7 @@ async function createTransactionFromService(service) {
             description: `Serviço: ${service.name || 'Sem nome'}`,
             value: parseFloat(service.value),
             category: 'Vendas',
-            date: service.completedAt || service.deliveredAt || new Date().toISOString().split('T')[0],
+            date: transactionDate,
             paymentMethod: 'debit',
             cardId: null,
             serviceId: service.id,
@@ -532,7 +535,7 @@ async function createTransactionFromService(service) {
         };
 
         await db.collection('transactions').add(transactionData);
-        console.log('✅ Transação criada para serviço:', service.id);
+        console.log('✅ Transação criada para serviço:', service.id, 'Data:', transactionDate);
 
         // Recarregar transações
         await loadTransactions();
@@ -563,11 +566,9 @@ function startServicesListener() {
             snapshot.docChanges().forEach(change => {
                 const service = { id: change.doc.id, ...change.doc.data() };
 
+                // Criar transação quando serviço for adicionado ou modificado
                 if (change.type === 'added' || change.type === 'modified') {
-                    // Se serviço foi marcado como entregue, criar transação
-                    if (service.status === 'entregue' || service.status === 'retirada') {
-                        createTransactionFromService(service);
-                    }
+                    createTransactionFromService(service);
                 }
             });
         });
@@ -583,10 +584,9 @@ async function processHistoricalServices() {
 
     const servicesSnapshot = await db.collection('services')
         .where('userId', '==', activeUserId)
-        .where('status', 'in', ['entregue', 'retirada'])
         .get();
 
-    console.log(`${servicesSnapshot.size} serviços entregues encontrados`);
+    console.log(`${servicesSnapshot.size} serviços encontrados`);
 
     for (const doc of servicesSnapshot.docs) {
         const service = { id: doc.id, ...doc.data() };
