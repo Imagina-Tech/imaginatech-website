@@ -2208,7 +2208,7 @@ function updateKPIs() {
     // Total geral de saídas (atual + projeção)
     const totalExpense = totalExpenseActual + totalExpenseProjection;
 
-    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito - Investimentos
+    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito
     const totalIncomeAllTime = transactions
         .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
@@ -2217,13 +2217,14 @@ function updateKPIs() {
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total de investimentos
+    // Total de investimentos (separado, não afeta o saldo)
     const totalInvestments = investments.reduce((sum, inv) => sum + inv.value, 0);
 
-    // SALDO = Entradas - Saídas(débito) - Investimentos
+    // SALDO = Entradas - Saídas(débito)
     // NOTA: As saídas de débito já incluem pagamentos de fatura (via transação automática)
     // Então o saldo desconta automaticamente quando a fatura é paga
-    const totalBalance = totalIncomeAllTime - totalDebitAllTime - totalInvestments;
+    // IMPORTANTE: Investimentos NÃO afetam o saldo, são mostrados separadamente
+    const totalBalance = totalIncomeAllTime - totalDebitAllTime;
 
     // Log de debug para verificar cálculos
     console.log('[KPIs] Cálculos do mês:', {
@@ -2244,8 +2245,11 @@ function updateKPIs() {
     console.log('[KPIs] Componentes do saldo:', {
         entradasHistoricas: totalIncomeAllTime,
         saidasDebito: totalDebitAllTime,
-        investimentos: totalInvestments,
         saldoCalculado: totalBalance
+    });
+
+    console.log('[KPIs] Investimentos (separado):', {
+        totalInvestido: totalInvestments
     });
 
     // Total Active Subscriptions
