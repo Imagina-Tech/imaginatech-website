@@ -10,9 +10,9 @@ IMPORTANTE: NÃƒO REMOVER ESTE CABEÃ‡ALHO DE IDENTIFICAÃ‡ÃƒO
 // APEXCHARTS - INITIALIZATION
 // ===========================
 
-// ðŸ”„ DestrÃ³i todas as instÃ¢ncias de grÃ¡ficos antes de recriar
+// 🔄 Destrói todas as instâncias de gráficos antes de recriar
 function destroyAllCharts() {
-    console.log('Destruindo grÃ¡ficos existentes...');
+    console.log('Destruindo gráficos existentes...');
 
     if (cashFlowChart) {
         cashFlowChart.destroy();
@@ -48,10 +48,10 @@ function destroyAllCharts() {
     }
 }
 
-// ðŸ”„ Inicializa todos os grÃ¡ficos do dashboard
+// 🔄 Inicializa todos os gráficos do dashboard
 function initializeCharts() {
     try {
-        // Destruir grÃ¡ficos existentes antes de criar novos
+        // Destruir gráficos existentes antes de criar novos
         destroyAllCharts();
 
         initializeCashFlowChart();
@@ -64,32 +64,32 @@ function initializeCharts() {
         initializeExpenseTrendSparkline();
         initializeTopCategoriesChart();
         initializeWeeklyTrendChart();
-        console.log('GrÃ¡ficos inicializados');
+        console.log('Gráficos inicializados');
     } catch (error) {
-        console.error('Erro ao inicializar grÃ¡ficos:', error);
+        console.error('Erro ao inicializar gráficos:', error);
     }
 }
 
-// ðŸ”„ Atualiza dados de todos os grÃ¡ficos existentes
+// 🔄 Atualiza dados de todos os gráficos existentes
 function updateCharts() {
     try {
-        console.log('[updateCharts] Atualizando todos os grÃ¡ficos...');
+        console.log('[updateCharts] Atualizando todos os gráficos...');
         updateCashFlowChart();
         updateCategoryChart();
         updatePaymentMethodChart();
         updateComparisonChart();
         updateTopCategoriesChart();
         updateWeeklyTrendChart();
-        console.log('[updateCharts] GrÃ¡ficos atualizados!');
+        console.log('[updateCharts] Gráficos atualizados!');
     } catch (error) {
-        console.error('Erro ao atualizar grÃ¡ficos:', error);
+        console.error('Erro ao atualizar gráficos:', error);
     }
 }
 
 // ===========================
 // CASH FLOW CHART
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico de fluxo de caixa (entradas vs saÃ­das)
+// 🎨 Cria gráfico de fluxo de caixa (entradas vs saídas)
 function initializeCashFlowChart() {
     const chartEl = document.querySelector("#cashFlowChart");
     if (!chartEl) return;
@@ -103,7 +103,7 @@ function initializeCashFlowChart() {
                 data: data.incomes
             },
             {
-                name: 'SaÃ­das',
+                name: 'Saídas',
                 data: data.expenses
             }
         ],
@@ -180,10 +180,10 @@ function initializeCashFlowChart() {
     cashFlowChart.render();
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de fluxo de caixa
+// 🔄 Atualiza dados do gráfico de fluxo de caixa
 function updateCashFlowChart() {
     const data = getCashFlowData();
-    // Atualizar tanto as sÃ©ries quanto as categorias do eixo X
+    // Atualizar tanto as séries quanto as categorias do eixo X
     cashFlowChart.updateOptions({
         xaxis: {
             categories: data.months
@@ -191,21 +191,21 @@ function updateCashFlowChart() {
     });
     cashFlowChart.updateSeries([
         { name: 'Entradas', data: data.incomes },
-        { name: 'SaÃ­das', data: data.expenses }
+        { name: 'Saídas', data: data.expenses }
     ]);
 }
 
-// ðŸ“Š ObtÃ©m dados de entradas e saÃ­das dos Ãºltimos 12 meses (baseado no mÃªs selecionado)
+// 📊 Obtém dados de entradas e saídas dos últimos 12 meses (baseado no mês selecionado)
 function getCashFlowData() {
     const months = [];
     const incomes = [];
     const expenses = [];
 
-    // Usar mÃªs/ano selecionado como referÃªncia (em vez da data atual)
+    // Usar mês/ano selecionado como referência (em vez da data atual)
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
-    // Criar data de referÃªncia baseada no mÃªs selecionado
+    // Criar data de referência baseada no mês selecionado
     const referenceDate = new Date(displayYear, displayMonth, 1);
 
     // Get last 12 months from the selected month
@@ -240,14 +240,14 @@ function getCashFlowData() {
 // ===========================
 // CATEGORY CHART (DONUT)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico de pizza com distribuiÃ§Ã£o de despesas por categoria
+// 🎨 Cria gráfico de pizza com distribuição de despesas por categoria
 function initializeCategoryChart() {
     const chartEl = document.querySelector("#categoryChart");
     if (!chartEl) return;
 
     const data = getCategoryData();
 
-    // Se nÃ£o hÃ¡ dados, mostra mensagem
+    // Se não há dados, mostra mensagem
     if (data.values.length === 0) {
         chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #94a3b8;">Sem dados para exibir</div>';
         return;
@@ -329,13 +329,13 @@ function initializeCategoryChart() {
     categoryChart.render();
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de categorias
+// 🔄 Atualiza dados do gráfico de categorias
 function updateCategoryChart() {
     const data = getCategoryData();
     const chartEl = document.querySelector("#categoryChart");
 
     if (data.values.length === 0) {
-        // Destroi o chart se nÃ£o hÃ¡ dados
+        // Destroi o chart se não há dados
         if (categoryChart) {
             categoryChart.destroy();
             categoryChart = null;
@@ -346,7 +346,7 @@ function updateCategoryChart() {
         return;
     }
 
-    // Se hÃ¡ dados mas grÃ¡fico nÃ£o existe, limpa o elemento e recria
+    // Se há dados mas gráfico não existe, limpa o elemento e recria
     if (!categoryChart) {
         if (chartEl) {
             chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
@@ -355,18 +355,18 @@ function updateCategoryChart() {
         return;
     }
 
-    // Atualiza grÃ¡fico existente
+    // Atualiza gráfico existente
     categoryChart.updateOptions({
         labels: data.categories,
         series: data.values
     });
 }
 
-// ðŸ“Š ObtÃ©m dados de despesas agrupadas por categoria do mÃªs atual
+// 📊 Obtém dados de despesas agrupadas por categoria do mês atual
 function getCategoryData() {
     const categoryMap = {};
 
-    // Usar mÃªs selecionado se disponÃ­vel
+    // Usar mês selecionado se disponível
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
@@ -389,14 +389,14 @@ function getCategoryData() {
 // ===========================
 // PAYMENT METHOD CHART (POLAR AREA)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico polar area com anÃ¡lise de mÃ©todos de pagamento
+// 🎨 Cria gráfico polar area com análise de métodos de pagamento
 function initializePaymentMethodChart() {
     const chartEl = document.querySelector("#paymentMethodChart");
     if (!chartEl) return;
 
     const data = getPaymentMethodData();
 
-    // Se nÃ£o hÃ¡ dados, mostra mensagem
+    // Se não há dados, mostra mensagem
     if (!data.hasData || data.values.length === 0) {
         chartEl.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Sem dados para exibir</div>';
         return;
@@ -404,8 +404,8 @@ function initializePaymentMethodChart() {
 
     // Mapear cores para cada tipo de pagamento
     const colorMap = {
-        'DÃ©bito/Pix': '#22c55e',
-        'CrÃ©dito': '#3b82f6'
+        'Débito/Pix': '#22c55e',
+        'Crédito': '#3b82f6'
     };
     const colors = data.labels.map(label => colorMap[label] || '#94a3b8');
 
@@ -477,13 +477,13 @@ function initializePaymentMethodChart() {
     paymentMethodChart.render();
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de mÃ©todos de pagamento
+// 🔄 Atualiza dados do gráfico de métodos de pagamento
 function updatePaymentMethodChart() {
     const data = getPaymentMethodData();
     const chartEl = document.querySelector("#paymentMethodChart");
 
     if (!data.hasData || data.values.length === 0) {
-        // Destroi o chart se nÃ£o hÃ¡ dados
+        // Destroi o chart se não há dados
         if (paymentMethodChart) {
             paymentMethodChart.destroy();
             paymentMethodChart = null;
@@ -494,7 +494,7 @@ function updatePaymentMethodChart() {
         return;
     }
 
-    // Se hÃ¡ dados mas grÃ¡fico nÃ£o existe, limpa o elemento e recria
+    // Se há dados mas gráfico não existe, limpa o elemento e recria
     if (!paymentMethodChart) {
         if (chartEl) {
             chartEl.innerHTML = ''; // Limpa mensagem de "sem dados"
@@ -503,7 +503,7 @@ function updatePaymentMethodChart() {
         return;
     }
 
-    // Atualiza grÃ¡fico existente - destruir e recriar para evitar problemas com labels dinÃ¢micos
+    // Atualiza gráfico existente - destruir e recriar para evitar problemas com labels dinâmicos
     paymentMethodChart.destroy();
     paymentMethodChart = null;
     if (chartEl) {
@@ -512,7 +512,7 @@ function updatePaymentMethodChart() {
     initializePaymentMethodChart();
 }
 
-// ðŸ“Š ObtÃ©m dados de mÃ©todos de pagamento do mÃªs atual
+// 📊 Obtém dados de métodos de pagamento do mês atual
 function getPaymentMethodData() {
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
@@ -521,7 +521,7 @@ function getPaymentMethodData() {
     let creditTotal = 0;
     let pixDinheiroTotal = 0;
 
-    // TransaÃ§Ãµes do mÃªs
+    // Transações do mês
     transactions.forEach(t => {
         if (t.type === 'expense') {
             const transactionDate = new Date(t.date);
@@ -532,14 +532,14 @@ function getPaymentMethodData() {
                 } else if (t.paymentMethod === 'debit') {
                     debitTotal += t.value;
                 } else {
-                    // TransaÃ§Ãµes sem mÃ©todo definido sÃ£o consideradas Pix/Dinheiro
+                    // Transações sem método definido são consideradas Pix/Dinheiro
                     pixDinheiroTotal += t.value;
                 }
             }
         }
     });
 
-    // Adicionar valores de cartÃµes de crÃ©dito (parcelamentos e assinaturas)
+    // Adicionar valores de cartões de crédito (parcelamentos e assinaturas)
     if (typeof creditCards !== 'undefined' && creditCards.length > 0) {
         creditCards.forEach(card => {
             if (typeof calculateCurrentBill === 'function') {
@@ -549,13 +549,13 @@ function getPaymentMethodData() {
         });
     }
 
-    // Preparar valores - filtrar apenas os que tÃªm valor > 0
+    // Preparar valores - filtrar apenas os que têm valor > 0
     const allData = [
-        { label: 'DÃ©bito/Pix', value: Math.round((debitTotal + pixDinheiroTotal) * 100) / 100 },
-        { label: 'CrÃ©dito', value: Math.round(creditTotal * 100) / 100 }
+        { label: 'Débito/Pix', value: Math.round((debitTotal + pixDinheiroTotal) * 100) / 100 },
+        { label: 'Crédito', value: Math.round(creditTotal * 100) / 100 }
     ];
 
-    // Filtrar apenas valores positivos para evitar erro de altura negativa no grÃ¡fico
+    // Filtrar apenas valores positivos para evitar erro de altura negativa no gráfico
     const filteredData = allData.filter(d => d.value > 0);
 
     return {
@@ -568,7 +568,7 @@ function getPaymentMethodData() {
 // ===========================
 // COMPARISON CHART (BARS)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico de barras comparando receitas e despesas mensais
+// 🎨 Cria gráfico de barras comparando receitas e despesas mensais
 function initializeComparisonChart() {
     const chartEl = document.querySelector("#comparisonChart");
     if (!chartEl) return;
@@ -648,7 +648,7 @@ function initializeComparisonChart() {
     comparisonChart.render();
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de comparaÃ§Ã£o
+// 🔄 Atualiza dados do gráfico de comparação
 function updateComparisonChart() {
     const data = getComparisonData();
     comparisonChart.updateSeries([{
@@ -657,9 +657,9 @@ function updateComparisonChart() {
     }]);
 }
 
-// ðŸ“Š ObtÃ©m dados de comparaÃ§Ã£o entre receitas e despesas por mÃªs
+// 📊 Obtém dados de comparação entre receitas e despesas por mês
 function getComparisonData() {
-    // Usar mÃªs selecionado se disponÃ­vel
+    // Usar mês selecionado se disponível
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
@@ -678,7 +678,7 @@ function getComparisonData() {
         .reduce((sum, t) => sum + t.value, 0);
 
     return {
-        labels: ['Entradas', 'SaÃ­das'],
+        labels: ['Entradas', 'Saídas'],
         values: [totalIncome, totalExpense]
     };
 }
@@ -686,7 +686,7 @@ function getComparisonData() {
 // ===========================
 // MODALS
 // ===========================
-// ðŸŽ¨ Abre modal para adicionar nova transaÃ§Ã£o
+// 🎨 Abre modal para adicionar nova transação
 function openTransactionModal() {
     editingTransactionId = null;
     document.getElementById('transactionModal').classList.add('active');
@@ -704,10 +704,10 @@ function openTransactionModal() {
     populateTransactionCardOptions();
 
     selectTransactionType('income');
-    document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova TransaÃ§Ã£o';
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
 
-// ðŸŽ¨ Fecha qualquer modal pelo ID
+// 🎨 Fecha qualquer modal pelo ID
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -715,7 +715,7 @@ function closeModal(modalId) {
     }
 }
 
-// ðŸŽ¨ Fecha modal de transaÃ§Ã£o e reseta formulÃ¡rio
+// 🎨 Fecha modal de transação e reseta formulário
 function closeTransactionModal() {
     editingTransactionId = null;
     currentPaymentMethod = 'debit';
@@ -726,7 +726,7 @@ function closeTransactionModal() {
     document.getElementById('creditCardGroup').style.display = 'none';
 }
 
-// ðŸŽ¨ Abre modal para editar transaÃ§Ã£o existente
+// 🎨 Abre modal para editar transação existente
 function editTransaction(id) {
     const transaction = transactions.find(t => t.id === id);
     if (!transaction) return;
@@ -736,8 +736,8 @@ function editTransaction(id) {
     // Abre o modal
     document.getElementById('transactionModal').classList.add('active');
 
-    // Atualiza tÃ­tulo do modal
-    document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar TransaÃ§Ã£o';
+    // Atualiza título do modal
+    document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar Transação';
 
     // Preenche os campos
     document.getElementById('description').value = transaction.description;
@@ -745,43 +745,43 @@ function editTransaction(id) {
     document.getElementById('category').value = transaction.category;
     document.getElementById('date').value = transaction.date;
 
-    // Define o tipo de transaÃ§Ã£o
+    // Define o tipo de transação
     currentTransactionType = transaction.type;
     selectTransactionType(transaction.type);
 
-    // Define o mÃ©todo de pagamento (tanto para entrada quanto para saÃ­da)
+    // Define o método de pagamento (tanto para entrada quanto para saída)
     currentPaymentMethod = transaction.paymentMethod || 'debit';
     selectPaymentMethod(currentPaymentMethod);
 
-    // Define o cartÃ£o se for crÃ©dito
+    // Define o cartão se for crédito
     if (transaction.paymentMethod === 'credit' && transaction.cardId) {
         document.getElementById('transactionCard').value = transaction.cardId;
     }
 }
 
-// ðŸŽ¨ Abre modal para adicionar nova assinatura
+// 🎨 Abre modal para adicionar nova assinatura
 function openSubscriptionModal() {
     editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.add('active');
     document.getElementById('subscriptionForm').reset();
     document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Nova Assinatura';
 
-    // Preenche dropdown de cartÃµes
+    // Preenche dropdown de cartões
     const cardSelect = document.getElementById('subCard');
-    cardSelect.innerHTML = '<option value="">Sem cartÃ£o</option>' +
+    cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
         creditCards.map(card =>
             `<option value="${card.id}">${card.name} - ${card.institution}</option>`
         ).join('');
 }
 
-// ðŸŽ¨ Fecha modal de assinatura
+// 🎨 Fecha modal de assinatura
 function closeSubscriptionModal() {
     editingSubscriptionId = null;
     document.getElementById('subscriptionModal').classList.remove('active');
     document.getElementById('subscriptionForm').reset();
 }
 
-// ðŸŽ¨ Abre modal para editar assinatura existente
+// 🎨 Abre modal para editar assinatura existente
 function editSubscription(id) {
     const subscription = subscriptions.find(s => s.id === id);
     if (!subscription) return;
@@ -791,12 +791,12 @@ function editSubscription(id) {
     // Abre o modal
     document.getElementById('subscriptionModal').classList.add('active');
 
-    // Atualiza tÃ­tulo do modal
+    // Atualiza título do modal
     document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Editar Assinatura';
 
-    // Preenche dropdown de cartÃµes
+    // Preenche dropdown de cartões
     const cardSelect = document.getElementById('subCard');
-    cardSelect.innerHTML = '<option value="">Sem cartÃ£o</option>' +
+    cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
         creditCards.map(card =>
             `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
         ).join('');
@@ -809,35 +809,35 @@ function editSubscription(id) {
     document.getElementById('subStatus').value = subscription.status;
 }
 
-// ðŸŽ¨ Abre modal para adicionar novo parcelamento
+// 🎨 Abre modal para adicionar novo parcelamento
 function openInstallmentModal() {
     editingInstallmentId = null;
     document.getElementById('installmentModal').classList.add('active');
     document.getElementById('installmentForm').reset();
     document.getElementById('instCurrentInstallment').value = 1;
-    // Define valor total como padrÃ£o
+    // Define valor total como padrão
     selectInstallmentValueType('total');
-    // Atualiza tÃ­tulo do modal
+    // Atualiza título do modal
     document.querySelector('#installmentModal .modal-header h2').textContent = 'Novo Parcelamento';
 
-    // Preenche dropdown de cartÃµes
+    // Preenche dropdown de cartões
     const cardSelect = document.getElementById('instCard');
-    cardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>' +
+    cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
         creditCards.map(card =>
             `<option value="${card.id}">${card.name} - ${card.institution}</option>`
         ).join('');
 }
 
-// ðŸŽ¨ Fecha modal de parcelamento
+// 🎨 Fecha modal de parcelamento
 function closeInstallmentModal() {
     editingInstallmentId = null;
     document.getElementById('installmentModal').classList.remove('active');
     document.getElementById('installmentForm').reset();
-    // Reset para valor total como padrÃ£o
+    // Reset para valor total como padrão
     selectInstallmentValueType('total');
 }
 
-// ðŸŽ¨ Abre modal para editar parcelamento existente
+// 🎨 Abre modal para editar parcelamento existente
 function editInstallment(id) {
     const installment = installments.find(inst => inst.id === id);
     if (!installment) return;
@@ -847,12 +847,12 @@ function editInstallment(id) {
     // Abre o modal
     document.getElementById('installmentModal').classList.add('active');
 
-    // Atualiza tÃ­tulo do modal
+    // Atualiza título do modal
     document.querySelector('#installmentModal .modal-header h2').textContent = 'Editar Parcelamento';
 
-    // Preenche dropdown de cartÃµes
+    // Preenche dropdown de cartões
     const cardSelect = document.getElementById('instCard');
-    cardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>' +
+    cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
         creditCards.map(card =>
             `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
         ).join('');
@@ -870,18 +870,18 @@ function editInstallment(id) {
     calculateInstallmentValues();
 }
 
-// VariÃ¡vel global para rastrear o tipo de valor selecionado no parcelamento
+// Variável global para rastrear o tipo de valor selecionado no parcelamento
 let installmentValueType = 'total';
 
-// ðŸ“ Alterna entre entrada de valor total ou valor por parcela
+// 📝 Alterna entre entrada de valor total ou valor por parcela
 function selectInstallmentValueType(type) {
     installmentValueType = type;
 
-    // Remove active de todos os botÃµes
+    // Remove active de todos os botões
     const buttons = document.querySelectorAll('#installmentModal .type-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
 
-    // Adiciona active no botÃ£o clicado
+    // Adiciona active no botão clicado
     const activeButton = document.querySelector(`#installmentModal .type-btn[data-type="${type}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
@@ -908,14 +908,14 @@ function selectInstallmentValueType(type) {
     }
 }
 
-// ðŸ”„ Calcula e exibe valor por parcela baseado no valor total
+// 🔄 Calcula e exibe valor por parcela baseado no valor total
 function calculateInstallmentValues() {
     const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value) || 0;
 
     if (totalInstallments < 2) return;
 
     if (installmentValueType === 'total') {
-        // UsuÃ¡rio digitou valor total, calcular valor da parcela
+        // Usuário digitou valor total, calcular valor da parcela
         const totalValueStr = document.getElementById('instTotalValue').value;
         if (!totalValueStr) return;
 
@@ -926,7 +926,7 @@ function calculateInstallmentValues() {
             installmentValueInput.value = formatCurrencyValue(installmentValue);
         }
     } else {
-        // UsuÃ¡rio digitou valor da parcela, calcular valor total
+        // Usuário digitou valor da parcela, calcular valor total
         const installmentValueStr = document.getElementById('instInstallmentValue').value;
         if (!installmentValueStr) return;
 
@@ -939,13 +939,13 @@ function calculateInstallmentValues() {
     }
 }
 
-// ðŸŽ¨ Abre modal para adicionar nova projeÃ§Ã£o
+// 🎨 Abre modal para adicionar nova projeção
 function openProjectionModal() {
     editingProjectionId = null;
     currentProjectionType = 'income';
     document.getElementById('projectionModal').classList.add('active');
     document.getElementById('projectionForm').reset();
-    document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova ProjeÃ§Ã£o';
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova Projeção';
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('projDate').value = today;
     document.getElementById('projStatus').value = 'pending';
@@ -953,7 +953,7 @@ function openProjectionModal() {
     selectProjectionType('income');
 }
 
-// ðŸŽ¨ Abre modal para editar projeÃ§Ã£o existente
+// 🎨 Abre modal para editar projeção existente
 function editProjection(id) {
     const projection = projections.find(p => p.id === id);
     if (!projection) return;
@@ -963,8 +963,8 @@ function editProjection(id) {
     // Abre o modal
     document.getElementById('projectionModal').classList.add('active');
 
-    // Atualiza tÃ­tulo do modal
-    document.querySelector('#projectionModal .modal-header h2').textContent = 'Editar ProjeÃ§Ã£o';
+    // Atualiza título do modal
+    document.querySelector('#projectionModal .modal-header h2').textContent = 'Editar Projeção';
 
     // Preenche os campos
     document.getElementById('projDescription').value = projection.description;
@@ -972,12 +972,12 @@ function editProjection(id) {
     document.getElementById('projDate').value = projection.date;
     document.getElementById('projStatus').value = projection.status || 'pending';
 
-    // Seleciona o tipo correto (default: income para projeÃ§Ãµes antigas)
+    // Seleciona o tipo correto (default: income para projeções antigas)
     const projType = projection.type || 'income';
     selectProjectionType(projType);
 }
 
-// ðŸŽ¨ Fecha modal de projeÃ§Ã£o
+// 🎨 Fecha modal de projeção
 function closeProjectionModal() {
     editingProjectionId = null;
     currentProjectionType = 'income';
@@ -985,11 +985,11 @@ function closeProjectionModal() {
     document.getElementById('projectionForm').reset();
 }
 
-// ðŸ“ Alterna tipo de projeÃ§Ã£o (entrada/saÃ­da) e atualiza labels
+// 📝 Alterna tipo de projeção (entrada/saída) e atualiza labels
 function selectProjectionType(type) {
     currentProjectionType = type;
 
-    // Update active button dentro do modal de projeÃ§Ã£o
+    // Update active button dentro do modal de projeção
     document.querySelectorAll('#projectionForm .type-btn[data-type]').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.type === type) {
@@ -1011,7 +1011,7 @@ function selectProjectionType(type) {
     }
 }
 
-// ðŸ“ Alterna tipo de transaÃ§Ã£o (entrada/saÃ­da) e atualiza categorias
+// 📝 Alterna tipo de transação (entrada/saída) e atualiza categorias
 function selectTransactionType(type) {
     currentTransactionType = type;
 
@@ -1023,7 +1023,7 @@ function selectTransactionType(type) {
         }
     });
 
-    // Sempre mostrar mÃ©todo de pagamento (para reembolsos em cartÃ£o tambÃ©m)
+    // Sempre mostrar método de pagamento (para reembolsos em cartão também)
     const paymentMethodGroup = document.getElementById('paymentMethodGroup');
     paymentMethodGroup.style.display = 'block';
     // Reset to debit quando trocar de tipo
@@ -1033,7 +1033,7 @@ function selectTransactionType(type) {
     populateCategories();
 }
 
-// ðŸ“ Alterna mÃ©todo de pagamento (dÃ©bito/crÃ©dito) e exibe campos apropriados
+// 📝 Alterna método de pagamento (débito/crédito) e exibe campos apropriados
 function selectPaymentMethod(method) {
     currentPaymentMethod = method;
 
@@ -1060,27 +1060,27 @@ function selectPaymentMethod(method) {
         creditCardGroup.style.display = 'none';
         transactionCardSelect.required = false;
         // Clear dropdown when switching away from credit
-        transactionCardSelect.innerHTML = '<option value="">Selecione um cartÃ£o</option>';
+        transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
         transactionCardSelect.value = '';
     }
 }
 
-// ðŸ“ Popula dropdown de cartÃµes no formulÃ¡rio de transaÃ§Ã£o
+// 📝 Popula dropdown de cartões no formulário de transação
 function populateTransactionCardOptions() {
     const select = document.getElementById('transactionCard');
-    select.innerHTML = '<option value="">Selecione um cartÃ£o</option>';
+    select.innerHTML = '<option value="">Selecione um cartão</option>';
 
     // Debug: Log card data before populating
-    console.log('ðŸ“‹ [populateTransactionCardOptions] CartÃµes disponÃ­veis:', creditCards.map(c => ({ id: c.id, name: c.name })));
+    console.log('📋 [populateTransactionCardOptions] Cartões disponíveis:', creditCards.map(c => ({ id: c.id, name: c.name })));
 
     if (!creditCards || creditCards.length === 0) {
-        console.warn('âš ï¸ Nenhum cartÃ£o disponÃ­vel para seleÃ§Ã£o');
+        console.warn('⚠️ Nenhum cartão disponível para seleção');
         return;
     }
 
     creditCards.forEach(card => {
         if (!card.id || !card.name) {
-            console.error('âŒ CartÃ£o invÃ¡lido:', card);
+            console.error('❌ Cartão inválido:', card);
             return;
         }
         const option = document.createElement('option');
@@ -1089,13 +1089,13 @@ function populateTransactionCardOptions() {
         select.appendChild(option);
     });
 
-    console.log('âœ… Dropdown preenchido com', select.options.length - 1, 'cartÃµes');
+    console.log('✅ Dropdown preenchido com', select.options.length - 1, 'cartões');
 }
 
-// ðŸ“ Sugere data padrÃ£o baseada no perÃ­odo da fatura do cartÃ£o selecionado
+// 📝 Sugere data padrão baseada no período da fatura do cartão selecionado
 function updateDefaultDateForCard(cardId) {
     if (!cardId) {
-        // Se nenhum cartÃ£o selecionado, usar hoje
+        // Se nenhum cartão selecionado, usar hoje
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
         return;
@@ -1104,18 +1104,18 @@ function updateDefaultDateForCard(cardId) {
     const card = creditCards.find(c => c.id === cardId);
     if (!card) return;
 
-    // Calcular o perÃ­odo da fatura deste cartÃ£o
+    // Calcular o período da fatura deste cartão
     const today = new Date();
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
 
     let billStartDate;
 
-    // Se estÃ¡ navegando para um mÃªs diferente do atual
+    // Se está navegando para um mês diferente do atual
     const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
     if (isNavigating) {
-        // Navegando: Fatura aberta Ã© DIA (closingDay+1) do mÃªs anterior atÃ© fechamento do mÃªs visualizado
+        // Navegando: Fatura aberta é DIA (closingDay+1) do mês anterior até fechamento do mês visualizado
         let prevMonth = currentMonth - 1;
         let prevYear = currentYear;
         if (prevMonth < 0) {
@@ -1124,27 +1124,27 @@ function updateDefaultDateForCard(cardId) {
         }
         billStartDate = new Date(prevYear, prevMonth, card.closingDay + 1);
     } else {
-        // Usando lÃ³gica do mÃªs atual
+        // Usando lógica do mês atual
         if (today.getDate() < card.closingDay) {
-            // Fatura aberta Ã© do mÃªs atual
+            // Fatura aberta é do mês atual
             billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
             if (currentMonth === 0) {
                 billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1);
             }
         } else {
-            // Fatura aberta Ã© do prÃ³ximo mÃªs
+            // Fatura aberta é do próximo mês
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
         }
     }
 
-    // Usar primeira data vÃ¡lida do perÃ­odo
+    // Usar primeira data válida do período
     const defaultDate = billStartDate.toISOString().split('T')[0];
     document.getElementById('date').value = defaultDate;
 
-    console.log(`ðŸ“… [updateDefaultDateForCard] CartÃ£o "${card.name}" - PerÃ­odo comeÃ§a em: ${defaultDate}`);
+    console.log(`📅 [updateDefaultDateForCard] Cartão "${card.name}" - Período começa em: ${defaultDate}`);
 }
 
-// Adicionar event listener ao dropdown de cartÃµes
+// Adicionar event listener ao dropdown de cartões
 document.addEventListener('change', (e) => {
     if (e.target.id === 'transactionCard') {
         const cardId = e.target.value;
@@ -1164,7 +1164,7 @@ document.addEventListener('click', (e) => {
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
-// ðŸ“ Formata valor numÃ©rico para exibiÃ§Ã£o (R$ 1.234,56)
+// 📝 Formata valor numérico para exibição (R$ 1.234,56)
 function formatCurrencyDisplay(value) {
     if (!value && value !== 0) return 'R$ 0,00';
 
@@ -1174,9 +1174,9 @@ function formatCurrencyDisplay(value) {
     });
 }
 
-// ðŸ“ Formata input de moeda conforme o usuÃ¡rio digita (onkeyup event)
+// 📝 Formata input de moeda conforme o usuário digita (onkeyup event)
 function formatCurrency(inputElement) {
-    // Remove tudo que nÃ£o for nÃºmero
+    // Remove tudo que não for número
     let value = inputElement.value.replace(/\D/g, '');
 
     if (!value) {
@@ -1184,7 +1184,7 @@ function formatCurrency(inputElement) {
         return;
     }
 
-    // Converte para nÃºmero e divide por 100 (para adicionar os centavos)
+    // Converte para número e divide por 100 (para adicionar os centavos)
     let numValue = parseInt(value, 10) / 100;
 
     // Formata para moeda brasileira
@@ -1194,9 +1194,9 @@ function formatCurrency(inputElement) {
     });
 }
 
-// ðŸ“ Formata valor numÃ©rico para input (1234.56)
+// 📝 Formata valor numérico para input (1234.56)
 function formatCurrencyValue(value) {
-    // Converte um nÃºmero para o formato do input (1.234,56)
+    // Converte um número para o formato do input (1.234,56)
     if (!value && value !== 0) return '';
 
     let formatted = value.toFixed(2);
@@ -1206,7 +1206,7 @@ function formatCurrencyValue(value) {
     return formatted;
 }
 
-// ðŸ“ Converte string formatada (1.234,56) para nÃºmero
+// 📝 Converte string formatada (1.234,56) para número
 function parseCurrencyInput(str) {
     if (!str) return 0;
 
@@ -1219,7 +1219,7 @@ function parseCurrencyInput(str) {
     return parseFloat(str) || 0;
 }
 
-// ðŸ“ Formata string de data para exibiÃ§Ã£o local
+// 📝 Formata string de data para exibição local
 function formatDate(dateStr) {
     if (!dateStr) return '';
 
@@ -1227,7 +1227,7 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// ðŸŽ¨ Exibe overlay de carregamento com mensagem personalizada
+// 🎨 Exibe overlay de carregamento com mensagem personalizada
 function showLoading(message = 'Carregando...') {
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay) return;
@@ -1237,13 +1237,13 @@ function showLoading(message = 'Carregando...') {
     overlay.style.display = 'flex';
 }
 
-// ðŸŽ¨ Esconde overlay de carregamento
+// 🎨 Esconde overlay de carregamento
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.style.display = 'none';
 }
 
-// ðŸŽ¨ Exibe notificaÃ§Ã£o toast temporÃ¡ria (sucesso/erro/info)
+// 🎨 Exibe notificação toast temporária (sucesso/erro/info)
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -1342,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===========================
 // HELPER FUNCTIONS FOR CHARTS
 // ===========================
-// ðŸ”„ Calcula total de entradas ou saÃ­das do mÃªs atual
+// 🔄 Calcula total de entradas ou saídas do mês atual
 function getCurrentMonthTotal(type) {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
@@ -1361,16 +1361,16 @@ function getCurrentMonthTotal(type) {
 // ===========================
 // MINI CHARTS - SAVINGS GOAL (RADIAL)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico radial de progresso de meta de economia
+// 🎨 Cria gráfico radial de progresso de meta de economia
 function initializeSavingsGoalChart() {
     const chartEl = document.querySelector("#savingsGoalChart");
     if (!chartEl) return;
 
-    // CorreÃ§Ã£o 5: Considerar faturas de cartÃ£o nas saÃ­das
+    // Correção 5: Considerar faturas de cartão nas saídas
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
-    // Calcular entradas do mÃªs (excluindo crÃ©dito)
+    // Calcular entradas do mês (excluindo crédito)
     const totalIncome = transactions
         .filter(t => {
             const d = new Date(t.date);
@@ -1379,7 +1379,7 @@ function initializeSavingsGoalChart() {
         })
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Calcular saÃ­das em dÃ©bito do mÃªs
+    // Calcular saídas em débito do mês
     const totalExpenseDebit = transactions
         .filter(t => {
             const d = new Date(t.date);
@@ -1388,14 +1388,14 @@ function initializeSavingsGoalChart() {
         })
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Incluir faturas de cartÃ£o (pagas e nÃ£o pagas) no total de saÃ­das
+    // Incluir faturas de cartão (pagas e não pagas) no total de saídas
     const totalCreditCards = creditCards.reduce((sum, card) => {
         return sum + calculateCurrentBill(card, currentMonth, currentYear);
     }, 0);
 
     const totalExpense = totalExpenseDebit + totalCreditCards;
     const saved = totalIncome - totalExpense;
-    const goal = userSettings.savingsGoal || 2000; // Meta de economia configurÃ¡vel
+    const goal = userSettings.savingsGoal || 2000; // Meta de economia configurável
     const percentage = goal > 0 ? Math.min(Math.max((saved / goal) * 100, 0), 100) : 0;
 
     const options = {
@@ -1426,7 +1426,7 @@ function initializeSavingsGoalChart() {
             }
         },
         fill: {
-            colors: [saved >= goal ? '#10b981' : '#f59e0b'] // Verde se atingiu meta, laranja se nÃ£o
+            colors: [saved >= goal ? '#10b981' : '#f59e0b'] // Verde se atingiu meta, laranja se não
         }
     };
 
@@ -1443,13 +1443,13 @@ function initializeSavingsGoalChart() {
 // ===========================
 // MINI CHARTS - EXPENSE LIMIT (RADIAL)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico radial de limite de despesas
+// 🎨 Cria gráfico radial de limite de despesas
 function initializeExpenseLimitChart() {
     const chartEl = document.querySelector("#expenseLimitChart");
     if (!chartEl) return;
 
     const totalExpense = getCurrentMonthTotal('expense');
-    const limit = userSettings.expenseLimit || 3000; // Limite de gastos configurÃ¡vel
+    const limit = userSettings.expenseLimit || 3000; // Limite de gastos configurável
     const percentage = limit > 0 ? Math.min((totalExpense / limit) * 100, 100) : 0;
 
     // Cores baseadas em porcentagem: verde < 60%, laranja 60-80%, vermelho > 80%
@@ -1505,7 +1505,7 @@ function initializeExpenseLimitChart() {
 // ===========================
 // MINI CHARTS - GROWTH SPARKLINE
 // ===========================
-// ðŸŽ¨ Cria mini grÃ¡fico de linha de crescimento de receitas
+// 🎨 Cria mini gráfico de linha de crescimento de receitas
 function initializeGrowthSparkline() {
     const chartEl = document.querySelector("#growthSparkline");
     if (!chartEl) return;
@@ -1551,7 +1551,7 @@ function initializeGrowthSparkline() {
 // ===========================
 // MINI CHARTS - EXPENSE TREND SPARKLINE
 // ===========================
-// ðŸŽ¨ Cria mini grÃ¡fico de linha de tendÃªncia de despesas
+// 🎨 Cria mini gráfico de linha de tendência de despesas
 function initializeExpenseTrendSparkline() {
     const chartEl = document.querySelector("#expenseTrendSparkline");
     if (!chartEl) return;
@@ -1599,7 +1599,7 @@ function initializeExpenseTrendSparkline() {
 // ===========================
 // TOP CATEGORIES CHART (BAR)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico de barras com top 5 categorias de despesas
+// 🎨 Cria gráfico de barras com top 5 categorias de despesas
 function initializeTopCategoriesChart() {
     const chartEl = document.querySelector("#topCategoriesChart");
     if (!chartEl) return;
@@ -1654,7 +1654,7 @@ function initializeTopCategoriesChart() {
 // ===========================
 // WEEKLY TREND CHART (AREA)
 // ===========================
-// ðŸŽ¨ Cria grÃ¡fico de Ã¡rea com despesas diÃ¡rias da Ãºltima semana do mÃªs selecionado
+// 🎨 Cria gráfico de área com despesas diárias da última semana do mês selecionado
 function initializeWeeklyTrendChart() {
     const chartEl = document.querySelector("#weeklyTrendChart");
     if (!chartEl) return;
@@ -1716,16 +1716,16 @@ function initializeWeeklyTrendChart() {
     weeklyTrendChart.render();
 }
 
-// ðŸ“Š ObtÃ©m dados de despesas diÃ¡rias da Ãºltima semana do mÃªs selecionado
+// 📊 Obtém dados de despesas diárias da última semana do mês selecionado
 function getWeeklyTrendData() {
     const last7Days = [];
     const labels = [];
 
-    // Usar mÃªs/ano selecionado como referÃªncia
+    // Usar mês/ano selecionado como referência
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
-    // Pegar o Ãºltimo dia do mÃªs selecionado
+    // Pegar o último dia do mês selecionado
     const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
     const referenceDate = lastDayOfMonth;
 
@@ -1744,7 +1744,7 @@ function getWeeklyTrendData() {
     return { values: last7Days, labels: labels };
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de evoluÃ§Ã£o semanal
+// 🔄 Atualiza dados do gráfico de evolução semanal
 function updateWeeklyTrendChart() {
     if (!weeklyTrendChart) return;
     const data = getWeeklyTrendData();
@@ -1756,7 +1756,7 @@ function updateWeeklyTrendChart() {
     weeklyTrendChart.updateSeries([{ name: 'Gastos', data: data.values }]);
 }
 
-// ðŸ”„ Atualiza dados do grÃ¡fico de top categorias
+// 🔄 Atualiza dados do gráfico de top categorias
 function updateTopCategoriesChart() {
     if (!topCategoriesChart) return;
     const data = getCategoryData();
@@ -1802,7 +1802,7 @@ class CustomSelect {
         // Esconder select original
         this.selectElement.style.display = 'none';
 
-        // Adicionar apÃ³s o select original
+        // Adicionar após o select original
         this.selectElement.parentNode.insertBefore(this.customSelect, this.selectElement.nextSibling);
 
         // Sincronizar valor inicial
@@ -1814,7 +1814,7 @@ class CustomSelect {
         this.customSelect = document.createElement('div');
         this.customSelect.className = 'custom-select';
 
-        // Trigger (botÃ£o que abre/fecha)
+        // Trigger (botão que abre/fecha)
         this.trigger = document.createElement('div');
         this.trigger.className = 'custom-select-trigger';
         this.trigger.innerHTML = `
@@ -1824,11 +1824,11 @@ class CustomSelect {
             </svg>
         `;
 
-        // Lista de opÃ§Ãµes
+        // Lista de opções
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'custom-select-dropdown';
 
-        // Criar opÃ§Ãµes
+        // Criar opções
         const options = Array.from(this.selectElement.options);
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
@@ -1860,7 +1860,7 @@ class CustomSelect {
             this.toggle();
         });
 
-        // Selecionar opÃ§Ã£o
+        // Selecionar opção
         this.dropdown.addEventListener('click', (e) => {
             e.preventDefault();
             const option = e.target.closest('.custom-select-option');
@@ -1892,13 +1892,13 @@ class CustomSelect {
             }
         });
 
-        // Observar mudanÃ§as no select original
+        // Observar mudanças no select original
         const observer = new MutationObserver(() => {
             this.updateDropdownOptions();
         });
         observer.observe(this.selectElement, { childList: true, subtree: true });
 
-        // Observar mudanÃ§as de valor
+        // Observar mudanças de valor
         this.selectElement.addEventListener('change', () => {
             this.updateSelected();
         });
@@ -1913,7 +1913,7 @@ class CustomSelect {
         this.customSelect.classList.add('open');
         this.trigger.setAttribute('aria-expanded', 'true');
 
-        // Scroll para opÃ§Ã£o selecionada
+        // Scroll para opção selecionada
         const selectedOption = this.dropdown.querySelector('.selected');
         if (selectedOption) {
             selectedOption.scrollIntoView({ block: 'nearest' });
@@ -1950,14 +1950,14 @@ class CustomSelect {
             valueSpan.classList.add('placeholder');
         }
 
-        // Atualizar classe selected nas opÃ§Ãµes
+        // Atualizar classe selected nas opções
         this.dropdown.querySelectorAll('.custom-select-option').forEach((opt, index) => {
             opt.classList.toggle('selected', index === this.selectElement.selectedIndex);
         });
     }
 
     updateDropdownOptions() {
-        // Recriar lista de opÃ§Ãµes quando o select original muda
+        // Recriar lista de opções quando o select original muda
         this.dropdown.innerHTML = '';
 
         const options = Array.from(this.selectElement.options);
@@ -2001,7 +2001,7 @@ class CustomSelect {
     }
 }
 
-// ðŸ“ Inicializa componentes de select personalizados para todos os dropdowns
+// 📝 Inicializa componentes de select personalizados para todos os dropdowns
 function initCustomSelects() {
     const selects = document.querySelectorAll('.form-select, select');
     selects.forEach(select => {
@@ -2024,62 +2024,62 @@ window.initCustomSelects = initCustomSelects;
 window.CustomSelect = CustomSelect;
 
 // ===========================
-// FUNÃ‡ÃƒO ADMINISTRATIVA - LIMPAR DADOS
+// FUNÇÃO ADMINISTRATIVA - LIMPAR DADOS
 // ===========================
 /**
- * ðŸ§¹ FunÃ§Ã£o administrativa para limpar todos os dados da conta da empresa
- * ATENÃ‡ÃƒO: Esta funÃ§Ã£o DELETARÃ permanentemente todos os dados!
+ * 🧹 Função administrativa para limpar todos os dados da conta da empresa
+ * ATENÇÃO: Esta função DELETARÁ permanentemente todos os dados!
  * Para executar, abra o console do navegador e digite: cleanCompanyData()
  */
 async function cleanCompanyData() {
     try {
         // 1. Buscar UID da empresa
-        console.log('ðŸ” Buscando UID da conta da empresa...');
+        console.log('🔍 Buscando UID da conta da empresa...');
         const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
 
         if (!configDoc.exists) {
-            console.error('âŒ ConfiguraÃ§Ã£o da empresa nÃ£o encontrada!');
+            console.error('❌ Configuração da empresa não encontrada!');
             return;
         }
 
         const companyUserId = configDoc.data().userId;
-        console.log('âœ… UID da empresa encontrado:', companyUserId);
+        console.log('✅ UID da empresa encontrado:', companyUserId);
 
-        // 2. Confirmar aÃ§Ã£o
+        // 2. Confirmar ação
         const confirmation = confirm(
-            'âš ï¸ ATENÃ‡ÃƒO: Esta aÃ§Ã£o irÃ¡ DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
-            'SerÃ£o deletados:\n' +
-            'â€¢ ServiÃ§os\n' +
-            'â€¢ TransaÃ§Ãµes\n' +
-            'â€¢ Assinaturas\n' +
-            'â€¢ Parcelamentos\n' +
-            'â€¢ ProjeÃ§Ãµes\n' +
-            'â€¢ CartÃµes de crÃ©dito\n' +
-            'â€¢ Despesas de cartÃ£o\n' +
-            'â€¢ Pagamentos de cartÃ£o\n' +
-            'â€¢ Investimentos\n\n' +
+            '⚠️ ATENÇÃO: Esta ação irá DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
+            'Serão deletados:\n' +
+            '• Serviços\n' +
+            '• Transações\n' +
+            '• Assinaturas\n' +
+            '• Parcelamentos\n' +
+            '• Projeções\n' +
+            '• Cartões de crédito\n' +
+            '• Despesas de cartão\n' +
+            '• Pagamentos de cartão\n' +
+            '• Investimentos\n\n' +
             'Deseja continuar?'
         );
 
         if (!confirmation) {
-            console.log('âŒ OperaÃ§Ã£o cancelada pelo usuÃ¡rio');
+            console.log('❌ Operação cancelada pelo usuário');
             return;
         }
 
-        // 3. Segundo nÃ­vel de confirmaÃ§Ã£o
+        // 3. Segundo nível de confirmação
         const finalConfirmation = prompt(
-            'Digite "DELETAR TUDO" para confirmar a exclusÃ£o permanente de todos os dados da empresa:'
+            'Digite "DELETAR TUDO" para confirmar a exclusão permanente de todos os dados da empresa:'
         );
 
         if (finalConfirmation !== 'DELETAR TUDO') {
-            console.log('âŒ ConfirmaÃ§Ã£o invÃ¡lida. OperaÃ§Ã£o cancelada.');
+            console.log('❌ Confirmação inválida. Operação cancelada.');
             return;
         }
 
-        console.log('ðŸ§¹ Iniciando limpeza dos dados...');
+        console.log('🧹 Iniciando limpeza dos dados...');
         showLoading('Limpando dados da empresa...');
 
-        // 4. Deletar dados de cada coleÃ§Ã£o
+        // 4. Deletar dados de cada coleção
         const collections = [
             'services',
             'transactions',
@@ -2095,7 +2095,7 @@ async function cleanCompanyData() {
         let totalDeleted = 0;
 
         for (const collectionName of collections) {
-            console.log(`ðŸ—‘ï¸ Deletando ${collectionName}...`);
+            console.log(`🗑️ Deletando ${collectionName}...`);
 
             const snapshot = await db.collection(collectionName)
                 .where('userId', '==', companyUserId)
@@ -2111,34 +2111,34 @@ async function cleanCompanyData() {
 
             if (count > 0) {
                 await batch.commit();
-                console.log(`âœ… ${count} documento(s) deletado(s) de ${collectionName}`);
+                console.log(`✅ ${count} documento(s) deletado(s) de ${collectionName}`);
                 totalDeleted += count;
             } else {
-                console.log(`â„¹ï¸ Nenhum documento encontrado em ${collectionName}`);
+                console.log(`ℹ️ Nenhum documento encontrado em ${collectionName}`);
             }
         }
 
         hideLoading();
 
-        console.log(`âœ… Limpeza concluÃ­da! Total de ${totalDeleted} documento(s) deletado(s).`);
-        showToast(`âœ… Limpeza concluÃ­da! ${totalDeleted} registros removidos.`, 'success');
+        console.log(`✅ Limpeza concluída! Total de ${totalDeleted} documento(s) deletado(s).`);
+        showToast(`✅ Limpeza concluída! ${totalDeleted} registros removidos.`, 'success');
 
         // 5. Recarregar dashboard
         setTimeout(() => {
-            console.log('ðŸ”„ Recarregando dashboard...');
+            console.log('🔄 Recarregando dashboard...');
             location.reload();
         }, 2000);
 
     } catch (error) {
         hideLoading();
-        console.error('âŒ Erro ao limpar dados:', error);
+        console.error('❌ Erro ao limpar dados:', error);
         showToast('Erro ao limpar dados: ' + error.message, 'error');
     }
 }
 
-// Exportar funÃ§Ã£o para console
+// Exportar função para console
 window.cleanCompanyData = cleanCompanyData;
-console.log('âœ… FunÃ§Ã£o administrativa carregada: cleanCompanyData()');
-console.log('ðŸ“ Para limpar os dados da empresa, digite no console: cleanCompanyData()');
+console.log('✅ Função administrativa carregada: cleanCompanyData()');
+console.log('📝 Para limpar os dados da empresa, digite no console: cleanCompanyData()');
 
 console.log('âœ… Finance UI v3.0 - Loaded');

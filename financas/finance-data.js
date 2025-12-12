@@ -7,13 +7,103 @@ VERSÃƒO: 3.0 - RefatoraÃ§Ã£o Modular
 IMPORTANTE: NÃƒO REMOVER ESTE CABEÃ‡ALHO DE IDENTIFICAÃ‡ÃƒO
 ==================================================
 */
+
+// ===========================
+// INITIALIZATION
+// ===========================
+// ðŸ”„ Inicializa dashboard e carrega todos os dados do Firestore
+async function initializeDashboard() {
+    showLoading('Carregando dados...');
+    console.log('Iniciando dashboard...');
+
+    try {
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('date');
+        const projDateInput = document.getElementById('projDate');
+
+        if (dateInput) dateInput.value = today;
+        if (projDateInput) projDateInput.value = today;
+
+        // Populate category options
+        populateCategories();
+
+        // Load all data with individual error handling
+        console.log('Carregando dados do Firestore...');
+        await Promise.allSettled([
+            loadTransactions(),
+            loadSubscriptions(),
+            loadInstallments(),
+            loadProjections(),
+            loadCreditCards(),
+            loadCreditCardPayments(),
+            loadInvestments(),
+            loadUserSettings(),
+            loadServices()
+        ]);
+
+        // Iniciar listener de serviÃ§os em tempo real
+        startServicesListener();
+
+        console.log('Dados carregados:', {
+            transactions: transactions.length,
+            subscriptions: subscriptions.length,
+            installments: installments.length,
+            projections: projections.length,
+            creditCardPayments: creditCardPayments.length,
+            services: services.length,
+            investments: investments.length
+        });
+
+        // Initialize charts (com dados ou sem)
+        initializeCharts();
+
+        // Update KPIs
+        updateKPIs();
+
+        // Migrar parcelamentos antigos automaticamente (se necessÃ¡rio)
+        // Fazemos isso em background para nÃ£o bloquear a interface
+        setTimeout(() => {
+            const oldInstallments = installments.filter(i =>
+                i.startMonth === undefined || i.startYear === undefined
+            );
+            if (oldInstallments.length > 0) {
+                console.log('[initializeDashboard] Detectados parcelamentos antigos, iniciando migraÃ§Ã£o automÃ¡tica...');
+                migrateOldInstallments();
+            }
+        }, 1000);
+
+        hideLoading();
+        showToast('Dashboard carregado com sucesso', 'success');
+    } catch (error) {
+        hideLoading();
+        console.error('Erro ao inicializar dashboard:', error);
+        showToast('Erro ao carregar dados: ' + error.message, 'error');
+    }
+}
+
+// ðŸ“ Popula dropdown de categorias com base no tipo de transaÃ§Ã£o
+function populateCategories() {
+    const categorySelect = document.getElementById('category');
+    if (!categorySelect) return;
+
+    categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+    const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+    });
+}
 // ===========================
 // TRANSACTIONS CRUD
 // ===========================
-// ðŸ—„ï¸ Carrega todas as transaÃ§Ãµes do Firestore
+// 🗄️ Carrega todas as transações do Firestore
 async function loadTransactions() {
     try {
-        console.log('Carregando transaÃ§Ãµes...');
+        console.log('Carregando transações...');
         const snapshot = await db.collection('transactions')
             .where('userId', '==', activeUserId)
             .orderBy('date', 'desc')
@@ -24,22 +114,21 @@ async function loadTransactions() {
             ...doc.data()
         }));
 
-        console.log(`${transactions.length} transaÃ§Ãµes carregadas`);
+        console.log(`${transactions.length} transações carregadas`);
     } catch (error) {
-        console.error('Erro ao carregar transaÃ§Ãµes:', error);
-        // NÃ£o mostra toast aqui para nÃ£o poluir - jÃ¡ mostra no catch principal
+        console.error('Erro ao carregar transações:', error);
+        // Não mostra toast aqui para não poluir - já mostra no catch principal
         transactions = []; // Garante array vazio
     }
 }
 
-// ðŸ›ï¸ Array global para armazenar serviÃ§os
-let services = [];
+// 🛍️ Array global para armazenar serviços
 
-// ðŸ“¦ FunÃ§Ã£o para carregar serviÃ§os
+// 📦 Função para carregar serviços
 async function loadServices() {
     try {
         if (!activeUserId) {
-            console.warn('activeUserId nÃ£o definido, pulando carregamento de serviÃ§os');
+            console.warn('activeUserId não definido, pulando carregamento de serviços');
             return;
         }
 
@@ -52,52 +141,52 @@ async function loadServices() {
             ...doc.data()
         }));
 
-        console.log(`${services.length} serviÃ§os carregados`);
+        console.log(`${services.length} serviços carregados`);
     } catch (error) {
-        console.error('Erro ao carregar serviÃ§os:', error);
+        console.error('Erro ao carregar serviços:', error);
         services = [];
     }
 }
 
-// ðŸ’° FunÃ§Ã£o para criar transaÃ§Ã£o a partir de serviÃ§o
+// 💰 Função para criar transação a partir de serviço
 async function createTransactionFromService(service) {
     try {
-        // VerificaÃ§Ãµes de seguranÃ§a
+        // Verificações de segurança
         if (!service.value || service.value <= 0) {
-            console.log('ServiÃ§o sem valor, ignorando:', service.id);
+            console.log('Serviço sem valor, ignorando:', service.id);
             return;
         }
 
         if (!service.userId || service.userId !== activeUserId) {
-            console.log('ServiÃ§o nÃ£o pertence ao usuÃ¡rio ativo, ignorando:', service.id);
+            console.log('Serviço não pertence ao usuário ativo, ignorando:', service.id);
             return;
         }
 
-        // Verificar se jÃ¡ existe transaÃ§Ã£o para este serviÃ§o
+        // Verificar se já existe transação para este serviço
         const existingTransactions = await db.collection('transactions')
             .where('userId', '==', activeUserId)
             .where('serviceId', '==', service.id)
             .get();
 
         if (!existingTransactions.empty) {
-            console.log('TransaÃ§Ã£o jÃ¡ existe para este serviÃ§o:', service.id);
+            console.log('Transação já existe para este serviço:', service.id);
             return;
         }
 
-        // Extrair data do serviÃ§o (usar createdAt que estÃ¡ em formato ISO)
+        // Extrair data do serviço (usar createdAt que está em formato ISO)
         let transactionDate;
         if (service.createdAt) {
-            // createdAt estÃ¡ em formato ISO, extrair apenas a data
+            // createdAt está em formato ISO, extrair apenas a data
             transactionDate = service.createdAt.split('T')[0];
         } else {
             transactionDate = new Date().toISOString().split('T')[0];
         }
 
-        // Criar transaÃ§Ã£o de entrada
+        // Criar transação de entrada
         const transactionData = {
             userId: activeUserId,
             type: 'income',
-            description: `ServiÃ§o: ${service.name || 'Sem nome'}`,
+            description: `Serviço: ${service.name || 'Sem nome'}`,
             value: parseFloat(service.value),
             category: 'Vendas',
             date: transactionDate,
@@ -108,23 +197,23 @@ async function createTransactionFromService(service) {
         };
 
         await db.collection('transactions').add(transactionData);
-        console.log('âœ… TransaÃ§Ã£o criada para serviÃ§o:', service.id, 'Data:', transactionDate);
+        console.log('✅ Transação criada para serviço:', service.id, 'Data:', transactionDate);
 
-        // Recarregar transaÃ§Ãµes
+        // Recarregar transações
         await loadTransactions();
         updateAllDisplays();
 
     } catch (error) {
-        console.error('Erro ao criar transaÃ§Ã£o de serviÃ§o:', error);
+        console.error('Erro ao criar transação de serviço:', error);
     }
 }
 
-// ðŸ‘‚ Listener em tempo real para serviÃ§os
+// 👂 Listener em tempo real para serviços
 let servicesListener = null;
 
 function startServicesListener() {
     if (!activeUserId) {
-        console.warn('activeUserId nÃ£o definido, nÃ£o iniciando listener de serviÃ§os');
+        console.warn('activeUserId não definido, não iniciando listener de serviços');
         return;
     }
 
@@ -139,37 +228,37 @@ function startServicesListener() {
             snapshot.docChanges().forEach(change => {
                 const service = { id: change.doc.id, ...change.doc.data() };
 
-                // Criar transaÃ§Ã£o quando serviÃ§o for adicionado ou modificado
+                // Criar transação quando serviço for adicionado ou modificado
                 if (change.type === 'added' || change.type === 'modified') {
                     createTransactionFromService(service);
                 }
             });
         });
 
-    console.log('Listener de serviÃ§os iniciado');
+    console.log('Listener de serviços iniciado');
 }
 
-// ðŸ•°ï¸ Processar serviÃ§os histÃ³ricos (executar uma vez apÃ³s implementaÃ§Ã£o)
+// 🕰️ Processar serviços históricos (executar uma vez após implementação)
 async function processHistoricalServices() {
     if (!activeUserId) return;
 
-    console.log('Processando serviÃ§os histÃ³ricos...');
+    console.log('Processando serviços históricos...');
 
     const servicesSnapshot = await db.collection('services')
         .where('userId', '==', activeUserId)
         .get();
 
-    console.log(`${servicesSnapshot.size} serviÃ§os encontrados`);
+    console.log(`${servicesSnapshot.size} serviços encontrados`);
 
     for (const doc of servicesSnapshot.docs) {
         const service = { id: doc.id, ...doc.data() };
         await createTransactionFromService(service);
     }
 
-    console.log('âœ… Processamento de serviÃ§os histÃ³ricos concluÃ­do');
+    console.log('✅ Processamento de serviços históricos concluído');
 }
 
-// ðŸ“² Processa envio do formulÃ¡rio de transaÃ§Ã£o (criar/editar)
+// 📲 Processa envio do formulário de transação (criar/editar)
 async function handleTransactionSubmit(e) {
     e.preventDefault();
 
@@ -183,25 +272,25 @@ async function handleTransactionSubmit(e) {
         return;
     }
 
-    // Validar cartÃ£o de crÃ©dito se for transaÃ§Ã£o no crÃ©dito (tanto saÃ­da quanto entrada/reembolso)
+    // Validar cartão de crédito se for transação no crédito (tanto saída quanto entrada/reembolso)
     let selectedCardId = null;
     let selectedCard = null;
     if (currentPaymentMethod === 'credit') {
         selectedCardId = document.getElementById('transactionCard').value;
         if (!selectedCardId) {
-            showToast('Selecione um cartÃ£o de crÃ©dito', 'error');
+            showToast('Selecione um cartão de crédito', 'error');
             return;
         }
-        // Validar que o cartÃ£o existe
+        // Validar que o cartão existe
         selectedCard = creditCards.find(c => c.id === selectedCardId);
         if (!selectedCard) {
-            console.error('âŒ CartÃ£o selecionado nÃ£o encontrado:', selectedCardId);
-            showToast('CartÃ£o invÃ¡lido. Recarregue a pÃ¡gina e tente novamente', 'error');
+            console.error('❌ Cartão selecionado não encontrado:', selectedCardId);
+            showToast('Cartão inválido. Recarregue a página e tente novamente', 'error');
             return;
         }
 
-        // âš ï¸ Validar se a data estÃ¡ dentro do perÃ­odo da fatura
-        // Fatura aberta: DIA (closingDay+1) do MÃŠS ANTERIOR atÃ© DIA FECHAMENTO do MÃŠS ATUAL
+        // ⚠️ Validar se a data está dentro do período da fatura
+        // Fatura aberta: DIA (closingDay+1) do MÊS ANTERIOR até DIA FECHAMENTO do MÊS ATUAL
         const transactionDate = new Date(date + 'T12:00:00');
         const today = new Date();
         const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
@@ -209,11 +298,11 @@ async function handleTransactionSubmit(e) {
 
         let billStartDate, billEndDate;
 
-        // Verificar se estÃ¡ navegando para um mÃªs diferente do atual
+        // Verificar se está navegando para um mês diferente do atual
         const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
         if (isNavigating) {
-            // Navegando: fatura aberta no mÃªs visualizado
+            // Navegando: fatura aberta no mês visualizado
             let prevMonth = currentMonth - 1;
             let prevYear = currentYear;
             if (prevMonth < 0) {
@@ -223,16 +312,16 @@ async function handleTransactionSubmit(e) {
             billStartDate = new Date(prevYear, prevMonth, selectedCard.closingDay + 1);
             billEndDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
         } else {
-            // MÃªs atual: verificar se jÃ¡ passou do fechamento
+            // Mês atual: verificar se já passou do fechamento
             if (today.getDate() < selectedCard.closingDay) {
-                // Fatura aberta Ã© do mÃªs atual
+                // Fatura aberta é do mês atual
                 billStartDate = new Date(currentYear, currentMonth - 1, selectedCard.closingDay + 1);
                 billEndDate = new Date(currentYear, currentMonth, selectedCard.closingDay);
                 if (currentMonth === 0) {
                     billStartDate = new Date(currentYear - 1, 11, selectedCard.closingDay + 1);
                 }
             } else {
-                // Fatura aberta Ã© do prÃ³ximo mÃªs
+                // Fatura aberta é do próximo mês
                 billStartDate = new Date(currentYear, currentMonth, selectedCard.closingDay + 1);
                 let nextMonth = currentMonth + 1;
                 let nextYear = currentYear;
@@ -244,13 +333,13 @@ async function handleTransactionSubmit(e) {
             }
         }
 
-        // Avisar se a data estÃ¡ fora do perÃ­odo
+        // Avisar se a data está fora do período
         if (transactionDate < billStartDate || transactionDate > billEndDate) {
             const startStr = billStartDate.toLocaleDateString('pt-BR');
             const endStr = billEndDate.toLocaleDateString('pt-BR');
-            const warningMsg = `âš ï¸ ATENÃ‡ÃƒO: A data (${new Date(date).toLocaleDateString('pt-BR')}) estÃ¡ FORA do perÃ­odo da fatura de "${selectedCard.name}" (${startStr} a ${endStr}). A transaÃ§Ã£o nÃ£o aparecerÃ¡ na fatura! Deseja continuar?`;
+            const warningMsg = `⚠️ ATENÇÃO: A data (${new Date(date).toLocaleDateString('pt-BR')}) está FORA do período da fatura de "${selectedCard.name}" (${startStr} a ${endStr}). A transação não aparecerá na fatura! Deseja continuar?`;
 
-            console.warn(`âš ï¸ [DATA FORA DO PERÃODO] TransaÃ§Ã£o de ${date} para cartÃ£o "${selectedCard.name}"`);
+            console.warn(`⚠️ [DATA FORA DO PERÍODO] Transação de ${date} para cartão "${selectedCard.name}"`);
 
             if (!confirm(warningMsg)) {
                 return;
@@ -260,11 +349,11 @@ async function handleTransactionSubmit(e) {
 
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
-    showLoading(editingTransactionId ? 'Atualizando transaÃ§Ã£o...' : 'Salvando transaÃ§Ã£o...');
+    showLoading(editingTransactionId ? 'Atualizando transação...' : 'Salvando transação...');
 
     try {
         const transactionData = {
@@ -276,45 +365,45 @@ async function handleTransactionSubmit(e) {
             date
         };
 
-        // Adicionar informaÃ§Ãµes de pagamento (para despesas e reembolsos no crÃ©dito)
+        // Adicionar informações de pagamento (para despesas e reembolsos no crédito)
         transactionData.paymentMethod = currentPaymentMethod;
         if (currentPaymentMethod === 'credit' && selectedCardId) {
             transactionData.cardId = selectedCardId;
-            console.log(`ðŸ“ [handleTransactionSubmit] Salvando transaÃ§Ã£o no cartÃ£o:`, selectedCardId, 'Nome:', creditCards.find(c => c.id === selectedCardId)?.name);
+            console.log(`📝 [handleTransactionSubmit] Salvando transação no cartão:`, selectedCardId, 'Nome:', creditCards.find(c => c.id === selectedCardId)?.name);
         }
 
         if (editingTransactionId) {
-            // Editando transaÃ§Ã£o existente
-            console.log(`âœï¸ Atualizando transaÃ§Ã£o ID: ${editingTransactionId}`);
+            // Editando transação existente
+            console.log(`✏️ Atualizando transação ID: ${editingTransactionId}`);
             await db.collection('transactions').doc(editingTransactionId).update({
                 ...transactionData,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast('TransaÃ§Ã£o atualizada com sucesso', 'success');
+            showToast('Transação atualizada com sucesso', 'success');
         } else {
-            // Criando nova transaÃ§Ã£o
-            console.log(`âœ¨ Criando nova transaÃ§Ã£o:`, { description, type: currentTransactionType, paymentMethod: currentPaymentMethod, cardId: selectedCardId });
+            // Criando nova transação
+            console.log(`✨ Criando nova transação:`, { description, type: currentTransactionType, paymentMethod: currentPaymentMethod, cardId: selectedCardId });
             await db.collection('transactions').add({
                 ...transactionData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast('TransaÃ§Ã£o adicionada com sucesso', 'success');
+            showToast('Transação adicionada com sucesso', 'success');
         }
 
         await loadTransactions();
         updateAllDisplays();
         closeTransactionModal();
     } catch (error) {
-        console.error('Erro ao salvar transaÃ§Ã£o:', error);
-        showToast('Erro ao salvar transaÃ§Ã£o', 'error');
+        console.error('Erro ao salvar transação:', error);
+        showToast('Erro ao salvar transação', 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ðŸ—„ï¸ Deleta uma transaÃ§Ã£o do Firestore
+// 🗄️ Deleta uma transação do Firestore
 async function deleteTransaction(id) {
-    if (!confirm('Deseja realmente deletar esta transaÃ§Ã£o?')) return;
+    if (!confirm('Deseja realmente deletar esta transação?')) return;
 
     showLoading('Deletando...');
 
@@ -322,10 +411,10 @@ async function deleteTransaction(id) {
         await db.collection('transactions').doc(id).delete();
         await loadTransactions();
         updateAllDisplays();
-        showToast('TransaÃ§Ã£o deletada com sucesso', 'success');
+        showToast('Transação deletada com sucesso', 'success');
     } catch (error) {
-        console.error('Erro ao deletar transaÃ§Ã£o:', error);
-        showToast('Erro ao deletar transaÃ§Ã£o', 'error');
+        console.error('Erro ao deletar transação:', error);
+        showToast('Erro ao deletar transação', 'error');
     } finally {
         hideLoading();
     }
@@ -334,7 +423,7 @@ async function deleteTransaction(id) {
 // ===========================
 // SUBSCRIPTIONS CRUD
 // ===========================
-// ðŸ—„ï¸ Carrega todas as assinaturas do Firestore
+// 🗄️ Carrega todas as assinaturas do Firestore
 async function loadSubscriptions() {
     try {
         console.log('Carregando assinaturas...');
@@ -355,7 +444,7 @@ async function loadSubscriptions() {
     }
 }
 
-// ðŸ“² Processa envio do formulÃ¡rio de assinatura (criar/editar)
+// 📲 Processa envio do formulário de assinatura (criar/editar)
 async function handleSubscriptionSubmit(e) {
     e.preventDefault();
 
@@ -378,7 +467,7 @@ async function handleSubscriptionSubmit(e) {
 
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
@@ -422,7 +511,7 @@ async function handleSubscriptionSubmit(e) {
     }
 }
 
-// ðŸ—„ï¸ Deleta uma assinatura do Firestore
+// 🗄️ Deleta uma assinatura do Firestore
 async function deleteSubscription(id) {
     if (!confirm('Deseja realmente deletar esta assinatura?')) return;
 
@@ -444,7 +533,7 @@ async function deleteSubscription(id) {
 // ===========================
 // INSTALLMENTS - MIGRATION
 // ===========================
-// ðŸ”„ Migra parcelamentos antigos adicionando startMonth e startYear
+// 🔄 Migra parcelamentos antigos adicionando startMonth e startYear
 async function migrateOldInstallments() {
     showLoading('Migrando parcelamentos antigos...');
 
@@ -478,10 +567,10 @@ async function migrateOldInstallments() {
         const today = new Date();
 
         installmentsToMigrate.forEach(inst => {
-            // Calcular o mÃªs de inÃ­cio baseado em currentInstallment ou paidInstallments
+            // Calcular o mês de início baseado em currentInstallment ou paidInstallments
             const current = inst.currentInstallment || (inst.paidInstallments ? inst.paidInstallments + 1 : 1);
 
-            // Se a parcela atual Ã© X, significa que comeÃ§ou hÃ¡ (X - 1) meses atrÃ¡s
+            // Se a parcela atual é X, significa que começou há (X - 1) meses atrás
             const monthsAgo = current - 1;
 
             const startDate = new Date(today);
@@ -506,7 +595,7 @@ async function migrateOldInstallments() {
         updateAllDisplays();
 
         showToast(`${installmentsToMigrate.length} parcelamento(s) migrado(s) com sucesso!`, 'success');
-        console.log('[migrateOldInstallments] MigraÃ§Ã£o concluÃ­da!');
+        console.log('[migrateOldInstallments] Migração concluída!');
     } catch (error) {
         console.error('Erro ao migrar parcelamentos:', error);
         showToast('Erro ao migrar parcelamentos: ' + error.message, 'error');
@@ -518,7 +607,7 @@ async function migrateOldInstallments() {
 // ===========================
 // INSTALLMENTS CRUD
 // ===========================
-// ðŸ—„ï¸ Carrega todos os parcelamentos do Firestore
+// 🗄️ Carrega todos os parcelamentos do Firestore
 async function loadInstallments() {
     try {
         console.log('Carregando parcelamentos...');
@@ -542,16 +631,16 @@ async function loadInstallments() {
     }
 }
 
-// ðŸ”„ Corrige startMonth de parcelamentos com dados inconsistentes
+// 🔄 Corrige startMonth de parcelamentos com dados inconsistentes
 async function fixInstallmentsStartMonth() {
     try {
         const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
         const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
-        console.log(`\nðŸ” [MIGRAÃ‡ÃƒO] Verificando parcelamentos... (ref: mÃªs ${displayMonth + 1}/${displayYear})`);
+        console.log(`\n🔍 [MIGRAÇÃO] Verificando parcelamentos... (ref: mês ${displayMonth + 1}/${displayYear})`);
 
         const toFix = installments.filter(inst => {
-            // Verifica se precisa correÃ§Ã£o: se startMonth estÃ¡ definido mas parece errado
+            // Verifica se precisa correção: se startMonth está definido mas parece errado
             if (inst.startMonth === undefined && inst.startMonth !== 0) return false;
             if (!inst.currentInstallment) return false;
             if (!inst.totalInstallments) return false;
@@ -570,22 +659,22 @@ async function fixInstallmentsStartMonth() {
                 correctStartYear++;
             }
 
-            // Se estÃ¡ diferente, precisa corrigir
+            // Se está diferente, precisa corrigir
             const needsFix = (inst.startMonth !== correctStartMonth || inst.startYear !== correctStartYear);
 
             if (needsFix) {
-                console.log(`   ðŸ”§ "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} â†’ ${correctStartMonth + 1}/${correctStartYear} (parcela ${inst.currentInstallment}/${inst.totalInstallments})`);
+                console.log(`   🔧 "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${correctStartMonth + 1}/${correctStartYear} (parcela ${inst.currentInstallment}/${inst.totalInstallments})`);
             }
 
             return needsFix;
         });
 
         if (toFix.length === 0) {
-            console.log(`   âœ… Todos os parcelamentos estÃ£o corretos!\n`);
+            console.log(`   ✅ Todos os parcelamentos estão corretos!\n`);
             return;
         }
 
-        console.log(`\nðŸ”§ Corrigindo ${toFix.length} parcelamentos com startMonth incorreto...`);
+        console.log(`\n🔧 Corrigindo ${toFix.length} parcelamentos com startMonth incorreto...`);
 
         for (const inst of toFix) {
             const monthsBack = inst.currentInstallment - 1;
@@ -597,7 +686,7 @@ async function fixInstallmentsStartMonth() {
                 startYear--;
             }
 
-            console.log(`   Corrigindo "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} â†’ ${startMonth + 1}/${startYear}`);
+            console.log(`   Corrigindo "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${startMonth + 1}/${startYear}`);
 
             await db.collection('installments').doc(inst.id).update({
                 startMonth,
@@ -610,23 +699,23 @@ async function fixInstallmentsStartMonth() {
             inst.startYear = startYear;
         }
 
-        console.log(`âœ… ${toFix.length} parcelamentos corrigidos!\n`);
+        console.log(`✅ ${toFix.length} parcelamentos corrigidos!\n`);
     } catch (error) {
         console.error('Erro ao corrigir parcelamentos:', error);
     }
 }
 
-// ðŸ”„ Calcula qual parcela estÃ¡ ativa baseada no mÃªs/ano de referÃªncia
+// 🔄 Calcula qual parcela está ativa baseada no mês/ano de referência
 function calculateCurrentInstallment(installment, targetMonth = null, targetYear = null) {
     // Fallback para valor salvo ou paidInstallments (para parcelamentos antigos)
     const savedCurrent = installment.currentInstallment || (installment.paidInstallments ? installment.paidInstallments + 1 : 1);
 
-    // Se nÃ£o tem startMonth/startYear, usar valor salvo
+    // Se não tem startMonth/startYear, usar valor salvo
     if (installment.startMonth === undefined || installment.startYear === undefined) {
         return savedCurrent;
     }
 
-    // Usar mÃªs/ano informado, senÃ£o usar display global, senÃ£o usar data atual
+    // Usar mês/ano informado, senão usar display global, senão usar data atual
     let refMonth, refYear;
     if (targetMonth !== null && targetYear !== null) {
         refMonth = targetMonth;
@@ -640,22 +729,22 @@ function calculateCurrentInstallment(installment, targetMonth = null, targetYear
         refYear = today.getFullYear();
     }
 
-    // Calcular quantos meses se passaram desde o inÃ­cio
+    // Calcular quantos meses se passaram desde o início
     const monthsDiff = (refYear - installment.startYear) * 12 + (refMonth - installment.startMonth);
 
-    // Se ainda nÃ£o comeÃ§ou, retornar 1
+    // Se ainda não começou, retornar 1
     if (monthsDiff < 0) {
         return 1;
     }
 
-    // Calcular parcela atual: parcela 1 no mÃªs de inÃ­cio + meses que se passaram
+    // Calcular parcela atual: parcela 1 no mês de início + meses que se passaram
     const calculatedCurrent = 1 + monthsDiff;
 
-    // NÃ£o ultrapassar o total de parcelas
+    // Não ultrapassar o total de parcelas
     return Math.min(calculatedCurrent, installment.totalInstallments);
 }
 
-// ðŸ“² Processa envio do formulÃ¡rio de parcelamento (criar/editar)
+// 📲 Processa envio do formulário de parcelamento (criar/editar)
 async function handleInstallmentSubmit(e) {
     e.preventDefault();
 
@@ -689,7 +778,7 @@ async function handleInstallmentSubmit(e) {
     }
 
     if (totalValue <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
@@ -699,14 +788,14 @@ async function handleInstallmentSubmit(e) {
     }
 
     if (currentInstallment < 1 || currentInstallment > totalInstallments) {
-        showToast('Parcela atual invÃ¡lida', 'error');
+        showToast('Parcela atual inválida', 'error');
         return;
     }
 
     showLoading(editingInstallmentId ? 'Atualizando parcelamento...' : 'Salvando parcelamento...');
 
     try {
-        // Usar mÃªs selecionado na navegaÃ§Ã£o ou mÃªs atual
+        // Usar mês selecionado na navegação ou mês atual
         const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
         const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
@@ -727,13 +816,13 @@ async function handleInstallmentSubmit(e) {
             });
             showToast('Parcelamento atualizado com sucesso', 'success');
         } else {
-            // Criar novo parcelamento - calcula mÃªs/ano de inÃ­cio baseado na parcela atual
-            // Se estÃ¡ visualizando dezembro e na parcela 9, a parcela 1 foi 8 meses atrÃ¡s (abril)
+            // Criar novo parcelamento - calcula mês/ano de início baseado na parcela atual
+            // Se está visualizando dezembro e na parcela 9, a parcela 1 foi 8 meses atrás (abril)
             const monthsBack = currentInstallment - 1;
             let startMonth = displayMonth - monthsBack;
             let startYear = displayYear;
 
-            // Ajusta ano se necessÃ¡rio (quando atravessa anos)
+            // Ajusta ano se necessário (quando atravessa anos)
             while (startMonth < 0) {
                 startMonth += 12;
                 startYear--;
@@ -759,7 +848,7 @@ async function handleInstallmentSubmit(e) {
     }
 }
 
-// ðŸ”„ Atualiza progresso da parcela atual de um parcelamento
+// 🔄 Atualiza progresso da parcela atual de um parcelamento
 async function updateInstallmentProgress(id, current) {
     const currentInstallment = parseInt(current);
 
@@ -781,7 +870,7 @@ async function updateInstallmentProgress(id, current) {
     }
 }
 
-// ðŸ—„ï¸ Deleta um parcelamento do Firestore
+// 🗄️ Deleta um parcelamento do Firestore
 async function deleteInstallment(id) {
     if (!confirm('Deseja realmente deletar este parcelamento?')) return;
 
@@ -803,10 +892,10 @@ async function deleteInstallment(id) {
 // ===========================
 // PROJECTIONS CRUD
 // ===========================
-// ðŸ—„ï¸ Carrega todas as projeÃ§Ãµes do Firestore
+// 🗄️ Carrega todas as projeções do Firestore
 async function loadProjections() {
     try {
-        console.log('Carregando projeÃ§Ãµes...');
+        console.log('Carregando projeções...');
         const snapshot = await db.collection('projections')
             .where('userId', '==', activeUserId)
             .orderBy('date', 'asc')
@@ -817,9 +906,9 @@ async function loadProjections() {
             ...doc.data()
         }));
 
-        console.log(`${projections.length} projeÃ§Ãµes carregadas`);
+        console.log(`${projections.length} projeções carregadas`);
     } catch (error) {
-        console.error('Erro ao carregar projeÃ§Ãµes:', error);
+        console.error('Erro ao carregar projeções:', error);
         projections = [];
     }
 }
@@ -846,7 +935,7 @@ async function loadCreditCardPayments() {
     }
 }
 
-// Verifica se uma fatura especÃ­fica estÃ¡ paga
+// Verifica se uma fatura específica está paga
 function isBillPaid(cardId, month, year) {
     return creditCardPayments.find(p =>
         p.cardId === cardId &&
@@ -855,35 +944,35 @@ function isBillPaid(cardId, month, year) {
     );
 }
 
-// Marca uma fatura como paga (cria transaÃ§Ã£o automÃ¡tica)
+// Marca uma fatura como paga (cria transação automática)
 async function markBillAsPaid(cardId, month, year, billAmount) {
     const card = creditCards.find(c => c.id === cardId);
     if (!card) {
-        showToast('CartÃ£o nÃ£o encontrado', 'error');
+        showToast('Cartão não encontrado', 'error');
         return;
     }
 
-    // Verifica se jÃ¡ estÃ¡ paga
+    // Verifica se já está paga
     if (isBillPaid(cardId, month, year)) {
-        showToast('Esta fatura jÃ¡ estÃ¡ marcada como paga', 'warning');
+        showToast('Esta fatura já está marcada como paga', 'warning');
         return;
     }
 
     showLoading('Registrando pagamento...');
 
     try {
-        const monthNames = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho',
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                             'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
-        // 1. Criar transaÃ§Ã£o de dÃ©bito automÃ¡tica
+        // 1. Criar transação de débito automática
         const transactionRef = await db.collection('transactions').add({
             userId: activeUserId,
             type: 'expense',
             description: `Pagamento Fatura ${card.name} - ${monthNames[month]}/${year}`,
             value: billAmount,
-            category: 'Fatura CartÃ£o',
+            category: 'Fatura Cartão',
             date: todayStr,
             paymentMethod: 'debit',
             cardId: null,
@@ -908,7 +997,7 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
         await loadCreditCardPayments();
         updateAllDisplays();
 
-        showToast('Fatura marcada como paga! TransaÃ§Ã£o de dÃ©bito criada.', 'success');
+        showToast('Fatura marcada como paga! Transação de débito criada.', 'success');
 
         // Fechar e reabrir modal para atualizar
         document.getElementById('cardBillDetailsModal').classList.remove('active');
@@ -924,20 +1013,20 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
 
 // Desfaz pagamento de fatura
 async function unmarkBillAsPaid(paymentId) {
-    if (!confirm('Deseja realmente desfazer este pagamento? A transaÃ§Ã£o de dÃ©bito serÃ¡ removida.')) {
+    if (!confirm('Deseja realmente desfazer este pagamento? A transação de débito será removida.')) {
         return;
     }
 
     const payment = creditCardPayments.find(p => p.id === paymentId);
     if (!payment) {
-        showToast('Pagamento nÃ£o encontrado', 'error');
+        showToast('Pagamento não encontrado', 'error');
         return;
     }
 
     showLoading('Removendo pagamento...');
 
     try {
-        // 1. Deletar transaÃ§Ã£o vinculada
+        // 1. Deletar transação vinculada
         if (payment.transactionId) {
             await db.collection('transactions').doc(payment.transactionId).delete();
         }
@@ -950,7 +1039,7 @@ async function unmarkBillAsPaid(paymentId) {
         await loadCreditCardPayments();
         updateAllDisplays();
 
-        showToast('Pagamento desfeito! TransaÃ§Ã£o removida.', 'success');
+        showToast('Pagamento desfeito! Transação removida.', 'success');
 
         // Fechar e reabrir modal para atualizar
         const cardId = payment.cardId;
@@ -993,17 +1082,17 @@ async function loadInvestments() {
 // ===========================
 async function loadUserSettings() {
     try {
-        console.log('Carregando configuraÃ§Ãµes do usuÃ¡rio...');
+        console.log('Carregando configurações do usuário...');
         const doc = await db.collection('userSettings').doc(activeUserId).get();
 
         if (doc.exists) {
             userSettings = { ...userSettings, ...doc.data() };
         }
 
-        console.log('ConfiguraÃ§Ãµes carregadas:', userSettings);
+        console.log('Configurações carregadas:', userSettings);
     } catch (error) {
-        console.error('Erro ao carregar configuraÃ§Ãµes:', error);
-        // MantÃ©m valores padrÃ£o
+        console.error('Erro ao carregar configurações:', error);
+        // Mantém valores padrão
     }
 }
 
@@ -1016,11 +1105,11 @@ async function saveUserSettings(newSettings) {
         }, { merge: true });
 
         userSettings = { ...userSettings, ...newSettings };
-        showToast('ConfiguraÃ§Ãµes salvas!', 'success');
+        showToast('Configurações salvas!', 'success');
         return true;
     } catch (error) {
-        console.error('Erro ao salvar configuraÃ§Ãµes:', error);
-        showToast('Erro ao salvar configuraÃ§Ãµes', 'error');
+        console.error('Erro ao salvar configurações:', error);
+        showToast('Erro ao salvar configurações', 'error');
         return false;
     }
 }
@@ -1094,7 +1183,7 @@ async function handleInvestmentSubmit(e) {
 
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
@@ -1120,7 +1209,7 @@ async function handleInvestmentSubmit(e) {
             showToast('Investimento adicionado!', 'success');
         }
 
-        // Limpar formulÃ¡rio
+        // Limpar formulário
         document.getElementById('investmentName').value = '';
         document.getElementById('investmentValue').value = '';
         document.getElementById('investmentDate').value = new Date().toISOString().split('T')[0];
@@ -1158,7 +1247,7 @@ async function deleteInvestment(id) {
         await loadInvestments();
         renderInvestmentsList();
         updateAllDisplays();
-        showToast('Investimento excluÃ­do!', 'success');
+        showToast('Investimento excluído!', 'success');
     } catch (error) {
         console.error('Erro ao excluir investimento:', error);
         showToast('Erro ao excluir investimento', 'error');
@@ -1192,7 +1281,7 @@ async function handleSettingsSubmit(e) {
     const expenseLimit = parseCurrencyInput(expenseLimitStr);
 
     if (savingsGoal <= 0 || expenseLimit <= 0) {
-        showToast('Valores invÃ¡lidos', 'error');
+        showToast('Valores inválidos', 'error');
         return;
     }
 
@@ -1202,13 +1291,13 @@ async function handleSettingsSubmit(e) {
 
     if (success) {
         closeSettingsModal();
-        initializeCharts(); // Atualizar grÃ¡ficos com novos valores
+        initializeCharts(); // Atualizar gráficos com novos valores
     }
 
     hideLoading();
 }
 
-// ðŸ“² Processa envio do formulÃ¡rio de projeÃ§Ã£o
+// 📲 Processa envio do formulário de projeção
 async function handleProjectionSubmit(e) {
     e.preventDefault();
 
@@ -1225,15 +1314,15 @@ async function handleProjectionSubmit(e) {
 
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
-    showLoading(editingProjectionId ? 'Atualizando projeÃ§Ã£o...' : 'Salvando projeÃ§Ã£o...');
+    showLoading(editingProjectionId ? 'Atualizando projeção...' : 'Salvando projeção...');
 
     try {
         if (editingProjectionId) {
-            // Atualizar projeÃ§Ã£o existente
+            // Atualizar projeção existente
             await db.collection('projections').doc(editingProjectionId).update({
                 description,
                 value,
@@ -1245,9 +1334,9 @@ async function handleProjectionSubmit(e) {
             await loadProjections();
             updateAllDisplays();
             closeProjectionModal();
-            showToast('ProjeÃ§Ã£o atualizada com sucesso', 'success');
+            showToast('Projeção atualizada com sucesso', 'success');
         } else {
-            // Criar nova projeÃ§Ã£o
+            // Criar nova projeção
             await db.collection('projections').add({
                 userId: activeUserId,
                 description,
@@ -1261,64 +1350,64 @@ async function handleProjectionSubmit(e) {
             await loadProjections();
             updateAllDisplays();
             closeProjectionModal();
-            showToast('ProjeÃ§Ã£o adicionada com sucesso', 'success');
+            showToast('Projeção adicionada com sucesso', 'success');
         }
     } catch (error) {
-        console.error('Erro ao salvar projeÃ§Ã£o:', error);
-        showToast('Erro ao salvar projeÃ§Ã£o', 'error');
+        console.error('Erro ao salvar projeção:', error);
+        showToast('Erro ao salvar projeção', 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ðŸ”„ Atualiza status de uma projeÃ§Ã£o
-// Quando marca como "received", cria uma transaÃ§Ã£o correspondente (entrada ou despesa)
+// 🔄 Atualiza status de uma projeção
+// Quando marca como "received", cria uma transação correspondente (entrada ou despesa)
 async function updateProjectionStatus(id, newStatus) {
     showLoading('Atualizando status...');
 
     try {
         const projection = projections.find(p => p.id === id);
         if (!projection) {
-            showToast('ProjeÃ§Ã£o nÃ£o encontrada', 'error');
+            showToast('Projeção não encontrada', 'error');
             return;
         }
 
         const oldStatus = projection.status;
-        const projType = projection.type || 'income'; // default: income para projeÃ§Ãµes antigas
-        console.log(`[ProjeÃ§Ã£o Status] ID: ${id}, Tipo: ${projType}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
+        const projType = projection.type || 'income'; // default: income para projeções antigas
+        console.log(`[Projeção Status] ID: ${id}, Tipo: ${projType}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
 
-        // Se marcando como "received" (ou "pago" para expense), criar transaÃ§Ã£o
+        // Se marcando como "received" (ou "pago" para expense), criar transação
         if (newStatus === 'received' && oldStatus !== 'received') {
-            console.log(`[ProjeÃ§Ã£o] Procurando transaÃ§Ã£o vinculada a: "${projection.description}"`);
+            console.log(`[Projeção] Procurando transação vinculada a: "${projection.description}"`);
 
-            // Verificar se jÃ¡ existe transaÃ§Ã£o vinculada a esta projeÃ§Ã£o
+            // Verificar se já existe transação vinculada a esta projeção
             let existingTransaction = transactions.find(t => t.projectionId === id);
 
-            // Fallback: procurar por descriÃ§Ã£o, data, valor e categoria
+            // Fallback: procurar por descrição, data, valor e categoria
             if (!existingTransaction) {
                 const expectedType = projType === 'income' ? 'income' : 'expense';
-                const expectedCategory = projType === 'income' ? 'ProjeÃ§Ã£o Recebida' : 'ProjeÃ§Ã£o Paga';
+                const expectedCategory = projType === 'income' ? 'Projeção Recebida' : 'Projeção Paga';
                 existingTransaction = transactions.find(t =>
                     t.type === expectedType &&
                     t.category === expectedCategory &&
                     t.date === projection.date &&
                     t.value === projection.value &&
-                    (t.description === projection.description || t.description === `[ProjeÃ§Ã£o] ${projection.description}`)
+                    (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
                 );
             }
 
             if (existingTransaction) {
-                console.log(`[ProjeÃ§Ã£o] TransaÃ§Ã£o jÃ¡ existe: ${existingTransaction.id}`);
+                console.log(`[Projeção] Transação já existe: ${existingTransaction.id}`);
             } else {
-                // Criar nova transaÃ§Ã£o baseada no tipo da projeÃ§Ã£o
+                // Criar nova transação baseada no tipo da projeção
                 if (projType === 'income') {
-                    console.log(`[ProjeÃ§Ã£o] Criando nova transaÃ§Ã£o de ENTRADA para: "${projection.description}"`);
+                    console.log(`[Projeção] Criando nova transação de ENTRADA para: "${projection.description}"`);
                     const newTransaction = {
                         userId: activeUserId,
                         type: 'income',
-                        description: `[ProjeÃ§Ã£o] ${projection.description}`,
+                        description: `[Projeção] ${projection.description}`,
                         value: projection.value,
-                        category: 'ProjeÃ§Ã£o Recebida',
+                        category: 'Projeção Recebida',
                         date: projection.date,
                         paymentMethod: 'debit',
                         cardId: null,
@@ -1326,15 +1415,15 @@ async function updateProjectionStatus(id, newStatus) {
                         projectionId: id
                     };
                     const docRef = await db.collection('transactions').add(newTransaction);
-                    console.log(`[ProjeÃ§Ã£o] TransaÃ§Ã£o de entrada criada com sucesso: ${docRef.id}`);
+                    console.log(`[Projeção] Transação de entrada criada com sucesso: ${docRef.id}`);
                 } else {
-                    console.log(`[ProjeÃ§Ã£o] Criando nova transaÃ§Ã£o de SAÃDA para: "${projection.description}"`);
+                    console.log(`[Projeção] Criando nova transação de SAÍDA para: "${projection.description}"`);
                     const newTransaction = {
                         userId: activeUserId,
                         type: 'expense',
-                        description: `[ProjeÃ§Ã£o] ${projection.description}`,
+                        description: `[Projeção] ${projection.description}`,
                         value: projection.value,
-                        category: 'ProjeÃ§Ã£o Paga',
+                        category: 'Projeção Paga',
                         date: projection.date,
                         paymentMethod: 'debit',
                         cardId: null,
@@ -1342,72 +1431,72 @@ async function updateProjectionStatus(id, newStatus) {
                         projectionId: id
                     };
                     const docRef = await db.collection('transactions').add(newTransaction);
-                    console.log(`[ProjeÃ§Ã£o] TransaÃ§Ã£o de despesa criada com sucesso: ${docRef.id}`);
+                    console.log(`[Projeção] Transação de despesa criada com sucesso: ${docRef.id}`);
                 }
             }
         }
-        // Se marcando como "pending", remover transaÃ§Ã£o vinculada (se houver)
+        // Se marcando como "pending", remover transação vinculada (se houver)
         else if (newStatus === 'pending' && oldStatus === 'received') {
-            console.log(`[ProjeÃ§Ã£o] Procurando transaÃ§Ã£o vinculada para deletar`);
+            console.log(`[Projeção] Procurando transação vinculada para deletar`);
 
-            // Procurar e deletar transaÃ§Ã£o vinculada
+            // Procurar e deletar transação vinculada
             let linkedTransaction = transactions.find(t => t.projectionId === id);
 
-            // Fallback: procurar por descriÃ§Ã£o, data, valor e categoria
+            // Fallback: procurar por descrição, data, valor e categoria
             if (!linkedTransaction) {
                 const expectedType = projType === 'income' ? 'income' : 'expense';
-                const expectedCategory = projType === 'income' ? 'ProjeÃ§Ã£o Recebida' : 'ProjeÃ§Ã£o Paga';
+                const expectedCategory = projType === 'income' ? 'Projeção Recebida' : 'Projeção Paga';
                 linkedTransaction = transactions.find(t =>
                     t.type === expectedType &&
                     t.category === expectedCategory &&
                     t.date === projection.date &&
                     t.value === projection.value &&
-                    (t.description === projection.description || t.description === `[ProjeÃ§Ã£o] ${projection.description}`)
+                    (t.description === projection.description || t.description === `[Projeção] ${projection.description}`)
                 );
             }
 
             if (linkedTransaction) {
-                console.log(`[ProjeÃ§Ã£o] Deletando transaÃ§Ã£o: ${linkedTransaction.id}`);
+                console.log(`[Projeção] Deletando transação: ${linkedTransaction.id}`);
                 await db.collection('transactions').doc(linkedTransaction.id).delete();
             } else {
-                console.log(`[ProjeÃ§Ã£o] Nenhuma transaÃ§Ã£o vinculada encontrada`);
+                console.log(`[Projeção] Nenhuma transação vinculada encontrada`);
             }
         }
 
-        // Atualizar status da projeÃ§Ã£o
-        console.log(`[ProjeÃ§Ã£o] Atualizando status no Firestore para: ${newStatus}`);
+        // Atualizar status da projeção
+        console.log(`[Projeção] Atualizando status no Firestore para: ${newStatus}`);
         await db.collection('projections').doc(id).update({ status: newStatus });
 
         // Recarregar dados e atualizar displays
-        console.log(`[ProjeÃ§Ã£o] Recarregando dados...`);
+        console.log(`[Projeção] Recarregando dados...`);
         await loadTransactions();
         await loadProjections();
 
-        console.log(`[ProjeÃ§Ã£o] Atualizando KPIs...`);
+        console.log(`[Projeção] Atualizando KPIs...`);
         updateAllDisplays();
 
         let message;
         if (projType === 'income') {
             message = newStatus === 'received'
-                ? 'ProjeÃ§Ã£o marcada como recebida! TransaÃ§Ã£o de entrada criada.'
-                : 'ProjeÃ§Ã£o marcada como pendente. TransaÃ§Ã£o removida.';
+                ? 'Projeção marcada como recebida! Transação de entrada criada.'
+                : 'Projeção marcada como pendente. Transação removida.';
         } else {
             message = newStatus === 'received'
-                ? 'ProjeÃ§Ã£o marcada como paga! TransaÃ§Ã£o de despesa criada.'
-                : 'ProjeÃ§Ã£o marcada como pendente. TransaÃ§Ã£o removida.';
+                ? 'Projeção marcada como paga! Transação de despesa criada.'
+                : 'Projeção marcada como pendente. Transação removida.';
         }
         showToast(message, 'success');
     } catch (error) {
-        console.error('Erro ao atualizar projeÃ§Ã£o:', error);
+        console.error('Erro ao atualizar projeção:', error);
         showToast('Erro ao atualizar status', 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ðŸ—„ï¸ Deleta uma projeÃ§Ã£o do Firestore
+// 🗄️ Deleta uma projeção do Firestore
 async function deleteProjection(id) {
-    if (!confirm('Deseja realmente deletar esta projeÃ§Ã£o?')) return;
+    if (!confirm('Deseja realmente deletar esta projeção?')) return;
 
     showLoading('Deletando...');
 
@@ -1415,10 +1504,10 @@ async function deleteProjection(id) {
         await db.collection('projections').doc(id).delete();
         await loadProjections();
         updateAllDisplays();
-        showToast('ProjeÃ§Ã£o deletada com sucesso', 'success');
+        showToast('Projeção deletada com sucesso', 'success');
     } catch (error) {
-        console.error('Erro ao deletar projeÃ§Ã£o:', error);
-        showToast('Erro ao deletar projeÃ§Ã£o', 'error');
+        console.error('Erro ao deletar projeção:', error);
+        showToast('Erro ao deletar projeção', 'error');
     } finally {
         hideLoading();
     }
@@ -1427,10 +1516,10 @@ async function deleteProjection(id) {
 // ===========================
 // CREDIT CARDS - LOAD & RENDER
 // ===========================
-// ðŸ—„ï¸ Carrega todos os cartÃµes de crÃ©dito do Firestore
+// 🗄️ Carrega todos os cartões de crédito do Firestore
 async function loadCreditCards() {
     try {
-        console.log('Carregando cartÃµes de crÃ©dito...');
+        console.log('Carregando cartões de crédito...');
         const snapshot = await db.collection('creditCards')
             .where('userId', '==', activeUserId)
             .orderBy('createdAt', 'desc')
@@ -1441,15 +1530,15 @@ async function loadCreditCards() {
             ...doc.data()
         }));
 
-        console.log(`${creditCards.length} cartÃµes carregados`);
+        console.log(`${creditCards.length} cartões carregados`);
         await loadCardExpenses();
     } catch (error) {
-        console.error('Erro ao carregar cartÃµes:', error);
+        console.error('Erro ao carregar cartões:', error);
         creditCards = [];
     }
 }
 
-// ðŸ—„ï¸ Carrega gastos avulsos de cartÃµes de crÃ©dito
+// 🗄️ Carrega gastos avulsos de cartões de crédito
 async function loadCardExpenses() {
     try {
         const snapshot = await db.collection('cardExpenses')
@@ -1461,7 +1550,7 @@ async function loadCardExpenses() {
             ...doc.data()
         }));
 
-        console.log(`${cardExpenses.length} gastos de cartÃ£o carregados`);
+        console.log(`${cardExpenses.length} gastos de cartão carregados`);
     } catch (error) {
         console.error('Erro ao carregar gastos:', error);
         cardExpenses = [];
@@ -1471,75 +1560,75 @@ async function loadCardExpenses() {
 // Contador de chamadas (para debug)
 let calculateBillCallCount = 0;
 
-// ðŸ”„ Calcula valor total da fatura do cartÃ£o para o mÃªs especificado
+// 🔄 Calcula valor total da fatura do cartão para o mês especificado
 function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     calculateBillCallCount++;
-    console.log(`\nðŸ” [CHAMADA #${calculateBillCallCount}] calculateCurrentBill("${card.name}")`);
+    console.log(`\n🔍 [CHAMADA #${calculateBillCallCount}] calculateCurrentBill("${card.name}")`);
 
     const today = new Date();
-    // Usar mÃªs/ano passados como parÃ¢metro, ou mÃªs selecionado no display, ou mÃªs atual
+    // Usar mês/ano passados como parâmetro, ou mês selecionado no display, ou mês atual
     const currentMonth = overrideMonth !== null ? overrideMonth :
                         (typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth());
     const currentYear = overrideYear !== null ? overrideYear :
                        (typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear());
 
-    // Determinar perÃ­odo da fatura
+    // Determinar período da fatura
     let billStartDate, billEndDate, billMonth, billYear;
 
-    // Se estÃ¡ navegando para um mÃªs DIFERENTE do mÃªs atual
-    // Comparar o mÃªs/ano calculados com o dia de hoje
+    // Se está navegando para um mês DIFERENTE do mês atual
+    // Comparar o mês/ano calculados com o dia de hoje
     const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
     if (isNavigating) {
-        // Navegando entre meses: mostrar fatura ABERTA no mÃªs visualizado
-        // Fatura aberta = perÃ­odo que estÃ¡ sendo construÃ­do no mÃªs
-        // DIA (closingDay+1) do MÃŠS ANTERIOR atÃ© DIA FECHAMENTO do MÃŠS ATUAL
-        // Se visualiza dezembro (mÃªs 11) com closingDay 20: 21/novembro atÃ© 20/dezembro
-        // Se visualiza dezembro (mÃªs 11) com closingDay 2: 03/novembro atÃ© 02/dezembro
+        // Navegando entre meses: mostrar fatura ABERTA no mês visualizado
+        // Fatura aberta = período que está sendo construído no mês
+        // DIA (closingDay+1) do MÊS ANTERIOR até DIA FECHAMENTO do MÊS ATUAL
+        // Se visualiza dezembro (mês 11) com closingDay 20: 21/novembro até 20/dezembro
+        // Se visualiza dezembro (mês 11) com closingDay 2: 03/novembro até 02/dezembro
         let prevMonth = currentMonth - 1;
         let prevYear = currentYear;
         if (prevMonth < 0) {
             prevMonth = 11;
             prevYear--;
         }
-        billStartDate = new Date(prevYear, prevMonth, card.closingDay + 1);    // Dia apÃ³s fechamento do mÃªs anterior
-        billEndDate = new Date(currentYear, currentMonth, card.closingDay);      // Dia de fechamento do mÃªs atual
+        billStartDate = new Date(prevYear, prevMonth, card.closingDay + 1);    // Dia após fechamento do mês anterior
+        billEndDate = new Date(currentYear, currentMonth, card.closingDay);      // Dia de fechamento do mês atual
 
         billMonth = currentMonth;
         billYear = currentYear;
     } else {
-        // MÃªs atual (real-time): usar lÃ³gica baseada no dia de fechamento
-        // Se hoje Ã© 09/12 e fechamento Ã© 20: fatura aberta Ã© de 21/11 atÃ© 20/12
-        // Se hoje Ã© 09/12 e fechamento Ã© 2: fatura aberta Ã© de 03/12 atÃ© 02/01 (jÃ¡ passou!)
+        // Mês atual (real-time): usar lógica baseada no dia de fechamento
+        // Se hoje é 09/12 e fechamento é 20: fatura aberta é de 21/11 até 20/12
+        // Se hoje é 09/12 e fechamento é 2: fatura aberta é de 03/12 até 02/01 (já passou!)
 
         if (today.getDate() < card.closingDay) {
-            // Ainda estamos no perÃ­odo: DIA (closingDay+1)/(mÃªs-1) atÃ© dia_fechamento/mÃªs
-            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);    // Dia apÃ³s fechamento anterior
-            billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // Dia de fechamento deste mÃªs
+            // Ainda estamos no período: DIA (closingDay+1)/(mês-1) até dia_fechamento/mês
+            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);    // Dia após fechamento anterior
+            billEndDate = new Date(currentYear, currentMonth, card.closingDay);           // Dia de fechamento deste mês
             billMonth = currentMonth;
             billYear = currentYear;
 
             // Ajustar se estiver em janeiro
             if (currentMonth === 0) {
-                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia apÃ³s fechamento no dezembro anterior
+                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1); // Dia após fechamento no dezembro anterior
             }
         } else {
-            // JÃ¡ passou do fechamento: DIA (closingDay+1)/mÃªs atÃ© dia_fechamento/(mÃªs+1)
-            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);      // Dia apÃ³s fechamento deste mÃªs
+            // Já passou do fechamento: DIA (closingDay+1)/mês até dia_fechamento/(mês+1)
+            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);      // Dia após fechamento deste mês
             let nextMonth = currentMonth + 1;
             let nextYear = currentYear;
             if (nextMonth > 11) {
                 nextMonth = 0;
                 nextYear++;
             }
-            billEndDate = new Date(nextYear, nextMonth, card.closingDay);        // Dia de fechamento do prÃ³ximo mÃªs
-            // billMonth Ã© SEMPRE o mÃªs atual para cÃ¡lculo de parcelamentos
+            billEndDate = new Date(nextYear, nextMonth, card.closingDay);        // Dia de fechamento do próximo mês
+            // billMonth é SEMPRE o mês atual para cálculo de parcelamentos
             billMonth = currentMonth;
             billYear = currentYear;
         }
     }
 
-    // Somar gastos do perÃ­odo (cardExpenses antigos + transaÃ§Ãµes de crÃ©dito)
+    // Somar gastos do período (cardExpenses antigos + transações de crédito)
     const expensesTotal = cardExpenses
         .filter(expense => {
             if (expense.cardId !== card.id) return false;
@@ -1548,16 +1637,16 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         })
         .reduce((sum, expense) => sum + expense.value, 0);
 
-    // Somar transaÃ§Ãµes de crÃ©dito do perÃ­odo (saÃ­das e reembolsos)
+    // Somar transações de crédito do período (saídas e reembolsos)
     const transactionsInPeriod = transactions.filter(t => {
         if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
 
         if (isNavigating) {
-            // Ao navegar, mostrar apenas transaÃ§Ãµes do mÃªs visualizado
+            // Ao navegar, mostrar apenas transações do mês visualizado
             return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
         } else {
-            // Modo real-time: usar o perÃ­odo da fatura
+            // Modo real-time: usar o período da fatura
             return transactionDate >= billStartDate && transactionDate <= billEndDate;
         }
     });
@@ -1567,41 +1656,41 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         return sum + (t.type === 'expense' ? t.value : -t.value);
     }, 0);
 
-    // Log das transaÃ§Ãµes incluÃ­das
+    // Log das transações incluídas
     if (transactionsInPeriod.length > 0) {
-        console.log(`   TransaÃ§Ãµes no perÃ­odo: ${transactionsInPeriod.length}`);
+        console.log(`   Transações no período: ${transactionsInPeriod.length}`);
         transactionsInPeriod.forEach(t => {
             const tDate = new Date(t.date + 'T12:00:00');
             console.log(`     ${t.type === 'expense' ? '+' : '-'} ${t.description} em ${tDate.toLocaleDateString('pt-BR')}`);
         });
     }
 
-    // Log simples do perÃ­odo e dados da fatura
-    console.log(`ðŸ“… [FATURA ${card.name}] MÃªs: ${billMonth + 1}/${billYear}`);
-    console.log(`   PerÃ­odo: ${billStartDate.toLocaleDateString('pt-BR')} atÃ© ${billEndDate.toLocaleDateString('pt-BR')}`);
+    // Log simples do período e dados da fatura
+    console.log(`📅 [FATURA ${card.name}] Mês: ${billMonth + 1}/${billYear}`);
+    console.log(`   Período: ${billStartDate.toLocaleDateString('pt-BR')} até ${billEndDate.toLocaleDateString('pt-BR')}`);
     console.log(`   isNavigating: ${isNavigating}`);
-    console.log(`   TransaÃ§Ãµes de crÃ©dito incluÃ­das: R$ ${creditTransactionsTotal.toFixed(2)}`);
+    console.log(`   Transações de crédito incluídas: R$ ${creditTransactionsTotal.toFixed(2)}`);
 
-    // Somar parcelas ativas deste cartÃ£o no mÃªs da fatura
+    // Somar parcelas ativas deste cartão no mês da fatura
     const installmentsFiltered = installments.filter(inst => {
         if (inst.cardId !== card.id) return false;
 
-        // Para parcelamentos antigos sem startMonth/startYear, usar lÃ³gica antiga
+        // Para parcelamentos antigos sem startMonth/startYear, usar lógica antiga
         if (inst.startMonth === undefined || inst.startYear === undefined) {
             return inst.currentInstallment <= inst.totalInstallments;
         }
 
-        // Calcular quantos meses se passaram desde o inÃ­cio do parcelamento (parcela 1)
+        // Calcular quantos meses se passaram desde o início do parcelamento (parcela 1)
         const monthsSinceStart = (billYear - inst.startYear) * 12 + (billMonth - inst.startMonth);
 
-        // Se o mÃªs da fatura Ã© antes do inÃ­cio do parcelamento, nÃ£o incluir
+        // Se o mês da fatura é antes do início do parcelamento, não incluir
         if (monthsSinceStart < 0) {
             return false;
         }
 
-        // Calcular qual parcela estÃ¡ vencendo neste mÃªs
-        // startMonth Ã© o mÃªs da PARCELA 1, entÃ£o:
-        // parcela deste mÃªs = 1 + meses desde o inÃ­cio
+        // Calcular qual parcela está vencendo neste mês
+        // startMonth é o mês da PARCELA 1, então:
+        // parcela deste mês = 1 + meses desde o início
         const installmentForThisMonth = 1 + monthsSinceStart;
 
         const installmentValue = inst.totalValue / inst.totalInstallments;
@@ -1615,7 +1704,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         return sum + installmentValue;
     }, 0);
 
-    // Somar assinaturas ativas deste cartÃ£o
+    // Somar assinaturas ativas deste cartão
     const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
     const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
 
@@ -1632,22 +1721,22 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 // ===========================
 // CREDIT CARDS - MODALS
 // ===========================
-// ðŸŽ¨ Abre modal para adicionar/editar cartÃ£o de crÃ©dito
+// 🎨 Abre modal para adicionar/editar cartão de crédito
 function openCreditCardModal() {
     editingCardId = null;
     document.getElementById('creditCardModal').classList.add('active');
     document.getElementById('creditCardForm').reset();
-    document.querySelector('#creditCardModal .modal-header h2').textContent = 'Novo CartÃ£o de CrÃ©dito';
+    document.querySelector('#creditCardModal .modal-header h2').textContent = 'Novo Cartão de Crédito';
 }
 
-// ðŸŽ¨ Fecha modal de cartÃ£o de crÃ©dito
+// 🎨 Fecha modal de cartão de crédito
 function closeCreditCardModal() {
     editingCardId = null;
     document.getElementById('creditCardModal').classList.remove('active');
     document.getElementById('creditCardForm').reset();
 }
 
-// ðŸŽ¨ Exibe detalhes completos da fatura do cartÃ£o em modal
+// 🎨 Exibe detalhes completos da fatura do cartão em modal
 function showCardBillDetails(cardId) {
     const card = creditCards.find(c => c.id === cardId);
     if (!card) return;
@@ -1656,15 +1745,15 @@ function showCardBillDetails(cardId) {
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
 
-    // Calcular perÃ­odo da fatura (mesmo cÃ¡lculo do calculateCurrentBill)
-    // Se estÃ¡ navegando para um mÃªs diferente do atual
+    // Calcular período da fatura (mesmo cálculo do calculateCurrentBill)
+    // Se está navegando para um mês diferente do atual
     const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
     let billStartDate, billEndDate, billMonth, billYear;
 
     if (isNavigating) {
-        // Navegando: mostrar fatura ABERTA no mÃªs visualizado
-        // DIA (closingDay+1) do MÃŠS ANTERIOR atÃ© DIA FECHAMENTO do MÃŠS ATUAL
+        // Navegando: mostrar fatura ABERTA no mês visualizado
+        // DIA (closingDay+1) do MÊS ANTERIOR até DIA FECHAMENTO do MÊS ATUAL
         let prevMonth = currentMonth - 1;
         let prevYear = currentYear;
         if (prevMonth < 0) {
@@ -1677,7 +1766,7 @@ function showCardBillDetails(cardId) {
         billYear = currentYear;
     } else {
         if (today.getDate() >= card.closingDay) {
-            // Fatura aberta Ã© do prÃ³ximo mÃªs (perÃ­odo), mas billMonth Ã© sempre currentMonth
+            // Fatura aberta é do próximo mês (período), mas billMonth é sempre currentMonth
             billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
             let nextMonth = currentMonth + 1;
             let nextYear = currentYear;
@@ -1686,11 +1775,11 @@ function showCardBillDetails(cardId) {
                 nextYear++;
             }
             billEndDate = new Date(nextYear, nextMonth, card.closingDay);
-            // billMonth Ã© SEMPRE o mÃªs atual para cÃ¡lculo de parcelamentos
+            // billMonth é SEMPRE o mês atual para cálculo de parcelamentos
             billMonth = currentMonth;
             billYear = currentYear;
         } else {
-            // Fatura aberta Ã© do mÃªs atual
+            // Fatura aberta é do mês atual
             billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
             billEndDate = new Date(currentYear, currentMonth, card.closingDay);
             billMonth = currentMonth;
@@ -1701,17 +1790,17 @@ function showCardBillDetails(cardId) {
         }
     }
 
-    // CorreÃ§Ã£o 8: Filtrar transaÃ§Ãµes pelo mÃªs correto quando navegando
+    // Correção 8: Filtrar transações pelo mês correto quando navegando
     const creditExpenses = transactions.filter(t => {
         if (t.type !== 'expense' || t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
 
         if (isNavigating) {
-            // Ao navegar, mostrar apenas transaÃ§Ãµes do mÃªs visualizado
+            // Ao navegar, mostrar apenas transações do mês visualizado
             return transactionDate.getMonth() === currentMonth &&
                    transactionDate.getFullYear() === currentYear;
         } else {
-            // Modo real-time: usar perÃ­odo da fatura
+            // Modo real-time: usar período da fatura
             return transactionDate >= billStartDate && transactionDate <= billEndDate;
         }
     });
@@ -1721,16 +1810,16 @@ function showCardBillDetails(cardId) {
         const transactionDate = new Date(t.date + 'T12:00:00');
 
         if (isNavigating) {
-            // Ao navegar, mostrar apenas transaÃ§Ãµes do mÃªs visualizado
+            // Ao navegar, mostrar apenas transações do mês visualizado
             return transactionDate.getMonth() === currentMonth &&
                    transactionDate.getFullYear() === currentYear;
         } else {
-            // Modo real-time: usar perÃ­odo da fatura
+            // Modo real-time: usar período da fatura
             return transactionDate >= billStartDate && transactionDate <= billEndDate;
         }
     });
 
-    // Coletar parcelas do perÃ­odo
+    // Coletar parcelas do período
     const activeInstallments = installments.filter(inst => {
         if (inst.cardId !== card.id) return false;
         if (inst.startMonth === undefined || inst.startYear === undefined) {
@@ -1759,7 +1848,7 @@ function showCardBillDetails(cardId) {
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
 
-    // Verificar se a fatura estÃ¡ paga
+    // Verificar se a fatura está paga
     const billPayment = isBillPaid(cardId, billMonth, billYear);
     const isPaid = !!billPayment;
 
@@ -1775,7 +1864,7 @@ function showCardBillDetails(cardId) {
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                     <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
-                        <div>PerÃ­odo: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
+                        <div>Período: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
                         <div>Vencimento: ${card.dueDay}/${billMonth === 11 ? '01' : String(billMonth + 2).padStart(2, '0')}</div>
                     </div>
                     ${grandTotal > 0 ? (isPaid
@@ -1795,12 +1884,12 @@ function showCardBillDetails(cardId) {
             <div style="display: flex; flex-direction: column;">
                 <h3 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
                     <i class="fas fa-credit-card"></i>
-                    Compras (${creditExpenses.length}) ${creditRefunds.length > 0 ? `â€¢ Reembolsos (${creditRefunds.length})` : ''}
+                    Compras (${creditExpenses.length}) ${creditRefunds.length > 0 ? `• Reembolsos (${creditRefunds.length})` : ''}
                     <span style="margin-left: auto; font-size: 0.75rem;">${formatCurrencyDisplay(creditExpensesTotal - creditRefundsTotal)}</span>
                 </h3>
                 <div style="background: var(--color-bg-tertiary); border-radius: 8px; border: 1px solid var(--color-border); overflow-y: auto; flex: 1; max-height: 400px;">
                     ${creditExpenses.length === 0 && creditRefunds.length === 0
-                        ? '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma transaÃ§Ã£o</div>'
+                        ? '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;">Nenhuma transação</div>'
                         : `
                             ${creditExpenses.map(t => `
                                 <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border);">
@@ -1815,7 +1904,7 @@ function showCardBillDetails(cardId) {
                                         <i class="fas fa-undo" style="color: #10b981; font-size: 0.7rem; margin-right: 0.25rem;"></i>
                                         ${t.description}
                                     </div>
-                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')} â€¢ Reembolso</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')} • Reembolso</div>
                                     <div style="font-weight: 600; color: #10b981; font-size: 0.875rem;">- ${formatCurrencyDisplay(t.value)}</div>
                                 </div>
                             `).join('')}
@@ -1881,7 +1970,7 @@ let selectedCardId = null;
 // ===========================
 // CREDIT CARDS - CRUD
 // ===========================
-// ðŸ“² Processa envio do formulÃ¡rio de cartÃ£o de crÃ©dito
+// 📲 Processa envio do formulário de cartão de crédito
 async function handleCreditCardSubmit(e) {
     e.preventDefault();
 
@@ -1898,7 +1987,7 @@ async function handleCreditCardSubmit(e) {
 
     const limit = parseCurrencyInput(limitStr);
     if (limit <= 0) {
-        showToast('Limite invÃ¡lido', 'error');
+        showToast('Limite inválido', 'error');
         return;
     }
 
@@ -1907,7 +1996,7 @@ async function handleCreditCardSubmit(e) {
         return;
     }
 
-    showLoading(editingCardId ? 'Atualizando cartÃ£o...' : 'Salvando cartÃ£o...');
+    showLoading(editingCardId ? 'Atualizando cartão...' : 'Salvando cartão...');
 
     try {
         const cardData = {
@@ -1924,27 +2013,27 @@ async function handleCreditCardSubmit(e) {
                 ...cardData,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast('CartÃ£o atualizado com sucesso', 'success');
+            showToast('Cartão atualizado com sucesso', 'success');
         } else {
             await db.collection('creditCards').add({
                 ...cardData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast('CartÃ£o adicionado com sucesso', 'success');
+            showToast('Cartão adicionado com sucesso', 'success');
         }
 
         await loadCreditCards();
         updateAllDisplays();
         closeCreditCardModal();
     } catch (error) {
-        console.error('Erro ao salvar cartÃ£o:', error);
-        showToast('Erro ao salvar cartÃ£o', 'error');
+        console.error('Erro ao salvar cartão:', error);
+        showToast('Erro ao salvar cartão', 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ðŸ“² Processa envio de gasto avulso no cartÃ£o (sistema antigo)
+// 📲 Processa envio de gasto avulso no cartão (sistema antigo)
 async function handleCardExpenseSubmit(e) {
     e.preventDefault();
 
@@ -1961,7 +2050,7 @@ async function handleCardExpenseSubmit(e) {
 
     const value = parseCurrencyInput(valueStr);
     if (value <= 0) {
-        showToast('Valor invÃ¡lido', 'error');
+        showToast('Valor inválido', 'error');
         return;
     }
 
@@ -1990,9 +2079,9 @@ async function handleCardExpenseSubmit(e) {
     }
 }
 
-// ðŸ—„ï¸ Deleta um cartÃ£o de crÃ©dito do Firestore
+// 🗄️ Deleta um cartão de crédito do Firestore
 async function deleteCreditCard(id) {
-    if (!confirm('Deseja realmente deletar este cartÃ£o? Todos os gastos associados serÃ£o mantidos.')) return;
+    if (!confirm('Deseja realmente deletar este cartão? Todos os gastos associados serão mantidos.')) return;
 
     showLoading('Deletando...');
 
@@ -2000,10 +2089,10 @@ async function deleteCreditCard(id) {
         await db.collection('creditCards').doc(id).delete();
         await loadCreditCards();
         updateAllDisplays();
-        showToast('CartÃ£o deletado com sucesso', 'success');
+        showToast('Cartão deletado com sucesso', 'success');
     } catch (error) {
-        console.error('Erro ao deletar cartÃ£o:', error);
-        showToast('Erro ao deletar cartÃ£o', 'error');
+        console.error('Erro ao deletar cartão:', error);
+        showToast('Erro ao deletar cartão', 'error');
     } finally {
         hideLoading();
     }
@@ -2012,7 +2101,7 @@ async function deleteCreditCard(id) {
 // ===========================
 // INSTALLMENT HELPER FUNCTIONS
 // ===========================
-// ðŸ”„ Verifica se um parcelamento estÃ¡ ativo em determinado mÃªs
+// 🔄 Verifica se um parcelamento está ativo em determinado mês
 function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
     // Para parcelamentos antigos sem startMonth/startYear, usar valor salvo
     if (installment.startMonth === undefined || installment.startYear === undefined) {
@@ -2020,28 +2109,28 @@ function isInstallmentActiveInMonth(installment, targetMonth, targetYear) {
         return savedCurrent <= installment.totalInstallments;
     }
 
-    // Calcular quantos meses se passaram desde o inÃ­cio atÃ© o mÃªs alvo
+    // Calcular quantos meses se passaram desde o início até o mês alvo
     const monthsDiff = (targetYear - installment.startYear) * 12 + (targetMonth - installment.startMonth);
 
-    // Se o mÃªs selecionado Ã© antes do inÃ­cio, nÃ£o mostrar
+    // Se o mês selecionado é antes do início, não mostrar
     if (monthsDiff < 0) {
         return false;
     }
 
-    // Calcular qual parcela estaria sendo cobrada no mÃªs selecionado
-    // Parcela 1 no mÃªs de inÃ­cio, entÃ£o: 1 + meses que se passaram
+    // Calcular qual parcela estaria sendo cobrada no mês selecionado
+    // Parcela 1 no mês de início, então: 1 + meses que se passaram
     const calculatedInstallment = 1 + monthsDiff;
 
-    // SÃ³ mostrar se a parcela calculada ainda estÃ¡ dentro do total
+    // Só mostrar se a parcela calculada ainda está dentro do total
     return calculatedInstallment <= installment.totalInstallments;
 }
 
 // ===========================
 // KPI CALCULATIONS
 // ===========================
-// ðŸ”„ Atualiza todos os indicadores (KPIs) do dashboard
+// 🔄 Atualiza todos os indicadores (KPIs) do dashboard
 function updateKPIs() {
-    // Usar mÃªs selecionado se disponÃ­vel, senÃ£o mÃªs atual
+    // Usar mês selecionado se disponível, senão mês atual
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
     const currentMonth = displayMonth;
@@ -2054,72 +2143,72 @@ function updateKPIs() {
                transactionDate.getFullYear() === currentYear;
     });
 
-    // Total Income (current month) - exclui reembolsos no crÃ©dito
+    // Total Income (current month) - exclui reembolsos no crédito
     const totalIncome = currentMonthTransactions
         .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
-    // Total Expense (current month) - apenas dÃ©bito direto (crÃ©dito Ã© contado na fatura do cartÃ£o)
-    // NOTA: Isso jÃ¡ inclui pagamentos de fatura (que sÃ£o transaÃ§Ãµes de dÃ©bito automÃ¡ticas)
+    // Total Expense (current month) - apenas débito direto (crédito é contado na fatura do cartão)
+    // NOTA: Isso já inclui pagamentos de fatura (que são transações de débito automáticas)
     const totalExpenseDebit = currentMonthTransactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
 
     // Total Credit Cards (current bills) - calculado antes para usar no totalExpense
-    console.log(`\nðŸ’³ðŸ’³ðŸ’³ Calculando TOTAL de faturas de ${creditCards.length} cartÃµes:`);
+    console.log(`\n💳💳💳 Calculando TOTAL de faturas de ${creditCards.length} cartões:`);
     const totalCreditCards = creditCards.reduce((sum, card) => {
         const billValue = calculateCurrentBill(card, currentMonth, currentYear);
-        console.log(`   ðŸ“Œ "${card.name}": R$ ${billValue.toFixed(2)}`);
+        console.log(`   📌 "${card.name}": R$ ${billValue.toFixed(2)}`);
         return sum + billValue;
     }, 0);
-    console.log(`   ðŸ§¾ SOMA TOTAL DAS FATURAS: R$ ${totalCreditCards.toFixed(2)}\n`);
+    console.log(`   🧾 SOMA TOTAL DAS FATURAS: R$ ${totalCreditCards.toFixed(2)}\n`);
 
-    // Calcular faturas pagas e nÃ£o pagas do mÃªs atual
+    // Calcular faturas pagas e não pagas do mês atual
     const paidBillsThisMonth = creditCardPayments.filter(p =>
         p.month === currentMonth && p.year === currentYear
     );
     const totalPaidBills = paidBillsThisMonth.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
 
-    // Faturas nÃ£o pagas = Total das faturas - Faturas que jÃ¡ foram pagas
-    // Calculamos para cada cartÃ£o se a fatura do mÃªs estÃ¡ paga
+    // Faturas não pagas = Total das faturas - Faturas que já foram pagas
+    // Calculamos para cada cartão se a fatura do mês está paga
     const totalUnpaidBills = creditCards.reduce((sum, card) => {
         const billValue = calculateCurrentBill(card, currentMonth, currentYear);
         const isPaid = isBillPaid(card.id, currentMonth, currentYear);
         return sum + (isPaid ? 0 : billValue);
     }, 0);
 
-    // ProjeÃ§Ãµes de saÃ­da pendentes do mÃªs atual
+    // Projeções de saída pendentes do mês atual
     const pendingExpenseProjections = projections
         .filter(p => {
             if (p.status !== 'pending') return false;
-            if (p.type !== 'expense') return false; // Apenas projeÃ§Ãµes de saÃ­da
+            if (p.type !== 'expense') return false; // Apenas projeções de saída
             const projDate = new Date(p.date + 'T12:00:00');
             return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
         })
         .reduce((sum, p) => sum + p.value, 0);
 
-    // ProjeÃ§Ãµes de entrada pendentes do mÃªs atual
+    // Projeções de entrada pendentes do mês atual
     const pendingIncomeProjections = projections
         .filter(p => {
             if (p.status !== 'pending') return false;
-            // Aceita 'income' explÃ­cito ou ausÃªncia de type (compatibilidade)
+            // Aceita 'income' explícito ou ausência de type (compatibilidade)
             if (p.type && p.type !== 'income') return false;
             const projDate = new Date(p.date + 'T12:00:00');
             return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
         })
         .reduce((sum, p) => sum + p.value, 0);
 
-    // Total Expense = dÃ©bito (saÃ­das efetivas)
-    // SaÃ­das Efetivas = dÃ©bito direto (jÃ¡ inclui pagamentos de faturas via transaÃ§Ã£o automÃ¡tica)
+    // Total Expense = débito (saídas efetivas)
+    // Saídas Efetivas = débito direto (já inclui pagamentos de faturas via transação automática)
     const totalExpenseActual = totalExpenseDebit;
 
-    // ProjeÃ§Ã£o de SaÃ­da = faturas nÃ£o pagas + projeÃ§Ãµes de saÃ­da pendentes
+    // Projeção de Saída = faturas não pagas + projeções de saída pendentes
     const totalExpenseProjection = totalUnpaidBills + pendingExpenseProjections;
 
-    // Total geral de saÃ­das (atual + projeÃ§Ã£o)
+    // Total geral de saídas (atual + projeção)
     const totalExpense = totalExpenseActual + totalExpenseProjection;
 
-    // SALDO BANCÃRIO REAL = Entradas - SaÃ­das em dÃ©bito - Investimentos
+    // SALDO BANCÁRIO REAL = Entradas - Saídas em débito - Investimentos
     const totalIncomeAllTime = transactions
         .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
         .reduce((sum, t) => sum + t.value, 0);
@@ -2131,13 +2220,13 @@ function updateKPIs() {
     // Total de investimentos
     const totalInvestments = investments.reduce((sum, inv) => sum + inv.value, 0);
 
-    // SALDO = Entradas - SaÃ­das(dÃ©bito) - Investimentos
-    // NOTA: As saÃ­das de dÃ©bito jÃ¡ incluem pagamentos de fatura (via transaÃ§Ã£o automÃ¡tica)
-    // EntÃ£o o saldo desconta automaticamente quando a fatura Ã© paga
+    // SALDO = Entradas - Saídas(débito) - Investimentos
+    // NOTA: As saídas de débito já incluem pagamentos de fatura (via transação automática)
+    // Então o saldo desconta automaticamente quando a fatura é paga
     const totalBalance = totalIncomeAllTime - totalDebitAllTime - totalInvestments;
 
-    // Log de debug para verificar cÃ¡lculos
-    console.log('[KPIs] CÃ¡lculos do mÃªs:', {
+    // Log de debug para verificar cálculos
+    console.log('[KPIs] Cálculos do mês:', {
         mes: `${currentMonth + 1}/${currentYear}`,
         entradas: totalIncome,
         saidasDebito: totalExpenseDebit,
@@ -2174,7 +2263,7 @@ function updateKPIs() {
 
     // Monthly Installments (only current selected month)
     const monthlyInstallments = installments.reduce((sum, inst) => {
-        // Verifica se a parcela estÃ¡ ativa no mÃªs selecionado
+        // Verifica se a parcela está ativa no mês selecionado
         const isActive = isInstallmentActiveInMonth(inst, currentMonth, currentYear);
         console.log(`Parcelamento "${inst.description}": ativo=${isActive}, currentInstallment=${inst.currentInstallment}, total=${inst.totalInstallments}, startMonth=${inst.startMonth}, startYear=${inst.startYear}`);
 
@@ -2209,7 +2298,7 @@ function updateKPIs() {
 
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
 
-    // Atualiza projeÃ§Ã£o de entradas
+    // Atualiza projeção de entradas
     const incomeProjectionEl = document.getElementById('totalIncomeProjection');
     if (incomeProjectionEl) {
         const totalIncomeTotal = totalIncome + pendingIncomeProjections;
@@ -2217,8 +2306,8 @@ function updateKPIs() {
         incomeProjectionEl.style.display = pendingIncomeProjections > 0 ? 'block' : 'none';
     }
 
-    // Card de SaÃ­das com dois valores
-    // CorreÃ§Ã£o 3: ProjeÃ§Ã£o mostra total = atual + faturas nÃ£o pagas + projeÃ§Ãµes de saÃ­da pendentes
+    // Card de Saídas com dois valores
+    // Correção 3: Projeção mostra total = atual + faturas não pagas + projeções de saída pendentes
     const totalExpenseTotal = totalExpenseActual + totalUnpaidBills + pendingExpenseProjections;
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpenseActual);
     if (expenseProjectionEl) {
@@ -2226,7 +2315,7 @@ function updateKPIs() {
         expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
     }
 
-    // ProjeÃ§Ã£o de saldo = saldo atual + entradas pendentes - faturas nÃ£o pagas - projeÃ§Ãµes de saÃ­da pendentes
+    // Projeção de saldo = saldo atual + entradas pendentes - faturas não pagas - projeções de saída pendentes
     const balanceProjection = totalBalance + pendingIncomeProjections - totalUnpaidBills - pendingExpenseProjections;
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
     const balanceProjectionEl = document.getElementById('balanceProjection');
@@ -2245,7 +2334,6 @@ function updateKPIs() {
     if (creditCardsEl) creditCardsEl.textContent = formatCurrencyDisplay(totalCreditCards);
     if (investmentsEl) investmentsEl.textContent = formatCurrencyDisplay(totalInvestments);
 
-// Fechar funÃ§Ã£o updateKPIs
 }
 
 console.log('âœ… Finance Data v3.0 - Loaded');
