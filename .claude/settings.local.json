@@ -13,7 +13,9 @@
       "Bash(ls:*)",
       "Bash(git restore:*)",
       "Bash(for func in changeMonth closeListModal openKPIList createParticles)",
-      "Bash(do echo -n \"$func: \")"
+      "Bash(do echo -n \"$func: \")",
+      "Bash(powershell -Command \"Select-String -Path ''C:\\Users\\Trindade\\Desktop\\imaginatech-website\\financas\\script.js'' -Pattern ''changeMonth'' | Select-Object -First 5\")",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
