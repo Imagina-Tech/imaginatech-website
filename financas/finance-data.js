@@ -2232,11 +2232,17 @@ function updateKPIs() {
     // Se houver data de corte (cutoffDate), só conta transações após essa data
     const cutoffDate = userSettings.cutoffDate;
 
+    console.log('[KPIs] Data de corte configurada:', cutoffDate);
+    console.log('[KPIs] Total de transações:', transactions.length);
+
     const totalIncomeAllTime = transactions
         .filter(t => {
             if (!t.type || t.type !== 'income' || t.paymentMethod === 'credit') return false;
             // Se há data de corte, só conta transações após essa data
-            if (cutoffDate && t.date < cutoffDate) return false;
+            if (cutoffDate && t.date < cutoffDate) {
+                console.log('[KPIs] Transação de entrada IGNORADA por data:', t.date, '<', cutoffDate, '- Valor:', t.value);
+                return false;
+            }
             return true;
         })
         .reduce((sum, t) => sum + t.value, 0);
@@ -2245,10 +2251,15 @@ function updateKPIs() {
         .filter(t => {
             if (!t.type || t.type !== 'expense' || t.paymentMethod === 'credit') return false;
             // Se há data de corte, só conta transações após essa data
-            if (cutoffDate && t.date < cutoffDate) return false;
+            if (cutoffDate && t.date < cutoffDate) {
+                console.log('[KPIs] Transação de saída IGNORADA por data:', t.date, '<', cutoffDate, '- Valor:', t.value);
+                return false;
+            }
             return true;
         })
         .reduce((sum, t) => sum + t.value, 0);
+
+    console.log('[KPIs] Saldo calculado - Entradas:', totalIncomeAllTime, 'Saídas:', totalDebitAllTime, 'Saldo:', totalIncomeAllTime - totalDebitAllTime);
 
     // Total de investimentos (separado, não afeta o saldo)
     const totalInvestments = investments.reduce((sum, inv) => sum + inv.value, 0);
