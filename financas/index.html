@@ -975,6 +975,16 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <small style="color: var(--text-muted);">Máximo que você quer gastar por mês</small>
                 </div>
 
+                <div class="form-group">
+                    <label for="cutoffDateInput">
+                        <i class="fas fa-calendar-check" style="color: #3b82f6;"></i> Data de Corte do Saldo
+                    </label>
+                    <input type="date" id="cutoffDateInput" class="form-input">
+                    <small style="color: var(--text-muted);">
+                        Apenas transações após esta data contam no saldo. Deixe vazio para contar tudo desde o início.
+                    </small>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeSettingsModal()">Cancelar</button>
                     <button type="submit" class="btn-submit">

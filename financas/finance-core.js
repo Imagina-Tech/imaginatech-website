@@ -117,10 +117,11 @@ let investments = [];
 // Services
 let services = [];
 
-// User settings (meta economia, limite gastos)
+// User settings (meta economia, limite gastos, data de corte)
 let userSettings = {
     savingsGoal: 2000,
-    expenseLimit: 3000
+    expenseLimit: 3000,
+    cutoffDate: null // Data a partir da qual as transações devem contar no saldo (formato: YYYY-MM-DD)
 };
 
 // Multi-user system

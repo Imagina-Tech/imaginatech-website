@@ -1087,6 +1087,20 @@ async function loadUserSettings() {
 
         if (doc.exists) {
             userSettings = { ...userSettings, ...doc.data() };
+        } else {
+            // Se não existe configuração E é a conta da empresa
+            // Definir data de corte padrão como 01/12/2024
+            if (activeUserEmail === COMPANY_EMAIL) {
+                userSettings.cutoffDate = '2024-12-01';
+                console.log('Definindo data de corte padrão para empresa: 2024-12-01');
+
+                // Salvar configuração padrão
+                await saveUserSettings({
+                    cutoffDate: '2024-12-01',
+                    savingsGoal: 2000,
+                    expenseLimit: 3000
+                });
+            }
         }
 
         console.log('Configurações carregadas:', userSettings);
@@ -1263,6 +1277,7 @@ function openSettingsModal() {
     // Preencher com valores atuais
     document.getElementById('savingsGoalInput').value = userSettings.savingsGoal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     document.getElementById('expenseLimitInput').value = userSettings.expenseLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('cutoffDateInput').value = userSettings.cutoffDate || '';
 
     document.getElementById('settingsModal').classList.add('active');
 }
@@ -1276,6 +1291,7 @@ async function handleSettingsSubmit(e) {
 
     const savingsGoalStr = document.getElementById('savingsGoalInput').value;
     const expenseLimitStr = document.getElementById('expenseLimitInput').value;
+    const cutoffDate = document.getElementById('cutoffDateInput').value;
 
     const savingsGoal = parseCurrencyInput(savingsGoalStr);
     const expenseLimit = parseCurrencyInput(expenseLimitStr);
@@ -1287,7 +1303,11 @@ async function handleSettingsSubmit(e) {
 
     showLoading('Salvando...');
 
-    const success = await saveUserSettings({ savingsGoal, expenseLimit });
+    const success = await saveUserSettings({
+        savingsGoal,
+        expenseLimit,
+        cutoffDate: cutoffDate || null
+    });
 
     if (success) {
         closeSettingsModal();
@@ -2209,12 +2229,25 @@ function updateKPIs() {
     const totalExpense = totalExpenseActual + totalExpenseProjection;
 
     // SALDO BANCÁRIO REAL = Entradas - Saídas em débito
+    // Se houver data de corte (cutoffDate), só conta transações após essa data
+    const cutoffDate = userSettings.cutoffDate;
+
     const totalIncomeAllTime = transactions
-        .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
+        .filter(t => {
+            if (!t.type || t.type !== 'income' || t.paymentMethod === 'credit') return false;
+            // Se há data de corte, só conta transações após essa data
+            if (cutoffDate && t.date < cutoffDate) return false;
+            return true;
+        })
         .reduce((sum, t) => sum + t.value, 0);
 
     const totalDebitAllTime = transactions
-        .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
+        .filter(t => {
+            if (!t.type || t.type !== 'expense' || t.paymentMethod === 'credit') return false;
+            // Se há data de corte, só conta transações após essa data
+            if (cutoffDate && t.date < cutoffDate) return false;
+            return true;
+        })
         .reduce((sum, t) => sum + t.value, 0);
 
     // Total de investimentos (separado, não afeta o saldo)
@@ -2224,6 +2257,7 @@ function updateKPIs() {
     // NOTA: As saídas de débito já incluem pagamentos de fatura (via transação automática)
     // Então o saldo desconta automaticamente quando a fatura é paga
     // IMPORTANTE: Investimentos NÃO afetam o saldo, são mostrados separadamente
+    // Se cutoffDate estiver definida, só conta transações após essa data
     const totalBalance = totalIncomeAllTime - totalDebitAllTime;
 
     // Log de debug para verificar cálculos
