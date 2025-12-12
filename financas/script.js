@@ -374,8 +374,12 @@ async function initializeDashboard() {
             loadCreditCards(),
             loadCreditCardPayments(),
             loadInvestments(),
-            loadUserSettings()
+            loadUserSettings(),
+            loadServices()
         ]);
+
+        // Iniciar listener de serviços em tempo real
+        startServicesListener();
 
         console.log('Dados carregados:', {
             transactions: transactions.length,
@@ -383,6 +387,7 @@ async function initializeDashboard() {
             installments: installments.length,
             projections: projections.length,
             creditCardPayments: creditCardPayments.length,
+            services: services.length,
             investments: investments.length
         });
 
@@ -452,6 +457,143 @@ async function loadTransactions() {
         // Não mostra toast aqui para não poluir - já mostra no catch principal
         transactions = []; // Garante array vazio
     }
+}
+
+// 🛍️ Array global para armazenar serviços
+let services = [];
+
+// 📦 Função para carregar serviços
+async function loadServices() {
+    try {
+        if (!activeUserId) {
+            console.warn('activeUserId não definido, pulando carregamento de serviços');
+            return;
+        }
+
+        const snapshot = await db.collection('services')
+            .where('userId', '==', activeUserId)
+            .get();
+
+        services = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.log(`${services.length} serviços carregados`);
+    } catch (error) {
+        console.error('Erro ao carregar serviços:', error);
+        services = [];
+    }
+}
+
+// 💰 Função para criar transação a partir de serviço
+async function createTransactionFromService(service) {
+    try {
+        // Verificações de segurança
+        if (!service.value || service.value <= 0) {
+            console.log('Serviço sem valor, ignorando:', service.id);
+            return;
+        }
+
+        if (!service.userId || service.userId !== activeUserId) {
+            console.log('Serviço não pertence ao usuário ativo, ignorando:', service.id);
+            return;
+        }
+
+        // Só criar transação se status for 'entregue' ou 'retirada'
+        if (service.status !== 'entregue' && service.status !== 'retirada') {
+            console.log('Serviço ainda não entregue, ignorando:', service.id, service.status);
+            return;
+        }
+
+        // Verificar se já existe transação para este serviço
+        const existingTransactions = await db.collection('transactions')
+            .where('userId', '==', activeUserId)
+            .where('serviceId', '==', service.id)
+            .get();
+
+        if (!existingTransactions.empty) {
+            console.log('Transação já existe para este serviço:', service.id);
+            return;
+        }
+
+        // Criar transação de entrada
+        const transactionData = {
+            userId: activeUserId,
+            type: 'income',
+            description: `Serviço: ${service.name || 'Sem nome'}`,
+            value: parseFloat(service.value),
+            category: 'Vendas',
+            date: service.completedAt || service.deliveredAt || new Date().toISOString().split('T')[0],
+            paymentMethod: 'debit',
+            cardId: null,
+            serviceId: service.id,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('transactions').add(transactionData);
+        console.log('✅ Transação criada para serviço:', service.id);
+
+        // Recarregar transações
+        await loadTransactions();
+        updateAllDisplays();
+
+    } catch (error) {
+        console.error('Erro ao criar transação de serviço:', error);
+    }
+}
+
+// 👂 Listener em tempo real para serviços
+let servicesListener = null;
+
+function startServicesListener() {
+    if (!activeUserId) {
+        console.warn('activeUserId não definido, não iniciando listener de serviços');
+        return;
+    }
+
+    // Parar listener anterior se existir
+    if (servicesListener) {
+        servicesListener();
+    }
+
+    servicesListener = db.collection('services')
+        .where('userId', '==', activeUserId)
+        .onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(change => {
+                const service = { id: change.doc.id, ...change.doc.data() };
+
+                if (change.type === 'added' || change.type === 'modified') {
+                    // Se serviço foi marcado como entregue, criar transação
+                    if (service.status === 'entregue' || service.status === 'retirada') {
+                        createTransactionFromService(service);
+                    }
+                }
+            });
+        });
+
+    console.log('Listener de serviços iniciado');
+}
+
+// 🕰️ Processar serviços históricos (executar uma vez após implementação)
+async function processHistoricalServices() {
+    if (!activeUserId) return;
+
+    console.log('Processando serviços históricos...');
+
+    const servicesSnapshot = await db.collection('services')
+        .where('userId', '==', activeUserId)
+        .where('status', 'in', ['entregue', 'retirada'])
+        .get();
+
+    console.log(`${servicesSnapshot.size} serviços entregues encontrados`);
+
+    for (const doc of servicesSnapshot.docs) {
+        const service = { id: doc.id, ...doc.data() };
+        await createTransactionFromService(service);
+    }
+
+    console.log('✅ Processamento de serviços históricos concluído');
 }
 
 // 📲 Processa envio do formulário de transação (criar/editar)

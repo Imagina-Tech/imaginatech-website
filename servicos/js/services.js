@@ -268,8 +268,10 @@ export function startServicesListener() {
     if (!state.db) return console.error('Firestore não está disponível');
     
     state.servicesListener?.();
-    
-    state.servicesListener = state.db.collection('services').onSnapshot(snapshot => {
+
+    state.servicesListener = state.db.collection('services')
+        .where('userId', '==', state.currentUser.uid)
+        .onSnapshot(snapshot => {
         state.services = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -717,7 +719,20 @@ export async function saveService(event) {
         let serviceDocId = state.editingServiceId;
 
         if (state.editingServiceId) {
-            await state.db.collection('services').doc(state.editingServiceId).update(service);
+            // Preservar userId se já existe, caso contrário adicionar
+            const updateData = {
+                ...service,
+                updatedAt: new Date().toISOString(),
+                updatedBy: state.currentUser.email
+            };
+
+            // Não sobrescrever userId se já existe
+            if (!updateData.userId) {
+                updateData.userId = state.currentUser.uid;
+                updateData.companyId = state.currentUser.uid;
+            }
+
+            await state.db.collection('services').doc(state.editingServiceId).update(updateData);
 
             // DEDUZIR MATERIAL DO ESTOQUE (se aplicável)
             // A lógica acima já calculou materialToDeduct corretamente
@@ -735,6 +750,8 @@ export async function saveService(event) {
             Object.assign(service, {
                 createdAt: new Date().toISOString(),
                 createdBy: state.currentUser.email,
+                userId: state.currentUser.uid,
+                companyId: state.currentUser.uid,
                 orderCode: generateOrderCode(),
                 serviceId: 'SRV-' + Date.now(),
                 files: [],
