@@ -2245,4 +2245,7 @@ function updateKPIs() {
     if (creditCardsEl) creditCardsEl.textContent = formatCurrencyDisplay(totalCreditCards);
     if (investmentsEl) investmentsEl.textContent = formatCurrencyDisplay(totalInvestments);
 
+// Fechar funÃ§Ã£o updateKPIs
+}
+
 console.log('âœ… Finance Data v3.0 - Loaded');

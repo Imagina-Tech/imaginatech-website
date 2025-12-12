@@ -437,4 +437,53 @@ function populateCategories() {
     });
 }
 
+// ===========================
+// UTILITY FUNCTIONS
+// ===========================
+// 🎨 Exibe overlay de carregamento
+function showLoading(message = 'Carregando...') {
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+
+    const text = overlay.querySelector('.loading-text');
+    if (text) text.textContent = message;
+    overlay.style.display = 'flex';
+}
+
+// 🎨 Esconde overlay de carregamento
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// 🎨 Exibe notificação toast temporária (sucesso/erro/info)
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    const icon = toast.querySelector('.toast-icon');
+    const messageEl = toast.querySelector('.toast-message');
+
+    if (icon) {
+        icon.className = 'toast-icon fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle');
+    }
+
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+
+    toast.className = 'toast ' + type;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
+    }, 3000);
+}
+
 console.log('✅ Finance Core v3.0 - Loaded');

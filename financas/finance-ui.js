@@ -7,9 +7,6 @@ VERSÃƒO: 3.0 - RefatoraÃ§Ã£o Modular
 IMPORTANTE: NÃƒO REMOVER ESTE CABEÃ‡ALHO DE IDENTIFICAÃ‡ÃƒO
 ==================================================
 */
-}
-
-// ===========================
 // APEXCHARTS - INITIALIZATION
 // ===========================
 
