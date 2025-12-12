@@ -2383,6 +2383,17 @@ function updateKPIs() {
         })
         .reduce((sum, p) => sum + p.value, 0);
 
+    // Projeções de entrada pendentes do mês atual
+    const pendingIncomeProjections = projections
+        .filter(p => {
+            if (p.status !== 'pending') return false;
+            // Aceita 'income' explícito ou ausência de type (compatibilidade)
+            if (p.type && p.type !== 'income') return false;
+            const projDate = new Date(p.date + 'T12:00:00');
+            return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + p.value, 0);
+
     // Total Expense = débito (saídas efetivas)
     // Saídas Efetivas = débito direto (já inclui pagamentos de faturas via transação automática)
     const totalExpenseActual = totalExpenseDebit;
@@ -2483,6 +2494,14 @@ function updateKPIs() {
 
     if (incomeEl) incomeEl.textContent = formatCurrencyDisplay(totalIncome);
 
+    // Atualiza projeção de entradas
+    const incomeProjectionEl = document.getElementById('totalIncomeProjection');
+    if (incomeProjectionEl) {
+        const totalIncomeTotal = totalIncome + pendingIncomeProjections;
+        incomeProjectionEl.textContent = `= ${formatCurrencyDisplay(totalIncomeTotal)}`;
+        incomeProjectionEl.style.display = pendingIncomeProjections > 0 ? 'block' : 'none';
+    }
+
     // Card de Saídas com dois valores
     // Correção 3: Projeção mostra total = atual + faturas não pagas + projeções de saída pendentes
     const totalExpenseTotal = totalExpenseActual + totalUnpaidBills + pendingExpenseProjections;
@@ -2492,8 +2511,8 @@ function updateKPIs() {
         expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
     }
 
-    // Correção 6: Projeção de saldo = saldo atual - faturas não pagas - projeções de saída pendentes
-    const balanceProjection = totalBalance - totalUnpaidBills - pendingExpenseProjections;
+    // Projeção de saldo = saldo atual + entradas pendentes - faturas não pagas - projeções de saída pendentes
+    const balanceProjection = totalBalance + pendingIncomeProjections - totalUnpaidBills - pendingExpenseProjections;
     if (balanceEl) balanceEl.textContent = formatCurrencyDisplay(totalBalance);
     const balanceProjectionEl = document.getElementById('balanceProjection');
     if (balanceProjectionEl) {

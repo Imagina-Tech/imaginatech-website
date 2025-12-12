@@ -151,6 +151,21 @@ a:hover { color: #2563EB; }
 .kpi-subtitle { font-size: 0.6rem; color: var(--color-text-tertiary); line-height: 1.2; margin-top: 0.1rem; }
 .kpi-projection { font-size: 0.7rem; color: #f59e0b; margin: 0.1rem 0 0 0; }
 
+/* Projeção de entradas - verde */
+.kpi-income .kpi-projection {
+    color: #10b981;
+}
+
+/* Projeção de saídas - laranja */
+.kpi-expense .kpi-projection {
+    color: #f59e0b;
+}
+
+/* Projeção de saldo - azul */
+.kpi-balance .kpi-projection {
+    color: #3b82f6;
+}
+
 .kpi-income .kpi-icon, .kpi-projection .kpi-icon { background-color: rgba(16,185,129,0.1); color: var(--color-success); }
 .kpi-expense .kpi-icon { background-color: rgba(239,68,68,0.1); color: var(--color-danger); }
 .kpi-balance .kpi-icon { background-color: rgba(59,130,246,0.1); color: var(--color-neutral); }
