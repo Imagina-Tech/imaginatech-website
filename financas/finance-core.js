@@ -121,7 +121,7 @@ let services = [];
 let userSettings = {
     savingsGoal: 2000,
     expenseLimit: 3000,
-    cutoffDate: '2026-01-01' // Data a partir da qual as transações devem contar no saldo (formato: YYYY-MM-DD)
+    cutoffDate: null // Data a partir da qual as transações devem contar no saldo (formato: YYYY-MM-DD) - só para empresa
 };
 
 // Multi-user system

@@ -1091,17 +1091,35 @@ async function loadInvestments() {
 async function loadUserSettings() {
     try {
         console.log('Carregando configurações do usuário...');
+
+        // Resetar userSettings para valores padrão antes de carregar (importante ao trocar de conta)
+        userSettings = {
+            savingsGoal: 2000,
+            expenseLimit: 3000,
+            cutoffDate: null
+        };
+
         const doc = await db.collection('userSettings').doc(activeUserId).get();
 
         if (doc.exists) {
             userSettings = { ...userSettings, ...doc.data() };
 
-            // Forçar atualização da data de corte para 2026 na conta da empresa
+            // Forçar atualização da data de corte para 2026 APENAS na conta da empresa
             if (activeUserEmail === COMPANY_EMAIL && userSettings.cutoffDate !== '2026-01-01') {
                 console.log('Atualizando data de corte da empresa para 2026-01-01 (anterior:', userSettings.cutoffDate, ')');
                 userSettings.cutoffDate = '2026-01-01';
                 await db.collection('userSettings').doc(activeUserId).update({
                     cutoffDate: '2026-01-01',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            // Garantir que contas pessoais NÃO tenham data de corte (a menos que configurado manualmente)
+            if (activeUserEmail !== COMPANY_EMAIL && userSettings.cutoffDate === '2026-01-01') {
+                console.log('Removendo data de corte indevida da conta pessoal');
+                userSettings.cutoffDate = null;
+                await db.collection('userSettings').doc(activeUserId).update({
+                    cutoffDate: null,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
