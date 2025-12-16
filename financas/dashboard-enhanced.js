@@ -105,7 +105,15 @@ function showTransactionsList(filterType) {
         return;
     }
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     const filtered = transactions.filter(t => {
+        // Filtrar por data de corte (ignorar transações anteriores)
+        if (cutoffDate && t.date < cutoffDate) {
+            return false;
+        }
+
         const d = new Date(t.date + 'T12:00:00');
         const match = d.getMonth() === currentDisplayMonth && d.getFullYear() === currentDisplayYear;
 

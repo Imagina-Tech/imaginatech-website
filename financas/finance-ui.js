@@ -205,6 +205,9 @@ function getCashFlowData() {
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     // Criar data de referência baseada no mês selecionado
     const referenceDate = new Date(displayYear, displayMonth, 1);
 
@@ -217,6 +220,8 @@ function getCashFlowData() {
         months.push(monthName.charAt(0).toUpperCase() + monthName.slice(1));
 
         const monthTransactions = transactions.filter(t => {
+            // Filtrar por data de corte
+            if (cutoffDate && t.date < cutoffDate) return false;
             const transactionDate = new Date(t.date);
             return transactionDate.getMonth() === date.getMonth() &&
                    transactionDate.getFullYear() === date.getFullYear();
@@ -663,7 +668,12 @@ function getComparisonData() {
     const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     const monthTransactions = transactions.filter(t => {
+        // Filtrar por data de corte
+        if (cutoffDate && t.date < cutoffDate) return false;
         const transactionDate = new Date(t.date);
         return transactionDate.getMonth() === currentMonth &&
                transactionDate.getFullYear() === currentYear;
@@ -1513,9 +1523,14 @@ function initializeGrowthSparkline() {
     const last6Months = [];
     const currentDate = new Date();
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
         const monthTransactions = transactions.filter(t => {
+            // Filtrar por data de corte
+            if (cutoffDate && t.date < cutoffDate) return false;
             const tDate = new Date(t.date);
             return tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear();
         });
@@ -1559,10 +1574,15 @@ function initializeExpenseTrendSparkline() {
     const last7Days = [];
     const currentDate = new Date();
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     for (let i = 6; i >= 0; i--) {
         const date = new Date(currentDate);
         date.setDate(date.getDate() - i);
         const dayExpenses = transactions.filter(t => {
+            // Filtrar por data de corte
+            if (cutoffDate && t.date < cutoffDate) return false;
             const tDate = new Date(t.date);
             return t.type === 'expense' &&
                    tDate.toDateString() === date.toDateString();
@@ -1725,6 +1745,9 @@ function getWeeklyTrendData() {
     const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
     const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
 
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
     // Pegar o último dia do mês selecionado
     const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
     const referenceDate = lastDayOfMonth;
@@ -1733,6 +1756,8 @@ function getWeeklyTrendData() {
         const date = new Date(referenceDate);
         date.setDate(date.getDate() - i);
         const dayExpenses = transactions.filter(t => {
+            // Filtrar por data de corte
+            if (cutoffDate && t.date < cutoffDate) return false;
             const tDate = new Date(t.date);
             return t.type === 'expense' &&
                    tDate.toDateString() === date.toDateString();

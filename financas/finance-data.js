@@ -2174,8 +2174,13 @@ function updateKPIs() {
     const currentMonth = displayMonth;
     const currentYear = displayYear;
 
-    // Filter transactions for current month
+    // Obter data de corte das configurações
+    const cutoffDate = userSettings.cutoffDate || null;
+
+    // Filter transactions for current month (aplicando data de corte)
     const currentMonthTransactions = transactions.filter(t => {
+        // Filtrar por data de corte
+        if (cutoffDate && t.date < cutoffDate) return false;
         const transactionDate = new Date(t.date);
         return transactionDate.getMonth() === currentMonth &&
                transactionDate.getFullYear() === currentYear;
