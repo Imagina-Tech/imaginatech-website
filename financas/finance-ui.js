@@ -749,13 +749,7 @@ function editTransaction(id) {
     // Atualiza título do modal
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar Transação';
 
-    // Preenche os campos
-    document.getElementById('description').value = transaction.description;
-    document.getElementById('value').value = formatCurrencyValue(transaction.value);
-    document.getElementById('category').value = transaction.category;
-    document.getElementById('date').value = transaction.date;
-
-    // Define o tipo de transação
+    // Define o tipo de transação PRIMEIRO (para popular categorias corretas)
     currentTransactionType = transaction.type;
     selectTransactionType(transaction.type);
 
@@ -767,6 +761,12 @@ function editTransaction(id) {
     if (transaction.paymentMethod === 'credit' && transaction.cardId) {
         document.getElementById('transactionCard').value = transaction.cardId;
     }
+
+    // Preenche os campos DEPOIS de popular as categorias
+    document.getElementById('description').value = transaction.description;
+    document.getElementById('value').value = formatCurrencyValue(transaction.value);
+    document.getElementById('category').value = transaction.category;
+    document.getElementById('date').value = transaction.date;
 }
 
 // 🎨 Abre modal para adicionar nova assinatura
