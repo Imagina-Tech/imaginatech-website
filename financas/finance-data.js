@@ -162,6 +162,14 @@ async function createTransactionFromService(service) {
             return;
         }
 
+        // Filtrar serviços anteriores a 01/01/2026
+        const cutoffServiceDate = '2026-01-01';
+        const serviceDate = service.createdAt ? service.createdAt.split('T')[0] : null;
+        if (!serviceDate || serviceDate < cutoffServiceDate) {
+            console.log('Serviço anterior a 2026, ignorando:', service.id, 'Data:', serviceDate);
+            return;
+        }
+
         // Verificar se já existe transação para este serviço
         const existingTransactions = await db.collection('transactions')
             .where('userId', '==', activeUserId)
@@ -1089,14 +1097,14 @@ async function loadUserSettings() {
             userSettings = { ...userSettings, ...doc.data() };
         } else {
             // Se não existe configuração E é a conta da empresa
-            // Definir data de corte padrão como 01/12/2024
+            // Definir data de corte padrão como 01/01/2026
             if (activeUserEmail === COMPANY_EMAIL) {
-                userSettings.cutoffDate = '2024-12-01';
-                console.log('Definindo data de corte padrão para empresa: 2024-12-01');
+                userSettings.cutoffDate = '2026-01-01';
+                console.log('Definindo data de corte padrão para empresa: 2026-01-01');
 
                 // Salvar configuração padrão
                 await saveUserSettings({
-                    cutoffDate: '2024-12-01',
+                    cutoffDate: '2026-01-01',
                     savingsGoal: 2000,
                     expenseLimit: 3000
                 });
