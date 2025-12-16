@@ -1095,6 +1095,16 @@ async function loadUserSettings() {
 
         if (doc.exists) {
             userSettings = { ...userSettings, ...doc.data() };
+
+            // Forçar atualização da data de corte para 2026 na conta da empresa
+            if (activeUserEmail === COMPANY_EMAIL && userSettings.cutoffDate !== '2026-01-01') {
+                console.log('Atualizando data de corte da empresa para 2026-01-01 (anterior:', userSettings.cutoffDate, ')');
+                userSettings.cutoffDate = '2026-01-01';
+                await db.collection('userSettings').doc(activeUserId).update({
+                    cutoffDate: '2026-01-01',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
         } else {
             // Se não existe configuração E é a conta da empresa
             // Definir data de corte padrão como 01/01/2026
