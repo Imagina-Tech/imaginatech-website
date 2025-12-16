@@ -2271,7 +2271,7 @@ function updateKPIs() {
 
     // SALDO BANCÁRIO REAL = Entradas - Saídas em débito
     // Se houver data de corte (cutoffDate), só conta transações após essa data
-    const cutoffDate = userSettings.cutoffDate;
+    // (cutoffDate já foi declarado no início da função)
 
     console.log('[KPIs] Data de corte configurada:', cutoffDate);
     console.log('[KPIs] Total de transações:', transactions.length);
