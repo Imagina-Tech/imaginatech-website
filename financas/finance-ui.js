@@ -2167,3 +2167,57 @@ console.log('✅ Função administrativa carregada: cleanCompanyData()');
 console.log('📝 Para limpar os dados da empresa, digite no console: cleanCompanyData()');
 
 console.log('âœ… Finance UI v3.0 - Loaded');
+// ===========================
+// PRIVACY TOGGLE (Investimentos)
+// ===========================
+/**
+ * Alterna a visibilidade do valor de investimentos
+ * Útil para abrir o painel em público sem expor valores sensíveis
+ */
+function toggleInvestmentVisibility(event) {
+    // Prevenir que o clique abra o modal
+    event.stopPropagation();
+
+    const valueElement = document.getElementById('totalInvestments');
+    const buttonElement = document.getElementById('btnToggleInvestments');
+    const iconElement = buttonElement.querySelector('i');
+
+    // Toggle classe blurred
+    valueElement.classList.toggle('blurred');
+    buttonElement.classList.toggle('revealed');
+
+    // Trocar ícone
+    if (valueElement.classList.contains('blurred')) {
+        // Valor está escondido - mostrar ícone de olho cortado
+        iconElement.className = 'fas fa-eye-slash';
+        buttonElement.title = 'Revelar valor';
+    } else {
+        // Valor está visível - mostrar ícone de olho aberto
+        iconElement.className = 'fas fa-eye';
+        buttonElement.title = 'Ocultar valor';
+    }
+
+    // Salvar preferência no localStorage
+    localStorage.setItem('investmentsHidden', valueElement.classList.contains('blurred'));
+}
+
+// Carregar estado salvo ao inicializar
+window.addEventListener('DOMContentLoaded', () => {
+    const isHidden = localStorage.getItem('investmentsHidden') === 'true';
+
+    if (!isHidden) {
+        // Se não está escondido, remover blur inicial e ajustar ícone
+        const valueElement = document.getElementById('totalInvestments');
+        const buttonElement = document.getElementById('btnToggleInvestments');
+        const iconElement = buttonElement?.querySelector('i');
+
+        if (valueElement && buttonElement && iconElement) {
+            valueElement.classList.remove('blurred');
+            buttonElement.classList.add('revealed');
+            iconElement.className = 'fas fa-eye';
+            buttonElement.title = 'Ocultar valor';
+        }
+    }
+});
+
+console.log('✅ Privacy Toggle - Loaded');

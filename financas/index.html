@@ -228,14 +228,19 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
 
                 <!-- KPI 4: Investimentos -->
-                <div class="kpi-card kpi-investments" onclick="openInvestmentsModal()" style="cursor: pointer;" title="Clique para gerenciar investimentos">
-                    <div class="kpi-icon" style="background-color: rgba(16, 185, 129, 0.1); color: #10B981;">
-                        <i class="fas fa-piggy-bank"></i>
-                    </div>
-                    <div class="kpi-content">
-                        <h3>Investimentos</h3>
-                        <p class="kpi-value" id="totalInvestments">R$ 0,00</p>
-                        <small class="kpi-subtitle">Total aplicado • Clique para gerenciar</small>
+                <div class="kpi-card kpi-investments" style="position: relative;">
+                    <button class="btn-toggle-privacy" id="btnToggleInvestments" onclick="toggleInvestmentVisibility(event)" title="Ocultar/Revelar valor">
+                        <i class="fas fa-eye-slash"></i>
+                    </button>
+                    <div onclick="openInvestmentsModal()" style="cursor: pointer;" title="Clique para gerenciar investimentos">
+                        <div class="kpi-icon" style="background-color: rgba(16, 185, 129, 0.1); color: #10B981;">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Investimentos</h3>
+                            <p class="kpi-value blurred" id="totalInvestments">R$ 0,00</p>
+                            <small class="kpi-subtitle">Total aplicado • Clique para gerenciar</small>
+                        </div>
                     </div>
                 </div>
 
