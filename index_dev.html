@@ -10,6 +10,26 @@
     <meta name="keywords" content="impressão 3d futurística, tecnologia 3d, impressão digital, modelagem avançada, ABS, PLA, resina, imaginatech, inovação">
     <meta name="author" content="ImaginaTech">
     <meta name="robots" content="index, follow">
+
+    <!-- Robots Avançados -->
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="bingbot" content="index, follow">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Geo Tags -->
+    <meta name="geo.region" content="BR-RJ">
+    <meta name="geo.placename" content="Rio de Janeiro">
+    <meta name="geo.position" content="-22.9068;-43.1729">
+    <meta name="ICBM" content="-22.9068, -43.1729">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0a0e1a">
+    <meta name="msapplication-TileColor" content="#0a0e1a">
+    <meta name="msapplication-navbutton-color" content="#0a0e1a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Sitemap -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -35,24 +55,138 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://imaginatech.com.br">
     
-    <!-- Schema.org -->
+    <!-- Schema.org - Organization -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "TechCompany",
-        "name": "ImaginaTech - Impressão 3D",
-        "description": "Empresa de tecnologia especializada em impressão 3D futurística e modelagem digital avançada.",
+        "@type": "Organization",
+        "name": "ImaginaTech",
+        "alternateName": "ImaginaTech 3D",
+        "description": "Empresa de tecnologia especializada em impressão 3D futurística e modelagem digital avançada. Da pessoa física à indústria.",
         "url": "https://imaginatech.com.br",
+        "logo": "https://imaginatech.com.br/imaginatech_logo.jpeg",
+        "image": "https://imaginatech.com.br/imaginatech_logo.jpeg",
         "telephone": "+55-21-96897-2539",
+        "email": "contato@imaginatech.com.br",
+        "foundingDate": "2020",
         "address": {
             "@type": "PostalAddress",
+            "addressLocality": "Rio de Janeiro",
+            "addressRegion": "RJ",
             "addressCountry": "BR"
         },
-        "image": "https://imaginatech.com.br/imaginatech_logo.jpeg",
-        "priceRange": "$$",
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "-22.9068",
+            "longitude": "-43.1729"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+55-21-96897-2539",
+            "contactType": "customer service",
+            "availableLanguage": ["Portuguese"]
+        },
         "sameAs": [
             "https://www.instagram.com/imaginatech3d/",
             "https://wa.me/5521968972539"
+        ]
+    }
+    </script>
+
+    <!-- Schema.org - LocalBusiness -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "ImaginaTech - Impressão 3D",
+        "description": "Serviços de impressão 3D profissional para pessoa física e indústria.",
+        "url": "https://imaginatech.com.br",
+        "telephone": "+55-21-96897-2539",
+        "priceRange": "$$",
+        "image": "https://imaginatech.com.br/imaginatech_logo.jpeg",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Rio de Janeiro",
+            "addressRegion": "RJ",
+            "addressCountry": "BR"
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "09:00",
+            "closes": "18:00"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "reviewCount": "150"
+        }
+    }
+    </script>
+
+    <!-- Schema.org - Services -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Serviços de Impressão 3D",
+        "itemListElement": [
+            {
+                "@type": "Service",
+                "position": 1,
+                "name": "Presentes Personalizados",
+                "description": "Criamos presentes únicos com tecnologia de ponta. Esculturas, miniaturas e objetos personalizados.",
+                "provider": {"@type": "Organization", "name": "ImaginaTech"}
+            },
+            {
+                "@type": "Service",
+                "position": 2,
+                "name": "Peças Industriais",
+                "description": "Prototipagem rápida e produção de peças técnicas com precisão milimétrica.",
+                "provider": {"@type": "Organization", "name": "ImaginaTech"}
+            },
+            {
+                "@type": "Service",
+                "position": 3,
+                "name": "Reparo e Reposição",
+                "description": "Reproduzimos e reforçamos peças quebradas ou descontinuadas.",
+                "provider": {"@type": "Organization", "name": "ImaginaTech"}
+            },
+            {
+                "@type": "Service",
+                "position": 4,
+                "name": "Modelagem 3D",
+                "description": "Design e modelagem 3D profissional. Transformamos ideias em modelos digitais.",
+                "provider": {"@type": "Organization", "name": "ImaginaTech"}
+            }
+        ]
+    }
+    </script>
+
+    <!-- Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://imaginatech.com.br"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Serviços",
+                "item": "https://imaginatech.com.br/#services"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Portfólio",
+                "item": "https://imaginatech.com.br/#portfolio"
+            }
         ]
     }
     </script>
@@ -60,13 +194,16 @@
     <!-- Domain Verification -->
     <meta name="facebook-domain-verification" content="2k032skuiidqnp9sdwv6t2q25fhgl7" />
     
-    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) - Google Ads -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17037169805"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'AW-17037169805');
+      // Google Analytics 4 - SUBSTITUA G-XXXXXXXXXX pelo seu ID de medição
+      // Crie em: https://analytics.google.com
+      // gtag('config', 'G-XXXXXXXXXX');
     </script>
     
     <!-- Meta Pixel Code -->
@@ -484,6 +621,256 @@
             .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(40px); }
             .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(40px); }
         }
+
+        /* ========== PORTFOLIO SECTION ========== */
+        .portfolio {
+            padding: 80px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .portfolio-card {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .portfolio-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
+        }
+
+        .portfolio-image {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .portfolio-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .portfolio-card:hover .portfolio-image img {
+            transform: scale(1.1);
+        }
+
+        .portfolio-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        }
+
+        .portfolio-category {
+            display: inline-block;
+            padding: 5px 12px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00D4FF;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #00D4FF;
+            font-weight: 500;
+        }
+
+        .portfolio-info {
+            padding: 20px;
+        }
+
+        .portfolio-info h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .portfolio-info p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .btn-ver-mais {
+            display: block;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 14px 35px;
+            background: transparent;
+            border: 2px solid #00D4FF;
+            color: #00D4FF;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-mais:hover {
+            background: #00D4FF;
+            color: #0a0e1a;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        /* ========== CLIENTS SECTION ========== */
+        .clients {
+            padding: 80px 20px;
+            background: rgba(10, 14, 26, 0.5);
+        }
+
+        .clients-carousel {
+            max-width: 1200px;
+            margin: 0 auto 60px;
+            overflow: hidden;
+            padding: 20px 0;
+        }
+
+        .clients-track {
+            display: flex;
+            gap: 60px;
+            animation: scroll-clients 20s linear infinite;
+        }
+
+        @keyframes scroll-clients {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .client-logo {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+            height: 80px;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .client-logo:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .client-logo img {
+            max-width: 140px;
+            max-height: 50px;
+            object-fit: contain;
+            filter: grayscale(100%) brightness(1.5);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .client-logo:hover img {
+            filter: grayscale(0%) brightness(1);
+            opacity: 1;
+        }
+
+        .client-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .client-logo:hover .client-name {
+            color: #00D4FF;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00D4FF, #00FF88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            line-height: 1;
+        }
+
+        .stat-label {
+            display: block;
+            margin-top: 10px;
+            color: #94a3b8;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Portfolio Responsive */
+        @media (max-width: 992px) {
+            .portfolio-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portfolio-image {
+                height: 200px;
+            }
+
+            .stats-grid {
+                gap: 40px;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+
+            .clients-track {
+                gap: 30px;
+            }
+
+            .client-logo {
+                min-width: 140px;
+                padding: 10px 15px;
+            }
+        }
     </style>
     
     <!-- SCRIPT DE DISTRIBUIÇÃO INTELIGENTE -->
@@ -666,6 +1053,157 @@
                 <p class="service-description">
                     Desenvolvemos soluções customizadas para projetos únicos. Consultoria e execução de ideias inovadoras.
                 </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section class="portfolio" id="portfolio">
+        <h2 class="section-title">Projetos Realizados</h2>
+        <p class="section-subtitle">Conheça alguns dos nossos trabalhos de impressão 3D</p>
+
+        <div class="portfolio-grid">
+            <!-- Projeto 1 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto+1" alt="Projeto de peça industrial" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Peça Industrial</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Componente Técnico</h3>
+                    <p>Peça de alta precisão desenvolvida para aplicação industrial.</p>
+                </div>
+            </div>
+
+            <!-- Projeto 2 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/00FF88?text=Projeto+2" alt="Projeto personalizado" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Personalizado</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Presente Exclusivo</h3>
+                    <p>Escultura personalizada criada para ocasião especial.</p>
+                </div>
+            </div>
+
+            <!-- Projeto 3 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/FF6B6B?text=Projeto+3" alt="Projeto de prototipagem" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Prototipagem</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Protótipo Funcional</h3>
+                    <p>Desenvolvimento de protótipo para validação de produto.</p>
+                </div>
+            </div>
+
+            <!-- Projeto 4 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/FFD93D?text=Projeto+4" alt="Projeto de reposição" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Reposição</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Peça de Reposição</h3>
+                    <p>Reprodução de peça descontinuada com engenharia reversa.</p>
+                </div>
+            </div>
+
+            <!-- Projeto 5 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/C084FC?text=Projeto+5" alt="Projeto decorativo" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Decorativo</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Arte Decorativa</h3>
+                    <p>Peça decorativa com design exclusivo e acabamento premium.</p>
+                </div>
+            </div>
+
+            <!-- Projeto 6 -->
+            <div class="portfolio-card">
+                <div class="portfolio-image">
+                    <img src="https://via.placeholder.com/400x300/0a1420/4ADE80?text=Projeto+6" alt="Projeto técnico" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <span class="portfolio-category">Técnico</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3>Componente Mecânico</h3>
+                    <p>Engrenagem de alta resistência para aplicação específica.</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="/servicos" class="btn-ver-mais">
+            <i class="fas fa-th-large"></i> Ver Todos os Projetos
+        </a>
+    </section>
+
+    <!-- Clients Section -->
+    <section class="clients" id="clients">
+        <h2 class="section-title">Empresas que Confiam em Nós</h2>
+
+        <div class="clients-carousel">
+            <div class="clients-track">
+                <!-- Vibra Energia -->
+                <div class="client-logo">
+                    <span class="client-name">Vibra Energia</span>
+                </div>
+                <!-- Brasilpav -->
+                <div class="client-logo">
+                    <span class="client-name">Brasilpav</span>
+                </div>
+                <!-- Força Aérea Brasileira -->
+                <div class="client-logo">
+                    <span class="client-name">Força Aérea</span>
+                </div>
+                <!-- Miclets -->
+                <div class="client-logo">
+                    <span class="client-name">Miclets</span>
+                </div>
+                <!-- Duplicados para efeito de carrossel infinito -->
+                <div class="client-logo">
+                    <span class="client-name">Vibra Energia</span>
+                </div>
+                <div class="client-logo">
+                    <span class="client-name">Brasilpav</span>
+                </div>
+                <div class="client-logo">
+                    <span class="client-name">Força Aérea</span>
+                </div>
+                <div class="client-logo">
+                    <span class="client-name">Miclets</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number" data-target="500">500</span>+
+                <span class="stat-label">Projetos Entregues</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="150">150</span>+
+                <span class="stat-label">Clientes Satisfeitos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="5">5</span>
+                <span class="stat-label">Anos de Experiência</span>
             </div>
         </div>
     </section>
