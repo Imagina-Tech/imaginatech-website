@@ -126,8 +126,10 @@ a:hover { color: #2563EB; }
 
 /* KPI CARDS - Compactos e informativos */
 .kpi-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: rgba(17, 24, 39, 0.6); /* Glassmorphism - mais transparente */
+  backdrop-filter: blur(12px); /* Efeito glass */
+  -webkit-backdrop-filter: blur(12px); /* Safari */
+  border: 1px solid rgba(0, 212, 255, 0.15); /* Borda azul neon sutil */
   border-radius: var(--radius-md);
   padding: 0.4rem;
   display: flex;
@@ -139,10 +141,65 @@ a:hover { color: #2563EB; }
   overflow: hidden;
   height: 100%;
   min-height: 85px;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.08); /* Glow azul suave */
 }
 .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, currentColor, transparent); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-base); }
-.kpi-card:hover { border-color: transparent; box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.kpi-card:hover { border-color: rgba(0, 212, 255, 0.4); box-shadow: var(--shadow-lg), 0 0 20px rgba(0, 212, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
 .kpi-card:hover::before { transform: scaleX(1); }
+
+/* KPI Investimentos - Verde Neon - overflow visible para não cortar blur */
+.kpi-card.kpi-investments {
+  overflow: visible;
+  border-color: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.08);
+}
+.kpi-card.kpi-investments:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.kpi-card.kpi-investments .kpi-content {
+  overflow: visible;
+}
+
+/* KPI Entradas (Income) - Verde Neon */
+.kpi-card.kpi-income {
+  border-color: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.08);
+}
+.kpi-card.kpi-income:hover {
+  border-color: rgba(0, 255, 136, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(0, 255, 136, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* KPI Saídas (Expense) - Vermelho Neon */
+.kpi-card.kpi-expense {
+  border-color: rgba(255, 0, 85, 0.15);
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.08);
+}
+.kpi-card.kpi-expense:hover {
+  border-color: rgba(255, 0, 85, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 0, 85, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* KPI Projeções - Roxo Neon */
+.kpi-card.kpi-projection {
+  border-color: rgba(153, 69, 255, 0.15);
+  box-shadow: 0 0 15px rgba(153, 69, 255, 0.08);
+}
+.kpi-card.kpi-projection:hover {
+  border-color: rgba(153, 69, 255, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(153, 69, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* KPI Assinaturas - Roxo Neon */
+.kpi-card.kpi-subscriptions {
+  border-color: rgba(153, 69, 255, 0.15);
+  box-shadow: 0 0 15px rgba(153, 69, 255, 0.08);
+}
+.kpi-card.kpi-subscriptions:hover {
+  border-color: rgba(153, 69, 255, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(153, 69, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
 
 .kpi-icon { width: 26px; height: 26px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-bottom: 0.3rem; }
 .kpi-content { display: flex; flex-direction: column; gap: 0.2rem; }
@@ -191,7 +248,10 @@ a:hover { color: #2563EB; }
   justify-content: center;
   gap: 0.3rem;
   padding: 0.4rem;
-  border: none;
+  background: rgba(17, 24, 39, 0.6); /* Glassmorphism base */
+  backdrop-filter: blur(10px); /* Efeito glass */
+  -webkit-backdrop-filter: blur(10px); /* Safari */
+  border: 1px solid rgba(0, 212, 255, 0.2); /* Borda azul neon */
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
@@ -211,11 +271,59 @@ a:hover { color: #2563EB; }
   display: block;
   text-align: center;
 }
-.btn-transaction { background: linear-gradient(135deg, var(--color-neutral), #1E40AF); }
-.btn-subscription { background: linear-gradient(135deg, var(--color-primary), #6D28D9); }
-.btn-installment { background: linear-gradient(135deg, var(--color-warning), #C2410C); }
-.btn-projection { background: linear-gradient(135deg, var(--color-success), #047857); }
-.btn-action:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+.btn-action:hover {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 212, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Botão Transação (Azul) */
+.btn-transaction {
+  background: linear-gradient(135deg, rgba(var(--color-neutral), 0.3), rgba(30, 64, 175, 0.3));
+  border-color: rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+}
+.btn-transaction:hover {
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+}
+
+/* Botão Parcela (Roxo) */
+.btn-installment {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(194, 65, 12, 0.3));
+  border-color: rgba(153, 69, 255, 0.3);
+  box-shadow: 0 0 10px rgba(153, 69, 255, 0.1);
+}
+.btn-installment:hover {
+  background: rgba(153, 69, 255, 0.15);
+  border-color: rgba(153, 69, 255, 0.6);
+  box-shadow: 0 0 25px rgba(153, 69, 255, 0.4);
+}
+
+/* Botão Assinatura (Roxo) */
+.btn-subscription {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(109, 40, 217, 0.3));
+  border-color: rgba(153, 69, 255, 0.3);
+  box-shadow: 0 0 10px rgba(153, 69, 255, 0.1);
+}
+.btn-subscription:hover {
+  background: rgba(153, 69, 255, 0.15);
+  border-color: rgba(153, 69, 255, 0.6);
+  box-shadow: 0 0 25px rgba(153, 69, 255, 0.4);
+}
+
+/* Botão Projeção (Verde) */
+.btn-projection {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(4, 120, 87, 0.3));
+  border-color: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+}
+.btn-projection:hover {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.6);
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+}
 
 /* MAIN DASHBOARD AREA - Grid 4 colunas otimizado */
 .dashboard-main-grid {
@@ -263,8 +371,10 @@ a:hover { color: #2563EB; }
 
 /* CHART CARDS GENÉRICOS */
 .chart-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: rgba(17, 24, 39, 0.6); /* Glassmorphism - mais transparente */
+  backdrop-filter: blur(12px); /* Efeito glass */
+  -webkit-backdrop-filter: blur(12px); /* Safari */
+  border: 1px solid rgba(0, 212, 255, 0.15); /* Borda azul neon sutil */
   border-radius: var(--radius-md);
   padding: 0.5rem;
   display: flex;
@@ -272,6 +382,7 @@ a:hover { color: #2563EB; }
   overflow: hidden;
   min-height: 0;
   height: 100%;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.1); /* Glow azul sutil */
 }
 
 
@@ -309,8 +420,10 @@ a:hover { color: #2563EB; }
 }
 
 .mini-chart-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: rgba(17, 24, 39, 0.6); /* Glassmorphism - mais transparente */
+  backdrop-filter: blur(12px); /* Efeito glass */
+  -webkit-backdrop-filter: blur(12px); /* Safari */
+  border: 1px solid rgba(0, 212, 255, 0.15); /* Borda azul neon sutil */
   border-radius: var(--radius-md);
   padding: 0.4rem 0.5rem;
   display: flex;
@@ -320,6 +433,7 @@ a:hover { color: #2563EB; }
   max-height: 100%;
   flex: 1;
   overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.1); /* Glow azul sutil */
 }
 
 /* Garantir que os containers dos gráficos ocupem o resto do card */
@@ -470,12 +584,18 @@ a:hover { color: #2563EB; }
 }
 
 .modal-container {
-    background: #1e2538; width: 95%; max-width: 500px;
+    background: rgba(30, 37, 56, 0.85); /* Glassmorphism - mais transparente */
+    backdrop-filter: blur(20px); /* Efeito glass - blur forte em modais */
+    -webkit-backdrop-filter: blur(20px); /* Safari */
+    width: 95%;
+    max-width: 500px;
     max-height: 90vh;
-    border-radius: 24px; padding: 32px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    transform: translateY(30px) scale(0.95); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 24px;
+    padding: 32px;
+    border: 1px solid rgba(0, 212, 255, 0.3); /* Borda azul neon mais visível */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1); /* Glow neon + luz interna */
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -522,14 +642,23 @@ a:hover { color: #2563EB; }
 .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-input[type="text"], input[type="number"], input[type="date"], select, .form-select {
-    width: 100%; padding: 14px; background: var(--color-bg-tertiary);
-    border: 1px solid var(--color-border); border-radius: 12px;
-    color: #fff; font-family: inherit; font-size: 1rem;
-    transition: all 0.2s;
+input[type="text"], input[type="number"], input[type="date"], select, .form-select, textarea {
+    width: 100%;
+    padding: 14px;
+    background: rgba(17, 24, 39, 0.6); /* Glassmorphism - mais transparente */
+    backdrop-filter: blur(10px); /* Efeito glass */
+    -webkit-backdrop-filter: blur(10px); /* Safari */
+    border: 1px solid rgba(0, 212, 255, 0.2); /* Borda azul neon */
+    border-radius: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
-input:focus, select:focus {
-    border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 224, 255, 0.15);
+input:focus, select:focus, textarea:focus {
+    background: rgba(17, 24, 39, 0.8); /* Mais opaco no focus */
+    border-color: rgba(0, 212, 255, 0.5); /* Azul mais intenso */
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1), 0 0 20px rgba(0, 212, 255, 0.2); /* Ring externo + glow neon */
     outline: none;
 }
 
@@ -541,16 +670,63 @@ input:focus, select:focus {
   border: 1px solid var(--color-border);
 }
 .type-btn {
-    flex: 1; padding: 12px; background: transparent; border: none;
-    color: var(--text-muted); font-weight: 600; cursor: pointer; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;
+    flex: 1;
+    padding: 12px;
+    background: rgba(17, 24, 39, 0.6); /* Glassmorphism */
+    backdrop-filter: blur(8px); /* Efeito glass */
+    -webkit-backdrop-filter: blur(8px); /* Safari */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
-.type-btn.active[data-type="income"] { background: rgba(0, 255, 148, 0.15); color: var(--neon-green); }
-.type-btn.active[data-type="expense"] { background: rgba(255, 0, 92, 0.15); color: var(--neon-red); }
-.type-btn.active[data-type="total"] { background: rgba(0, 224, 255, 0.15); color: var(--neon-blue); }
-.type-btn.active[data-type="installment"] { background: rgba(255, 107, 0, 0.15); color: var(--neon-orange); }
-.type-btn.active[data-method="debit"] { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-.type-btn.active[data-method="credit"] { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.type-btn:hover {
+    background: rgba(17, 24, 39, 0.8);
+    border-color: rgba(0, 212, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+.type-btn.active[data-type="income"] {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: var(--neon-green);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+}
+.type-btn.active[data-type="expense"] {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: var(--neon-red);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+}
+.type-btn.active[data-type="total"] {
+    background: rgba(0, 224, 255, 0.2);
+    border-color: rgba(0, 224, 255, 0.5);
+    color: var(--neon-blue);
+    box-shadow: 0 0 20px rgba(0, 224, 255, 0.25);
+}
+.type-btn.active[data-type="installment"] {
+    background: rgba(255, 107, 0, 0.2);
+    border-color: rgba(255, 107, 0, 0.5);
+    color: var(--neon-orange);
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.25);
+}
+.type-btn.active[data-method="debit"] {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #22c55e;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+}
+.type-btn.active[data-method="credit"] {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+}
 
 /* Account Selection Modal */
 .account-option-btn:hover {
@@ -560,17 +736,43 @@ input:focus, select:focus {
 
 .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-top: 30px; }
 .btn-submit {
-    background: linear-gradient(135deg, #00C6FB, #005BEA);
-    color: #fff; border: none; padding: 14px;
-    border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer;
-    transition: 0.3s;
+    background: rgba(16, 185, 129, 0.15); /* Glassmorphism - Verde */
+    backdrop-filter: blur(10px); /* Efeito glass */
+    -webkit-backdrop-filter: blur(10px); /* Safari */
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10B981;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+    transition: all 0.3s ease;
 }
-.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 91, 234, 0.4); }
+.btn-submit:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+}
 .btn-cancel {
-    background: transparent; border: 1px solid var(--color-border); color: var(--text-muted);
-    padding: 14px; border-radius: 12px; cursor: pointer; transition: 0.3s;
+    background: rgba(239, 68, 68, 0.15); /* Glassmorphism - Vermelho */
+    backdrop-filter: blur(10px); /* Efeito glass */
+    -webkit-backdrop-filter: blur(10px); /* Safari */
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+    transition: all 0.3s ease;
 }
-.btn-cancel:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.btn-cancel:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+}
 .btn-add {
     background: linear-gradient(135deg, #10b981, #059669);
     color: #fff; border: none; padding: 14px;
@@ -1189,6 +1391,8 @@ input:focus, select:focus {
   width: 32px;
   height: 32px;
   background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px); /* Glassmorphism */
+  -webkit-backdrop-filter: blur(8px); /* Safari */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.6);
@@ -1214,12 +1418,14 @@ input:focus, select:focus {
 
 /* Efeito Blur no valor */
 .kpi-value.blurred {
-  filter: blur(8px);
+  filter: blur(6px); /* Reduzido para 6px - mais suave e não corta */
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   transition: filter 0.3s ease;
+  padding: 2px 4px; /* Espaço para o blur não ser cortado */
+  display: inline-block; /* Forçar dimensionamento correto */
 }
 
 .kpi-value.blurred::selection {
@@ -1249,6 +1455,6 @@ input:focus, select:focus {
   }
 
   .kpi-value.blurred {
-    filter: blur(6px);
+    filter: blur(4px); /* Mobile - blur ainda mais suave */
   }
 }
