@@ -126,7 +126,7 @@ a:hover { color: #2563EB; }
 
 /* KPI CARDS - Compactos e informativos */
 .kpi-card {
-  background: rgba(17, 24, 39, 0.25); /* GLASSMORPHISM - muito transparente */
+  background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
   backdrop-filter: blur(20px) saturate(180%); /* Efeito glass FORTE */
   -webkit-backdrop-filter: blur(20px) saturate(180%); /* Safari */
   border: 2px solid rgba(0, 212, 255, 0.4); /* Borda azul neon VISÍVEL */
@@ -248,17 +248,17 @@ a:hover { color: #2563EB; }
   justify-content: center;
   gap: 0.3rem;
   padding: 0.4rem;
-  background: rgba(17, 24, 39, 0.6); /* Glassmorphism base */
-  backdrop-filter: blur(10px); /* Efeito glass */
-  -webkit-backdrop-filter: blur(10px); /* Safari */
-  border: 1px solid rgba(0, 212, 255, 0.2); /* Borda azul neon */
+  background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
+  backdrop-filter: blur(15px) saturate(180%); /* Efeito glass */
+  -webkit-backdrop-filter: blur(15px) saturate(180%); /* Safari */
+  border: 2px solid rgba(0, 212, 255, 0.3); /* Borda azul neon */
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
   color: #FFFFFF;
   font-size: 0.65rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 1;
   min-height: 50px;
@@ -371,7 +371,7 @@ a:hover { color: #2563EB; }
 
 /* CHART CARDS GENÉRICOS */
 .chart-card {
-  background: rgba(17, 24, 39, 0.25); /* GLASSMORPHISM - muito transparente */
+  background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
   backdrop-filter: blur(20px) saturate(180%); /* Efeito glass FORTE */
   -webkit-backdrop-filter: blur(20px) saturate(180%); /* Safari */
   border: 2px solid rgba(0, 212, 255, 0.4); /* Borda azul neon VISÍVEL */
@@ -420,7 +420,7 @@ a:hover { color: #2563EB; }
 }
 
 .mini-chart-card {
-  background: rgba(17, 24, 39, 0.25); /* GLASSMORPHISM - muito transparente */
+  background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
   backdrop-filter: blur(20px) saturate(180%); /* Efeito glass FORTE */
   -webkit-backdrop-filter: blur(20px) saturate(180%); /* Safari */
   border: 2px solid rgba(0, 212, 255, 0.4); /* Borda azul neon VISÍVEL */
@@ -584,7 +584,7 @@ a:hover { color: #2563EB; }
 }
 
 .modal-container {
-    background: rgba(30, 37, 56, 0.3); /* GLASSMORPHISM - muito transparente */
+    background: rgba(255, 255, 255, 0.08); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
     backdrop-filter: blur(30px) saturate(180%); /* Efeito glass MUITO FORTE */
     -webkit-backdrop-filter: blur(30px) saturate(180%); /* Safari */
     width: 95%;
@@ -645,7 +645,7 @@ a:hover { color: #2563EB; }
 input[type="text"], input[type="number"], input[type="date"], select, .form-select, textarea {
     width: 100%;
     padding: 14px;
-    background: rgba(17, 24, 39, 0.3); /* GLASSMORPHISM - muito transparente */
+    background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM REAL - fundo branco semi-transparente */
     backdrop-filter: blur(15px) saturate(180%); /* Efeito glass FORTE */
     -webkit-backdrop-filter: blur(15px) saturate(180%); /* Safari */
     border: 2px solid rgba(0, 212, 255, 0.4); /* Borda azul neon VISÍVEL */
@@ -657,7 +657,7 @@ input[type="text"], input[type="number"], input[type="date"], select, .form-sele
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 input:focus, select:focus, textarea:focus {
-    background: rgba(17, 24, 39, 0.4); /* Um pouco mais opaco no focus */
+    background: rgba(255, 255, 255, 0.08); /* Um pouco mais opaco no focus */
     border-color: rgba(0, 212, 255, 0.8); /* Azul BEM intenso */
     box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2), 0 0 30px rgba(0, 212, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2); /* Ring externo + glow neon FORTE */
     outline: none;
