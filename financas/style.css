@@ -264,10 +264,51 @@ a:hover { color: #2563EB; }
 
 .kpi-icon { width: 26px; height: 26px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-bottom: 0.3rem; }
 .kpi-content { display: flex; flex-direction: column; gap: 0.2rem; }
-.kpi-content h3 { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.3px; }
-.kpi-value { font-size: 0.95rem; font-weight: 700; margin: 0; line-height: 1.2; color: var(--color-text-primary); }
-.kpi-subtitle { font-size: 0.6rem; color: var(--color-text-tertiary); line-height: 1.2; margin-top: 0.1rem; }
-.kpi-projection { font-size: 0.7rem; color: #f59e0b; margin: 0.1rem 0 0 0; }
+.kpi-content h3 {
+  font-size: 0.65rem;
+  font-weight: 700; /* Aumentado de 600 para dar mais corpo */
+  /* Aumentando contraste: de cinza escuro para cinza claro quase branco */
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px; /* Aumentado para clareza */
+  /* Sombra sutil para destacar do grid */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.kpi-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  /* CORREÇÃO DE LEGIBILIDADE */
+  color: #ffffff; /* Branco puro */
+  /* Sombra estratégica: contorno suave preto atrás do número */
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.8);
+  /* Leve aumento no espaçamento para facilitar leitura */
+  letter-spacing: 0.3px;
+}
+
+.kpi-subtitle {
+  font-size: 0.6rem;
+  /* Mudança de cor: de tertiary (0.4) para secondary (0.75) */
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.2;
+  margin-top: 0.1rem;
+  font-weight: 500;
+  /* Sombra fina para letras pequenas */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.kpi-projection {
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin: 0.1rem 0 0 0;
+  /* Sombra para garantir que a cor não se misture com o grid */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
 
 /* Projeção de entradas - verde */
 .kpi-income .kpi-projection {
@@ -426,10 +467,12 @@ a:hover { color: #2563EB; }
 }
 .chart-header h3 {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-weight: 700; /* Mais peso */
+  color: #ffffff; /* Branco puro */
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  /* Sombra para separar do fundo semi-transparente */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .chart-legend { display: flex; gap: 1rem; }
@@ -502,6 +545,10 @@ a:hover { color: #2563EB; }
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--neon-blue);
+  /* Sombra preta para destacar o azul neon contra o grid */
+  text-shadow:
+    0 0 10px rgba(0, 212, 255, 0.3), /* Glow da própria cor */
+    0 1px 3px rgba(0, 0, 0, 0.9); /* Contraste preto */
 }
 
 
