@@ -63,7 +63,16 @@ VERSÃO: 3.0 - Layout Dashboard Otimizado Desktop
   100% { transform: translate(100px, 50px); }
 }
 
-.grid-lines { position: absolute; inset: 0; background: linear-gradient(rgba(0,212,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.1) 1px, transparent 1px); background-size: 50px 50px; animation: grid-move 10s linear infinite; }
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  /* Aumentei a opacidade da linha de 0.1 para 0.2 para resistir ao blur do vidro */
+  background:
+    linear-gradient(rgba(0, 212, 255, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-move 10s linear infinite;
+}
 @keyframes grid-move { to { transform: translate(50px, 50px); } }
 .particles { position: absolute; inset: 0; overflow: hidden; }
 .particle { position: absolute; width: 2px; height: 2px; background: var(--neon-blue); border-radius: 50%; opacity: 0.5; animation: float 20s infinite linear; }
@@ -198,10 +207,13 @@ a:hover { color: #2563EB; }
   height: 100%;
   min-height: 85px;
 
-  /* APLICANDO O EFEITO DE VIDRO REAL */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
+  /* Reduzi a opacidade do branco para 0.03 e 0.005 */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%);
+  /* Reduzi o blur de 12px para 8px para não "apagar" as linhas do grid */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Mantém as bordas de luz */
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-top-color: rgba(255, 255, 255, 0.2);
   border-left-color: rgba(255, 255, 255, 0.2);
@@ -304,10 +316,10 @@ a:hover { color: #2563EB; }
   z-index: 1;
   min-height: 50px;
 
-  /* EFEITO VIDRO BOTÃO */
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* EFEITO VIDRO MAIS LEVE - grid visível */
+  background: rgba(255, 255, 255, 0.02); /* Quase transparente */
+  backdrop-filter: blur(6px); /* Blur bem leve */
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
@@ -387,10 +399,12 @@ a:hover { color: #2563EB; }
   min-height: 0;
   height: 100%;
 
-  /* EFEITO DE VIDRO REAL */
-  background: rgba(20, 30, 50, 0.4); /* Base um pouco mais escura para legibilidade dos gráficos */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
+  /* Mudei de 0.4 para 0.15 (muito mais transparente) */
+  background: rgba(20, 30, 50, 0.15);
+  /* Reduzi o blur de 16px para 10px */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   /* Bordas refinadas */
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -447,10 +461,12 @@ a:hover { color: #2563EB; }
   flex: 1;
   overflow: hidden;
 
-  /* EFEITO DE VIDRO REAL */
-  background: rgba(20, 30, 50, 0.4); /* Base um pouco mais escura para legibilidade dos gráficos */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
+  /* Mudei de 0.4 para 0.15 (muito mais transparente) */
+  background: rgba(20, 30, 50, 0.15);
+  /* Reduzi o blur de 16px para 10px */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   /* Bordas refinadas */
   border: 1px solid rgba(255, 255, 255, 0.05);
