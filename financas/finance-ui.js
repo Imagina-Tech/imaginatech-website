@@ -1102,56 +1102,14 @@ function populateTransactionCardOptions() {
     console.log('✅ Dropdown preenchido com', select.options.length - 1, 'cartões');
 }
 
-// 📝 Sugere data padrão baseada no período da fatura do cartão selecionado
+// 📝 Mantém a data atual ao selecionar cartão (transações geralmente ocorrem no dia atual)
 function updateDefaultDateForCard(cardId) {
-    if (!cardId) {
-        // Se nenhum cartão selecionado, usar hoje
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
-        return;
-    }
+    // Sempre manter a data atual quando o cartão for selecionado
+    // A maioria das transações acontece no dia de hoje
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
 
-    const card = creditCards.find(c => c.id === cardId);
-    if (!card) return;
-
-    // Calcular o período da fatura deste cartão
-    const today = new Date();
-    const currentMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : today.getMonth();
-    const currentYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear();
-
-    let billStartDate;
-
-    // Se está navegando para um mês diferente do atual
-    const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
-
-    if (isNavigating) {
-        // Navegando: Fatura aberta é DIA (closingDay+1) do mês anterior até fechamento do mês visualizado
-        let prevMonth = currentMonth - 1;
-        let prevYear = currentYear;
-        if (prevMonth < 0) {
-            prevMonth = 11;
-            prevYear--;
-        }
-        billStartDate = new Date(prevYear, prevMonth, card.closingDay + 1);
-    } else {
-        // Usando lógica do mês atual
-        if (today.getDate() < card.closingDay) {
-            // Fatura aberta é do mês atual
-            billStartDate = new Date(currentYear, currentMonth - 1, card.closingDay + 1);
-            if (currentMonth === 0) {
-                billStartDate = new Date(currentYear - 1, 11, card.closingDay + 1);
-            }
-        } else {
-            // Fatura aberta é do próximo mês
-            billStartDate = new Date(currentYear, currentMonth, card.closingDay + 1);
-        }
-    }
-
-    // Usar primeira data válida do período
-    const defaultDate = billStartDate.toISOString().split('T')[0];
-    document.getElementById('date').value = defaultDate;
-
-    console.log(`📅 [updateDefaultDateForCard] Cartão "${card.name}" - Período começa em: ${defaultDate}`);
+    console.log(`📅 [updateDefaultDateForCard] Data mantida como hoje: ${today}`);
 }
 
 // Adicionar event listener ao dropdown de cartões
