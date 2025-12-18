@@ -66,12 +66,17 @@ VERSÃO: 3.0 - Layout Dashboard Otimizado Desktop
 .grid-lines {
   position: absolute;
   inset: 0;
-  /* Aumentei a opacidade da linha de 0.1 para 0.2 para resistir ao blur do vidro */
+  /* Opacidade 0.3 (mais neon) e espessura 2px (para sobreviver ao blur) */
   background:
-    linear-gradient(rgba(0, 212, 255, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: grid-move 10s linear infinite;
+    linear-gradient(rgba(0, 212, 255, 0.3) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.3) 2px, transparent 2px);
+  background-size: 60px 60px; /* Espaçamento maior para elegância com linhas grossas */
+  animation: grid-move 15s linear infinite; /* Mais lento para ser mais suave */
+
+  /* Força renderização na GPU para parar de piscar */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 @keyframes grid-move { to { transform: translate(50px, 50px); } }
 .particles { position: absolute; inset: 0; overflow: hidden; }
@@ -194,7 +199,7 @@ a:hover { color: #2563EB; }
 
 /* KPI CARDS - Compactos e informativos */
 .kpi-card {
-  /* Mantendo layout */
+  /* Layout */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -207,16 +212,15 @@ a:hover { color: #2563EB; }
   height: 100%;
   min-height: 85px;
 
-  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
-  /* Reduzi a opacidade do branco para 0.03 e 0.005 */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%);
-  /* Reduzi o blur de 12px para 8px para não "apagar" as linhas do grid */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  /* Mantém as bordas de luz */
+  /* VIDRO REAL - grid visível através */
+  /* Fundo quase invisível para deixar a cor do grid passar */
+  background: rgba(255, 255, 255, 0.02);
+  /* Blur 6px: define a "nitidez" do que está atrás */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top-color: rgba(255, 255, 255, 0.2);
-  border-left-color: rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.25); /* Luz superior mais forte */
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
 
@@ -390,7 +394,7 @@ a:hover { color: #2563EB; }
 
 /* CHART CARDS GENÉRICOS */
 .chart-card {
-  /* Layout mantido */
+  /* Layout */
   display: flex;
   flex-direction: column;
   padding: 0.5rem;
@@ -399,19 +403,16 @@ a:hover { color: #2563EB; }
   min-height: 0;
   height: 100%;
 
-  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
-  /* Mudei de 0.4 para 0.15 (muito mais transparente) */
-  background: rgba(20, 30, 50, 0.15);
-  /* Reduzi o blur de 16px para 10px */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* VIDRO REAL - mostra vulto do grid */
+  background: rgba(15, 23, 42, 0.3); /* Tom azulado escuro muito transparente */
+  /* Blur 8px: suficiente para focar no gráfico, mas mostra o vulto do grid */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
-  /* Bordas refinadas */
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.15); /* Luz superior */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 
-  /* Sombra profunda */
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
@@ -450,7 +451,7 @@ a:hover { color: #2563EB; }
 }
 
 .mini-chart-card {
-  /* Layout mantido */
+  /* Layout */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -461,19 +462,16 @@ a:hover { color: #2563EB; }
   flex: 1;
   overflow: hidden;
 
-  /* EFEITO DE VIDRO MAIS TRANSPARENTE - grid visível */
-  /* Mudei de 0.4 para 0.15 (muito mais transparente) */
-  background: rgba(20, 30, 50, 0.15);
-  /* Reduzi o blur de 16px para 10px */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* VIDRO REAL - mostra vulto do grid */
+  background: rgba(15, 23, 42, 0.3); /* Tom azulado escuro muito transparente */
+  /* Blur 8px: suficiente para focar no gráfico, mas mostra o vulto do grid */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
-  /* Bordas refinadas */
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.15); /* Luz superior */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 
-  /* Sombra profunda */
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
