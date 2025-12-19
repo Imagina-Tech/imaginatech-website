@@ -630,45 +630,6 @@
             padding: 0 !important;
         }
 
-        /* ========== DESKTOP HIGH-RES: CUBO AMPLIADO ========== */
-        @media (min-width: 1024px) {
-            .cube-container {
-                width: 300px !important;
-                height: 300px !important;
-                margin: 50px auto !important;
-                filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.2));
-            }
-
-            .cube-face {
-                width: 300px !important;
-                height: 300px !important;
-                border: 1px solid rgba(0, 212, 255, 0.3) !important;
-                border-radius: 12px !important;
-            }
-
-            /* Reposicionamento das faces para 300px (metade = 150px) */
-            .cube-face:nth-child(1) { transform: translateZ(150px) !important; }
-            .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(150px) !important; }
-            .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(150px) !important; }
-            .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(150px) !important; }
-            .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(150px) !important; }
-            .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(150px) !important; }
-
-            .cube-face::before {
-                border-radius: 12px;
-            }
-
-            .cube-face::after {
-                border-radius: 11px;
-            }
-
-            /* Reflexo maior para cubo maior */
-            .cube-reflection {
-                width: 300px;
-                height: 30px;
-            }
-        }
-
         /* ========== RESPONSIVIDADE MOBILE CORRIGIDA ========== */
         @media (max-width: 768px) {
             .navbar {
