@@ -285,11 +285,19 @@
             50% { transform: translate(-100px, -100px); }
         }
 
-        /* Grid quase imperceptível */
+        /* Grid infinito e fluido - corrigido */
         .grid-lines {
             background-image:
                 linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px) !important;
+            background-size: 50px 50px !important;
+            background-position: 0 0;
+            animation: infinite-grid 15s linear infinite !important;
+        }
+
+        @keyframes infinite-grid {
+            from { background-position: 0 0; }
+            to { background-position: 50px 50px; }
         }
 
         /* Barra de progresso de leitura */
@@ -554,7 +562,7 @@
             padding: 0 20px;
         }
 
-        /* Hero Layout Assimétrico */
+        /* Hero Layout Assimétrico - Estabilizado */
         .hero-content {
             display: flex;
             align-items: center;
@@ -562,7 +570,9 @@
             gap: 60px;
             text-align: left;
             max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .hero-text {
@@ -601,7 +611,64 @@
             background: radial-gradient(ellipse, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
             filter: blur(10px);
         }
-        
+
+        /* Estabilização do texto glitch */
+        .glitch-text {
+            display: block !important;
+            width: 100%;
+            min-height: 1.2em;
+            text-align: left;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Estabilização do subtítulo */
+        .hero-subtitle {
+            width: 100% !important;
+            max-width: 500px !important;
+            margin: 0 0 35px 0 !important;
+            padding: 0 !important;
+        }
+
+        /* ========== DESKTOP HIGH-RES: CUBO AMPLIADO ========== */
+        @media (min-width: 1024px) {
+            .cube-container {
+                width: 300px !important;
+                height: 300px !important;
+                margin: 50px auto !important;
+                filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.2));
+            }
+
+            .cube-face {
+                width: 300px !important;
+                height: 300px !important;
+                border: 1px solid rgba(0, 212, 255, 0.3) !important;
+                border-radius: 12px !important;
+            }
+
+            /* Reposicionamento das faces para 300px (metade = 150px) */
+            .cube-face:nth-child(1) { transform: translateZ(150px) !important; }
+            .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(150px) !important; }
+            .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(150px) !important; }
+            .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(150px) !important; }
+            .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(150px) !important; }
+            .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(150px) !important; }
+
+            .cube-face::before {
+                border-radius: 12px;
+            }
+
+            .cube-face::after {
+                border-radius: 11px;
+            }
+
+            /* Reflexo maior para cubo maior */
+            .cube-reflection {
+                width: 300px;
+                height: 30px;
+            }
+        }
+
         /* ========== RESPONSIVIDADE MOBILE CORRIGIDA ========== */
         @media (max-width: 768px) {
             .navbar {
@@ -1164,15 +1231,36 @@
                 padding: 10px 15px;
             }
 
-            /* Hero responsivo */
+            /* Hero responsivo - alinhamento central perfeito */
             .hero-content {
                 flex-direction: column;
                 text-align: center;
+                align-items: center !important;
+                padding: 0 15px;
             }
 
-            .hero-text,
+            .hero-text {
+                max-width: 100%;
+                text-align: center;
+            }
+
             .hero-visual {
                 max-width: 100%;
+            }
+
+            .glitch-text {
+                text-align: center !important;
+            }
+
+            .hero-subtitle {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .badge {
+                margin-left: auto;
+                margin-right: auto;
             }
         }
 
