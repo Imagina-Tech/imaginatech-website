@@ -228,12 +228,82 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
+
+    <!-- AOS - Animate On Scroll Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     <!-- External Stylesheet -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- SISTEMA DEFINITIVO COM IMAGENS NÍTIDAS E CUBO FECHADO -->
+    <!-- SISTEMA DEFINITIVO COM GLASSMORPHISM REFINADO -->
     <style>
+        /* ╔══════════════════════════════════════════════════════════════════════════╗ */
+        /* ║ GLASSMORPHISM REFINADO - VARIÁVEIS E FUNDAÇÃO VISUAL                    ║ */
+        /* ╚══════════════════════════════════════════════════════════════════════════╝ */
+
+        /* Sobrescrita de variáveis para Glassmorphism */
+        :root {
+            --dark-bg: #05070a;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-stroke: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Orbes de Luz - Mesh Gradient */
+        .cosmic-bg::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            filter: blur(150px);
+            animation: float-orb-1 20s infinite ease-in-out;
+            z-index: 1;
+        }
+
+        .cosmic-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
+            filter: blur(150px);
+            animation: float-orb-2 25s infinite ease-in-out;
+            z-index: 1;
+        }
+
+        @keyframes float-orb-1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(100px, 100px); }
+        }
+
+        @keyframes float-orb-2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-100px, -100px); }
+        }
+
+        /* Grid quase imperceptível */
+        .grid-lines {
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px) !important;
+        }
+
+        /* Barra de progresso de leitura */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: linear-gradient(90deg, #00D4FF, #00FF88);
+            z-index: 10000;
+            transition: width 0.1s ease;
+        }
+
         /* ╔══════════════════════════════════════════════════════════════════════════╗ */
         /* ║ PROTOCOLO EXECUTIVO MANDATÓRIO - SISTEMA BASE64 DEFINITIVO              ║ */
         /* ╚══════════════════════════════════════════════════════════════════════════╝ */
@@ -367,18 +437,25 @@
             animation-play-state: paused;
         }
         
-        /* ========== NAVBAR DO PAINEL ========== */
+        /* ========== NAVBAR FLOATING PILL ========== */
         .navbar {
-            background: rgba(10, 14, 26, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 20px;
             position: fixed;
-            top: 0;
-            width: 100%;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px 40px;
+            background: rgba(10, 14, 26, 0.6) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid var(--glass-stroke) !important;
+            border-radius: 50px !important;
+            border-bottom: none !important;
             z-index: 1000;
             box-sizing: border-box;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
         }
 
         .navbar-container {
@@ -475,6 +552,54 @@
             font-weight: 400;
             letter-spacing: 0.5px;
             padding: 0 20px;
+        }
+
+        /* Hero Layout Assimétrico */
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 60px;
+            text-align: left;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-text {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .hero-visual {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 500px;
+        }
+
+        /* Badge acima do título */
+        .badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50px;
+            color: #00D4FF;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* Reflexo do cubo */
+        .cube-reflection {
+            width: 120px;
+            height: 20px;
+            margin-top: 20px;
+            background: radial-gradient(ellipse, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
+            filter: blur(10px);
         }
         
         /* ========== RESPONSIVIDADE MOBILE CORRIGIDA ========== */
@@ -643,6 +768,120 @@
             .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(40px); }
         }
 
+        /* ========== CARDS DE SERVIÇOS REFINADOS ========== */
+        .service-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid var(--glass-stroke) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Efeito de glow no ícone */
+        .service-icon {
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+
+        /* ========== PROCESSO DE PRODUÇÃO (NOVA SEÇÃO) ========== */
+        .processo {
+            padding: 100px 20px;
+            background: rgba(255, 255, 255, 0.01);
+            position: relative;
+        }
+
+        .processo-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .processo-step {
+            text-align: center;
+            padding: 40px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-stroke);
+            border-radius: 24px;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .processo-step:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        .processo-number {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #00D4FF, #0077FF);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .processo-icon {
+            font-size: 3rem;
+            color: #00D4FF;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+
+        .processo-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .processo-description {
+            color: #94a3b8;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* Linha conectora entre steps */
+        .processo-step::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -40px;
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--glass-stroke), transparent);
+        }
+
+        .processo-step:last-child::after {
+            display: none;
+        }
+
+        @media (max-width: 992px) {
+            .processo-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .processo-step::after {
+                display: none;
+            }
+        }
+
         /* ========== PORTFOLIO SECTION ========== */
         .portfolio {
             padding: 80px 20px;
@@ -692,7 +931,34 @@
         }
 
         .portfolio-card:hover .portfolio-image img {
-            transform: scale(1.1);
+            transform: scale(1.15);
+            filter: brightness(1.1);
+        }
+
+        /* Specs técnicos no portfólio */
+        .portfolio-specs {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .spec-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #00D4FF;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .spec-badge i {
+            font-size: 0.7rem;
         }
 
         .portfolio-overlay {
@@ -802,14 +1068,20 @@
             max-width: 140px;
             max-height: 50px;
             object-fit: contain;
-            filter: grayscale(100%) brightness(1.5);
-            opacity: 0.7;
-            transition: all 0.3s ease;
+            filter: grayscale(1) brightness(2);
+            opacity: 0.6;
+            transition: all 0.4s ease;
         }
 
         .client-logo:hover img {
-            filter: grayscale(0%) brightness(1);
+            filter: grayscale(0) brightness(1);
             opacity: 1;
+        }
+
+        /* Remover borda sólida dos clientes */
+        .client-logo {
+            border: none !important;
+            background: transparent !important;
         }
 
         .client-name {
@@ -891,6 +1163,32 @@
                 min-width: 140px;
                 padding: 10px 15px;
             }
+
+            /* Hero responsivo */
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-text,
+            .hero-visual {
+                max-width: 100%;
+            }
+        }
+
+        /* ========== BOTÃO WHATSAPP COM VIDRO ========== */
+        .fab-whatsapp {
+            background: rgba(37, 211, 102, 0.2) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(37, 211, 102, 0.4);
+            box-shadow: 0 8px 32px rgba(37, 211, 102, 0.3) !important;
+        }
+
+        .fab-whatsapp:hover {
+            background: rgba(37, 211, 102, 0.3) !important;
+            border-color: rgba(37, 211, 102, 0.6);
+            box-shadow: 0 12px 40px rgba(37, 211, 102, 0.5) !important;
         }
     </style>
     
@@ -952,6 +1250,9 @@
     </script>
 </head>
 <body>
+    <!-- Barra de Progresso de Leitura -->
+    <div id="scroll-progress"></div>
+
     <!-- Loading Screen -->
     <div class="loader" id="loader">
         <div class="loader-cube"></div>
@@ -991,42 +1292,48 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <h1 class="glitch-text">ImaginaTech</h1>
-            <p class="hero-subtitle">Da pessoa física à indústria - Impressão 3D para todas as escalas</p>
-            
-            <div class="cube-container">
-                <div class="cube">
-                    <div class="cube-face cube-face-1"></div>
-                    <div class="cube-face cube-face-2"></div>
-                    <div class="cube-face cube-face-3"></div>
-                    <div class="cube-face cube-face-4"></div>
-                    <div class="cube-face cube-face-5"></div>
-                    <div class="cube-face cube-face-6"></div>
+        <div class="hero-content" data-aos="fade-up">
+            <div class="hero-text">
+                <span class="badge">Tecnologia 3D de Alta Precisão</span>
+                <h1 class="glitch-text">ImaginaTech</h1>
+                <p class="hero-subtitle">Da pessoa física à indústria - Impressão 3D para todas as escalas</p>
+
+                <div class="cta-container">
+                    <a href="https://wa.me/5521968972539?text=Olá,%20gostaria%20de%20conhecer%20o%20futuro%20da%20impressão%203D!"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="cta-button cta-primary">
+                        <i class="fab fa-whatsapp"></i>
+                        Iniciar Projeto
+                    </a>
+                    <a href="#services" class="cta-button cta-secondary">
+                        <i class="fas fa-cube"></i>
+                        Explorar Serviços
+                    </a>
                 </div>
             </div>
 
-            <div class="cta-container">
-                <a href="https://wa.me/5521968972539?text=Olá,%20gostaria%20de%20conhecer%20o%20futuro%20da%20impressão%203D!" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="cta-button cta-primary">
-                    <i class="fab fa-whatsapp"></i>
-                    Iniciar Projeto
-                </a>
-                <a href="#services" class="cta-button cta-secondary">
-                    <i class="fas fa-cube"></i>
-                    Explorar Serviços
-                </a>
+            <div class="hero-visual">
+                <div class="cube-container">
+                    <div class="cube">
+                        <div class="cube-face cube-face-1"></div>
+                        <div class="cube-face cube-face-2"></div>
+                        <div class="cube-face cube-face-3"></div>
+                        <div class="cube-face cube-face-4"></div>
+                        <div class="cube-face cube-face-5"></div>
+                        <div class="cube-face cube-face-6"></div>
+                    </div>
+                </div>
+                <div class="cube-reflection"></div>
             </div>
         </div>
     </section>
 
     <!-- Services Section -->
     <section class="services" id="services">
-        <h2 class="section-title">Serviços do Futuro</h2>
+        <h2 class="section-title" data-aos="fade-up">Serviços do Futuro</h2>
         <div class="services-grid">
-            <div class="service-card">
+            <div class="service-card" data-aos="fade-up" data-aos-delay="100">
                 <div class="service-icon">
                     <i class="fas fa-gift"></i>
                 </div>
@@ -1088,6 +1395,41 @@
         </div>
     </section>
 
+    <!-- Processo de Produção Section -->
+    <section class="processo" id="processo">
+        <h2 class="section-title" data-aos="fade-up">Como Funciona</h2>
+        <p class="section-subtitle" data-aos="fade-up">Processo simples e transparente em 3 passos</p>
+
+        <div class="processo-grid">
+            <div class="processo-step" data-aos="fade-up" data-aos-delay="100">
+                <div class="processo-number">1</div>
+                <i class="fas fa-cloud-upload-alt processo-icon"></i>
+                <h3 class="processo-title">Upload</h3>
+                <p class="processo-description">
+                    Envie seu modelo 3D (STL, OBJ) ou descreva sua ideia. Aceitamos arquivos ou criamos o design para você.
+                </p>
+            </div>
+
+            <div class="processo-step" data-aos="fade-up" data-aos-delay="200">
+                <div class="processo-number">2</div>
+                <i class="fas fa-calculator processo-icon"></i>
+                <h3 class="processo-title">Orçamento</h3>
+                <p class="processo-description">
+                    Análise técnica em até 2h úteis. Você recebe especificações, materiais recomendados e prazo de entrega.
+                </p>
+            </div>
+
+            <div class="processo-step" data-aos="fade-up" data-aos-delay="300">
+                <div class="processo-number">3</div>
+                <i class="fas fa-shipping-fast processo-icon"></i>
+                <h3 class="processo-title">Produção</h3>
+                <p class="processo-description">
+                    Impressão com monitoramento em tempo real. Postagem rápida com rastreamento ou retirada local.
+                </p>
+            </div>
+        </div>
+    </section>
+
     <!-- Portfolio Section -->
     <section class="portfolio" id="portfolio">
         <h2 class="section-title">Projetos Realizados</h2>
@@ -1095,7 +1437,7 @@
 
         <div class="portfolio-grid">
             <!-- Projeto 1 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto+1" alt="Projeto de peça industrial" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1105,11 +1447,15 @@
                 <div class="portfolio-info">
                     <h3>Componente Técnico</h3>
                     <p>Peça de alta precisão desenvolvida para aplicação industrial.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-cube"></i> ABS Premium</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.12mm</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Projeto 2 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up" data-aos-delay="100">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/00FF88?text=Projeto+2" alt="Projeto personalizado" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1119,11 +1465,15 @@
                 <div class="portfolio-info">
                     <h3>Presente Exclusivo</h3>
                     <p>Escultura personalizada criada para ocasião especial.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-tint"></i> Resina UV</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.05mm</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Projeto 3 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up" data-aos-delay="200">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/FF6B6B?text=Projeto+3" alt="Projeto de prototipagem" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1133,11 +1483,15 @@
                 <div class="portfolio-info">
                     <h3>Protótipo Funcional</h3>
                     <p>Desenvolvimento de protótipo para validação de produto.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-cube"></i> PLA Técnico</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.15mm</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Projeto 4 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/FFD93D?text=Projeto+4" alt="Projeto de reposição" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1147,11 +1501,15 @@
                 <div class="portfolio-info">
                     <h3>Peça de Reposição</h3>
                     <p>Reprodução de peça descontinuada com engenharia reversa.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-cube"></i> PETG Reforçado</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.20mm</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Projeto 5 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up" data-aos-delay="100">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/C084FC?text=Projeto+5" alt="Projeto decorativo" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1161,11 +1519,15 @@
                 <div class="portfolio-info">
                     <h3>Arte Decorativa</h3>
                     <p>Peça decorativa com design exclusivo e acabamento premium.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-cube"></i> PLA Silk</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.10mm</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Projeto 6 -->
-            <div class="portfolio-card">
+            <div class="portfolio-card" data-aos="fade-up" data-aos-delay="200">
                 <div class="portfolio-image">
                     <img src="https://via.placeholder.com/400x300/0a1420/4ADE80?text=Projeto+6" alt="Projeto técnico" loading="lazy">
                     <div class="portfolio-overlay">
@@ -1175,6 +1537,10 @@
                 <div class="portfolio-info">
                     <h3>Componente Mecânico</h3>
                     <p>Engrenagem de alta resistência para aplicação específica.</p>
+                    <div class="portfolio-specs">
+                        <span class="spec-badge"><i class="fas fa-cube"></i> Nylon Industrial</span>
+                        <span class="spec-badge"><i class="fas fa-layer-group"></i> Camada: 0.18mm</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1312,6 +1678,39 @@
             <span class="fab-tooltip">Instagram</span>
         </a>
     </div>
+
+    <!-- AOS Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- Micro-interações e Animações -->
+    <script>
+        // Inicializar AOS (Animate On Scroll)
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+
+        // Barra de progresso de leitura
+        window.addEventListener('scroll', function() {
+            const scrollProgress = document.getElementById('scroll-progress');
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrollPercentage = (scrollTop / scrollHeight) * 100;
+            scrollProgress.style.width = scrollPercentage + '%';
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
 
     <!-- External JavaScript -->
     <script src="script.js"></script>
