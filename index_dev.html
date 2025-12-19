@@ -630,6 +630,33 @@
             padding: 0 !important;
         }
 
+        /* ========== DESKTOP: CUBO 20% MAIOR ========== */
+        @media (min-width: 1024px) {
+            .cube-container {
+                width: 144px !important;
+                height: 144px !important;
+                margin: 40px auto !important;
+            }
+
+            .cube-face {
+                width: 144px !important;
+                height: 144px !important;
+            }
+
+            /* Reposicionamento das faces para 144px (metade = 72px) */
+            .cube-face:nth-child(1) { transform: translateZ(72px) !important; }
+            .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(72px) !important; }
+            .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(72px) !important; }
+            .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(72px) !important; }
+            .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(72px) !important; }
+            .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(72px) !important; }
+
+            /* Reflexo proporcional */
+            .cube-reflection {
+                width: 144px;
+            }
+        }
+
         /* ========== RESPONSIVIDADE MOBILE CORRIGIDA ========== */
         @media (max-width: 768px) {
             .navbar {
