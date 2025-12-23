@@ -87,16 +87,97 @@ const EXPENSE_CATEGORIES = [
 ];
 
 // ===========================
-// GLOBAL STATE
+// GLOBAL STATE (Encapsulado)
 // ===========================
+
+/**
+ * Estado centralizado da aplicação de finanças
+ * Agrupa todas as variáveis de estado em um único objeto organizado
+ */
+const FinanceState = {
+    // Firebase instances
+    firebase: {
+        db: null,
+        auth: null
+    },
+
+    // Dados do usuário
+    user: {
+        current: null,
+        activeId: null,
+        activeEmail: null
+    },
+
+    // Coleções de dados (carregadas do Firestore)
+    data: {
+        transactions: [],
+        subscriptions: [],
+        installments: [],
+        projections: [],
+        creditCards: [],
+        cardExpenses: [],
+        creditCardPayments: [],
+        investments: [],
+        services: []
+    },
+
+    // Estado da UI (formulários)
+    ui: {
+        currentTransactionType: 'income',
+        currentPaymentMethod: 'debit',
+        currentProjectionType: 'income',
+        editingTransactionId: null,
+        editingSubscriptionId: null,
+        editingInstallmentId: null,
+        editingCardId: null,
+        editingProjectionId: null,
+        editingInvestmentId: null
+    },
+
+    // Configurações do usuário
+    settings: {
+        savingsGoal: 2000,
+        expenseLimit: 3000,
+        cutoffDate: null
+    },
+
+    // Instâncias dos gráficos ApexCharts
+    charts: {
+        cashFlow: null,
+        category: null,
+        comparison: null,
+        topCategories: null,
+        weeklyTrend: null,
+        savingsGoal: null,
+        expenseLimit: null,
+        paymentMethod: null
+    },
+
+    // Método para resetar estado (útil ao trocar de conta)
+    reset() {
+        this.data.transactions = [];
+        this.data.subscriptions = [];
+        this.data.installments = [];
+        this.data.projections = [];
+        this.data.creditCards = [];
+        this.data.cardExpenses = [];
+        this.data.creditCardPayments = [];
+        this.data.investments = [];
+        this.data.services = [];
+        this.settings = { savingsGoal: 2000, expenseLimit: 3000, cutoffDate: null };
+    }
+};
+
+// Aliases para compatibilidade com código existente
+// (permite migração gradual sem quebrar funcionalidades)
 let db, auth;
 let currentUser = null;
-let transactions = [];
-let subscriptions = [];
-let installments = [];
-let projections = [];
-let creditCards = [];
-let cardExpenses = [];
+let transactions = FinanceState.data.transactions;
+let subscriptions = FinanceState.data.subscriptions;
+let installments = FinanceState.data.installments;
+let projections = FinanceState.data.projections;
+let creditCards = FinanceState.data.creditCards;
+let cardExpenses = FinanceState.data.cardExpenses;
 let currentTransactionType = 'income';
 let currentPaymentMethod = 'debit';
 let editingTransactionId = null;
@@ -105,30 +186,16 @@ let editingInstallmentId = null;
 let editingCardId = null;
 let editingProjectionId = null;
 let editingInvestmentId = null;
-let currentProjectionType = 'income'; // Tipo de projeção: 'income' ou 'expense'
-
-// Credit card payments tracking
-let creditCardPayments = [];
-
-// Investments
-let investments = [];
-
-// Services
-let services = [];
-
-// User settings (meta economia, limite gastos, data de corte)
-let userSettings = {
-    savingsGoal: 2000,
-    expenseLimit: 3000,
-    cutoffDate: null // Data a partir da qual as transações devem contar no saldo (formato: YYYY-MM-DD) - só para empresa
-};
-
-// Multi-user system
-let activeUserId = null; // ID do usuário ativo (pode ser diferente de activeUserId)
-let activeUserEmail = null; // Email do usuário ativo
+let currentProjectionType = 'income';
+let creditCardPayments = FinanceState.data.creditCardPayments;
+let investments = FinanceState.data.investments;
+let services = FinanceState.data.services;
+let userSettings = FinanceState.settings;
+let activeUserId = null;
+let activeUserEmail = null;
 const COMPANY_EMAIL = '3d3printers@gmail.com';
 
-// ApexCharts instances
+// ApexCharts instances (aliases)
 let cashFlowChart = null;
 let categoryChart = null;
 let comparisonChart = null;
