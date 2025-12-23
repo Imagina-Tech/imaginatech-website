@@ -1549,7 +1549,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     console.log(`\n🔍 [CHAMADA #${calculateBillCallCount}] calculateCurrentBill("${card.name}")`);
 
     // Usar função centralizada para calcular período da fatura
-    const { startDate: billStartDate, endDate: billEndDate, billMonth, billYear } = getBillPeriod(card, overrideMonth, overrideYear);
+    const { startDate: billStartDate, endDate: billEndDate, billMonth, billYear, isNavigating } = getBillPeriod(card, overrideMonth, overrideYear);
 
     // Somar gastos do período (cardExpenses antigos + transações de crédito)
     const expensesTotal = cardExpenses
@@ -1567,7 +1567,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 
         if (isNavigating) {
             // Ao navegar, mostrar apenas transações do mês visualizado
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === billMonth && transactionDate.getFullYear() === billYear;
         } else {
             // Modo real-time: usar o período da fatura
             return transactionDate >= billStartDate && transactionDate <= billEndDate;
