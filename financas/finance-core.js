@@ -97,7 +97,6 @@ let installments = [];
 let projections = [];
 let creditCards = [];
 let cardExpenses = [];
-let currentFilter = 'all';
 let currentTransactionType = 'income';
 let currentPaymentMethod = 'debit';
 let editingTransactionId = null;

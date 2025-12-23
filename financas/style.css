@@ -176,27 +176,6 @@ a:hover { color: #2563EB; }
   align-items: start;
 }
 
-/* Classe base para o efeito de vidro (pode ser usada em outros lugares) */
-.glass-effect {
-  /* Gradiente sutil: mais claro no topo-esquerda, mais escuro embaixo-direita */
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
-  /* O Blur é essencial */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  /* A borda mágica: fina e semi-transparente */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* Luz vindo de cima */
-  border-left: 1px solid rgba(255, 255, 255, 0.2); /* Luz vindo da esquerda */
-  /* Sombra suave para profundidade + luz interna (inset) */
-  box-shadow:
-    0 8px 32px 0 rgba(0, 0, 0, 0.37),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
 /* KPI CARDS - Compactos e informativos */
 .kpi-card {
   /* Layout */
@@ -737,7 +716,7 @@ a:hover { color: #2563EB; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 /* INPUTS DENTRO DO MODAL - "BURACOS" NO VIDRO */
-input[type="text"], input[type="number"], input[type="date"], select, .form-select, textarea {
+input[type="text"], input[type="number"], input[type="date"], select, .form-select, .form-input, textarea {
     width: 100%;
     padding: 14px;
 
@@ -963,6 +942,17 @@ input:focus, select:focus, textarea:focus {
   .chart-category, .chart-payment-method, .charts-section-top, .charts-section-bottom {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  /* Mobile block - bloqueia acesso em tablets/mobile */
+  .mobile-block {
+    display: flex !important;
+  }
+
+  .dashboard,
+  .login-screen,
+  #accountSelectionModal {
+    display: none !important;
   }
 }
 
@@ -1270,6 +1260,19 @@ input:focus, select:focus, textarea:focus {
     .custom-select.open .custom-select-option {
         animation: none;
     }
+
+    /* Privacy toggle - Mobile */
+    .btn-toggle-privacy {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+        font-size: 0.75rem;
+    }
+
+    .kpi-value.blurred {
+        filter: blur(4px); /* Mobile - blur ainda mais suave */
+    }
 }
 
 @media (max-width: 480px) {
@@ -1326,18 +1329,6 @@ input:focus, select:focus, textarea:focus {
 .mobile-block-content p {
   color: var(--text-secondary);
   font-size: 0.9rem;
-}
-
-@media (max-width: 1024px) {
-  .mobile-block {
-    display: flex !important;
-  }
-
-  .dashboard,
-  .login-screen,
-  #accountSelectionModal {
-    display: none !important;
-  }
 }
 
 /* ===========================
@@ -1541,19 +1532,4 @@ input:focus, select:focus, textarea:focus {
 .btn-toggle-privacy.revealed:hover {
   background: rgba(16, 185, 129, 0.15);
   border-color: rgba(16, 185, 129, 0.4);
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-  .btn-toggle-privacy {
-    width: 28px;
-    height: 28px;
-    top: 8px;
-    right: 8px;
-    font-size: 0.75rem;
-  }
-
-  .kpi-value.blurred {
-    filter: blur(4px); /* Mobile - blur ainda mais suave */
-  }
 }

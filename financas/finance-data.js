@@ -246,26 +246,6 @@ function startServicesListener() {
     console.log('Listener de serviços iniciado');
 }
 
-// 🕰️ Processar serviços históricos (executar uma vez após implementação)
-async function processHistoricalServices() {
-    if (!activeUserId) return;
-
-    console.log('Processando serviços históricos...');
-
-    const servicesSnapshot = await db.collection('services')
-        .where('userId', '==', activeUserId)
-        .get();
-
-    console.log(`${servicesSnapshot.size} serviços encontrados`);
-
-    for (const doc of servicesSnapshot.docs) {
-        const service = { id: doc.id, ...doc.data() };
-        await createTransactionFromService(service);
-    }
-
-    console.log('✅ Processamento de serviços históricos concluído');
-}
-
 // 📲 Processa envio do formulário de transação (criar/editar)
 async function handleTransactionSubmit(e) {
     e.preventDefault();
@@ -630,86 +610,9 @@ async function loadInstallments() {
         }));
 
         console.log(`${installments.length} parcelamentos carregados`);
-
-        // Recalcular startMonth de parcelamentos com dados inconsistentes (apenas uma vez)
-        await fixInstallmentsStartMonth();
     } catch (error) {
         console.error('Erro ao carregar parcelamentos:', error);
         installments = [];
-    }
-}
-
-// 🔄 Corrige startMonth de parcelamentos com dados inconsistentes
-async function fixInstallmentsStartMonth() {
-    try {
-        const displayMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
-        const displayYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
-
-        console.log(`\n🔍 [MIGRAÇÃO] Verificando parcelamentos... (ref: mês ${displayMonth + 1}/${displayYear})`);
-
-        const toFix = installments.filter(inst => {
-            // Verifica se precisa correção: se startMonth está definido mas parece errado
-            if (inst.startMonth === undefined && inst.startMonth !== 0) return false;
-            if (!inst.currentInstallment) return false;
-            if (!inst.totalInstallments) return false;
-
-            // Recalcular o que deveria ser
-            const monthsBack = inst.currentInstallment - 1;
-            let correctStartMonth = displayMonth - monthsBack;
-            let correctStartYear = displayYear;
-
-            while (correctStartMonth < 0) {
-                correctStartMonth += 12;
-                correctStartYear--;
-            }
-            while (correctStartMonth > 11) {
-                correctStartMonth -= 12;
-                correctStartYear++;
-            }
-
-            // Se está diferente, precisa corrigir
-            const needsFix = (inst.startMonth !== correctStartMonth || inst.startYear !== correctStartYear);
-
-            if (needsFix) {
-                console.log(`   🔧 "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${correctStartMonth + 1}/${correctStartYear} (parcela ${inst.currentInstallment}/${inst.totalInstallments})`);
-            }
-
-            return needsFix;
-        });
-
-        if (toFix.length === 0) {
-            console.log(`   ✅ Todos os parcelamentos estão corretos!\n`);
-            return;
-        }
-
-        console.log(`\n🔧 Corrigindo ${toFix.length} parcelamentos com startMonth incorreto...`);
-
-        for (const inst of toFix) {
-            const monthsBack = inst.currentInstallment - 1;
-            let startMonth = displayMonth - monthsBack;
-            let startYear = displayYear;
-
-            while (startMonth < 0) {
-                startMonth += 12;
-                startYear--;
-            }
-
-            console.log(`   Corrigindo "${inst.description}": ${inst.startMonth + 1}/${inst.startYear} → ${startMonth + 1}/${startYear}`);
-
-            await db.collection('installments').doc(inst.id).update({
-                startMonth,
-                startYear,
-                migratedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Atualizar no array local
-            inst.startMonth = startMonth;
-            inst.startYear = startYear;
-        }
-
-        console.log(`✅ ${toFix.length} parcelamentos corrigidos!\n`);
-    } catch (error) {
-        console.error('Erro ao corrigir parcelamentos:', error);
     }
 }
 
