@@ -1266,6 +1266,188 @@
             border-color: rgba(37, 211, 102, 0.6);
             box-shadow: 0 12px 40px rgba(37, 211, 102, 0.5) !important;
         }
+
+        /* ===========================
+           PROJETOS REALIZADOS - CARROSSEL
+           =========================== */
+
+        .projetos-section {
+            padding: 120px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .projetos-carousel {
+            max-width: 100%;
+            position: relative;
+            overflow: hidden;
+            padding: 40px 0;
+        }
+
+        /* Fade nas bordas laterais */
+        .projetos-carousel::before,
+        .projetos-carousel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .projetos-carousel::before {
+            left: 0;
+            background: linear-gradient(90deg,
+                #05070a 0%,
+                rgba(5, 7, 10, 0.8) 30%,
+                transparent 100%
+            );
+        }
+
+        .projetos-carousel::after {
+            right: 0;
+            background: linear-gradient(270deg,
+                #05070a 0%,
+                rgba(5, 7, 10, 0.8) 30%,
+                transparent 100%
+            );
+        }
+
+        /* Track com animação */
+        .projetos-track {
+            display: flex;
+            gap: 30px;
+            animation: scroll-projetos 40s linear infinite;
+            padding: 0 60px;
+        }
+
+        .projetos-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll-projetos {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Cards dos projetos */
+        .projeto-card {
+            min-width: 320px;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.05) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .projeto-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow:
+                0 30px 60px -12px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(0, 212, 255, 0.15);
+        }
+
+        .projeto-image {
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            position: relative;
+        }
+
+        .projeto-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+            filter: brightness(0.9);
+        }
+
+        .projeto-card:hover .projeto-image img {
+            transform: scale(1.1);
+            filter: brightness(1);
+        }
+
+        /* Overlay sutil na imagem */
+        .projeto-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+        }
+
+        .projeto-info {
+            padding: 24px;
+            position: relative;
+        }
+
+        .projeto-nome {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            line-height: 1.4;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .projetos-section {
+                padding: 80px 0 60px;
+            }
+
+            .projetos-carousel::before,
+            .projetos-carousel::after {
+                width: 100px;
+            }
+
+            .projetos-track {
+                gap: 20px;
+                padding: 0 30px;
+                animation: scroll-projetos 30s linear infinite;
+            }
+
+            .projeto-card {
+                min-width: 280px;
+            }
+
+            .projeto-image {
+                height: 200px;
+            }
+
+            .projeto-info {
+                padding: 20px;
+            }
+
+            .projeto-nome {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .projeto-card {
+                min-width: 240px;
+            }
+
+            .projeto-image {
+                height: 180px;
+            }
+        }
     </style>
     
     <!-- SCRIPT DE DISTRIBUIÇÃO INTELIGENTE -->
@@ -1401,6 +1583,166 @@
                     </div>
                 </div>
                 <div class="cube-reflection"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEÇÃO DE PROJETOS REALIZADOS -->
+    <section class="projetos-section">
+        <div class="section-header" data-aos="fade-up">
+            <h2 class="section-title">
+                <span class="gradient-text">Projetos Realizados</span>
+            </h2>
+            <p class="section-subtitle">Conheça alguns dos nossos trabalhos anteriores</p>
+        </div>
+
+        <div class="projetos-carousel">
+            <div class="projetos-track">
+                <!-- SET 1 (original) -->
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-1.jpg" alt="Miniatura Darth Vader">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Miniatura Darth Vader</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-2.jpg" alt="Busto Iron Man">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Busto Iron Man</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-3.jpg" alt="Peça Automotiva Customizada">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Peça Automotiva Customizada</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-4.jpg" alt="Protótipo Arquitetônico">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Protótipo Arquitetônico</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-5.jpg" alt="Réplica Baby Yoda">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Réplica Baby Yoda</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-6.jpg" alt="Suporte Ergonômico">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Suporte Ergonômico</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-7.jpg" alt="Miniatura Pokémon">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Miniatura Pokémon</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-8.jpg" alt="Engrenagem Industrial">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Engrenagem Industrial</h3>
+                    </div>
+                </div>
+
+                <!-- SET 2 (duplicado para loop infinito) -->
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-1.jpg" alt="Miniatura Darth Vader">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Miniatura Darth Vader</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-2.jpg" alt="Busto Iron Man">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Busto Iron Man</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-3.jpg" alt="Peça Automotiva Customizada">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Peça Automotiva Customizada</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-4.jpg" alt="Protótipo Arquitetônico">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Protótipo Arquitetônico</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-5.jpg" alt="Réplica Baby Yoda">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Réplica Baby Yoda</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-6.jpg" alt="Suporte Ergonômico">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Suporte Ergonômico</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-7.jpg" alt="Miniatura Pokémon">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Miniatura Pokémon</h3>
+                    </div>
+                </div>
+
+                <div class="projeto-card">
+                    <div class="projeto-image">
+                        <img src="assets/images/projetos/projeto-8.jpg" alt="Engrenagem Industrial">
+                    </div>
+                    <div class="projeto-info">
+                        <h3 class="projeto-nome">Engrenagem Industrial</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
