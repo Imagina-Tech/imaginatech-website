@@ -214,17 +214,32 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
 
         // Converter gramas para kg
         const weightInKg = absWeightInGrams / 1000;
-        const currentWeight = filament.weight || 0;
 
-        // Calcular novo peso (deduzir ou adicionar)
-        const newWeight = isReturn
-            ? currentWeight + weightInKg  // Devolver ao estoque
-            : Math.max(0, currentWeight - weightInKg);  // Deduzir do estoque
+        // Usar Firestore Transaction para evitar condição de corrida
+        const filamentRef = state.db.collection('filaments').doc(filament.id);
 
-        // Atualizar no Firestore
-        await state.db.collection('filaments').doc(filament.id).update({
-            weight: newWeight,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        const newWeight = await state.db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(filamentRef);
+
+            if (!doc.exists) {
+                throw new Error('Filamento não encontrado no estoque');
+            }
+
+            const currentWeight = doc.data().weight || 0;
+
+            // Calcular novo peso (deduzir ou adicionar)
+            const newWeight = isReturn
+                ? currentWeight + weightInKg  // Devolver ao estoque
+                : Math.max(0, currentWeight - weightInKg);  // Deduzir do estoque
+
+            // Atualizar dentro da transaction
+            transaction.update(filamentRef, {
+                weight: newWeight,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Retornar novo peso para atualizar cache local
+            return newWeight;
         });
 
         const action = isReturn ? 'devolvidos' : 'deduzidos';
@@ -910,17 +925,33 @@ export async function deleteService(serviceId) {
         
         if (filesToDelete.length > 0) {
             showToast('Deletando arquivos...', 'info');
-            
+
+            let deletionErrors = [];
+
             for (const fileUrl of filesToDelete) {
                 try {
                     const fileRef = state.storage.refFromURL(fileUrl);
                     await fileRef.delete();
                 } catch (error) {
                     console.error('Erro ao deletar arquivo:', fileUrl, error);
+                    deletionErrors.push(fileUrl);
                 }
             }
+
+            // Se houver erros, não continua com a exclusão do Firestore
+            if (deletionErrors.length > 0) {
+                showToast(`⚠️ ${deletionErrors.length} arquivo(s) não foi(foram) deletado(s) do Storage. Tente novamente.`, 'warning');
+                console.error('Arquivos que falharam:', deletionErrors);
+                return; // Para aqui, não deleta do Firestore
+            }
         }
-        
+
+        // Devolver material ao estoque antes de excluir (se foi deduzido)
+        if (!service.needsMaterialPurchase && service.material && service.color && service.weight) {
+            console.log(`🔄 Devolvendo ${service.weight}g de ${service.material} ${service.color} ao estoque...`);
+            await deductMaterialFromStock(service.material, service.color, -service.weight);
+        }
+
         await state.db.collection('services').doc(serviceId).delete();
         showToast('Serviço e arquivos excluídos!', 'success');
     } catch (error) {

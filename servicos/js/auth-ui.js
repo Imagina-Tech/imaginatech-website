@@ -2166,7 +2166,46 @@ export const sendWhatsAppMessage = (phone, message) => {
     const cleanPhone = phone.replace(/\D/g, '');
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+
+    const popup = window.open(whatsappUrl, '_blank');
+
+    // Verifica se o popup foi bloqueado
+    setTimeout(() => {
+        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+            // Popup bloqueado - mostrar modal com link clicável
+            showToast('⚠️ Popup bloqueado. Clique no botão abaixo para abrir WhatsApp', 'warning');
+
+            // Remover modal anterior se existir
+            const existingModal = document.querySelector('.whatsapp-fallback-modal');
+            if (existingModal) existingModal.remove();
+
+            // Criar modal com link clicável como fallback
+            const modal = document.createElement('div');
+            modal.className = 'whatsapp-fallback-modal modal active';
+            modal.innerHTML = `
+                <div class="modal-content modal-small">
+                    <div class="modal-header">
+                        <h2><i class="fab fa-whatsapp"></i> Abrir WhatsApp</h2>
+                        <button class="modal-close" onclick="this.closest('.whatsapp-fallback-modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>O popup foi bloqueado pelo navegador. Clique no botão abaixo para abrir o WhatsApp:</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="${whatsappUrl}" target="_blank" class="btn-primary" onclick="setTimeout(() => this.closest('.whatsapp-fallback-modal').remove(), 500)">
+                            <i class="fab fa-whatsapp"></i> Abrir WhatsApp
+                        </a>
+                        <button class="btn-secondary" onclick="this.closest('.whatsapp-fallback-modal').remove()">
+                            <i class="fas fa-times"></i> Fechar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    }, 500); // Aguarda 500ms para verificar se o popup foi bloqueado
 };
 
 export const contactClient = (phone, serviceName, orderCode, clientName) => {

@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Lista de emails autorizados (deve coincidir com servicos/js/config.js)
+    function isAuthorizedAdmin() {
+      return request.auth != null && request.auth.token.email in [
+        '3d3printers@gmail.com',
+        'netrindademarcus@gmail.com',
+        'allanedg01@gmail.com',
+        'quequell1010@gmail.com',
+        'igor.butter@gmail.com'
+      ];
+    }
+
+    // Services collection - Apenas emails autorizados podem ler/escrever
+    match /services/{serviceId} {
+      allow read, write: if isAuthorizedAdmin();
+    }
+
+    // Filaments collection - Apenas emails autorizados podem ler/escrever
+    match /filaments/{filamentId} {
+      allow read, write: if isAuthorizedAdmin();
+    }
+
+    // Clients collection - Apenas emails autorizados podem ler/escrever
+    match /clients/{clientId} {
+      allow read, write: if isAuthorizedAdmin();
+    }
+
+    // AdminAccess collection - Apenas emails autorizados podem ler/escrever
+    match /adminAccess/{userId} {
+      allow read, write: if isAuthorizedAdmin();
+    }
+
+    // Todas as outras collections são bloqueadas por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
