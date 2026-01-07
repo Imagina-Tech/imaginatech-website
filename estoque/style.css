@@ -4,14 +4,37 @@
    =========================== */
 
 /* ===========================
-   CARDS DE ESTATÍSTICAS - CUSTOMIZAÇÃO
+   CARDS DE ESTATÍSTICAS - COMPACTOS
    =========================== */
+.stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
 .stats-grid .stat-card {
-    min-height: 160px;
+    min-height: auto;
+    padding: 1rem;
+    flex-direction: row;
+    gap: 0.75rem;
+}
+
+.stats-grid .stat-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    margin: 0;
+}
+
+.stats-grid .stat-content {
+    align-items: flex-start;
+    gap: 0.2rem;
 }
 
 .stats-grid .stat-number {
-    font-size: 3rem;
+    font-size: 1.8rem;
     font-weight: 800;
     font-family: 'Orbitron', monospace;
     background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
@@ -19,9 +42,8 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: none;
-    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3));
     line-height: 1;
-    margin-bottom: 0.25rem;
 }
 
 .stats-grid .stat-card:nth-child(2) .stat-number {
@@ -29,7 +51,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(67, 233, 123, 0.3));
+    filter: drop-shadow(0 0 8px rgba(67, 233, 123, 0.3));
 }
 
 .stats-grid .stat-card:nth-child(3) .stat-number {
@@ -37,7 +59,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(250, 112, 154, 0.3));
+    filter: drop-shadow(0 0 8px rgba(250, 112, 154, 0.3));
 }
 
 .stats-grid .stat-card:nth-child(4) .stat-number {
@@ -45,17 +67,18 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(79, 172, 254, 0.3));
+    filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.3));
 }
 
 .stats-grid .stat-label {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
 }
 
-/* Hover e Active states mais visíveis */
+/* Hover e Active states */
 .stats-grid .stat-card.clickable:hover .stat-number {
     transform: scale(1.05);
     transition: transform 0.3s ease;
@@ -63,7 +86,7 @@
 
 .stats-grid .stat-card.active {
     border-color: var(--neon-blue);
-    box-shadow: 0 0 25px rgba(0, 212, 255, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.05);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.35);
 }
 
 .stats-grid .stat-card.active::after {
@@ -72,8 +95,9 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
+    background-size: 200% 100%;
     animation: gradient-flow 2s linear infinite;
 }
 
@@ -82,20 +106,49 @@
     100% { background-position: 200% 50%; }
 }
 
-/* Responsividade dos números */
-@media (max-width: 768px) {
-    .stats-grid .stat-number {
-        font-size: 2.5rem;
+/* Responsividade dos cards de estatísticas */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 480px) {
-    .stats-grid .stat-number {
-        font-size: 2rem;
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
     }
 
     .stats-grid .stat-card {
-        min-height: 140px;
+        padding: 0.75rem;
+    }
+
+    .stats-grid .stat-icon {
+        width: 35px;
+        height: 35px;
+        min-width: 35px;
+        font-size: 1rem;
+    }
+
+    .stats-grid .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .stats-grid .stat-label {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-grid .stat-number {
+        font-size: 1.3rem;
+    }
+
+    .stats-grid .stat-icon {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        font-size: 0.9rem;
     }
 }
 
