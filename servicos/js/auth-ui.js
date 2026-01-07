@@ -195,6 +195,15 @@ export function checkAuthorization(user) {
         startServicesListener();
         loadClientsFromFirestore();
         migrateExistingClientsOnce();
+
+        // CORRIGIDO: Iniciar listener de filamentos imediatamente
+        // Isso garante que o estoque esteja sincronizado em real-time
+        loadAvailableFilaments().then(() => {
+            console.log('📦 Listener de estoque iniciado');
+        }).catch(err => {
+            console.error('❌ Erro ao iniciar listener de estoque:', err);
+        });
+
         // Nota: updateLastAccess é chamado diretamente no main.js
     } else {
         state.isAuthorized = false;

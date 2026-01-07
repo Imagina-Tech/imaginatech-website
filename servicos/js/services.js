@@ -44,20 +44,26 @@ export const generateOrderCode = () => Array(5).fill(0).map(() => 'ABCDEFGHIJKLM
 // ===========================
 
 let availableFilaments = [];
+let filamentsListener = null; // Listener para atualizações real-time
 
 /**
  * Encontra TODOS os filamentos que correspondem a material + cor
  * Retorna ordenado por quantidade de estoque (maior primeiro)
+ * CORRIGIDO: Comparação case-insensitive para material E cor
  * @param {string} material - Tipo do material
  * @param {string} color - Cor do material
  * @returns {Array} Array de filamentos correspondentes, ordenado por estoque
  */
 export function findAllMatchingFilaments(material, color) {
-    const matches = availableFilaments.filter(f =>
-        f.type === material &&
-        f.color.toLowerCase() === color.toLowerCase() &&
-        f.weight > 0 // Apenas com estoque
-    );
+    if (!material || !color) return [];
+
+    const matches = availableFilaments.filter(f => {
+        if (!f.type || !f.color) return false;
+        // CORRIGIDO: Ambas comparações agora são case-insensitive
+        return f.type.toLowerCase() === material.toLowerCase() &&
+               f.color.toLowerCase() === color.toLowerCase() &&
+               f.weight > 0; // Apenas com estoque
+    });
 
     // Ordenar por quantidade de estoque (maior primeiro)
     return matches.sort((a, b) => b.weight - a.weight);
@@ -75,21 +81,54 @@ export function findBestFilament(material, color) {
 }
 
 /**
- * Carrega filamentos disponíveis do estoque
+ * Carrega filamentos disponíveis do estoque com LISTENER REAL-TIME
+ * CORRIGIDO: Agora usa onSnapshot em vez de get() para manter sincronizado
  */
-export async function loadAvailableFilaments() {
-    if (!state.db) return;
+export function loadAvailableFilaments() {
+    if (!state.db) return Promise.resolve([]);
 
-    try {
-        const snapshot = await state.db.collection('filaments').get();
-        availableFilaments = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        return availableFilaments;
-    } catch (error) {
-        console.error('Erro ao carregar filamentos:', error);
-        return [];
+    // Remover listener anterior se existir
+    if (filamentsListener) {
+        filamentsListener();
+        filamentsListener = null;
+    }
+
+    return new Promise((resolve, reject) => {
+        filamentsListener = state.db.collection('filaments')
+            .onSnapshot(snapshot => {
+                availableFilaments = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                console.log(`📦 Estoque atualizado: ${availableFilaments.length} filamentos carregados`);
+
+                // Atualizar dropdowns se o modal estiver aberto
+                const materialSelect = document.getElementById('serviceMaterial');
+                if (materialSelect) {
+                    const currentMaterial = materialSelect.value;
+                    updateMaterialDropdown();
+                    if (currentMaterial) {
+                        materialSelect.value = currentMaterial;
+                        updateColorDropdown(currentMaterial);
+                    }
+                }
+
+                resolve(availableFilaments);
+            }, error => {
+                console.error('Erro ao carregar filamentos:', error);
+                reject(error);
+            });
+    });
+}
+
+/**
+ * Para o listener de filamentos (chamar ao desmontar/sair)
+ */
+export function stopFilamentsListener() {
+    if (filamentsListener) {
+        filamentsListener();
+        filamentsListener = null;
+        console.log('🛑 Listener de filamentos parado');
     }
 }
 
@@ -182,46 +221,57 @@ export function updateColorDropdown(selectedMaterial) {
 
 /**
  * Deduz ou devolve material do estoque
+ * CORRIGIDO: Busca case-insensitive e remoção de cache local (listener cuida disso)
  * @param {string} material - Tipo do material
  * @param {string} color - Cor do material
  * @param {number} weightInGrams - Peso em gramas (positivo = deduzir, negativo = devolver)
+ * @returns {Promise<boolean>} true se sucesso, false se falhou
  */
 export async function deductMaterialFromStock(material, color, weightInGrams) {
-    if (!state.db || !material || !color || weightInGrams === 0) return;
+    if (!state.db || !material || !color || weightInGrams === 0) return false;
 
     try {
         const isReturn = weightInGrams < 0;
         const absWeightInGrams = Math.abs(weightInGrams);
 
-        // Encontrar o MELHOR filamento (maior estoque) entre todas as marcas
-        // Se for devolução, usar o primeiro encontrado (order não importa)
+        // CORRIGIDO: Busca case-insensitive para TODOS os casos
         let filament;
         if (isReturn) {
-            // Para devolução, buscar qualquer filamento correspondente
+            // Para devolução, buscar qualquer filamento correspondente (case-insensitive)
             filament = availableFilaments.find(f =>
-                f.type === material &&
+                f.type && f.color &&
+                f.type.toLowerCase() === material.toLowerCase() &&
                 f.color.toLowerCase() === color.toLowerCase()
             );
         } else {
-            // Para dedução, buscar o que tem mais estoque
+            // Para dedução, buscar o que tem mais estoque (já é case-insensitive)
             filament = findBestFilament(material, color);
         }
 
         if (!filament) {
-            console.warn('Filamento não encontrado no estoque:', { material, color });
-            return;
+            console.warn('⚠️ Filamento não encontrado no estoque:', { material, color });
+            // Para devolução, se não encontrar, não é erro crítico
+            if (isReturn) {
+                console.warn('↩️ Devolução ignorada - filamento não existe mais no sistema');
+                return true; // Retorna true para não bloquear o fluxo
+            }
+            return false;
         }
 
         // Converter gramas para kg
         const weightInKg = absWeightInGrams / 1000;
 
-        // Usar Firestore Transaction para evitar condição de corrida
+        // Usar Firestore Transaction para evitar race condition
         const filamentRef = state.db.collection('filaments').doc(filament.id);
 
-        const newWeight = await state.db.runTransaction(async (transaction) => {
+        await state.db.runTransaction(async (transaction) => {
             const doc = await transaction.get(filamentRef);
 
             if (!doc.exists) {
+                if (isReturn) {
+                    console.warn('↩️ Devolução ignorada - documento não existe mais');
+                    return; // Não é erro para devolução
+                }
                 throw new Error('Filamento não encontrado no estoque');
             }
 
@@ -230,7 +280,7 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
             // Calcular novo peso (deduzir ou adicionar)
             const newWeight = isReturn
                 ? currentWeight + weightInKg  // Devolver ao estoque
-                : Math.max(0, currentWeight - weightInKg);  // Deduzir do estoque
+                : Math.max(0, currentWeight - weightInKg);  // Deduzir do estoque (nunca negativo)
 
             // Atualizar dentro da transaction
             transaction.update(filamentRef, {
@@ -238,21 +288,23 @@ export async function deductMaterialFromStock(material, color, weightInGrams) {
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            // Retornar novo peso para atualizar cache local
-            return newWeight;
+            console.log(`📊 Transação: ${currentWeight.toFixed(3)}kg → ${newWeight.toFixed(3)}kg`);
         });
 
-        const action = isReturn ? 'devolvidos' : 'deduzidos';
+        const action = isReturn ? 'devolvidos ao' : 'deduzidos do';
         const symbol = isReturn ? '+' : '-';
-        console.log(`✅ Estoque atualizado: ${material} ${color} - ${absWeightInGrams}g ${action}`);
-        showToast(`Estoque atualizado: ${symbol}${absWeightInGrams}g de ${material} ${color}`, 'info');
+        console.log(`✅ Estoque atualizado: ${symbol}${absWeightInGrams}g de ${material} ${color} ${action} estoque`);
+        showToast(`Estoque: ${symbol}${absWeightInGrams}g ${material} ${color}`, 'info');
 
-        // Atualizar cache local
-        filament.weight = newWeight;
+        // REMOVIDO: Cache local não precisa mais ser atualizado manualmente
+        // O listener onSnapshot cuida disso automaticamente
+
+        return true;
 
     } catch (error) {
-        console.error('Erro ao atualizar material do estoque:', error);
+        console.error('❌ Erro ao atualizar material do estoque:', error);
         showToast('⚠️ Erro ao atualizar estoque', 'warning');
+        return false;
     }
 }
 
