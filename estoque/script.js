@@ -728,9 +728,7 @@ function generateColorPrint() {
     printPreview.innerHTML = available.map(f => `
         <div class="print-item">
             <img src="${f.imageUrl || '/iconwpp.jpg'}" alt="${f.name}" class="print-item-image">
-            <div class="print-item-name">${f.type} - ${f.name}</div>
-            <div class="print-item-color">${f.color}</div>
-            <div class="print-item-weight">${(f.weight * 1000).toFixed(0)}g disponível</div>
+            <div class="print-item-name">${f.color}</div>
         </div>
     `).join('');
 
