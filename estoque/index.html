@@ -137,9 +137,9 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <!-- Cards de Estatísticas -->
+                <!-- Cards de Estatísticas (Clicáveis como filtros) -->
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card clickable active" id="statCardTotal" onclick="filterByStatCard('total')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
                             <i class="fas fa-boxes"></i>
                         </div>
@@ -148,7 +148,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <div class="stat-label">Total de Filamentos</div>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" id="statCardOk" onclick="filterByStatCard('ok')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
                             <i class="fas fa-check-circle"></i>
                         </div>
@@ -157,7 +157,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <div class="stat-label">Estoque OK (>800g)</div>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" id="statCardLow" onclick="filterByStatCard('low')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
                             <i class="fas fa-exclamation-triangle"></i>
                         </div>
@@ -166,7 +166,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             <div class="stat-label">Estoque Baixo (<600g)</div>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" id="statCardWeight" onclick="filterByStatCard('weight')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
                             <i class="fas fa-weight"></i>
                         </div>

@@ -214,19 +214,17 @@ function attachCardEventListeners() {
 }
 
 function createFilamentCard(filament) {
-    // CORRIGIDO: Garantir que weight seja número válido
+    // Garantir que weight seja número válido
     const weightInGrams = (parseFloat(filament.weight) || 0) * 1000;
     const stockClass = weightInGrams < 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
 
-    // CORRIGIDO: Tratar valores undefined/null
+    // Tratar valores undefined/null
     const filamentType = filament.type || '';
     const filamentColor = filament.color || '';
-    const displayName = `${filamentType} ${filamentColor}`.trim() || 'Sem nome';
     const brand = filament.brand || 'Não especificada';
 
     // Buscar serviços pendentes para este filamento
-    // CORRIGIDO: Verificar se filament tem type e color antes de comparar
     const servicesForThisFilament = (filamentType && filamentColor) ? pendingServices.filter(s =>
         s.material && s.color &&
         s.material.toLowerCase() === filamentType.toLowerCase() &&
@@ -261,12 +259,11 @@ function createFilamentCard(filament) {
                 </div>
             </div>` : ''}
 
-            <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${displayName}" class="filament-image">
+            <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image">
             <div class="filament-info">
                 <div class="filament-type">${filamentType || 'N/A'}</div>
-                <div class="filament-name">${displayName}</div>
-                <div class="filament-brand"><i class="fas fa-copyright"></i> ${brand}</div>
                 <div class="filament-color">${filamentColor || 'N/A'}</div>
+                <div class="filament-brand"><i class="fas fa-copyright"></i> ${brand}</div>
                 <div class="filament-weight ${weightInGrams < 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
             </div>
         </div>
@@ -312,6 +309,52 @@ function filterByStock(stockLevel) {
         event.target.classList.add('active');
     }
     renderFilaments();
+    updateStatCardsActiveState();
+}
+
+// Filtro via cards de estatísticas
+function filterByStatCard(statType) {
+    // Resetar filtro de tipo
+    currentFilter = 'todos';
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.filter-btn')?.classList.add('active'); // Primeiro botão "Todos"
+
+    // Resetar filtros de estoque nos botões
+    document.querySelectorAll('.filter-group:last-child .filter-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Aplicar filtro baseado no card clicado
+    switch (statType) {
+        case 'total':
+            currentStockFilter = null;
+            break;
+        case 'ok':
+            currentStockFilter = 'ok';
+            break;
+        case 'low':
+            currentStockFilter = 'low';
+            break;
+        case 'weight':
+            currentStockFilter = null;
+            break;
+        default:
+            currentStockFilter = null;
+    }
+
+    renderFilaments();
+    updateStatCardsActiveState();
+}
+
+// Atualizar estado visual dos cards de estatísticas
+function updateStatCardsActiveState() {
+    document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+
+    if (currentStockFilter === 'ok') {
+        document.getElementById('statCardOk')?.classList.add('active');
+    } else if (currentStockFilter === 'low') {
+        document.getElementById('statCardLow')?.classList.add('active');
+    } else {
+        document.getElementById('statCardTotal')?.classList.add('active');
+    }
 }
 
 // ===========================
@@ -1055,6 +1098,7 @@ window.editFilament = editFilament;
 window.deleteFilament = deleteFilament;
 window.filterByType = filterByType;
 window.filterByStock = filterByStock;
+window.filterByStatCard = filterByStatCard;
 window.previewImage = previewImage;
 window.openPrintModal = openPrintModal;
 window.closePrintModal = closePrintModal;
