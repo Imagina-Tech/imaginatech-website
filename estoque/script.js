@@ -49,6 +49,7 @@ let selectedFilamentId = null;
 document.addEventListener('DOMContentLoaded', () => {
     initializeFirebase();
     setupAuthListener();
+    setupDragAndDrop(); // Configurar drag & drop para upload de imagem
 });
 
 function initializeFirebase() {
@@ -388,6 +389,24 @@ function editFilament(id) {
 function previewImage(event) {
     const file = event.target.files[0];
     if (!file) return;
+    handleImageFile(file);
+}
+
+// ===========================
+// DRAG & DROP UPLOAD
+// ===========================
+
+/**
+ * Processa arquivo de imagem e exibe preview
+ * Reutilizado por click upload e drag & drop
+ */
+function handleImageFile(file) {
+    // Validar tipo de arquivo
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        showToast('Formato inválido! Use PNG, JPEG ou WebP.', 'error');
+        return;
+    }
 
     selectedImage = file;
     const reader = new FileReader();
@@ -397,6 +416,66 @@ function previewImage(event) {
         document.getElementById('uploadPlaceholder').style.display = 'none';
     };
     reader.readAsDataURL(file);
+
+    showToast('Imagem carregada com sucesso!', 'success');
+}
+
+/**
+ * Configura drag & drop na área de upload
+ */
+function setupDragAndDrop() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    if (!uploadArea) return;
+
+    // Prevenir comportamento padrão do browser em toda a página
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Feedback visual ao arrastar sobre a área
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlightUploadArea, false);
+    });
+
+    // Remover feedback ao sair ou soltar
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlightUploadArea, false);
+    });
+
+    // Handler do drop
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    console.log('🖼️ Drag & Drop configurado para upload de imagem');
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlightUploadArea(e) {
+    const uploadArea = document.getElementById('imageUploadArea');
+    if (uploadArea) {
+        uploadArea.classList.add('drag-over');
+    }
+}
+
+function unhighlightUploadArea(e) {
+    const uploadArea = document.getElementById('imageUploadArea');
+    if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+    }
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length > 0) {
+        const file = files[0];
+        handleImageFile(file);
+    }
 }
 
 async function saveFilament(event) {

@@ -374,6 +374,45 @@
     object-fit: contain;
 }
 
+/* ===========================
+   DRAG & DROP STATES
+   =========================== */
+.image-upload-area.drag-over {
+    border-color: var(--neon-green);
+    border-width: 3px;
+    background: rgba(0, 255, 136, 0.1);
+    transform: scale(1.02);
+    box-shadow:
+        0 0 20px rgba(0, 255, 136, 0.3),
+        inset 0 0 30px rgba(0, 255, 136, 0.05);
+}
+
+.image-upload-area.drag-over .upload-placeholder i {
+    color: var(--neon-green);
+    animation: dragPulse 0.6s ease-in-out infinite;
+    font-size: 2.5rem;
+}
+
+.image-upload-area.drag-over .upload-placeholder p {
+    color: var(--neon-green);
+    font-weight: 600;
+}
+
+.image-upload-area.drag-over .upload-placeholder small {
+    color: rgba(0, 255, 136, 0.7);
+}
+
+@keyframes dragPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
 /* Ajustes específicos para o modal de filamento */
 #filamentModal .modal-content {
     max-width: 700px;
