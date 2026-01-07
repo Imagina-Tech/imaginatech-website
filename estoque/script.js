@@ -170,10 +170,12 @@ function renderFilaments() {
     const emptyState = document.getElementById('emptyState');
 
     // Apply filters
+    // CORRIGIDO: Garantir que weight seja número antes de comparar
     let filtered = filaments.filter(f => {
+        const weight = parseFloat(f.weight) || 0;
         if (currentFilter !== 'todos' && f.type !== currentFilter) return false;
-        if (currentStockFilter === 'low' && f.weight >= 0.6) return false;
-        if (currentStockFilter === 'ok' && f.weight < 0.8) return false;
+        if (currentStockFilter === 'low' && weight >= 0.6) return false;
+        if (currentStockFilter === 'ok' && weight < 0.8) return false;
         return true;
     });
 
@@ -211,18 +213,24 @@ function attachCardEventListeners() {
 }
 
 function createFilamentCard(filament) {
-    const weightInGrams = filament.weight * 1000;
+    // CORRIGIDO: Garantir que weight seja número válido
+    const weightInGrams = (parseFloat(filament.weight) || 0) * 1000;
     const stockClass = weightInGrams < 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
-    const displayName = `${filament.type} ${filament.color}`;
+
+    // CORRIGIDO: Tratar valores undefined/null
+    const filamentType = filament.type || '';
+    const filamentColor = filament.color || '';
+    const displayName = `${filamentType} ${filamentColor}`.trim() || 'Sem nome';
     const brand = filament.brand || 'Não especificada';
 
     // Buscar serviços pendentes para este filamento
-    const servicesForThisFilament = pendingServices.filter(s =>
+    // CORRIGIDO: Verificar se filament tem type e color antes de comparar
+    const servicesForThisFilament = (filamentType && filamentColor) ? pendingServices.filter(s =>
         s.material && s.color &&
-        s.material.toLowerCase() === filament.type.toLowerCase() &&
-        s.color.toLowerCase() === filament.color.toLowerCase()
-    );
+        s.material.toLowerCase() === filamentType.toLowerCase() &&
+        s.color.toLowerCase() === filamentColor.toLowerCase()
+    ) : [];
 
     // Calcular quantidade total necessária
     const totalNeeded = servicesForThisFilament.reduce((sum, s) => sum + (s.weight || 0), 0);
@@ -254,10 +262,10 @@ function createFilamentCard(filament) {
 
             <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${displayName}" class="filament-image">
             <div class="filament-info">
-                <div class="filament-type">${filament.type}</div>
+                <div class="filament-type">${filamentType || 'N/A'}</div>
                 <div class="filament-name">${displayName}</div>
                 <div class="filament-brand"><i class="fas fa-copyright"></i> ${brand}</div>
-                <div class="filament-color">${filament.color}</div>
+                <div class="filament-color">${filamentColor || 'N/A'}</div>
                 <div class="filament-weight ${weightInGrams < 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
             </div>
         </div>
@@ -269,9 +277,13 @@ function createFilamentCard(filament) {
 // ===========================
 function updateStats() {
     const total = filaments.length;
-    const stockOk = filaments.filter(f => f.weight > 0.8).length;
-    const stockLow = filaments.filter(f => f.weight < 0.6 && f.weight > 0).length;
-    const totalWeight = filaments.reduce((sum, f) => sum + (f.weight || 0), 0);
+    // CORRIGIDO: Garantir que weight seja número antes de comparar
+    const stockOk = filaments.filter(f => (parseFloat(f.weight) || 0) > 0.8).length;
+    const stockLow = filaments.filter(f => {
+        const w = parseFloat(f.weight) || 0;
+        return w < 0.6 && w > 0;
+    }).length;
+    const totalWeight = filaments.reduce((sum, f) => sum + (parseFloat(f.weight) || 0), 0);
 
     document.getElementById('totalFilaments').textContent = total;
     document.getElementById('stockOk').textContent = stockOk;
