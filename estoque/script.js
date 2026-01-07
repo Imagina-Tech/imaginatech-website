@@ -422,28 +422,26 @@ function handleImageFile(file) {
 
 /**
  * Configura drag & drop na área de upload
+ * Usa contador para lidar com elementos aninhados
  */
+let dragCounter = 0;
+
 function setupDragAndDrop() {
     const uploadArea = document.getElementById('imageUploadArea');
-    if (!uploadArea) return;
+    if (!uploadArea) {
+        console.log('⚠️ Elemento imageUploadArea não encontrado');
+        return;
+    }
 
     // Prevenir comportamento padrão do browser em toda a página
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
+    // Isso evita que o browser abra a imagem em nova aba
+    document.addEventListener('dragover', preventDefaults, false);
+    document.addEventListener('drop', preventDefaults, false);
 
-    // Feedback visual ao arrastar sobre a área
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, highlightUploadArea, false);
-    });
-
-    // Remover feedback ao sair ou soltar
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, unhighlightUploadArea, false);
-    });
-
-    // Handler do drop
+    // Eventos na área de upload
+    uploadArea.addEventListener('dragenter', handleDragEnter, false);
+    uploadArea.addEventListener('dragover', handleDragOver, false);
+    uploadArea.addEventListener('dragleave', handleDragLeave, false);
     uploadArea.addEventListener('drop', handleDrop, false);
 
     console.log('🖼️ Drag & Drop configurado para upload de imagem');
@@ -454,21 +452,53 @@ function preventDefaults(e) {
     e.stopPropagation();
 }
 
-function highlightUploadArea(e) {
+function handleDragEnter(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter++;
+
     const uploadArea = document.getElementById('imageUploadArea');
     if (uploadArea) {
         uploadArea.classList.add('drag-over');
     }
 }
 
-function unhighlightUploadArea(e) {
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Manter o highlight durante o drag
     const uploadArea = document.getElementById('imageUploadArea');
-    if (uploadArea) {
-        uploadArea.classList.remove('drag-over');
+    if (uploadArea && !uploadArea.classList.contains('drag-over')) {
+        uploadArea.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter--;
+
+    // Só remove o highlight quando realmente sair da área
+    // (não quando passar sobre elementos filhos)
+    if (dragCounter === 0) {
+        const uploadArea = document.getElementById('imageUploadArea');
+        if (uploadArea) {
+            uploadArea.classList.remove('drag-over');
+        }
     }
 }
 
 function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter = 0;
+
+    const uploadArea = document.getElementById('imageUploadArea');
+    if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+    }
+
     const dt = e.dataTransfer;
     const files = dt.files;
 
