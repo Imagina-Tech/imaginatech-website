@@ -326,6 +326,12 @@ function openAddFilamentModal() {
     document.getElementById('filamentForm').reset();
     document.getElementById('filamentId').value = '';
 
+    // Sincronizar CustomSelects após reset (para mostrar "Selecione..." novamente)
+    const typeSelect = document.getElementById('filamentType');
+    const brandSelect = document.getElementById('filamentBrand');
+    typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
     // Resetar preview de imagem
     document.getElementById('imagePreview').style.display = 'none';
     document.getElementById('imagePreview').src = '';
@@ -361,12 +367,17 @@ function editFilament(id) {
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Filamento';
     document.getElementById('filamentId').value = filament.id;
 
-    // Preencher selects nativos primeiro
+    // Preencher selects nativos e sincronizar CustomSelects
     const typeSelect = document.getElementById('filamentType');
     const brandSelect = document.getElementById('filamentBrand');
 
     typeSelect.value = filament.type || '';
     brandSelect.value = filament.brand || '';
+
+    // Disparar evento change para sincronizar os CustomSelects visuais
+    // Isso notifica os wrappers CustomSelect para atualizarem sua exibição
+    typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Preencher campos de texto
     document.getElementById('filamentColor').value = filament.color || '';
@@ -612,11 +623,17 @@ function closeFilamentModal() {
     selectedImage = null;
     editingFilamentId = null;
 
-    // Resetar formulário
+    // Resetar formulário após animação de fechamento
     setTimeout(() => {
         document.getElementById('filamentForm').reset();
         document.getElementById('imagePreview').style.display = 'none';
         document.getElementById('uploadPlaceholder').style.display = 'flex';
+
+        // Sincronizar CustomSelects após reset
+        const typeSelect = document.getElementById('filamentType');
+        const brandSelect = document.getElementById('filamentBrand');
+        if (typeSelect) typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        if (brandSelect) brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }, 300); // Aguardar animação de fechamento
 }
 
