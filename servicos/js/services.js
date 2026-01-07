@@ -1011,9 +1011,15 @@ export async function deleteService(serviceId) {
         }
 
         // Devolver material ao estoque antes de excluir (se foi deduzido)
-        if (!service.needsMaterialPurchase && service.material && service.color && service.weight) {
-            console.log(`🔄 Devolvendo ${service.weight}g de ${service.material} ${service.color} ao estoque...`);
-            await deductMaterialFromStock(service.material, service.color, -service.weight);
+        // CORRIGIDO: Verificar se needsMaterialPurchase é EXPLICITAMENTE false
+        // Serviços antigos sem este campo (undefined) não devem tentar devolver
+        const materialWasDeducted = service.needsMaterialPurchase === false;
+        const hasMaterial = service.material && service.color && (parseFloat(service.weight) || 0) > 0;
+
+        if (materialWasDeducted && hasMaterial) {
+            const weightToReturn = parseFloat(service.weight) || 0;
+            console.log(`🔄 Devolvendo ${weightToReturn}g de ${service.material} ${service.color} ao estoque...`);
+            await deductMaterialFromStock(service.material, service.color, -weightToReturn);
         }
 
         await state.db.collection('services').doc(serviceId).delete();
