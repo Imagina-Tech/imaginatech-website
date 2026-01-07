@@ -746,15 +746,25 @@ async function downloadPrint() {
     const printArea = document.getElementById('printPreview');
 
     try {
+        showLoading('Convertendo imagens...');
+
+        // Converter todas as imagens para base64 antes de gerar o canvas
+        // Isso resolve o problema de CORS com imagens do Firebase Storage
+        const images = printArea.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => convertImageToBase64(img)));
+
         showLoading('Gerando imagem...');
         const canvas = await html2canvas(printArea, {
             backgroundColor: '#ffffff',
-            scale: 2
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
         });
 
         const link = document.createElement('a');
         link.download = `cores-disponiveis-${Date.now()}.png`;
-        link.href = canvas.toDataURL();
+        link.href = canvas.toDataURL('image/png');
         link.click();
 
         showToast('Imagem baixada com sucesso!', 'success');
@@ -764,6 +774,51 @@ async function downloadPrint() {
     } finally {
         hideLoading();
     }
+}
+
+/**
+ * Converte uma imagem externa para base64 para evitar problemas de CORS
+ */
+async function convertImageToBase64(imgElement) {
+    return new Promise((resolve) => {
+        // Se já é base64 ou data URL, não precisa converter
+        if (imgElement.src.startsWith('data:')) {
+            resolve();
+            return;
+        }
+
+        // Criar imagem temporária para carregar com CORS
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                // Converter para base64 e atualizar o src original
+                const base64 = canvas.toDataURL('image/png');
+                imgElement.src = base64;
+                resolve();
+            } catch (e) {
+                console.warn('Não foi possível converter imagem:', e);
+                resolve(); // Continua mesmo se falhar
+            }
+        };
+
+        img.onerror = () => {
+            console.warn('Erro ao carregar imagem:', imgElement.src);
+            resolve(); // Continua mesmo se falhar
+        };
+
+        // Adicionar timestamp para evitar cache
+        const separator = imgElement.src.includes('?') ? '&' : '?';
+        img.src = imgElement.src + separator + 't=' + Date.now();
+    });
 }
 
 // ===========================
