@@ -113,8 +113,23 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             </div>
         </header>
 
+        <!-- Tabs de Navegação -->
+        <div class="section-tabs">
+            <button class="tab-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
+                <i class="fas fa-scroll"></i>
+                <span>Filamentos</span>
+            </button>
+            <button class="tab-btn" data-section="inventario" onclick="switchSection('inventario')">
+                <i class="fas fa-boxes"></i>
+                <span>Inventário</span>
+            </button>
+        </div>
+
         <main class="main-content">
             <div class="container">
+                <!-- ========== SEÇÃO: FILAMENTOS ========== -->
+                <section id="filamentos-section" class="inventory-section active">
+
                 <!-- Header com Ações -->
                 <div class="action-bar">
                     <h2 class="page-title">
@@ -216,6 +231,60 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         Adicionar Filamento
                     </button>
                 </div>
+
+                </section>
+                <!-- ========== FIM SEÇÃO: FILAMENTOS ========== -->
+
+                <!-- ========== SEÇÃO: INVENTÁRIO ========== -->
+                <section id="inventario-section" class="inventory-section">
+
+                    <!-- Header com Ações -->
+                    <div class="action-bar">
+                        <h2 class="page-title">
+                            <i class="fas fa-boxes"></i>
+                            Inventário da Empresa
+                        </h2>
+                        <div class="action-buttons">
+                            <button class="btn-primary" onclick="openAddEquipmentModal()">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Equipamento
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card de Total Investido -->
+                    <div class="total-invested-card">
+                        <div class="invested-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="invested-info">
+                            <span class="invested-label">Total Investido</span>
+                            <span class="invested-value" id="totalInvested">R$ 0,00</span>
+                        </div>
+                        <div class="invested-count">
+                            <span id="equipmentCount">0</span> equipamentos
+                        </div>
+                    </div>
+
+                    <!-- Grid de Equipamentos -->
+                    <div class="equipment-grid" id="equipmentGrid">
+                        <!-- Cards dinâmicos aqui -->
+                    </div>
+
+                    <!-- Estado Vazio -->
+                    <div class="empty-state" id="equipmentEmptyState">
+                        <div class="empty-icon"><i class="fas fa-tools"></i></div>
+                        <h3>Nenhum equipamento cadastrado</h3>
+                        <p>Adicione seu primeiro equipamento ao inventário</p>
+                        <button class="btn-primary" onclick="openAddEquipmentModal()">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Equipamento
+                        </button>
+                    </div>
+
+                </section>
+                <!-- ========== FIM SEÇÃO: INVENTÁRIO ========== -->
+
             </div>
         </main>
     </div>
@@ -347,6 +416,98 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     <button class="action-option-btn delete-option" onclick="handleDeleteFilament()">
                         <i class="fas fa-trash"></i>
                         <span>Excluir Filamento</span>
+                        <small>Remover permanentemente</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Adicionar/Editar Equipamento -->
+    <div class="modal" id="equipmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="equipmentModalTitle"><i class="fas fa-plus"></i> Adicionar Equipamento</h2>
+                <button class="modal-close" onclick="closeEquipmentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="equipmentForm" onsubmit="saveEquipment(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="equipmentId">
+
+                    <!-- Upload de Imagem -->
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Foto do Equipamento</label>
+                        <div class="image-upload-area" id="equipmentImageUpload" onclick="document.getElementById('equipmentImage').click()">
+                            <div class="upload-placeholder" id="equipmentUploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Arraste uma imagem ou clique aqui</p>
+                                <small>PNG, JPEG ou WebP</small>
+                            </div>
+                            <img id="equipmentImagePreview" class="image-preview-img" style="display: none;" alt="Preview">
+                        </div>
+                        <input type="file" id="equipmentImage" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" onchange="previewEquipmentImage(event)">
+                    </div>
+
+                    <!-- Nome -->
+                    <div class="form-group">
+                        <label for="equipmentName"><i class="fas fa-tag"></i> Nome do Equipamento *</label>
+                        <input type="text" id="equipmentName" class="form-input" required placeholder="Ex: Impressora 3D K1">
+                    </div>
+
+                    <!-- Marca -->
+                    <div class="form-group">
+                        <label for="equipmentBrand"><i class="fas fa-copyright"></i> Marca *</label>
+                        <input type="text" id="equipmentBrand" class="form-input" required placeholder="Ex: Creality">
+                    </div>
+
+                    <!-- Preço -->
+                    <div class="form-group">
+                        <label for="equipmentPrice"><i class="fas fa-dollar-sign"></i> Preço (R$) *</label>
+                        <input type="number" id="equipmentPrice" class="form-input" required min="0" step="0.01" placeholder="0,00">
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="form-group">
+                        <label for="equipmentNotes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <textarea id="equipmentNotes" class="form-textarea" rows="2" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeEquipmentModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar Equipamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Ações do Equipamento -->
+    <div class="modal" id="equipmentActionsModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> O que deseja fazer?</h2>
+                <button class="modal-close" onclick="closeEquipmentActionsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-info-summary" id="equipmentInfoSummary">
+                    <!-- Informações do equipamento serão inseridas aqui -->
+                </div>
+                <div class="action-options">
+                    <button class="action-option-btn" onclick="handleEditEquipment()">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar Equipamento</span>
+                        <small>Modificar informações</small>
+                    </button>
+                    <button class="action-option-btn delete-option" onclick="handleDeleteEquipment()">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir Equipamento</span>
                         <small>Remover permanentemente</small>
                     </button>
                 </div>

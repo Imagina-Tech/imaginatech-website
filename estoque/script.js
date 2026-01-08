@@ -43,6 +43,12 @@ let selectedImage = null;
 let editingFilamentId = null;
 let selectedFilamentId = null;
 
+// Equipamentos (Inventário)
+let equipment = [];
+let selectedEquipmentId = null;
+let editingEquipmentId = null;
+let selectedEquipmentImage = null;
+
 // ===========================
 // INITIALIZATION
 // ===========================
@@ -106,6 +112,7 @@ function showDashboard(user) {
     document.getElementById('userPhoto').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`;
     updateConnectionStatus(true);
     loadPendingServices(); // Carregar serviços aguardando material
+    loadEquipment(); // Carregar equipamentos do inventário
 }
 
 function showLoginScreen() {
@@ -1078,6 +1085,357 @@ function handleDeleteFilament() {
 }
 
 // ===========================
+// EQUIPMENT (INVENTÁRIO) FUNCTIONS
+// ===========================
+
+// Alternar entre seções (Filamentos / Inventário)
+function switchSection(section) {
+    // Atualizar tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === section);
+    });
+
+    // Atualizar seções
+    document.querySelectorAll('.inventory-section').forEach(sec => {
+        sec.classList.remove('active');
+    });
+    document.getElementById(`${section}-section`).classList.add('active');
+}
+
+// Carregar equipamentos do Firebase
+function loadEquipment() {
+    db.collection('equipment')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            equipment = [];
+            snapshot.forEach(doc => {
+                equipment.push({ id: doc.id, ...doc.data() });
+            });
+            renderEquipment();
+            updateEquipmentStats();
+        }, error => {
+            console.error('Error loading equipment:', error);
+        });
+}
+
+// Renderizar grid de equipamentos
+function renderEquipment() {
+    const grid = document.getElementById('equipmentGrid');
+    const emptyState = document.getElementById('equipmentEmptyState');
+
+    if (!grid || !emptyState) return;
+
+    if (equipment.length === 0) {
+        grid.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    grid.innerHTML = equipment.map(item => createEquipmentCard(item)).join('');
+}
+
+// Criar HTML do card de equipamento
+function createEquipmentCard(item) {
+    const imageHtml = item.imageUrl
+        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${item.name}">`
+        : `<i class="fas fa-tools equipment-image-placeholder"></i>`;
+
+    const notesHtml = item.notes
+        ? `<div class="equipment-notes">${item.notes}</div>`
+        : '';
+
+    return `
+        <div class="equipment-card" onclick="openEquipmentActionsModal('${item.id}')">
+            <div class="equipment-image-container">
+                ${imageHtml}
+            </div>
+            <div class="equipment-info">
+                <div class="equipment-name">${item.name}</div>
+                <div class="equipment-brand"><i class="fas fa-copyright"></i> ${item.brand}</div>
+                <div class="equipment-price">R$ ${formatMoney(item.price)}</div>
+                ${notesHtml}
+            </div>
+        </div>
+    `;
+}
+
+// Atualizar estatísticas de equipamentos (Total Investido)
+function updateEquipmentStats() {
+    const total = equipment.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    const countEl = document.getElementById('equipmentCount');
+    const totalEl = document.getElementById('totalInvested');
+
+    if (countEl) countEl.textContent = equipment.length;
+    if (totalEl) totalEl.textContent = `R$ ${formatMoney(total)}`;
+}
+
+// Formatar valor monetário
+function formatMoney(value) {
+    return parseFloat(value || 0).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// Abrir modal para adicionar equipamento
+function openAddEquipmentModal() {
+    editingEquipmentId = null;
+    selectedEquipmentImage = null;
+
+    document.getElementById('equipmentModalTitle').textContent = 'Adicionar Equipamento';
+    document.getElementById('equipmentId').value = '';
+    document.getElementById('equipmentName').value = '';
+    document.getElementById('equipmentBrand').value = '';
+    document.getElementById('equipmentPrice').value = '';
+    document.getElementById('equipmentNotes').value = '';
+
+    // Resetar área de upload
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    uploadArea.innerHTML = `
+        <div class="upload-placeholder">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Clique ou arraste a imagem</p>
+            <small>JPG, PNG ou WEBP (max 5MB)</small>
+        </div>
+    `;
+
+    document.getElementById('equipmentModal').classList.add('open');
+}
+
+// Abrir modal para editar equipamento
+function openEditEquipmentModal(id) {
+    const item = equipment.find(e => e.id === id);
+    if (!item) return;
+
+    editingEquipmentId = id;
+    selectedEquipmentImage = null;
+
+    document.getElementById('equipmentModalTitle').textContent = 'Editar Equipamento';
+    document.getElementById('equipmentId').value = id;
+    document.getElementById('equipmentName').value = item.name || '';
+    document.getElementById('equipmentBrand').value = item.brand || '';
+    document.getElementById('equipmentPrice').value = item.price || '';
+    document.getElementById('equipmentNotes').value = item.notes || '';
+
+    // Mostrar imagem existente ou placeholder
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    if (item.imageUrl) {
+        uploadArea.innerHTML = `<img src="${item.imageUrl}" class="image-preview-img" alt="Preview">`;
+    } else {
+        uploadArea.innerHTML = `
+            <div class="upload-placeholder">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Clique ou arraste a imagem</p>
+                <small>JPG, PNG ou WEBP (max 5MB)</small>
+            </div>
+        `;
+    }
+
+    document.getElementById('equipmentModal').classList.add('open');
+}
+
+// Fechar modal de equipamento
+function closeEquipmentModal() {
+    document.getElementById('equipmentModal').classList.remove('open');
+    editingEquipmentId = null;
+    selectedEquipmentImage = null;
+}
+
+// Salvar equipamento (criar ou atualizar)
+async function saveEquipment(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('equipmentName').value.trim();
+    const brand = document.getElementById('equipmentBrand').value.trim();
+    const price = parseFloat(document.getElementById('equipmentPrice').value) || 0;
+    const notes = document.getElementById('equipmentNotes').value.trim();
+
+    if (!name || !brand) {
+        showToast('Preencha nome e marca do equipamento', 'error');
+        return;
+    }
+
+    try {
+        showLoading(editingEquipmentId ? 'Atualizando equipamento...' : 'Salvando equipamento...');
+
+        let imageUrl = null;
+
+        // Se tem nova imagem selecionada, fazer upload
+        if (selectedEquipmentImage) {
+            const timestamp = Date.now();
+            const fileName = `equipment_${timestamp}_${selectedEquipmentImage.name}`;
+            const storageRef = storage.ref().child(`equipment/${fileName}`);
+            await storageRef.put(selectedEquipmentImage);
+            imageUrl = await storageRef.getDownloadURL();
+        }
+
+        const equipmentData = {
+            name,
+            brand,
+            price,
+            notes,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (imageUrl) {
+            equipmentData.imageUrl = imageUrl;
+        }
+
+        if (editingEquipmentId) {
+            // Atualizar existente
+            await db.collection('equipment').doc(editingEquipmentId).update(equipmentData);
+            showToast('Equipamento atualizado com sucesso!', 'success');
+        } else {
+            // Criar novo
+            equipmentData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('equipment').add(equipmentData);
+            showToast('Equipamento adicionado com sucesso!', 'success');
+        }
+
+        closeEquipmentModal();
+    } catch (error) {
+        console.error('Error saving equipment:', error);
+        showToast('Erro ao salvar equipamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Excluir equipamento
+async function deleteEquipment(id) {
+    if (!confirm('Tem certeza que deseja excluir este equipamento?')) return;
+
+    try {
+        showLoading('Excluindo equipamento...');
+        await db.collection('equipment').doc(id).delete();
+        showToast('Equipamento excluído com sucesso!', 'success');
+        closeEquipmentActionsModal();
+    } catch (error) {
+        console.error('Error deleting equipment:', error);
+        showToast('Erro ao excluir equipamento', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Abrir modal de ações do equipamento
+function openEquipmentActionsModal(id) {
+    selectedEquipmentId = id;
+    const item = equipment.find(e => e.id === id);
+    if (!item) return;
+
+    // Atualizar resumo do card
+    const summaryEl = document.querySelector('#equipmentActionsModal .card-info-summary');
+    if (summaryEl) {
+        const imageHtml = item.imageUrl
+            ? `<img src="${item.imageUrl}" class="summary-image" alt="${item.name}">`
+            : `<div class="summary-image" style="display: flex; align-items: center; justify-content: center;"><i class="fas fa-tools" style="font-size: 1.5rem; color: var(--text-secondary);"></i></div>`;
+
+        summaryEl.innerHTML = `
+            ${imageHtml}
+            <div class="summary-info">
+                <h3>${item.name}</h3>
+                <p><i class="fas fa-copyright"></i> ${item.brand}</p>
+                <p style="color: var(--neon-green); font-family: 'Orbitron', monospace; font-weight: bold;">R$ ${formatMoney(item.price)}</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('equipmentActionsModal').classList.add('open');
+}
+
+// Fechar modal de ações do equipamento
+function closeEquipmentActionsModal() {
+    document.getElementById('equipmentActionsModal').classList.remove('open');
+    selectedEquipmentId = null;
+}
+
+// Handlers para ações do modal de equipamento
+function handleEditEquipment() {
+    if (!selectedEquipmentId) return;
+    const id = selectedEquipmentId;
+    closeEquipmentActionsModal();
+    openEditEquipmentModal(id);
+}
+
+function handleDeleteEquipment() {
+    if (!selectedEquipmentId) return;
+    const id = selectedEquipmentId;
+    closeEquipmentActionsModal();
+    deleteEquipment(id);
+}
+
+// Preview de imagem do equipamento
+function previewEquipmentImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Imagem muito grande (máx 5MB)', 'error');
+        return;
+    }
+
+    selectedEquipmentImage = file;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const uploadArea = document.getElementById('equipmentImageUpload');
+        uploadArea.innerHTML = `<img src="${e.target.result}" class="image-preview-img" alt="Preview">`;
+    };
+    reader.readAsDataURL(file);
+}
+
+// Configurar upload de imagem do equipamento
+function setupEquipmentImageUpload() {
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    if (!uploadArea) return;
+
+    uploadArea.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = previewEquipmentImage;
+        input.click();
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            previewEquipmentImage({ target: { files: [file] } });
+        }
+    });
+}
+
+// Inicializar upload ao abrir modal
+document.addEventListener('DOMContentLoaded', () => {
+    // Observer para configurar upload quando modal abrir
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.target.id === 'equipmentModal' && mutation.target.classList.contains('open')) {
+                setupEquipmentImageUpload();
+            }
+        });
+    });
+
+    const equipmentModal = document.getElementById('equipmentModal');
+    if (equipmentModal) {
+        observer.observe(equipmentModal, { attributes: true, attributeFilter: ['class'] });
+    }
+});
+
+// ===========================
 // GLOBAL FUNCTIONS FOR ONCLICK
 // ===========================
 window.signInWithGoogle = signInWithGoogle;
@@ -1097,3 +1455,15 @@ window.handleRestock1kg = handleRestock1kg;
 window.handleAddFractional = handleAddFractional;
 window.handleEditFilament = handleEditFilament;
 window.handleDeleteFilament = handleDeleteFilament;
+
+// Equipment (Inventário)
+window.switchSection = switchSection;
+window.openAddEquipmentModal = openAddEquipmentModal;
+window.openEditEquipmentModal = openEditEquipmentModal;
+window.closeEquipmentModal = closeEquipmentModal;
+window.saveEquipment = saveEquipment;
+window.deleteEquipment = deleteEquipment;
+window.openEquipmentActionsModal = openEquipmentActionsModal;
+window.closeEquipmentActionsModal = closeEquipmentActionsModal;
+window.handleEditEquipment = handleEditEquipment;
+window.handleDeleteEquipment = handleDeleteEquipment;
