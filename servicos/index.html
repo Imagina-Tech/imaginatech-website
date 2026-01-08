@@ -634,6 +634,37 @@
         </div>
     </div>
 
+    <!-- MODAL: Bypass de Foto Obrigatória -->
+    <div class="modal" id="bypassPasswordModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2><i class="fas fa-lock"></i> Autorização Necessária</h2>
+                <button class="modal-close" onclick="closeBypassModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    Para prosseguir sem anexar foto, insira a senha de autorização:
+                </p>
+                <div class="form-group">
+                    <label for="bypassPasswordInput">Senha de Bypass</label>
+                    <input type="password" id="bypassPasswordInput" class="form-input"
+                           placeholder="Digite a senha..."
+                           onkeypress="if(event.key==='Enter') confirmBypassPassword()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeBypassModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-confirm" onclick="confirmBypassPassword()">
+                    <i class="fas fa-unlock"></i> Autorizar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Visualizar Imagens -->
     <div class="modal" id="imageViewerModal">
         <div class="modal-content modal-image">

@@ -1419,7 +1419,8 @@ export async function confirmStatusChange() {
     
     if (requiresPackagedPhoto) {
         if (state.pendingPackagedPhotos.length === 0) {
-            return showToast('❌ Selecione pelo menos uma foto do produto embalado', 'error');
+            window.showBypassPasswordModal();
+            return;
         }
         
         const trackingInput = document.getElementById('statusTrackingCodeInput');
@@ -1500,7 +1501,8 @@ export async function confirmStatusChange() {
     
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
-            return showToast('Selecione pelo menos uma foto antes de confirmar.', 'error');
+            window.showBypassPasswordModal();
+            return;
         }
 
         try {
@@ -1651,6 +1653,76 @@ export async function confirmStatusChange() {
         showToast('Erro ao atualizar status', 'error');
     }
     window.closeStatusModal();
+}
+
+// ===========================
+// BYPASS DE FOTO OBRIGATÓRIA
+// ===========================
+export async function proceedWithStatusChangeWithoutPhoto() {
+    if (!state.pendingStatusUpdate || !state.db) return;
+
+    const { serviceId, newStatus, service, requiresInstagramPhoto, requiresPackagedPhoto } =
+        state.pendingStatusUpdate;
+    const sendWhatsapp = document.getElementById('sendWhatsappNotification')?.checked || false;
+    const sendEmail = document.getElementById('sendEmailNotification')?.checked || false;
+
+    try {
+        const isModelagem = service.serviceType === 'modelagem';
+        const updates = {
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+            updatedBy: state.currentUser.email,
+            lastStatusChange: new Date().toISOString(),
+            photoBypassUsed: true // Flag para auditoria
+        };
+
+        // Adiciona timestamps específicos por status
+        if (newStatus === 'concluido' || newStatus === 'modelagem_concluida') {
+            updates.completedAt = new Date().toISOString();
+        } else if (newStatus === 'retirada') {
+            updates.readyAt = new Date().toISOString();
+
+            // Se for Sedex, verificar código de rastreio
+            if (service.deliveryMethod === 'sedex') {
+                const trackingInput = document.getElementById('statusTrackingCodeInput');
+                if (trackingInput?.value.trim()) {
+                    updates.trackingCode = trackingInput.value.trim().toUpperCase();
+                    updates.postedAt = new Date().toISOString();
+                }
+            }
+        } else if (newStatus === 'entregue') {
+            updates.deliveredAt = new Date().toISOString();
+        }
+
+        await state.db.collection('services').doc(serviceId).update(updates);
+
+        showToast(`✅ Status alterado para ${getStatusLabel(newStatus)} (bypass autorizado)`, 'success');
+
+        // Enviar notificações se selecionado
+        if (sendWhatsapp && service.clientPhone) {
+            const trackingLink = `\n\nAcompanhe em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
+            const messages = isModelagem ? {
+                'modelagem_concluida': `Olá, ${service.client}!\n\n✅ Modelagem concluída!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nSeu modelo 3D está pronto!${trackingLink}`
+            } : {
+                'concluido': `Olá, ${service.client}!\n\n✅ Concluído!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'retirada': service.deliveryMethod === 'retirada' ?
+                    `Olá, ${service.client}!\n\n🎉 Pronto para retirada!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nVenha buscar seu pedido!${trackingLink}` :
+                    `Olá, ${service.client}!\n\n📦 Postado!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}${trackingLink}`,
+                'entregue': `Olá, ${service.client}!\n\n✅ Entregue com sucesso!\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n\nObrigado! 😊`
+            };
+            messages[newStatus] && sendWhatsAppMessage(service.clientPhone, messages[newStatus]);
+        }
+
+        if (sendEmail && service.clientEmail) {
+            sendEmailNotification(service);
+        }
+
+        window.closeStatusModal();
+
+    } catch (error) {
+        console.error('Erro ao alterar status com bypass:', error);
+        showToast('❌ Erro ao alterar status', 'error');
+    }
 }
 
 // ===========================

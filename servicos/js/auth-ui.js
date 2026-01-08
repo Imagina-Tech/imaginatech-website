@@ -2316,6 +2316,53 @@ window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
 };
 
 // ===========================
+// BYPASS DE FOTO OBRIGATÓRIA
+// ===========================
+const BYPASS_PASSWORD = 'Trin2234@';
+
+export function showBypassPasswordModal() {
+    const modal = document.getElementById('bypassPasswordModal');
+    const input = document.getElementById('bypassPasswordInput');
+
+    if (modal) {
+        modal.classList.add('active');
+        if (input) {
+            input.value = '';
+            setTimeout(() => input.focus(), 100);
+        }
+    }
+}
+
+export function closeBypassModal() {
+    const modal = document.getElementById('bypassPasswordModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+export async function confirmBypassPassword() {
+    const input = document.getElementById('bypassPasswordInput');
+    const password = input?.value || '';
+
+    if (password === BYPASS_PASSWORD) {
+        closeBypassModal();
+        // Importar e chamar função de bypass
+        const { proceedWithStatusChangeWithoutPhoto } = await import('./services.js');
+        await proceedWithStatusChangeWithoutPhoto();
+    } else {
+        showToast('❌ Senha incorreta', 'error');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    }
+}
+
+window.showBypassPasswordModal = showBypassPasswordModal;
+window.closeBypassModal = closeBypassModal;
+window.confirmBypassPassword = confirmBypassPassword;
+
+// ===========================
 // CLIENTS MODAL
 // ===========================
 export async function openClientsModal() {
