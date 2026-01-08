@@ -40,3 +40,8 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+# Firebase rules (gerenciado localmente)
+firestore.rules
+storage.rules
+.firebaserc
