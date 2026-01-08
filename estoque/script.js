@@ -1180,6 +1180,7 @@ function formatMoney(value) {
 
 // Abrir modal para adicionar equipamento
 function openAddEquipmentModal() {
+    alert('Função chamada!'); // DEBUG - remover depois
     try {
         console.log('openAddEquipmentModal chamado');
 
