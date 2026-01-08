@@ -503,6 +503,22 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         </div>
                     </div>
 
+                    <!-- Status do Equipamento -->
+                    <div class="form-group">
+                        <label><i class="fas fa-heartbeat"></i> Status do Equipamento *</label>
+                        <div class="status-buttons">
+                            <button type="button" class="status-btn operational active" data-status="operational" onclick="selectEquipmentStatus('operational')">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Operacional</span>
+                            </button>
+                            <button type="button" class="status-btn repair" data-status="repair" onclick="selectEquipmentStatus('repair')">
+                                <i class="fas fa-tools"></i>
+                                <span>Em Reparo</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="equipmentStatus" value="operational">
+                    </div>
+
                     <!-- Observações -->
                     <div class="form-group">
                         <label for="equipmentNotes"><i class="fas fa-sticky-note"></i> Observações</label>

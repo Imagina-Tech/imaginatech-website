@@ -1265,8 +1265,15 @@ function createEquipmentCard(item) {
         acquisitionHtml = `<div class="equipment-acquisition-warning"><i class="fas fa-exclamation-circle"></i> Preencher data de aquisição</div>`;
     }
 
+    // Selo de status (operacional ou reparo)
+    const status = item.status || 'operational';
+    const statusIcon = status === 'operational' ? 'fa-check-circle' : 'fa-tools';
+    const statusText = status === 'operational' ? 'Operacional' : 'Reparo';
+    const statusBadge = `<div class="equipment-status-badge ${status}"><i class="fas ${statusIcon}"></i> ${statusText}</div>`;
+
     return `
         <div class="equipment-card" onclick="openEquipmentActionsModal('${item.id}')">
+            ${statusBadge}
             <div class="equipment-image-container">
                 ${imageHtml}
             </div>
@@ -1297,6 +1304,20 @@ function formatMoney(value) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+}
+
+// Selecionar status do equipamento (operacional ou reparo)
+function selectEquipmentStatus(status) {
+    // Atualizar botões visuais
+    document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const selectedBtn = document.querySelector(`.status-btn[data-status="${status}"]`);
+    if (selectedBtn) selectedBtn.classList.add('active');
+
+    // Atualizar valor do input hidden
+    const statusInput = document.getElementById('equipmentStatus');
+    if (statusInput) statusInput.value = status;
 }
 
 // Preencher o select de anos de aquisição
@@ -1356,6 +1377,9 @@ function openAddEquipmentModal() {
         }
         if (fileInput) fileInput.value = '';
 
+        // Resetar status para operacional (padrão)
+        selectEquipmentStatus('operational');
+
         if (modal) {
             modal.classList.add('active');
         }
@@ -1407,6 +1431,9 @@ function openEditEquipmentModal(id) {
         }
     }
 
+    // Carregar status do equipamento (operacional ou reparo)
+    selectEquipmentStatus(item.status || 'operational');
+
     document.getElementById('equipmentModal').classList.add('active');
 }
 
@@ -1427,6 +1454,7 @@ async function saveEquipment(event) {
     const notes = document.getElementById('equipmentNotes').value.trim();
     const acquisitionMonth = document.getElementById('equipmentAcquisitionMonth').value;
     const acquisitionYear = document.getElementById('equipmentAcquisitionYear').value;
+    const status = document.getElementById('equipmentStatus').value || 'operational';
 
     if (!name || !brand) {
         showToast('Preencha nome e marca do equipamento', 'error');
@@ -1459,6 +1487,7 @@ async function saveEquipment(event) {
             notes,
             acquisitionMonth,
             acquisitionYear,
+            status,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -1609,3 +1638,4 @@ window.handleEditEquipment = handleEditEquipment;
 window.handleDeleteEquipment = handleDeleteEquipment;
 window.previewEquipmentImage = previewEquipmentImage;
 window.sortEquipment = sortEquipment;
+window.selectEquipmentStatus = selectEquipmentStatus;

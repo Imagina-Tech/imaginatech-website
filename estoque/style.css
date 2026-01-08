@@ -1860,6 +1860,94 @@
 }
 
 /* ===========================
+   SELO DE STATUS DO EQUIPAMENTO
+   =========================== */
+.equipment-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    z-index: 5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.equipment-status-badge.operational {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.9), rgba(0, 200, 100, 0.9));
+    color: #0a0e1a;
+    border: 1px solid var(--neon-green);
+}
+
+.equipment-status-badge.repair {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 100, 0, 0.9));
+    color: #0a0e1a;
+    border: 1px solid #ff6b00;
+    animation: repair-pulse 2s infinite;
+}
+
+@keyframes repair-pulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3); }
+    50% { box-shadow: 0 2px 15px rgba(255, 165, 0, 0.6); }
+}
+
+.equipment-status-badge i {
+    font-size: 0.6rem;
+}
+
+/* ===========================
+   BOTÕES DE STATUS NO MODAL
+   =========================== */
+.status-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.status-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    background: var(--glass-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.status-btn:hover {
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.status-btn.operational.active {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--neon-green);
+}
+
+.status-btn.repair.active {
+    border-color: #ff6b00;
+    background: rgba(255, 107, 0, 0.15);
+    color: #ff6b00;
+}
+
+.status-btn i {
+    font-size: 1rem;
+}
+
+/* ===========================
    MODAL DE EQUIPAMENTO
    =========================== */
 #equipmentModal .modal-content {
