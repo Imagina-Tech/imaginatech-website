@@ -1712,7 +1712,7 @@
 
 .equipment-image-container {
     width: 100%;
-    height: 160px;
+    height: 220px;
     border-radius: 12px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
@@ -1724,7 +1724,7 @@
 .equipment-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.3s ease;
 }
 
@@ -1910,7 +1910,7 @@
     }
 
     .equipment-image-container {
-        height: 140px;
+        height: 180px;
     }
 
     .equipment-name {
