@@ -119,8 +119,8 @@ const MATERIALS = {
 // ===========================
 
 const printerDefaults = {
-    "SATURN_2": {
-        name: "Saturn 2",
+    "M7": {
+        name: "Elegoo Mars 7",
         type: "resin",
         materialUnit: "ml",
         defaults: {
@@ -129,7 +129,7 @@ const printerDefaults = {
             failureRate: 20,         // %
             machinePower: 400,       // W
             kwhPrice: 1.2,           // R$/kWh
-            machineValue: 2600,      // R$
+            machineValue: 3800,      // R$
             depreciationTime: 2000,  // horas
             consumables: 2           // R$ - álcool + luva
         }
