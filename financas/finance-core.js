@@ -312,12 +312,19 @@ function showAccountSelectionModal(user) {
 
 // 🔐 Seleciona e carrega dados da conta escolhida (pessoal ou empresa)
 async function selectAccount(accountType) {
-    showLoading('Carregando dados...');
-
-    // Fechar modal
+    // Fechar modal de seleção se estiver aberto
     document.getElementById('accountSelectionModal').classList.remove('active');
 
     if (accountType === 'company') {
+        // Verificar se é admin antes de permitir acesso à empresa
+        if (!isAdminUser(currentUser.email)) {
+            // Mostrar modal de acesso negado
+            showAccessDeniedModal();
+            return;
+        }
+
+        showLoading('Carregando dados...');
+
         // Acessar como conta da empresa
         // Buscar UID da conta da empresa no systemConfig
         try {
@@ -360,6 +367,7 @@ async function selectAccount(accountType) {
             return;
         }
     } else {
+        showLoading('Carregando dados...');
         // Acessar como conta pessoal
         activeUserId = currentUser.uid;
         activeUserEmail = currentUser.email;
@@ -399,6 +407,30 @@ function updateAccountDisplay(accountType) {
             userRole.textContent = 'Conta Pessoal';
         }
     }
+}
+
+// 🚫 Mostra modal de acesso negado (fullscreen)
+function showAccessDeniedModal() {
+    // Atualizar email do usuário no modal
+    const emailEl = document.getElementById('deniedUserEmail');
+    if (emailEl && currentUser) {
+        emailEl.textContent = currentUser.email;
+    }
+
+    // Esconder dashboard se estiver visível
+    document.getElementById('dashboard').classList.add('hidden');
+
+    // Mostrar modal
+    document.getElementById('accessDeniedModal').classList.add('active');
+}
+
+// 🚫 Fecha modal de acesso negado e volta para conta pessoal
+function closeAccessDeniedModal() {
+    // Fechar modal
+    document.getElementById('accessDeniedModal').classList.remove('active');
+
+    // Voltar para conta pessoal
+    selectAccount('personal');
 }
 
 // ===========================
