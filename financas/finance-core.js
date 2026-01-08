@@ -21,15 +21,20 @@ const firebaseConfig = {
 };
 
 // ===========================
-// AUTHORIZED USERS (carregado de ENV_CONFIG)
+// ADMIN USERS (têm acesso à conta da empresa)
 // ===========================
-const AUTHORIZED_EMAILS = window.ENV_CONFIG?.AUTHORIZED_ADMINS?.map(a => a.email) || [
+const ADMIN_EMAILS = window.ENV_CONFIG?.AUTHORIZED_ADMINS?.map(a => a.email) || [
     '3d3printers@gmail.com',
     'netrindademarcus@gmail.com',
     'allanedg01@gmail.com',
     'quequell1010@gmail.com',
     'igor.butter@gmail.com'
 ];
+
+// Verifica se o usuário atual é admin
+function isAdminUser(email) {
+    return ADMIN_EMAILS.includes(email);
+}
 
 // ===========================
 // CATEGORIES
@@ -226,13 +231,15 @@ auth.onAuthStateChanged(user => {
     hideLoading(); // IMPORTANTE: Sempre esconde o loading primeiro
 
     if (user) {
-        if (AUTHORIZED_EMAILS.includes(user.email)) {
-            currentUser = user;
-            // Mostrar modal de seleção de conta
+        currentUser = user;
+
+        if (isAdminUser(user.email)) {
+            // Admin: mostrar modal de seleção (pessoal ou empresa)
             showAccountSelectionModal(user);
         } else {
-            showToast('Acesso não autorizado!', 'error');
-            signOut();
+            // Usuário comum: ir direto para conta pessoal
+            console.log('Usuário comum - acesso direto à conta pessoal');
+            selectAccount('personal');
         }
     } else {
         showLoginScreen();
