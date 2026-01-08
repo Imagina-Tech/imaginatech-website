@@ -1181,8 +1181,6 @@ function formatMoney(value) {
 // Abrir modal para adicionar equipamento
 function openAddEquipmentModal() {
     try {
-        console.log('openAddEquipmentModal chamado');
-
         editingEquipmentId = null;
         selectedEquipmentImage = null;
 
@@ -1215,9 +1213,6 @@ function openAddEquipmentModal() {
 
         if (modal) {
             modal.classList.add('active');
-            console.log('Modal aberto com sucesso');
-        } else {
-            console.error('Modal #equipmentModal não encontrado!');
         }
     } catch (error) {
         console.error('Erro ao abrir modal de equipamento:', error);
