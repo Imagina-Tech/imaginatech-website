@@ -1316,8 +1316,10 @@ export async function updateStatus(serviceId, newStatus) {
     // Only for impressão services - delivery-related validations
     if (!isModelagem) {
         if (newStatus === 'retirada') {
+            // Se não tem foto instagramável, abre modal para bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-                showToast('❌ Para marcar como Pronto/Postado, é necessário ter fotos do produto finalizado', 'error');
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
+                window.showBypassPasswordModal();
                 return;
             }
 
@@ -1329,13 +1331,17 @@ export async function updateStatus(serviceId, newStatus) {
         }
 
         if (newStatus === 'entregue') {
+            // Se não tem foto instagramável, abre modal para bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-                showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto finalizado', 'error');
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
+                window.showBypassPasswordModal();
                 return;
             }
 
+            // Se não tem foto embalada, abre modal para bypass
             if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
-                showToast('❌ Para marcar como Entregue, é necessário ter fotos do produto embalado', 'error');
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true, skipToBypass: true };
+                window.showBypassPasswordModal();
                 return;
             }
         }
