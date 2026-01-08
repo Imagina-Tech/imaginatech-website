@@ -164,9 +164,16 @@ function populateCategories() {
 // ===========================
 // TRANSACTIONS CRUD
 // ===========================
-// 🗄️ Carrega todas as transações do Firestore
+// 🗄️ Carrega todas as transações do Firestore (apenas para admins)
 async function loadTransactions() {
     try {
+        // Transações são restritas a admins - verificar antes de carregar
+        if (typeof isAdminUser === 'function' && currentUser && !isAdminUser(currentUser.email)) {
+            console.log('Usuário não é admin - pulando carregamento de transações');
+            transactions = [];
+            return;
+        }
+
         console.log('Carregando transações...');
         const snapshot = await db.collection('transactions')
             .where('userId', '==', activeUserId)
@@ -215,6 +222,12 @@ async function loadServices() {
 // 💰 Função para criar transação a partir de serviço
 async function createTransactionFromService(service) {
     try {
+        // Apenas admins podem criar transações
+        if (typeof isAdminUser === 'function' && currentUser && !isAdminUser(currentUser.email)) {
+            console.log('Usuário não é admin - não pode criar transações');
+            return;
+        }
+
         // Verificações de segurança
         if (!service.value || service.value <= 0) {
             console.log('Serviço sem valor, ignorando:', service.id);
@@ -286,6 +299,12 @@ let servicesListener = null;
 function startServicesListener() {
     if (!activeUserId) {
         console.warn('activeUserId não definido, não iniciando listener de serviços');
+        return;
+    }
+
+    // Listener de serviços só faz sentido para admins (cria transações)
+    if (typeof isAdminUser === 'function' && currentUser && !isAdminUser(currentUser.email)) {
+        console.log('Usuário não é admin - pulando listener de serviços');
         return;
     }
 
@@ -901,18 +920,24 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
-        // 1. Criar transação de débito automática
-        const transactionRef = await db.collection('transactions').add({
-            userId: activeUserId,
-            type: 'expense',
-            description: `Pagamento Fatura ${card.name} - ${monthNames[month]}/${year}`,
-            value: billAmount,
-            category: 'Fatura Cartão',
-            date: todayStr,
-            paymentMethod: 'debit',
-            cardId: null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        let transactionId = null;
+
+        // 1. Criar transação de débito automática (apenas para admins)
+        const userIsAdmin = typeof isAdminUser === 'function' && currentUser && isAdminUser(currentUser.email);
+        if (userIsAdmin) {
+            const transactionRef = await db.collection('transactions').add({
+                userId: activeUserId,
+                type: 'expense',
+                description: `Pagamento Fatura ${card.name} - ${monthNames[month]}/${year}`,
+                value: billAmount,
+                category: 'Fatura Cartão',
+                date: todayStr,
+                paymentMethod: 'debit',
+                cardId: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            transactionId = transactionRef.id;
+        }
 
         // 2. Criar registro de pagamento
         await db.collection('creditCardPayments').add({
@@ -923,16 +948,18 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
             paidAmount: billAmount,
             paidDate: todayStr,
             billAmount: billAmount,
-            transactionId: transactionRef.id,
+            transactionId: transactionId,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         // 3. Recarregar dados
-        await loadTransactions();
+        if (userIsAdmin) {
+            await loadTransactions();
+        }
         await loadCreditCardPayments();
         updateAllDisplays();
 
-        showToast('Fatura marcada como paga! Transação de débito criada.', 'success');
+        showToast('Fatura marcada como paga!', 'success');
 
         // Fechar e reabrir modal para atualizar
         document.getElementById('cardBillDetailsModal').classList.remove('active');
@@ -961,8 +988,10 @@ async function unmarkBillAsPaid(paymentId) {
     showLoading('Removendo pagamento...');
 
     try {
-        // 1. Deletar transação vinculada
-        if (payment.transactionId) {
+        const userIsAdmin = typeof isAdminUser === 'function' && currentUser && isAdminUser(currentUser.email);
+
+        // 1. Deletar transação vinculada (apenas para admins)
+        if (payment.transactionId && userIsAdmin) {
             await db.collection('transactions').doc(payment.transactionId).delete();
         }
 
@@ -970,11 +999,13 @@ async function unmarkBillAsPaid(paymentId) {
         await db.collection('creditCardPayments').doc(paymentId).delete();
 
         // 3. Recarregar dados
-        await loadTransactions();
+        if (userIsAdmin) {
+            await loadTransactions();
+        }
         await loadCreditCardPayments();
         updateAllDisplays();
 
-        showToast('Pagamento desfeito! Transação removida.', 'success');
+        showToast('Pagamento desfeito!', 'success');
 
         // Fechar e reabrir modal para atualizar
         const cardId = payment.cardId;
@@ -1357,10 +1388,11 @@ async function updateProjectionStatus(id, newStatus) {
 
         const oldStatus = projection.status;
         const projType = projection.type || 'income'; // default: income para projeções antigas
+        const userIsAdmin = typeof isAdminUser === 'function' && currentUser && isAdminUser(currentUser.email);
         console.log(`[Projeção Status] ID: ${id}, Tipo: ${projType}, Status anterior: ${oldStatus}, Novo status: ${newStatus}`);
 
-        // Se marcando como "received" (ou "pago" para expense), criar transação
-        if (newStatus === 'received' && oldStatus !== 'received') {
+        // Se marcando como "received" (ou "pago" para expense), criar transação (apenas admins)
+        if (newStatus === 'received' && oldStatus !== 'received' && userIsAdmin) {
             console.log(`[Projeção] Procurando transação vinculada a: "${projection.description}"`);
 
             // Verificar se já existe transação vinculada a esta projeção
@@ -1418,8 +1450,8 @@ async function updateProjectionStatus(id, newStatus) {
                 }
             }
         }
-        // Se marcando como "pending", remover transação vinculada (se houver)
-        else if (newStatus === 'pending' && oldStatus === 'received') {
+        // Se marcando como "pending", remover transação vinculada (se houver) - apenas admins
+        else if (newStatus === 'pending' && oldStatus === 'received' && userIsAdmin) {
             console.log(`[Projeção] Procurando transação vinculada para deletar`);
 
             // Procurar e deletar transação vinculada
@@ -1452,7 +1484,9 @@ async function updateProjectionStatus(id, newStatus) {
 
         // Recarregar dados e atualizar displays
         console.log(`[Projeção] Recarregando dados...`);
-        await loadTransactions();
+        if (userIsAdmin) {
+            await loadTransactions();
+        }
         await loadProjections();
 
         console.log(`[Projeção] Atualizando KPIs...`);
@@ -1461,12 +1495,12 @@ async function updateProjectionStatus(id, newStatus) {
         let message;
         if (projType === 'income') {
             message = newStatus === 'received'
-                ? 'Projeção marcada como recebida! Transação de entrada criada.'
-                : 'Projeção marcada como pendente. Transação removida.';
+                ? (userIsAdmin ? 'Projeção marcada como recebida! Transação de entrada criada.' : 'Projeção marcada como recebida!')
+                : (userIsAdmin ? 'Projeção marcada como pendente. Transação removida.' : 'Projeção marcada como pendente.');
         } else {
             message = newStatus === 'received'
-                ? 'Projeção marcada como paga! Transação de despesa criada.'
-                : 'Projeção marcada como pendente. Transação removida.';
+                ? (userIsAdmin ? 'Projeção marcada como paga! Transação de despesa criada.' : 'Projeção marcada como paga!')
+                : (userIsAdmin ? 'Projeção marcada como pendente. Transação removida.' : 'Projeção marcada como pendente.');
         }
         showToast(message, 'success');
     } catch (error) {
