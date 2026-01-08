@@ -4,22 +4,22 @@
 // Arquivo: script-custo.js
 // ==========================
 
-// Firebase Configuration
+// Firebase Configuration (carregado de ENV_CONFIG)
 const firebaseConfig = {
-    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
-    authDomain: "imaginatech-servicos.firebaseapp.com",
-    projectId: "imaginatech-servicos",
-    storageBucket: "imaginatech-servicos.firebasestorage.app",
-    messagingSenderId: "321455309872",
-    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+    apiKey: window.ENV_CONFIG?.FIREBASE_API_KEY || "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+    authDomain: window.ENV_CONFIG?.FIREBASE_AUTH_DOMAIN || "imaginatech-servicos.firebaseapp.com",
+    projectId: window.ENV_CONFIG?.FIREBASE_PROJECT_ID || "imaginatech-servicos",
+    storageBucket: window.ENV_CONFIG?.FIREBASE_STORAGE_BUCKET || "imaginatech-servicos.firebasestorage.app",
+    messagingSenderId: window.ENV_CONFIG?.FIREBASE_MESSAGING_SENDER_ID || "321455309872",
+    appId: window.ENV_CONFIG?.FIREBASE_APP_ID || "1:321455309872:web:e7ba49a0f020bbae1159f5"
 };
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Authorized Emails
-const AUTHORIZED_EMAILS = [
+// Authorized Emails (carregado de ENV_CONFIG)
+const AUTHORIZED_EMAILS = window.ENV_CONFIG?.AUTHORIZED_ADMINS?.map(a => a.email) || [
     "3d3printers@gmail.com",
     "allanedg01@gmail.com",
     "igor.butter@gmail.com"

@@ -7,7 +7,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
-import { state, AUTHORIZED_EMAILS, AUTHORIZED_ADMINS } from './config.js';
+import { state, AUTHORIZED_EMAILS, AUTHORIZED_ADMINS, BYPASS_PASSWORD, EMAILJS_CONFIG, WHATSAPP_NUMBER } from './config.js';
 import {
     startServicesListener,
     saveService,
@@ -2225,13 +2225,13 @@ export const contactClient = (phone, serviceName, orderCode, clientName) => {
 
 export async function sendEmailNotification(service) {
     if (!service.clientEmail || service.clientEmail.trim().length === 0) return;
-    
+
     try {
-        await emailjs.send('service_vxndoi5', 'template_cwrmts1', {
+        await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
             to_email: service.clientEmail,
             client_name: service.client || 'Cliente',
             order_code: service.orderCode || 'N/A',
-            reply_to: '3d3printers@gmail.com'
+            reply_to: window.ENV_CONFIG?.ADMIN_EMAIL || '3d3printers@gmail.com'
         });
         console.log('Email enviado com sucesso para:', service.clientEmail);
         showToast('📧 Email de notificação enviado!', 'success');
@@ -2318,7 +2318,7 @@ window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
 // ===========================
 // BYPASS DE FOTO OBRIGATÓRIA
 // ===========================
-const BYPASS_PASSWORD = 'Trin2234@';
+// BYPASS_PASSWORD importado de config.js
 
 export function showBypassPasswordModal() {
     const modal = document.getElementById('bypassPasswordModal');

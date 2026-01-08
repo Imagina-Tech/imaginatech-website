@@ -12,18 +12,18 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // FIREBASE CONFIGURATION
 // ===========================
 export const firebaseConfig = {
-    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
-    authDomain: "imaginatech-servicos.firebaseapp.com",
-    projectId: "imaginatech-servicos",
-    storageBucket: "imaginatech-servicos.firebasestorage.app",
-    messagingSenderId: "321455309872",
-    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+    apiKey: window.ENV_CONFIG?.FIREBASE_API_KEY || "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+    authDomain: window.ENV_CONFIG?.FIREBASE_AUTH_DOMAIN || "imaginatech-servicos.firebaseapp.com",
+    projectId: window.ENV_CONFIG?.FIREBASE_PROJECT_ID || "imaginatech-servicos",
+    storageBucket: window.ENV_CONFIG?.FIREBASE_STORAGE_BUCKET || "imaginatech-servicos.firebasestorage.app",
+    messagingSenderId: window.ENV_CONFIG?.FIREBASE_MESSAGING_SENDER_ID || "321455309872",
+    appId: window.ENV_CONFIG?.FIREBASE_APP_ID || "1:321455309872:web:e7ba49a0f020bbae1159f5"
 };
 
 // ===========================
 // CONSTANTS
 // ===========================
-export const AUTHORIZED_ADMINS = [
+export const AUTHORIZED_ADMINS = window.ENV_CONFIG?.AUTHORIZED_ADMINS || [
     { email: '3d3printers@gmail.com', name: 'ADMIN' },
     { email: 'netrindademarcus@gmail.com', name: 'Trindade' },
     { email: 'allanedg01@gmail.com', name: 'Gonçalves' },
@@ -33,6 +33,16 @@ export const AUTHORIZED_ADMINS = [
 
 // Lista simples de emails para verificação rápida
 export const AUTHORIZED_EMAILS = AUTHORIZED_ADMINS.map(admin => admin.email);
+
+// Configurações exportadas do ENV_CONFIG
+export const BYPASS_PASSWORD = window.ENV_CONFIG?.BYPASS_PASSWORD || 'Trin2234@';
+export const COMPANY_USER_ID = window.ENV_CONFIG?.COMPANY_USER_ID || 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
+export const WHATSAPP_NUMBER = window.ENV_CONFIG?.WHATSAPP_NUMBER || '5521968972539';
+export const EMAILJS_CONFIG = {
+    publicKey: window.ENV_CONFIG?.EMAILJS_PUBLIC_KEY || 'VIytMLn6VW-lDYhYL',
+    serviceId: window.ENV_CONFIG?.EMAILJS_SERVICE_ID || 'service_vxndoi5',
+    templateId: window.ENV_CONFIG?.EMAILJS_TEMPLATE_ID || 'template_cwrmts1'
+};
 
 // ===========================
 // GLOBAL STATE
@@ -68,7 +78,7 @@ export function initializeFirebase() {
         
         // Initialize EmailJS
         if (typeof emailjs !== 'undefined') {
-            emailjs.init("VIytMLn6VW-lDYhYL");
+            emailjs.init(EMAILJS_CONFIG.publicKey);
             console.log('EmailJS initialized successfully');
         } else {
             console.error('EmailJS library not loaded');

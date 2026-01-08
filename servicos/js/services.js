@@ -7,7 +7,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 ==================================================
 */
 
-import { state } from './config.js';
+import { state, COMPANY_USER_ID } from './config.js';
 import {
     showToast,
     escapeHtml,
@@ -30,8 +30,7 @@ import {
 } from './auth-ui.js';
 import { STATUS_ORDER, STATUS_ORDER_MODELAGEM, getStatusOrderForService } from './utils.js';
 
-// UID da empresa (conta que recebe as transações financeiras)
-const COMPANY_USER_ID = 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
+// COMPANY_USER_ID importado de config.js
 
 // ===========================
 // SERVICE MANAGEMENT

@@ -6,14 +6,14 @@
 // IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // ===========================
 
-// Firebase Configuration (mesma do sistema principal)
+// Firebase Configuration (carregado de ENV_CONFIG)
 const firebaseConfig = {
-    apiKey: "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
-    authDomain: "imaginatech-servicos.firebaseapp.com",
-    projectId: "imaginatech-servicos",
-    storageBucket: "imaginatech-servicos.firebasestorage.app",
-    messagingSenderId: "321455309872",
-    appId: "1:321455309872:web:e7ba49a0f020bbae1159f5"
+    apiKey: window.ENV_CONFIG?.FIREBASE_API_KEY || "AIzaSyDZxuazTrmimr0951TmTCKckI4Ede2hdn4",
+    authDomain: window.ENV_CONFIG?.FIREBASE_AUTH_DOMAIN || "imaginatech-servicos.firebaseapp.com",
+    projectId: window.ENV_CONFIG?.FIREBASE_PROJECT_ID || "imaginatech-servicos",
+    storageBucket: window.ENV_CONFIG?.FIREBASE_STORAGE_BUCKET || "imaginatech-servicos.firebasestorage.app",
+    messagingSenderId: window.ENV_CONFIG?.FIREBASE_MESSAGING_SENDER_ID || "321455309872",
+    appId: window.ENV_CONFIG?.FIREBASE_APP_ID || "1:321455309872:web:e7ba49a0f020bbae1159f5"
 };
 
 // Initialize Firebase
@@ -47,8 +47,8 @@ let clientAttempts = 0;
 const MAX_ATTEMPTS = 3;
 let pendingUrlOrderCode = null; // Código da URL aguardando processamento
 
-// WhatsApp da ImaginaTech
-const WHATSAPP_NUMBER = '5521968972539';
+// WhatsApp da ImaginaTech (carregado de ENV_CONFIG)
+const WHATSAPP_NUMBER = window.ENV_CONFIG?.WHATSAPP_NUMBER || '5521968972539';
 
 // Status Messages in Portuguese
 const STATUS_MESSAGES = {
