@@ -164,6 +164,104 @@ function loadPendingServices() {
 }
 
 // ===========================
+// AUTO-FULFILL PENDING SERVICES
+// ===========================
+
+/**
+ * Verifica serviços pendentes para um tipo+cor e deduz automaticamente se possível
+ * @param {string} type - Tipo do material (PLA, ABS, etc)
+ * @param {string} color - Cor do material
+ */
+async function checkAndFulfillPendingServices(type, color) {
+    if (!type || !color) return;
+
+    // 1. Filtrar serviços pendentes para este tipo+cor
+    const matchingServices = pendingServices.filter(s =>
+        s.material?.toLowerCase() === type?.toLowerCase() &&
+        s.color?.toLowerCase() === color?.toLowerCase()
+    );
+
+    if (matchingServices.length === 0) return;
+
+    // 2. Calcular estoque total combinado (todas as marcas)
+    const matchingFilaments = filaments.filter(f =>
+        f.type?.toLowerCase() === type?.toLowerCase() &&
+        f.color?.toLowerCase() === color?.toLowerCase()
+    );
+
+    const totalStockGrams = matchingFilaments.reduce((sum, f) =>
+        sum + (parseFloat(f.weight) || 0) * 1000, 0
+    );
+
+    // 3. Ordenar serviços por peso (menores primeiro - otimiza atendimento)
+    matchingServices.sort((a, b) => (a.weight || 0) - (b.weight || 0));
+
+    let remainingStock = totalStockGrams;
+    const servicesToFulfill = [];
+
+    // 4. Identificar quais serviços podem ser atendidos
+    for (const service of matchingServices) {
+        const needed = service.weight || 0;
+        if (needed <= remainingStock) {
+            servicesToFulfill.push(service);
+            remainingStock -= needed;
+        }
+    }
+
+    if (servicesToFulfill.length === 0) return;
+
+    // 5. Para cada serviço, deduzir material e limpar flag
+    for (const service of servicesToFulfill) {
+        try {
+            // Deduzir do filamento com maior estoque
+            await deductFromBestFilament(type, color, service.weight);
+
+            // Atualizar serviço no Firestore
+            await db.collection('services').doc(service.id).update({
+                needsMaterialPurchase: false
+            });
+
+            console.log(`✅ Material deduzido para serviço #${service.orderCode}`);
+        } catch (error) {
+            console.error(`Erro ao deduzir material para ${service.orderCode}:`, error);
+        }
+    }
+
+    // 6. Mostrar feedback
+    if (servicesToFulfill.length > 0) {
+        showToast(`✅ ${servicesToFulfill.length} serviço(s) atendido(s) automaticamente!`, 'success');
+    }
+}
+
+/**
+ * Deduz material do filamento com maior estoque
+ */
+async function deductFromBestFilament(type, color, weightInGrams) {
+    // Encontrar filamento com maior estoque
+    const matching = filaments
+        .filter(f =>
+            f.type?.toLowerCase() === type?.toLowerCase() &&
+            f.color?.toLowerCase() === color?.toLowerCase() &&
+            (parseFloat(f.weight) || 0) > 0
+        )
+        .sort((a, b) => (parseFloat(b.weight) || 0) - (parseFloat(a.weight) || 0));
+
+    if (matching.length === 0) {
+        throw new Error('Nenhum filamento disponível');
+    }
+
+    const best = matching[0];
+    const weightInKg = weightInGrams / 1000;
+    const currentWeight = parseFloat(best.weight) || 0;
+    const newWeight = Math.max(0, currentWeight - weightInKg);
+
+    await db.collection('filaments').doc(best.id).update({
+        weight: newWeight,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+// ===========================
 // RENDER FILAMENTS
 // ===========================
 function renderFilaments() {
@@ -235,11 +333,22 @@ function createFilamentCard(filament) {
     const totalNeeded = servicesForThisFilament.reduce((sum, s) => sum + (s.weight || 0), 0);
     const serviceCount = servicesForThisFilament.length;
 
+    // Calcular estoque TOTAL para este tipo+cor (todas as marcas)
+    const totalStockForColor = filaments
+        .filter(f =>
+            f.type?.toLowerCase() === filamentType?.toLowerCase() &&
+            f.color?.toLowerCase() === filamentColor?.toLowerCase()
+        )
+        .reduce((sum, f) => sum + (parseFloat(f.weight) || 0) * 1000, 0);
+
+    // Só mostrar badge se estoque TOTAL for insuficiente
+    const showBadge = serviceCount > 0 && totalStockForColor < totalNeeded;
+
     return `
         <div class="filament-card ${outOfStock}" data-filament-id="${filament.id}">
             ${stockClass ? `<div class="stock-indicator ${stockClass}"></div>` : ''}
 
-            ${serviceCount > 0 ? `
+            ${showBadge ? `
             <div class="pending-services-badge">
                 <i class="fas fa-exclamation-triangle"></i>
                 <div class="badge-content">
@@ -653,6 +762,11 @@ async function saveFilament(event) {
         }
 
         closeFilamentModal();
+
+        // Verificar se pode atender serviços pendentes para este tipo+cor
+        setTimeout(() => {
+            checkAndFulfillPendingServices(type, color);
+        }, 500);
     } catch (error) {
         console.error('Error saving filament:', error);
         showToast('Erro ao salvar filamento', 'error');
@@ -871,6 +985,11 @@ async function handleRestock1kg() {
         });
 
         showToast('1kg adicionado ao estoque com sucesso!', 'success');
+
+        // Verificar se pode atender serviços pendentes
+        setTimeout(() => {
+            checkAndFulfillPendingServices(filament.type, filament.color);
+        }, 500);
     } catch (error) {
         console.error('Error restocking:', error);
         showToast('Erro ao adicionar estoque', 'error');
@@ -917,6 +1036,11 @@ async function handleAddFractional() {
         });
 
         showToast(`${amount}g adicionados ao estoque com sucesso!`, 'success');
+
+        // Verificar se pode atender serviços pendentes
+        setTimeout(() => {
+            checkAndFulfillPendingServices(filament.type, filament.color);
+        }, 500);
     } catch (error) {
         console.error('Error adding fractional:', error);
         showToast('Erro ao adicionar estoque', 'error');
