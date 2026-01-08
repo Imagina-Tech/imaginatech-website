@@ -1180,7 +1180,6 @@ function formatMoney(value) {
 
 // Abrir modal para adicionar equipamento
 function openAddEquipmentModal() {
-    alert('Função chamada!'); // DEBUG - remover depois
     try {
         console.log('openAddEquipmentModal chamado');
 
@@ -1215,7 +1214,7 @@ function openAddEquipmentModal() {
         if (fileInput) fileInput.value = '';
 
         if (modal) {
-            modal.classList.add('open');
+            modal.classList.add('active');
             console.log('Modal aberto com sucesso');
         } else {
             console.error('Modal #equipmentModal não encontrado!');
@@ -1261,12 +1260,12 @@ function openEditEquipmentModal(id) {
         }
     }
 
-    document.getElementById('equipmentModal').classList.add('open');
+    document.getElementById('equipmentModal').classList.add('active');
 }
 
 // Fechar modal de equipamento
 function closeEquipmentModal() {
-    document.getElementById('equipmentModal').classList.remove('open');
+    document.getElementById('equipmentModal').classList.remove('active');
     editingEquipmentId = null;
     selectedEquipmentImage = null;
 }
@@ -1371,12 +1370,12 @@ function openEquipmentActionsModal(id) {
         `;
     }
 
-    document.getElementById('equipmentActionsModal').classList.add('open');
+    document.getElementById('equipmentActionsModal').classList.add('active');
 }
 
 // Fechar modal de ações do equipamento
 function closeEquipmentActionsModal() {
-    document.getElementById('equipmentActionsModal').classList.remove('open');
+    document.getElementById('equipmentActionsModal').classList.remove('active');
     selectedEquipmentId = null;
 }
 
