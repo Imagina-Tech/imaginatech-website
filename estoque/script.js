@@ -1180,29 +1180,48 @@ function formatMoney(value) {
 
 // Abrir modal para adicionar equipamento
 function openAddEquipmentModal() {
-    editingEquipmentId = null;
-    selectedEquipmentImage = null;
+    try {
+        console.log('openAddEquipmentModal chamado');
 
-    document.getElementById('equipmentModalTitle').innerHTML = '<i class="fas fa-plus"></i> Adicionar Equipamento';
-    document.getElementById('equipmentId').value = '';
-    document.getElementById('equipmentName').value = '';
-    document.getElementById('equipmentBrand').value = '';
-    document.getElementById('equipmentPrice').value = '';
-    document.getElementById('equipmentNotes').value = '';
+        editingEquipmentId = null;
+        selectedEquipmentImage = null;
 
-    // Resetar área de upload (mostrar placeholder, esconder preview)
-    const placeholder = document.getElementById('equipmentUploadPlaceholder');
-    const preview = document.getElementById('equipmentImagePreview');
-    const fileInput = document.getElementById('equipmentImage');
+        const modalTitle = document.getElementById('equipmentModalTitle');
+        const equipmentId = document.getElementById('equipmentId');
+        const equipmentName = document.getElementById('equipmentName');
+        const equipmentBrand = document.getElementById('equipmentBrand');
+        const equipmentPrice = document.getElementById('equipmentPrice');
+        const equipmentNotes = document.getElementById('equipmentNotes');
+        const modal = document.getElementById('equipmentModal');
 
-    if (placeholder) placeholder.style.display = 'block';
-    if (preview) {
-        preview.style.display = 'none';
-        preview.src = '';
+        if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus"></i> Adicionar Equipamento';
+        if (equipmentId) equipmentId.value = '';
+        if (equipmentName) equipmentName.value = '';
+        if (equipmentBrand) equipmentBrand.value = '';
+        if (equipmentPrice) equipmentPrice.value = '';
+        if (equipmentNotes) equipmentNotes.value = '';
+
+        // Resetar área de upload (mostrar placeholder, esconder preview)
+        const placeholder = document.getElementById('equipmentUploadPlaceholder');
+        const preview = document.getElementById('equipmentImagePreview');
+        const fileInput = document.getElementById('equipmentImage');
+
+        if (placeholder) placeholder.style.display = 'block';
+        if (preview) {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
+        if (fileInput) fileInput.value = '';
+
+        if (modal) {
+            modal.classList.add('open');
+            console.log('Modal aberto com sucesso');
+        } else {
+            console.error('Modal #equipmentModal não encontrado!');
+        }
+    } catch (error) {
+        console.error('Erro ao abrir modal de equipamento:', error);
     }
-    if (fileInput) fileInput.value = '';
-
-    document.getElementById('equipmentModal').classList.add('open');
 }
 
 // Abrir modal para editar equipamento
