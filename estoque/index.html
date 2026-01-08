@@ -484,6 +484,31 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <input type="number" id="equipmentPrice" class="form-input" required min="0" step="0.01" placeholder="0,00">
                     </div>
 
+                    <!-- Mês e Ano de Aquisição -->
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar-alt"></i> Data de Aquisição *</label>
+                        <div class="form-row acquisition-date-row">
+                            <select id="equipmentAcquisitionMonth" class="form-select" required>
+                                <option value="">Mês</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                            <select id="equipmentAcquisitionYear" class="form-select" required>
+                                <option value="">Ano</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Observações -->
                     <div class="form-group">
                         <label for="equipmentNotes"><i class="fas fa-sticky-note"></i> Observações</label>

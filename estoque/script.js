@@ -1193,6 +1193,17 @@ function createEquipmentCard(item) {
         ? `<div class="equipment-notes">${item.notes}</div>`
         : '';
 
+    // Data de aquisição ou aviso
+    let acquisitionHtml = '';
+    if (item.acquisitionMonth && item.acquisitionYear) {
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const monthIndex = parseInt(item.acquisitionMonth) - 1;
+        const monthName = monthNames[monthIndex] || item.acquisitionMonth;
+        acquisitionHtml = `<div class="equipment-acquisition"><i class="fas fa-calendar-alt"></i> ${monthName}/${item.acquisitionYear}</div>`;
+    } else {
+        acquisitionHtml = `<div class="equipment-acquisition-warning"><i class="fas fa-exclamation-circle"></i> Preencher data de aquisição</div>`;
+    }
+
     return `
         <div class="equipment-card" onclick="openEquipmentActionsModal('${item.id}')">
             <div class="equipment-image-container">
@@ -1201,6 +1212,7 @@ function createEquipmentCard(item) {
             <div class="equipment-info">
                 <div class="equipment-name">${item.name}</div>
                 <div class="equipment-brand"><i class="fas fa-copyright"></i> ${item.brand}</div>
+                ${acquisitionHtml}
                 <div class="equipment-price">R$ ${formatMoney(item.price)}</div>
                 ${notesHtml}
             </div>
@@ -1226,6 +1238,23 @@ function formatMoney(value) {
     });
 }
 
+// Preencher o select de anos de aquisição
+function populateAcquisitionYears() {
+    const yearSelect = document.getElementById('equipmentAcquisitionYear');
+    if (!yearSelect) return;
+
+    // Manter apenas a primeira opção (placeholder)
+    yearSelect.innerHTML = '<option value="">Ano</option>';
+
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= 2015; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+}
+
 // Abrir modal para adicionar equipamento
 function openAddEquipmentModal() {
     try {
@@ -1238,6 +1267,8 @@ function openAddEquipmentModal() {
         const equipmentBrand = document.getElementById('equipmentBrand');
         const equipmentPrice = document.getElementById('equipmentPrice');
         const equipmentNotes = document.getElementById('equipmentNotes');
+        const equipmentMonth = document.getElementById('equipmentAcquisitionMonth');
+        const equipmentYear = document.getElementById('equipmentAcquisitionYear');
         const modal = document.getElementById('equipmentModal');
 
         if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus"></i> Adicionar Equipamento';
@@ -1246,6 +1277,11 @@ function openAddEquipmentModal() {
         if (equipmentBrand) equipmentBrand.value = '';
         if (equipmentPrice) equipmentPrice.value = '';
         if (equipmentNotes) equipmentNotes.value = '';
+
+        // Preencher anos e resetar campos de data
+        populateAcquisitionYears();
+        if (equipmentMonth) equipmentMonth.value = '';
+        if (equipmentYear) equipmentYear.value = '';
 
         // Resetar área de upload (mostrar placeholder, esconder preview)
         const placeholder = document.getElementById('equipmentUploadPlaceholder');
@@ -1281,6 +1317,13 @@ function openEditEquipmentModal(id) {
     document.getElementById('equipmentBrand').value = item.brand || '';
     document.getElementById('equipmentPrice').value = item.price || '';
     document.getElementById('equipmentNotes').value = item.notes || '';
+
+    // Preencher anos e definir valores de data de aquisição
+    populateAcquisitionYears();
+    const monthSelect = document.getElementById('equipmentAcquisitionMonth');
+    const yearSelect = document.getElementById('equipmentAcquisitionYear');
+    if (monthSelect) monthSelect.value = item.acquisitionMonth || '';
+    if (yearSelect) yearSelect.value = item.acquisitionYear || '';
 
     // Mostrar imagem existente ou placeholder
     const placeholder = document.getElementById('equipmentUploadPlaceholder');
@@ -1321,9 +1364,16 @@ async function saveEquipment(event) {
     const brand = document.getElementById('equipmentBrand').value.trim();
     const price = parseFloat(document.getElementById('equipmentPrice').value) || 0;
     const notes = document.getElementById('equipmentNotes').value.trim();
+    const acquisitionMonth = document.getElementById('equipmentAcquisitionMonth').value;
+    const acquisitionYear = document.getElementById('equipmentAcquisitionYear').value;
 
     if (!name || !brand) {
         showToast('Preencha nome e marca do equipamento', 'error');
+        return;
+    }
+
+    if (!acquisitionMonth || !acquisitionYear) {
+        showToast('Preencha o mês e ano de aquisição', 'error');
         return;
     }
 
@@ -1346,6 +1396,8 @@ async function saveEquipment(event) {
             brand,
             price,
             notes,
+            acquisitionMonth,
+            acquisitionYear,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 

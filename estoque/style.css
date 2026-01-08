@@ -1796,6 +1796,47 @@
     font-size: 0.75rem;
 }
 
+.equipment-acquisition {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0.8;
+}
+
+.equipment-acquisition i {
+    color: var(--neon-cyan);
+    font-size: 0.7rem;
+}
+
+.equipment-acquisition-warning {
+    font-size: 0.75rem;
+    color: var(--neon-red);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+    animation: pulse-warning 2s infinite;
+}
+
+.equipment-acquisition-warning i {
+    font-size: 0.7rem;
+}
+
+@keyframes pulse-warning {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Row para data de aquisição no modal */
+.acquisition-date-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0;
+}
+
 .equipment-price {
     font-size: 1.4rem;
     font-family: 'Orbitron', monospace;
