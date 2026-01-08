@@ -1162,17 +1162,9 @@ function createEquipmentCard(item) {
 
 // Atualizar estatísticas de equipamentos (Total Investido)
 function updateEquipmentStats() {
-    console.log('Equipment data:', equipment);
-    const total = equipment.reduce((sum, item) => {
-        console.log('Item price:', item.price, 'Type:', typeof item.price);
-        return sum + (parseFloat(item.price) || 0);
-    }, 0);
-    console.log('Total calculado:', total);
-
+    const total = equipment.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
     const countEl = document.getElementById('equipmentCount');
     const totalEl = document.getElementById('totalInvested');
-
-    console.log('countEl:', countEl, 'totalEl:', totalEl);
 
     if (countEl) countEl.textContent = equipment.length;
     if (totalEl) totalEl.textContent = `R$ ${formatMoney(total)}`;

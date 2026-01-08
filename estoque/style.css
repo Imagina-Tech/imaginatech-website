@@ -1633,14 +1633,12 @@
 }
 
 .invested-value {
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-family: 'Orbitron', monospace;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
+    color: #00ff88;
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
 .invested-count {
