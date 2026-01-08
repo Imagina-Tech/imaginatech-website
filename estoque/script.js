@@ -48,6 +48,7 @@ let equipment = [];
 let selectedEquipmentId = null;
 let editingEquipmentId = null;
 let selectedEquipmentImage = null;
+let equipmentSortOrder = 'price-desc'; // Ordenação padrão: preço maior → menor
 
 // ===========================
 // INITIALIZATION
@@ -1131,8 +1132,55 @@ function renderEquipment() {
         return;
     }
 
+    // Aplicar ordenação
+    const sortedEquipment = getSortedEquipment();
+
     emptyState.style.display = 'none';
-    grid.innerHTML = equipment.map(item => createEquipmentCard(item)).join('');
+    grid.innerHTML = sortedEquipment.map(item => createEquipmentCard(item)).join('');
+}
+
+// Ordenar equipamentos conforme critério selecionado
+function getSortedEquipment() {
+    const sorted = [...equipment];
+
+    switch (equipmentSortOrder) {
+        case 'price-desc':
+            sorted.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+            break;
+        case 'price-asc':
+            sorted.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+            break;
+        case 'name-asc':
+            sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+            break;
+        case 'name-desc':
+            sorted.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'pt-BR'));
+            break;
+        case 'date-desc':
+            sorted.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateB - dateA;
+            });
+            break;
+        case 'date-asc':
+            sorted.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateA - dateB;
+            });
+            break;
+        default:
+            sorted.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+    }
+
+    return sorted;
+}
+
+// Mudar ordenação dos equipamentos
+function sortEquipment(sortOrder) {
+    equipmentSortOrder = sortOrder;
+    renderEquipment();
 }
 
 // Criar HTML do card de equipamento
@@ -1447,3 +1495,4 @@ window.closeEquipmentActionsModal = closeEquipmentActionsModal;
 window.handleEditEquipment = handleEditEquipment;
 window.handleDeleteEquipment = handleDeleteEquipment;
 window.previewEquipmentImage = previewEquipmentImage;
+window.sortEquipment = sortEquipment;

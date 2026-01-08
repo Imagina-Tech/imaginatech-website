@@ -21,7 +21,9 @@
       "Bash(del \"C:\\Users\\Trindade\\Desktop\\imaginatech-website\\financas\\clean-function.js\")",
       "Bash(git revert:*)",
       "Bash(for class in \"glass-effect\" \"chart-header\" \"mini-chart-header\" \"prefix\" \"form-select\" \"toast-content\" \"toast-message\")",
-      "Bash(do echo \"Procurando: $class\")"
+      "Bash(do echo \"Procurando: $class\")",
+      "Bash(tree:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

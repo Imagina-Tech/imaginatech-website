@@ -1657,6 +1657,40 @@
 }
 
 /* ===========================
+   FILTROS DE EQUIPAMENTOS
+   =========================== */
+.equipment-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+}
+
+.equipment-filters .filter-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.equipment-filters .filter-label i {
+    color: var(--neon-cyan);
+}
+
+.equipment-filters .sort-select {
+    flex: 1;
+    max-width: 250px;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* ===========================
    GRID DE EQUIPAMENTOS
    =========================== */
 .equipment-grid {
@@ -1905,6 +1939,16 @@
 
     .invested-value {
         font-size: 1.6rem;
+    }
+
+    .equipment-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .equipment-filters .sort-select {
+        max-width: 100%;
     }
 
     .equipment-image-container {
