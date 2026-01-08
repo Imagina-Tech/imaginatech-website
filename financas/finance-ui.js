@@ -1125,7 +1125,13 @@ document.addEventListener('change', (e) => {
 // Close modal when clicking outside
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) {
-        e.target.classList.remove('active');
+        // Se for o modal de seleção de conta, restaurar o dashboard ao fechar
+        if (e.target.id === 'accountSelectionModal') {
+            e.target.classList.remove('active');
+            document.getElementById('dashboard').classList.remove('hidden');
+        } else {
+            e.target.classList.remove('active');
+        }
     }
 });
 
