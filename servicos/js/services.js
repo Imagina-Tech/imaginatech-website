@@ -1871,7 +1871,7 @@ function createServiceCard(service) {
                 ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                 ${!isModelagem && service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}
                 ${filesCount > 0 ? `<div class="info-item"><button class="btn-download" onclick="window.showServiceFiles('${service.id}')" title="Ver Arquivos"><i class="fas fa-file"></i><span>${filesCount} ${filesCount > 1 ? 'Arquivos' : 'Arquivo'}</span></button></div>` : ''}
-                ${service.fileInDrive ? `<div class="info-item drive-badge"><i class="fab fa-google-drive"></i><span>Arquivo no Drive</span></div>` : ''}
+                ${service.fileInDrive ? `<div class="info-item drive-badge"><i class="fab fa-microsoft"></i><span>Arquivo no OneDrive</span></div>` : ''}
                 ${hasImages ? `<div class="info-item"><button class="btn-image-view" onclick="window.showServiceImages('${service.id}')" title="Ver Imagens"><i class="fas fa-image"></i><span>${getTotalImagesCount(service)} ${getTotalImagesCount(service) > 1 ? 'Imagens' : 'Imagem'}</span></button></div>` : ''}
             </div>
             
