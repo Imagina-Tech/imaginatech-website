@@ -264,22 +264,16 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <div class="invested-count">
                             <span id="equipmentCount">0</span> equipamentos
                         </div>
-                    </div>
-
-                    <!-- Filtro de Ordenação -->
-                    <div class="equipment-filters">
-                        <div class="filter-label">
-                            <i class="fas fa-sort-amount-down"></i>
-                            <span>Ordenar por:</span>
+                        <div class="invested-sort">
+                            <select id="equipmentSortSelect" class="sort-select-compact" onchange="sortEquipment(this.value)">
+                                <option value="price-desc">Preço ↓</option>
+                                <option value="price-asc">Preço ↑</option>
+                                <option value="name-asc">Nome A-Z</option>
+                                <option value="name-desc">Nome Z-A</option>
+                                <option value="date-desc">Recentes</option>
+                                <option value="date-asc">Antigos</option>
+                            </select>
                         </div>
-                        <select id="equipmentSortSelect" class="form-select sort-select" onchange="sortEquipment(this.value)">
-                            <option value="price-desc">Preço (Maior → Menor)</option>
-                            <option value="price-asc">Preço (Menor → Maior)</option>
-                            <option value="name-asc">Nome (A → Z)</option>
-                            <option value="name-desc">Nome (Z → A)</option>
-                            <option value="date-desc">Mais Recentes</option>
-                            <option value="date-asc">Mais Antigos</option>
-                        </select>
                     </div>
 
                     <!-- Grid de Equipamentos -->

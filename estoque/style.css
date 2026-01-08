@@ -1656,38 +1656,41 @@
     font-family: 'Orbitron', monospace;
 }
 
-/* ===========================
-   FILTROS DE EQUIPAMENTOS
-   =========================== */
-.equipment-filters {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    background: var(--glass-bg);
+/* Dropdown de ordenação compacto dentro do card */
+.invested-sort {
+    margin-left: auto;
+}
+
+.sort-select-compact {
+    padding: 0.4rem 1.8rem 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    transition: all 0.3s ease;
 }
 
-.equipment-filters .filter-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    white-space: nowrap;
+.sort-select-compact:hover {
+    border-color: var(--neon-cyan);
+    background-color: rgba(0, 212, 255, 0.1);
 }
 
-.equipment-filters .filter-label i {
-    color: var(--neon-cyan);
+.sort-select-compact:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
 
-.equipment-filters .sort-select {
-    flex: 1;
-    max-width: 250px;
-    padding: 0.5rem 2rem 0.5rem 0.75rem;
-    font-size: 0.85rem;
+.sort-select-compact option {
+    background: #1a1a2e;
+    color: var(--text-primary);
 }
 
 /* ===========================
@@ -1982,14 +1985,13 @@
         font-size: 1.6rem;
     }
 
-    .equipment-filters {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
+    .invested-sort {
+        margin-left: 0;
+        width: 100%;
     }
 
-    .equipment-filters .sort-select {
-        max-width: 100%;
+    .sort-select-compact {
+        width: 100%;
     }
 
     .equipment-image-container {
