@@ -592,30 +592,36 @@ function handleImageFile(file) {
 }
 
 /**
- * Configura drag & drop na área de upload
+ * Configura drag & drop nas áreas de upload
  * Usa contador para lidar com elementos aninhados
  */
 let dragCounter = 0;
+let equipmentDragCounter = 0;
 
 function setupDragAndDrop() {
-    const uploadArea = document.getElementById('imageUploadArea');
-    if (!uploadArea) {
-        console.log('⚠️ Elemento imageUploadArea não encontrado');
-        return;
-    }
-
     // Prevenir comportamento padrão do browser em toda a página
-    // Isso evita que o browser abra a imagem em nova aba
     document.addEventListener('dragover', preventDefaults, false);
     document.addEventListener('drop', preventDefaults, false);
 
-    // Eventos na área de upload
-    uploadArea.addEventListener('dragenter', handleDragEnter, false);
-    uploadArea.addEventListener('dragover', handleDragOver, false);
-    uploadArea.addEventListener('dragleave', handleDragLeave, false);
-    uploadArea.addEventListener('drop', handleDrop, false);
+    // Configurar área de upload de filamentos
+    const filamentUploadArea = document.getElementById('imageUploadArea');
+    if (filamentUploadArea) {
+        filamentUploadArea.addEventListener('dragenter', handleFilamentDragEnter, false);
+        filamentUploadArea.addEventListener('dragover', handleFilamentDragOver, false);
+        filamentUploadArea.addEventListener('dragleave', handleFilamentDragLeave, false);
+        filamentUploadArea.addEventListener('drop', handleFilamentDrop, false);
+        console.log('🖼️ Drag & Drop configurado para filamentos');
+    }
 
-    console.log('🖼️ Drag & Drop configurado para upload de imagem');
+    // Configurar área de upload de equipamentos
+    const equipmentUploadArea = document.getElementById('equipmentImageUpload');
+    if (equipmentUploadArea) {
+        equipmentUploadArea.addEventListener('dragenter', handleEquipmentDragEnter, false);
+        equipmentUploadArea.addEventListener('dragover', handleEquipmentDragOver, false);
+        equipmentUploadArea.addEventListener('dragleave', handleEquipmentDragLeave, false);
+        equipmentUploadArea.addEventListener('drop', handleEquipmentDrop, false);
+        console.log('🖼️ Drag & Drop configurado para equipamentos');
+    }
 }
 
 function preventDefaults(e) {
@@ -623,60 +629,115 @@ function preventDefaults(e) {
     e.stopPropagation();
 }
 
-function handleDragEnter(e) {
+// === FILAMENTOS DRAG & DROP ===
+function handleFilamentDragEnter(e) {
     e.preventDefault();
     e.stopPropagation();
     dragCounter++;
-
     const uploadArea = document.getElementById('imageUploadArea');
-    if (uploadArea) {
-        uploadArea.classList.add('drag-over');
-    }
+    if (uploadArea) uploadArea.classList.add('drag-over');
 }
 
-function handleDragOver(e) {
+function handleFilamentDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
-
-    // Manter o highlight durante o drag
     const uploadArea = document.getElementById('imageUploadArea');
     if (uploadArea && !uploadArea.classList.contains('drag-over')) {
         uploadArea.classList.add('drag-over');
     }
 }
 
-function handleDragLeave(e) {
+function handleFilamentDragLeave(e) {
     e.preventDefault();
     e.stopPropagation();
     dragCounter--;
-
-    // Só remove o highlight quando realmente sair da área
-    // (não quando passar sobre elementos filhos)
     if (dragCounter === 0) {
         const uploadArea = document.getElementById('imageUploadArea');
-        if (uploadArea) {
-            uploadArea.classList.remove('drag-over');
-        }
+        if (uploadArea) uploadArea.classList.remove('drag-over');
     }
 }
 
-function handleDrop(e) {
+function handleFilamentDrop(e) {
     e.preventDefault();
     e.stopPropagation();
     dragCounter = 0;
-
     const uploadArea = document.getElementById('imageUploadArea');
-    if (uploadArea) {
-        uploadArea.classList.remove('drag-over');
-    }
+    if (uploadArea) uploadArea.classList.remove('drag-over');
 
-    const dt = e.dataTransfer;
-    const files = dt.files;
-
+    const files = e.dataTransfer.files;
     if (files.length > 0) {
-        const file = files[0];
-        handleImageFile(file);
+        handleImageFile(files[0]);
     }
+}
+
+// === EQUIPAMENTOS DRAG & DROP ===
+function handleEquipmentDragEnter(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    equipmentDragCounter++;
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    if (uploadArea) uploadArea.classList.add('drag-over');
+}
+
+function handleEquipmentDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    if (uploadArea && !uploadArea.classList.contains('drag-over')) {
+        uploadArea.classList.add('drag-over');
+    }
+}
+
+function handleEquipmentDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    equipmentDragCounter--;
+    if (equipmentDragCounter === 0) {
+        const uploadArea = document.getElementById('equipmentImageUpload');
+        if (uploadArea) uploadArea.classList.remove('drag-over');
+    }
+}
+
+function handleEquipmentDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    equipmentDragCounter = 0;
+    const uploadArea = document.getElementById('equipmentImageUpload');
+    if (uploadArea) uploadArea.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleEquipmentImageFile(files[0]);
+    }
+}
+
+// Processar arquivo de imagem de equipamento (drag & drop)
+function handleEquipmentImageFile(file) {
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        showToast('Formato inválido! Use PNG, JPEG ou WebP.', 'error');
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Imagem muito grande (máx 5MB)', 'error');
+        return;
+    }
+
+    selectedEquipmentImage = file;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const placeholder = document.getElementById('equipmentUploadPlaceholder');
+        const preview = document.getElementById('equipmentImagePreview');
+
+        if (placeholder) placeholder.style.display = 'none';
+        if (preview) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+    showToast('Imagem carregada com sucesso!', 'success');
 }
 
 async function saveFilament(event) {
