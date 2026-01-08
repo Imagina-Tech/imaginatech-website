@@ -1047,7 +1047,7 @@ window.generateColorPrintFromBudget = async function() {
         const materialType = selectedMaterial.name;
 
         // Filtrar filamentos disponíveis
-        const available = filaments.filter(f => {
+        const availableAll = filaments.filter(f => {
             const weight = parseFloat(f.weight) || 0;
             // Verificar se tem quantidade suficiente
             if (weight < requiredInKg) return false;
@@ -1056,22 +1056,35 @@ window.generateColorPrintFromBudget = async function() {
             return true;
         });
 
-        if (available.length === 0) {
+        if (availableAll.length === 0) {
             alert(`Nenhuma cor de ${materialType} disponível com ${materialAmount}g ou mais!`);
             return;
         }
+
+        // Agrupar por cor e manter apenas o com maior quantidade
+        const colorMap = new Map();
+        availableAll.forEach(f => {
+            const colorName = (f.color || f.name || '').toLowerCase().trim();
+            const weight = parseFloat(f.weight) || 0;
+
+            if (!colorMap.has(colorName) || weight > (parseFloat(colorMap.get(colorName).weight) || 0)) {
+                colorMap.set(colorName, f);
+            }
+        });
+
+        const available = Array.from(colorMap.values());
 
         // Atualizar informações no modal
         document.getElementById('colorPrintRequiredAmount').textContent = materialAmount + 'g';
         document.getElementById('colorPrintMaterialType').textContent = materialType;
         document.getElementById('colorPrintAvailableCount').textContent = available.length;
 
-        // Renderizar cores disponíveis
+        // Renderizar cores disponíveis (sem borda nas imagens)
         const printPreview = document.getElementById('colorPrintPreview');
         printPreview.innerHTML = available.map(f => `
             <div class="print-item" style="text-align: center; padding: 0.5rem;">
                 <img src="${f.imageUrl || '/iconwpp.jpg'}" alt="${f.color}"
-                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;"
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
                      onerror="this.src='/iconwpp.jpg'">
                 <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${f.color || f.name}</div>
             </div>
