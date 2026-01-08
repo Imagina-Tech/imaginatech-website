@@ -35,7 +35,8 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <!-- html2canvas para gerar prints -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -307,8 +308,51 @@
                             <i class="fas fa-camera"></i>
                             Gerar em Print
                         </button>
+                        <button id="generate-colors-btn" class="btn btn-print" onclick="generateColorPrintFromBudget()" style="margin-top: 0.5rem; background: linear-gradient(135deg, #9945FF, #00D4FF);">
+                            <i class="fas fa-palette"></i>
+                            Gerar Print de Cores
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Resultado do Print de Cores -->
+    <div class="modal" id="colorPrintResultModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-palette"></i> Cores Disponíveis</h2>
+                <button class="modal-close" onclick="closeColorPrintModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="print-info" style="display: flex; gap: 2rem; margin-bottom: 1.5rem; justify-content: center;">
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Quantidade Necessária</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-cyan);" id="colorPrintRequiredAmount">0g</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Material</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-purple);" id="colorPrintMaterialType">PLA</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Cores Disponíveis</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-green);" id="colorPrintAvailableCount">0</p>
+                    </div>
+                </div>
+                <div id="colorPrintPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; padding: 1rem; background: #ffffff; border-radius: 12px; min-height: 200px;">
+                    <!-- Cores serão inseridas aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeColorPrintModal()">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+                <button class="btn-primary" onclick="downloadColorPrint()">
+                    <i class="fas fa-download"></i> Baixar Imagem
+                </button>
             </div>
         </div>
     </div>

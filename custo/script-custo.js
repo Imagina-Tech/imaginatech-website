@@ -993,3 +993,160 @@ function monitorConnection() {
 
     updateStatus(navigator.onLine);
 }
+
+// ===========================
+// PRINT DE CORES DISPONÍVEIS
+// ===========================
+
+// Inicializar Firestore para buscar filamentos
+const db = firebase.firestore();
+
+// Função para buscar filamentos do Firebase
+async function fetchFilaments() {
+    try {
+        const snapshot = await db.collection('filaments').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Erro ao buscar filamentos:', error);
+        return [];
+    }
+}
+
+// Função principal para gerar print de cores do orçamento
+window.generateColorPrintFromBudget = async function() {
+    // Verificar se tem material selecionado e quantidade
+    if (!selectedMaterial) {
+        alert('Selecione um material primeiro!');
+        return;
+    }
+
+    if (!materialAmount || materialAmount <= 0) {
+        alert('Adicione a quantidade de material necessária!');
+        return;
+    }
+
+    // Mostrar loading no botão
+    const btn = document.getElementById('generate-colors-btn');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+    btn.disabled = true;
+
+    try {
+        // Buscar filamentos do Firebase
+        const filaments = await fetchFilaments();
+
+        if (filaments.length === 0) {
+            alert('Nenhum filamento encontrado no estoque!');
+            return;
+        }
+
+        // Converter quantidade de gramas para kg (peso no Firebase está em kg)
+        const requiredInKg = materialAmount / 1000;
+
+        // Nome do material selecionado (PLA, ABS, etc.)
+        const materialType = selectedMaterial.name;
+
+        // Filtrar filamentos disponíveis
+        const available = filaments.filter(f => {
+            const weight = parseFloat(f.weight) || 0;
+            // Verificar se tem quantidade suficiente
+            if (weight < requiredInKg) return false;
+            // Verificar se é do tipo correto
+            if (f.type !== materialType) return false;
+            return true;
+        });
+
+        if (available.length === 0) {
+            alert(`Nenhuma cor de ${materialType} disponível com ${materialAmount}g ou mais!`);
+            return;
+        }
+
+        // Atualizar informações no modal
+        document.getElementById('colorPrintRequiredAmount').textContent = materialAmount + 'g';
+        document.getElementById('colorPrintMaterialType').textContent = materialType;
+        document.getElementById('colorPrintAvailableCount').textContent = available.length;
+
+        // Renderizar cores disponíveis
+        const printPreview = document.getElementById('colorPrintPreview');
+        printPreview.innerHTML = available.map(f => `
+            <div class="print-item" style="text-align: center; padding: 0.5rem;">
+                <img src="${f.imageUrl || '/iconwpp.jpg'}" alt="${f.color}"
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;"
+                     onerror="this.src='/iconwpp.jpg'">
+                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${f.color || f.name}</div>
+            </div>
+        `).join('');
+
+        // Abrir modal de resultado
+        document.getElementById('colorPrintResultModal').classList.add('active');
+
+    } catch (error) {
+        console.error('Erro ao gerar print de cores:', error);
+        alert('Erro ao gerar print de cores. Tente novamente.');
+    } finally {
+        // Restaurar botão
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+};
+
+// Fechar modal de print de cores
+window.closeColorPrintModal = function() {
+    document.getElementById('colorPrintResultModal').classList.remove('active');
+};
+
+// Baixar imagem do print de cores
+window.downloadColorPrint = async function() {
+    const printArea = document.getElementById('colorPrintPreview');
+
+    try {
+        // Feedback visual
+        const btn = document.querySelector('#colorPrintResultModal .btn-primary');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+        btn.disabled = true;
+
+        // Converter imagens para base64 antes de gerar canvas
+        const images = printArea.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            return new Promise((resolve) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
+        }));
+
+        // Gerar canvas com html2canvas
+        const canvas = await html2canvas(printArea, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+        });
+
+        // Download da imagem
+        const link = document.createElement('a');
+        const materialType = document.getElementById('colorPrintMaterialType').textContent;
+        link.download = `cores-${materialType}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // Feedback de sucesso
+        btn.innerHTML = '<i class="fas fa-check"></i> Baixado!';
+        btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
+
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 2000);
+
+    } catch (error) {
+        console.error('Erro ao baixar print:', error);
+        alert('Erro ao baixar imagem. Tente novamente.');
+    }
+};
