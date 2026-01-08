@@ -1183,22 +1183,24 @@ function openAddEquipmentModal() {
     editingEquipmentId = null;
     selectedEquipmentImage = null;
 
-    document.getElementById('equipmentModalTitle').textContent = 'Adicionar Equipamento';
+    document.getElementById('equipmentModalTitle').innerHTML = '<i class="fas fa-plus"></i> Adicionar Equipamento';
     document.getElementById('equipmentId').value = '';
     document.getElementById('equipmentName').value = '';
     document.getElementById('equipmentBrand').value = '';
     document.getElementById('equipmentPrice').value = '';
     document.getElementById('equipmentNotes').value = '';
 
-    // Resetar área de upload
-    const uploadArea = document.getElementById('equipmentImageUpload');
-    uploadArea.innerHTML = `
-        <div class="upload-placeholder">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <p>Clique ou arraste a imagem</p>
-            <small>JPG, PNG ou WEBP (max 5MB)</small>
-        </div>
-    `;
+    // Resetar área de upload (mostrar placeholder, esconder preview)
+    const placeholder = document.getElementById('equipmentUploadPlaceholder');
+    const preview = document.getElementById('equipmentImagePreview');
+    const fileInput = document.getElementById('equipmentImage');
+
+    if (placeholder) placeholder.style.display = 'block';
+    if (preview) {
+        preview.style.display = 'none';
+        preview.src = '';
+    }
+    if (fileInput) fileInput.value = '';
 
     document.getElementById('equipmentModal').classList.add('open');
 }
@@ -1211,7 +1213,7 @@ function openEditEquipmentModal(id) {
     editingEquipmentId = id;
     selectedEquipmentImage = null;
 
-    document.getElementById('equipmentModalTitle').textContent = 'Editar Equipamento';
+    document.getElementById('equipmentModalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Equipamento';
     document.getElementById('equipmentId').value = id;
     document.getElementById('equipmentName').value = item.name || '';
     document.getElementById('equipmentBrand').value = item.brand || '';
@@ -1219,17 +1221,24 @@ function openEditEquipmentModal(id) {
     document.getElementById('equipmentNotes').value = item.notes || '';
 
     // Mostrar imagem existente ou placeholder
-    const uploadArea = document.getElementById('equipmentImageUpload');
+    const placeholder = document.getElementById('equipmentUploadPlaceholder');
+    const preview = document.getElementById('equipmentImagePreview');
+    const fileInput = document.getElementById('equipmentImage');
+
+    if (fileInput) fileInput.value = '';
+
     if (item.imageUrl) {
-        uploadArea.innerHTML = `<img src="${item.imageUrl}" class="image-preview-img" alt="Preview">`;
+        if (placeholder) placeholder.style.display = 'none';
+        if (preview) {
+            preview.src = item.imageUrl;
+            preview.style.display = 'block';
+        }
     } else {
-        uploadArea.innerHTML = `
-            <div class="upload-placeholder">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Clique ou arraste a imagem</p>
-                <small>JPG, PNG ou WEBP (max 5MB)</small>
-            </div>
-        `;
+        if (placeholder) placeholder.style.display = 'block';
+        if (preview) {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
     }
 
     document.getElementById('equipmentModal').classList.add('open');
@@ -1379,61 +1388,17 @@ function previewEquipmentImage(event) {
     selectedEquipmentImage = file;
     const reader = new FileReader();
     reader.onload = function(e) {
-        const uploadArea = document.getElementById('equipmentImageUpload');
-        uploadArea.innerHTML = `<img src="${e.target.result}" class="image-preview-img" alt="Preview">`;
+        const placeholder = document.getElementById('equipmentUploadPlaceholder');
+        const preview = document.getElementById('equipmentImagePreview');
+
+        if (placeholder) placeholder.style.display = 'none';
+        if (preview) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
     };
     reader.readAsDataURL(file);
 }
-
-// Configurar upload de imagem do equipamento
-function setupEquipmentImageUpload() {
-    const uploadArea = document.getElementById('equipmentImageUpload');
-    if (!uploadArea) return;
-
-    uploadArea.addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = previewEquipmentImage;
-        input.click();
-    });
-
-    // Drag and drop
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            previewEquipmentImage({ target: { files: [file] } });
-        }
-    });
-}
-
-// Inicializar upload ao abrir modal
-document.addEventListener('DOMContentLoaded', () => {
-    // Observer para configurar upload quando modal abrir
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.target.id === 'equipmentModal' && mutation.target.classList.contains('open')) {
-                setupEquipmentImageUpload();
-            }
-        });
-    });
-
-    const equipmentModal = document.getElementById('equipmentModal');
-    if (equipmentModal) {
-        observer.observe(equipmentModal, { attributes: true, attributeFilter: ['class'] });
-    }
-});
 
 // ===========================
 // GLOBAL FUNCTIONS FOR ONCLICK
@@ -1467,3 +1432,4 @@ window.openEquipmentActionsModal = openEquipmentActionsModal;
 window.closeEquipmentActionsModal = closeEquipmentActionsModal;
 window.handleEditEquipment = handleEditEquipment;
 window.handleDeleteEquipment = handleDeleteEquipment;
+window.previewEquipmentImage = previewEquipmentImage;
