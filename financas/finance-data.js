@@ -2190,13 +2190,20 @@ function updateKPIs() {
     }, 0);
 
     // Projection for Current Month (mudado de Next Month)
+    // Calcula saldo líquido: entradas - saídas
     const totalProjection = projections
         .filter(p => {
             if (p.status !== 'pending') return false;
             const projDate = new Date(p.date + 'T12:00:00');
             return projDate.getMonth() === currentMonth && projDate.getFullYear() === currentYear;
         })
-        .reduce((sum, p) => sum + p.value, 0);
+        .reduce((sum, p) => {
+            // Se for saída (expense), subtrai; se for entrada (income ou sem tipo), soma
+            if (p.type === 'expense') {
+                return sum - p.value;
+            }
+            return sum + p.value;
+        }, 0);
 
     // Update DOM
     const incomeEl = document.getElementById('totalIncome');
