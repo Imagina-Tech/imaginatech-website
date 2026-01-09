@@ -1150,10 +1150,10 @@ function handleDeleteFilament() {
 // EQUIPMENT (INVENTÁRIO) FUNCTIONS
 // ===========================
 
-// Alternar entre seções (Filamentos / Inventário)
+// Alternar entre seções (Filamentos / Equipamentos)
 function switchSection(section) {
-    // Atualizar tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    // Atualizar tabs no header
+    document.querySelectorAll('.header-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.section === section);
     });
 

@@ -80,12 +80,23 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                         <h1 class="logo">ImaginaTech</h1>
                         <span class="logo-subtitle">Gestão de Estoque</span>
                     </div>
+                    <!-- Tabs integrados no header -->
+                    <div class="header-tabs">
+                        <button class="header-tab active" data-section="filamentos" onclick="switchSection('filamentos')">
+                            <i class="fas fa-scroll"></i>
+                            <span>Filamentos</span>
+                        </button>
+                        <button class="header-tab" data-section="inventario" onclick="switchSection('inventario')">
+                            <i class="fas fa-toolbox"></i>
+                            <span>Equipamentos</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="navbar-right">
                     <div class="connection-status" id="connectionStatus">
                         <div class="status-dot"></div>
                         <span id="statusText">Conectado</span>
                     </div>
-                </div>
-                <div class="navbar-right">
                     <a href="/servicos/" class="btn-nav">
                         <i class="fas fa-tasks"></i>
                         <span>Serviços</span>
@@ -112,18 +123,6 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
             </div>
         </header>
-
-        <!-- Tabs de Navegação -->
-        <div class="section-tabs">
-            <button class="tab-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
-                <i class="fas fa-scroll"></i>
-                <span>Filamentos</span>
-            </button>
-            <button class="tab-btn" data-section="inventario" onclick="switchSection('inventario')">
-                <i class="fas fa-boxes"></i>
-                <span>Inventário</span>
-            </button>
-        </div>
 
         <main class="main-content">
             <div class="container">
