@@ -1362,8 +1362,16 @@ function openAddEquipmentModal() {
 
         // Preencher anos e resetar campos de data
         populateAcquisitionYears();
-        if (equipmentMonth) equipmentMonth.value = '';
-        if (equipmentYear) equipmentYear.value = '';
+
+        // Resetar dropdowns customizados (precisa disparar evento change para atualizar a UI)
+        if (equipmentMonth) {
+            equipmentMonth.selectedIndex = 0;
+            equipmentMonth.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (equipmentYear) {
+            equipmentYear.selectedIndex = 0;
+            equipmentYear.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         // Resetar área de upload (mostrar placeholder, esconder preview)
         const placeholder = document.getElementById('equipmentUploadPlaceholder');
@@ -1407,8 +1415,16 @@ function openEditEquipmentModal(id) {
     populateAcquisitionYears();
     const monthSelect = document.getElementById('equipmentAcquisitionMonth');
     const yearSelect = document.getElementById('equipmentAcquisitionYear');
-    if (monthSelect) monthSelect.value = item.acquisitionMonth || '';
-    if (yearSelect) yearSelect.value = item.acquisitionYear || '';
+
+    // Definir valores e disparar eventos para sincronizar dropdowns customizados
+    if (monthSelect) {
+        monthSelect.value = item.acquisitionMonth || '';
+        monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (yearSelect) {
+        yearSelect.value = item.acquisitionYear || '';
+        yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     // Mostrar imagem existente ou placeholder
     const placeholder = document.getElementById('equipmentUploadPlaceholder');
