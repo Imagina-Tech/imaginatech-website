@@ -174,6 +174,7 @@ export function updateMaterialDropdown() {
 
 /**
  * Atualiza dropdown de cores baseado no material selecionado
+ * Lista cada filamento individualmente com marca e peso para diferenciação
  */
 export function updateColorDropdown(selectedMaterial) {
     const colorSelect = document.getElementById('serviceColor');
@@ -187,37 +188,40 @@ export function updateColorDropdown(selectedMaterial) {
         return true;
     });
 
-    // Agrupar por cor e encontrar melhor marca para cada cor
-    const colorMap = new Map();
-    filtered.forEach(f => {
-        const color = f.color;
-        if (!colorMap.has(color)) {
-            colorMap.set(color, []);
-        }
-        colorMap.get(color).push(f);
+    // Ordenar por cor (alfabético) e depois por peso (maior primeiro)
+    filtered.sort((a, b) => {
+        const colorCompare = a.color.localeCompare(b.color);
+        if (colorCompare !== 0) return colorCompare;
+        return b.weight - a.weight; // Maior peso primeiro
     });
-
-    // Ordenar cores alfabeticamente
-    const colors = Array.from(colorMap.keys()).sort();
 
     // Atualizar dropdown
     colorSelect.innerHTML = '<option value="">Selecione a cor</option>';
 
-    if (colors.length === 0) {
+    if (filtered.length === 0) {
         colorSelect.innerHTML += '<option value="" disabled>Sem estoque disponível</option>';
     } else {
-        colors.forEach(color => {
-            // Encontrar a marca com mais estoque para esta cor
-            const brands = colorMap.get(color);
-            const bestBrand = brands.reduce((best, current) =>
-                current.weight > best.weight ? current : best
-            );
+        // Agrupar por cor para saber se precisa mostrar marca
+        const colorCounts = {};
+        filtered.forEach(f => {
+            colorCounts[f.color] = (colorCounts[f.color] || 0) + 1;
+        });
 
-            const brandInfo = brands.length > 1 ? ` (${bestBrand.brand || 'S/marca'} - ${(bestBrand.weight * 1000).toFixed(0)}g)` : '';
-
+        filtered.forEach(filament => {
             const option = document.createElement('option');
-            option.value = color.toLowerCase();
-            option.textContent = `${color}${brandInfo}`;
+            option.value = filament.color.toLowerCase();
+            option.dataset.filamentId = filament.id; // Guardar ID para referência futura
+
+            const weightGrams = (filament.weight * 1000).toFixed(0);
+            const brand = filament.brand || 'S/marca';
+
+            // Se há múltiplos da mesma cor, mostrar marca para diferenciar
+            if (colorCounts[filament.color] > 1) {
+                option.textContent = `${filament.color} - ${brand} (${weightGrams}g)`;
+            } else {
+                option.textContent = `${filament.color} (${weightGrams}g)`;
+            }
+
             colorSelect.appendChild(option);
         });
     }
