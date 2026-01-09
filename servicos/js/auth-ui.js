@@ -852,10 +852,13 @@ export async function openEditModal(serviceId) {
     if (service.material) {
         updateColorDropdown(service.material);
         // Re-definir a cor após atualizar o dropdown e sincronizar dropdown customizado
+        // Usar setTimeout para aguardar o MutationObserver do CustomSelect processar as novas opções
         const colorSelect = document.getElementById('serviceColor');
         if (colorSelect && service.color) {
-            colorSelect.value = service.color;
-            colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            setTimeout(() => {
+                colorSelect.value = service.color;
+                colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }, 0);
         }
     }
     
