@@ -531,7 +531,9 @@ export async function saveService(event) {
             
             if (deliveryMethod !== 'sedex') {
                 showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
-                document.getElementById('deliveryMethod').value = 'sedex';
+                const deliverySelect = document.getElementById('deliveryMethod');
+                deliverySelect.value = 'sedex';
+                deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
                 window.toggleDeliveryFields();
                 return;
             }

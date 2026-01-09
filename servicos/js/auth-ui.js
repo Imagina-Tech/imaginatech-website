@@ -817,6 +817,7 @@ export async function openEditModal(serviceId) {
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
     document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
 
+    // Preencher campos de texto/número (exceto dropdowns customizados)
     Object.entries({
         serviceName: service.name,
         clientName: service.client,
@@ -824,16 +825,12 @@ export async function openEditModal(serviceId) {
         clientEmail: service.clientEmail,
         clientPhone: service.clientPhone,
         serviceDescription: service.description,
-        serviceMaterial: service.material,
-        serviceColor: service.color,
-        servicePriority: service.priority || 'media',
         startDate: service.startDate,
         dueDate: service.dueDate,
         serviceValue: service.value,
         serviceWeight: service.weight,
         serviceObservations: service.observations,
-        serviceStatus: service.status || 'pendente',
-        deliveryMethod: service.deliveryMethod
+        serviceStatus: service.status || 'pendente'
     }).forEach(([id, value]) => {
         const el = document.getElementById(id);
         el && (el.value = value || '');
@@ -848,18 +845,50 @@ export async function openEditModal(serviceId) {
         }
     }
 
-    // Atualizar dropdown de cores baseado no material selecionado
+    // =====================================================
+    // SINCRONIZAÇÃO DE DROPDOWNS CUSTOMIZADOS
+    // O CustomSelect usa MutationObserver que é assíncrono.
+    // Precisamos usar setTimeout para aguardar o processamento
+    // das novas opções antes de definir os valores.
+    // =====================================================
+
+    // 1. Material (dropdown dinâmico - opções vêm do estoque)
     if (service.material) {
-        updateColorDropdown(service.material);
-        // Re-definir a cor após atualizar o dropdown e sincronizar dropdown customizado
-        // Usar setTimeout para aguardar o MutationObserver do CustomSelect processar as novas opções
-        const colorSelect = document.getElementById('serviceColor');
-        if (colorSelect && service.color) {
+        // updateMaterialDropdown() já foi chamado acima
+        // Aguardar MutationObserver processar antes de definir valor
+        const materialSelect = document.getElementById('serviceMaterial');
+        if (materialSelect) {
             setTimeout(() => {
-                colorSelect.value = service.color;
-                colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                materialSelect.value = service.material;
+                materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // 2. Cor (dropdown dinâmico - depende do material)
+                // Só atualizar após o material estar definido
+                updateColorDropdown(service.material);
+
+                const colorSelect = document.getElementById('serviceColor');
+                if (colorSelect && service.color) {
+                    setTimeout(() => {
+                        colorSelect.value = service.color;
+                        colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }, 0);
+                }
             }, 0);
         }
+    }
+
+    // 3. Prioridade (dropdown estático - mas precisa sincronizar CustomSelect)
+    const prioritySelect = document.getElementById('servicePriority');
+    if (prioritySelect) {
+        prioritySelect.value = service.priority || 'media';
+        prioritySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // 4. Método de Entrega (dropdown estático - mas precisa sincronizar CustomSelect)
+    const deliverySelect = document.getElementById('deliveryMethod');
+    if (deliverySelect && service.deliveryMethod) {
+        deliverySelect.value = service.deliveryMethod;
+        deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
     const notificationSection = document.getElementById('notificationSection');
@@ -982,16 +1011,12 @@ export async function openEditModal(serviceId) {
     
     document.getElementById('clientSuggestions').style.display = 'none';
 
-    // INTEGRAÇÃO COM ESTOQUE: Configurar listener para material e atualizar cores
-    const materialSelect = document.getElementById('serviceMaterial');
-    if (materialSelect) {
-        materialSelect.removeEventListener('change', handleMaterialChange);
-        materialSelect.addEventListener('change', handleMaterialChange);
-
-        // Se já houver material selecionado, atualizar cores disponíveis
-        if (service.material) {
-            updateColorDropdown(service.material);
-        }
+    // INTEGRAÇÃO COM ESTOQUE: Configurar listener para material
+    // (Não chamar updateColorDropdown aqui - já é tratado na sincronização acima)
+    const materialSelectListener = document.getElementById('serviceMaterial');
+    if (materialSelectListener) {
+        materialSelectListener.removeEventListener('change', handleMaterialChange);
+        materialSelectListener.addEventListener('change', handleMaterialChange);
     }
 
     document.getElementById('serviceModal')?.classList.add('active');
@@ -1996,7 +2021,9 @@ export function toggleDeliveryFields() {
         const service = state.services.find(s => s.id === state.editingServiceId);
         if (service && service.trackingCode && service.deliveryMethod === 'sedex' && method !== 'sedex') {
             showToast('ATENÇÃO: Este pedido já foi postado! Não é possível mudar o método de entrega.', 'error');
-            document.getElementById('deliveryMethod').value = 'sedex';
+            const deliverySelect = document.getElementById('deliveryMethod');
+            deliverySelect.value = 'sedex';
+            deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
             hideAllDeliveryFields();
             document.getElementById('deliveryFields')?.classList.add('active');
             
