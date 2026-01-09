@@ -1417,13 +1417,18 @@ function openEditEquipmentModal(id) {
     const yearSelect = document.getElementById('equipmentAcquisitionYear');
 
     // Definir valores e disparar eventos para sincronizar dropdowns customizados
+    // monthSelect é estático, pode definir diretamente
     if (monthSelect) {
         monthSelect.value = item.acquisitionMonth || '';
         monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    // yearSelect é dinâmico (populado por populateAcquisitionYears)
+    // Usar setTimeout para aguardar MutationObserver processar novas opções
     if (yearSelect) {
-        yearSelect.value = item.acquisitionYear || '';
-        yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        setTimeout(() => {
+            yearSelect.value = item.acquisitionYear || '';
+            yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 0);
     }
 
     // Mostrar imagem existente ou placeholder
