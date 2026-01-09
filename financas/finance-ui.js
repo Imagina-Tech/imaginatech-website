@@ -895,6 +895,12 @@ function editInstallment(id) {
             `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
         ).join('');
 
+    // Sincronizar CustomSelect após popular opções
+    // Usar setTimeout para aguardar MutationObserver processar
+    setTimeout(() => {
+        cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+
     // Preenche os campos
     document.getElementById('instDescription').value = installment.description;
     document.getElementById('instTotalInstallments').value = installment.totalInstallments;
@@ -1099,12 +1105,18 @@ function selectPaymentMethod(method) {
         populateTransactionCardOptions();
         // Reset selection to empty (force user to choose)
         transactionCardSelect.value = '';
+        // Sincronizar CustomSelect após popular opções
+        setTimeout(() => {
+            transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 0);
     } else {
         creditCardGroup.style.display = 'none';
         transactionCardSelect.required = false;
         // Clear dropdown when switching away from credit
         transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
         transactionCardSelect.value = '';
+        // Sincronizar CustomSelect
+        transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 }
 
