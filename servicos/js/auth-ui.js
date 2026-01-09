@@ -700,8 +700,18 @@ export async function selectServiceType(type) {
     const filesPreviewContainer = document.getElementById('filesPreviewContainer');
     if (filesPreviewContainer) filesPreviewContainer.innerHTML = '';
 
-    document.getElementById('servicePriority') && (document.getElementById('servicePriority').value = 'media');
-    document.getElementById('serviceStatus') && (document.getElementById('serviceStatus').value = type === 'modelagem' ? 'modelando' : 'pendente');
+    // Definir valores padrão e sincronizar dropdowns customizados
+    const prioritySelect = document.getElementById('servicePriority');
+    const statusSelect = document.getElementById('serviceStatus');
+
+    if (prioritySelect) {
+        prioritySelect.value = 'media';
+        prioritySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (statusSelect) {
+        statusSelect.value = type === 'modelagem' ? 'modelando' : 'pendente';
+        statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
 
     const notificationSection = document.getElementById('notificationSection');
@@ -841,10 +851,11 @@ export async function openEditModal(serviceId) {
     // Atualizar dropdown de cores baseado no material selecionado
     if (service.material) {
         updateColorDropdown(service.material);
-        // Re-definir a cor após atualizar o dropdown
+        // Re-definir a cor após atualizar o dropdown e sincronizar dropdown customizado
         const colorSelect = document.getElementById('serviceColor');
         if (colorSelect && service.color) {
             colorSelect.value = service.color;
+            colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
     

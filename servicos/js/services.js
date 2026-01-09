@@ -108,6 +108,7 @@ export function loadAvailableFilaments() {
                     updateMaterialDropdown();
                     if (currentMaterial) {
                         materialSelect.value = currentMaterial;
+                        materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
                         updateColorDropdown(currentMaterial);
                     }
                 }
@@ -161,9 +162,13 @@ export function updateMaterialDropdown() {
         });
     }
 
-    // Restaurar valor selecionado se ainda existir
+    // Restaurar valor selecionado se ainda existir e sincronizar dropdown customizado
     if (currentValue && materials.includes(currentValue)) {
         materialSelect.value = currentValue;
+        materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+        // Se não restaurar, ainda precisa sincronizar para mostrar o placeholder
+        materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 }
 

@@ -713,6 +713,11 @@ function openTransactionModal() {
     transactionCardSelect.value = '';
     populateTransactionCardOptions();
 
+    // Sincronizar dropdowns customizados após reset
+    const categorySelect = document.getElementById('category');
+    if (categorySelect) categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (transactionCardSelect) transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
     selectTransactionType('income');
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Nova Transação';
 }
@@ -759,13 +764,19 @@ function editTransaction(id) {
 
     // Define o cartão se for crédito
     if (transaction.paymentMethod === 'credit' && transaction.cardId) {
-        document.getElementById('transactionCard').value = transaction.cardId;
+        const cardSelect = document.getElementById('transactionCard');
+        cardSelect.value = transaction.cardId;
+        cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     // Preenche os campos DEPOIS de popular as categorias
     document.getElementById('description').value = transaction.description;
     document.getElementById('value').value = formatCurrencyValue(transaction.value);
-    document.getElementById('category').value = transaction.category;
+
+    const categorySelect = document.getElementById('category');
+    categorySelect.value = transaction.category;
+    categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+
     document.getElementById('date').value = transaction.date;
 }
 
@@ -782,6 +793,13 @@ function openSubscriptionModal() {
         creditCards.map(card =>
             `<option value="${card.id}">${card.name} - ${card.institution}</option>`
         ).join('');
+
+    // Sincronizar dropdowns customizados após reset
+    const subCategorySelect = document.getElementById('subCategory');
+    const subStatusSelect = document.getElementById('subStatus');
+    if (cardSelect) cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (subCategorySelect) subCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (subStatusSelect) subStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // 🎨 Fecha modal de assinatura
@@ -810,13 +828,20 @@ function editSubscription(id) {
         creditCards.map(card =>
             `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
         ).join('');
+    cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Preenche os campos
     document.getElementById('subName').value = subscription.name;
     document.getElementById('subValue').value = formatCurrencyValue(subscription.value);
     document.getElementById('subDueDay').value = subscription.dueDay;
-    document.getElementById('subCategory').value = subscription.category;
-    document.getElementById('subStatus').value = subscription.status;
+
+    const subCategorySelect = document.getElementById('subCategory');
+    subCategorySelect.value = subscription.category;
+    subCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const subStatusSelect = document.getElementById('subStatus');
+    subStatusSelect.value = subscription.status;
+    subStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // 🎨 Abre modal para adicionar novo parcelamento
@@ -836,6 +861,9 @@ function openInstallmentModal() {
         creditCards.map(card =>
             `<option value="${card.id}">${card.name} - ${card.institution}</option>`
         ).join('');
+
+    // Sincronizar dropdown customizado
+    if (cardSelect) cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // 🎨 Fecha modal de parcelamento
@@ -958,7 +986,9 @@ function openProjectionModal() {
     document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova Projeção';
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('projDate').value = today;
-    document.getElementById('projStatus').value = 'pending';
+    const projStatusSelect = document.getElementById('projStatus');
+    projStatusSelect.value = 'pending';
+    projStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
     // Reset tipo para entrada
     selectProjectionType('income');
 }
@@ -980,7 +1010,10 @@ function editProjection(id) {
     document.getElementById('projDescription').value = projection.description;
     document.getElementById('projValue').value = formatCurrencyValue(projection.value);
     document.getElementById('projDate').value = projection.date;
-    document.getElementById('projStatus').value = projection.status || 'pending';
+
+    const projStatusSelect = document.getElementById('projStatus');
+    projStatusSelect.value = projection.status || 'pending';
+    projStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Seleciona o tipo correto (default: income para projeções antigas)
     const projType = projection.type || 'income';
