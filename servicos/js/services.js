@@ -513,7 +513,10 @@ export async function saveService(event) {
             
             service.createdAt = currentService.createdAt;
             service.createdBy = currentService.createdBy;
-            service.orderCode = currentService.orderCode;
+            // Permitir edição do código do pedido
+            const orderCodeInput = document.getElementById('orderCodeInput');
+            const editedOrderCode = orderCodeInput?.value?.trim().toUpperCase();
+            service.orderCode = editedOrderCode || currentService.orderCode;
             service.serviceId = currentService.serviceId;
             
             if (currentService.productionStartedAt) service.productionStartedAt = currentService.productionStartedAt;
@@ -838,12 +841,16 @@ export async function saveService(event) {
                 showToast('Serviço atualizado com sucesso!', 'success');
             }
         } else {
+            // Obter código do pedido do input (customizado ou gerado)
+            const orderCodeInput = document.getElementById('orderCodeInput');
+            const customOrderCode = orderCodeInput?.value?.trim().toUpperCase() || generateOrderCode();
+
             Object.assign(service, {
                 createdAt: new Date().toISOString(),
                 createdBy: state.currentUser.email,
                 userId: COMPANY_USER_ID,
                 companyId: COMPANY_USER_ID,
-                orderCode: generateOrderCode(),
+                orderCode: customOrderCode,
                 serviceId: 'SRV-' + Date.now(),
                 files: [],
                 fileUrl: '',
@@ -868,8 +875,12 @@ export async function saveService(event) {
                 await deductMaterialFromStock(service.material, service.color, materialToDeduct);
             }
 
-            document.getElementById('orderCodeDisplay').style.display = 'block';
-            document.getElementById('orderCodeValue').textContent = service.orderCode;
+            // Destacar o código do pedido criado
+            const orderCodeInputEl = document.getElementById('orderCodeInput');
+            if (orderCodeInputEl) {
+                orderCodeInputEl.style.background = 'linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 212, 255, 0.2))';
+                orderCodeInputEl.style.borderColor = 'var(--neon-green)';
+            }
             showToast(`Serviço criado! Código: ${service.orderCode}`, 'success');
 
             const sendWhatsapp = document.getElementById('sendWhatsappOnCreate')?.checked || false;

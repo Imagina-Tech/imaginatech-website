@@ -20,7 +20,8 @@ import {
     uploadFile,
     loadAvailableFilaments,
     updateMaterialDropdown,
-    updateColorDropdown
+    updateColorDropdown,
+    generateOrderCode
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -687,7 +688,21 @@ export async function selectServiceType(type) {
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = type === 'modelagem' ? 'Novo Serviço de Modelagem' : 'Novo Serviço de Impressão');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Salvar Serviço');
     document.getElementById('serviceForm')?.reset();
-    document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
+
+    // Configurar seção de código do pedido para NOVO serviço
+    const orderCodeInput = document.getElementById('orderCodeInput');
+    const orderCodeNewInfo = document.getElementById('orderCodeNewInfo');
+    const orderCodeEditInfo = document.getElementById('orderCodeEditInfo');
+    const btnRegenerate = document.getElementById('btnRegenerateCode');
+
+    if (orderCodeInput) {
+        // Gerar código aleatório para preview
+        orderCodeInput.value = generateOrderCode();
+        orderCodeInput.removeAttribute('readonly');
+    }
+    if (orderCodeNewInfo) orderCodeNewInfo.style.display = 'inline';
+    if (orderCodeEditInfo) orderCodeEditInfo.style.display = 'none';
+    if (btnRegenerate) btnRegenerate.style.display = 'flex';
 
     setupDateFields();
     ['filesInfo', 'imagePreview'].forEach(id => {
@@ -816,7 +831,19 @@ export async function openEditModal(serviceId) {
 
     document.getElementById('modalTitle') && (document.getElementById('modalTitle').textContent = 'Editar Serviço');
     document.getElementById('saveButtonText') && (document.getElementById('saveButtonText').textContent = 'Atualizar Serviço');
-    document.getElementById('orderCodeDisplay') && (document.getElementById('orderCodeDisplay').style.display = 'none');
+
+    // Configurar seção de código do pedido para EDIÇÃO
+    const orderCodeInput = document.getElementById('orderCodeInput');
+    const orderCodeNewInfo = document.getElementById('orderCodeNewInfo');
+    const orderCodeEditInfo = document.getElementById('orderCodeEditInfo');
+    const btnRegenerate = document.getElementById('btnRegenerateCode');
+
+    if (orderCodeInput) {
+        orderCodeInput.value = service.orderCode || '';
+    }
+    if (orderCodeNewInfo) orderCodeNewInfo.style.display = 'none';
+    if (orderCodeEditInfo) orderCodeEditInfo.style.display = 'inline';
+    if (btnRegenerate) btnRegenerate.style.display = 'flex';
 
     // Preencher campos de texto/número (exceto dropdowns customizados)
     Object.entries({
@@ -2322,6 +2349,16 @@ window.closeModal = closeModal;
 window.saveService = saveService;
 window.deleteServiceGlobal = deleteService;
 window.duplicateServiceGlobal = duplicateService;
+window.regenerateOrderCode = () => {
+    const orderCodeInput = document.getElementById('orderCodeInput');
+    if (orderCodeInput) {
+        orderCodeInput.value = generateOrderCode();
+        // Animação de feedback
+        orderCodeInput.style.animation = 'none';
+        orderCodeInput.offsetHeight; // Trigger reflow
+        orderCodeInput.style.animation = 'pulse 0.3s ease';
+    }
+};
 window.updateStatusGlobal = updateStatus;
 window.confirmStatusChange = confirmStatusChange;
 window.closeStatusModal = closeStatusModal;

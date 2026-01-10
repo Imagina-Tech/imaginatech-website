@@ -231,10 +231,22 @@
             
             <form id="serviceForm" onsubmit="saveService(event)">
                 <div class="form-grid">
-                    <div class="order-code-display" id="orderCodeDisplay" style="display: none; grid-column: 1 / -1;">
-                        <div class="order-code-label">Código do Pedido</div>
-                        <div class="order-code-value" id="orderCodeValue">-</div>
-                        <div class="order-code-info">Guarde este código para acompanhamento</div>
+                    <div class="order-code-section" id="orderCodeSection" style="grid-column: 1 / -1;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="orderCodeInput"><i class="fas fa-hashtag"></i> Código do Pedido</label>
+                            <div class="order-code-input-wrapper">
+                                <input type="text" id="orderCodeInput" class="form-input order-code-input"
+                                    placeholder="Ex: ABC12" maxlength="10" autocomplete="off"
+                                    style="text-transform: uppercase; font-family: monospace; font-weight: bold; letter-spacing: 2px;">
+                                <button type="button" class="btn-regenerate" id="btnRegenerateCode" onclick="window.regenerateOrderCode()" title="Gerar novo código aleatório">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="order-code-info" id="orderCodeInfo">
+                                <span id="orderCodeNewInfo" style="display: none;"><i class="fas fa-info-circle"></i> Código será usado para acompanhamento do pedido</span>
+                                <span id="orderCodeEditInfo" style="display: none;"><i class="fas fa-exclamation-triangle"></i> Alterar o código invalidará links antigos enviados ao cliente</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
