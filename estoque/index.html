@@ -33,9 +33,10 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
     <!-- Estilos base compartilhados -->
     <link rel="stylesheet" href="/servicos/styles.css">
-    <!-- Tela de bloqueio centralizada -->
+    <!-- Telas de autenticacao centralizadas -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
     <link rel="stylesheet" href="/shared/access-denied.css">
-    <!-- Customizações do módulo Estoque -->
+    <!-- Customizacoes do modulo Estoque -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -51,25 +52,26 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         <div class="particles" id="particles"></div>
     </div>
 
-    <div class="login-screen hidden" id="loginScreen">
-        <div class="login-container">
-            <div class="login-header">
-                <div class="login-logo">
-                    <h1>ImaginaTech</h1>
-                    <p>Gestão de Estoque</p>
-                </div>
-                <div class="login-info">
-                    <i class="fas fa-shield-alt"></i>
-                    <h2>Acesso Restrito</h2>
-                    <p>Área exclusiva para funcionários autorizados</p>
-                </div>
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Gestao de Estoque</p>
             </div>
-            <button class="btn-google" onclick="signInWithGoogle()">
+            <div class="auth-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para funcionarios autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" onclick="signInWithGoogle()">
                 <i class="fab fa-google"></i>
                 <span>Entrar com Google</span>
             </button>
-            <div class="login-footer">
-                <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
+            <div class="auth-footer">
+                <p>Cliente? <a href="/">Voltar ao site</a></p>
             </div>
         </div>
     </div>

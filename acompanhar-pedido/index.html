@@ -40,6 +40,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     
     <!-- CSS Principal -->
     <link rel="stylesheet" href="style.css">
+    <!-- Tela de autenticacao centralizada -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -50,14 +52,38 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Acompanhar Pedido</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-cube"></i>
+            </div>
+            <h2 class="auth-title">Portal do Cliente</h2>
+            <p class="auth-message">
+                Faca login para acompanhar o status do seu pedido em tempo real.
+            </p>
+            <button class="auth-btn-google" onclick="loginWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Qualquer conta Google pode acessar</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Background Animado -->
     <div class="cosmic-bg">
         <div class="grid-lines"></div>
         <div class="particles" id="particles"></div>
     </div>
 
-    <!-- Header -->
-    <header class="navbar">
+    <!-- Header (hidden ate login) -->
+    <header class="navbar hidden" id="mainNavbar">
         <div class="navbar-container">
             <div class="navbar-left">
                 <div class="logo-section">
@@ -82,8 +108,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </header>
 
-    <!-- Container Principal -->
-    <main class="main-container">
+    <!-- Container Principal (hidden ate login) -->
+    <main class="main-container hidden" id="mainContainer">
         
         <!-- Tela de Boas-Vindas -->
         <div class="welcome-screen" id="welcomeScreen">

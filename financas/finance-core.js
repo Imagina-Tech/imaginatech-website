@@ -269,23 +269,24 @@ function signOut() {
     });
 }
 
-// 🎨 Exibe tela de login
+// Exibe tela de login
 function showLoginScreen() {
-    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginScreen').classList.add('active');
     document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
     hideLoading(); // IMPORTANTE: Esconde loading na tela de login
 }
 
-// 🎨 Exibe dashboard principal após autenticação
+// Exibe dashboard principal apos autenticacao
 function showDashboard(user) {
     const loginScreen = document.getElementById('loginScreen');
     const dashboard = document.getElementById('dashboard');
     const userName = document.getElementById('userName');
     const userPhoto = document.getElementById('userPhoto');
 
-    if (loginScreen) loginScreen.style.display = 'none';
+    if (loginScreen) loginScreen.classList.remove('active');
     if (dashboard) dashboard.classList.remove('hidden');
-    if (userName) userName.textContent = user.displayName || 'Usuário';
+    if (userName) userName.textContent = user.displayName || 'Usuario';
     if (userPhoto) userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
 }
 
@@ -307,9 +308,9 @@ function showAccountSelectionModal(user) {
     document.getElementById('personalAccountEmail').textContent = user.email;
 
     // Esconder login screen
-    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('loginScreen').classList.remove('active');
 
-    // Mostrar modal de seleção
+    // Mostrar modal de selecao
     document.getElementById('accountSelectionModal').classList.add('active');
 }
 

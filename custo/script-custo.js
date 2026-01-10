@@ -74,7 +74,8 @@ async function logout() {
 
 function showMainApp() {
     document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('accessDeniedScreen').classList.remove('active');
     document.getElementById('mainApp').style.display = 'block';
 
     // Update user info
@@ -91,14 +92,14 @@ function showMainApp() {
 
 function hideMainApp() {
     document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginScreen').classList.add('active');
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('accessDeniedScreen').classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
     document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('mainApp').style.display = 'none';
 
     // Atualizar informacoes do usuario na tela

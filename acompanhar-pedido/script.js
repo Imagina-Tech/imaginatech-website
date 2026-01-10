@@ -246,12 +246,21 @@ async function logout() {
 // ===========================
 
 function showLoginSection() {
-    document.getElementById('loginSection').classList.remove('hidden');
-    document.getElementById('codeSection').classList.add('hidden');
+    // Mostrar tela de login fullscreen
+    document.getElementById('loginScreen').classList.add('active');
+    // Esconder conteudo principal
+    document.getElementById('mainNavbar').classList.add('hidden');
+    document.getElementById('mainContainer').classList.add('hidden');
     document.getElementById('orderView').classList.add('hidden');
 }
 
 function showCodeSection() {
+    // Esconder tela de login
+    document.getElementById('loginScreen').classList.remove('active');
+    // Mostrar conteudo principal
+    document.getElementById('mainNavbar').classList.remove('hidden');
+    document.getElementById('mainContainer').classList.remove('hidden');
+    // Configurar secoes internas
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('codeSection').classList.remove('hidden');
     document.getElementById('orderView').classList.add('hidden');
@@ -259,16 +268,16 @@ function showCodeSection() {
     // Update user info - verificar se currentUser existe
     const user = currentUser || auth.currentUser;
     if (user) {
-        document.getElementById('userName').textContent = user.displayName || 'Usuário';
+        document.getElementById('userName').textContent = user.displayName || 'Usuario';
         document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
 
-        // Garantir que currentUser está definido
+        // Garantir que currentUser esta definido
         currentUser = user;
     }
 
     // Reset attempts
     clientAttempts = 0;
-    // Só limpar o input se não houver código pendente da URL
+    // So limpar o input se nao houver codigo pendente da URL
     if (!pendingUrlOrderCode) {
         document.getElementById('orderCode').value = '';
     }

@@ -247,15 +247,15 @@ export async function updateLastAccess(user) {
 // UI MANAGEMENT
 // ===========================
 export function showLoginScreen() {
-    document.getElementById('loginScreen')?.classList.remove('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
     document.getElementById('adminDashboard')?.classList.add('hidden');
-    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
     state.servicesListener?.();
     state.servicesListener = null;
 }
 
 export function showAdminDashboard(user) {
-    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
     document.getElementById('adminDashboard')?.classList.remove('hidden');
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
     document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
@@ -263,7 +263,7 @@ export function showAdminDashboard(user) {
 }
 
 export function showAccessDeniedScreen(user) {
-    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
     document.getElementById('adminDashboard')?.classList.add('hidden');
 
     let accessDeniedScreen = document.getElementById('accessDeniedScreen');

@@ -108,23 +108,24 @@ function signOut() {
 }
 
 function showDashboard(user) {
-    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('accessDeniedScreen').classList.remove('active');
     document.getElementById('userName').textContent = user.displayName || user.email;
     document.getElementById('userPhoto').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`;
     updateConnectionStatus(true);
-    loadPendingServices(); // Carregar serviços aguardando material
-    loadEquipment(); // Carregar equipamentos do inventário
+    loadPendingServices(); // Carregar servicos aguardando material
+    loadEquipment(); // Carregar equipamentos do inventario
 }
 
 function showLoginScreen() {
     document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loginScreen').classList.add('active');
     document.getElementById('accessDeniedScreen').classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
-    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('dashboard').classList.add('hidden');
 
     // Atualizar informacoes do usuario na tela

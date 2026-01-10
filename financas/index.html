@@ -40,7 +40,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="style.css?v=2024121803">
-    <!-- Tela de bloqueio centralizada -->
+    <!-- Telas de autenticacao centralizadas -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
     <link rel="stylesheet" href="/shared/access-denied.css">
 </head>
 <body>
@@ -67,30 +68,26 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-container">
-            <div class="login-header">
-                <div class="login-logo">
-                    <h1>ImaginaTech</h1>
-                    <p>Painel Administrativo</p>
-                </div>
-                <div class="login-info">
-                    <i class="fas fa-shield-alt"></i>
-                    <h2>Acesso Restrito</h2>
-                    <p>Área exclusiva para funcionários autorizados</p>
-                </div>
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Dashboard Financeiro</p>
             </div>
-            <button class="btn-google" onclick="signInWithGoogle()">
+            <div class="auth-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para funcionarios autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" onclick="signInWithGoogle()">
                 <i class="fab fa-google"></i>
                 <span>Entrar com Google</span>
             </button>
-            <div class="login-footer">
-                <p class="footer-text">Cliente? Acompanhe seu pedido:</p>
-                <a href="https://imaginatech.com.br" class="client-link" target="_blank">
-                    <i class="fas fa-cube"></i>
-                    Portal do Cliente
-                </a>
+            <div class="auth-footer">
+                <p>Cliente? <a href="/acompanhar-pedido/">Acompanhe seu pedido</a></p>
             </div>
         </div>
     </div>

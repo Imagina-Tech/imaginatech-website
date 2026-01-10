@@ -31,7 +31,8 @@
     
     <!-- CSS Principal -->
     <link rel="stylesheet" href="styles-custo.css">
-    <!-- Tela de bloqueio centralizada -->
+    <!-- Telas de autenticacao centralizadas -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
     <link rel="stylesheet" href="/shared/access-denied.css">
 
     <!-- Firebase -->
@@ -57,29 +58,26 @@
         </div>
     </div>
 
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-container">
-            <div class="login-logo">
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
                 <h1>ImaginaTech</h1>
-                <p>Sistema de Orçamento</p>
+                <p>Sistema de Orcamento</p>
             </div>
-            
-            <div class="login-card">
-                <div class="login-header">
-                    <i class="fas fa-lock"></i>
-                    <h2>Acesso Restrito</h2>
-                    <p>Área exclusiva para colaboradores autorizados</p>
-                </div>
-                
-                <button class="btn btn-google" onclick="loginWithGoogle()">
-                    <i class="fab fa-google"></i>
-                    <span>Entrar com Google</span>
-                </button>
-                
-                <div class="login-footer">
-                    <p>Apenas emails autorizados têm acesso</p>
-                </div>
+            <div class="auth-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para colaboradores autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" onclick="loginWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Apenas emails autorizados tem acesso</p>
             </div>
         </div>
     </div>
