@@ -124,7 +124,7 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card clickable" onclick="filterServices('todos')">
+                    <div class="stat-card clickable" data-filter="todos" onclick="filterServices('todos')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
                             <i class="fas fa-list"></i>
                         </div>
@@ -133,7 +133,7 @@
                             <div class="stat-label">Serviços Ativos</div>
                         </div>
                     </div>
-                    <div class="stat-card clickable" onclick="filterServices('pendente')">
+                    <div class="stat-card clickable" data-filter="pendente" onclick="filterServices('pendente')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
                             <i class="fas fa-clock"></i>
                         </div>
@@ -142,7 +142,7 @@
                             <div class="stat-label">Pendentes</div>
                         </div>
                     </div>
-                    <div class="stat-card clickable" onclick="filterServices('producao')">
+                    <div class="stat-card clickable" data-filter="producao" onclick="filterServices('producao')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
                             <i class="fas fa-cogs"></i>
                         </div>
@@ -151,7 +151,7 @@
                             <div class="stat-label">Em Produção</div>
                         </div>
                     </div>
-                    <div class="stat-card clickable" onclick="filterServices('concluido')">
+                    <div class="stat-card clickable" data-filter="concluido" onclick="filterServices('concluido')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
                             <i class="fas fa-check-circle"></i>
                         </div>
@@ -160,7 +160,7 @@
                             <div class="stat-label">Concluídos</div>
                         </div>
                     </div>
-                    <div class="stat-card clickable" onclick="filterServices('retirada')">
+                    <div class="stat-card clickable" data-filter="retirada" onclick="filterServices('retirada')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
                             <i class="fas fa-box-open"></i>
                         </div>
@@ -169,7 +169,7 @@
                             <div class="stat-label">Em Processo de Entrega</div>
                         </div>
                     </div>
-                    <div class="stat-card clickable" onclick="filterServices('entregue')">
+                    <div class="stat-card clickable" data-filter="entregue" onclick="filterServices('entregue')">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #30cfd0, #330867);">
                             <i class="fas fa-handshake"></i>
                         </div>

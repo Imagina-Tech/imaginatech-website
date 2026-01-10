@@ -2825,34 +2825,70 @@ export function navigateToServiceByCode(orderCode) {
     closeClientHistoryModal();
     closeClientsModal();
 
-    // Buscar o serviço pelo orderCode no state
+    // Buscar o serviço pelo orderCode no state (contém TODOS os serviços)
     const service = state.services.find(s => s.orderCode === orderCode);
 
     if (!service) {
-        showToast(`Pedido #${orderCode} não encontrado na lista atual`, 'warning');
+        showToast(`Pedido #${orderCode} não encontrado`, 'warning');
         return;
     }
 
-    // Buscar o card do serviço
-    const card = document.querySelector(`[data-service-id="${service.id}"]`);
+    // Determinar qual filtro mostra esse serviço
+    const status = service.status;
+    let targetFilter;
 
-    if (card) {
-        // Scroll suave até o card
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Adicionar destaque temporário
-        card.classList.add('highlight-card');
-
-        // Remover destaque após 2 segundos
-        setTimeout(() => {
-            card.classList.remove('highlight-card');
-        }, 2000);
-
-        showToast(`Navegando para pedido #${orderCode}`, 'success');
+    if (status === 'entregue') {
+        targetFilter = 'entregue';
+    } else if (status === 'retirada') {
+        targetFilter = 'retirada';
+    } else if (['concluido', 'modelagem_concluida'].includes(status)) {
+        targetFilter = 'concluido';
+    } else if (['producao', 'modelando'].includes(status)) {
+        targetFilter = 'producao';
+    } else if (status === 'pendente') {
+        targetFilter = 'pendente';
     } else {
-        // O serviço existe mas o card não está visível (filtro diferente?)
-        showToast(`Pedido #${orderCode} encontrado, mas não está visível com o filtro atual`, 'warning');
+        targetFilter = 'todos';
     }
+
+    // Mudar o filtro se necessário
+    if (state.currentFilter !== targetFilter) {
+        // Atualizar o filtro
+        state.currentFilter = targetFilter;
+
+        // Atualizar visual dos botões de filtro
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.classList.remove('active');
+            if (card.dataset.filter === targetFilter) {
+                card.classList.add('active');
+            }
+        });
+
+        // Re-renderizar os serviços
+        renderServices();
+    }
+
+    // Aguardar a renderização e então navegar
+    setTimeout(() => {
+        const card = document.querySelector(`[data-service-id="${service.id}"]`);
+
+        if (card) {
+            // Scroll suave até o card
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Adicionar destaque temporário
+            card.classList.add('highlight-card');
+
+            // Remover destaque após 2 segundos
+            setTimeout(() => {
+                card.classList.remove('highlight-card');
+            }, 2000);
+
+            showToast(`Pedido #${orderCode} (${getStatusLabel(status)})`, 'success');
+        } else {
+            showToast(`Pedido #${orderCode} não pôde ser exibido`, 'warning');
+        }
+    }, 100);
 }
 
 window.openClientsModal = openClientsModal;
