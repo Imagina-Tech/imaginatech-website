@@ -31,6 +31,9 @@ const ADMIN_EMAILS = window.ENV_CONFIG?.AUTHORIZED_ADMINS?.map(a => a.email) || 
     'igor.butter@gmail.com'
 ];
 
+// ID fixo da conta da empresa (DEVE ser o mesmo do painel de serviços)
+const COMPANY_USER_ID = window.ENV_CONFIG?.COMPANY_USER_ID || 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
+
 // Verifica se o usuário atual é admin
 function isAdminUser(email) {
     return ADMIN_EMAILS.includes(email);
@@ -325,46 +328,29 @@ async function selectAccount(accountType) {
 
         showLoading('Carregando dados...');
 
-        // Acessar como conta da empresa
-        // Buscar UID da conta da empresa no systemConfig
+        // Usar o COMPANY_USER_ID fixo para garantir consistência com o painel de serviços
+        activeUserId = COMPANY_USER_ID;
+        activeUserEmail = COMPANY_EMAIL;
+        console.log('Usando UID da empresa (fixo):', activeUserId);
+
+        // Garantir que o systemConfig esteja atualizado com o ID correto
         try {
             const configDoc = await db.collection('systemConfig').doc('companyAccount').get();
 
-            if (configDoc.exists) {
-                // Usar UID salvo na configuração
-                activeUserId = configDoc.data().userId;
-                activeUserEmail = COMPANY_EMAIL;
-                console.log('Usando UID da empresa do systemConfig:', activeUserId);
-            } else {
-                // Se não existe configuração, criar automaticamente
-                // Isso só acontecerá quando 3d3printers@gmail.com fizer login
-                if (currentUser.email === COMPANY_EMAIL) {
-                    showToast('Configurando conta da empresa pela primeira vez...', 'info');
-                    await db.collection('systemConfig').doc('companyAccount').set({
-                        userId: currentUser.uid,
-                        email: COMPANY_EMAIL,
-                        displayName: 'ImaginaTech - Caixa Interno',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        createdBy: currentUser.email
-                    });
-                    activeUserId = currentUser.uid;
-                    activeUserEmail = COMPANY_EMAIL;
-                    console.log('Configuração da empresa criada com UID:', activeUserId);
-                } else {
-                    // Admin tentando acessar empresa, mas configuração não existe
-                    showToast('Conta da empresa ainda não foi configurada. Entre primeiro com 3d3printers@gmail.com', 'error');
-                    // Voltar para seleção
-                    localStorage.removeItem('selectedAccountType');
-                    showAccountSelectionModal(currentUser);
-                    hideLoading();
-                    return;
-                }
+            if (!configDoc.exists || configDoc.data().userId !== COMPANY_USER_ID) {
+                // Criar ou atualizar configuração com o ID correto
+                console.log('Atualizando systemConfig com COMPANY_USER_ID correto...');
+                await db.collection('systemConfig').doc('companyAccount').set({
+                    userId: COMPANY_USER_ID,
+                    email: COMPANY_EMAIL,
+                    displayName: 'ImaginaTech - Caixa Interno',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.email
+                }, { merge: true });
             }
         } catch (error) {
-            console.error('Erro ao buscar conta da empresa:', error);
-            showToast('Erro ao acessar conta da empresa', 'error');
-            hideLoading();
-            return;
+            // Erro ao atualizar config não deve impedir o acesso
+            console.warn('Aviso: não foi possível atualizar systemConfig:', error);
         }
     } else {
         showLoading('Carregando dados...');
