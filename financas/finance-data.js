@@ -354,20 +354,21 @@ function startServicesListener() {
 
     servicesListener = db.collection('services')
         .where('userId', '==', activeUserId)
-        .onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(async change => {
+        .onSnapshot(async snapshot => {
+            // Usar for...of para aguardar cada operação async corretamente
+            for (const change of snapshot.docChanges()) {
                 const service = { id: change.doc.id, ...change.doc.data() };
 
                 // Criar/atualizar transação quando serviço for adicionado ou modificado
                 if (change.type === 'added' || change.type === 'modified') {
-                    createTransactionFromService(service);
+                    await createTransactionFromService(service);
                 }
 
                 // Excluir transação quando serviço for removido
                 if (change.type === 'removed') {
                     await deleteTransactionByServiceId(service.id);
                 }
-            });
+            }
         });
 
     console.log('Listener de serviços iniciado');
