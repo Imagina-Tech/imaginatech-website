@@ -12,6 +12,7 @@ import {
     startServicesListener,
     saveService,
     deleteService,
+    duplicateService,
     updateStatus,
     confirmStatusChange,
     renderServices,
@@ -2320,6 +2321,7 @@ window.openEditModal = openEditModal;
 window.closeModal = closeModal;
 window.saveService = saveService;
 window.deleteServiceGlobal = deleteService;
+window.duplicateServiceGlobal = duplicateService;
 window.updateStatusGlobal = updateStatus;
 window.confirmStatusChange = confirmStatusChange;
 window.closeStatusModal = closeStatusModal;
