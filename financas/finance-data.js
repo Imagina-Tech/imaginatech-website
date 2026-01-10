@@ -341,6 +341,15 @@ async function deleteTransactionByServiceId(serviceId) {
 // 👂 Listener em tempo real para serviços
 let servicesListener = null;
 
+// Para o listener de serviços (chamado ao trocar de conta)
+function stopServicesListener() {
+    if (servicesListener) {
+        servicesListener();
+        servicesListener = null;
+        console.log('Listener de serviços parado');
+    }
+}
+
 function startServicesListener() {
     if (!activeUserId) {
         console.warn('activeUserId não definido, não iniciando listener de serviços');
@@ -355,6 +364,14 @@ function startServicesListener() {
     servicesListener = db.collection('services')
         .where('userId', '==', activeUserId)
         .onSnapshot(async snapshot => {
+            // Nao processar se tela de acesso negado estiver visivel ou dashboard escondido
+            const accessDeniedScreen = document.getElementById('accessDeniedScreen');
+            const dashboard = document.getElementById('dashboard');
+            if (accessDeniedScreen?.classList.contains('active') || dashboard?.classList.contains('hidden')) {
+                console.log('Listener ignorado: tela de acesso negado ou dashboard escondido');
+                return;
+            }
+
             // Usar for...of para aguardar cada operação async corretamente
             for (const change of snapshot.docChanges()) {
                 const service = { id: change.doc.id, ...change.doc.data() };

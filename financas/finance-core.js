@@ -374,6 +374,11 @@ async function selectAccount(accountType) {
 
 // 🔄 Alterna entre contas (pessoal/empresa)
 function switchAccount() {
+    // Parar listener de servicos para evitar erros durante a troca
+    if (typeof stopServicesListener === 'function') {
+        stopServicesListener();
+    }
+
     // Limpar preferência salva
     localStorage.removeItem('selectedAccountType');
 
@@ -398,6 +403,11 @@ function updateAccountDisplay(accountType) {
 
 // Mostra tela de acesso negado (fullscreen)
 function showAccessDeniedModal() {
+    // Parar listener de servicos para evitar erros de permissao
+    if (typeof stopServicesListener === 'function') {
+        stopServicesListener();
+    }
+
     // Atualizar email do usuario na tela
     const emailEl = document.getElementById('deniedUserEmail');
     if (emailEl && currentUser) {
