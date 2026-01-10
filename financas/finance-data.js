@@ -241,7 +241,32 @@ async function createTransactionFromService(service) {
             .get();
 
         if (!existingTransactions.empty) {
-            console.log('Transação já existe para este serviço:', service.id);
+            // Transação já existe - ATUALIZAR ao invés de ignorar
+            const existingDoc = existingTransactions.docs[0];
+            const existingData = existingDoc.data();
+
+            // Verificar se houve mudança no valor ou descrição
+            const newValue = parseFloat(service.value);
+            const newDescription = `Serviço: ${service.name || 'Sem nome'}`;
+
+            if (existingData.value !== newValue || existingData.description !== newDescription) {
+                console.log('Serviço editado, atualizando transação:', service.id);
+                console.log('Valor anterior:', existingData.value, '-> Novo valor:', newValue);
+
+                await db.collection('transactions').doc(existingDoc.id).update({
+                    value: newValue,
+                    description: newDescription,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                console.log('Transação atualizada para serviço:', service.id);
+
+                // Recarregar transações
+                await loadTransactions();
+                updateAllDisplays();
+            } else {
+                console.log('Serviço sem alterações relevantes:', service.id);
+            }
             return;
         }
 
