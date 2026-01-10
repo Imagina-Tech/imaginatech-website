@@ -305,6 +305,39 @@ async function createTransactionFromService(service) {
     }
 }
 
+// 🗑️ Função para excluir transação quando serviço for removido
+async function deleteTransactionByServiceId(serviceId) {
+    try {
+        // Buscar transação associada ao serviço
+        const transactionsToDelete = await db.collection('transactions')
+            .where('userId', '==', activeUserId)
+            .where('serviceId', '==', serviceId)
+            .get();
+
+        if (transactionsToDelete.empty) {
+            console.log('Nenhuma transação encontrada para serviço removido:', serviceId);
+            return;
+        }
+
+        // Excluir cada transação encontrada
+        const batch = db.batch();
+        transactionsToDelete.docs.forEach(doc => {
+            batch.delete(doc.ref);
+            console.log('🗑️ Marcando transação para exclusão:', doc.id);
+        });
+
+        await batch.commit();
+        console.log('✅ Transação(ões) excluída(s) para serviço:', serviceId);
+
+        // Recarregar transações
+        await loadTransactions();
+        updateAllDisplays();
+
+    } catch (error) {
+        console.error('Erro ao excluir transação de serviço:', error);
+    }
+}
+
 // 👂 Listener em tempo real para serviços
 let servicesListener = null;
 
@@ -322,12 +355,17 @@ function startServicesListener() {
     servicesListener = db.collection('services')
         .where('userId', '==', activeUserId)
         .onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(change => {
+            snapshot.docChanges().forEach(async change => {
                 const service = { id: change.doc.id, ...change.doc.data() };
 
-                // Criar transação quando serviço for adicionado ou modificado
+                // Criar/atualizar transação quando serviço for adicionado ou modificado
                 if (change.type === 'added' || change.type === 'modified') {
                     createTransactionFromService(service);
+                }
+
+                // Excluir transação quando serviço for removido
+                if (change.type === 'removed') {
+                    await deleteTransactionByServiceId(service.id);
                 }
             });
         });
