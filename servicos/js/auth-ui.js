@@ -2876,12 +2876,38 @@ export function navigateToServiceByCode(orderCode) {
             // Scroll suave até o card
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // Adicionar destaque temporário
-            card.classList.add('highlight-card');
+            // Usar IntersectionObserver para detectar quando o card está visível
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Card está visível, aguardar um pouco para o scroll estabilizar
+                        setTimeout(() => {
+                            // Adicionar destaque temporário
+                            card.classList.add('highlight-card');
 
-            // Remover destaque após 2 segundos
+                            // Remover destaque após 2 segundos
+                            setTimeout(() => {
+                                card.classList.remove('highlight-card');
+                            }, 2000);
+                        }, 300);
+
+                        // Parar de observar
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.5 }); // 50% do card visível
+
+            observer.observe(card);
+
+            // Fallback: se o observer não disparar em 2s, aplicar mesmo assim
             setTimeout(() => {
-                card.classList.remove('highlight-card');
+                observer.disconnect();
+                if (!card.classList.contains('highlight-card')) {
+                    card.classList.add('highlight-card');
+                    setTimeout(() => {
+                        card.classList.remove('highlight-card');
+                    }, 2000);
+                }
             }, 2000);
 
             showToast(`Pedido #${orderCode} (${getStatusLabel(status)})`, 'success');
