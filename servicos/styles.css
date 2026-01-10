@@ -3332,6 +3332,39 @@ input[type="file"]::file-selector-button {
     color: var(--neon-purple);
 }
 
+.client-order-code.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.client-order-code.clickable:hover {
+    background: var(--neon-purple);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+}
+
+/* Destaque de card ao navegar */
+.service-card.highlight-card {
+    animation: highlightPulse 2s ease-out;
+    box-shadow: 0 0 20px var(--neon-blue), 0 0 40px rgba(0, 212, 255, 0.3);
+}
+
+@keyframes highlightPulse {
+    0% {
+        box-shadow: 0 0 20px var(--neon-blue), 0 0 40px rgba(0, 212, 255, 0.5);
+        transform: scale(1.02);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--neon-green), 0 0 60px rgba(0, 255, 136, 0.4);
+        transform: scale(1.01);
+    }
+    100% {
+        box-shadow: none;
+        transform: scale(1);
+    }
+}
+
 .no-clients-message {
     text-align: center;
     padding: 3rem;

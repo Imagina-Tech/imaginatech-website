@@ -2489,6 +2489,15 @@ async function loadClientsForModal() {
                 if (!existing.googlePhotoURL && data.googlePhotoURL) {
                     existing.googlePhotoURL = data.googlePhotoURL;
                 }
+                // Adicionar orderCode à lista se não existir
+                if (data.orderCode) {
+                    if (!existing.orderCodes) {
+                        existing.orderCodes = [];
+                    }
+                    if (!existing.orderCodes.includes(data.orderCode)) {
+                        existing.orderCodes.push(data.orderCode);
+                    }
+                }
             }
         });
 
@@ -2534,30 +2543,33 @@ function renderClientItem(client) {
 
     if (lastAccess) {
         const date = new Date(lastAccess);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
+        // Validar se a data é válida
+        if (!isNaN(date.getTime())) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) {
-            lastAccessText = 'Agora mesmo';
-        } else if (diffMins < 60) {
-            lastAccessText = `Há ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
-        } else if (diffHours < 24) {
-            lastAccessText = `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
-        } else if (diffDays < 7) {
-            lastAccessText = `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
-        } else {
-            lastAccessText = date.toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            if (diffMins < 1) {
+                lastAccessText = 'Agora mesmo';
+            } else if (diffMins < 60) {
+                lastAccessText = `Há ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
+            } else if (diffHours < 24) {
+                lastAccessText = `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+            } else if (diffDays < 7) {
+                lastAccessText = `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+            } else {
+                lastAccessText = date.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            lastAccessClass = '';
         }
-        lastAccessClass = '';
     }
 
     // Format CPF/CNPJ for display
@@ -2582,7 +2594,7 @@ function renderClientItem(client) {
                 Pedidos (${orderCodes.length})
             </div>
             <div class="client-order-codes">
-                ${orderCodes.map(code => `<span class="client-order-code">#${code}</span>`).join('')}
+                ${orderCodes.map(code => `<span class="client-order-code clickable" onclick="event.stopPropagation(); navigateToServiceByCode('${escapeHtml(code)}')" title="Clique para ir ao pedido">#${code}</span>`).join('')}
             </div>
            </div>`
         : '';
@@ -2656,7 +2668,7 @@ function renderClientItem(client) {
                 ${addressesHtml}
                 ${searchEmail ? `
                 <div class="client-history-section">
-                    <button class="btn-view-history" onclick="event.stopPropagation(); viewClientHistory('${searchEmail}', '${escapeHtml(client.name)}')">
+                    <button class="btn-view-history" onclick="event.stopPropagation(); viewClientHistory('${escapeHtml(searchEmail)}', '${escapeHtml(client.name || '')}')">
                         <i class="fas fa-history"></i>
                         Ver Histórico de Acessos
                     </button>
@@ -2754,6 +2766,7 @@ export async function viewClientHistory(email, clientName) {
                     minute: '2-digit'
                 });
 
+                const orderCodeEscaped = escapeHtml(access.orderCode || '');
                 html += `
                     <div class="history-item" style="
                         padding: 0.75rem;
@@ -2763,14 +2776,16 @@ export async function viewClientHistory(email, clientName) {
                         align-items: center;
                     ">
                         <div>
-                            <span class="history-order-code" style="
+                            <span class="history-order-code clickable" style="
                                 background: var(--neon-blue);
                                 color: white;
                                 padding: 0.2rem 0.5rem;
                                 border-radius: 4px;
                                 font-size: 0.85rem;
                                 font-weight: bold;
-                            ">#${access.orderCode || 'N/A'}</span>
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            " onclick="navigateToServiceByCode('${orderCodeEscaped}')" title="Clique para ir ao pedido">#${access.orderCode || 'N/A'}</span>
                             <span style="margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
                                 ${access.device || 'Desktop'}
                             </span>
@@ -2802,8 +2817,47 @@ export function closeClientHistoryModal() {
     }
 }
 
+// Função para navegar até um serviço pelo código do pedido
+export function navigateToServiceByCode(orderCode) {
+    if (!orderCode) return;
+
+    // Fechar todos os modais de clientes
+    closeClientHistoryModal();
+    closeClientsModal();
+
+    // Buscar o serviço pelo orderCode no state
+    const service = state.services.find(s => s.orderCode === orderCode);
+
+    if (!service) {
+        showToast(`Pedido #${orderCode} não encontrado na lista atual`, 'warning');
+        return;
+    }
+
+    // Buscar o card do serviço
+    const card = document.querySelector(`[data-service-id="${service.id}"]`);
+
+    if (card) {
+        // Scroll suave até o card
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Adicionar destaque temporário
+        card.classList.add('highlight-card');
+
+        // Remover destaque após 2 segundos
+        setTimeout(() => {
+            card.classList.remove('highlight-card');
+        }, 2000);
+
+        showToast(`Navegando para pedido #${orderCode}`, 'success');
+    } else {
+        // O serviço existe mas o card não está visível (filtro diferente?)
+        showToast(`Pedido #${orderCode} encontrado, mas não está visível com o filtro atual`, 'warning');
+    }
+}
+
 window.openClientsModal = openClientsModal;
 window.closeClientsModal = closeClientsModal;
 window.toggleClientDetails = toggleClientDetails;
 window.viewClientHistory = viewClientHistory;
 window.closeClientHistoryModal = closeClientHistoryModal;
+window.navigateToServiceByCode = navigateToServiceByCode;
