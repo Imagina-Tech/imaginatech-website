@@ -1108,9 +1108,12 @@ window.closeColorPrintModal = function() {
     document.getElementById('colorPrintResultModal').classList.remove('active');
 };
 
-// Baixar imagem do print de cores
+// Baixar imagem do print de cores (layout estruturado igual ao print de custo)
 window.downloadColorPrint = async function() {
-    const printArea = document.getElementById('colorPrintPreview');
+    const printPreview = document.getElementById('colorPrintPreview');
+    const materialType = document.getElementById('colorPrintMaterialType').textContent;
+    const requiredAmount = document.getElementById('colorPrintRequiredAmount').textContent;
+    const availableCount = document.getElementById('colorPrintAvailableCount').textContent;
 
     try {
         // Feedback visual
@@ -1119,8 +1122,162 @@ window.downloadColorPrint = async function() {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
         btn.disabled = true;
 
-        // Converter imagens para base64 antes de gerar canvas
-        const images = printArea.querySelectorAll('img');
+        // Extrair dados dos filamentos do preview atual
+        const items = printPreview.querySelectorAll('.print-item');
+        const colorsData = Array.from(items).map(item => ({
+            imageUrl: item.querySelector('img')?.src || '/iconwpp.jpg',
+            color: item.querySelector('div:last-child')?.textContent || 'Cor'
+        }));
+
+        // Criar container temporário com layout estruturado (similar ao print de custo)
+        const printContainer = document.createElement('div');
+        printContainer.style.cssText = `
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 700px;
+            background: #0a0e1a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+            overflow: hidden;
+        `;
+
+        // Gerar grid de cores (4 por linha)
+        const colorsPerRow = 4;
+        let colorsGridHTML = '';
+
+        for (let i = 0; i < colorsData.length; i += colorsPerRow) {
+            const rowItems = colorsData.slice(i, i + colorsPerRow);
+            colorsGridHTML += `
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                    ${rowItems.map(c => `
+                        <div style="text-align: center; width: 140px;">
+                            <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 12px; overflow: hidden;
+                                border: 3px solid rgba(0, 212, 255, 0.3); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
+                                <img src="${c.imageUrl}" alt="${c.color}"
+                                     style="width: 100%; height: 100%; object-fit: cover;"
+                                     crossorigin="anonymous">
+                            </div>
+                            <div style="margin-top: 10px; font-size: 14px; color: #fff; font-weight: 600;
+                                text-transform: uppercase; letter-spacing: 1px;">${c.color}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        printContainer.innerHTML = `
+            <!-- Background Grid -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background-image:
+                    linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+                background-size: 25px 25px;
+                pointer-events: none;">
+            </div>
+
+            <!-- Top Border -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                background: linear-gradient(90deg, #00D4FF, #00FF88, #00D4FF);"></div>
+
+            <!-- Content -->
+            <div style="position: relative; padding: 40px 50px;">
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 30px; position: relative;">
+                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+                        width: 150px; height: 2px; background: linear-gradient(90deg, transparent, #00D4FF, transparent);"></div>
+
+                    <h1 style="font-family: 'Orbitron', monospace; font-size: 32px;
+                        background: linear-gradient(135deg, #00D4FF, #57D4CA);
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        background-clip: text; margin: 0; letter-spacing: 4px; text-transform: uppercase;">
+                        IMAGINATECH
+                    </h1>
+
+                    <div style="margin: 12px auto; width: 200px; height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);"></div>
+
+                    <p style="color: #00FF88; font-size: 13px; margin: 0; font-weight: 600;
+                        letter-spacing: 3px; text-transform: uppercase;">
+                        CORES DISPONÍVEIS
+                    </p>
+                </div>
+
+                <!-- Info Badge -->
+                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 30px;">
+                    <div style="text-align: center; padding: 15px 25px;
+                        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+                        border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 12px;">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Material</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #00D4FF; font-family: 'Orbitron', monospace;">${materialType}</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px 25px;
+                        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+                        border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 12px;">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Mínimo</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #FFD700; font-family: 'Orbitron', monospace;">${requiredAmount}</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px 25px;
+                        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+                        border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 12px;">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Opções</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #00FF88; font-family: 'Orbitron', monospace;">${availableCount}</div>
+                    </div>
+                </div>
+
+                <!-- Colors Grid Section -->
+                <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.03), rgba(0, 212, 255, 0.03));
+                    border: 2px solid rgba(0, 255, 136, 0.3); padding: 25px; position: relative; border-radius: 12px;">
+
+                    <!-- Corner Accents -->
+                    <div style="position: absolute; top: -2px; left: -2px; width: 20px; height: 20px;
+                        border-top: 4px solid #00D4FF; border-left: 4px solid #00D4FF; border-radius: 4px 0 0 0;"></div>
+                    <div style="position: absolute; top: -2px; right: -2px; width: 20px; height: 20px;
+                        border-top: 4px solid #00D4FF; border-right: 4px solid #00D4FF; border-radius: 0 4px 0 0;"></div>
+                    <div style="position: absolute; bottom: -2px; left: -2px; width: 20px; height: 20px;
+                        border-bottom: 4px solid #00D4FF; border-left: 4px solid #00D4FF; border-radius: 0 0 0 4px;"></div>
+                    <div style="position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px;
+                        border-bottom: 4px solid #00D4FF; border-right: 4px solid #00D4FF; border-radius: 0 0 4px 0;"></div>
+
+                    <!-- Section Title -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span style="font-size: 14px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 2px;">
+                            Escolha sua cor preferida
+                        </span>
+                    </div>
+
+                    <!-- Colors Grid -->
+                    ${colorsGridHTML}
+                </div>
+
+                <!-- Footer -->
+                <div style="margin-top: 30px; text-align: center; position: relative;">
+                    <div style="margin: 0 auto 15px; width: 200px; height: 1px;
+                        background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);"></div>
+
+                    <p style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin: 5px 0;">
+                        ${new Date().toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </p>
+                    <p style="color: rgba(0, 212, 255, 0.7); font-size: 13px; margin: 5px 0;
+                        font-weight: 600; letter-spacing: 1px;">
+                        www.imaginatech.com.br
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bottom Border -->
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+                background: linear-gradient(90deg, #00D4FF, #00FF88, #00D4FF);"></div>
+        `;
+
+        document.body.appendChild(printContainer);
+
+        // Aguardar carregamento das imagens
+        const images = printContainer.querySelectorAll('img');
         await Promise.all(Array.from(images).map(img => {
             return new Promise((resolve) => {
                 if (img.complete) {
@@ -1133,33 +1290,48 @@ window.downloadColorPrint = async function() {
         }));
 
         // Gerar canvas com html2canvas
-        const canvas = await html2canvas(printArea, {
-            backgroundColor: '#ffffff',
+        const canvas = await html2canvas(printContainer, {
+            backgroundColor: '#0a0e1a',
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            logging: false
+            logging: false,
+            width: 700,
+            height: printContainer.scrollHeight
         });
 
+        // Remover container temporário
+        document.body.removeChild(printContainer);
+
         // Download da imagem
-        const link = document.createElement('a');
-        const materialType = document.getElementById('colorPrintMaterialType').textContent;
-        link.download = `cores-${materialType}-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `cores-${materialType}-${Date.now()}.png`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
 
-        // Feedback de sucesso
-        btn.innerHTML = '<i class="fas fa-check"></i> Baixado!';
-        btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
+            // Feedback de sucesso
+            btn.innerHTML = '<i class="fas fa-check"></i> Baixado!';
+            btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
 
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = '';
-            btn.disabled = false;
-        }, 2000);
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+        });
 
     } catch (error) {
         console.error('Erro ao baixar print:', error);
         alert('Erro ao baixar imagem. Tente novamente.');
+
+        // Restaurar botão em caso de erro
+        const btn = document.querySelector('#colorPrintResultModal .btn-primary');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-download"></i> Baixar Imagem';
+            btn.disabled = false;
+        }
     }
 };

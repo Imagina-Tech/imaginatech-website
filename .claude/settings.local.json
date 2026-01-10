@@ -23,7 +23,10 @@
       "Bash(for class in \"glass-effect\" \"chart-header\" \"mini-chart-header\" \"prefix\" \"form-select\" \"toast-content\" \"toast-message\")",
       "Bash(do echo \"Procurando: $class\")",
       "Bash(tree:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(dir:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
