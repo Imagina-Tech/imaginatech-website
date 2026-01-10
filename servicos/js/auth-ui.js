@@ -257,7 +257,7 @@ export function showLoginScreen() {
 export function showAdminDashboard(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('adminDashboard')?.classList.remove('hidden');
-    document.getElementById('accessDeniedScreen')?.classList.add('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
     document.getElementById('userName') && (document.getElementById('userName').textContent = user.displayName || user.email);
     document.getElementById('userPhoto') && (document.getElementById('userPhoto').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=00D4FF&color=fff');
 }
@@ -265,35 +265,39 @@ export function showAdminDashboard(user) {
 export function showAccessDeniedScreen(user) {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('adminDashboard')?.classList.add('hidden');
-    
+
     let accessDeniedScreen = document.getElementById('accessDeniedScreen');
     if (!accessDeniedScreen) {
         accessDeniedScreen = document.createElement('div');
         accessDeniedScreen.id = 'accessDeniedScreen';
         accessDeniedScreen.className = 'access-denied-screen';
         accessDeniedScreen.innerHTML = `
-            <div class="access-denied-container">
+            <div class="access-denied-content">
                 <div class="access-denied-icon">
                     <i class="fas fa-lock"></i>
                 </div>
-                <h1>Acesso Restrito</h1>
+                <h1 class="access-denied-title">Acesso Restrito</h1>
                 <p class="access-denied-message">
-                    Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.
+                    Ola ${user.displayName || 'Usuario'}, esta area e exclusiva para administradores.
                 </p>
-                <p class="access-denied-info">
-                    Você está logado com: <strong>${user.email}</strong>
+                <p class="access-denied-submessage">
+                    O painel de servicos requer permissao especial de acesso.
                 </p>
+                <div class="access-denied-user">
+                    <i class="fas fa-user-slash"></i>
+                    <span>${user.email}</span>
+                </div>
                 <div class="access-denied-actions">
-                    <a href="/" class="btn-primary">
+                    <a href="/" class="access-denied-btn btn-primary">
                         <i class="fas fa-home"></i>
-                        Voltar ao Início
+                        Voltar ao Inicio
                     </a>
-                    <a href="/acompanhar-pedido/" class="btn-secondary">
+                    <a href="/acompanhar-pedido/" class="access-denied-btn btn-secondary">
                         <i class="fas fa-cube"></i>
                         Acompanhar Pedido
                     </a>
                 </div>
-                <button class="btn-logout-denied" onclick="window.signOutGlobal()">
+                <button class="access-denied-btn btn-logout" onclick="window.signOutGlobal()">
                     <i class="fas fa-sign-out-alt"></i>
                     Fazer Logout
                 </button>
@@ -302,12 +306,12 @@ export function showAccessDeniedScreen(user) {
         document.body.appendChild(accessDeniedScreen);
     } else {
         const message = accessDeniedScreen.querySelector('.access-denied-message');
-        const info = accessDeniedScreen.querySelector('.access-denied-info');
-        if (message) message.innerHTML = `Olá ${user.displayName || user.email}, esta área é exclusiva para administradores.`;
-        if (info) info.innerHTML = `Você está logado com: <strong>${user.email}</strong>`;
+        const userEmail = accessDeniedScreen.querySelector('.access-denied-user span');
+        if (message) message.textContent = `Ola ${user.displayName || 'Usuario'}, esta area e exclusiva para administradores.`;
+        if (userEmail) userEmail.textContent = user.email;
     }
-    
-    accessDeniedScreen.classList.remove('hidden');
+
+    accessDeniedScreen.classList.add('active');
 }
 
 // ===========================

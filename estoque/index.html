@@ -33,6 +33,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
     <!-- Estilos base compartilhados -->
     <link rel="stylesheet" href="/servicos/styles.css">
+    <!-- Tela de bloqueio centralizada -->
+    <link rel="stylesheet" href="/shared/access-denied.css">
     <!-- Customizações do módulo Estoque -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -69,6 +71,40 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             <div class="login-footer">
                 <p class="footer-text">Cliente? <a href="/">Voltar ao site</a></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Restrito</h1>
+            <p class="access-denied-message" id="deniedMessage">
+                Esta area e exclusiva para administradores.
+            </p>
+            <p class="access-denied-submessage">
+                O gerenciamento de estoque requer permissao especial de acesso.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <div class="access-denied-actions">
+                <a href="/" class="access-denied-btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Inicio
+                </a>
+                <a href="/acompanhar-pedido/" class="access-denied-btn btn-secondary">
+                    <i class="fas fa-cube"></i>
+                    Acompanhar Pedido
+                </a>
+            </div>
+            <button class="access-denied-btn btn-logout" onclick="signOut()">
+                <i class="fas fa-sign-out-alt"></i>
+                Fazer Logout
+            </button>
         </div>
     </div>
 

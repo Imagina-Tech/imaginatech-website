@@ -46,14 +46,14 @@ async function loginWithGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
-        
+
         if (AUTHORIZED_EMAILS.includes(user.email)) {
             currentUser = user;
             isAuthorized = true;
             showMainApp();
         } else {
-            await auth.signOut();
-            alert(`Acesso negado! O email ${user.email} não está autorizado.`);
+            // Mostrar tela de acesso negado com dados do usuario
+            showAccessDeniedScreen(user);
         }
     } catch (error) {
         console.error('Erro no login:', error);
@@ -93,6 +93,22 @@ function hideMainApp() {
     document.getElementById('loadingOverlay').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('accessDeniedScreen').classList.remove('active');
+}
+
+function showAccessDeniedScreen(user) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'none';
+
+    // Atualizar informacoes do usuario na tela
+    const displayName = user.displayName || 'Usuario';
+    document.getElementById('deniedMessage').textContent =
+        `Ola ${displayName}, esta area e exclusiva para administradores.`;
+    document.getElementById('deniedUserEmail').textContent = user.email;
+
+    // Mostrar tela de acesso negado
+    document.getElementById('accessDeniedScreen').classList.add('active');
 }
 
 // ===========================

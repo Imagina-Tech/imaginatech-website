@@ -395,25 +395,25 @@ function updateAccountDisplay(accountType) {
     }
 }
 
-// 🚫 Mostra modal de acesso negado (fullscreen)
+// Mostra tela de acesso negado (fullscreen)
 function showAccessDeniedModal() {
-    // Atualizar email do usuário no modal
+    // Atualizar email do usuario na tela
     const emailEl = document.getElementById('deniedUserEmail');
     if (emailEl && currentUser) {
         emailEl.textContent = currentUser.email;
     }
 
-    // Esconder dashboard se estiver visível
+    // Esconder dashboard se estiver visivel
     document.getElementById('dashboard').classList.add('hidden');
 
-    // Mostrar modal
-    document.getElementById('accessDeniedModal').classList.add('active');
+    // Mostrar tela de acesso negado
+    document.getElementById('accessDeniedScreen').classList.add('active');
 }
 
-// 🚫 Fecha modal de acesso negado e volta para conta pessoal
+// Fecha tela de acesso negado e volta para conta pessoal
 function closeAccessDeniedModal() {
-    // Fechar modal
-    document.getElementById('accessDeniedModal').classList.remove('active');
+    // Fechar tela
+    document.getElementById('accessDeniedScreen').classList.remove('active');
 
     // Voltar para conta pessoal
     selectAccount('personal');

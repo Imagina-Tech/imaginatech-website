@@ -83,10 +83,11 @@ function setupAuthListener() {
             loadFilaments();
         } else {
             if (user) {
-                showToast('Acesso não autorizado', 'error');
-                auth.signOut();
+                // Mostrar tela de acesso negado com dados do usuario
+                showAccessDeniedScreen(user);
+            } else {
+                showLoginScreen();
             }
-            showLoginScreen();
         }
     });
 }
@@ -119,6 +120,21 @@ function showDashboard(user) {
 function showLoginScreen() {
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('accessDeniedScreen').classList.remove('active');
+}
+
+function showAccessDeniedScreen(user) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('hidden');
+
+    // Atualizar informacoes do usuario na tela
+    const displayName = user.displayName || 'Usuario';
+    document.getElementById('deniedMessage').textContent =
+        `Ola ${displayName}, esta area e exclusiva para administradores.`;
+    document.getElementById('deniedUserEmail').textContent = user.email;
+
+    // Mostrar tela de acesso negado
+    document.getElementById('accessDeniedScreen').classList.add('active');
 }
 
 // ===========================

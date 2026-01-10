@@ -40,6 +40,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="style.css?v=2024121803">
+    <!-- Tela de bloqueio centralizada -->
+    <link rel="stylesheet" href="/shared/access-denied.css">
 </head>
 <body>
     <!-- Mobile Block Screen -->
@@ -121,18 +123,18 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
         </div>
     </div>
 
-    <!-- Access Denied Modal (Fullscreen) -->
-    <div class="access-denied-modal" id="accessDeniedModal">
+    <!-- Tela de Acesso Negado (Admin da Empresa) -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
         <div class="access-denied-content">
             <div class="access-denied-icon">
                 <i class="fas fa-ban"></i>
             </div>
             <h1 class="access-denied-title">Acesso Negado</h1>
             <p class="access-denied-message">
-                Você não possui permissão de administrador.
+                Voce nao possui permissao de administrador.
             </p>
             <p class="access-denied-submessage">
-                O acesso aos dados financeiros da empresa é restrito apenas para usuários autorizados.
+                O acesso aos dados financeiros da empresa e restrito apenas para usuarios autorizados.
             </p>
             <div class="access-denied-user">
                 <i class="fas fa-user-slash"></i>
