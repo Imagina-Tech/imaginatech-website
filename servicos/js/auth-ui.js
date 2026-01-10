@@ -2059,6 +2059,12 @@ export function toggleDeliveryFields() {
             trackingField.style.display = 'none';
         }
     }
+
+    // Alterar label do prazo conforme método de entrega
+    const dueDateLabelText = document.getElementById('dueDateLabelText');
+    if (dueDateLabelText) {
+        dueDateLabelText.textContent = method === 'sedex' ? 'Prazo de Postagem' : 'Prazo de Entrega';
+    }
 }
 
 export const hideAllDeliveryFields = () => {

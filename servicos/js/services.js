@@ -877,7 +877,8 @@ export async function saveService(event) {
             
             if (service.clientPhone && sendWhatsapp) {
                 const dueDateText = service.dateUndefined ? 'A definir' : formatDateBrazil(service.dueDate);
-                const message = `Olá, ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» Prazo: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
+                const prazoLabel = service.deliveryMethod === 'sedex' ? 'Prazo de postagem' : 'Prazo de entrega';
+                const message = `Olá, ${service.client}!\nSeu pedido foi registrado com sucesso.\n\n» Serviço: ${service.name}\n» Código: ${service.orderCode}\n» ${prazoLabel}: ${dueDateText}\n» Entrega: ${getDeliveryMethodName(service.deliveryMethod)}\n\nAcompanhe seu pedido em:\nhttps://imaginatech.com.br/acompanhar-pedido/?codigo=${service.orderCode}`;
                 sendWhatsAppMessage(service.clientPhone, message);
             }
             
