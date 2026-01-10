@@ -1242,12 +1242,31 @@ window.downloadColorPrint = async function() {
                     <!-- Section Title -->
                     <div style="text-align: center; margin-bottom: 20px;">
                         <span style="font-size: 14px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 2px;">
-                            Escolha sua cor preferida
+                            Cores em estoque imediato para o seu projeto
                         </span>
                     </div>
 
                     <!-- Colors Grid -->
                     ${colorsGridHTML}
+                </div>
+
+                <!-- Other Colors Notice -->
+                <div style="margin-top: 20px; padding: 15px 20px;
+                    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 165, 0, 0.08));
+                    border-left: 3px solid #FFD700; border-radius: 8px;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="color: #FFD700; font-size: 18px; margin-top: 2px;">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 600; color: #FFD700; margin-bottom: 4px;">
+                                Prefere outra cor?
+                            </div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5;">
+                                Trabalhamos com diversas outras cores sob encomenda. O prazo de producao aumenta ligeiramente para cores fora do estoque.
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer -->
