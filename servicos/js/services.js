@@ -1823,7 +1823,7 @@ function createServiceCard(service) {
     const isModelagem = service.serviceType === 'modelagem';
 
     return `
-        <div class="service-card priority-${service.priority || 'media'} ${isModelagem ? 'service-modelagem' : 'service-impressao'}">
+        <div class="service-card priority-${service.priority || 'media'} ${isModelagem ? 'service-modelagem' : 'service-impressao'}" data-service-id="${service.id}">
             <div class="service-header">
                 <div class="service-title">
                     <h3>${escapeHtml(service.name || 'Sem nome')}</h3>
