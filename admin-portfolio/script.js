@@ -63,10 +63,9 @@ function handleAuthStateChange(user) {
             showDashboard();
             loadPortfolioItems();
         } else {
-            // Not authorized
-            auth.signOut();
-            showToast('Acesso negado. Email nao autorizado.', 'error');
-            showLoginScreen();
+            // Not authorized - show access denied
+            currentUser = user;
+            showAccessDenied(user.email);
         }
     } else {
         currentUser = null;
@@ -118,17 +117,27 @@ function hideLoading() {
 
 function showLoginScreen() {
     hideLoading();
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('accessDeniedScreen').classList.remove('active');
+    document.getElementById('dashboard').classList.add('hidden');
+}
+
+function showAccessDenied(email) {
+    hideLoading();
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('accessDeniedScreen').classList.add('active');
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('deniedUserEmail').textContent = email;
 }
 
 function showDashboard() {
     hideLoading();
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('accessDeniedScreen').classList.remove('active');
+    document.getElementById('dashboard').classList.remove('hidden');
 
     // Update user info
-    document.getElementById('userPhoto').src = currentUser.photoURL || '../iconwpp.jpg';
+    document.getElementById('userPhoto').src = currentUser.photoURL || '/iconwpp.jpg';
     document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
 
     // Setup event listeners
@@ -137,9 +146,9 @@ function showDashboard() {
 
 function setupEventListeners() {
     // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('.filter-tab').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
             renderPortfolioItems();

@@ -1,109 +1,226 @@
+<!--
+==================================================
+ARQUIVO: admin-portfolio/index.html
+MODULO: Gerenciamento de Portfolio
+SISTEMA: ImaginaTech - Gestao de Impressao 3D
+VERSAO: 1.0
+IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
+==================================================
+-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Portfolio - ImaginaTech</title>
+    <title>Portfolio - ImaginaTech Admin</title>
+    <meta name="description" content="Gerenciamento de portfolio - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
 
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/admin-portfolio/">
+    <meta property="og:title" content="Portfolio - ImaginaTech">
+    <meta property="og:description" content="Sistema de gerenciamento de portfolio - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- Estilos base compartilhados -->
+    <link rel="stylesheet" href="/servicos/styles.css">
+    <!-- Telas de autenticacao centralizadas -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <!-- Customizacoes do modulo Portfolio -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <p id="loadingText">Carregando...</p>
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Carregando portfolio...</div>
+        </div>
     </div>
 
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen" style="display: none;">
-        <div class="login-card">
-            <div class="login-logo">
-                <img src="../iconwpp.jpg" alt="ImaginaTech">
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Gerenciar Portfolio</p>
             </div>
-            <h1>Gerenciar Portfolio</h1>
-            <p>Acesso restrito a administradores</p>
-            <button class="btn-google" onclick="signInWithGoogle()">
-                <i class="fab fa-google"></i> Entrar com Google
+            <div class="auth-icon">
+                <i class="fas fa-images"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para funcionarios autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Cliente? <a href="/">Voltar ao site</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Restrito</h1>
+            <p class="access-denied-message" id="deniedMessage">
+                Esta area e exclusiva para administradores.
+            </p>
+            <p class="access-denied-submessage">
+                O gerenciamento de portfolio requer permissao especial de acesso.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <div class="access-denied-actions">
+                <a href="/" class="access-denied-btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Inicio
+                </a>
+                <a href="/acompanhar-pedido/" class="access-denied-btn btn-secondary">
+                    <i class="fas fa-cube"></i>
+                    Acompanhar Pedido
+                </a>
+            </div>
+            <button class="access-denied-btn btn-logout" onclick="signOut()">
+                <i class="fas fa-sign-out-alt"></i>
+                Fazer Logout
             </button>
         </div>
     </div>
 
-    <!-- Main Dashboard -->
-    <div class="dashboard" id="dashboard" style="display: none;">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <a href="../servicos/" class="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h1><i class="fas fa-images"></i> Gerenciar Portfolio</h1>
-            </div>
-            <div class="header-right">
-                <div class="user-info">
-                    <img id="userPhoto" src="" alt="User">
-                    <span id="userName"></span>
+    <!-- Dashboard -->
+    <div class="dashboard hidden" id="dashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Gerenciar Portfolio</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
                 </div>
-                <button class="btn-logout" onclick="signOut()">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+                <div class="navbar-right">
+                    <a href="/servicos/" class="btn-nav">
+                        <i class="fas fa-tasks"></i>
+                        <span>Servicos</span>
+                    </a>
+                    <a href="/estoque/" class="btn-nav">
+                        <i class="fas fa-box-open"></i>
+                        <span>Estoque</span>
+                    </a>
+                    <a href="/financas/" class="btn-nav">
+                        <i class="fas fa-wallet"></i>
+                        <span>Financas</span>
+                    </a>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="btn-text">Sair</span>
+                    </button>
+                </div>
             </div>
         </header>
 
-        <!-- Stats -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <i class="fas fa-images"></i>
-                <span id="totalItems">0</span>
-                <label>Total</label>
-            </div>
-            <div class="stat-item carrossel">
-                <i class="fas fa-film"></i>
-                <span id="carrosselItems">0</span>
-                <label>Carrossel</label>
-            </div>
-            <div class="stat-item projetos">
-                <i class="fas fa-th-large"></i>
-                <span id="projetosItems">0</span>
-                <label>Projetos</label>
-            </div>
-            <div class="stat-item orphan">
-                <i class="fas fa-unlink"></i>
-                <span id="orphanItems">0</span>
-                <label>Sem Vinculo</label>
-            </div>
-        </div>
+        <main class="main-content">
+            <div class="container">
+                <!-- Stats Bar -->
+                <div class="portfolio-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalItems">0</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                    </div>
+                    <div class="stat-card carrossel">
+                        <div class="stat-icon">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="carrosselItems">0</span>
+                            <span class="stat-label">Carrossel</span>
+                        </div>
+                    </div>
+                    <div class="stat-card projetos">
+                        <div class="stat-icon">
+                            <i class="fas fa-th-large"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="projetosItems">0</span>
+                            <span class="stat-label">Projetos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card orphan">
+                        <div class="stat-icon">
+                            <i class="fas fa-unlink"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="orphanItems">0</span>
+                            <span class="stat-label">Sem Vinculo</span>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Filters -->
-        <div class="filters-bar">
-            <div class="filter-group">
-                <button class="filter-btn active" data-filter="todos">Todos</button>
-                <button class="filter-btn" data-filter="carrossel">Carrossel</button>
-                <button class="filter-btn" data-filter="projetos">Projetos</button>
-                <button class="filter-btn" data-filter="orphan">Sem Vinculo</button>
-            </div>
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Buscar por titulo...">
-            </div>
-        </div>
+                <!-- Filters -->
+                <div class="portfolio-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="todos">Todos</button>
+                        <button class="filter-tab" data-filter="carrossel">Carrossel</button>
+                        <button class="filter-tab" data-filter="projetos">Projetos</button>
+                        <button class="filter-tab" data-filter="orphan">Sem Vinculo</button>
+                    </div>
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por titulo...">
+                    </div>
+                </div>
 
-        <!-- Portfolio Grid -->
-        <div class="portfolio-grid" id="portfolioGrid">
-            <!-- Items will be inserted here -->
-        </div>
+                <!-- Portfolio Grid -->
+                <div class="portfolio-grid" id="portfolioGrid">
+                    <!-- Items serao inseridos aqui -->
+                </div>
 
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <i class="fas fa-images"></i>
-            <h3>Nenhum item no portfolio</h3>
-            <p>Use o botao "Up" nos servicos para adicionar itens</p>
-        </div>
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-images"></i>
+                    <h3>Nenhum item no portfolio</h3>
+                    <p>Use o botao "Up" nos servicos para adicionar itens</p>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Edit Modal -->
@@ -116,19 +233,17 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Service Info (if linked) -->
-                <div class="service-link-info" id="serviceLinkInfo" style="display: none;">
-                    <div class="info-badge">
-                        <i class="fas fa-link"></i>
-                        <span>Vinculado ao servico: <strong id="linkedServiceName"></strong></span>
-                    </div>
+                <!-- Service Info -->
+                <div class="service-link-badge" id="serviceLinkInfo" style="display: none;">
+                    <i class="fas fa-link"></i>
+                    <span>Vinculado ao servico: <strong id="linkedServiceName"></strong></span>
                 </div>
 
                 <div class="form-grid">
                     <!-- Photo -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-camera"></i> Foto Principal</label>
-                        <div class="image-upload-area" id="editPhotoArea" onclick="document.getElementById('editPhoto').click()">
+                        <div class="image-upload-box" id="editPhotoArea" onclick="document.getElementById('editPhoto').click()">
                             <input type="file" id="editPhoto" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="editPhotoPlaceholder">
                                 <i class="fas fa-cloud-upload-alt"></i>
@@ -136,7 +251,7 @@
                             </div>
                             <div class="image-preview" id="editPhotoPreview" style="display: none;">
                                 <img id="editPhotoImg" src="" alt="Preview">
-                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); removePhoto()">
+                                <button type="button" class="btn-remove-img" onclick="event.stopPropagation(); removePhoto()">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -146,13 +261,13 @@
                     <!-- Title -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-heading"></i> Titulo *</label>
-                        <input type="text" id="editTitle" class="form-input" placeholder="Titulo do projeto">
+                        <input type="text" id="editTitle" class="form-control" placeholder="Titulo do projeto">
                     </div>
 
                     <!-- Destination -->
                     <div class="form-group">
                         <label><i class="fas fa-map-marker-alt"></i> Destino *</label>
-                        <select id="editDestination" class="form-select" onchange="toggleCategory()">
+                        <select id="editDestination" class="form-control" onchange="toggleCategory()">
                             <option value="">Selecione</option>
                             <option value="carrossel">Carrossel (Hero)</option>
                             <option value="projetos">Projetos Anteriores</option>
@@ -162,7 +277,7 @@
                     <!-- Category -->
                     <div class="form-group" id="editCategoryGroup" style="display: none;">
                         <label><i class="fas fa-tag"></i> Categoria *</label>
-                        <select id="editCategory" class="form-select">
+                        <select id="editCategory" class="form-control">
                             <option value="">Selecione</option>
                             <option value="industrial">Industrial</option>
                             <option value="personalizado">Personalizado</option>
@@ -176,7 +291,7 @@
                     <!-- Logo -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-building"></i> Logo (opcional)</label>
-                        <div class="image-upload-area small" id="editLogoArea" onclick="document.getElementById('editLogo').click()">
+                        <div class="image-upload-box small" id="editLogoArea" onclick="document.getElementById('editLogo').click()">
                             <input type="file" id="editLogo" accept="image/png,image/svg+xml,image/webp" onchange="handleLogoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="editLogoPlaceholder">
                                 <i class="fas fa-image"></i>
@@ -184,7 +299,7 @@
                             </div>
                             <div class="image-preview" id="editLogoPreview" style="display: none;">
                                 <img id="editLogoImg" src="" alt="Logo">
-                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); removeLogo()">
+                                <button type="button" class="btn-remove-img" onclick="event.stopPropagation(); removeLogo()">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -195,10 +310,10 @@
                 <input type="hidden" id="editItemId">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeEditModal()">
+                <button type="button" class="btn-secondary" onclick="closeEditModal()">
                     <i class="fas fa-times"></i> Cancelar
                 </button>
-                <button type="button" class="btn-save" onclick="saveItem()">
+                <button type="button" class="btn-primary" onclick="saveItem()">
                     <i class="fas fa-save"></i> Salvar
                 </button>
             </div>
@@ -207,7 +322,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div class="modal" id="deleteModal">
-        <div class="modal-content modal-small">
+        <div class="modal-content modal-sm">
             <div class="modal-header">
                 <h2><i class="fas fa-trash"></i> Confirmar Exclusao</h2>
                 <button class="modal-close" onclick="closeDeleteModal()">
@@ -219,17 +334,17 @@
                     <img id="deletePreviewImg" src="" alt="Item">
                     <h3 id="deleteItemTitle"></h3>
                 </div>
-                <p class="delete-warning">
+                <div class="delete-warning">
                     <i class="fas fa-exclamation-triangle"></i>
-                    Esta acao nao pode ser desfeita. As imagens serao excluidas permanentemente.
-                </p>
+                    <span>Esta acao nao pode ser desfeita. As imagens serao excluidas permanentemente.</span>
+                </div>
                 <input type="hidden" id="deleteItemId">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeDeleteModal()">
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">
                     <i class="fas fa-times"></i> Cancelar
                 </button>
-                <button type="button" class="btn-delete" onclick="confirmDelete()">
+                <button type="button" class="btn-danger" onclick="confirmDelete()">
                     <i class="fas fa-trash"></i> Excluir
                 </button>
             </div>
@@ -246,7 +361,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <!-- Config -->
-    <script src="../js/env-config.js"></script>
+    <script src="/js/env-config.js"></script>
 
     <!-- Main Script -->
     <script src="script.js"></script>
