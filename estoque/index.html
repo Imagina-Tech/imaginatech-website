@@ -116,17 +116,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <div class="navbar-left">
                     <div class="logo-section">
                         <h1 class="logo">ImaginaTech</h1>
-                        <div class="logo-subtitle-row">
-                            <span class="logo-subtitle">Estoque:</span>
-                            <div class="section-selector">
-                                <button class="selector-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
-                                    Filamentos
-                                </button>
-                                <button class="selector-btn" data-section="inventario" onclick="switchSection('inventario')">
-                                    Equipamentos
-                                </button>
-                            </div>
-                        </div>
+                        <span class="logo-subtitle">Gestão de Estoque</span>
                     </div>
                     <div class="connection-status" id="connectionStatus">
                         <div class="status-dot"></div>
@@ -172,10 +162,20 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                 <!-- Header com Ações -->
                 <div class="action-bar">
-                    <h2 class="page-title">
-                        <i class="fas fa-box-open"></i>
-                        Gerenciamento de Estoque
-                    </h2>
+                    <div class="action-bar-left">
+                        <h2 class="page-title">
+                            <i class="fas fa-box-open"></i>
+                            Estoque
+                        </h2>
+                        <div class="section-selector">
+                            <button class="selector-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
+                                Filamentos
+                            </button>
+                            <button class="selector-btn" data-section="inventario" onclick="switchSection('inventario')">
+                                Equipamentos
+                            </button>
+                        </div>
+                    </div>
                     <div class="action-buttons">
                         <button class="btn-primary" onclick="openAddFilamentModal()">
                             <i class="fas fa-plus"></i>
