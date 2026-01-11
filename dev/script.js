@@ -410,12 +410,20 @@ async function loadCarouselItems() {
 // Criar card de projeto (para o carrossel do hero)
 function createProjetoCard(item) {
     const photoUrl = item.mainPhoto?.url || 'assets/images/projetos/projeto-1.svg';
+    const logoUrl = item.logo?.url;
     const title = item.title || 'Projeto';
+
+    const logoHtml = logoUrl ? `
+        <div class="projeto-logo">
+            <img src="${logoUrl}" alt="Logo">
+        </div>
+    ` : '';
 
     return `
         <div class="projeto-card">
             <div class="projeto-image">
                 <img src="${photoUrl}" alt="${title}">
+                ${logoHtml}
             </div>
             <div class="projeto-info">
                 <h3 class="projeto-nome">${title}</h3>

@@ -1570,6 +1570,35 @@
             filter: brightness(1);
         }
 
+        /* Logo da empresa no card do projeto */
+        .projeto-logo {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+
+        .projeto-card:hover .projeto-logo {
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .projeto-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
         /* Overlay sutil na imagem */
         .projeto-image::after {
             content: '';
