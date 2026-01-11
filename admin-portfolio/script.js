@@ -145,10 +145,10 @@ function showDashboard() {
 }
 
 function setupEventListeners() {
-    // Filter buttons
-    document.querySelectorAll('.filter-tab').forEach(btn => {
+    // Filter buttons (stat cards)
+    document.querySelectorAll('.stat-card[data-filter]').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.stat-card[data-filter]').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
             renderPortfolioItems();
@@ -248,7 +248,7 @@ function renderPortfolioItems() {
 }
 
 function createPortfolioCard(item) {
-    const imageUrl = item.mainPhoto?.url || item.imageUrl || '../iconwpp.jpg';
+    const imageUrl = item.mainPhoto?.url || item.imageUrl || '/iconwpp.jpg';
     const badgeClass = item.destination || 'orphan';
     const badgeText = item.destination === 'carrossel' ? 'Carrossel' :
                       item.destination === 'projetos' ? 'Projetos' : 'Sem Destino';
@@ -266,11 +266,18 @@ function createPortfolioCard(item) {
         categoryHtml = `<span class="card-category">${item.category}</span>`;
     }
 
+    // Badge NOVO
+    let newBadgeHtml = '';
+    if (item.isNew) {
+        newBadgeHtml = `<span class="card-badge-new"><i class="fas fa-star"></i> NOVO</span>`;
+    }
+
     return `
         <div class="portfolio-card" data-id="${item.id}">
             <div class="card-image">
-                <img src="${imageUrl}" alt="${item.title || 'Portfolio item'}" onerror="this.src='../iconwpp.jpg'">
+                <img src="${imageUrl}" alt="${item.title || 'Portfolio item'}" onerror="this.src='/iconwpp.jpg'">
                 <span class="card-badge ${badgeClass}${isOrphan ? ' orphan' : ''}">${badgeText}</span>
+                ${newBadgeHtml}
                 ${logoHtml}
             </div>
             <div class="card-body">
@@ -324,6 +331,7 @@ function openEditModal(itemId) {
     document.getElementById('editTitle').value = editingItem.title || '';
     document.getElementById('editDestination').value = editingItem.destination || '';
     document.getElementById('editCategory').value = editingItem.category || '';
+    document.getElementById('editIsNew').checked = editingItem.isNew || false;
 
     // Show/hide category based on destination
     toggleCategory();
@@ -372,6 +380,12 @@ function openEditModal(itemId) {
 
     // Show modal
     document.getElementById('editModal').classList.add('active');
+
+    // Sync custom selects after a small delay
+    setTimeout(() => {
+        document.getElementById('editDestination').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
+    }, 50);
 }
 
 function closeEditModal() {
@@ -474,6 +488,7 @@ async function saveItem() {
     const title = document.getElementById('editTitle').value.trim();
     const destination = document.getElementById('editDestination').value;
     const category = document.getElementById('editCategory').value;
+    const isNew = document.getElementById('editIsNew').checked;
 
     // Validation
     if (!title) {
@@ -498,6 +513,7 @@ async function saveItem() {
             title: title,
             destination: destination,
             category: destination === 'projetos' ? category : null,
+            isNew: isNew,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 

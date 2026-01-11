@@ -154,9 +154,9 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
 
         <main class="main-content">
             <div class="container">
-                <!-- Stats Bar -->
+                <!-- Stats Bar (agora funcionam como filtros) -->
                 <div class="portfolio-stats">
-                    <div class="stat-card">
+                    <button class="stat-card active" data-filter="todos">
                         <div class="stat-icon">
                             <i class="fas fa-images"></i>
                         </div>
@@ -164,8 +164,8 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <span class="stat-value" id="totalItems">0</span>
                             <span class="stat-label">Total</span>
                         </div>
-                    </div>
-                    <div class="stat-card carrossel">
+                    </button>
+                    <button class="stat-card carrossel" data-filter="carrossel">
                         <div class="stat-icon">
                             <i class="fas fa-film"></i>
                         </div>
@@ -173,8 +173,8 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <span class="stat-value" id="carrosselItems">0</span>
                             <span class="stat-label">Carrossel</span>
                         </div>
-                    </div>
-                    <div class="stat-card projetos">
+                    </button>
+                    <button class="stat-card projetos" data-filter="projetos">
                         <div class="stat-icon">
                             <i class="fas fa-th-large"></i>
                         </div>
@@ -182,8 +182,8 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <span class="stat-value" id="projetosItems">0</span>
                             <span class="stat-label">Projetos</span>
                         </div>
-                    </div>
-                    <div class="stat-card orphan">
+                    </button>
+                    <button class="stat-card orphan" data-filter="orphan">
                         <div class="stat-icon">
                             <i class="fas fa-unlink"></i>
                         </div>
@@ -191,17 +191,11 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <span class="stat-value" id="orphanItems">0</span>
                             <span class="stat-label">Sem Vinculo</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
-                <!-- Filters -->
+                <!-- Search Bar -->
                 <div class="portfolio-filters">
-                    <div class="filter-tabs">
-                        <button class="filter-tab active" data-filter="todos">Todos</button>
-                        <button class="filter-tab" data-filter="carrossel">Carrossel</button>
-                        <button class="filter-tab" data-filter="projetos">Projetos</button>
-                        <button class="filter-tab" data-filter="orphan">Sem Vinculo</button>
-                    </div>
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Buscar por titulo...">
@@ -267,7 +261,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     <!-- Destination -->
                     <div class="form-group">
                         <label><i class="fas fa-map-marker-alt"></i> Destino *</label>
-                        <select id="editDestination" class="form-control" onchange="toggleCategory()">
+                        <select id="editDestination" class="form-select" onchange="toggleCategory()">
                             <option value="">Selecione</option>
                             <option value="carrossel">Carrossel (Hero)</option>
                             <option value="projetos">Projetos Anteriores</option>
@@ -277,7 +271,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     <!-- Category -->
                     <div class="form-group" id="editCategoryGroup" style="display: none;">
                         <label><i class="fas fa-tag"></i> Categoria *</label>
-                        <select id="editCategory" class="form-control">
+                        <select id="editCategory" class="form-select">
                             <option value="">Selecione</option>
                             <option value="industrial">Industrial</option>
                             <option value="personalizado">Personalizado</option>
@@ -286,6 +280,16 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <option value="decorativo">Decorativo</option>
                             <option value="tecnico">Tecnico</option>
                         </select>
+                    </div>
+
+                    <!-- Selo NOVO -->
+                    <div class="form-group full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="editIsNew" class="form-checkbox">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text"><i class="fas fa-star"></i> Marcar como NOVO</span>
+                        </label>
+                        <small class="form-hint">Exibe um selo "NOVO" no item do portfolio</small>
                     </div>
 
                     <!-- Logo -->
@@ -362,6 +366,9 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
 
     <!-- Config -->
     <script src="/js/env-config.js"></script>
+
+    <!-- Custom Select -->
+    <script src="/servicos/js/custom-select.js"></script>
 
     <!-- Main Script -->
     <script src="script.js"></script>
