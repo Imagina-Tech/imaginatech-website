@@ -1408,42 +1408,12 @@
         }
 
         .projetos-carousel {
-            max-width: 100%;
+            width: 100vw;
             position: relative;
+            left: 50%;
+            transform: translateX(-50%);
             overflow: hidden;
             padding: 30px 0;
-        }
-
-        /* Fade nas bordas laterais */
-        .projetos-carousel::before,
-        .projetos-carousel::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            width: 200px;
-            height: 100%;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        .projetos-carousel::before {
-            left: 0;
-            background: linear-gradient(90deg,
-                var(--dark-bg) 0%,
-                rgba(5, 7, 10, 0.6) 20%,
-                rgba(5, 7, 10, 0.3) 50%,
-                transparent 100%
-            );
-        }
-
-        .projetos-carousel::after {
-            right: 0;
-            background: linear-gradient(270deg,
-                var(--dark-bg) 0%,
-                rgba(5, 7, 10, 0.6) 20%,
-                rgba(5, 7, 10, 0.3) 50%,
-                transparent 100%
-            );
         }
 
         /* Track com animação */
@@ -1451,7 +1421,7 @@
             display: flex;
             gap: 30px;
             animation: scroll-projetos 40s linear infinite;
-            padding: 0 60px;
+            padding: 0;
         }
 
         .projetos-track:hover {
@@ -1556,27 +1526,8 @@
                 font-size: 0.9rem;
             }
 
-            .projetos-carousel::before,
-            .projetos-carousel::after {
-                width: 80px;
-                background: linear-gradient(90deg,
-                    var(--dark-bg) 0%,
-                    rgba(5, 7, 10, 0.5) 40%,
-                    transparent 100%
-                );
-            }
-
-            .projetos-carousel::after {
-                background: linear-gradient(270deg,
-                    var(--dark-bg) 0%,
-                    rgba(5, 7, 10, 0.5) 40%,
-                    transparent 100%
-                );
-            }
-
             .projetos-track {
                 gap: 20px;
-                padding: 0 30px;
                 animation: scroll-projetos 30s linear infinite;
             }
 
@@ -1695,7 +1646,7 @@
             <div class="navbar-left">
                 <div class="logo-section">
                     <h1 class="logo">ImaginaTech</h1>
-                    <span class="logo-subtitle">IMPRESSÃO 3D FUTURÍSTICA</span>
+                    <span class="logo-subtitle">IMPRESSÃO 3D</span>
                 </div>
             </div>
             <div class="navbar-right">
@@ -1723,7 +1674,6 @@
     <section class="hero">
         <div class="hero-content" data-aos="fade-up">
             <div class="hero-text">
-                <span class="badge">Tecnologia 3D de Alta Precisão</span>
                 <h1 class="glitch-text">ImaginaTech</h1>
                 <p class="hero-subtitle">Da pessoa física à indústria - Impressão 3D para todas as escalas</p>
 
