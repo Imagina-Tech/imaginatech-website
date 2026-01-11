@@ -390,6 +390,9 @@ window.moveCarousel = moveCarousel;
 
 // Inicializar Firebase para pagina publica
 let db = null;
+let portfolioItems = []; // Armazena os projetos carregados
+let portfolioModalPhotos = []; // Fotos do projeto atual no modal
+let portfolioModalCurrentIndex = 0; // Indice da foto atual
 
 function initializeFirebasePublic() {
     if (typeof firebase === 'undefined' || !window.ENV_CONFIG) {
@@ -521,15 +524,15 @@ async function loadPortfolioGrid() {
             return;
         }
 
-        const items = [];
+        portfolioItems = []; // Limpar e armazenar globalmente
         snapshot.forEach(doc => {
-            items.push({ id: doc.id, ...doc.data() });
+            portfolioItems.push({ id: doc.id, ...doc.data() });
         });
 
         // Atualizar DOM do portfolio
         const portfolioGrid = document.querySelector('.portfolio-grid');
         if (portfolioGrid) {
-            portfolioGrid.innerHTML = items.map((item, index) => createPortfolioCard(item, index)).join('');
+            portfolioGrid.innerHTML = portfolioItems.map((item, index) => createPortfolioCard(item, index)).join('');
 
             // Reinicializar AOS para novos elementos
             if (typeof AOS !== 'undefined') {
@@ -537,7 +540,10 @@ async function loadPortfolioGrid() {
             }
         }
 
-        console.log(`Portfolio atualizado com ${items.length} projeto(s)`);
+        // Inicializar modal do portfolio
+        initPortfolioModal();
+
+        console.log(`Portfolio atualizado com ${portfolioItems.length} projeto(s)`);
     } catch (error) {
         console.error('Erro ao carregar portfolio:', error);
     }
@@ -549,12 +555,12 @@ function createPortfolioCard(item, index) {
 
     // Mapear categoria para display bonito
     const categoryMap = {
-        'industrial': 'Peça Industrial',
+        'industrial': 'Peca Industrial',
         'personalizado': 'Personalizado',
         'prototipagem': 'Prototipagem',
-        'reposicao': 'Reposição',
+        'reposicao': 'Reposicao',
         'decorativo': 'Decorativo',
-        'tecnico': 'Técnico'
+        'tecnico': 'Tecnico'
     };
 
     const categoryDisplay = categoryMap[item.category] || item.category || 'Projeto';
@@ -566,14 +572,23 @@ function createPortfolioCard(item, index) {
         </div>
     ` : '';
 
+    // Indicador de galeria se tiver fotos extras
+    const hasGallery = item.extraPhotos && item.extraPhotos.length > 0;
+    const galleryIndicator = hasGallery ? `
+        <div class="portfolio-gallery-indicator">
+            <i class="fas fa-images"></i> ${1 + item.extraPhotos.length}
+        </div>
+    ` : '';
+
     return `
-        <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}">
+        <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="openPortfolioModal('${item.id}')">
             <div class="portfolio-image">
                 <img src="${item.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy">
                 <div class="portfolio-overlay">
                     <span class="portfolio-category">${categoryDisplay}</span>
                 </div>
                 ${logoOverlay}
+                ${galleryIndicator}
             </div>
             <div class="portfolio-info">
                 <h3>${item.title}</h3>
@@ -585,6 +600,181 @@ function createPortfolioCard(item, index) {
         </div>
     `;
 }
+
+// ============================================
+// PORTFOLIO MODAL FUNCTIONS
+// ============================================
+
+function initPortfolioModal() {
+    const overlay = document.getElementById('portfolio-modal-overlay');
+    const closeBtn = document.getElementById('portfolio-modal-close');
+    const prevBtn = document.getElementById('portfolio-modal-prev');
+    const nextBtn = document.getElementById('portfolio-modal-next');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePortfolioModal);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closePortfolioModal();
+            }
+        });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigatePortfolioPhoto(-1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigatePortfolioPhoto(1);
+        });
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        const overlay = document.getElementById('portfolio-modal-overlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+
+        if (e.key === 'Escape') {
+            closePortfolioModal();
+        } else if (e.key === 'ArrowLeft') {
+            navigatePortfolioPhoto(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigatePortfolioPhoto(1);
+        }
+    });
+}
+
+function openPortfolioModal(projectId) {
+    const project = portfolioItems.find(p => p.id === projectId);
+    if (!project) return;
+
+    // Construir array de todas as fotos
+    portfolioModalPhotos = [];
+    if (project.mainPhoto?.url) {
+        portfolioModalPhotos.push(project.mainPhoto.url);
+    }
+    if (project.extraPhotos && Array.isArray(project.extraPhotos)) {
+        project.extraPhotos.forEach(photo => {
+            if (photo?.url) {
+                portfolioModalPhotos.push(photo.url);
+            }
+        });
+    }
+
+    if (portfolioModalPhotos.length === 0) {
+        portfolioModalPhotos.push('https://via.placeholder.com/800x600/0a1420/00D4FF?text=Projeto');
+    }
+
+    portfolioModalCurrentIndex = 0;
+
+    const modalTitle = document.getElementById('portfolio-modal-title');
+    const modalSpecs = document.getElementById('portfolio-modal-specs');
+
+    if (modalTitle) {
+        modalTitle.textContent = project.title;
+    }
+
+    if (modalSpecs) {
+        modalSpecs.innerHTML = `
+            <span class="spec-badge"><i class="fas fa-cube"></i> ${project.material || 'PLA'}</span>
+            <span class="spec-badge"><i class="fas fa-palette"></i> ${project.color || 'Variado'}</span>
+        `;
+    }
+
+    setupPortfolioPhotoNavigation();
+    showPortfolioPhoto(0);
+
+    const overlay = document.getElementById('portfolio-modal-overlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function setupPortfolioPhotoNavigation() {
+    const prevBtn = document.getElementById('portfolio-modal-prev');
+    const nextBtn = document.getElementById('portfolio-modal-next');
+    const counter = document.getElementById('portfolio-modal-counter');
+    const thumbnails = document.getElementById('portfolio-modal-thumbnails');
+    const totalPhotos = document.getElementById('portfolio-modal-total');
+
+    const hasMultiple = portfolioModalPhotos.length > 1;
+
+    if (prevBtn) prevBtn.style.display = hasMultiple ? 'flex' : 'none';
+    if (nextBtn) nextBtn.style.display = hasMultiple ? 'flex' : 'none';
+    if (counter) counter.style.display = hasMultiple ? 'block' : 'none';
+    if (thumbnails) thumbnails.style.display = hasMultiple ? 'flex' : 'none';
+    if (totalPhotos) totalPhotos.textContent = portfolioModalPhotos.length;
+
+    if (thumbnails && hasMultiple) {
+        thumbnails.innerHTML = portfolioModalPhotos.map((url, index) => `
+            <div class="portfolio-modal-thumb ${index === 0 ? 'active' : ''}" onclick="goToPortfolioPhoto(${index})">
+                <img src="${url}" alt="Foto ${index + 1}" loading="lazy">
+            </div>
+        `).join('');
+    }
+}
+
+function showPortfolioPhoto(index) {
+    if (index < 0 || index >= portfolioModalPhotos.length) return;
+
+    portfolioModalCurrentIndex = index;
+
+    const modalImage = document.getElementById('portfolio-modal-image');
+    const currentPhotoEl = document.getElementById('portfolio-modal-current');
+    const thumbnails = document.querySelectorAll('.portfolio-modal-thumb');
+
+    if (modalImage) {
+        modalImage.src = portfolioModalPhotos[index];
+    }
+
+    if (currentPhotoEl) {
+        currentPhotoEl.textContent = index + 1;
+    }
+
+    thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+    });
+}
+
+function navigatePortfolioPhoto(direction) {
+    let newIndex = portfolioModalCurrentIndex + direction;
+
+    if (newIndex < 0) {
+        newIndex = portfolioModalPhotos.length - 1;
+    } else if (newIndex >= portfolioModalPhotos.length) {
+        newIndex = 0;
+    }
+
+    showPortfolioPhoto(newIndex);
+}
+
+function goToPortfolioPhoto(index) {
+    showPortfolioPhoto(index);
+}
+
+function closePortfolioModal() {
+    const overlay = document.getElementById('portfolio-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    portfolioModalPhotos = [];
+    portfolioModalCurrentIndex = 0;
+}
+
+// Expor funcoes globalmente
+window.openPortfolioModal = openPortfolioModal;
+window.goToPortfolioPhoto = goToPortfolioPhoto;
+window.closePortfolioModal = closePortfolioModal;
 
 // Inicializar carregamento dinamico quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', async () => {

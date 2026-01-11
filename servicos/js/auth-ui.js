@@ -31,7 +31,11 @@ import {
     handleUpLogoSelect,
     removeUpLogo,
     saveToPortfolio,
-    setupUpModalDragDrop
+    setupUpModalDragDrop,
+    // Extra Photos (Galeria)
+    addExtraPhotoSlot,
+    handleExtraPhotoSelect,
+    removeExtraPhoto
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -2351,6 +2355,10 @@ window.removeUpPhoto = removeUpPhoto;
 window.handleUpLogoSelect = handleUpLogoSelect;
 window.removeUpLogo = removeUpLogo;
 window.saveToPortfolio = saveToPortfolio;
+// Extra Photos (Galeria)
+window.addExtraPhotoSlot = addExtraPhotoSlot;
+window.handleExtraPhotoSelect = handleExtraPhotoSelect;
+window.removeExtraPhoto = removeExtraPhoto;
 
 // ===========================
 // BYPASS DE FOTO OBRIGATÓRIA

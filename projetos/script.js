@@ -270,9 +270,14 @@ function filterProjects(filter) {
 // MODAL FUNCTIONALITY
 // ============================================
 
+let modalPhotos = []; // Array de fotos do projeto atual
+let currentPhotoIndex = 0; // Indice da foto atual
+
 function initializeModal() {
     const overlay = document.getElementById('modal-overlay');
     const closeBtn = document.getElementById('modal-close');
+    const prevBtn = document.getElementById('modal-prev');
+    const nextBtn = document.getElementById('modal-next');
 
     if (closeBtn) {
         closeBtn.addEventListener('click', closeModal);
@@ -286,10 +291,32 @@ function initializeModal() {
         });
     }
 
-    // ESC key to close
+    // Navegacao
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigatePhoto(-1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigatePhoto(1);
+        });
+    }
+
+    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
+        const overlay = document.getElementById('modal-overlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+
         if (e.key === 'Escape') {
             closeModal();
+        } else if (e.key === 'ArrowLeft') {
+            navigatePhoto(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigatePhoto(1);
         }
     });
 }
@@ -298,15 +325,29 @@ function openModal(projectId) {
     const project = allProjects.find(p => p.id === projectId);
     if (!project) return;
 
+    // Construir array de todas as fotos
+    modalPhotos = [];
+    if (project.mainPhoto?.url) {
+        modalPhotos.push(project.mainPhoto.url);
+    }
+    if (project.extraPhotos && Array.isArray(project.extraPhotos)) {
+        project.extraPhotos.forEach(photo => {
+            if (photo?.url) {
+                modalPhotos.push(photo.url);
+            }
+        });
+    }
+
+    // Se nao houver fotos, usar placeholder
+    if (modalPhotos.length === 0) {
+        modalPhotos.push('https://via.placeholder.com/800x600/0a1420/00D4FF?text=Projeto');
+    }
+
+    currentPhotoIndex = 0;
+
     const overlay = document.getElementById('modal-overlay');
-    const modalImage = document.getElementById('modal-image');
     const modalTitle = document.getElementById('modal-title');
     const modalSpecs = document.getElementById('modal-specs');
-
-    if (modalImage) {
-        modalImage.src = project.mainPhoto?.url || 'https://via.placeholder.com/800x600/0a1420/00D4FF?text=Projeto';
-        modalImage.alt = project.title;
-    }
 
     if (modalTitle) {
         modalTitle.textContent = project.title;
@@ -319,10 +360,80 @@ function openModal(projectId) {
         `;
     }
 
+    // Configurar navegacao baseado no numero de fotos
+    setupPhotoNavigation();
+    showPhoto(0);
+
     if (overlay) {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
+}
+
+function setupPhotoNavigation() {
+    const prevBtn = document.getElementById('modal-prev');
+    const nextBtn = document.getElementById('modal-next');
+    const counter = document.getElementById('modal-photo-counter');
+    const thumbnails = document.getElementById('modal-thumbnails');
+    const totalPhotos = document.getElementById('modal-total-photos');
+
+    const hasMultiple = modalPhotos.length > 1;
+
+    // Mostrar/esconder navegacao
+    if (prevBtn) prevBtn.style.display = hasMultiple ? 'flex' : 'none';
+    if (nextBtn) nextBtn.style.display = hasMultiple ? 'flex' : 'none';
+    if (counter) counter.style.display = hasMultiple ? 'block' : 'none';
+    if (thumbnails) thumbnails.style.display = hasMultiple ? 'flex' : 'none';
+    if (totalPhotos) totalPhotos.textContent = modalPhotos.length;
+
+    // Criar miniaturas
+    if (thumbnails && hasMultiple) {
+        thumbnails.innerHTML = modalPhotos.map((url, index) => `
+            <div class="modal-thumbnail ${index === 0 ? 'active' : ''}" onclick="goToPhoto(${index})">
+                <img src="${url}" alt="Foto ${index + 1}" loading="lazy">
+            </div>
+        `).join('');
+    }
+}
+
+function showPhoto(index) {
+    if (index < 0 || index >= modalPhotos.length) return;
+
+    currentPhotoIndex = index;
+
+    const modalImage = document.getElementById('modal-image');
+    const currentPhotoEl = document.getElementById('modal-current-photo');
+    const thumbnails = document.querySelectorAll('.modal-thumbnail');
+
+    if (modalImage) {
+        modalImage.src = modalPhotos[index];
+    }
+
+    if (currentPhotoEl) {
+        currentPhotoEl.textContent = index + 1;
+    }
+
+    // Atualizar miniaturas ativas
+    thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+    });
+}
+
+function navigatePhoto(direction) {
+    let newIndex = currentPhotoIndex + direction;
+
+    // Loop infinito
+    if (newIndex < 0) {
+        newIndex = modalPhotos.length - 1;
+    } else if (newIndex >= modalPhotos.length) {
+        newIndex = 0;
+    }
+
+    showPhoto(newIndex);
+}
+
+function goToPhoto(index) {
+    showPhoto(index);
 }
 
 function closeModal() {
@@ -331,10 +442,13 @@ function closeModal() {
         overlay.classList.remove('active');
         document.body.style.overflow = '';
     }
+    modalPhotos = [];
+    currentPhotoIndex = 0;
 }
 
-// Make openModal available globally
+// Make functions available globally
 window.openModal = openModal;
+window.goToPhoto = goToPhoto;
 
 // ============================================
 // EMPTY STATE

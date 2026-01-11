@@ -795,9 +795,9 @@
                 <!-- Formulario de Up (pode ser escondido quando mostrar lista) -->
                 <div class="up-form-section" id="upFormSection">
                 <div class="form-grid">
-                    <!-- Foto de Qualidade -->
+                    <!-- Foto Principal -->
                     <div class="form-group full-width">
-                        <label for="upPhoto"><i class="fas fa-camera"></i> Foto de Qualidade *</label>
+                        <label for="upPhoto"><i class="fas fa-camera"></i> Foto Principal *</label>
                         <div class="image-upload-area" id="upPhotoUploadArea" onclick="document.getElementById('upPhoto').click()">
                             <input type="file" id="upPhoto" accept="image/jpeg,image/jpg,image/png,image/webp"
                                    onchange="window.handleUpPhotoSelect(event)" style="display: none;">
@@ -813,6 +813,18 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Fotos Adicionais (apenas para Projetos) -->
+                    <div class="form-group full-width" id="upExtraPhotosGroup" style="display: none;">
+                        <label><i class="fas fa-images"></i> Fotos Adicionais (opcional)</label>
+                        <small class="form-hint">Adicione mais fotos para criar uma galeria navegavel</small>
+                        <div class="extra-photos-container" id="upExtraPhotosContainer">
+                            <!-- Fotos adicionais serao inseridas aqui -->
+                        </div>
+                        <button type="button" class="btn-add-photo" id="btnAddExtraPhoto" onclick="window.addExtraPhotoSlot()">
+                            <i class="fas fa-plus"></i> Adicionar Foto
+                        </button>
                     </div>
 
                     <!-- Titulo -->

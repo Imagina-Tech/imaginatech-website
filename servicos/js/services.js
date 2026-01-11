@@ -2009,6 +2009,7 @@ export function filterServices(filter) {
 
 let upPhotoFile = null;
 let upLogoFile = null;
+let upExtraPhotosFiles = []; // Array de fotos extras
 let existingPortfolioItems = []; // Cache dos itens existentes
 
 export async function openUpModal(serviceId) {
@@ -2204,20 +2205,31 @@ export function closeUpModal() {
     document.getElementById('upModal').classList.remove('active');
     upPhotoFile = null;
     upLogoFile = null;
+    clearExtraPhotos();
 }
 
 export function toggleCategoryField() {
     const destination = document.getElementById('upDestination').value;
     const categoryGroup = document.getElementById('upCategoryGroup');
     const categorySelect = document.getElementById('upCategory');
+    const extraPhotosGroup = document.getElementById('upExtraPhotosGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
         categorySelect.required = true;
+        // Mostrar opcao de fotos extras para projetos
+        if (extraPhotosGroup) {
+            extraPhotosGroup.style.display = 'block';
+        }
     } else {
         categoryGroup.style.display = 'none';
         categorySelect.required = false;
         categorySelect.value = '';
+        // Esconder e limpar fotos extras para carrossel
+        if (extraPhotosGroup) {
+            extraPhotosGroup.style.display = 'none';
+            clearExtraPhotos();
+        }
     }
 
     // Atualizar CustomSelect se existir
@@ -2291,6 +2303,116 @@ export function removeUpLogo() {
     document.getElementById('upLogo').value = '';
     document.getElementById('upLogoPreview').style.display = 'none';
     document.getElementById('upLogoPlaceholder').style.display = 'flex';
+}
+
+// ===========================
+// FOTOS EXTRAS (GALERIA)
+// ===========================
+
+let extraPhotoSlotCounter = 0;
+
+/**
+ * Limpa todas as fotos extras
+ */
+function clearExtraPhotos() {
+    upExtraPhotosFiles = [];
+    extraPhotoSlotCounter = 0;
+    const container = document.getElementById('upExtraPhotosContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+
+/**
+ * Adiciona um novo slot para foto extra
+ */
+export function addExtraPhotoSlot() {
+    const container = document.getElementById('upExtraPhotosContainer');
+    if (!container) return;
+
+    // Limitar a 5 fotos extras (6 total com a principal)
+    if (upExtraPhotosFiles.filter(f => f !== null).length >= 5) {
+        showToast('Maximo de 5 fotos extras permitido', 'warning');
+        return;
+    }
+
+    const slotId = extraPhotoSlotCounter++;
+    const slotHtml = `
+        <div class="extra-photo-slot" id="extraSlot_${slotId}" onclick="document.getElementById('extraPhotoInput_${slotId}').click()">
+            <input type="file" id="extraPhotoInput_${slotId}" accept="image/jpeg,image/jpg,image/png,image/webp"
+                   onchange="window.handleExtraPhotoSelect(event, ${slotId})" style="display: none;">
+            <div class="slot-placeholder">
+                <i class="fas fa-plus"></i>
+                <span>Foto ${upExtraPhotosFiles.filter(f => f !== null).length + 2}</span>
+            </div>
+            <div class="slot-preview">
+                <img id="extraPhotoImg_${slotId}" src="" alt="Preview">
+            </div>
+            <button type="button" class="btn-remove-slot" onclick="event.stopPropagation(); window.removeExtraPhoto(${slotId})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', slotHtml);
+
+    // Expandir o array para acomodar o novo slot
+    while (upExtraPhotosFiles.length <= slotId) {
+        upExtraPhotosFiles.push(null);
+    }
+}
+
+/**
+ * Handler para selecao de foto extra
+ */
+export function handleExtraPhotoSelect(event, slotId) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+        showToast('Formato invalido. Use JPG, PNG ou WebP', 'error');
+        return;
+    }
+
+    // Validar tamanho (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Imagem muito grande. Maximo 10MB', 'error');
+        return;
+    }
+
+    upExtraPhotosFiles[slotId] = file;
+
+    const slot = document.getElementById(`extraSlot_${slotId}`);
+    const img = document.getElementById(`extraPhotoImg_${slotId}`);
+
+    if (slot && img) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            slot.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+/**
+ * Remove uma foto extra
+ */
+export function removeExtraPhoto(slotId) {
+    upExtraPhotosFiles[slotId] = null;
+
+    const slot = document.getElementById(`extraSlot_${slotId}`);
+    if (slot) {
+        slot.remove();
+    }
+}
+
+/**
+ * Retorna array de arquivos de fotos extras (sem nulls)
+ */
+function getExtraPhotosFiles() {
+    return upExtraPhotosFiles.filter(f => f !== null);
 }
 
 // ===========================
@@ -2529,6 +2651,24 @@ export async function saveToPortfolio() {
             logoData = { url: logoUrl, path: logoPath };
         }
 
+        // Upload das fotos extras (apenas para projetos)
+        let extraPhotosData = [];
+        if (destination === 'projetos') {
+            const extraFiles = getExtraPhotosFiles();
+            if (extraFiles.length > 0) {
+                showToast(`Enviando ${extraFiles.length} foto(s) extra(s)...`, 'info');
+                for (let i = 0; i < extraFiles.length; i++) {
+                    const file = extraFiles[i];
+                    const ext = file.name.split('.').pop();
+                    const path = `portfolio/${timestamp}_extra_${i}.${ext}`;
+                    const ref = state.storage.ref().child(path);
+                    await ref.put(file);
+                    const url = await ref.getDownloadURL();
+                    extraPhotosData.push({ url, path });
+                }
+            }
+        }
+
         if (isEditing) {
             // Atualizar documento existente
             const updateData = {
@@ -2554,6 +2694,7 @@ export async function saveToPortfolio() {
                 color: service.color || null,
                 orderCode: service.orderCode || null,
                 mainPhoto: photoData,
+                extraPhotos: extraPhotosData.length > 0 ? extraPhotosData : null,
                 logo: logoData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 createdBy: state.currentUser?.email || 'unknown',
@@ -2563,7 +2704,8 @@ export async function saveToPortfolio() {
             };
 
             await state.db.collection('portfolio').add(portfolioDoc);
-            showToast('Projeto adicionado ao portfolio!', 'success');
+            const totalPhotos = 1 + extraPhotosData.length;
+            showToast(`Projeto adicionado ao portfolio com ${totalPhotos} foto(s)!`, 'success');
         }
 
         closeUpModal();

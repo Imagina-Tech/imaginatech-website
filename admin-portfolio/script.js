@@ -272,12 +272,20 @@ function createPortfolioCard(item) {
         newBadgeHtml = `<span class="card-badge-new"><i class="fas fa-star"></i> NOVO</span>`;
     }
 
+    // Indicador de galeria
+    let galleryBadgeHtml = '';
+    const extraPhotosCount = item.extraPhotos?.length || 0;
+    if (extraPhotosCount > 0) {
+        galleryBadgeHtml = `<span class="gallery-badge"><i class="fas fa-images"></i> ${1 + extraPhotosCount}</span>`;
+    }
+
     return `
         <div class="portfolio-card" data-id="${item.id}">
             <div class="card-image">
                 <img src="${imageUrl}" alt="${item.title || 'Portfolio item'}" onerror="this.src='/iconwpp.jpg'">
                 <span class="card-badge ${badgeClass}${isOrphan ? ' orphan' : ''}">${badgeText}</span>
                 ${newBadgeHtml}
+                ${galleryBadgeHtml}
                 ${logoHtml}
             </div>
             <div class="card-body">
@@ -318,6 +326,9 @@ function formatDate(timestamp) {
 let editingItem = null;
 let newPhotoFile = null;
 let newLogoFile = null;
+let newExtraPhotosFiles = []; // Novas fotos extras a adicionar
+let extraPhotosToDelete = []; // URLs das fotos extras a deletar
+let extraPhotoSlotCounterAdmin = 0;
 
 function openEditModal(itemId) {
     editingItem = portfolioItems.find(i => i.id === itemId);
@@ -375,8 +386,14 @@ function openEditModal(itemId) {
     // Reset file inputs
     newPhotoFile = null;
     newLogoFile = null;
+    newExtraPhotosFiles = [];
+    extraPhotosToDelete = [];
+    extraPhotoSlotCounterAdmin = 0;
     document.getElementById('editPhoto').value = '';
     document.getElementById('editLogo').value = '';
+
+    // Load extra photos
+    loadExtraPhotosInEditModal();
 
     // Show modal
     document.getElementById('editModal').classList.add('active');
@@ -393,16 +410,22 @@ function closeEditModal() {
     editingItem = null;
     newPhotoFile = null;
     newLogoFile = null;
+    newExtraPhotosFiles = [];
+    extraPhotosToDelete = [];
+    extraPhotoSlotCounterAdmin = 0;
 }
 
 function toggleCategory() {
     const destination = document.getElementById('editDestination').value;
     const categoryGroup = document.getElementById('editCategoryGroup');
+    const extraPhotosGroup = document.getElementById('editExtraPhotosGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
+        if (extraPhotosGroup) extraPhotosGroup.style.display = 'block';
     } else {
         categoryGroup.style.display = 'none';
+        if (extraPhotosGroup) extraPhotosGroup.style.display = 'none';
     }
 }
 
@@ -477,6 +500,126 @@ function removeLogo() {
     document.getElementById('editLogoPreview').style.display = 'none';
     document.getElementById('editLogoPlaceholder').style.display = 'flex';
     document.getElementById('editLogoImg').src = '';
+}
+
+// ==========================================
+// EXTRA PHOTOS HANDLING
+// ==========================================
+
+function loadExtraPhotosInEditModal() {
+    const grid = document.getElementById('editExtraPhotosGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    // Carregar fotos extras existentes
+    if (editingItem?.extraPhotos && Array.isArray(editingItem.extraPhotos)) {
+        editingItem.extraPhotos.forEach((photo, index) => {
+            if (photo?.url) {
+                const item = document.createElement('div');
+                item.className = 'extra-photo-item existing';
+                item.dataset.url = photo.url;
+                item.dataset.path = photo.path || '';
+                item.innerHTML = `
+                    <img src="${photo.url}" alt="Foto ${index + 1}">
+                    <button type="button" class="btn-remove-extra" onclick="event.stopPropagation(); removeExistingExtraPhoto(this, '${photo.url}', '${photo.path || ''}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                grid.appendChild(item);
+            }
+        });
+    }
+}
+
+function addExtraPhotoSlotAdmin() {
+    const grid = document.getElementById('editExtraPhotosGrid');
+    if (!grid) return;
+
+    // Limitar a 5 fotos extras
+    const existingCount = grid.querySelectorAll('.extra-photo-item.existing:not(.to-delete)').length;
+    const newCount = newExtraPhotosFiles.filter(f => f !== null).length;
+
+    if (existingCount + newCount >= 5) {
+        showToast('Maximo de 5 fotos extras', 'warning');
+        return;
+    }
+
+    const slotId = extraPhotoSlotCounterAdmin++;
+    const slot = document.createElement('div');
+    slot.className = 'extra-photo-item new-slot';
+    slot.id = `adminExtraSlot_${slotId}`;
+    slot.onclick = () => document.getElementById(`adminExtraInput_${slotId}`).click();
+    slot.innerHTML = `
+        <input type="file" id="adminExtraInput_${slotId}" accept="image/jpeg,image/jpg,image/png,image/webp"
+               onchange="handleExtraPhotoSelectAdmin(event, ${slotId})" style="display: none;">
+        <i class="fas fa-plus"></i>
+        <span>Adicionar</span>
+    `;
+
+    grid.appendChild(slot);
+
+    // Expandir array
+    while (newExtraPhotosFiles.length <= slotId) {
+        newExtraPhotosFiles.push(null);
+    }
+}
+
+function handleExtraPhotoSelectAdmin(event, slotId) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+        showToast('Formato invalido. Use JPG, PNG ou WebP', 'error');
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Imagem muito grande. Maximo 10MB', 'error');
+        return;
+    }
+
+    newExtraPhotosFiles[slotId] = file;
+
+    const slot = document.getElementById(`adminExtraSlot_${slotId}`);
+    if (slot) {
+        slot.classList.remove('new-slot');
+        slot.classList.add('has-file');
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            slot.innerHTML = `
+                <img src="${e.target.result}" alt="Nova foto">
+                <button type="button" class="btn-remove-extra" onclick="event.stopPropagation(); removeNewExtraPhoto(${slotId})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            slot.onclick = null;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeNewExtraPhoto(slotId) {
+    newExtraPhotosFiles[slotId] = null;
+    const slot = document.getElementById(`adminExtraSlot_${slotId}`);
+    if (slot) {
+        slot.remove();
+    }
+}
+
+function removeExistingExtraPhoto(button, url, path) {
+    const item = button.closest('.extra-photo-item');
+    if (item) {
+        item.classList.add('to-delete');
+        item.style.opacity = '0.3';
+        item.style.pointerEvents = 'none';
+    }
+    extraPhotosToDelete.push({ url, path });
+}
+
+function getNewExtraPhotosFiles() {
+    return newExtraPhotosFiles.filter(f => f !== null);
 }
 
 // ==========================================
@@ -565,6 +708,45 @@ async function saveItem() {
             const logoUrl = await logoRef.getDownloadURL();
 
             updateData.logo = { url: logoUrl, path: logoPath };
+        }
+
+        // Handle extra photos (only for projetos)
+        if (destination === 'projetos') {
+            // Start with existing photos (filtering out deleted ones)
+            let currentExtraPhotos = [];
+            if (editingItem.extraPhotos && Array.isArray(editingItem.extraPhotos)) {
+                const deletedUrls = extraPhotosToDelete.map(d => d.url);
+                currentExtraPhotos = editingItem.extraPhotos.filter(p => !deletedUrls.includes(p.url));
+            }
+
+            // Delete marked photos from storage
+            for (const photo of extraPhotosToDelete) {
+                if (photo.path) {
+                    try {
+                        await storage.ref(photo.path).delete();
+                    } catch (e) {
+                        console.warn('Erro ao deletar foto extra:', e);
+                    }
+                }
+            }
+
+            // Upload new extra photos
+            const newFiles = getNewExtraPhotosFiles();
+            if (newFiles.length > 0) {
+                showLoading(`Enviando ${newFiles.length} foto(s) extra(s)...`);
+                for (let i = 0; i < newFiles.length; i++) {
+                    const file = newFiles[i];
+                    const timestamp = Date.now();
+                    const ext = file.name.split('.').pop();
+                    const path = `portfolio/${itemId}/extra_${timestamp}_${i}.${ext}`;
+                    const ref = storage.ref(path);
+                    await ref.put(file);
+                    const url = await ref.getDownloadURL();
+                    currentExtraPhotos.push({ url, path });
+                }
+            }
+
+            updateData.extraPhotos = currentExtraPhotos.length > 0 ? currentExtraPhotos : null;
         }
 
         // Save to Firestore
@@ -716,3 +898,8 @@ window.saveItem = saveItem;
 window.openDeleteModal = openDeleteModal;
 window.closeDeleteModal = closeDeleteModal;
 window.confirmDelete = confirmDelete;
+// Extra photos
+window.addExtraPhotoSlotAdmin = addExtraPhotoSlotAdmin;
+window.handleExtraPhotoSelectAdmin = handleExtraPhotoSelectAdmin;
+window.removeNewExtraPhoto = removeNewExtraPhoto;
+window.removeExistingExtraPhoto = removeExistingExtraPhoto;
