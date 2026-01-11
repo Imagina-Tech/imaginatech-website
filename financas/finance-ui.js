@@ -1901,17 +1901,55 @@ class CustomSelect {
         this.customSelect.classList.add('open');
         this.trigger.setAttribute('aria-expanded', 'true');
 
+        // Posicionar dropdown com position fixed para sair do modal
+        const triggerRect = this.trigger.getBoundingClientRect();
+        const dropdownHeight = Math.min(300, this.dropdown.scrollHeight);
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+
+        // Aplicar position fixed no dropdown
+        this.dropdown.style.position = 'fixed';
+        this.dropdown.style.width = `${triggerRect.width}px`;
+        this.dropdown.style.left = `${triggerRect.left}px`;
+
+        // Verificar se deve abrir para cima ou para baixo
+        if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+            // Abrir para cima
+            this.dropdown.style.bottom = `${viewportHeight - triggerRect.top}px`;
+            this.dropdown.style.top = 'auto';
+            this.dropdown.style.maxHeight = `${Math.min(300, spaceAbove - 10)}px`;
+            this.customSelect.classList.add('open-up');
+        } else {
+            // Abrir para baixo
+            this.dropdown.style.top = `${triggerRect.bottom}px`;
+            this.dropdown.style.bottom = 'auto';
+            this.dropdown.style.maxHeight = `${Math.min(300, spaceBelow - 10)}px`;
+            this.customSelect.classList.remove('open-up');
+        }
+
         // Scroll para opção selecionada
         const selectedOption = this.dropdown.querySelector('.selected');
         if (selectedOption) {
-            selectedOption.scrollIntoView({ block: 'nearest' });
+            setTimeout(() => {
+                selectedOption.scrollIntoView({ block: 'nearest' });
+            }, 50);
         }
     }
 
     close() {
         this.isOpen = false;
         this.customSelect.classList.remove('open');
+        this.customSelect.classList.remove('open-up');
         this.trigger.setAttribute('aria-expanded', 'false');
+
+        // Limpar estilos inline do dropdown
+        this.dropdown.style.position = '';
+        this.dropdown.style.top = '';
+        this.dropdown.style.bottom = '';
+        this.dropdown.style.left = '';
+        this.dropdown.style.width = '';
+        this.dropdown.style.maxHeight = '';
     }
 
     selectOption(index) {
