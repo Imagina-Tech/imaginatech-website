@@ -9,11 +9,13 @@ let portfolioItems = [];
 let currentFilter = 'todos';
 let currentSearch = '';
 
-// Emails autorizados
-const AUTHORIZED_EMAILS = [
-    'trindadealmeida.contato@gmail.com',
-    'leandro.trindade.o@gmail.com'
-];
+// Emails autorizados (carregados do ENV_CONFIG)
+function getAuthorizedEmails() {
+    if (window.ENV_CONFIG && window.ENV_CONFIG.AUTHORIZED_ADMINS) {
+        return window.ENV_CONFIG.AUTHORIZED_ADMINS.map(admin => admin.email);
+    }
+    return [];
+}
 
 // ==========================================
 // INITIALIZATION
@@ -27,7 +29,15 @@ function initializeFirebase() {
     try {
         // Check if already initialized
         if (firebase.apps.length === 0) {
-            firebase.initializeApp(window.ENV_CONFIG.firebase);
+            const firebaseConfig = {
+                apiKey: window.ENV_CONFIG.FIREBASE_API_KEY,
+                authDomain: window.ENV_CONFIG.FIREBASE_AUTH_DOMAIN,
+                projectId: window.ENV_CONFIG.FIREBASE_PROJECT_ID,
+                storageBucket: window.ENV_CONFIG.FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: window.ENV_CONFIG.FIREBASE_MESSAGING_SENDER_ID,
+                appId: window.ENV_CONFIG.FIREBASE_APP_ID
+            };
+            firebase.initializeApp(firebaseConfig);
         }
 
         db = firebase.firestore();
@@ -47,7 +57,8 @@ function initializeFirebase() {
 function handleAuthStateChange(user) {
     if (user) {
         // Check if authorized
-        if (AUTHORIZED_EMAILS.includes(user.email)) {
+        const authorizedEmails = getAuthorizedEmails();
+        if (authorizedEmails.includes(user.email)) {
             currentUser = user;
             showDashboard();
             loadPortfolioItems();
