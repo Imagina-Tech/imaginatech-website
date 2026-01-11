@@ -281,20 +281,6 @@ body {
     border-color: var(--neon-blue);
 }
 
-.btn-nav.btn-portfolio {
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(123, 44, 191, 0.1) 100%);
-    border-color: rgba(123, 44, 191, 0.4);
-}
-
-.btn-nav.btn-portfolio:hover {
-    border-color: rgba(123, 44, 191, 0.8);
-    box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);
-}
-
-.btn-nav.btn-portfolio i {
-    color: #a855f7;
-}
-
 .btn-caixa {
     background: linear-gradient(135deg, #9945FF, #B845FF);
     color: white;
