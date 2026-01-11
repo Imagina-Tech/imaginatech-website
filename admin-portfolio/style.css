@@ -159,6 +159,7 @@
     outline: none;
     color: var(--text-primary);
     font-size: 0.9rem;
+    font-family: inherit;
 }
 
 .search-wrapper input::placeholder {
@@ -342,6 +343,7 @@
     border-radius: 8px;
     color: var(--text-secondary);
     font-size: 0.8rem;
+    font-family: inherit;
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -395,9 +397,15 @@
 }
 
 /* ===========================
-   MODALS - Estilos especificos
+   MODALS - Complementos
    =========================== */
 
+/* Modal pequeno para confirmacao */
+.modal-content.modal-sm {
+    max-width: 450px;
+}
+
+/* Service Link Badge */
 .service-link-badge {
     display: inline-flex;
     align-items: center;
@@ -411,7 +419,10 @@
     margin-bottom: 1.5rem;
 }
 
-/* Image Upload Box */
+/* ===========================
+   IMAGE UPLOAD BOX
+   =========================== */
+
 .image-upload-box {
     position: relative;
     border: 2px dashed var(--glass-border);
@@ -453,7 +464,7 @@
     font-size: 0.85rem;
 }
 
-/* Image Preview - Fix */
+/* Image Preview - Posicionamento correto */
 .image-upload-box .image-preview {
     position: absolute;
     top: 0;
@@ -496,6 +507,30 @@
 }
 
 /* ===========================
+   BOTAO DANGER (Excluir)
+   =========================== */
+
+.btn-danger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font: 500 0.95rem/1 inherit;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(244, 67, 54, 0.4);
+}
+
+/* ===========================
    CHECKBOX CUSTOMIZADO
    =========================== */
 
@@ -521,6 +556,11 @@
     justify-content: center;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    background: var(--glass-bg);
+}
+
+.checkbox-label:hover .checkbox-custom {
+    border-color: var(--neon-cyan);
 }
 
 .checkbox-label .form-checkbox:checked + .checkbox-custom {
@@ -556,7 +596,10 @@
     margin-left: calc(22px + 0.75rem);
 }
 
-/* Delete Modal */
+/* ===========================
+   DELETE MODAL
+   =========================== */
+
 .delete-preview {
     display: flex;
     flex-direction: column;
@@ -579,11 +622,12 @@
     font-size: 1rem;
     font-weight: 500;
     color: var(--text-primary);
+    margin: 0;
 }
 
 .delete-warning {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
     padding: 1rem;
     background: rgba(244, 67, 54, 0.1);
@@ -595,13 +639,48 @@
 
 .delete-warning i {
     font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ===========================
+   FORM GROUP NO MODAL
+   =========================== */
+
+.modal .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.modal .form-group label i {
+    color: var(--neon-cyan);
+    font-size: 0.9rem;
+}
+
+/* ===========================
+   TOAST CONTAINER AJUSTE
+   =========================== */
+
+.toast-container {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 /* ===========================
    RESPONSIVE
    =========================== */
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .portfolio-stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -620,6 +699,11 @@
     .portfolio-grid {
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     }
+
+    .modal-content.modal-sm {
+        max-width: 95%;
+        margin: 1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -635,11 +719,29 @@
         padding: 1rem;
     }
 
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stat-card .stat-icon i {
+        font-size: 1rem;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.25rem;
+    }
+
     .portfolio-grid {
         grid-template-columns: 1fr;
     }
 
     .portfolio-card .card-actions {
         flex-direction: column;
+    }
+
+    .delete-preview img {
+        width: 100px;
+        height: 70px;
     }
 }
