@@ -12,7 +12,6 @@ import {
     startServicesListener,
     saveService,
     deleteService,
-    duplicateService,
     updateStatus,
     confirmStatusChange,
     renderServices,
@@ -2352,7 +2351,6 @@ window.openEditModal = openEditModal;
 window.closeModal = closeModal;
 window.saveService = saveService;
 window.deleteServiceGlobal = deleteService;
-window.duplicateServiceGlobal = duplicateService;
 window.regenerateOrderCode = () => {
     const orderCodeInput = document.getElementById('orderCodeInput');
     if (orderCodeInput) {

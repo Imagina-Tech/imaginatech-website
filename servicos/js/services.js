@@ -1060,73 +1060,6 @@ export async function deleteService(serviceId) {
     }
 }
 
-// 📋 Duplica um serviço com o UID correto da empresa (sem notificar cliente)
-export async function duplicateService(serviceId) {
-    if (!state.isAuthorized) return showToast('Sem permissão', 'error');
-
-    const service = state.services.find(s => s.id === serviceId);
-    if (!service) return showToast('Serviço não encontrado', 'error');
-
-    const confirm1 = confirm(
-        `Duplicar o serviço "${service.name}"?\n\n` +
-        `Isso criará uma cópia IDÊNTICA com o UID correto da empresa.\n` +
-        `O cliente NÃO será notificado.\n\n` +
-        `Após duplicar, você pode excluir o serviço antigo manualmente.`
-    );
-
-    if (!confirm1) return;
-
-    try {
-        showToast('Duplicando serviço...', 'info');
-
-        // Gerar novo orderCode e serviceId
-        const now = new Date();
-        const timestamp = now.getTime();
-        const newOrderCode = `#${String(timestamp).slice(-6)}`;
-        const newServiceId = `SVC-${timestamp}`;
-
-        // Copiar todos os dados do serviço original
-        const newService = {
-            ...service,
-            // Sobrescrever campos de identificação
-            orderCode: newOrderCode,
-            serviceId: newServiceId,
-            // Definir UID correto da empresa
-            userId: COMPANY_USER_ID,
-            companyId: COMPANY_USER_ID,
-            // Atualizar timestamps
-            createdAt: now.toISOString(),
-            createdBy: state.currentUser.email,
-            updatedAt: now.toISOString(),
-            updatedBy: state.currentUser.email,
-            // Resetar status se necessário (manter o original)
-            // status: service.status,
-            // Marcar como duplicado (para referência)
-            duplicatedFrom: serviceId,
-            duplicatedAt: now.toISOString()
-        };
-
-        // Remover o ID do documento original (Firestore gera um novo)
-        delete newService.id;
-
-        // Criar o novo serviço no Firestore
-        const docRef = await state.db.collection('services').add(newService);
-
-        console.log('✅ Serviço duplicado:', {
-            original: serviceId,
-            novo: docRef.id,
-            orderCode: newOrderCode,
-            userId: COMPANY_USER_ID
-        });
-
-        showToast(`Serviço duplicado! Novo código: ${newOrderCode}`, 'success');
-
-    } catch (error) {
-        console.error('Erro ao duplicar serviço:', error);
-        showToast('Erro ao duplicar serviço', 'error');
-    }
-}
-
 // ===========================
 // FILE UPLOAD
 // ===========================
@@ -1921,9 +1854,6 @@ function createServiceCard(service) {
                 <div class="service-actions">
                     <button class="btn-icon" onclick="window.openEditModal('${service.id}')" title="Editar">
                         <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon" onclick="window.duplicateServiceGlobal('${service.id}')" title="Duplicar (recriar com UID correto)">
-                        <i class="fas fa-copy"></i>
                     </button>
                     <button class="btn-icon btn-delete" onclick="window.deleteServiceGlobal('${service.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
