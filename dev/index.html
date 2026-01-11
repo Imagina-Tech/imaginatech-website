@@ -1412,8 +1412,38 @@
             position: relative;
             left: 50%;
             transform: translateX(-50%);
+            overflow: visible;
+            padding: 0;
+        }
+
+        .hero-projetos {
             overflow: hidden;
-            padding: 30px 0;
+            -webkit-mask-image:
+                linear-gradient(to right,
+                    transparent 0%,
+                    rgba(0,0,0,0.2) 2%,
+                    rgba(0,0,0,0.5) 5%,
+                    rgba(0,0,0,0.8) 10%,
+                    black 15%,
+                    black 85%,
+                    rgba(0,0,0,0.8) 90%,
+                    rgba(0,0,0,0.5) 95%,
+                    rgba(0,0,0,0.2) 98%,
+                    transparent 100%
+                );
+            mask-image:
+                linear-gradient(to right,
+                    transparent 0%,
+                    rgba(0,0,0,0.2) 2%,
+                    rgba(0,0,0,0.5) 5%,
+                    rgba(0,0,0,0.8) 10%,
+                    black 15%,
+                    black 85%,
+                    rgba(0,0,0,0.8) 90%,
+                    rgba(0,0,0,0.5) 95%,
+                    rgba(0,0,0,0.2) 98%,
+                    transparent 100%
+                );
         }
 
         /* Track com animação */
@@ -1421,7 +1451,7 @@
             display: flex;
             gap: 30px;
             animation: scroll-projetos 40s linear infinite;
-            padding: 0;
+            padding: 40px 0;
         }
 
         .projetos-track:hover {
