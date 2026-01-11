@@ -3,9 +3,10 @@
     --secondary-blue: #57D4CA;
     --neon-blue: #00D4FF;
     --neon-red: #FF0055;
-    --dark-bg: #0a0e1a;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --dark-bg: #05070a;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-stroke: rgba(255, 255, 255, 0.08);
 }
 
 * {

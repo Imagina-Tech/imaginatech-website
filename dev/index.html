@@ -259,7 +259,8 @@
             background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
             filter: blur(150px);
             animation: float-orb-1 20s infinite ease-in-out;
-            z-index: 1;
+            z-index: 0;
+            pointer-events: none;
         }
 
         .cosmic-bg::after {
@@ -272,7 +273,8 @@
             background: radial-gradient(circle, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
             filter: blur(150px);
             animation: float-orb-2 25s infinite ease-in-out;
-            z-index: 1;
+            z-index: 0;
+            pointer-events: none;
         }
 
         @keyframes float-orb-1 {
@@ -832,7 +834,8 @@
             border-radius: 24px !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
+            isolation: isolate;
         }
 
         /* Efeito de glow no ícone */
@@ -1086,6 +1089,39 @@
             margin: 0 auto 60px;
             overflow: hidden;
             padding: 20px 0;
+            position: relative;
+        }
+
+        /* Fade suave nas bordas do carrossel de clientes */
+        .clients-carousel::before,
+        .clients-carousel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 150px;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .clients-carousel::before {
+            left: 0;
+            background: linear-gradient(90deg,
+                rgba(10, 14, 26, 1) 0%,
+                rgba(10, 14, 26, 0.6) 30%,
+                rgba(10, 14, 26, 0.2) 60%,
+                transparent 100%
+            );
+        }
+
+        .clients-carousel::after {
+            right: 0;
+            background: linear-gradient(270deg,
+                rgba(10, 14, 26, 1) 0%,
+                rgba(10, 14, 26, 0.6) 30%,
+                rgba(10, 14, 26, 0.2) 60%,
+                transparent 100%
+            );
         }
 
         .clients-track {
@@ -1219,6 +1255,28 @@
                 padding: 10px 15px;
             }
 
+            /* Fade suave em mobile para carrossel de clientes */
+            .clients-carousel::before,
+            .clients-carousel::after {
+                width: 60px;
+            }
+
+            .clients-carousel::before {
+                background: linear-gradient(90deg,
+                    rgba(10, 14, 26, 1) 0%,
+                    rgba(10, 14, 26, 0.4) 50%,
+                    transparent 100%
+                );
+            }
+
+            .clients-carousel::after {
+                background: linear-gradient(270deg,
+                    rgba(10, 14, 26, 1) 0%,
+                    rgba(10, 14, 26, 0.4) 50%,
+                    transparent 100%
+                );
+            }
+
             /* Hero responsivo - alinhamento central perfeito */
             .hero-content {
                 flex-direction: column;
@@ -1327,8 +1385,9 @@
         .projetos-carousel::before {
             left: 0;
             background: linear-gradient(90deg,
-                #05070a 0%,
-                rgba(5, 7, 10, 0.8) 30%,
+                var(--dark-bg) 0%,
+                rgba(5, 7, 10, 0.6) 20%,
+                rgba(5, 7, 10, 0.3) 50%,
                 transparent 100%
             );
         }
@@ -1336,8 +1395,9 @@
         .projetos-carousel::after {
             right: 0;
             background: linear-gradient(270deg,
-                #05070a 0%,
-                rgba(5, 7, 10, 0.8) 30%,
+                var(--dark-bg) 0%,
+                rgba(5, 7, 10, 0.6) 20%,
+                rgba(5, 7, 10, 0.3) 50%,
                 transparent 100%
             );
         }
@@ -1454,7 +1514,20 @@
 
             .projetos-carousel::before,
             .projetos-carousel::after {
-                width: 100px;
+                width: 80px;
+                background: linear-gradient(90deg,
+                    var(--dark-bg) 0%,
+                    rgba(5, 7, 10, 0.5) 40%,
+                    transparent 100%
+                );
+            }
+
+            .projetos-carousel::after {
+                background: linear-gradient(270deg,
+                    var(--dark-bg) 0%,
+                    rgba(5, 7, 10, 0.5) 40%,
+                    transparent 100%
+                );
             }
 
             .projetos-track {
