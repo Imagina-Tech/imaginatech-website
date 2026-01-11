@@ -403,17 +403,33 @@ async function loadCarouselItems() {
 
 // Criar card do carrossel
 function createCarouselCard(item) {
-    // Se tem logo, mostrar logo. Senao, mostrar nome do cliente/titulo
-    if (item.logo && item.logo.url) {
+    const photoUrl = item.mainPhoto?.url;
+    const logoUrl = item.logo?.url;
+    const title = item.title || 'Projeto';
+
+    // Card com foto do projeto
+    if (photoUrl) {
+        return `
+            <div class="carousel-project-card">
+                <div class="carousel-project-image">
+                    <img src="${photoUrl}" alt="${title}" loading="lazy">
+                    ${logoUrl ? `<div class="carousel-project-logo"><img src="${logoUrl}" alt="Logo"></div>` : ''}
+                </div>
+                <div class="carousel-project-title">${title}</div>
+            </div>
+        `;
+    }
+    // Fallback: apenas logo ou texto
+    else if (logoUrl) {
         return `
             <div class="client-logo client-logo-dynamic">
-                <img src="${item.logo.url}" alt="${item.title}" class="client-logo-img">
+                <img src="${logoUrl}" alt="${title}" class="client-logo-img">
             </div>
         `;
     } else {
         return `
             <div class="client-logo">
-                <span class="client-name">${item.title}</span>
+                <span class="client-name">${title}</span>
             </div>
         `;
     }
