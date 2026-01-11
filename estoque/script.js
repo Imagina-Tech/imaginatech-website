@@ -41,6 +41,7 @@ let currentFilter = 'todos';
 let currentStockFilter = null;
 let selectedImage = null;
 let editingFilamentId = null;
+let editingFilamentUpdatedAt = null; // Para bloqueio otimista
 let selectedFilamentId = null;
 
 // Equipamentos (Inventário)
@@ -193,113 +194,150 @@ function loadPendingServices() {
 // ===========================
 
 /**
- * Verifica serviços pendentes para um tipo+cor e deduz automaticamente se possível
+ * Verifica servicos pendentes para um tipo+cor e deduz automaticamente se possivel
+ * USA TRANSACAO FIRESTORE para evitar race conditions
  * @param {string} type - Tipo do material (PLA, ABS, etc)
  * @param {string} color - Cor do material
  */
 async function checkAndFulfillPendingServices(type, color) {
     if (!type || !color) return;
 
-    // 1. Filtrar serviços pendentes para este tipo+cor
+    const typeLower = type.trim().toLowerCase();
+    const colorLower = color.trim().toLowerCase();
+
+    // Filtrar servicos pendentes para este tipo+cor (da memoria, so para saber se vale a pena continuar)
     const matchingServices = pendingServices.filter(s =>
-        s.material?.toLowerCase() === type?.toLowerCase() &&
-        s.color?.toLowerCase() === color?.toLowerCase()
+        s.material?.trim().toLowerCase() === typeLower &&
+        s.color?.trim().toLowerCase() === colorLower
     );
 
     if (matchingServices.length === 0) return;
 
-    // 2. Calcular estoque total combinado (todas as marcas)
-    const matchingFilaments = filaments.filter(f =>
-        f.type?.toLowerCase() === type?.toLowerCase() &&
-        f.color?.toLowerCase() === color?.toLowerCase()
-    );
-
-    const totalStockGrams = matchingFilaments.reduce((sum, f) =>
-        sum + (parseFloat(f.weight) || 0) * 1000, 0
-    );
-
-    // 3. Ordenar serviços por peso (menores primeiro - otimiza atendimento)
+    // Ordenar servicos por peso (menores primeiro - otimiza atendimento)
     matchingServices.sort((a, b) => (a.weight || 0) - (b.weight || 0));
 
-    let remainingStock = totalStockGrams;
-    const servicesToFulfill = [];
+    let fulfilledCount = 0;
 
-    // 4. Identificar quais serviços podem ser atendidos
+    // Processar cada servico em transacao separada para evitar conflitos
     for (const service of matchingServices) {
-        const needed = service.weight || 0;
-        if (needed <= remainingStock) {
-            servicesToFulfill.push(service);
-            remainingStock -= needed;
-        }
-    }
-
-    if (servicesToFulfill.length === 0) return;
-
-    // 5. Para cada serviço, deduzir material e limpar flag
-    for (const service of servicesToFulfill) {
         try {
-            // Deduzir do filamento com maior estoque
-            await deductFromBestFilament(type, color, service.weight);
-
-            // Atualizar serviço no Firestore
-            await db.collection('services').doc(service.id).update({
-                needsMaterialPurchase: false
-            });
-
-            console.log(`✅ Material deduzido para serviço #${service.orderCode}`);
+            const success = await fulfillServiceWithTransaction(service, typeLower, colorLower);
+            if (success) {
+                fulfilledCount++;
+                console.log(`Material deduzido para servico #${service.orderCode}`);
+            }
         } catch (error) {
             console.error(`Erro ao deduzir material para ${service.orderCode}:`, error);
+            // Continua para o proximo servico
         }
     }
 
-    // 6. Mostrar feedback
-    if (servicesToFulfill.length > 0) {
-        showToast(`✅ ${servicesToFulfill.length} serviço(s) atendido(s) automaticamente!`, 'success');
+    if (fulfilledCount > 0) {
+        showToast(`${fulfilledCount} servico(s) atendido(s) automaticamente!`, 'success');
     }
 }
 
 /**
- * Deduz material do filamento com maior estoque
+ * Processa um servico usando transacao Firestore para garantir atomicidade
+ * Le dados frescos do banco (nao da memoria) para evitar race conditions
  */
-async function deductFromBestFilament(type, color, weightInGrams) {
-    // Encontrar filamento com maior estoque
-    const matching = filaments
-        .filter(f =>
-            f.type?.toLowerCase() === type?.toLowerCase() &&
-            f.color?.toLowerCase() === color?.toLowerCase() &&
-            (parseFloat(f.weight) || 0) > 0
-        )
-        .sort((a, b) => (parseFloat(b.weight) || 0) - (parseFloat(a.weight) || 0));
+async function fulfillServiceWithTransaction(service, typeLower, colorLower) {
+    const neededGrams = service.weight || 0;
+    if (neededGrams <= 0) return false;
 
-    if (matching.length === 0) {
-        throw new Error('Nenhum filamento disponível');
-    }
+    return await db.runTransaction(async (transaction) => {
+        // 1. Buscar filamentos FRESCOS do banco (nao da memoria!)
+        const filamentsSnapshot = await transaction.get(
+            db.collection('filaments')
+                .where('type', '==', service.material) // Busca exata primeiro
+        );
 
-    const best = matching[0];
-    const weightInKg = weightInGrams / 1000;
-    const currentWeight = parseFloat(best.weight) || 0;
-    const newWeight = Math.max(0, currentWeight - weightInKg);
+        // Filtrar por cor e peso > 0, ordenar por peso decrescente
+        const matchingFilaments = [];
+        filamentsSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.color?.trim().toLowerCase() === colorLower &&
+                (parseFloat(data.weight) || 0) > 0) {
+                matchingFilaments.push({ id: doc.id, ref: doc.ref, ...data });
+            }
+        });
 
-    await db.collection('filaments').doc(best.id).update({
-        weight: newWeight,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        // Se busca exata falhou, tentar case-insensitive
+        if (matchingFilaments.length === 0) {
+            const allFilamentsSnapshot = await transaction.get(db.collection('filaments'));
+            allFilamentsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.type?.trim().toLowerCase() === typeLower &&
+                    data.color?.trim().toLowerCase() === colorLower &&
+                    (parseFloat(data.weight) || 0) > 0) {
+                    matchingFilaments.push({ id: doc.id, ref: doc.ref, ...data });
+                }
+            });
+        }
+
+        if (matchingFilaments.length === 0) {
+            return false; // Sem estoque disponivel
+        }
+
+        // Ordenar por peso decrescente (maior estoque primeiro)
+        matchingFilaments.sort((a, b) => (parseFloat(b.weight) || 0) - (parseFloat(a.weight) || 0));
+
+        // Calcular estoque total disponivel
+        const totalStockGrams = matchingFilaments.reduce((sum, f) =>
+            sum + Math.round((parseFloat(f.weight) || 0) * 1000), 0
+        );
+
+        if (totalStockGrams < neededGrams) {
+            return false; // Estoque insuficiente
+        }
+
+        // 2. Deduzir do filamento com maior estoque
+        const best = matchingFilaments[0];
+        const currentWeightKg = parseFloat(best.weight) || 0;
+        const deductKg = neededGrams / 1000;
+        const newWeightKg = Math.max(0, currentWeightKg - deductKg);
+
+        // Arredondar para evitar erros de ponto flutuante
+        const newWeightRounded = Math.round(newWeightKg * 1000) / 1000;
+
+        // 3. Atualizar filamento E servico na mesma transacao
+        transaction.update(best.ref, {
+            weight: newWeightRounded,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        transaction.update(db.collection('services').doc(service.id), {
+            needsMaterialPurchase: false
+        });
+
+        return true;
     });
 }
 
 // ===========================
 // RENDER FILAMENTS
 // ===========================
+
+// Flag para garantir que event delegation seja configurado apenas uma vez
+let gridEventDelegationSetup = false;
+
 function renderFilaments() {
     const grid = document.getElementById('filamentsGrid');
     const emptyState = document.getElementById('emptyState');
 
+    // Configurar event delegation UMA VEZ (evita memory leak)
+    if (!gridEventDelegationSetup) {
+        setupGridEventDelegation(grid);
+        gridEventDelegationSetup = true;
+    }
+
     // Apply filters
-    // CORRIGIDO: Garantir que weight seja número antes de comparar
+    // CORRIGIDO: Garantir que weight seja numero antes de comparar
     let filtered = filaments.filter(f => {
         const weight = parseFloat(f.weight) || 0;
         if (currentFilter !== 'todos' && f.type !== currentFilter) return false;
-        if (currentStockFilter === 'low' && weight >= 0.6) return false;
-        if (currentStockFilter === 'ok' && weight < 0.8) return false;
+        if (currentStockFilter === 'low' && weight > 0.6) return false;
+        if (currentStockFilter === 'ok' && weight <= 0.8) return false;
         return true;
     });
 
@@ -311,28 +349,24 @@ function renderFilaments() {
 
     emptyState.style.display = 'none';
     grid.innerHTML = filtered.map(filament => createFilamentCard(filament)).join('');
-
-    // Adicionar event listeners aos cards
-    attachCardEventListeners();
 }
 
-function attachCardEventListeners() {
-    const cards = document.querySelectorAll('.filament-card');
-    console.log('Anexando event listeners a', cards.length, 'cards');
+/**
+ * Configura event delegation no grid - UM listener para todos os cards
+ * Isso evita memory leak de adicionar listeners a cada render
+ */
+function setupGridEventDelegation(grid) {
+    if (!grid) return;
 
-    cards.forEach(card => {
-        const filamentId = card.getAttribute('data-filament-id');
-        console.log('Card com ID:', filamentId);
+    grid.addEventListener('click', function(e) {
+        // Encontrar o card clicado (pode ser o card ou um elemento filho)
+        const card = e.target.closest('.filament-card');
+        if (!card) return;
 
-        card.addEventListener('click', function(e) {
-            const id = this.getAttribute('data-filament-id');
-            console.log('Card clicado! ID:', id);
-            if (id) {
-                openCardActionsModal(id);
-            } else {
-                console.error('Card não tem data-filament-id');
-            }
-        });
+        const id = card.getAttribute('data-filament-id');
+        if (id) {
+            openCardActionsModal(id);
+        }
     });
 }
 
@@ -569,6 +603,7 @@ function editFilament(id) {
     }
 
     editingFilamentId = id;
+    editingFilamentUpdatedAt = filament.updatedAt || null; // Guardar timestamp para bloqueio otimista
 
     // Abrir modal
     document.getElementById('filamentModal').classList.add('active');
@@ -837,8 +872,28 @@ async function saveFilament(event) {
         };
 
         if (id) {
-            // Update
-            await db.collection('filaments').doc(id).update(filamentData);
+            // Update com bloqueio otimista
+            await db.runTransaction(async (transaction) => {
+                const docRef = db.collection('filaments').doc(id);
+                const doc = await transaction.get(docRef);
+
+                if (!doc.exists) {
+                    throw new Error('DELETED');
+                }
+
+                // Verificar se documento foi modificado por outro usuario
+                const currentUpdatedAt = doc.data().updatedAt;
+                if (editingFilamentUpdatedAt && currentUpdatedAt) {
+                    const originalTime = editingFilamentUpdatedAt.toMillis ? editingFilamentUpdatedAt.toMillis() : 0;
+                    const currentTime = currentUpdatedAt.toMillis ? currentUpdatedAt.toMillis() : 0;
+
+                    if (currentTime > originalTime) {
+                        throw new Error('CONFLICT');
+                    }
+                }
+
+                transaction.update(docRef, filamentData);
+            });
             showToast('Filamento atualizado com sucesso!', 'success');
         } else {
             // Create
@@ -855,7 +910,15 @@ async function saveFilament(event) {
         }, 500);
     } catch (error) {
         console.error('Error saving filament:', error);
-        showToast('Erro ao salvar filamento', 'error');
+
+        if (error.message === 'CONFLICT') {
+            showToast('Este filamento foi modificado por outro usuario. Recarregue e tente novamente.', 'error');
+        } else if (error.message === 'DELETED') {
+            showToast('Este filamento foi excluido por outro usuario.', 'error');
+            closeFilamentModal();
+        } else {
+            showToast('Erro ao salvar filamento', 'error');
+        }
     } finally {
         hideLoading();
     }
@@ -865,6 +928,7 @@ function closeFilamentModal() {
     document.getElementById('filamentModal').classList.remove('active');
     selectedImage = null;
     editingFilamentId = null;
+    editingFilamentUpdatedAt = null;
 
     // Resetar formulário após animação de fechamento
     setTimeout(() => {
