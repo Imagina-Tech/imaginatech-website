@@ -1,9 +1,9 @@
-/* 
+/*
 ==================================================
 ARQUIVO: servicos/js/main.js
-MÓDULO: Inicializador Principal
-SISTEMA: ImaginaTech - Gestão de Impressão 3D
-VERSÃO: 3.1 - Modular + Push Notifications
+MODULO: Inicializador Principal
+SISTEMA: ImaginaTech - Gestao de Impressao 3D
+VERSAO: 3.2 - Modular
 ==================================================
 */
 
@@ -22,21 +22,6 @@ import {
     updateLastAccess,
     setupUpModalDragDrop
 } from './auth-ui.js';
-
-// ===========================
-// PUSH NOTIFICATIONS - DESABILITADO
-// ===========================
-// 🔔 INSTRUÇÕES PARA IMPLEMENTAÇÃO FUTURA:
-// 1. Descomentar a linha abaixo
-// 2. Corrigir o path para: '../push-system/push-notifications.js'
-// 3. Descomentar linhas 68-73 (inicialização)
-// 4. Ver documentação completa em: /servicos/push-system/README.md
-// ===========================
-// import { initPushNotifications } from '../push-system/push-notifications.js';
-
-// ===========================
-// NOVO: IMPORTAR SISTEMA DE TAREFAS
-// ===========================
 import { initTasksSystem } from './tasks.js';
 
 // ===========================
@@ -71,21 +56,8 @@ onDOMReady(() => {
             // Chamar diretamente para garantir registro em cada carregamento
             updateLastAccess(user);
 
-            // ===========================
-            // NOVO: INICIALIZAR SISTEMA DE TAREFAS
-            // ===========================
+            // Inicializar sistema de tarefas
             initTasksSystem();
-
-            // ===========================
-            // PUSH NOTIFICATIONS - DESABILITADO
-            // ===========================
-            // 🔔 DESCOMENTAR APÓS IMPLEMENTAR (ver /servicos/push-system/README.md)
-            // if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-            //     console.log('🚀 App nativo detectado - Inicializando notificações push');
-            //     initPushNotifications();
-            // } else {
-            //     console.log('🌐 Rodando no navegador web - Push notifications desabilitadas');
-            // }
         } else {
             state.isAuthorized = false;
             showLoginScreen();

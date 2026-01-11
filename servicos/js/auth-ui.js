@@ -85,103 +85,28 @@ export {
 
 export async function signInWithGoogle() {
     if (!state.auth) return showToast('Sistema não está pronto. Recarregue a página.', 'error');
-    
+
     try {
-        let user;
-        
-        if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-            console.log('🚀 Login no app nativo - usando Google Auth plugin');
-            
-            const { GoogleAuth } = Capacitor.Plugins;
-            
-            if (!GoogleAuth) {
-                console.error('❌ Plugin GoogleAuth não encontrado');
-                alert('DEBUG: Plugin GoogleAuth não encontrado');
-                throw new Error('Plugin de autenticação não disponível');
-            }
-            
-            try {
-                console.log('🔧 Inicializando GoogleAuth...');
-                await GoogleAuth.initialize();
-                console.log('✅ GoogleAuth inicializado');
-            } catch (initError) {
-                console.log('⚠️ Plugin já inicializado:', initError);
-            }
-            
-            console.log('📱 Chamando GoogleAuth.signIn()...');
-            const googleUser = await GoogleAuth.signIn();
-            
-            console.log('✅ Google Auth retornou:', googleUser);
-            
-            alert('DEBUG: Google retornou:\n' + JSON.stringify({
-                email: googleUser.email,
-                name: googleUser.name,
-                hasAuth: !!googleUser.authentication,
-                hasIdToken: !!googleUser.authentication?.idToken,
-                hasAccessToken: !!googleUser.authentication?.accessToken
-            }, null, 2));
-            
-            if (!googleUser.authentication) {
-                alert('DEBUG: googleUser.authentication é NULL ou UNDEFINED');
-                throw new Error('Resposta do Google Auth inválida - authentication missing');
-            }
-            
-            const idToken = googleUser.authentication.idToken;
-            const accessToken = googleUser.authentication.accessToken;
-            
-            if (!idToken && !accessToken) {
-                alert('DEBUG: Nenhum token encontrado!\nidToken: ' + idToken + '\naccessToken: ' + accessToken);
-                throw new Error('Tokens de autenticação não encontrados');
-            }
-            
-            console.log('🔥 Criando credencial do Firebase...');
-            
-            let credential;
-            if (idToken) {
-                console.log('🔐 Usando idToken');
-                credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
-            } else {
-                console.log('🔓 Usando apenas accessToken');
-                credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
-            }
-            
-            console.log('🔥 Fazendo signInWithCredential...');
-            const result = await state.auth.signInWithCredential(credential);
-            
-            user = result.user;
-            console.log('👤 Usuário logado:', user.email);
-            
-        } else {
-            console.log('🌐 Login no navegador web - usando Firebase popup');
-            
-            const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-            user = result.user;
-        }
-        
+        const result = await state.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        const user = result.user;
+
         if (!AUTHORIZED_EMAILS.includes(user.email)) {
             state.currentUser = user;
             state.isAuthorized = false;
             showAccessDeniedScreen(user);
-            showToast(`Olá ${user.displayName}! Esta área é restrita aos administradores.`, 'info');
+            showToast(`Ola ${user.displayName}! Esta area e restrita aos administradores.`, 'info');
             return;
         }
-        
+
         state.currentUser = user;
         state.isAuthorized = true;
         showToast(`Bem-vindo, ${user.displayName}!`, 'success');
-        
+
     } catch (error) {
-        console.error('❌ ERRO COMPLETO:', error);
-        
-        alert('ERRO AO FAZER LOGIN:\n\n' + 
-              'Mensagem: ' + (error.message || 'Sem mensagem') + '\n' +
-              'Code: ' + (error.code || 'Sem código') + '\n' +
-              'Error: ' + (error.error || 'Sem error'));
-        
-        if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup_closed_by_user')) {
+        console.error('Erro no login:', error);
+
+        if (error.code === 'auth/popup-closed-by-user') {
             showToast('Login cancelado', 'info');
-        } else if (error.error === '12501') {
-            showToast('Login cancelado pelo usuário', 'info');
         } else {
             showToast('Erro ao fazer login: ' + (error.message || 'Tente novamente'), 'error');
         }
