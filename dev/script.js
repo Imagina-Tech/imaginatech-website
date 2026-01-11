@@ -333,6 +333,43 @@ function preloadImages() {
 preloadImages();
 
 // ============================================
+// NAVEGACAO DO CARROSSEL DE PROJETOS
+// ============================================
+
+let carouselPosition = 0;
+const cardWidth = 350; // largura do card + gap
+
+function moveCarousel(direction) {
+    const track = document.querySelector('.projetos-track');
+    if (!track) return;
+
+    // Pausar animacao automatica temporariamente
+    track.style.animation = 'none';
+
+    // Calcular nova posicao
+    carouselPosition += direction * cardWidth;
+
+    // Aplicar transformacao
+    track.style.transform = `translateX(${-carouselPosition}px)`;
+    track.style.transition = 'transform 0.5s ease';
+
+    // Retomar animacao apos 5 segundos de inatividade
+    clearTimeout(window.carouselTimeout);
+    window.carouselTimeout = setTimeout(() => {
+        track.style.transition = 'none';
+        track.style.transform = 'translateX(0)';
+        carouselPosition = 0;
+        // Pequeno delay antes de retomar animacao
+        setTimeout(() => {
+            track.style.animation = 'scroll-projetos 40s linear infinite';
+        }, 50);
+    }, 5000);
+}
+
+// Expor funcao globalmente
+window.moveCarousel = moveCarousel;
+
+// ============================================
 // PORTFOLIO DINAMICO - Firebase Integration
 // ============================================
 

@@ -1505,6 +1505,57 @@
                 );
         }
 
+        /* Setas de Navegacao */
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 212, 255, 0.15);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            border-radius: 50%;
+            color: #00D4FF;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .carousel-nav:hover {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00D4FF;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-prev {
+            left: 20px;
+        }
+
+        .carousel-next {
+            right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .carousel-prev {
+                left: 10px;
+            }
+
+            .carousel-next {
+                right: 10px;
+            }
+        }
 
         /* Track com animação */
         .projetos-track {
@@ -1831,6 +1882,13 @@
             </div>
 
             <div class="projetos-carousel">
+                <!-- Setas de Navegacao -->
+                <button class="carousel-nav carousel-prev" onclick="moveCarousel(-1)" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav carousel-next" onclick="moveCarousel(1)" aria-label="Próximo">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
                 <div class="projetos-track">
                     <!-- SET 1 (original) -->
                     <div class="projeto-card">
