@@ -1254,8 +1254,8 @@ function handleDeleteFilament() {
 
 // Alternar entre seções (Filamentos / Equipamentos)
 function switchSection(section) {
-    // Atualizar tabs no header
-    document.querySelectorAll('.header-tab').forEach(btn => {
+    // Atualizar seletor no header
+    document.querySelectorAll('.selector-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.section === section);
     });
 

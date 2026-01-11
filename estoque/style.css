@@ -1562,78 +1562,51 @@
 }
 
 /* ===========================
-   TABS NO HEADER
+   SELETOR DE SECAO (Filamentos/Equipamentos)
    =========================== */
-.header-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-left: 1.5rem;
-}
-
-.header-tab {
-    padding: 0.5rem 1.25rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.3s ease;
+.logo-subtitle-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.85rem;
+}
+
+.logo-subtitle-row .logo-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.section-selector {
+    display: flex;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.selector-btn {
+    padding: 0.25rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 0.7rem;
     font-weight: 500;
     font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
     white-space: nowrap;
-    position: relative;
-    overflow: hidden;
 }
 
-.header-tab::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 69, 255, 0.1));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.header-tab:hover {
+.selector-btn:hover {
     color: var(--text-primary);
-    border-color: var(--neon-blue);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.header-tab:hover::before {
-    opacity: 1;
-}
-
-.header-tab.active {
-    background: transparent;
-    border-color: var(--neon-cyan);
-    color: var(--neon-cyan);
+.selector-btn.active {
+    background: var(--neon-cyan);
+    color: #0a0a0f;
     font-weight: 600;
-    box-shadow:
-        0 0 20px rgba(0, 212, 255, 0.3),
-        inset 0 0 20px rgba(0, 212, 255, 0.1);
-}
-
-.header-tab.active::before {
-    opacity: 1;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 255, 136, 0.1));
-}
-
-.header-tab.active i {
-    color: var(--neon-green);
-    text-shadow: 0 0 10px var(--neon-green);
-}
-
-.header-tab i {
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
 }
 
 /* ===========================
@@ -2079,62 +2052,18 @@
 }
 
 /* ===========================
-   RESPONSIVIDADE TABS E INVENTÁRIO
+   RESPONSIVIDADE SELETOR E INVENTÁRIO
    =========================== */
-@media (max-width: 992px) {
-    .header-tabs {
-        margin-left: 1rem;
-        gap: 0.35rem;
-    }
-
-    .header-tab {
-        padding: 0.45rem 0.9rem;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .header-tabs {
-        margin-left: 0.5rem;
+@media (max-width: 480px) {
+    .logo-subtitle-row {
+        flex-direction: column;
+        align-items: flex-start;
         gap: 0.25rem;
     }
 
-    .header-tab {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.75rem;
-        border-radius: 6px;
-    }
-
-    .header-tab span {
-        display: none;
-    }
-
-    .header-tab i {
-        font-size: 1.1rem;
-    }
-
-    .header-tab.active {
-        box-shadow:
-            0 0 15px rgba(0, 212, 255, 0.4),
-            inset 0 0 15px rgba(0, 212, 255, 0.15);
-    }
-}
-
-@media (max-width: 480px) {
-    .header-tabs {
-        position: absolute;
-        right: 60px;
-        top: 50%;
-        transform: translateY(-50%);
-        margin-left: 0;
-    }
-
-    .header-tab {
-        padding: 0.4rem 0.6rem;
-    }
-
-    .header-tab i {
-        font-size: 1rem;
+    .selector-btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.65rem;
     }
 }
 

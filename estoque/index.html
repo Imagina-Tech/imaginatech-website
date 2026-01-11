@@ -116,18 +116,17 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 <div class="navbar-left">
                     <div class="logo-section">
                         <h1 class="logo">ImaginaTech</h1>
-                        <span class="logo-subtitle">Gestão de Estoque</span>
-                    </div>
-                    <!-- Tabs integrados no header -->
-                    <div class="header-tabs">
-                        <button class="header-tab active" data-section="filamentos" onclick="switchSection('filamentos')">
-                            <i class="fas fa-scroll"></i>
-                            <span>Filamentos</span>
-                        </button>
-                        <button class="header-tab" data-section="inventario" onclick="switchSection('inventario')">
-                            <i class="fas fa-toolbox"></i>
-                            <span>Equipamentos</span>
-                        </button>
+                        <div class="logo-subtitle-row">
+                            <span class="logo-subtitle">Estoque:</span>
+                            <div class="section-selector">
+                                <button class="selector-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
+                                    Filamentos
+                                </button>
+                                <button class="selector-btn" data-section="inventario" onclick="switchSection('inventario')">
+                                    Equipamentos
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="connection-status" id="connectionStatus">
                         <div class="status-dot"></div>
