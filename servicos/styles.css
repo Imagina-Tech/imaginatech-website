@@ -928,6 +928,25 @@ body {
     animation: modalSlideIn 0.3s ease;
 }
 
+/* Scrollbar do modal - respeita border-radius */
+.modal-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 15px 0; /* Margem para não vazar do border-radius */
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 5px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);
+}
+
 /* Modal de imagem - Desktop */
 .modal-content.modal-image { 
     max-width: 90vw;
