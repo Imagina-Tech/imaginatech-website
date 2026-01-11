@@ -3566,5 +3566,194 @@ input[type="file"]::file-selector-button {
 }
 
 /* ===========================
+   LISTA DE UPS EXISTENTES
+   =========================== */
+
+.existing-ups-section {
+    margin-bottom: 1.5rem;
+}
+
+.existing-ups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.existing-ups-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.existing-ups-header h3 i {
+    color: var(--neon-cyan);
+}
+
+.btn-new-up {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    border: none;
+    border-radius: 6px;
+    color: #0a0e1a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-new-up:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);
+}
+
+.existing-ups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.existing-up-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.existing-up-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.up-card-image {
+    position: relative;
+    width: 80px;
+    height: 60px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.up-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.up-card-image .up-card-logo {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.up-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.up-card-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.35rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.up-card-meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.up-destination {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.up-destination.carrossel {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
+}
+
+.up-destination.projetos {
+    background: rgba(156, 39, 176, 0.15);
+    color: #ce93d8;
+}
+
+.up-category {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    padding: 0.2rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.up-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit-up,
+.btn-delete-up {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-up {
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--neon-cyan);
+}
+
+.btn-edit-up:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.btn-delete-up {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
+.btn-delete-up:hover {
+    background: rgba(244, 67, 54, 0.3);
+    transform: scale(1.1);
+}
+
+/* ===========================
    FIM DO ARQUIVO
    =========================== */

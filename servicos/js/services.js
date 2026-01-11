@@ -2009,8 +2009,9 @@ export function filterServices(filter) {
 
 let upPhotoFile = null;
 let upLogoFile = null;
+let existingPortfolioItems = []; // Cache dos itens existentes
 
-export function openUpModal(serviceId) {
+export async function openUpModal(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) {
         showToast('Servico nao encontrado', 'error');
@@ -2019,30 +2020,246 @@ export function openUpModal(serviceId) {
 
     // Preencher informacoes do servico
     document.getElementById('upServiceId').value = serviceId;
+    document.getElementById('upEditingId').value = '';
     document.getElementById('upServiceName').textContent = service.name || 'Sem nome';
     document.getElementById('upServiceMaterial').textContent = service.material || 'N/A';
     document.getElementById('upServiceColor').textContent = formatColorName(service.color) || 'N/A';
 
-    // Pre-preencher titulo com nome do servico
-    document.getElementById('upTitle').value = service.name || '';
+    // Abrir modal primeiro (para feedback visual)
+    document.getElementById('upModal').classList.add('active');
+
+    // Buscar ups existentes deste servico
+    try {
+        const snapshot = await state.db.collection('portfolio')
+            .where('serviceId', '==', serviceId)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        existingPortfolioItems = [];
+        snapshot.forEach(doc => {
+            existingPortfolioItems.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (existingPortfolioItems.length > 0) {
+            // Mostrar lista de ups existentes
+            showExistingUpsList();
+        } else {
+            // Mostrar formulario direto
+            showUpForm();
+        }
+    } catch (error) {
+        console.error('Erro ao buscar portfolio:', error);
+        // Em caso de erro, mostrar formulario
+        showUpForm();
+    }
+}
+
+/**
+ * Mostra a lista de ups existentes
+ */
+function showExistingUpsList() {
+    const section = document.getElementById('existingUpsSection');
+    const list = document.getElementById('existingUpsList');
+    const formSection = document.getElementById('upFormSection');
+    const footer = document.getElementById('upModalFooter');
+
+    // Esconder formulario e footer
+    formSection.style.display = 'none';
+    footer.style.display = 'none';
+
+    // Gerar HTML da lista
+    list.innerHTML = existingPortfolioItems.map(item => `
+        <div class="existing-up-card" data-id="${item.id}">
+            <div class="up-card-image">
+                <img src="${item.mainPhoto?.url || ''}" alt="${item.title}">
+                ${item.logo ? `<img src="${item.logo.url}" alt="Logo" class="up-card-logo">` : ''}
+            </div>
+            <div class="up-card-info">
+                <h4>${item.title || 'Sem titulo'}</h4>
+                <div class="up-card-meta">
+                    <span class="up-destination ${item.destination}">
+                        <i class="fas ${item.destination === 'carrossel' ? 'fa-images' : 'fa-th-large'}"></i>
+                        ${item.destination === 'carrossel' ? 'Carrossel' : 'Projetos'}
+                    </span>
+                    ${item.category ? `<span class="up-category">${formatCategoryName(item.category)}</span>` : ''}
+                </div>
+            </div>
+            <div class="up-card-actions">
+                <button type="button" class="btn-edit-up" onclick="window.editPortfolioItem('${item.id}')" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="btn-delete-up" onclick="window.deletePortfolioItem('${item.id}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    // Mostrar secao
+    section.style.display = 'block';
+}
+
+/**
+ * Formata nome da categoria
+ */
+function formatCategoryName(category) {
+    const names = {
+        'industrial': 'Industrial',
+        'personalizado': 'Personalizado',
+        'prototipagem': 'Prototipagem',
+        'reposicao': 'Reposicao',
+        'decorativo': 'Decorativo',
+        'tecnico': 'Tecnico'
+    };
+    return names[category] || category;
+}
+
+/**
+ * Mostra o formulario de novo up
+ */
+export function showUpForm(editItem = null) {
+    const section = document.getElementById('existingUpsSection');
+    const formSection = document.getElementById('upFormSection');
+    const footer = document.getElementById('upModalFooter');
+    const saveBtn = document.getElementById('upSaveBtn');
+
+    // Esconder lista
+    section.style.display = 'none';
+
+    // Mostrar formulario e footer
+    formSection.style.display = 'block';
+    footer.style.display = 'flex';
 
     // Resetar campos
-    document.getElementById('upDestination').value = '';
-    document.getElementById('upCategory').value = '';
-    document.getElementById('upCategoryGroup').style.display = 'none';
-
-    // Limpar previews de imagens
     upPhotoFile = null;
     upLogoFile = null;
-    document.getElementById('upPhotoPreview').style.display = 'none';
-    document.getElementById('upPhotoPlaceholder').style.display = 'flex';
-    document.getElementById('upLogoPreview').style.display = 'none';
-    document.getElementById('upLogoPlaceholder').style.display = 'flex';
     document.getElementById('upPhoto').value = '';
     document.getElementById('upLogo').value = '';
 
-    // Abrir modal
-    document.getElementById('upModal').classList.add('active');
+    if (editItem) {
+        // Modo edicao
+        document.getElementById('upEditingId').value = editItem.id;
+        document.getElementById('upTitle').value = editItem.title || '';
+        document.getElementById('upDestination').value = editItem.destination || '';
+        document.getElementById('upCategory').value = editItem.category || '';
+
+        // Mostrar categoria se for projetos
+        if (editItem.destination === 'projetos') {
+            document.getElementById('upCategoryGroup').style.display = 'block';
+        } else {
+            document.getElementById('upCategoryGroup').style.display = 'none';
+        }
+
+        // Mostrar imagem existente
+        if (editItem.mainPhoto?.url) {
+            document.getElementById('upPhotoImg').src = editItem.mainPhoto.url;
+            document.getElementById('upPhotoPreview').style.display = 'block';
+            document.getElementById('upPhotoPlaceholder').style.display = 'none';
+        } else {
+            document.getElementById('upPhotoPreview').style.display = 'none';
+            document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+        }
+
+        // Mostrar logo existente
+        if (editItem.logo?.url) {
+            document.getElementById('upLogoImg').src = editItem.logo.url;
+            document.getElementById('upLogoPreview').style.display = 'block';
+            document.getElementById('upLogoPlaceholder').style.display = 'none';
+        } else {
+            document.getElementById('upLogoPreview').style.display = 'none';
+            document.getElementById('upLogoPlaceholder').style.display = 'flex';
+        }
+
+        // Atualizar botao
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alteracoes';
+    } else {
+        // Modo novo
+        document.getElementById('upEditingId').value = '';
+        const service = state.services.find(s => s.id === document.getElementById('upServiceId').value);
+        document.getElementById('upTitle').value = service?.name || '';
+        document.getElementById('upDestination').value = '';
+        document.getElementById('upCategory').value = '';
+        document.getElementById('upCategoryGroup').style.display = 'none';
+
+        document.getElementById('upPhotoPreview').style.display = 'none';
+        document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+        document.getElementById('upLogoPreview').style.display = 'none';
+        document.getElementById('upLogoPlaceholder').style.display = 'flex';
+
+        // Atualizar botao
+        saveBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Promover';
+    }
+
+    // Sincronizar CustomSelects
+    setTimeout(() => {
+        document.getElementById('upDestination').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('upCategory').dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+}
+
+/**
+ * Edita um item do portfolio
+ */
+export async function editPortfolioItem(itemId) {
+    const item = existingPortfolioItems.find(i => i.id === itemId);
+    if (!item) {
+        showToast('Item nao encontrado', 'error');
+        return;
+    }
+    showUpForm(item);
+}
+
+/**
+ * Exclui um item do portfolio
+ */
+export async function deletePortfolioItem(itemId) {
+    const item = existingPortfolioItems.find(i => i.id === itemId);
+    if (!item) {
+        showToast('Item nao encontrado', 'error');
+        return;
+    }
+
+    if (!confirm(`Excluir "${item.title}" do portfolio?\n\nEsta acao nao pode ser desfeita.`)) {
+        return;
+    }
+
+    try {
+        showToast('Excluindo...', 'info');
+
+        // Deletar imagens do Storage
+        if (item.mainPhoto?.path) {
+            try {
+                await state.storage.ref().child(item.mainPhoto.path).delete();
+            } catch (e) {
+                console.warn('Erro ao deletar foto:', e);
+            }
+        }
+        if (item.logo?.path) {
+            try {
+                await state.storage.ref().child(item.logo.path).delete();
+            } catch (e) {
+                console.warn('Erro ao deletar logo:', e);
+            }
+        }
+
+        // Deletar documento
+        await state.db.collection('portfolio').doc(itemId).delete();
+
+        // Atualizar lista local
+        existingPortfolioItems = existingPortfolioItems.filter(i => i.id !== itemId);
+
+        showToast('Item excluido do portfolio!', 'success');
+
+        // Atualizar visualizacao
+        if (existingPortfolioItems.length > 0) {
+            showExistingUpsList();
+        } else {
+            showUpForm();
+        }
+    } catch (error) {
+        console.error('Erro ao excluir:', error);
+        showToast('Erro ao excluir. Tente novamente.', 'error');
+    }
 }
 
 export function closeUpModal() {
@@ -2294,12 +2511,16 @@ function processUpLogoFile(file) {
 
 export async function saveToPortfolio() {
     const serviceId = document.getElementById('upServiceId').value;
+    const editingId = document.getElementById('upEditingId').value;
     const title = document.getElementById('upTitle').value.trim();
     const destination = document.getElementById('upDestination').value;
     const category = document.getElementById('upCategory').value;
 
+    const isEditing = !!editingId;
+    const existingItem = isEditing ? existingPortfolioItems.find(i => i.id === editingId) : null;
+
     // Validacoes
-    if (!upPhotoFile) {
+    if (!isEditing && !upPhotoFile) {
         showToast('Selecione uma foto de qualidade', 'error');
         return;
     }
@@ -2326,54 +2547,87 @@ export async function saveToPortfolio() {
     }
 
     try {
-        showToast('Enviando para portfolio...', 'info');
+        showToast(isEditing ? 'Salvando alteracoes...' : 'Enviando para portfolio...', 'info');
 
-        // Upload da foto principal
         const timestamp = Date.now();
-        const photoExt = upPhotoFile.name.split('.').pop();
-        const photoPath = `portfolio/${timestamp}_main.${photoExt}`;
-        const photoRef = state.storage.ref().child(photoPath);
-        await photoRef.put(upPhotoFile);
-        const photoUrl = await photoRef.getDownloadURL();
+        let photoData = existingItem?.mainPhoto || null;
+        let logoData = existingItem?.logo || null;
 
-        // Upload do logo (se houver)
-        let logoData = null;
+        // Upload da foto principal (se nova foto foi selecionada)
+        if (upPhotoFile) {
+            // Deletar foto antiga se existir
+            if (existingItem?.mainPhoto?.path) {
+                try {
+                    await state.storage.ref().child(existingItem.mainPhoto.path).delete();
+                } catch (e) {
+                    console.warn('Erro ao deletar foto antiga:', e);
+                }
+            }
+
+            const photoExt = upPhotoFile.name.split('.').pop();
+            const photoPath = `portfolio/${timestamp}_main.${photoExt}`;
+            const photoRef = state.storage.ref().child(photoPath);
+            await photoRef.put(upPhotoFile);
+            const photoUrl = await photoRef.getDownloadURL();
+            photoData = { url: photoUrl, path: photoPath };
+        }
+
+        // Upload do logo (se novo logo foi selecionado)
         if (upLogoFile) {
+            // Deletar logo antigo se existir
+            if (existingItem?.logo?.path) {
+                try {
+                    await state.storage.ref().child(existingItem.logo.path).delete();
+                } catch (e) {
+                    console.warn('Erro ao deletar logo antigo:', e);
+                }
+            }
+
             const logoExt = upLogoFile.name.split('.').pop();
             const logoPath = `portfolio/${timestamp}_logo.${logoExt}`;
             const logoRef = state.storage.ref().child(logoPath);
             await logoRef.put(upLogoFile);
             const logoUrl = await logoRef.getDownloadURL();
-            logoData = {
-                url: logoUrl,
-                path: logoPath
-            };
+            logoData = { url: logoUrl, path: logoPath };
         }
 
-        // Criar documento no portfolio
-        const portfolioDoc = {
-            title: title,
-            category: destination === 'projetos' ? category : null,
-            destination: destination,
-            serviceId: serviceId,
-            material: service.material || null,
-            color: service.color || null,
-            orderCode: service.orderCode || null,
-            mainPhoto: {
-                url: photoUrl,
-                path: photoPath
-            },
-            logo: logoData,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdBy: state.currentUser?.email || 'unknown',
-            featured: false,
-            order: 0,
-            active: true
-        };
+        if (isEditing) {
+            // Atualizar documento existente
+            const updateData = {
+                title: title,
+                category: destination === 'projetos' ? category : null,
+                destination: destination,
+                mainPhoto: photoData,
+                logo: logoData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: state.currentUser?.email || 'unknown'
+            };
 
-        await state.db.collection('portfolio').add(portfolioDoc);
+            await state.db.collection('portfolio').doc(editingId).update(updateData);
+            showToast('Portfolio atualizado!', 'success');
+        } else {
+            // Criar documento novo
+            const portfolioDoc = {
+                title: title,
+                category: destination === 'projetos' ? category : null,
+                destination: destination,
+                serviceId: serviceId,
+                material: service.material || null,
+                color: service.color || null,
+                orderCode: service.orderCode || null,
+                mainPhoto: photoData,
+                logo: logoData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: state.currentUser?.email || 'unknown',
+                featured: false,
+                order: 0,
+                active: true
+            };
 
-        showToast('Projeto adicionado ao portfolio!', 'success');
+            await state.db.collection('portfolio').add(portfolioDoc);
+            showToast('Projeto adicionado ao portfolio!', 'success');
+        }
+
         closeUpModal();
 
     } catch (error) {
