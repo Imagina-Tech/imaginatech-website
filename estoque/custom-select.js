@@ -186,17 +186,86 @@ class CustomSelect {
         this.customSelect.classList.add('open');
         this.trigger.setAttribute('aria-expanded', 'true');
 
+        // Posicionar dropdown com position fixed
+        const triggerRect = this.trigger.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+
+        // Calcular se abre para cima ou para baixo
+        const dropdownHeight = 300;
+        const openUp = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+
+        // Aplicar estilos base ANTES de mover para o body (invisível)
+        this.dropdown.style.position = 'fixed';
+        this.dropdown.style.width = `${triggerRect.width}px`;
+        this.dropdown.style.left = `${triggerRect.left}px`;
+        this.dropdown.style.zIndex = '999999';
+        this.dropdown.style.pointerEvents = 'auto';
+        this.dropdown.style.background = 'linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(16, 24, 39, 0.98) 100%)';
+        this.dropdown.style.backdropFilter = 'blur(15px)';
+        this.dropdown.style.border = '1px solid rgba(0, 212, 255, 0.3)';
+        this.dropdown.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 212, 255, 0.2)';
+        this.dropdown.style.overflow = 'auto';
+
+        // Estado inicial da animação (invisível e comprimido)
+        this.dropdown.style.opacity = '0';
+        this.dropdown.style.transformOrigin = openUp ? 'bottom center' : 'top center';
+        this.dropdown.style.transform = openUp ? 'scaleY(0.8) translateY(10px)' : 'scaleY(0.8) translateY(-10px)';
+        this.dropdown.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        // Posição vertical
+        if (openUp) {
+            this.dropdown.style.bottom = `${viewportHeight - triggerRect.top}px`;
+            this.dropdown.style.top = 'auto';
+            this.dropdown.style.maxHeight = `${Math.min(300, spaceAbove - 10)}px`;
+            this.dropdown.style.borderRadius = '12px 12px 0 0';
+            this.customSelect.classList.add('open-up');
+        } else {
+            this.dropdown.style.top = `${triggerRect.bottom}px`;
+            this.dropdown.style.bottom = 'auto';
+            this.dropdown.style.maxHeight = `${Math.min(300, spaceBelow - 10)}px`;
+            this.dropdown.style.borderRadius = '0 0 12px 12px';
+            this.customSelect.classList.remove('open-up');
+        }
+
+        // Mover para o body
+        document.body.appendChild(this.dropdown);
+
+        // Animar entrada (próximo frame)
+        requestAnimationFrame(() => {
+            this.dropdown.style.opacity = '1';
+            this.dropdown.style.transform = 'scaleY(1) translateY(0)';
+        });
+
         // Scroll para opção selecionada
         const selectedOption = this.dropdown.querySelector('.selected');
         if (selectedOption) {
-            selectedOption.scrollIntoView({ block: 'nearest' });
+            setTimeout(() => {
+                selectedOption.scrollIntoView({ block: 'nearest' });
+            }, 100);
         }
     }
 
     close() {
+        if (!this.isOpen) return;
+
         this.isOpen = false;
         this.customSelect.classList.remove('open');
         this.trigger.setAttribute('aria-expanded', 'false');
+
+        const openUp = this.customSelect.classList.contains('open-up');
+
+        // Animar saída
+        this.dropdown.style.opacity = '0';
+        this.dropdown.style.transform = openUp ? 'scaleY(0.8) translateY(10px)' : 'scaleY(0.8) translateY(-10px)';
+
+        // Após animação, mover de volta e limpar estilos
+        setTimeout(() => {
+            this.customSelect.classList.remove('open-up');
+            this.customSelect.appendChild(this.dropdown);
+            this.dropdown.style.cssText = '';
+        }, 200);
     }
 
     selectOption(index) {
