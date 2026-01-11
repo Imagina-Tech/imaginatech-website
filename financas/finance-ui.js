@@ -1901,17 +1901,32 @@ class CustomSelect {
         this.customSelect.classList.add('open');
         this.trigger.setAttribute('aria-expanded', 'true');
 
-        // Posicionar dropdown com position fixed para sair do modal
+        // Mover dropdown para o body para escapar do stacking context do modal
+        document.body.appendChild(this.dropdown);
+
+        // Posicionar dropdown com position fixed
         const triggerRect = this.trigger.getBoundingClientRect();
-        const dropdownHeight = Math.min(300, this.dropdown.scrollHeight);
         const viewportHeight = window.innerHeight;
         const spaceBelow = viewportHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
 
-        // Aplicar position fixed no dropdown
+        // Aplicar estilos de posicionamento e visual
         this.dropdown.style.position = 'fixed';
         this.dropdown.style.width = `${triggerRect.width}px`;
         this.dropdown.style.left = `${triggerRect.left}px`;
+        this.dropdown.style.zIndex = '999999';
+        this.dropdown.style.opacity = '1';
+        this.dropdown.style.transform = 'translateY(0)';
+        this.dropdown.style.pointerEvents = 'auto';
+        this.dropdown.style.background = 'linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(16, 24, 39, 0.98) 100%)';
+        this.dropdown.style.backdropFilter = 'blur(15px)';
+        this.dropdown.style.border = '1px solid rgba(0, 212, 255, 0.3)';
+        this.dropdown.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 212, 255, 0.2)';
+
+        // Calcular altura do dropdown
+        this.dropdown.style.maxHeight = 'none';
+        this.dropdown.style.overflow = 'visible';
+        const dropdownHeight = Math.min(300, this.dropdown.scrollHeight);
 
         // Verificar se deve abrir para cima ou para baixo
         if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
@@ -1919,12 +1934,16 @@ class CustomSelect {
             this.dropdown.style.bottom = `${viewportHeight - triggerRect.top}px`;
             this.dropdown.style.top = 'auto';
             this.dropdown.style.maxHeight = `${Math.min(300, spaceAbove - 10)}px`;
+            this.dropdown.style.overflow = 'auto';
+            this.dropdown.style.borderRadius = '12px 12px 0 0';
             this.customSelect.classList.add('open-up');
         } else {
             // Abrir para baixo
             this.dropdown.style.top = `${triggerRect.bottom}px`;
             this.dropdown.style.bottom = 'auto';
             this.dropdown.style.maxHeight = `${Math.min(300, spaceBelow - 10)}px`;
+            this.dropdown.style.overflow = 'auto';
+            this.dropdown.style.borderRadius = '0 0 12px 12px';
             this.customSelect.classList.remove('open-up');
         }
 
@@ -1943,13 +1962,11 @@ class CustomSelect {
         this.customSelect.classList.remove('open-up');
         this.trigger.setAttribute('aria-expanded', 'false');
 
+        // Mover dropdown de volta para o container original
+        this.customSelect.appendChild(this.dropdown);
+
         // Limpar estilos inline do dropdown
-        this.dropdown.style.position = '';
-        this.dropdown.style.top = '';
-        this.dropdown.style.bottom = '';
-        this.dropdown.style.left = '';
-        this.dropdown.style.width = '';
-        this.dropdown.style.maxHeight = '';
+        this.dropdown.style.cssText = '';
     }
 
     selectOption(index) {
