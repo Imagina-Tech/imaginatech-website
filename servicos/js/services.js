@@ -992,22 +992,25 @@ export async function deleteService(serviceId) {
     if (!service || !confirm(`Excluir o serviço "${service.name}"?\n\nTodos os arquivos e imagens serão deletados permanentemente.`)) return;
     
     try {
-        const filesToDelete = [];
-        
+        // Usar Set para evitar URLs duplicadas (mesmo arquivo em múltiplos campos)
+        const filesToDeleteSet = new Set();
+
         if (service.files && service.files.length > 0) {
-            service.files.forEach(file => file.url && filesToDelete.push(file.url));
+            service.files.forEach(file => file.url && filesToDeleteSet.add(file.url));
         }
-        if (service.fileUrl) filesToDelete.push(service.fileUrl);
-        
+        if (service.fileUrl) filesToDeleteSet.add(service.fileUrl);
+
         if (service.images && service.images.length > 0) {
-            service.images.forEach(img => img.url && filesToDelete.push(img.url));
+            service.images.forEach(img => img.url && filesToDeleteSet.add(img.url));
         }
-        if (service.imageUrl) filesToDelete.push(service.imageUrl);
-        if (service.instagramPhoto) filesToDelete.push(service.instagramPhoto);
-        
+        if (service.imageUrl) filesToDeleteSet.add(service.imageUrl);
+        if (service.instagramPhoto) filesToDeleteSet.add(service.instagramPhoto);
+
         if (service.packagedPhotos && service.packagedPhotos.length > 0) {
-            service.packagedPhotos.forEach(photo => photo.url && filesToDelete.push(photo.url));
+            service.packagedPhotos.forEach(photo => photo.url && filesToDeleteSet.add(photo.url));
         }
+
+        const filesToDelete = [...filesToDeleteSet];
         
         if (filesToDelete.length > 0) {
             showToast('Deletando arquivos...', 'info');
