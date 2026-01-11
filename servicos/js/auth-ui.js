@@ -25,8 +25,6 @@ import {
     openUpModal,
     closeUpModal,
     showUpForm,
-    editPortfolioItem,
-    deletePortfolioItem,
     toggleCategoryField,
     handleUpPhotoSelect,
     removeUpPhoto,
@@ -2347,8 +2345,6 @@ window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
 window.openUpModal = openUpModal;
 window.closeUpModal = closeUpModal;
 window.showUpForm = showUpForm;
-window.editPortfolioItem = editPortfolioItem;
-window.deletePortfolioItem = deletePortfolioItem;
 window.toggleCategoryField = toggleCategoryField;
 window.handleUpPhotoSelect = handleUpPhotoSelect;
 window.removeUpPhoto = removeUpPhoto;

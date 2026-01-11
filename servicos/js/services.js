@@ -2055,7 +2055,7 @@ export async function openUpModal(serviceId) {
 }
 
 /**
- * Mostra a lista de ups existentes
+ * Mostra a lista de ups existentes (simplificado - gerenciamento no admin)
  */
 function showExistingUpsList() {
     const section = document.getElementById('existingUpsSection');
@@ -2067,8 +2067,8 @@ function showExistingUpsList() {
     formSection.style.display = 'none';
     footer.style.display = 'none';
 
-    // Gerar HTML da lista
-    list.innerHTML = existingPortfolioItems.map(item => `
+    // Gerar HTML da lista (simplificado - sem botoes de edicao/exclusao)
+    let html = existingPortfolioItems.map(item => `
         <div class="existing-up-card" data-id="${item.id}">
             <div class="up-card-image">
                 <img src="${item.mainPhoto?.url || ''}" alt="${item.title}">
@@ -2084,16 +2084,17 @@ function showExistingUpsList() {
                     ${item.category ? `<span class="up-category">${formatCategoryName(item.category)}</span>` : ''}
                 </div>
             </div>
-            <div class="up-card-actions">
-                <button type="button" class="btn-edit-up" onclick="window.editPortfolioItem('${item.id}')" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button type="button" class="btn-delete-up" onclick="window.deletePortfolioItem('${item.id}')" title="Excluir">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
         </div>
     `).join('');
+
+    // Adicionar link para gerenciamento no admin
+    html += `
+        <a href="../admin-portfolio/" class="btn-manage-portfolio" target="_blank">
+            <i class="fas fa-cog"></i> Gerenciar Portfolio
+        </a>
+    `;
+
+    list.innerHTML = html;
 
     // Mostrar secao
     section.style.display = 'block';
@@ -2197,70 +2198,7 @@ export function showUpForm(editItem = null) {
     }, 0);
 }
 
-/**
- * Edita um item do portfolio
- */
-export async function editPortfolioItem(itemId) {
-    const item = existingPortfolioItems.find(i => i.id === itemId);
-    if (!item) {
-        showToast('Item nao encontrado', 'error');
-        return;
-    }
-    showUpForm(item);
-}
-
-/**
- * Exclui um item do portfolio
- */
-export async function deletePortfolioItem(itemId) {
-    const item = existingPortfolioItems.find(i => i.id === itemId);
-    if (!item) {
-        showToast('Item nao encontrado', 'error');
-        return;
-    }
-
-    if (!confirm(`Excluir "${item.title}" do portfolio?\n\nEsta acao nao pode ser desfeita.`)) {
-        return;
-    }
-
-    try {
-        showToast('Excluindo...', 'info');
-
-        // Deletar imagens do Storage
-        if (item.mainPhoto?.path) {
-            try {
-                await state.storage.ref().child(item.mainPhoto.path).delete();
-            } catch (e) {
-                console.warn('Erro ao deletar foto:', e);
-            }
-        }
-        if (item.logo?.path) {
-            try {
-                await state.storage.ref().child(item.logo.path).delete();
-            } catch (e) {
-                console.warn('Erro ao deletar logo:', e);
-            }
-        }
-
-        // Deletar documento
-        await state.db.collection('portfolio').doc(itemId).delete();
-
-        // Atualizar lista local
-        existingPortfolioItems = existingPortfolioItems.filter(i => i.id !== itemId);
-
-        showToast('Item excluido do portfolio!', 'success');
-
-        // Atualizar visualizacao
-        if (existingPortfolioItems.length > 0) {
-            showExistingUpsList();
-        } else {
-            showUpForm();
-        }
-    } catch (error) {
-        console.error('Erro ao excluir:', error);
-        showToast('Erro ao excluir. Tente novamente.', 'error');
-    }
-}
+// Funcoes editPortfolioItem e deletePortfolioItem movidas para admin-portfolio/script.js
 
 export function closeUpModal() {
     document.getElementById('upModal').classList.remove('active');

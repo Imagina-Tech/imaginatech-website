@@ -281,6 +281,20 @@ body {
     border-color: var(--neon-blue);
 }
 
+.btn-nav.btn-portfolio {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(123, 44, 191, 0.1) 100%);
+    border-color: rgba(123, 44, 191, 0.4);
+}
+
+.btn-nav.btn-portfolio:hover {
+    border-color: rgba(123, 44, 191, 0.8);
+    box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);
+}
+
+.btn-nav.btn-portfolio i {
+    color: #a855f7;
+}
+
 .btn-caixa {
     background: linear-gradient(135deg, #9945FF, #B845FF);
     color: white;
@@ -3752,6 +3766,36 @@ input[type="file"]::file-selector-button {
 .btn-delete-up:hover {
     background: rgba(244, 67, 54, 0.3);
     transform: scale(1.1);
+}
+
+/* Botao gerenciar portfolio */
+.btn-manage-portfolio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(123, 44, 191, 0.1) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    color: var(--neon-cyan);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-manage-portfolio:hover {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(123, 44, 191, 0.2) 100%);
+    border-color: rgba(0, 212, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+}
+
+.btn-manage-portfolio i {
+    font-size: 0.9rem;
 }
 
 /* ===========================

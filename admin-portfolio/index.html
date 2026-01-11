@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Portfolio - ImaginaTech</title>
+
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">Carregando...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen" style="display: none;">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="../iconwpp.jpg" alt="ImaginaTech">
+            </div>
+            <h1>Gerenciar Portfolio</h1>
+            <p>Acesso restrito a administradores</p>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i> Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard" id="dashboard" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <a href="../servicos/" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1><i class="fas fa-images"></i> Gerenciar Portfolio</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <img id="userPhoto" src="" alt="User">
+                    <span id="userName"></span>
+                </div>
+                <button class="btn-logout" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <i class="fas fa-images"></i>
+                <span id="totalItems">0</span>
+                <label>Total</label>
+            </div>
+            <div class="stat-item carrossel">
+                <i class="fas fa-film"></i>
+                <span id="carrosselItems">0</span>
+                <label>Carrossel</label>
+            </div>
+            <div class="stat-item projetos">
+                <i class="fas fa-th-large"></i>
+                <span id="projetosItems">0</span>
+                <label>Projetos</label>
+            </div>
+            <div class="stat-item orphan">
+                <i class="fas fa-unlink"></i>
+                <span id="orphanItems">0</span>
+                <label>Sem Vinculo</label>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="todos">Todos</button>
+                <button class="filter-btn" data-filter="carrossel">Carrossel</button>
+                <button class="filter-btn" data-filter="projetos">Projetos</button>
+                <button class="filter-btn" data-filter="orphan">Sem Vinculo</button>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar por titulo...">
+            </div>
+        </div>
+
+        <!-- Portfolio Grid -->
+        <div class="portfolio-grid" id="portfolioGrid">
+            <!-- Items will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-images"></i>
+            <h3>Nenhum item no portfolio</h3>
+            <p>Use o botao "Up" nos servicos para adicionar itens</p>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Editar Item</h2>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Service Info (if linked) -->
+                <div class="service-link-info" id="serviceLinkInfo" style="display: none;">
+                    <div class="info-badge">
+                        <i class="fas fa-link"></i>
+                        <span>Vinculado ao servico: <strong id="linkedServiceName"></strong></span>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Photo -->
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-camera"></i> Foto Principal</label>
+                        <div class="image-upload-area" id="editPhotoArea" onclick="document.getElementById('editPhoto').click()">
+                            <input type="file" id="editPhoto" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;">
+                            <div class="upload-placeholder" id="editPhotoPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Clique para trocar a foto</span>
+                            </div>
+                            <div class="image-preview" id="editPhotoPreview" style="display: none;">
+                                <img id="editPhotoImg" src="" alt="Preview">
+                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); removePhoto()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-heading"></i> Titulo *</label>
+                        <input type="text" id="editTitle" class="form-input" placeholder="Titulo do projeto">
+                    </div>
+
+                    <!-- Destination -->
+                    <div class="form-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Destino *</label>
+                        <select id="editDestination" class="form-select" onchange="toggleCategory()">
+                            <option value="">Selecione</option>
+                            <option value="carrossel">Carrossel (Hero)</option>
+                            <option value="projetos">Projetos Anteriores</option>
+                        </select>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group" id="editCategoryGroup" style="display: none;">
+                        <label><i class="fas fa-tag"></i> Categoria *</label>
+                        <select id="editCategory" class="form-select">
+                            <option value="">Selecione</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="personalizado">Personalizado</option>
+                            <option value="prototipagem">Prototipagem</option>
+                            <option value="reposicao">Reposicao</option>
+                            <option value="decorativo">Decorativo</option>
+                            <option value="tecnico">Tecnico</option>
+                        </select>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-building"></i> Logo (opcional)</label>
+                        <div class="image-upload-area small" id="editLogoArea" onclick="document.getElementById('editLogo').click()">
+                            <input type="file" id="editLogo" accept="image/png,image/svg+xml,image/webp" onchange="handleLogoSelect(event)" style="display: none;">
+                            <div class="upload-placeholder" id="editLogoPlaceholder">
+                                <i class="fas fa-image"></i>
+                                <span>Logo PNG transparente</span>
+                            </div>
+                            <div class="image-preview" id="editLogoPreview" style="display: none;">
+                                <img id="editLogoImg" src="" alt="Logo">
+                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); removeLogo()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="editItemId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-save" onclick="saveItem()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2><i class="fas fa-trash"></i> Confirmar Exclusao</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-preview">
+                    <img id="deletePreviewImg" src="" alt="Item">
+                    <h3 id="deleteItemTitle"></h3>
+                </div>
+                <p class="delete-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Esta acao nao pode ser desfeita. As imagens serao excluidas permanentemente.
+                </p>
+                <input type="hidden" id="deleteItemId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-delete" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <!-- Config -->
+    <script src="../js/env-config.js"></script>
+
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>
