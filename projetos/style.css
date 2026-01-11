@@ -203,6 +203,13 @@ body {
     transition: all 0.3s;
     text-decoration: none;
     font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+}
+
+.btn-nav i {
+    font-size: 0.9rem;
+    width: 1rem;
+    text-align: center;
 }
 
 .btn-nav:hover {
