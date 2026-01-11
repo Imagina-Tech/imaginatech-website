@@ -1562,46 +1562,37 @@
 }
 
 /* ===========================
-   ACTION BAR - LAYOUT
-   =========================== */
-.action-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.action-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* ===========================
    SELETOR DE SECAO (Filamentos/Equipamentos)
    =========================== */
 .section-selector {
-    display: flex;
+    display: inline-flex;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 3px;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
 }
 
 .selector-btn {
-    padding: 0.4rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
     background: transparent;
     border: none;
-    border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     white-space: nowrap;
+}
+
+.selector-btn i {
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
 }
 
 .selector-btn:hover {
@@ -1610,9 +1601,14 @@
 }
 
 .selector-btn.active {
-    background: var(--neon-cyan);
+    background: linear-gradient(135deg, var(--neon-cyan), #00b4d8);
     color: #0a0a0f;
     font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+}
+
+.selector-btn.active i {
+    color: #0a0a0f;
 }
 
 /* ===========================
@@ -2060,17 +2056,19 @@
 /* ===========================
    RESPONSIVIDADE SELETOR E INVENTÁRIO
    =========================== */
-@media (max-width: 768px) {
-    .action-bar-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+@media (max-width: 600px) {
+    .section-selector {
+        padding: 3px;
+        gap: 3px;
     }
-}
 
-@media (max-width: 480px) {
     .selector-btn {
-        padding: 0.35rem 0.75rem;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
+    }
+
+    .selector-btn i {
         font-size: 0.8rem;
     }
 }

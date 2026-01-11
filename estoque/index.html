@@ -162,19 +162,15 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                 <!-- Header com Ações -->
                 <div class="action-bar">
-                    <div class="action-bar-left">
-                        <h2 class="page-title">
-                            <i class="fas fa-box-open"></i>
-                            Estoque
-                        </h2>
-                        <div class="section-selector">
-                            <button class="selector-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
-                                Filamentos
-                            </button>
-                            <button class="selector-btn" data-section="inventario" onclick="switchSection('inventario')">
-                                Equipamentos
-                            </button>
-                        </div>
+                    <div class="section-selector" id="selectorFilamentos">
+                        <button class="selector-btn active" data-section="filamentos" onclick="switchSection('filamentos')">
+                            <i class="fas fa-scroll"></i>
+                            Filamentos
+                        </button>
+                        <button class="selector-btn" data-section="inventario" onclick="switchSection('inventario')">
+                            <i class="fas fa-toolbox"></i>
+                            Equipamentos
+                        </button>
                     </div>
                     <div class="action-buttons">
                         <button class="btn-primary" onclick="openAddFilamentModal()">
@@ -280,10 +276,16 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                     <!-- Header com Ações -->
                     <div class="action-bar">
-                        <h2 class="page-title">
-                            <i class="fas fa-boxes"></i>
-                            Inventário da Empresa
-                        </h2>
+                        <div class="section-selector" id="selectorInventario">
+                            <button class="selector-btn" data-section="filamentos" onclick="switchSection('filamentos')">
+                                <i class="fas fa-scroll"></i>
+                                Filamentos
+                            </button>
+                            <button class="selector-btn active" data-section="inventario" onclick="switchSection('inventario')">
+                                <i class="fas fa-toolbox"></i>
+                                Equipamentos
+                            </button>
+                        </div>
                         <div class="action-buttons">
                             <button class="btn-primary" onclick="openAddEquipmentModal()">
                                 <i class="fas fa-plus"></i>
