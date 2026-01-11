@@ -29,7 +29,8 @@ import {
     removeUpPhoto,
     handleUpLogoSelect,
     removeUpLogo,
-    saveToPortfolio
+    saveToPortfolio,
+    setupUpModalDragDrop
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -73,7 +74,9 @@ export {
     isStatusCompleted,
     getTodayBrazil,
     parseDateBrazil,
-    calculateDaysRemaining
+    calculateDaysRemaining,
+    // Portfolio Up Drag & Drop
+    setupUpModalDragDrop
 };
 
 // ===========================

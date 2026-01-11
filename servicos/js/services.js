@@ -2138,6 +2138,160 @@ export function removeUpLogo() {
     document.getElementById('upLogoPlaceholder').style.display = 'flex';
 }
 
+// ===========================
+// DRAG & DROP PARA PORTFOLIO
+// ===========================
+
+let upPhotoDragCounter = 0;
+let upLogoDragCounter = 0;
+
+export function setupUpModalDragDrop() {
+    const photoArea = document.getElementById('upPhotoUploadArea');
+    const logoArea = document.getElementById('upLogoUploadArea');
+
+    if (photoArea) {
+        photoArea.addEventListener('dragenter', handleUpPhotoDragEnter, false);
+        photoArea.addEventListener('dragover', handleUpPhotoDragOver, false);
+        photoArea.addEventListener('dragleave', handleUpPhotoDragLeave, false);
+        photoArea.addEventListener('drop', handleUpPhotoDrop, false);
+    }
+
+    if (logoArea) {
+        logoArea.addEventListener('dragenter', handleUpLogoDragEnter, false);
+        logoArea.addEventListener('dragover', handleUpLogoDragOver, false);
+        logoArea.addEventListener('dragleave', handleUpLogoDragLeave, false);
+        logoArea.addEventListener('drop', handleUpLogoDrop, false);
+    }
+}
+
+function preventUpDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// === FOTO DRAG & DROP ===
+function handleUpPhotoDragEnter(e) {
+    preventUpDefaults(e);
+    upPhotoDragCounter++;
+    const area = document.getElementById('upPhotoUploadArea');
+    if (area) area.classList.add('drag-over');
+}
+
+function handleUpPhotoDragOver(e) {
+    preventUpDefaults(e);
+    const area = document.getElementById('upPhotoUploadArea');
+    if (area && !area.classList.contains('drag-over')) {
+        area.classList.add('drag-over');
+    }
+}
+
+function handleUpPhotoDragLeave(e) {
+    preventUpDefaults(e);
+    upPhotoDragCounter--;
+    if (upPhotoDragCounter === 0) {
+        const area = document.getElementById('upPhotoUploadArea');
+        if (area) area.classList.remove('drag-over');
+    }
+}
+
+function handleUpPhotoDrop(e) {
+    preventUpDefaults(e);
+    upPhotoDragCounter = 0;
+    const area = document.getElementById('upPhotoUploadArea');
+    if (area) area.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processUpPhotoFile(files[0]);
+    }
+}
+
+function processUpPhotoFile(file) {
+    // Validar tipo
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+        showToast('Formato invalido. Use JPG, PNG ou WebP', 'error');
+        return;
+    }
+
+    // Validar tamanho (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Imagem muito grande. Maximo 10MB', 'error');
+        return;
+    }
+
+    upPhotoFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('upPhotoImg').src = e.target.result;
+        document.getElementById('upPhotoPreview').style.display = 'block';
+        document.getElementById('upPhotoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    showToast('Foto carregada!', 'success');
+}
+
+// === LOGO DRAG & DROP ===
+function handleUpLogoDragEnter(e) {
+    preventUpDefaults(e);
+    upLogoDragCounter++;
+    const area = document.getElementById('upLogoUploadArea');
+    if (area) area.classList.add('drag-over');
+}
+
+function handleUpLogoDragOver(e) {
+    preventUpDefaults(e);
+    const area = document.getElementById('upLogoUploadArea');
+    if (area && !area.classList.contains('drag-over')) {
+        area.classList.add('drag-over');
+    }
+}
+
+function handleUpLogoDragLeave(e) {
+    preventUpDefaults(e);
+    upLogoDragCounter--;
+    if (upLogoDragCounter === 0) {
+        const area = document.getElementById('upLogoUploadArea');
+        if (area) area.classList.remove('drag-over');
+    }
+}
+
+function handleUpLogoDrop(e) {
+    preventUpDefaults(e);
+    upLogoDragCounter = 0;
+    const area = document.getElementById('upLogoUploadArea');
+    if (area) area.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processUpLogoFile(files[0]);
+    }
+}
+
+function processUpLogoFile(file) {
+    if (!file.type.match(/image\/(png|svg\+xml|webp)/)) {
+        showToast('Logo deve ser PNG, SVG ou WebP (transparente)', 'error');
+        return;
+    }
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Logo muito grande. Maximo 5MB', 'error');
+        return;
+    }
+
+    upLogoFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('upLogoImg').src = e.target.result;
+        document.getElementById('upLogoPreview').style.display = 'block';
+        document.getElementById('upLogoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    showToast('Logo carregado!', 'success');
+}
+
 export async function saveToPortfolio() {
     const serviceId = document.getElementById('upServiceId').value;
     const title = document.getElementById('upTitle').value.trim();

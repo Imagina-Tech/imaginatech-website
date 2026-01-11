@@ -3456,6 +3456,24 @@ input[type="file"]::file-selector-button {
     background: rgba(0, 212, 255, 0.05);
 }
 
+/* Drag & Drop Estado Ativo */
+#upModal .image-upload-area.drag-over {
+    border-color: #43e97b !important;
+    background: rgba(67, 233, 123, 0.15) !important;
+    box-shadow: 0 0 25px rgba(67, 233, 123, 0.3), inset 0 0 30px rgba(67, 233, 123, 0.1);
+    transform: scale(1.02);
+}
+
+#upModal .image-upload-area.drag-over .upload-placeholder i {
+    color: #43e97b;
+    animation: pulse-icon 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 1; }
+}
+
 #upModal .image-upload-area.small {
     min-height: 100px;
     padding: 1rem;
@@ -3473,6 +3491,17 @@ input[type="file"]::file-selector-button {
     font-size: 2.5rem;
     color: var(--neon-cyan);
     opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+#upModal .upload-placeholder span {
+    font-weight: 500;
+}
+
+#upModal .upload-placeholder small {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: -0.25rem;
 }
 
 #upModal .image-upload-area.small .upload-placeholder i {

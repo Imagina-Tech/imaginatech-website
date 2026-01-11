@@ -779,12 +779,13 @@
                     <!-- Foto de Qualidade -->
                     <div class="form-group full-width">
                         <label for="upPhoto"><i class="fas fa-camera"></i> Foto de Qualidade *</label>
-                        <div class="image-upload-area" id="upPhotoArea" onclick="document.getElementById('upPhoto').click()">
+                        <div class="image-upload-area" id="upPhotoUploadArea" onclick="document.getElementById('upPhoto').click()">
                             <input type="file" id="upPhoto" accept="image/jpeg,image/jpg,image/png,image/webp"
                                    onchange="window.handleUpPhotoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="upPhotoPlaceholder">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Clique para selecionar uma foto</span>
+                                <span>Arraste uma foto ou clique aqui</span>
+                                <small>JPG, PNG ou WebP (max 10MB)</small>
                             </div>
                             <div class="image-preview" id="upPhotoPreview" style="display: none;">
                                 <img id="upPhotoImg" src="" alt="Preview">
@@ -793,7 +794,6 @@
                                 </button>
                             </div>
                         </div>
-                        <small class="form-hint">Foto de alta qualidade do projeto finalizado (JPG, PNG ou WebP)</small>
                     </div>
 
                     <!-- Titulo -->
@@ -830,12 +830,12 @@
                     <!-- Logo Transparente (opcional) -->
                     <div class="form-group full-width">
                         <label for="upLogo"><i class="fas fa-building"></i> Logo do Cliente (opcional)</label>
-                        <div class="image-upload-area small" id="upLogoArea" onclick="document.getElementById('upLogo').click()">
+                        <div class="image-upload-area small" id="upLogoUploadArea" onclick="document.getElementById('upLogo').click()">
                             <input type="file" id="upLogo" accept="image/png,image/svg+xml,image/webp"
                                    onchange="window.handleUpLogoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="upLogoPlaceholder">
                                 <i class="fas fa-image"></i>
-                                <span>Logo transparente (PNG)</span>
+                                <span>Arraste ou clique - PNG transparente</span>
                             </div>
                             <div class="image-preview" id="upLogoPreview" style="display: none;">
                                 <img id="upLogoImg" src="" alt="Logo Preview">
@@ -844,7 +844,6 @@
                                 </button>
                             </div>
                         </div>
-                        <small class="form-hint">Para projetos empresariais - logo com fundo transparente</small>
                     </div>
                 </div>
 

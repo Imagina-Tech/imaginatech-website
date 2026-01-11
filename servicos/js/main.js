@@ -19,7 +19,8 @@ import {
     formatCEP,
     updateNotificationOptions,
     monitorConnection,
-    updateLastAccess
+    updateLastAccess,
+    setupUpModalDragDrop
 } from './auth-ui.js';
 
 // ===========================
@@ -116,6 +117,9 @@ onDOMReady(() => {
     document.getElementById('clientEmail')?.addEventListener('input', updateNotificationOptions);
     
     monitorConnection();
+
+    // Setup drag & drop para modal Up Portfolio
+    setupUpModalDragDrop();
 });
 
 // ===========================
