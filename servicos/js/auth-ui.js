@@ -20,7 +20,16 @@ import {
     loadAvailableFilaments,
     updateMaterialDropdown,
     updateColorDropdown,
-    generateOrderCode
+    generateOrderCode,
+    // Portfolio Up Functions
+    openUpModal,
+    closeUpModal,
+    toggleCategoryField,
+    handleUpPhotoSelect,
+    removeUpPhoto,
+    handleUpLogoSelect,
+    removeUpLogo,
+    saveToPortfolio
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -2402,6 +2411,16 @@ window.removeFileFromService = async (serviceId, fileIndex, fileUrl) => {
     const { removeFileFromService } = await import('./services.js');
     await removeFileFromService(serviceId, fileIndex, fileUrl);
 };
+
+// Portfolio Up Functions
+window.openUpModal = openUpModal;
+window.closeUpModal = closeUpModal;
+window.toggleCategoryField = toggleCategoryField;
+window.handleUpPhotoSelect = handleUpPhotoSelect;
+window.removeUpPhoto = removeUpPhoto;
+window.handleUpLogoSelect = handleUpLogoSelect;
+window.removeUpLogo = removeUpLogo;
+window.saveToPortfolio = saveToPortfolio;
 
 // ===========================
 // BYPASS DE FOTO OBRIGATÓRIA

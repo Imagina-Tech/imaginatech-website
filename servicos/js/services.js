@@ -1852,6 +1852,11 @@ function createServiceCard(service) {
                     </div>
                 </div>
                 <div class="service-actions">
+                    ${['concluido', 'retirada', 'entregue', 'modelagem_concluida'].includes(service.status) ? `
+                    <button class="btn-icon btn-up" onclick="window.openUpModal('${service.id}')" title="Promover para Portfolio">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    ` : ''}
                     <button class="btn-icon" onclick="window.openEditModal('${service.id}')" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -1996,4 +2001,229 @@ export function filterServices(filter) {
     document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
     event?.currentTarget?.classList.add('active');
     renderServices();
+}
+
+// ===========================
+// PORTFOLIO UP FUNCTIONS
+// ===========================
+
+let upPhotoFile = null;
+let upLogoFile = null;
+
+export function openUpModal(serviceId) {
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service) {
+        showToast('Servico nao encontrado', 'error');
+        return;
+    }
+
+    // Preencher informacoes do servico
+    document.getElementById('upServiceId').value = serviceId;
+    document.getElementById('upServiceName').textContent = service.name || 'Sem nome';
+    document.getElementById('upServiceMaterial').textContent = service.material || 'N/A';
+    document.getElementById('upServiceColor').textContent = formatColorName(service.color) || 'N/A';
+
+    // Pre-preencher titulo com nome do servico
+    document.getElementById('upTitle').value = service.name || '';
+
+    // Resetar campos
+    document.getElementById('upDestination').value = '';
+    document.getElementById('upCategory').value = '';
+    document.getElementById('upCategoryGroup').style.display = 'none';
+
+    // Limpar previews de imagens
+    upPhotoFile = null;
+    upLogoFile = null;
+    document.getElementById('upPhotoPreview').style.display = 'none';
+    document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+    document.getElementById('upLogoPreview').style.display = 'none';
+    document.getElementById('upLogoPlaceholder').style.display = 'flex';
+    document.getElementById('upPhoto').value = '';
+    document.getElementById('upLogo').value = '';
+
+    // Abrir modal
+    document.getElementById('upModal').classList.add('active');
+}
+
+export function closeUpModal() {
+    document.getElementById('upModal').classList.remove('active');
+    upPhotoFile = null;
+    upLogoFile = null;
+}
+
+export function toggleCategoryField() {
+    const destination = document.getElementById('upDestination').value;
+    const categoryGroup = document.getElementById('upCategoryGroup');
+    const categorySelect = document.getElementById('upCategory');
+
+    if (destination === 'projetos') {
+        categoryGroup.style.display = 'block';
+        categorySelect.required = true;
+    } else {
+        categoryGroup.style.display = 'none';
+        categorySelect.required = false;
+        categorySelect.value = '';
+    }
+
+    // Atualizar CustomSelect se existir
+    if (typeof window.initCustomSelects === 'function') {
+        setTimeout(() => window.initCustomSelects(), 0);
+    }
+}
+
+export function handleUpPhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+        showToast('Formato invalido. Use JPG, PNG ou WebP', 'error');
+        return;
+    }
+
+    // Validar tamanho (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Imagem muito grande. Maximo 10MB', 'error');
+        return;
+    }
+
+    upPhotoFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('upPhotoImg').src = e.target.result;
+        document.getElementById('upPhotoPreview').style.display = 'block';
+        document.getElementById('upPhotoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+export function removeUpPhoto() {
+    upPhotoFile = null;
+    document.getElementById('upPhoto').value = '';
+    document.getElementById('upPhotoPreview').style.display = 'none';
+    document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+}
+
+export function handleUpLogoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match(/image\/(png|svg\+xml|webp)/)) {
+        showToast('Logo deve ser PNG, SVG ou WebP (transparente)', 'error');
+        return;
+    }
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Logo muito grande. Maximo 5MB', 'error');
+        return;
+    }
+
+    upLogoFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('upLogoImg').src = e.target.result;
+        document.getElementById('upLogoPreview').style.display = 'block';
+        document.getElementById('upLogoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+export function removeUpLogo() {
+    upLogoFile = null;
+    document.getElementById('upLogo').value = '';
+    document.getElementById('upLogoPreview').style.display = 'none';
+    document.getElementById('upLogoPlaceholder').style.display = 'flex';
+}
+
+export async function saveToPortfolio() {
+    const serviceId = document.getElementById('upServiceId').value;
+    const title = document.getElementById('upTitle').value.trim();
+    const destination = document.getElementById('upDestination').value;
+    const category = document.getElementById('upCategory').value;
+
+    // Validacoes
+    if (!upPhotoFile) {
+        showToast('Selecione uma foto de qualidade', 'error');
+        return;
+    }
+
+    if (!title) {
+        showToast('Digite um titulo para o projeto', 'error');
+        return;
+    }
+
+    if (!destination) {
+        showToast('Selecione o destino', 'error');
+        return;
+    }
+
+    if (destination === 'projetos' && !category) {
+        showToast('Selecione uma categoria', 'error');
+        return;
+    }
+
+    const service = state.services.find(s => s.id === serviceId);
+    if (!service) {
+        showToast('Servico nao encontrado', 'error');
+        return;
+    }
+
+    try {
+        showToast('Enviando para portfolio...', 'info');
+
+        // Upload da foto principal
+        const timestamp = Date.now();
+        const photoExt = upPhotoFile.name.split('.').pop();
+        const photoPath = `portfolio/${timestamp}_main.${photoExt}`;
+        const photoRef = state.storage.ref().child(photoPath);
+        await photoRef.put(upPhotoFile);
+        const photoUrl = await photoRef.getDownloadURL();
+
+        // Upload do logo (se houver)
+        let logoData = null;
+        if (upLogoFile) {
+            const logoExt = upLogoFile.name.split('.').pop();
+            const logoPath = `portfolio/${timestamp}_logo.${logoExt}`;
+            const logoRef = state.storage.ref().child(logoPath);
+            await logoRef.put(upLogoFile);
+            const logoUrl = await logoRef.getDownloadURL();
+            logoData = {
+                url: logoUrl,
+                path: logoPath
+            };
+        }
+
+        // Criar documento no portfolio
+        const portfolioDoc = {
+            title: title,
+            category: destination === 'projetos' ? category : null,
+            destination: destination,
+            serviceId: serviceId,
+            material: service.material || null,
+            color: service.color || null,
+            orderCode: service.orderCode || null,
+            mainPhoto: {
+                url: photoUrl,
+                path: photoPath
+            },
+            logo: logoData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdBy: state.currentUser?.email || 'unknown',
+            featured: false,
+            order: 0,
+            active: true
+        };
+
+        await state.db.collection('portfolio').add(portfolioDoc);
+
+        showToast('Projeto adicionado ao portfolio!', 'success');
+        closeUpModal();
+
+    } catch (error) {
+        console.error('Erro ao salvar no portfolio:', error);
+        showToast('Erro ao salvar. Tente novamente.', 'error');
+    }
 }

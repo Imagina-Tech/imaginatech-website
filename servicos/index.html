@@ -753,6 +753,114 @@
         </div>
     </div>
 
+    <!-- MODAL: Promover para Portfolio -->
+    <div class="modal" id="upModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-arrow-up"></i> Promover para Portfolio</h2>
+                <button class="modal-close" onclick="window.closeUpModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Info do Servico Original -->
+                <div class="up-service-info" id="upServiceInfo">
+                    <div class="info-badge">
+                        <i class="fas fa-cube"></i>
+                        <span id="upServiceName">Nome do Servico</span>
+                    </div>
+                    <div class="info-details">
+                        <span><i class="fas fa-layer-group"></i> <span id="upServiceMaterial">Material</span></span>
+                        <span><i class="fas fa-palette"></i> <span id="upServiceColor">Cor</span></span>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Foto de Qualidade -->
+                    <div class="form-group full-width">
+                        <label for="upPhoto"><i class="fas fa-camera"></i> Foto de Qualidade *</label>
+                        <div class="image-upload-area" id="upPhotoArea" onclick="document.getElementById('upPhoto').click()">
+                            <input type="file" id="upPhoto" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                   onchange="window.handleUpPhotoSelect(event)" style="display: none;">
+                            <div class="upload-placeholder" id="upPhotoPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Clique para selecionar uma foto</span>
+                            </div>
+                            <div class="image-preview" id="upPhotoPreview" style="display: none;">
+                                <img id="upPhotoImg" src="" alt="Preview">
+                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); window.removeUpPhoto()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-hint">Foto de alta qualidade do projeto finalizado (JPG, PNG ou WebP)</small>
+                    </div>
+
+                    <!-- Titulo -->
+                    <div class="form-group full-width">
+                        <label for="upTitle"><i class="fas fa-heading"></i> Titulo do Projeto *</label>
+                        <input type="text" id="upTitle" class="form-input"
+                               placeholder="Ex: Busto Darth Vader em PLA Preto">
+                    </div>
+
+                    <!-- Destino -->
+                    <div class="form-group">
+                        <label for="upDestination"><i class="fas fa-map-marker-alt"></i> Destino *</label>
+                        <select id="upDestination" class="form-select" onchange="window.toggleCategoryField()">
+                            <option value="">Selecione o destino</option>
+                            <option value="carrossel">Carrossel (Hero da Homepage)</option>
+                            <option value="projetos">Projetos Anteriores</option>
+                        </select>
+                    </div>
+
+                    <!-- Categoria (condicional) -->
+                    <div class="form-group" id="upCategoryGroup" style="display: none;">
+                        <label for="upCategory"><i class="fas fa-tag"></i> Categoria *</label>
+                        <select id="upCategory" class="form-select">
+                            <option value="">Selecione a categoria</option>
+                            <option value="industrial">Peca Industrial</option>
+                            <option value="personalizado">Personalizado</option>
+                            <option value="prototipagem">Prototipagem</option>
+                            <option value="reposicao">Reposicao</option>
+                            <option value="decorativo">Decorativo</option>
+                            <option value="tecnico">Tecnico</option>
+                        </select>
+                    </div>
+
+                    <!-- Logo Transparente (opcional) -->
+                    <div class="form-group full-width">
+                        <label for="upLogo"><i class="fas fa-building"></i> Logo do Cliente (opcional)</label>
+                        <div class="image-upload-area small" id="upLogoArea" onclick="document.getElementById('upLogo').click()">
+                            <input type="file" id="upLogo" accept="image/png,image/svg+xml,image/webp"
+                                   onchange="window.handleUpLogoSelect(event)" style="display: none;">
+                            <div class="upload-placeholder" id="upLogoPlaceholder">
+                                <i class="fas fa-image"></i>
+                                <span>Logo transparente (PNG)</span>
+                            </div>
+                            <div class="image-preview" id="upLogoPreview" style="display: none;">
+                                <img id="upLogoImg" src="" alt="Logo Preview">
+                                <button type="button" class="btn-remove-image" onclick="event.stopPropagation(); window.removeUpLogo()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-hint">Para projetos empresariais - logo com fundo transparente</small>
+                    </div>
+                </div>
+
+                <input type="hidden" id="upServiceId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="window.closeUpModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-confirm btn-up-confirm" onclick="window.saveToPortfolio()">
+                    <i class="fas fa-arrow-up"></i> Promover
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
