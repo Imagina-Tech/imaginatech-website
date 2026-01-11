@@ -1019,16 +1019,21 @@ export async function deleteService(serviceId) {
                     const fileRef = state.storage.refFromURL(fileUrl);
                     await fileRef.delete();
                 } catch (error) {
-                    console.error('Erro ao deletar arquivo:', fileUrl, error);
-                    deletionErrors.push(fileUrl);
+                    // Se o arquivo já não existe, ignorar (resultado desejado)
+                    if (error.code === 'storage/object-not-found') {
+                        console.log('Arquivo já não existe (ignorado):', fileUrl);
+                    } else {
+                        console.error('Erro ao deletar arquivo:', fileUrl, error);
+                        deletionErrors.push(fileUrl);
+                    }
                 }
             }
 
-            // Se houver erros, não continua com a exclusão do Firestore
+            // Apenas erros reais bloqueiam a exclusão (não "object-not-found")
             if (deletionErrors.length > 0) {
                 showToast(`⚠️ ${deletionErrors.length} arquivo(s) não foi(foram) deletado(s) do Storage. Tente novamente.`, 'warning');
                 console.error('Arquivos que falharam:', deletionErrors);
-                return; // Para aqui, não deleta do Firestore
+                return;
             }
         }
 
