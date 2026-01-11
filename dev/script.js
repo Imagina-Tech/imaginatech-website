@@ -19,7 +19,7 @@ function createParticles() {
         const particle = document.createElement('div');
         particle.className = 'particle';
         particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDelay = -(Math.random() * 20) + 's';
         particle.style.animationDuration = (15 + Math.random() * 10) + 's';
         particlesContainer.appendChild(particle);
     }
