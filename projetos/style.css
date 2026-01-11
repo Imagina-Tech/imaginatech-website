@@ -190,26 +190,31 @@ body {
 }
 
 .btn-nav {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
+    height: 36px;
     background: transparent;
     color: #e0e0e0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     font-size: 0.9rem;
+    line-height: 1;
     cursor: pointer;
     transition: all 0.3s;
     text-decoration: none;
     font-family: 'Inter', sans-serif;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .btn-nav i {
     font-size: 0.9rem;
     width: 1rem;
     text-align: center;
+    line-height: 1;
 }
 
 .btn-nav:hover {
