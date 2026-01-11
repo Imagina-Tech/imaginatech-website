@@ -1383,9 +1383,10 @@
 
         .hero-projetos {
             width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px;
+            max-width: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
 
         .projetos-header {
@@ -1412,14 +1413,6 @@
             position: relative;
             overflow: visible;
             padding: 0;
-        }
-
-        .hero-projetos {
-            overflow: hidden;
-            width: 100vw;
-            position: relative;
-            left: 50%;
-            transform: translateX(-50%);
             -webkit-mask-image:
                 linear-gradient(to right,
                     transparent 0%,
@@ -1439,6 +1432,7 @@
                     transparent 100%
                 );
         }
+
 
         /* Track com animação */
         .projetos-track {
