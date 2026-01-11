@@ -362,7 +362,7 @@ function initializeFirebasePublic() {
     return true;
 }
 
-// Carregar itens do carrossel (logos de clientes)
+// Carregar itens do carrossel de PROJETOS (hero)
 async function loadCarouselItems() {
     if (!db) return;
 
@@ -374,7 +374,7 @@ async function loadCarouselItems() {
             .get();
 
         if (snapshot.empty) {
-            console.log('Nenhum item no carrossel - mantendo estaticos');
+            console.log('Nenhum projeto no carrossel - mantendo estaticos');
             return;
         }
 
@@ -389,50 +389,59 @@ async function loadCarouselItems() {
             carouselItems = [...carouselItems, ...items];
         }
 
-        // Atualizar DOM do carrossel
-        const clientsTrack = document.querySelector('.clients-track');
-        if (clientsTrack) {
-            clientsTrack.innerHTML = carouselItems.map(item => createCarouselCard(item)).join('');
+        // Atualizar DOM do carrossel de PROJETOS
+        const projetosTrack = document.querySelector('.projetos-track');
+        if (projetosTrack) {
+            projetosTrack.innerHTML = carouselItems.map(item => createProjetoCard(item)).join('');
         }
 
-        console.log(`Carrossel atualizado com ${items.length} item(s) do portfolio`);
+        // Se tem logo, adicionar ao carrossel de EMPRESAS
+        const itemsComLogo = items.filter(item => item.logo && item.logo.url);
+        if (itemsComLogo.length > 0) {
+            addLogosToClientsCarousel(itemsComLogo);
+        }
+
+        console.log(`Carrossel de projetos atualizado com ${items.length} item(s)`);
     } catch (error) {
         console.error('Erro ao carregar carrossel:', error);
     }
 }
 
-// Criar card do carrossel
-function createCarouselCard(item) {
-    const photoUrl = item.mainPhoto?.url;
-    const logoUrl = item.logo?.url;
+// Criar card de projeto (para o carrossel do hero)
+function createProjetoCard(item) {
+    const photoUrl = item.mainPhoto?.url || 'assets/images/projetos/projeto-1.svg';
     const title = item.title || 'Projeto';
 
-    // Card com foto do projeto
-    if (photoUrl) {
-        return `
-            <div class="carousel-project-card">
-                <div class="carousel-project-image">
-                    <img src="${photoUrl}" alt="${title}" loading="lazy">
-                    ${logoUrl ? `<div class="carousel-project-logo"><img src="${logoUrl}" alt="Logo"></div>` : ''}
-                </div>
-                <div class="carousel-project-title">${title}</div>
+    return `
+        <div class="projeto-card">
+            <div class="projeto-image">
+                <img src="${photoUrl}" alt="${title}">
             </div>
-        `;
-    }
-    // Fallback: apenas logo ou texto
-    else if (logoUrl) {
-        return `
-            <div class="client-logo client-logo-dynamic">
-                <img src="${logoUrl}" alt="${title}" class="client-logo-img">
+            <div class="projeto-info">
+                <h3 class="projeto-nome">${title}</h3>
             </div>
-        `;
-    } else {
-        return `
-            <div class="client-logo">
-                <span class="client-name">${title}</span>
-            </div>
-        `;
-    }
+        </div>
+    `;
+}
+
+// Adicionar logos ao carrossel de empresas
+function addLogosToClientsCarousel(items) {
+    const clientsTrack = document.querySelector('.clients-track');
+    if (!clientsTrack) return;
+
+    // Criar HTML dos novos logos
+    const newLogosHtml = items.map(item => `
+        <div class="client-logo client-logo-dynamic">
+            <img src="${item.logo.url}" alt="${item.title}" class="client-logo-img">
+        </div>
+    `).join('');
+
+    // Adicionar ao inicio do carrossel (antes dos estaticos)
+    clientsTrack.insertAdjacentHTML('afterbegin', newLogosHtml);
+    // Duplicar no final para manter o loop
+    clientsTrack.insertAdjacentHTML('beforeend', newLogosHtml);
+
+    console.log(`${items.length} logo(s) adicionado(s) ao carrossel de empresas`);
 }
 
 // Carregar grid de portfolio (projetos anteriores)
