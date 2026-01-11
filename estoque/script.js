@@ -339,7 +339,7 @@ function attachCardEventListeners() {
 function createFilamentCard(filament) {
     // Garantir que weight seja número válido
     const weightInGrams = (parseFloat(filament.weight) || 0) * 1000;
-    const stockClass = weightInGrams < 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
+    const stockClass = weightInGrams <= 600 ? 'low' : (weightInGrams > 800 ? 'ok' : '');
     const outOfStock = weightInGrams <= 0 ? 'out-of-stock' : '';
 
     // Tratar valores undefined/null
@@ -398,7 +398,7 @@ function createFilamentCard(filament) {
                 <div class="filament-type">${filamentType || 'N/A'}</div>
                 <div class="filament-color">${filamentColor || 'N/A'}</div>
                 <div class="filament-brand"><i class="fas fa-copyright"></i> ${brand}</div>
-                <div class="filament-weight ${weightInGrams < 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
+                <div class="filament-weight ${weightInGrams <= 600 ? 'low' : ''}">${weightInGrams.toFixed(0)}g</div>
             </div>
         </div>
     `;
@@ -413,7 +413,7 @@ function updateStats() {
     const stockOk = filaments.filter(f => (parseFloat(f.weight) || 0) > 0.8).length;
     const stockLow = filaments.filter(f => {
         const w = parseFloat(f.weight) || 0;
-        return w < 0.6 && w > 0;
+        return w <= 0.6 && w > 0;
     }).length;
     const totalWeight = filaments.reduce((sum, f) => sum + (parseFloat(f.weight) || 0), 0);
 
