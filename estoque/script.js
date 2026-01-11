@@ -246,6 +246,19 @@ async function fulfillServiceWithTransaction(service, typeLower, colorLower) {
     if (neededGrams <= 0) return false;
 
     return await db.runTransaction(async (transaction) => {
+        // 0. Verificar se servico AINDA precisa de material (evita deducao duplicada)
+        const serviceRef = db.collection('services').doc(service.id);
+        const serviceDoc = await transaction.get(serviceRef);
+
+        if (!serviceDoc.exists) {
+            return false; // Servico foi deletado
+        }
+
+        const serviceData = serviceDoc.data();
+        if (!serviceData.needsMaterialPurchase) {
+            return false; // Ja foi atendido por outro usuario
+        }
+
         // 1. Buscar filamentos FRESCOS do banco (nao da memoria!)
         const filamentsSnapshot = await transaction.get(
             db.collection('filaments')
@@ -306,7 +319,7 @@ async function fulfillServiceWithTransaction(service, typeLower, colorLower) {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        transaction.update(db.collection('services').doc(service.id), {
+        transaction.update(serviceRef, {
             needsMaterialPurchase: false
         });
 
@@ -532,6 +545,7 @@ function openAddFilamentModal() {
     // Resetar estado
     selectedImage = null;
     editingFilamentId = null;
+    editingFilamentUpdatedAt = null;
 
     // Limpar formulário
     document.getElementById('filamentForm').reset();
@@ -1109,36 +1123,39 @@ function closeCardActionsModal() {
 
 async function handleRestock1kg() {
     if (!selectedFilamentId) {
-        showToast('Erro: ID do filamento não selecionado', 'error');
+        showToast('Erro: ID do filamento nao selecionado', 'error');
         return;
     }
 
-    // Guardar ID em variável local
+    // Guardar ID e dados em variavel local antes de fechar modal
     const filamentId = selectedFilamentId;
-
     const filament = filaments.find(f => f.id === filamentId);
+
     if (!filament) {
-        showToast('Filamento não encontrado', 'error');
+        showToast('Filamento nao encontrado', 'error');
         return;
     }
 
-    const newWeight = filament.weight + 1.0; // Adiciona 1kg
+    const filamentType = filament.type;
+    const filamentColor = filament.color;
 
-    // Fechar modal antes da operação
+    // Fechar modal antes da operacao
     closeCardActionsModal();
 
     try {
         showLoading('Adicionando 1kg ao estoque...');
+
+        // Usar increment() para operacao atomica (evita race condition)
         await db.collection('filaments').doc(filamentId).update({
-            weight: newWeight,
+            weight: firebase.firestore.FieldValue.increment(1.0),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         showToast('1kg adicionado ao estoque com sucesso!', 'success');
 
-        // Verificar se pode atender serviços pendentes
+        // Verificar se pode atender servicos pendentes
         setTimeout(() => {
-            checkAndFulfillPendingServices(filament.type, filament.color);
+            checkAndFulfillPendingServices(filamentType, filamentColor);
         }, 500);
     } catch (error) {
         console.error('Error restocking:', error);
@@ -1150,18 +1167,21 @@ async function handleRestock1kg() {
 
 async function handleAddFractional() {
     if (!selectedFilamentId) {
-        showToast('Erro: ID do filamento não selecionado', 'error');
+        showToast('Erro: ID do filamento nao selecionado', 'error');
         return;
     }
 
-    // Guardar ID em variável local
+    // Guardar ID e dados em variavel local antes de fechar modal
     const filamentId = selectedFilamentId;
-
     const filament = filaments.find(f => f.id === filamentId);
+
     if (!filament) {
-        showToast('Filamento não encontrado', 'error');
+        showToast('Filamento nao encontrado', 'error');
         return;
     }
+
+    const filamentType = filament.type;
+    const filamentColor = filament.color;
 
     // Fechar modal antes do prompt para melhor UX
     closeCardActionsModal();
@@ -1170,26 +1190,27 @@ async function handleAddFractional() {
 
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
         if (amount !== null) {
-            showToast('Digite uma quantidade válida', 'error');
+            showToast('Digite uma quantidade valida', 'error');
         }
         return;
     }
 
     const amountInKg = parseFloat(amount) / 1000;
-    const newWeight = filament.weight + amountInKg;
 
     try {
         showLoading('Adicionando quantidade ao estoque...');
+
+        // Usar increment() para operacao atomica (evita race condition)
         await db.collection('filaments').doc(filamentId).update({
-            weight: newWeight,
+            weight: firebase.firestore.FieldValue.increment(amountInKg),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         showToast(`${amount}g adicionados ao estoque com sucesso!`, 'success');
 
-        // Verificar se pode atender serviços pendentes
+        // Verificar se pode atender servicos pendentes
         setTimeout(() => {
-            checkAndFulfillPendingServices(filament.type, filament.color);
+            checkAndFulfillPendingServices(filamentType, filamentColor);
         }, 500);
     } catch (error) {
         console.error('Error adding fractional:', error);
