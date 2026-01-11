@@ -659,10 +659,47 @@
     overflow-y: auto;
 }
 
+/* Scrollbar do modal - respeita border-radius */
+#filamentModal .modal-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+#filamentModal .modal-content::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 15px 0;
+}
+
+#filamentModal .modal-content::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 5px;
+}
+
+#filamentModal .modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);
+}
+
 #filamentModal .modal-body {
     padding: 1rem;
     max-height: calc(90vh - 200px);
     overflow-y: auto;
+}
+
+#filamentModal .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+#filamentModal .modal-body::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 10px 0;
+}
+
+#filamentModal .modal-body::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 4px;
+}
+
+#filamentModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);
 }
 
 #filamentModal .form-group {
