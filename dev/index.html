@@ -446,6 +446,49 @@
         .cube-container:hover .cube {
             animation-play-state: paused;
         }
+
+        /* ========== VIDEO DO CUBO 3D ========== */
+        .cube-video-container {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .cube-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        /* Responsivo - Desktop grande */
+        @media (min-width: 1024px) {
+            .cube-video-container {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        /* Responsivo - Tablet e Mobile */
+        @media (max-width: 768px) {
+            .cube-video-container {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* Responsivo - Mobile pequeno */
+        @media (max-width: 480px) {
+            .cube-video-container {
+                width: 160px;
+                height: 160px;
+            }
+        }
         
         /* ========== NAVBAR FLOATING PILL ========== */
         .navbar {
@@ -1695,15 +1738,10 @@
             </div>
 
             <div class="hero-visual">
-                <div class="cube-container">
-                    <div class="cube">
-                        <div class="cube-face cube-face-1"></div>
-                        <div class="cube-face cube-face-2"></div>
-                        <div class="cube-face cube-face-3"></div>
-                        <div class="cube-face cube-face-4"></div>
-                        <div class="cube-face cube-face-5"></div>
-                        <div class="cube-face cube-face-6"></div>
-                    </div>
+                <div class="cube-video-container">
+                    <video class="cube-video" autoplay loop muted playsinline>
+                        <source src="assets/videos/cubo.mp4" type="video/mp4">
+                    </video>
                 </div>
                 <div class="cube-reflection"></div>
             </div>
