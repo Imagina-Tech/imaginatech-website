@@ -4,6 +4,13 @@
    =========================== */
 
 /* ===========================
+   NAVBAR - IMPEDIR QUEBRA DE LINHA
+   =========================== */
+.navbar-container {
+    flex-wrap: nowrap;
+}
+
+/* ===========================
    LAYOUT FULLSCREEN - MÁXIMO APROVEITAMENTO
    =========================== */
 .main-content {
