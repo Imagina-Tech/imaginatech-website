@@ -337,33 +337,48 @@ preloadImages();
 // ============================================
 
 let carouselPosition = 0;
-const cardWidth = 350; // largura do card + gap
 
 function moveCarousel(direction) {
     const track = document.querySelector('.projetos-track');
     if (!track) return;
 
-    // Pausar animacao automatica temporariamente
+    const cards = track.querySelectorAll('.projeto-card');
+    if (cards.length === 0) return;
+
+    // Calcular largura do card + gap
+    const cardStyle = getComputedStyle(cards[0]);
+    const cardWidth = cards[0].offsetWidth + 30; // 30 = gap
+    const totalWidth = cardWidth * cards.length;
+    const visibleWidth = track.parentElement.offsetWidth;
+    const maxPosition = totalWidth - visibleWidth;
+
+    // Pausar animacao automatica
     track.style.animation = 'none';
 
     // Calcular nova posicao
     carouselPosition += direction * cardWidth;
 
+    // Loop infinito
+    if (carouselPosition < 0) {
+        carouselPosition = maxPosition - cardWidth;
+    } else if (carouselPosition >= maxPosition) {
+        carouselPosition = 0;
+    }
+
     // Aplicar transformacao
     track.style.transform = `translateX(${-carouselPosition}px)`;
-    track.style.transition = 'transform 0.5s ease';
+    track.style.transition = 'transform 0.4s ease';
 
-    // Retomar animacao apos 5 segundos de inatividade
+    // Retomar animacao apos 8 segundos de inatividade
     clearTimeout(window.carouselTimeout);
     window.carouselTimeout = setTimeout(() => {
         track.style.transition = 'none';
         track.style.transform = 'translateX(0)';
         carouselPosition = 0;
-        // Pequeno delay antes de retomar animacao
         setTimeout(() => {
             track.style.animation = 'scroll-projetos 40s linear infinite';
         }, 50);
-    }, 5000);
+    }, 8000);
 }
 
 // Expor funcao globalmente
