@@ -178,5 +178,14 @@ service cloud.firestore {
     match /equipment/{document} {
       allow read, write: if isAdmin();
     }
+
+    // ===========================
+    // PORTFOLIO (Projetos Públicos)
+    // Admins escrevem, público lê
+    // ===========================
+    match /portfolio/{document} {
+      allow read: if true;  // Público pode ler (homepage e /projetos)
+      allow write: if isAdmin();  // Só admin pode criar/editar/deletar
+    }
   }
 }
