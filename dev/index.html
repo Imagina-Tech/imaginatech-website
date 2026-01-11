@@ -190,7 +190,25 @@
         ]
     }
     </script>
-    
+
+    <!-- Schema.org - WebSite with SearchAction (Google Sitelinks) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ImaginaTech",
+        "url": "https://imaginatech.com.br",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://imaginatech.com.br/acompanhar-pedido/?codigo={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
     <!-- Domain Verification -->
     <meta name="facebook-domain-verification" content="2k032skuiidqnp9sdwv6t2q25fhgl7" />
     
@@ -1232,6 +1250,60 @@
             color: #00D4FF;
         }
 
+        /* ========== LOGO DINAMICO NO CARROSSEL ========== */
+        .client-logo-dynamic {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            padding: 10px !important;
+        }
+
+        .client-logo-dynamic:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(0, 212, 255, 0.3) !important;
+        }
+
+        .client-logo-img {
+            max-width: 140px;
+            max-height: 60px;
+            object-fit: contain;
+            filter: brightness(0.9);
+            transition: all 0.4s ease;
+        }
+
+        .client-logo-dynamic:hover .client-logo-img {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        /* ========== LOGO OVERLAY NO PORTFOLIO ========== */
+        .portfolio-logo-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .portfolio-card:hover .portfolio-logo-overlay {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .portfolio-logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
         /* Stats Grid */
         .stats-grid {
             display: flex;
@@ -2097,7 +2169,7 @@
             </div>
         </div>
 
-        <a href="../servicos" class="btn-ver-mais">
+        <a href="../projetos/" class="btn-ver-mais">
             <i class="fas fa-th-large"></i> Ver Todos os Projetos
         </a>
     </section>
@@ -2263,6 +2335,13 @@
             }
         });
     </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Configuracoes de Ambiente -->
+    <script src="../js/env-config.js"></script>
 
     <!-- External JavaScript -->
     <script src="script.js"></script>

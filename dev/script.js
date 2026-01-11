@@ -331,3 +331,185 @@ function preloadImages() {
     });
 }
 preloadImages();
+
+// ============================================
+// PORTFOLIO DINAMICO - Firebase Integration
+// ============================================
+
+// Inicializar Firebase para pagina publica
+let db = null;
+
+function initializeFirebasePublic() {
+    if (typeof firebase === 'undefined' || !window.ENV_CONFIG) {
+        console.warn('Firebase SDK ou ENV_CONFIG nao carregado');
+        return false;
+    }
+
+    // Verificar se ja foi inicializado
+    if (firebase.apps.length === 0) {
+        const firebaseConfig = {
+            apiKey: window.ENV_CONFIG.FIREBASE_API_KEY,
+            authDomain: window.ENV_CONFIG.FIREBASE_AUTH_DOMAIN,
+            projectId: window.ENV_CONFIG.FIREBASE_PROJECT_ID,
+            storageBucket: window.ENV_CONFIG.FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.ENV_CONFIG.FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.ENV_CONFIG.FIREBASE_APP_ID
+        };
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    db = firebase.firestore();
+    return true;
+}
+
+// Carregar itens do carrossel (logos de clientes)
+async function loadCarouselItems() {
+    if (!db) return;
+
+    try {
+        const snapshot = await db.collection('portfolio')
+            .where('destination', '==', 'carrossel')
+            .where('active', '==', true)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        if (snapshot.empty) {
+            console.log('Nenhum item no carrossel - mantendo estaticos');
+            return;
+        }
+
+        const items = [];
+        snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Duplicar itens para efeito infinito (minimo 8 itens)
+        let carouselItems = [...items];
+        while (carouselItems.length < 8) {
+            carouselItems = [...carouselItems, ...items];
+        }
+
+        // Atualizar DOM do carrossel
+        const clientsTrack = document.querySelector('.clients-track');
+        if (clientsTrack) {
+            clientsTrack.innerHTML = carouselItems.map(item => createCarouselCard(item)).join('');
+        }
+
+        console.log(`Carrossel atualizado com ${items.length} item(s) do portfolio`);
+    } catch (error) {
+        console.error('Erro ao carregar carrossel:', error);
+    }
+}
+
+// Criar card do carrossel
+function createCarouselCard(item) {
+    // Se tem logo, mostrar logo. Senao, mostrar nome do cliente/titulo
+    if (item.logo && item.logo.url) {
+        return `
+            <div class="client-logo client-logo-dynamic">
+                <img src="${item.logo.url}" alt="${item.title}" class="client-logo-img">
+            </div>
+        `;
+    } else {
+        return `
+            <div class="client-logo">
+                <span class="client-name">${item.title}</span>
+            </div>
+        `;
+    }
+}
+
+// Carregar grid de portfolio (projetos anteriores)
+async function loadPortfolioGrid() {
+    if (!db) return;
+
+    try {
+        const snapshot = await db.collection('portfolio')
+            .where('destination', '==', 'projetos')
+            .where('active', '==', true)
+            .orderBy('createdAt', 'desc')
+            .limit(6)
+            .get();
+
+        if (snapshot.empty) {
+            console.log('Nenhum projeto no portfolio - mantendo estaticos');
+            return;
+        }
+
+        const items = [];
+        snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Atualizar DOM do portfolio
+        const portfolioGrid = document.querySelector('.portfolio-grid');
+        if (portfolioGrid) {
+            portfolioGrid.innerHTML = items.map((item, index) => createPortfolioCard(item, index)).join('');
+
+            // Reinicializar AOS para novos elementos
+            if (typeof AOS !== 'undefined') {
+                AOS.refresh();
+            }
+        }
+
+        console.log(`Portfolio atualizado com ${items.length} projeto(s)`);
+    } catch (error) {
+        console.error('Erro ao carregar portfolio:', error);
+    }
+}
+
+// Criar card do portfolio
+function createPortfolioCard(item, index) {
+    const delay = (index % 3) * 100; // Delay escalonado para animacao
+
+    // Mapear categoria para display bonito
+    const categoryMap = {
+        'industrial': 'Peça Industrial',
+        'personalizado': 'Personalizado',
+        'prototipagem': 'Prototipagem',
+        'reposicao': 'Reposição',
+        'decorativo': 'Decorativo',
+        'tecnico': 'Técnico'
+    };
+
+    const categoryDisplay = categoryMap[item.category] || item.category || 'Projeto';
+
+    // Logo overlay se disponivel
+    const logoOverlay = item.logo && item.logo.url ? `
+        <div class="portfolio-logo-overlay">
+            <img src="${item.logo.url}" alt="Logo" class="portfolio-logo-img">
+        </div>
+    ` : '';
+
+    return `
+        <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}">
+            <div class="portfolio-image">
+                <img src="${item.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">${categoryDisplay}</span>
+                </div>
+                ${logoOverlay}
+            </div>
+            <div class="portfolio-info">
+                <h3>${item.title}</h3>
+                <div class="portfolio-specs">
+                    <span class="spec-badge"><i class="fas fa-cube"></i> ${item.material || 'PLA'}</span>
+                    <span class="spec-badge"><i class="fas fa-palette"></i> ${item.color || 'Variado'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Inicializar carregamento dinamico quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', async () => {
+    // Aguardar um momento para garantir que Firebase SDK carregou
+    setTimeout(async () => {
+        if (initializeFirebasePublic()) {
+            await Promise.all([
+                loadCarouselItems(),
+                loadPortfolioGrid()
+            ]);
+        }
+    }, 100);
+});
