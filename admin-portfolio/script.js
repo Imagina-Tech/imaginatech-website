@@ -505,6 +505,7 @@ function openAddModal() {
     document.getElementById('editPhotoPreview').style.display = 'none';
     document.getElementById('editPhotoPlaceholder').style.display = 'flex';
     document.getElementById('editPhotoImg').src = '';
+    document.getElementById('editPhotoPreview').dataset.galleryUrl = '';
     newPhotoFile = null;
 
     // Reset logo
@@ -639,6 +640,9 @@ function openEditModal(itemId) {
     const photoPlaceholder = document.getElementById('editPhotoPlaceholder');
     const photoUrl = editingItem.mainPhoto?.url || editingItem.imageUrl;
 
+    // Reset gallery URL
+    photoPreview.dataset.galleryUrl = '';
+
     if (photoUrl) {
         document.getElementById('editPhotoImg').src = photoUrl;
         photoPreview.style.display = 'block';
@@ -753,6 +757,7 @@ function removePhoto() {
     document.getElementById('editPhotoPreview').style.display = 'none';
     document.getElementById('editPhotoPlaceholder').style.display = 'flex';
     document.getElementById('editPhotoImg').src = '';
+    document.getElementById('editPhotoPreview').dataset.galleryUrl = '';
 }
 
 // Logo handling
@@ -991,8 +996,14 @@ async function saveItem() {
             saveData.active = true;
         }
 
-        // Handle photo - herdar do servico ou fazer upload
-        if (inheritPhoto && selectedServicePhoto) {
+        // Handle photo - galeria, herdar do servico ou fazer upload
+        const galleryUrl = document.getElementById('editPhotoPreview')?.dataset?.galleryUrl;
+
+        if (galleryUrl && !newPhotoFile) {
+            // Usar foto da galeria (URL ja existente)
+            saveData.mainPhoto = { url: galleryUrl, fromGallery: true };
+            saveData.imageUrl = galleryUrl;
+        } else if (inheritPhoto && selectedServicePhoto) {
             // Usar foto do servico (apenas referencia a URL, nao copia o arquivo)
             saveData.mainPhoto = { url: selectedServicePhoto, inherited: true };
             saveData.imageUrl = selectedServicePhoto;
@@ -1080,6 +1091,12 @@ async function saveItem() {
                     currentExtraPhotos.push({ url, path });
                 }
             }
+
+            // Adicionar fotos extras da galeria (URLs ja existentes)
+            const galleryExtraUrls = getGalleryExtraPhotosUrls();
+            galleryExtraUrls.forEach(url => {
+                currentExtraPhotos.push({ url, fromGallery: true });
+            });
 
             saveData.extraPhotos = currentExtraPhotos.length > 0 ? currentExtraPhotos : null;
         }
@@ -1223,6 +1240,272 @@ function showToast(message, type = 'success') {
 }
 
 // ==========================================
+// GALLERY MODAL - Fotos do Banco de Dados
+// ==========================================
+
+let galleryPhotos = []; // Todas as fotos carregadas
+let selectedGalleryPhotos = []; // Fotos selecionadas
+let galleryMode = 'main'; // 'main' ou 'extra'
+let gallerySearchTerm = '';
+
+// Abrir modal da galeria
+async function openGalleryModal(mode = 'main') {
+    galleryMode = mode;
+    selectedGalleryPhotos = [];
+    gallerySearchTerm = '';
+
+    // Reset UI
+    document.getElementById('gallerySearch').value = '';
+    document.getElementById('selectedPhotosCount').textContent = '0';
+    document.getElementById('btnAddSelectedPhotos').disabled = true;
+
+    // Mostrar modal
+    document.getElementById('galleryModal').classList.add('active');
+
+    // Carregar fotos
+    await loadGalleryPhotos();
+}
+
+// Fechar modal da galeria
+function closeGalleryModal() {
+    document.getElementById('galleryModal').classList.remove('active');
+    selectedGalleryPhotos = [];
+}
+
+// Carregar todas as fotos dos servicos
+async function loadGalleryPhotos() {
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = `
+        <div class="gallery-loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando fotos dos servicos...</p>
+        </div>
+    `;
+
+    try {
+        // Buscar todos os servicos com fotos
+        const snapshot = await db.collection('services')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        galleryPhotos = [];
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const serviceName = data.name || 'Servico sem nome';
+            const client = data.client || '';
+            const displayName = client ? `${serviceName} - ${client}` : serviceName;
+
+            // Foto principal
+            if (data.mainImage) {
+                galleryPhotos.push({
+                    url: data.mainImage,
+                    serviceName: displayName,
+                    serviceId: doc.id,
+                    type: 'main'
+                });
+            }
+
+            // Fotos adicionais
+            if (data.photos && Array.isArray(data.photos)) {
+                data.photos.forEach((photo, index) => {
+                    if (photo?.url) {
+                        galleryPhotos.push({
+                            url: photo.url,
+                            serviceName: displayName,
+                            serviceId: doc.id,
+                            type: 'extra',
+                            index: index
+                        });
+                    }
+                });
+            }
+        });
+
+        console.log(`Carregadas ${galleryPhotos.length} fotos da galeria`);
+        renderGalleryPhotos();
+
+    } catch (error) {
+        console.error('Erro ao carregar galeria:', error);
+        grid.innerHTML = `
+            <div class="gallery-empty">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Erro ao carregar fotos</p>
+            </div>
+        `;
+    }
+}
+
+// Renderizar fotos na galeria
+function renderGalleryPhotos() {
+    const grid = document.getElementById('galleryGrid');
+
+    // Filtrar por busca
+    let filtered = galleryPhotos;
+    if (gallerySearchTerm) {
+        filtered = galleryPhotos.filter(p =>
+            p.serviceName.toLowerCase().includes(gallerySearchTerm.toLowerCase())
+        );
+    }
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="gallery-empty">
+                <i class="fas fa-images"></i>
+                <p>Nenhuma foto encontrada</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Renderizar fotos
+    grid.innerHTML = filtered.map((photo, index) => `
+        <div class="gallery-photo-item ${selectedGalleryPhotos.includes(photo.url) ? 'selected' : ''}"
+             data-url="${photo.url}"
+             data-index="${index}"
+             onclick="toggleGalleryPhotoSelection('${photo.url}')">
+            <img src="${photo.url}" alt="${photo.serviceName}" loading="lazy">
+            <div class="photo-service-name">${photo.serviceName}</div>
+        </div>
+    `).join('');
+}
+
+// Filtrar fotos por busca
+function filterGalleryPhotos() {
+    gallerySearchTerm = document.getElementById('gallerySearch').value.trim();
+    renderGalleryPhotos();
+}
+
+// Toggle selecao de foto
+function toggleGalleryPhotoSelection(url) {
+    const index = selectedGalleryPhotos.indexOf(url);
+
+    if (index === -1) {
+        // Se for modo 'main' (foto principal), so permite 1 selecao
+        if (galleryMode === 'main') {
+            selectedGalleryPhotos = [url];
+        } else {
+            // Modo extra - permite multiplas (max 5)
+            if (selectedGalleryPhotos.length >= 5) {
+                showToast('Maximo de 5 fotos por vez', 'warning');
+                return;
+            }
+            selectedGalleryPhotos.push(url);
+        }
+    } else {
+        selectedGalleryPhotos.splice(index, 1);
+    }
+
+    // Atualizar UI
+    updateGallerySelectionUI();
+}
+
+// Atualizar UI de selecao
+function updateGallerySelectionUI() {
+    // Atualizar contador
+    document.getElementById('selectedPhotosCount').textContent = selectedGalleryPhotos.length;
+
+    // Atualizar botao
+    document.getElementById('btnAddSelectedPhotos').disabled = selectedGalleryPhotos.length === 0;
+
+    // Atualizar visual dos itens
+    document.querySelectorAll('.gallery-photo-item').forEach(item => {
+        const url = item.dataset.url;
+        if (selectedGalleryPhotos.includes(url)) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+// Adicionar fotos selecionadas
+function addSelectedPhotosFromGallery() {
+    if (selectedGalleryPhotos.length === 0) {
+        showToast('Selecione pelo menos uma foto', 'warning');
+        return;
+    }
+
+    if (galleryMode === 'main') {
+        // Adicionar como foto principal
+        const url = selectedGalleryPhotos[0];
+        addPhotoFromGalleryAsMain(url);
+    } else {
+        // Adicionar como fotos extras
+        selectedGalleryPhotos.forEach(url => {
+            addPhotoFromGalleryAsExtra(url);
+        });
+    }
+
+    closeGalleryModal();
+    showToast(`${selectedGalleryPhotos.length} foto(s) adicionada(s)`, 'success');
+}
+
+// Adicionar foto da galeria como principal
+function addPhotoFromGalleryAsMain(url) {
+    // Marcar que estamos usando foto da galeria (URL externa)
+    newPhotoFile = null; // Limpar arquivo selecionado
+
+    // Mostrar preview
+    document.getElementById('editPhotoImg').src = url;
+    document.getElementById('editPhotoPreview').style.display = 'block';
+    document.getElementById('editPhotoPlaceholder').style.display = 'none';
+
+    // Guardar a URL para salvar depois
+    document.getElementById('editPhotoPreview').dataset.galleryUrl = url;
+}
+
+// Adicionar foto da galeria como extra
+function addPhotoFromGalleryAsExtra(url) {
+    const grid = document.getElementById('editExtraPhotosGrid');
+    if (!grid) return;
+
+    // Verificar limite
+    const existingCount = grid.querySelectorAll('.extra-photo-item.existing:not(.to-delete)').length;
+    const fromGalleryCount = grid.querySelectorAll('.extra-photo-item.from-gallery').length;
+    const newCount = newExtraPhotosFiles.filter(f => f !== null).length;
+
+    if (existingCount + fromGalleryCount + newCount >= 5) {
+        showToast('Maximo de 5 fotos extras', 'warning');
+        return;
+    }
+
+    // Criar item da galeria
+    const item = document.createElement('div');
+    item.className = 'extra-photo-item from-gallery';
+    item.dataset.url = url;
+    item.innerHTML = `
+        <img src="${url}" alt="Foto da galeria">
+        <button type="button" class="btn-remove-extra" onclick="event.stopPropagation(); removeGalleryExtraPhoto(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    grid.appendChild(item);
+}
+
+// Remover foto extra da galeria
+function removeGalleryExtraPhoto(button) {
+    const item = button.closest('.extra-photo-item');
+    if (item) {
+        item.remove();
+    }
+}
+
+// Obter URLs das fotos extras da galeria
+function getGalleryExtraPhotosUrls() {
+    const grid = document.getElementById('editExtraPhotosGrid');
+    if (!grid) return [];
+
+    const urls = [];
+    grid.querySelectorAll('.extra-photo-item.from-gallery').forEach(item => {
+        const url = item.dataset.url;
+        if (url) urls.push(url);
+    });
+    return urls;
+}
+
+// ==========================================
 // EXPOSE GLOBAL FUNCTIONS
 // ==========================================
 
@@ -1248,3 +1531,10 @@ window.addExtraPhotoSlotAdmin = addExtraPhotoSlotAdmin;
 window.handleExtraPhotoSelectAdmin = handleExtraPhotoSelectAdmin;
 window.removeNewExtraPhoto = removeNewExtraPhoto;
 window.removeExistingExtraPhoto = removeExistingExtraPhoto;
+// Gallery
+window.openGalleryModal = openGalleryModal;
+window.closeGalleryModal = closeGalleryModal;
+window.filterGalleryPhotos = filterGalleryPhotos;
+window.toggleGalleryPhotoSelection = toggleGalleryPhotoSelection;
+window.addSelectedPhotosFromGallery = addSelectedPhotosFromGallery;
+window.removeGalleryExtraPhoto = removeGalleryExtraPhoto;

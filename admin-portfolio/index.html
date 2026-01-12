@@ -262,24 +262,30 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     <!-- Photo -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-camera"></i> Foto Principal</label>
-                        <div class="image-upload-box" id="editPhotoArea">
-                            <input type="file" id="editPhoto" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;">
-                            <div class="upload-placeholder" id="editPhotoPlaceholder">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <span class="upload-text">Arraste uma imagem ou clique para selecionar</span>
-                                <span class="upload-hint">Tamanho recomendado: 1200x800px</span>
-                                <div class="upload-formats">
-                                    <span class="format-badge">JPG</span>
-                                    <span class="format-badge">PNG</span>
-                                    <span class="format-badge">WebP</span>
+                        <div class="photo-upload-wrapper">
+                            <div class="image-upload-box" id="editPhotoArea">
+                                <input type="file" id="editPhoto" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;">
+                                <div class="upload-placeholder" id="editPhotoPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span class="upload-text">Arraste uma imagem ou clique para selecionar</span>
+                                    <span class="upload-hint">Tamanho recomendado: 1200x800px</span>
+                                    <div class="upload-formats">
+                                        <span class="format-badge">JPG</span>
+                                        <span class="format-badge">PNG</span>
+                                        <span class="format-badge">WebP</span>
+                                    </div>
+                                </div>
+                                <div class="image-preview" id="editPhotoPreview" style="display: none;">
+                                    <img id="editPhotoImg" src="" alt="Preview">
+                                    <button type="button" class="btn-remove-img" onclick="event.stopPropagation(); removePhoto()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="image-preview" id="editPhotoPreview" style="display: none;">
-                                <img id="editPhotoImg" src="" alt="Preview">
-                                <button type="button" class="btn-remove-img" onclick="event.stopPropagation(); removePhoto()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                            <button type="button" class="btn-open-gallery" onclick="openGalleryModal('main')">
+                                <i class="fas fa-images"></i>
+                                <span>Escolher do Banco</span>
+                            </button>
                         </div>
                     </div>
 
@@ -290,9 +296,14 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                         <div class="extra-photos-grid" id="editExtraPhotosGrid">
                             <!-- Fotos extras existentes e novos slots serao inseridos aqui -->
                         </div>
-                        <button type="button" class="btn-add-extra-photo" onclick="addExtraPhotoSlotAdmin()">
-                            <i class="fas fa-plus"></i> Adicionar Foto
-                        </button>
+                        <div class="extra-photos-actions">
+                            <button type="button" class="btn-add-extra-photo" onclick="addExtraPhotoSlotAdmin()">
+                                <i class="fas fa-plus"></i> Adicionar Foto
+                            </button>
+                            <button type="button" class="btn-open-gallery-extra" onclick="openGalleryModal('extra')">
+                                <i class="fas fa-photo-video"></i> Escolher do Banco
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Title -->
@@ -426,6 +437,43 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                 </button>
                 <button type="button" class="btn-danger" onclick="confirmDelete()">
                     <i class="fas fa-trash"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal - Fotos do Banco de Dados -->
+    <div class="modal" id="galleryModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-photo-video"></i> Galeria de Fotos</h2>
+                <button class="modal-close" onclick="closeGalleryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="gallery-toolbar">
+                    <div class="gallery-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="gallerySearch" placeholder="Buscar por nome do servico..." oninput="filterGalleryPhotos()">
+                    </div>
+                    <div class="gallery-selection-info" id="gallerySelectionInfo">
+                        <span id="selectedPhotosCount">0</span> foto(s) selecionada(s)
+                    </div>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <div class="gallery-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando fotos...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeGalleryModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-primary" id="btnAddSelectedPhotos" onclick="addSelectedPhotosFromGallery()" disabled>
+                    <i class="fas fa-plus"></i> Adicionar Selecionadas
                 </button>
             </div>
         </div>
