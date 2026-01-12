@@ -374,7 +374,7 @@ body {
 
 .projeto-image {
     position: relative;
-    height: 250px;
+    height: 280px;
     overflow: hidden;
 }
 
@@ -386,7 +386,7 @@ body {
 }
 
 .projeto-card:hover .projeto-image img {
-    transform: scale(1.15);
+    transform: scale(1.1);
     filter: brightness(1.1);
 }
 
@@ -395,8 +395,9 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 15px;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 10px 15px;
+    background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    pointer-events: none;
 }
 
 .projeto-category {
@@ -894,7 +895,7 @@ footer p {
     }
 
     .projeto-image {
-        height: 220px;
+        height: 240px;
     }
 }
 
