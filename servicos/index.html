@@ -819,18 +819,16 @@
                     <div class="form-group full-width" id="upExtraPhotosGroup" style="display: none;">
                         <label><i class="fas fa-images"></i> Fotos Adicionais (opcional)</label>
                         <small class="form-hint">Adicione mais fotos para criar uma galeria navegavel (max 5)</small>
-                        <div class="extra-photos-drop-area" id="upExtraPhotosDropArea">
+                        <input type="file" id="upExtraPhotosInput" accept="image/jpeg,image/jpg,image/png,image/webp" multiple style="display: none;">
+                        <div class="extra-photos-drop-area" id="upExtraPhotosDropArea" onclick="document.getElementById('upExtraPhotosInput').click()">
                             <div class="extra-photos-container" id="upExtraPhotosContainer">
                                 <!-- Fotos adicionais serao inseridas aqui -->
                             </div>
                             <div class="extra-photos-drop-hint" id="upExtraPhotosDropHint">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Arraste fotos aqui ou clique em adicionar</span>
+                                <span>Arraste fotos aqui ou clique para adicionar</span>
                             </div>
                         </div>
-                        <button type="button" class="btn-add-photo" id="btnAddExtraPhoto" onclick="window.addExtraPhotoSlot()">
-                            <i class="fas fa-plus"></i> Adicionar Foto
-                        </button>
                     </div>
 
                     <!-- Titulo -->

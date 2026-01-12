@@ -2456,6 +2456,17 @@ export function setupUpModalDragDrop() {
         extraPhotosArea.addEventListener('dragleave', handleExtraPhotosDragLeave, false);
         extraPhotosArea.addEventListener('drop', handleExtraPhotosDrop, false);
     }
+
+    // Input file para clique na area de extra photos
+    const extraPhotosInput = document.getElementById('upExtraPhotosInput');
+    if (extraPhotosInput) {
+        extraPhotosInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processDroppedExtraPhotos(e.target.files);
+                e.target.value = ''; // Reset para permitir selecionar mesmos arquivos novamente
+            }
+        });
+    }
 }
 
 function preventUpDefaults(e) {

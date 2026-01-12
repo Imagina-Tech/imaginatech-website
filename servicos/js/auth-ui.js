@@ -33,8 +33,6 @@ import {
     saveToPortfolio,
     setupUpModalDragDrop,
     // Extra Photos (Galeria)
-    addExtraPhotoSlot,
-    handleExtraPhotoSelect,
     removeExtraPhoto
 } from './services.js';
 
@@ -2355,9 +2353,7 @@ window.removeUpPhoto = removeUpPhoto;
 window.handleUpLogoSelect = handleUpLogoSelect;
 window.removeUpLogo = removeUpLogo;
 window.saveToPortfolio = saveToPortfolio;
-// Extra Photos (Galeria)
-window.addExtraPhotoSlot = addExtraPhotoSlot;
-window.handleExtraPhotoSelect = handleExtraPhotoSelect;
+// Extra Photos (Galeria) - removeExtraPhoto ainda usado nos slots individuais
 window.removeExtraPhoto = removeExtraPhoto;
 
 // ===========================

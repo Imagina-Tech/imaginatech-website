@@ -3668,27 +3668,6 @@ input[type="file"]::file-selector-button {
     color: white;
 }
 
-.btn-add-photo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    background: rgba(0, 212, 255, 0.1);
-    border: 1px dashed var(--neon-cyan);
-    border-radius: 6px;
-    color: var(--neon-cyan);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-}
-
-.btn-add-photo:hover {
-    background: rgba(0, 212, 255, 0.2);
-    border-style: solid;
-}
-
 /* Area de drop para fotos extras */
 .extra-photos-drop-area {
     border: 2px dashed var(--glass-border);
@@ -3697,6 +3676,12 @@ input[type="file"]::file-selector-button {
     min-height: 120px;
     transition: all 0.3s ease;
     position: relative;
+    cursor: pointer;
+}
+
+.extra-photos-drop-area:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 212, 255, 0.05);
 }
 
 .extra-photos-drop-area.drag-over {
