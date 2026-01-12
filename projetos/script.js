@@ -174,33 +174,10 @@ function renderProjects(projects) {
     emptyState.style.display = 'none';
     grid.innerHTML = projects.map((project, index) => createProjectCard(project, index)).join('');
 
-    // Adicionar handler de load nas imagens para fade-in
-    initImageLoading();
-
     // Refresh AOS for new elements
     if (typeof AOS !== 'undefined') {
         AOS.refresh();
     }
-}
-
-// ============================================
-// IMAGE LOADING - Previne layout shift
-// ============================================
-
-function initImageLoading() {
-    const images = document.querySelectorAll('.projeto-image img');
-    images.forEach(img => {
-        if (img.complete) {
-            img.classList.add('loaded');
-        } else {
-            img.addEventListener('load', () => {
-                img.classList.add('loaded');
-            });
-            img.addEventListener('error', () => {
-                img.classList.add('loaded'); // Mostra mesmo se falhar
-            });
-        }
-    });
 }
 
 // ============================================
