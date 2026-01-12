@@ -128,7 +128,9 @@ async function loadProjects() {
     const emptyState = document.getElementById('empty-state');
 
     try {
+        // Carregar apenas projetos com destino "projetos" (nao carrossel)
         const snapshot = await db.collection('portfolio')
+            .where('destination', '==', 'projetos')
             .where('active', '==', true)
             .orderBy('createdAt', 'desc')
             .get();
