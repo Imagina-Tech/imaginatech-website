@@ -496,6 +496,8 @@ function openAddModal() {
     document.getElementById('editDescription').value = '';
     document.getElementById('editDestination').value = '';
     document.getElementById('editCategory').value = '';
+    document.getElementById('editMaterial').value = '';
+    document.getElementById('editColor').value = '';
     document.getElementById('editIsNew').checked = true; // Novo por padrao
     document.getElementById('editShowOnLanding').checked = false;
 
@@ -608,6 +610,8 @@ function openEditModal(itemId) {
     document.getElementById('editDescription').value = editingItem.description || '';
     document.getElementById('editDestination').value = editingItem.destination || '';
     document.getElementById('editCategory').value = editingItem.category || '';
+    document.getElementById('editMaterial').value = editingItem.material || '';
+    document.getElementById('editColor').value = editingItem.color || '';
     document.getElementById('editIsNew').checked = editingItem.isNew || false;
     document.getElementById('editShowOnLanding').checked = editingItem.showOnLanding || false;
 
@@ -695,17 +699,23 @@ function toggleCategory() {
     const extraPhotosGroup = document.getElementById('editExtraPhotosGroup');
     const showOnLandingGroup = document.getElementById('editShowOnLandingGroup');
     const descriptionGroup = document.getElementById('editDescriptionGroup');
+    const materialGroup = document.getElementById('editMaterialGroup');
+    const colorGroup = document.getElementById('editColorGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'block';
         if (showOnLandingGroup) showOnLandingGroup.style.display = 'block';
         if (descriptionGroup) descriptionGroup.style.display = 'block';
+        if (materialGroup) materialGroup.style.display = 'block';
+        if (colorGroup) colorGroup.style.display = 'block';
     } else {
         categoryGroup.style.display = 'none';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'none';
         if (showOnLandingGroup) showOnLandingGroup.style.display = 'none';
         if (descriptionGroup) descriptionGroup.style.display = 'none';
+        if (materialGroup) materialGroup.style.display = 'none';
+        if (colorGroup) colorGroup.style.display = 'none';
     }
 }
 
@@ -912,6 +922,8 @@ async function saveItem() {
     const description = document.getElementById('editDescription')?.value.trim() || '';
     const destination = document.getElementById('editDestination').value;
     const category = document.getElementById('editCategory').value;
+    const material = document.getElementById('editMaterial')?.value.trim() || '';
+    const color = document.getElementById('editColor')?.value.trim() || '';
     const isNew = document.getElementById('editIsNew').checked;
     const showOnLanding = document.getElementById('editShowOnLanding').checked;
     const serviceId = document.getElementById('editServiceLink').value;
@@ -933,6 +945,16 @@ async function saveItem() {
         return;
     }
 
+    if (destination === 'projetos' && !material) {
+        showToast('Informe o material utilizado', 'error');
+        return;
+    }
+
+    if (destination === 'projetos' && !color) {
+        showToast('Informe a cor do projeto', 'error');
+        return;
+    }
+
     // Validar foto (obrigatoria para novos itens, exceto se herdando)
     if (isAddMode && !newPhotoFile && !inheritPhoto) {
         showToast('Selecione uma foto ou herde do servico', 'error');
@@ -950,6 +972,8 @@ async function saveItem() {
             description: destination === 'projetos' ? description : null,
             destination: destination,
             category: destination === 'projetos' ? category : null,
+            material: destination === 'projetos' ? material : null,
+            color: destination === 'projetos' ? color : null,
             isNew: isNew,
             showOnLanding: destination === 'projetos' ? showOnLanding : false,
             serviceId: serviceId || null,
