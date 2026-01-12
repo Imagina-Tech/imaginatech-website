@@ -618,20 +618,21 @@ body {
     box-shadow: 0 15px 40px rgba(37, 211, 102, 0.4);
 }
 
-/* ========== MODAL ========== */
+/* ========== VISUALIZACAO FULLSCREEN ========== */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     z-index: 10000;
     display: none;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    padding: 20px;
+    overflow: hidden;
 }
 
 .modal-overlay.active {
@@ -639,67 +640,55 @@ body {
 }
 
 .modal-content {
-    background: rgba(10, 14, 26, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 212, 255, 0.15);
-    border-radius: 20px;
-    max-width: 1100px;
-    width: 95%;
-    max-height: 90vh;
-    overflow: hidden;
+    background: transparent;
+    border: none;
+    width: 100%;
+    height: 100%;
     position: relative;
     animation: modalFadeIn 0.3s ease;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5),
-                0 0 40px rgba(0, 212, 255, 0.1);
 }
 
 @keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
     background: rgba(255, 255, 255, 0.1);
     border: none;
     border-radius: 50%;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     cursor: pointer;
     transition: all 0.3s;
-    z-index: 10;
+    z-index: 100;
 }
 
 .modal-close:hover {
-    background: rgba(255, 0, 85, 0.3);
-    color: #FF0055;
-    transform: rotate(90deg);
+    background: rgba(255, 0, 85, 0.4);
+    color: #fff;
+    transform: scale(1.1);
 }
 
-/* Layout lado a lado */
+/* Layout lado a lado fullscreen */
 .modal-layout {
     display: grid;
-    grid-template-columns: 1fr 380px;
-    min-height: 500px;
-    max-height: 85vh;
+    grid-template-columns: 1fr 420px;
+    height: 100vh;
+    width: 100%;
 }
 
 /* Lado esquerdo - Foto */
 .modal-left {
-    background: rgba(0, 0, 0, 0.3);
+    background: transparent;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .modal-image-container {
@@ -708,15 +697,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    min-height: 400px;
+    padding: 30px;
 }
 
 .modal-image-container img {
     max-width: 100%;
-    max-height: 60vh;
+    max-height: 75vh;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: 4px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* Botoes de navegacao */
@@ -724,17 +713,17 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
     border: none;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 1.5rem;
+    font-size: 2rem;
     cursor: pointer;
     z-index: 5;
     transition: all 0.3s ease;
-    padding: 12px;
+    padding: 15px;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -746,38 +735,37 @@ body {
     transform: translateY(-50%) scale(1.1);
 }
 
-.modal-prev { left: 15px; }
-.modal-next { right: 15px; }
+.modal-prev { left: 20px; }
+.modal-next { right: 20px; }
 
 /* Contador de fotos */
 .modal-photo-counter {
     position: absolute;
-    bottom: 25px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    padding: 6px 14px;
-    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 18px;
+    border-radius: 20px;
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 500;
 }
 
 /* Miniaturas */
 .modal-thumbnails {
     display: flex;
-    gap: 8px;
-    padding: 12px 20px;
+    gap: 10px;
+    padding: 15px 30px;
     overflow-x: auto;
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
     justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .modal-thumbnail {
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     border: 2px solid transparent;
@@ -793,7 +781,7 @@ body {
 .modal-thumbnail.active {
     border-color: #00D4FF;
     opacity: 1;
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
 }
 
 .modal-thumbnail img {
@@ -804,89 +792,144 @@ body {
 
 /* Lado direito - Informacoes */
 .modal-right {
-    background: rgba(0, 0, 0, 0.2);
-    border-left: 1px solid rgba(0, 212, 255, 0.1);
+    background: rgba(0, 0, 0, 0.4);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
     overflow-y: auto;
+    height: 100vh;
 }
 
 .modal-info {
-    padding: 30px 25px;
+    padding: 40px 30px;
+    padding-top: 80px;
 }
 
 .modal-info h3 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     color: #fff;
-    margin-bottom: 15px;
-    padding-right: 30px;
+    margin-bottom: 20px;
+    line-height: 1.3;
 }
 
 .modal-specs {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
+}
+
+.modal-specs .spec-badge {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.3);
+    padding: 8px 16px;
+    font-size: 0.85rem;
 }
 
 .modal-description-container {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
+    padding-top: 25px;
 }
 
 .modal-description-container h4 {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #00D4FF;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .modal-description-container h4 i {
-    font-size: 0.85rem;
+    font-size: 1rem;
 }
 
 .modal-description {
-    color: #b8c4ce;
-    font-size: 0.95rem;
-    line-height: 1.7;
+    color: #c5cdd5;
+    font-size: 1rem;
+    line-height: 1.8;
     margin: 0;
     white-space: pre-line;
 }
 
 /* Responsivo */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .modal-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: 55vh 1fr;
+        height: 100vh;
     }
 
     .modal-left {
-        max-height: 50vh;
+        height: auto;
     }
 
     .modal-image-container {
-        min-height: 250px;
-        padding: 15px;
-    }
-
-    .modal-image-container img {
-        max-height: 40vh;
-    }
-
-    .modal-right {
-        border-left: none;
-        border-top: 1px solid rgba(0, 212, 255, 0.15);
-        max-height: 40vh;
-    }
-
-    .modal-info {
         padding: 20px;
     }
 
+    .modal-image-container img {
+        max-height: 45vh;
+    }
+
+    .modal-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .modal-prev { left: 10px; }
+    .modal-next { right: 10px; }
+
+    .modal-right {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        height: auto;
+        max-height: 45vh;
+    }
+
+    .modal-info {
+        padding: 25px 20px;
+        padding-top: 25px;
+    }
+
     .modal-info h3 {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
+    }
+
+    .modal-close {
+        top: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-layout {
+        grid-template-rows: 50vh 1fr;
+    }
+
+    .modal-image-container {
+        padding: 15px;
+    }
+
+    .modal-thumbnails {
+        padding: 10px 15px;
+    }
+
+    .modal-thumbnail {
+        width: 55px;
+        height: 55px;
+    }
+
+    .modal-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-description {
+        font-size: 0.95rem;
     }
 }
 
