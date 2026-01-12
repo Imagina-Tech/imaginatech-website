@@ -1435,19 +1435,44 @@ function renderGalleryPhotos() {
         return;
     }
 
-    // Renderizar fotos com lazy loading
+    // Renderizar fotos com lazy loading (sem onclick inline para evitar problemas com URLs especiais)
     grid.innerHTML = filtered.map((photo, index) => `
         <div class="gallery-photo-item lazy ${selectedGalleryPhotos.includes(photo.url) ? 'selected' : ''}"
-             data-url="${photo.url}"
-             data-index="${index}"
-             onclick="toggleGalleryPhotoSelection('${photo.url}')">
+             data-url="${encodeURIComponent(photo.url)}"
+             data-index="${index}">
             <img data-src="${photo.url}" alt="${photo.serviceName}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="photo-service-name">${photo.serviceName}</div>
         </div>
     `).join('');
 
+    // Adicionar event listeners via delegation
+    setupGalleryClickHandlers();
+
     // Iniciar lazy loading com Intersection Observer
     setupLazyLoading();
+}
+
+// Configurar click handlers da galeria via event delegation
+function setupGalleryClickHandlers() {
+    const grid = document.getElementById('galleryGrid');
+
+    // Remover listener anterior se existir
+    grid.removeEventListener('click', handleGalleryClick);
+
+    // Adicionar novo listener
+    grid.addEventListener('click', handleGalleryClick);
+}
+
+// Handler de click na galeria
+function handleGalleryClick(e) {
+    const item = e.target.closest('.gallery-photo-item');
+    if (!item) return;
+
+    const encodedUrl = item.dataset.url;
+    if (!encodedUrl) return;
+
+    const url = decodeURIComponent(encodedUrl);
+    toggleGalleryPhotoSelection(url);
 }
 
 // Configurar Intersection Observer para lazy loading
@@ -1535,7 +1560,8 @@ function updateGallerySelectionUI() {
 
     // Atualizar visual dos itens
     document.querySelectorAll('.gallery-photo-item').forEach(item => {
-        const url = item.dataset.url;
+        const encodedUrl = item.dataset.url;
+        const url = encodedUrl ? decodeURIComponent(encodedUrl) : '';
         if (selectedGalleryPhotos.includes(url)) {
             item.classList.add('selected');
         } else {
