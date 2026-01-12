@@ -8,6 +8,9 @@ let currentUser = null;
 let portfolioItems = [];
 let currentFilter = 'todos';
 let currentSearch = '';
+let allServices = []; // Lista de servicos para o dropdown
+let isAddMode = false; // Modo de adicao vs edicao
+let selectedServicePhoto = null; // Foto do servico selecionado para herdar
 
 // Emails autorizados (carregados do ENV_CONFIG)
 function getAuthorizedEmails() {
@@ -142,6 +145,68 @@ function showDashboard() {
 
     // Setup event listeners
     setupEventListeners();
+
+    // Carregar lista de servicos para o dropdown
+    loadServicesForDropdown();
+}
+
+// ==========================================
+// LOAD SERVICES FOR DROPDOWN
+// ==========================================
+
+async function loadServicesForDropdown() {
+    try {
+        const snapshot = await db.collection('services')
+            .orderBy('createdAt', 'desc')
+            .limit(100)
+            .get();
+
+        allServices = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            allServices.push({
+                id: doc.id,
+                name: data.name || 'Sem nome',
+                client: data.client || '',
+                orderCode: data.orderCode || '',
+                mainImage: data.mainImage || null,
+                photos: data.photos || [],
+                createdAt: data.createdAt
+            });
+        });
+
+        console.log(`Carregados ${allServices.length} servicos para dropdown`);
+    } catch (error) {
+        console.error('Erro ao carregar servicos:', error);
+    }
+}
+
+function populateServicesDropdown(selectedServiceId = '') {
+    const select = document.getElementById('editServiceLink');
+    if (!select) return;
+
+    // Manter a primeira opcao
+    select.innerHTML = '<option value="">Nenhum - Item avulso</option>';
+
+    // Adicionar servicos
+    allServices.forEach(service => {
+        const displayName = service.orderCode
+            ? `[${service.orderCode}] ${service.name} - ${service.client}`
+            : `${service.name} - ${service.client}`;
+
+        const option = document.createElement('option');
+        option.value = service.id;
+        option.textContent = displayName;
+        if (service.id === selectedServiceId) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+
+    // Disparar evento para sincronizar CustomSelect
+    setTimeout(() => {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 50);
 }
 
 function setupEventListeners() {
@@ -327,7 +392,7 @@ function formatDate(timestamp) {
 }
 
 // ==========================================
-// EDIT MODAL
+// ADD/EDIT MODAL
 // ==========================================
 
 let editingItem = null;
@@ -337,12 +402,129 @@ let newExtraPhotosFiles = []; // Novas fotos extras a adicionar
 let extraPhotosToDelete = []; // URLs das fotos extras a deletar
 let extraPhotoSlotCounterAdmin = 0;
 
+// ==========================================
+// OPEN ADD MODAL (novo item)
+// ==========================================
+
+function openAddModal() {
+    isAddMode = true;
+    editingItem = null;
+    selectedServicePhoto = null;
+
+    // Atualizar titulo do modal
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Novo Item';
+
+    // Limpar formulario
+    document.getElementById('editItemId').value = '';
+    document.getElementById('editTitle').value = '';
+    document.getElementById('editDescription').value = '';
+    document.getElementById('editDestination').value = '';
+    document.getElementById('editCategory').value = '';
+    document.getElementById('editIsNew').checked = true; // Novo por padrao
+    document.getElementById('editShowOnLanding').checked = false;
+
+    // Reset photo
+    document.getElementById('editPhotoPreview').style.display = 'none';
+    document.getElementById('editPhotoPlaceholder').style.display = 'flex';
+    document.getElementById('editPhotoImg').src = '';
+    newPhotoFile = null;
+
+    // Reset logo
+    document.getElementById('editLogoPreview').style.display = 'none';
+    document.getElementById('editLogoPlaceholder').style.display = 'flex';
+    document.getElementById('editLogoImg').src = '';
+    newLogoFile = null;
+
+    // Reset extra photos
+    newExtraPhotosFiles = [];
+    extraPhotosToDelete = [];
+    extraPhotoSlotCounterAdmin = 0;
+    document.getElementById('editExtraPhotosGrid').innerHTML = '';
+
+    // Hide category and extra options until destination is selected
+    toggleCategory();
+
+    // Populate and reset service dropdown
+    populateServicesDropdown('');
+    document.getElementById('inheritServicePhoto').checked = false;
+    document.getElementById('inheritPhotoSection').style.display = 'none';
+    document.getElementById('inheritPhotoPreview').style.display = 'none';
+
+    // Show modal
+    document.getElementById('editModal').classList.add('active');
+
+    // Sync custom selects
+    setTimeout(() => {
+        document.getElementById('editDestination').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
+    }, 50);
+}
+
+// ==========================================
+// SERVICE LINK HANDLERS
+// ==========================================
+
+function onServiceLinkChange() {
+    const serviceId = document.getElementById('editServiceLink').value;
+    const inheritSection = document.getElementById('inheritPhotoSection');
+    const inheritCheckbox = document.getElementById('inheritServicePhoto');
+    const inheritPreview = document.getElementById('inheritPhotoPreview');
+
+    if (!serviceId) {
+        // Nenhum servico selecionado
+        inheritSection.style.display = 'none';
+        inheritCheckbox.checked = false;
+        inheritPreview.style.display = 'none';
+        selectedServicePhoto = null;
+        return;
+    }
+
+    // Encontrar servico selecionado
+    const service = allServices.find(s => s.id === serviceId);
+    if (!service) return;
+
+    // Verificar se o servico tem foto
+    const servicePhotoUrl = service.mainImage || (service.photos && service.photos[0]?.url);
+
+    if (servicePhotoUrl) {
+        selectedServicePhoto = servicePhotoUrl;
+        document.getElementById('inheritPhotoImg').src = servicePhotoUrl;
+        inheritSection.style.display = 'block';
+    } else {
+        selectedServicePhoto = null;
+        inheritSection.style.display = 'none';
+        inheritCheckbox.checked = false;
+    }
+}
+
+function toggleInheritPhoto() {
+    const inheritCheckbox = document.getElementById('inheritServicePhoto');
+    const inheritPreview = document.getElementById('inheritPhotoPreview');
+    const photoArea = document.getElementById('editPhotoArea');
+
+    if (inheritCheckbox.checked && selectedServicePhoto) {
+        // Mostrar preview da foto herdada
+        inheritPreview.style.display = 'flex';
+        // Esconder area de upload manual
+        photoArea.style.opacity = '0.5';
+        photoArea.style.pointerEvents = 'none';
+    } else {
+        inheritPreview.style.display = 'none';
+        photoArea.style.opacity = '1';
+        photoArea.style.pointerEvents = 'auto';
+    }
+}
+
 function openEditModal(itemId) {
+    isAddMode = false;
     editingItem = portfolioItems.find(i => i.id === itemId);
     if (!editingItem) {
         showToast('Item nao encontrado', 'error');
         return;
     }
+
+    // Atualizar titulo do modal
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Item';
 
     // Fill form
     document.getElementById('editItemId').value = itemId;
@@ -356,14 +538,21 @@ function openEditModal(itemId) {
     // Show/hide category based on destination
     toggleCategory();
 
-    // Show service link info if linked
-    const linkInfo = document.getElementById('serviceLinkInfo');
-    if (editingItem.serviceId) {
-        linkInfo.style.display = 'block';
-        document.getElementById('linkedServiceName').textContent = editingItem.serviceName || editingItem.serviceId;
-    } else {
-        linkInfo.style.display = 'none';
-    }
+    // Populate service dropdown and select current service if linked
+    populateServicesDropdown(editingItem.serviceId || '');
+
+    // Reset inherit photo section
+    selectedServicePhoto = null;
+    document.getElementById('inheritServicePhoto').checked = false;
+    document.getElementById('inheritPhotoSection').style.display = 'none';
+    document.getElementById('inheritPhotoPreview').style.display = 'none';
+    document.getElementById('editPhotoArea').style.opacity = '1';
+    document.getElementById('editPhotoArea').style.pointerEvents = 'auto';
+
+    // Trigger service link change to show inherit option if applicable
+    setTimeout(() => {
+        onServiceLinkChange();
+    }, 100);
 
     // Photo preview
     const photoPreview = document.getElementById('editPhotoPreview');
@@ -649,6 +838,8 @@ async function saveItem() {
     const category = document.getElementById('editCategory').value;
     const isNew = document.getElementById('editIsNew').checked;
     const showOnLanding = document.getElementById('editShowOnLanding').checked;
+    const serviceId = document.getElementById('editServiceLink').value;
+    const inheritPhoto = document.getElementById('inheritServicePhoto').checked;
 
     // Validation
     if (!title) {
@@ -666,23 +857,48 @@ async function saveItem() {
         return;
     }
 
+    // Validar foto (obrigatoria para novos itens, exceto se herdando)
+    if (isAddMode && !newPhotoFile && !inheritPhoto) {
+        showToast('Selecione uma foto ou herde do servico', 'error');
+        return;
+    }
+
     showLoading('Salvando...');
 
     try {
-        const updateData = {
+        // Encontrar servico vinculado para nome
+        const linkedService = serviceId ? allServices.find(s => s.id === serviceId) : null;
+
+        const saveData = {
             title: title,
             description: destination === 'projetos' ? description : null,
             destination: destination,
             category: destination === 'projetos' ? category : null,
             isNew: isNew,
             showOnLanding: destination === 'projetos' ? showOnLanding : false,
+            serviceId: serviceId || null,
+            serviceName: linkedService ? `${linkedService.name} - ${linkedService.client}` : null,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Upload new photo if changed
-        if (newPhotoFile && newPhotoFile !== 'remove') {
-            // Delete old photo if exists
-            if (editingItem.mainPhoto?.path) {
+        // Determinar o ID do documento (novo ou existente)
+        let docId = itemId;
+        if (isAddMode) {
+            // Criar novo documento
+            const docRef = await db.collection('portfolio').doc();
+            docId = docRef.id;
+            saveData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            saveData.active = true;
+        }
+
+        // Handle photo - herdar do servico ou fazer upload
+        if (inheritPhoto && selectedServicePhoto) {
+            // Usar foto do servico (apenas referencia a URL, nao copia o arquivo)
+            saveData.mainPhoto = { url: selectedServicePhoto, inherited: true };
+            saveData.imageUrl = selectedServicePhoto;
+        } else if (newPhotoFile && newPhotoFile !== 'remove') {
+            // Delete old photo if exists (apenas no modo edicao)
+            if (!isAddMode && editingItem?.mainPhoto?.path) {
                 try {
                     await storage.ref(editingItem.mainPhoto.path).delete();
                 } catch (e) {
@@ -691,29 +907,29 @@ async function saveItem() {
             }
 
             // Upload new
-            const photoPath = `portfolio/${itemId}/photo_${Date.now()}`;
+            const photoPath = `portfolio/${docId}/photo_${Date.now()}`;
             const photoRef = storage.ref(photoPath);
             await photoRef.put(newPhotoFile);
             const photoUrl = await photoRef.getDownloadURL();
 
-            updateData.mainPhoto = { url: photoUrl, path: photoPath };
-            updateData.imageUrl = photoUrl; // Backward compatibility
+            saveData.mainPhoto = { url: photoUrl, path: photoPath };
+            saveData.imageUrl = photoUrl;
         }
 
         // Handle logo
         if (newLogoFile === 'remove') {
-            // Delete logo
-            if (editingItem.logo?.path) {
+            // Delete logo (apenas no modo edicao)
+            if (!isAddMode && editingItem?.logo?.path) {
                 try {
                     await storage.ref(editingItem.logo.path).delete();
                 } catch (e) {
                     console.warn('Erro ao deletar logo:', e);
                 }
             }
-            updateData.logo = null;
+            saveData.logo = null;
         } else if (newLogoFile) {
             // Upload new logo
-            if (editingItem.logo?.path) {
+            if (!isAddMode && editingItem?.logo?.path) {
                 try {
                     await storage.ref(editingItem.logo.path).delete();
                 } catch (e) {
@@ -721,19 +937,19 @@ async function saveItem() {
                 }
             }
 
-            const logoPath = `portfolio/${itemId}/logo_${Date.now()}`;
+            const logoPath = `portfolio/${docId}/logo_${Date.now()}`;
             const logoRef = storage.ref(logoPath);
             await logoRef.put(newLogoFile);
             const logoUrl = await logoRef.getDownloadURL();
 
-            updateData.logo = { url: logoUrl, path: logoPath };
+            saveData.logo = { url: logoUrl, path: logoPath };
         }
 
         // Handle extra photos (only for projetos)
         if (destination === 'projetos') {
             // Start with existing photos (filtering out deleted ones)
             let currentExtraPhotos = [];
-            if (editingItem.extraPhotos && Array.isArray(editingItem.extraPhotos)) {
+            if (!isAddMode && editingItem?.extraPhotos && Array.isArray(editingItem.extraPhotos)) {
                 const deletedUrls = extraPhotosToDelete.map(d => d.url);
                 currentExtraPhotos = editingItem.extraPhotos.filter(p => !deletedUrls.includes(p.url));
             }
@@ -757,7 +973,7 @@ async function saveItem() {
                     const file = newFiles[i];
                     const timestamp = Date.now();
                     const ext = file.name.split('.').pop();
-                    const path = `portfolio/${itemId}/extra_${timestamp}_${i}.${ext}`;
+                    const path = `portfolio/${docId}/extra_${timestamp}_${i}.${ext}`;
                     const ref = storage.ref(path);
                     await ref.put(file);
                     const url = await ref.getDownloadURL();
@@ -765,22 +981,28 @@ async function saveItem() {
                 }
             }
 
-            updateData.extraPhotos = currentExtraPhotos.length > 0 ? currentExtraPhotos : null;
+            saveData.extraPhotos = currentExtraPhotos.length > 0 ? currentExtraPhotos : null;
         }
 
         // Save to Firestore
-        await db.collection('portfolio').doc(itemId).update(updateData);
-
-        // Update local array
-        const index = portfolioItems.findIndex(i => i.id === itemId);
-        if (index !== -1) {
-            portfolioItems[index] = { ...portfolioItems[index], ...updateData };
+        if (isAddMode) {
+            // Criar novo documento
+            await db.collection('portfolio').doc(docId).set(saveData);
+            portfolioItems.unshift({ id: docId, ...saveData });
+            showToast('Item criado com sucesso!', 'success');
+        } else {
+            // Atualizar documento existente
+            await db.collection('portfolio').doc(docId).update(saveData);
+            const index = portfolioItems.findIndex(i => i.id === docId);
+            if (index !== -1) {
+                portfolioItems[index] = { ...portfolioItems[index], ...saveData };
+            }
+            showToast('Item atualizado com sucesso!', 'success');
         }
 
         closeEditModal();
         updateStats();
         renderPortfolioItems();
-        showToast('Item atualizado com sucesso', 'success');
 
     } catch (error) {
         console.error('Erro ao salvar:', error);
@@ -906,6 +1128,7 @@ function showToast(message, type = 'success') {
 
 window.signInWithGoogle = signInWithGoogle;
 window.signOut = signOut;
+window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
 window.toggleCategory = toggleCategory;
@@ -917,6 +1140,9 @@ window.saveItem = saveItem;
 window.openDeleteModal = openDeleteModal;
 window.closeDeleteModal = closeDeleteModal;
 window.confirmDelete = confirmDelete;
+// Service link
+window.onServiceLinkChange = onServiceLinkChange;
+window.toggleInheritPhoto = toggleInheritPhoto;
 // Extra photos
 window.addExtraPhotoSlotAdmin = addExtraPhotoSlotAdmin;
 window.handleExtraPhotoSelectAdmin = handleExtraPhotoSelectAdmin;

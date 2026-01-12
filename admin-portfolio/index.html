@@ -198,12 +198,16 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     </button>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search Bar & Add Button -->
                 <div class="portfolio-filters">
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Buscar por titulo...">
                     </div>
+                    <button class="btn-add-new" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i>
+                        <span>Novo Item</span>
+                    </button>
                 </div>
 
                 <!-- Portfolio Grid -->
@@ -225,16 +229,33 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
     <div class="modal" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-edit"></i> Editar Item</h2>
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> Novo Item</h2>
                 <button class="modal-close" onclick="closeEditModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Service Info -->
-                <div class="service-link-badge" id="serviceLinkInfo" style="display: none;">
-                    <i class="fas fa-link"></i>
-                    <span>Vinculado ao servico: <strong id="linkedServiceName"></strong></span>
+                <!-- Service Link Dropdown (opcional) -->
+                <div class="form-group full-width service-link-section">
+                    <label><i class="fas fa-link"></i> Atrelar a um Servico (opcional)</label>
+                    <select id="editServiceLink" class="form-select" onchange="onServiceLinkChange()">
+                        <option value="">Nenhum - Item avulso</option>
+                        <!-- Servicos serao carregados aqui -->
+                    </select>
+                    <small class="form-hint">Vincule este item a um servico existente</small>
+                </div>
+
+                <!-- Opcao de herdar foto do servico -->
+                <div class="form-group full-width inherit-photo-section" id="inheritPhotoSection" style="display: none;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="inheritServicePhoto" class="form-checkbox" onchange="toggleInheritPhoto()">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text"><i class="fas fa-clone"></i> Usar foto do servico</span>
+                    </label>
+                    <div class="inherit-photo-preview" id="inheritPhotoPreview" style="display: none;">
+                        <img id="inheritPhotoImg" src="" alt="Foto do servico">
+                        <span>Esta foto sera usada</span>
+                    </div>
                 </div>
 
                 <div class="form-grid">
