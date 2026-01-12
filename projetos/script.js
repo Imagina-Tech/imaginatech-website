@@ -303,11 +303,6 @@ function initializeModal() {
                 closeModal();
             }
         });
-
-        // Fechar ao fazer scroll
-        overlay.addEventListener('wheel', (e) => {
-            closeModal();
-        });
     }
 
     // Navegacao
@@ -396,11 +391,79 @@ function openModal(projectId) {
     setupPhotoNavigation();
     showPhoto(0);
 
+    // Carregar projetos relacionados
+    loadRelatedProjects(projectId, project.category);
+
     if (overlay) {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+        // Scroll para o topo do modal
+        overlay.scrollTop = 0;
     }
 }
+
+function loadRelatedProjects(currentProjectId, currentCategory) {
+    const relatedGrid = document.getElementById('related-grid');
+    if (!relatedGrid) return;
+
+    // Filtrar projetos: mesma categoria primeiro, depois outros, excluindo o atual
+    let related = allProjects
+        .filter(p => p.id !== currentProjectId)
+        .sort((a, b) => {
+            // Priorizar mesma categoria
+            if (a.category === currentCategory && b.category !== currentCategory) return -1;
+            if (b.category === currentCategory && a.category !== currentCategory) return 1;
+            return 0;
+        })
+        .slice(0, 4); // Limitar a 4 projetos
+
+    if (related.length === 0) {
+        document.getElementById('modal-related').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('modal-related').style.display = 'block';
+
+    const categoryMap = {
+        'industrial': 'Industrial',
+        'personalizado': 'Personalizado',
+        'prototipagem': 'Prototipagem',
+        'reposicao': 'Reposicao',
+        'decorativo': 'Decorativo',
+        'tecnico': 'Tecnico'
+    };
+
+    relatedGrid.innerHTML = related.map(project => {
+        const imageUrl = project.mainPhoto?.url || 'https://via.placeholder.com/300x200/0a1420/00D4FF?text=Projeto';
+        const categoryDisplay = categoryMap[project.category] || project.category || 'Projeto';
+
+        return `
+            <div class="related-card" onclick="switchToProject('${project.id}')">
+                <div class="related-card-image">
+                    <img src="${imageUrl}" alt="${project.title}" loading="lazy">
+                </div>
+                <div class="related-card-info">
+                    <h5>${project.title}</h5>
+                    <span>${categoryDisplay}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function switchToProject(projectId) {
+    // Scroll suave para o topo antes de trocar
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) {
+        overlay.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    // Pequeno delay para o scroll acontecer
+    setTimeout(() => {
+        openModal(projectId);
+    }, 200);
+}
+
+window.switchToProject = switchToProject;
 
 function setupPhotoNavigation() {
     const prevBtn = document.getElementById('modal-prev');

@@ -848,10 +848,87 @@ body {
     box-shadow: 0 12px 35px rgba(37, 211, 102, 0.45);
 }
 
+/* Outros Projetos Relacionados */
+.modal-related {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-related h4 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    color: #fff;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.related-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.related-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 10px 25px rgba(0, 212, 255, 0.15);
+}
+
+.related-card-image {
+    height: 120px;
+    overflow: hidden;
+}
+
+.related-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.related-card:hover .related-card-image img {
+    transform: scale(1.1);
+}
+
+.related-card-info {
+    padding: 12px;
+}
+
+.related-card-info h5 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: #fff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.related-card-info span {
+    font-size: 0.75rem;
+    color: #00D4FF;
+    display: block;
+    margin-top: 5px;
+}
+
 /* Responsivo */
 @media (max-width: 1024px) {
     .modal-content {
         padding: 30px 25px;
+    }
+
+    .related-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .modal-layout {
