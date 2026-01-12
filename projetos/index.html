@@ -233,25 +233,38 @@
             <button class="modal-close" id="modal-close">
                 <i class="fas fa-times"></i>
             </button>
-            <div class="modal-image-container">
-                <button class="modal-nav modal-prev" id="modal-prev" style="display: none;">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <img src="" alt="" id="modal-image">
-                <button class="modal-nav modal-next" id="modal-next" style="display: none;">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-                <div class="modal-photo-counter" id="modal-photo-counter" style="display: none;">
-                    <span id="modal-current-photo">1</span> / <span id="modal-total-photos">1</span>
+
+            <div class="modal-layout">
+                <!-- Lado Esquerdo: Foto -->
+                <div class="modal-left">
+                    <div class="modal-image-container">
+                        <button class="modal-nav modal-prev" id="modal-prev" style="display: none;">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <img src="" alt="" id="modal-image">
+                        <button class="modal-nav modal-next" id="modal-next" style="display: none;">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div class="modal-photo-counter" id="modal-photo-counter" style="display: none;">
+                            <span id="modal-current-photo">1</span> / <span id="modal-total-photos">1</span>
+                        </div>
+                    </div>
+                    <div class="modal-thumbnails" id="modal-thumbnails" style="display: none;">
+                        <!-- Miniaturas serao inseridas aqui -->
+                    </div>
                 </div>
-            </div>
-            <div class="modal-info">
-                <h3 id="modal-title"></h3>
-                <p id="modal-description" class="modal-description" style="display: none;"></p>
-                <div class="modal-specs" id="modal-specs"></div>
-            </div>
-            <div class="modal-thumbnails" id="modal-thumbnails" style="display: none;">
-                <!-- Miniaturas serao inseridas aqui -->
+
+                <!-- Lado Direito: Informacoes -->
+                <div class="modal-right">
+                    <div class="modal-info">
+                        <h3 id="modal-title"></h3>
+                        <div class="modal-specs" id="modal-specs"></div>
+                        <div class="modal-description-container">
+                            <h4><i class="fas fa-info-circle"></i> Sobre o Projeto</h4>
+                            <p id="modal-description" class="modal-description"></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

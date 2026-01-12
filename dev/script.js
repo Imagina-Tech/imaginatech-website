@@ -512,12 +512,12 @@ async function loadPortfolioGrid() {
     if (!db) return;
 
     try {
+        // Query simplificada para evitar necessidade de indice composto
+        // Filtramos showOnLanding no cliente
         const snapshot = await db.collection('portfolio')
             .where('destination', '==', 'projetos')
             .where('active', '==', true)
-            .where('showOnLanding', '==', true)
             .orderBy('createdAt', 'desc')
-            .limit(6)
             .get();
 
         if (snapshot.empty) {
@@ -525,10 +525,20 @@ async function loadPortfolioGrid() {
             return;
         }
 
-        portfolioItems = []; // Limpar e armazenar globalmente
+        // Filtrar apenas projetos marcados para landing e limitar a 6
+        portfolioItems = [];
         snapshot.forEach(doc => {
-            portfolioItems.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            if (data.showOnLanding === true && portfolioItems.length < 6) {
+                portfolioItems.push({ id: doc.id, ...data });
+            }
         });
+
+        // Se nao houver projetos marcados para landing, manter estaticos
+        if (portfolioItems.length === 0) {
+            console.log('Nenhum projeto marcado para landing - mantendo estaticos');
+            return;
+        }
 
         // Atualizar DOM do portfolio
         const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -544,7 +554,7 @@ async function loadPortfolioGrid() {
         // Inicializar modal do portfolio
         initPortfolioModal();
 
-        console.log(`Portfolio atualizado com ${portfolioItems.length} projeto(s)`);
+        console.log(`Portfolio landing atualizado com ${portfolioItems.length} projeto(s) marcados`);
     } catch (error) {
         console.error('Erro ao carregar portfolio:', error);
     }

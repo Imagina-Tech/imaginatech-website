@@ -373,12 +373,13 @@ function openModal(projectId) {
 
     // Mostrar descricao no modal se existir
     const modalDescription = document.getElementById('modal-description');
-    if (modalDescription) {
+    const descriptionContainer = document.querySelector('.modal-description-container');
+    if (modalDescription && descriptionContainer) {
         if (project.description) {
             modalDescription.textContent = project.description;
-            modalDescription.style.display = 'block';
+            descriptionContainer.style.display = 'block';
         } else {
-            modalDescription.style.display = 'none';
+            descriptionContainer.style.display = 'none';
         }
     }
 
