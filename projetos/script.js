@@ -292,19 +292,21 @@ let currentPhotoIndex = 0; // Indice da foto atual
 
 function initializeModal() {
     const overlay = document.getElementById('modal-overlay');
-    const closeBtn = document.getElementById('modal-close');
     const prevBtn = document.getElementById('modal-prev');
     const nextBtn = document.getElementById('modal-next');
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-
     if (overlay) {
+        // Fechar ao clicar fora do conteudo
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
+            // Fecha se clicar no overlay ou em areas vazias
+            if (e.target === overlay || e.target.closest('.modal-content') === null) {
                 closeModal();
             }
+        });
+
+        // Fechar ao fazer scroll
+        overlay.addEventListener('wheel', (e) => {
+            closeModal();
         });
     }
 
