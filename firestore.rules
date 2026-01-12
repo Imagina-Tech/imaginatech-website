@@ -8,7 +8,8 @@ service cloud.firestore {
           "3d3printers@gmail.com",
           "netrindademarcus@gmail.com",
           "quequell1010@gmail.com",
-          "igor.butter@gmail.com"
+          "igor.butter@gmail.com",
+          "contato.elainesas@gmail.com"
         ];
     }
 

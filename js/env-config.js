@@ -57,9 +57,9 @@ window.ENV_CONFIG = {
     AUTHORIZED_ADMINS: [
         { email: '3d3printers@gmail.com', name: 'ADMIN' },
         { email: 'netrindademarcus@gmail.com', name: 'Trindade' },
-        { email: 'allanedg01@gmail.com', name: 'Gonçalves' },
         { email: 'quequell1010@gmail.com', name: 'Raquel' },
-        { email: 'igor.butter@gmail.com', name: 'Leão' }
+        { email: 'igor.butter@gmail.com', name: 'Leão' },
+        { email: 'contato.elainesas@gmail.com', name: 'Elaine' }
     ]
 };
 
