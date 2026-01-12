@@ -167,6 +167,7 @@ body {
 .logo-section {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 5px;
 }
 
@@ -178,6 +179,7 @@ body {
     background-clip: text;
     letter-spacing: 2px;
     margin: 0;
+    text-align: center;
 }
 
 .logo-subtitle {
@@ -187,6 +189,7 @@ body {
     color: rgba(0, 212, 255, 0.7);
     letter-spacing: 3px;
     text-transform: uppercase;
+    text-align: center;
 }
 
 .btn-nav {
