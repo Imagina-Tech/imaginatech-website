@@ -866,23 +866,6 @@
     border-color: #00FF88;
 }
 
-/* Badge na Landing */
-.portfolio-card .landing-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: linear-gradient(135deg, #00D4FF, #00FF88);
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.65rem;
-    color: #0a0e1a;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    z-index: 3;
-}
-
 /* Hint abaixo de checkbox */
 .checkbox-label + .form-hint,
 .form-group:has(.checkbox-label) .form-hint {
@@ -1027,21 +1010,23 @@
     position: absolute;
     bottom: 8px;
     left: 8px;
+    width: 24px;
+    height: 24px;
     background: rgba(0, 200, 83, 0.9);
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
+    border-radius: 6px;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 3;
     border: 1px solid rgba(0, 255, 136, 0.5);
+    box-sizing: border-box;
 }
 
 .portfolio-card .landing-badge i {
     color: white;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
+    line-height: 1;
 }
 
 /* ===========================
