@@ -207,6 +207,21 @@ function createProjectCard(project, index) {
         </div>
     ` : '';
 
+    // Calcular quantidade de fotos
+    let photoCount = 0;
+    if (project.mainPhoto?.url) photoCount++;
+    if (project.extraPhotos && Array.isArray(project.extraPhotos)) {
+        photoCount += project.extraPhotos.filter(p => p?.url).length;
+    }
+
+    // Badge de quantidade de fotos (so mostra se > 1)
+    const photoCountBadge = photoCount > 1 ? `
+        <div class="projeto-photo-count">
+            <i class="fas fa-images"></i>
+            <span>${photoCount} fotos</span>
+        </div>
+    ` : '';
+
     // Overlay de hover com descricao ou call-to-action
     const description = project.description || '';
     const truncatedDesc = description.length > 100 ? description.substring(0, 100) + '...' : description;
@@ -236,6 +251,7 @@ function createProjectCard(project, index) {
                 </div>
                 ${descriptionOverlay}
                 ${logoOverlay}
+                ${photoCountBadge}
             </div>
             <div class="projeto-info">
                 <h3>${project.title}</h3>
