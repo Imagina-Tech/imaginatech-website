@@ -205,14 +205,19 @@ function createProjectCard(project, index) {
         </div>
     ` : '';
 
-    // Descricao para hover (truncada se muito longa)
+    // Overlay de hover com descricao ou call-to-action
     const description = project.description || '';
-    const truncatedDesc = description.length > 120 ? description.substring(0, 120) + '...' : description;
-    const descriptionOverlay = description ? `
-        <div class="projeto-description-overlay">
-            <p>${truncatedDesc}</p>
+    const truncatedDesc = description.length > 100 ? description.substring(0, 100) + '...' : description;
+    const overlayContent = description
+        ? `<p class="projeto-hover-desc">${truncatedDesc}</p>`
+        : '';
+
+    const descriptionOverlay = `
+        <div class="projeto-hover-overlay">
+            ${overlayContent}
+            <span class="projeto-hover-cta"><i class="fas fa-expand"></i> Clique para ver detalhes</span>
         </div>
-    ` : '';
+    `;
 
     const imageUrl = project.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto';
 

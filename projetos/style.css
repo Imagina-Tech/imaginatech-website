@@ -400,33 +400,58 @@ body {
     pointer-events: none;
 }
 
-/* Descricao no hover */
-.projeto-description-overlay {
+/* Overlay de hover */
+.projeto-hover-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(10, 14, 26, 0.95);
+    background: rgba(10, 14, 26, 0.92);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 25px;
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: 2;
+    gap: 15px;
 }
 
-.projeto-card:hover .projeto-description-overlay {
+.projeto-card:hover .projeto-hover-overlay {
     opacity: 1;
 }
 
-.projeto-description-overlay p {
-    color: #e0e0e0;
+.projeto-hover-desc {
+    color: #d0d0d0;
     font-size: 0.9rem;
     line-height: 1.6;
     text-align: center;
     margin: 0;
+}
+
+.projeto-hover-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #00D4FF;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 10px 18px;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    border-radius: 25px;
+    background: rgba(0, 212, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.projeto-card:hover .projeto-hover-cta {
+    animation: pulse-cta 2s infinite;
+}
+
+@keyframes pulse-cta {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
+    50% { box-shadow: 0 0 20px 5px rgba(0, 212, 255, 0.2); }
 }
 
 .projeto-category {
@@ -614,15 +639,19 @@ body {
 }
 
 .modal-content {
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    border-radius: 16px;
+    background: rgba(10, 14, 26, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 20px;
     max-width: 1100px;
     width: 95%;
     max-height: 90vh;
     overflow: hidden;
     position: relative;
     animation: modalFadeIn 0.3s ease;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(0, 212, 255, 0.1);
 }
 
 @keyframes modalFadeIn {
@@ -668,7 +697,7 @@ body {
 
 /* Lado esquerdo - Foto */
 .modal-left {
-    background: #0a0e1a;
+    background: rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
 }
@@ -775,8 +804,8 @@ body {
 
 /* Lado direito - Informacoes */
 .modal-right {
-    background: rgba(15, 23, 42, 0.95);
-    border-left: 1px solid rgba(0, 212, 255, 0.15);
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 1px solid rgba(0, 212, 255, 0.1);
     overflow-y: auto;
 }
 
