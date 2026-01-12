@@ -164,13 +164,18 @@ async function loadServicesForDropdown() {
         allServices = [];
         snapshot.forEach(doc => {
             const data = doc.data();
+            // mainPhoto pode ser objeto {url, path} ou string direta
+            const mainPhotoUrl = data.mainPhoto?.url || data.mainPhoto || data.instagramPhoto || null;
+            // images pode ser array de objetos ou strings
+            const photos = data.images || data.packagedPhotos || [];
+
             allServices.push({
                 id: doc.id,
                 name: data.name || 'Sem nome',
                 client: data.client || '',
                 orderCode: data.orderCode || '',
-                mainImage: data.mainImage || null,
-                photos: data.photos || [],
+                mainImage: mainPhotoUrl,
+                photos: photos,
                 createdAt: data.createdAt
             });
         });
@@ -1296,19 +1301,61 @@ async function loadGalleryPhotos() {
             const client = data.client || '';
             const displayName = client ? `${serviceName} - ${client}` : serviceName;
 
-            // Foto principal
-            if (data.mainImage) {
+            // Foto principal (mainPhoto)
+            if (data.mainPhoto?.url) {
                 galleryPhotos.push({
-                    url: data.mainImage,
+                    url: data.mainPhoto.url,
                     serviceName: displayName,
                     serviceId: doc.id,
                     type: 'main'
                 });
             }
 
-            // Fotos adicionais
-            if (data.photos && Array.isArray(data.photos)) {
-                data.photos.forEach((photo, index) => {
+            // Imagens gerais (images)
+            if (data.images && Array.isArray(data.images)) {
+                data.images.forEach((img, index) => {
+                    const imgUrl = typeof img === 'string' ? img : img?.url;
+                    if (imgUrl) {
+                        galleryPhotos.push({
+                            url: imgUrl,
+                            serviceName: displayName,
+                            serviceId: doc.id,
+                            type: 'image',
+                            index: index
+                        });
+                    }
+                });
+            }
+
+            // Foto Instagram (produto finalizado)
+            if (data.instagramPhoto) {
+                galleryPhotos.push({
+                    url: data.instagramPhoto,
+                    serviceName: `${displayName} (Finalizado)`,
+                    serviceId: doc.id,
+                    type: 'instagram'
+                });
+            }
+
+            // Fotos embaladas
+            if (data.packagedPhotos && Array.isArray(data.packagedPhotos)) {
+                data.packagedPhotos.forEach((photo, index) => {
+                    const photoUrl = typeof photo === 'string' ? photo : photo?.url;
+                    if (photoUrl) {
+                        galleryPhotos.push({
+                            url: photoUrl,
+                            serviceName: `${displayName} (Embalado)`,
+                            serviceId: doc.id,
+                            type: 'packaged',
+                            index: index
+                        });
+                    }
+                });
+            }
+
+            // Fotos extras do portfolio (extraPhotos)
+            if (data.extraPhotos && Array.isArray(data.extraPhotos)) {
+                data.extraPhotos.forEach((photo, index) => {
                     if (photo?.url) {
                         galleryPhotos.push({
                             url: photo.url,
