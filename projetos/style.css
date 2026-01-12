@@ -625,27 +625,29 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 10000;
     display: none;
-    align-items: stretch;
-    justify-content: center;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .modal-overlay.active {
-    display: flex;
+    display: block;
 }
 
 .modal-content {
     background: transparent;
     border: none;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     position: relative;
     animation: modalFadeIn 0.3s ease;
+    padding: 60px 40px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 @keyframes modalFadeIn {
@@ -656,7 +658,7 @@ body {
 .modal-close {
     position: fixed;
     top: 20px;
-    right: 20px;
+    right: 25px;
     width: 50px;
     height: 50px;
     background: rgba(255, 255, 255, 0.1);
@@ -675,37 +677,33 @@ body {
     transform: scale(1.1);
 }
 
-/* Layout lado a lado fullscreen */
+/* Layout fluido - foto e texto lado a lado */
 .modal-layout {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    height: 100vh;
-    width: 100%;
+    display: flex;
+    gap: 50px;
+    align-items: flex-start;
 }
 
 /* Lado esquerdo - Foto */
 .modal-left {
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    flex: 0 0 55%;
+    max-width: 55%;
+    position: sticky;
+    top: 20px;
 }
 
 .modal-image-container {
     position: relative;
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px;
 }
 
 .modal-image-container img {
-    max-width: 100%;
-    max-height: 75vh;
+    width: 100%;
+    max-height: 80vh;
     object-fit: contain;
-    border-radius: 4px;
-    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
 }
 
 /* Botoes de navegacao */
@@ -713,42 +711,42 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     border: none;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.8rem;
     cursor: pointer;
     z-index: 5;
     transition: all 0.3s ease;
-    padding: 15px;
+    padding: 12px;
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .modal-nav:hover {
-    background: rgba(0, 212, 255, 0.3);
-    color: #00D4FF;
+    background: rgba(0, 212, 255, 0.4);
+    color: #fff;
     transform: translateY(-50%) scale(1.1);
 }
 
-.modal-prev { left: 20px; }
-.modal-next { right: 20px; }
+.modal-prev { left: 15px; }
+.modal-next { right: 15px; }
 
 /* Contador de fotos */
 .modal-photo-counter {
     position: absolute;
-    bottom: 20px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     padding: 8px 18px;
     border-radius: 20px;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
 }
 
@@ -756,10 +754,10 @@ body {
 .modal-thumbnails {
     display: flex;
     gap: 10px;
-    padding: 15px 30px;
+    padding: 15px 0;
     overflow-x: auto;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
+    justify-content: flex-start;
+    margin-top: 15px;
 }
 
 .modal-thumbnail {
@@ -790,22 +788,19 @@ body {
     object-fit: cover;
 }
 
-/* Lado direito - Informacoes */
+/* Lado direito - Informacoes fluindo */
 .modal-right {
-    background: rgba(0, 0, 0, 0.4);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    overflow-y: auto;
-    height: 100vh;
+    flex: 1;
+    padding-top: 10px;
 }
 
 .modal-info {
-    padding: 40px 30px;
-    padding-top: 80px;
+    padding: 0;
 }
 
 .modal-info h3 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: #fff;
     margin-bottom: 20px;
     line-height: 1.3;
@@ -815,7 +810,7 @@ body {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .modal-specs .spec-badge {
@@ -828,73 +823,92 @@ body {
 .modal-description-container {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 25px;
+    margin-top: 10px;
 }
 
 .modal-description-container h4 {
-    font-size: 1rem;
-    color: #00D4FF;
-    margin-bottom: 15px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.modal-description-container h4 i {
-    font-size: 1rem;
+    display: none;
 }
 
 .modal-description {
-    color: #c5cdd5;
-    font-size: 1rem;
-    line-height: 1.8;
+    color: #d0d8e0;
+    font-size: 1.05rem;
+    line-height: 1.9;
     margin: 0;
     white-space: pre-line;
 }
 
+/* CTA e compartilhamento */
+.modal-cta {
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-cta p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.modal-cta .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.modal-cta .btn-whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
+}
+
 /* Responsivo */
 @media (max-width: 1024px) {
+    .modal-content {
+        padding: 70px 25px 30px;
+    }
+
     .modal-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: 55vh 1fr;
-        height: 100vh;
+        flex-direction: column;
+        gap: 30px;
     }
 
     .modal-left {
-        height: auto;
-    }
-
-    .modal-image-container {
-        padding: 20px;
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+        position: relative;
+        top: 0;
     }
 
     .modal-image-container img {
-        max-height: 45vh;
+        max-height: 50vh;
     }
 
     .modal-nav {
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
+        width: 45px;
+        height: 45px;
+        font-size: 1.4rem;
     }
 
     .modal-prev { left: 10px; }
     .modal-next { right: 10px; }
 
     .modal-right {
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        height: auto;
-        max-height: 45vh;
-    }
-
-    .modal-info {
-        padding: 25px 20px;
-        padding-top: 25px;
+        width: 100%;
     }
 
     .modal-info h3 {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
     }
 
     .modal-close {
@@ -907,16 +921,16 @@ body {
 }
 
 @media (max-width: 600px) {
-    .modal-layout {
-        grid-template-rows: 50vh 1fr;
+    .modal-content {
+        padding: 60px 20px 25px;
     }
 
-    .modal-image-container {
-        padding: 15px;
+    .modal-image-container img {
+        max-height: 40vh;
     }
 
     .modal-thumbnails {
-        padding: 10px 15px;
+        gap: 8px;
     }
 
     .modal-thumbnail {
@@ -925,11 +939,12 @@ body {
     }
 
     .modal-info h3 {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .modal-description {
-        font-size: 0.95rem;
+        font-size: 1rem;
+        line-height: 1.8;
     }
 }
 
