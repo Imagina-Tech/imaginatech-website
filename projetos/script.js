@@ -205,6 +205,15 @@ function createProjectCard(project, index) {
         </div>
     ` : '';
 
+    // Descricao para hover (truncada se muito longa)
+    const description = project.description || '';
+    const truncatedDesc = description.length > 120 ? description.substring(0, 120) + '...' : description;
+    const descriptionOverlay = description ? `
+        <div class="projeto-description-overlay">
+            <p>${truncatedDesc}</p>
+        </div>
+    ` : '';
+
     const imageUrl = project.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto';
 
     return `
@@ -218,6 +227,7 @@ function createProjectCard(project, index) {
                 <div class="projeto-overlay">
                     <span class="projeto-category">${categoryDisplay}</span>
                 </div>
+                ${descriptionOverlay}
                 ${logoOverlay}
             </div>
             <div class="projeto-info">
@@ -354,10 +364,22 @@ function openModal(projectId) {
     }
 
     if (modalSpecs) {
-        modalSpecs.innerHTML = `
+        let specsHtml = `
             <span class="spec-badge"><i class="fas fa-cube"></i> ${project.material || 'PLA'}</span>
             <span class="spec-badge"><i class="fas fa-palette"></i> ${project.color || 'Variado'}</span>
         `;
+        modalSpecs.innerHTML = specsHtml;
+    }
+
+    // Mostrar descricao no modal se existir
+    const modalDescription = document.getElementById('modal-description');
+    if (modalDescription) {
+        if (project.description) {
+            modalDescription.textContent = project.description;
+            modalDescription.style.display = 'block';
+        } else {
+            modalDescription.style.display = 'none';
+        }
     }
 
     // Configurar navegacao baseado no numero de fotos

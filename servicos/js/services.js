@@ -2213,22 +2213,30 @@ export function toggleCategoryField() {
     const categoryGroup = document.getElementById('upCategoryGroup');
     const categorySelect = document.getElementById('upCategory');
     const extraPhotosGroup = document.getElementById('upExtraPhotosGroup');
+    const descriptionGroup = document.getElementById('upDescriptionGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
         categorySelect.required = true;
-        // Mostrar opcao de fotos extras para projetos
+        // Mostrar opcao de fotos extras e descricao para projetos
         if (extraPhotosGroup) {
             extraPhotosGroup.style.display = 'block';
+        }
+        if (descriptionGroup) {
+            descriptionGroup.style.display = 'block';
         }
     } else {
         categoryGroup.style.display = 'none';
         categorySelect.required = false;
         categorySelect.value = '';
-        // Esconder e limpar fotos extras para carrossel
+        // Esconder e limpar fotos extras e descricao para carrossel
         if (extraPhotosGroup) {
             extraPhotosGroup.style.display = 'none';
             clearExtraPhotos();
+        }
+        if (descriptionGroup) {
+            descriptionGroup.style.display = 'none';
+            document.getElementById('upDescription').value = '';
         }
     }
 
@@ -2727,6 +2735,7 @@ export async function saveToPortfolio() {
     const serviceId = document.getElementById('upServiceId').value;
     const editingId = document.getElementById('upEditingId').value;
     const title = document.getElementById('upTitle').value.trim();
+    const description = document.getElementById('upDescription')?.value.trim() || '';
     const destination = document.getElementById('upDestination').value;
     const category = document.getElementById('upCategory').value;
 
@@ -2827,6 +2836,7 @@ export async function saveToPortfolio() {
             // Atualizar documento existente
             const updateData = {
                 title: title,
+                description: destination === 'projetos' ? description : null,
                 category: destination === 'projetos' ? category : null,
                 destination: destination,
                 mainPhoto: photoData,
@@ -2841,6 +2851,7 @@ export async function saveToPortfolio() {
             // Criar documento novo
             const portfolioDoc = {
                 title: title,
+                description: destination === 'projetos' ? description : null,
                 category: destination === 'projetos' ? category : null,
                 destination: destination,
                 serviceId: serviceId,

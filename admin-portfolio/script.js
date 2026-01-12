@@ -347,6 +347,7 @@ function openEditModal(itemId) {
     // Fill form
     document.getElementById('editItemId').value = itemId;
     document.getElementById('editTitle').value = editingItem.title || '';
+    document.getElementById('editDescription').value = editingItem.description || '';
     document.getElementById('editDestination').value = editingItem.destination || '';
     document.getElementById('editCategory').value = editingItem.category || '';
     document.getElementById('editIsNew').checked = editingItem.isNew || false;
@@ -428,15 +429,18 @@ function toggleCategory() {
     const categoryGroup = document.getElementById('editCategoryGroup');
     const extraPhotosGroup = document.getElementById('editExtraPhotosGroup');
     const showOnLandingGroup = document.getElementById('editShowOnLandingGroup');
+    const descriptionGroup = document.getElementById('editDescriptionGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'block';
         if (showOnLandingGroup) showOnLandingGroup.style.display = 'block';
+        if (descriptionGroup) descriptionGroup.style.display = 'block';
     } else {
         categoryGroup.style.display = 'none';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'none';
         if (showOnLandingGroup) showOnLandingGroup.style.display = 'none';
+        if (descriptionGroup) descriptionGroup.style.display = 'none';
     }
 }
 
@@ -640,6 +644,7 @@ function getNewExtraPhotosFiles() {
 async function saveItem() {
     const itemId = document.getElementById('editItemId').value;
     const title = document.getElementById('editTitle').value.trim();
+    const description = document.getElementById('editDescription')?.value.trim() || '';
     const destination = document.getElementById('editDestination').value;
     const category = document.getElementById('editCategory').value;
     const isNew = document.getElementById('editIsNew').checked;
@@ -666,6 +671,7 @@ async function saveItem() {
     try {
         const updateData = {
             title: title,
+            description: destination === 'projetos' ? description : null,
             destination: destination,
             category: destination === 'projetos' ? category : null,
             isNew: isNew,
