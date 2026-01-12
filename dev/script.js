@@ -529,6 +529,7 @@ async function loadPortfolioGrid() {
         portfolioItems = [];
         snapshot.forEach(doc => {
             const data = doc.data();
+            console.log(`Projeto: ${data.title}, showOnLanding: ${data.showOnLanding}`);
             if (data.showOnLanding === true && portfolioItems.length < 6) {
                 portfolioItems.push({ id: doc.id, ...data });
             }
