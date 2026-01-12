@@ -1275,6 +1275,12 @@ async function openGalleryModal(mode = 'main') {
 function closeGalleryModal() {
     document.getElementById('galleryModal').classList.remove('active');
     selectedGalleryPhotos = [];
+
+    // Limpar observer
+    if (galleryObserver) {
+        galleryObserver.disconnect();
+        galleryObserver = null;
+    }
 }
 
 // Carregar todas as fotos dos servicos
@@ -1404,6 +1410,9 @@ async function loadGalleryPhotos() {
     }
 }
 
+// Observer para lazy loading
+let galleryObserver = null;
+
 // Renderizar fotos na galeria
 function renderGalleryPhotos() {
     const grid = document.getElementById('galleryGrid');
@@ -1426,16 +1435,64 @@ function renderGalleryPhotos() {
         return;
     }
 
-    // Renderizar fotos
+    // Renderizar fotos com lazy loading
     grid.innerHTML = filtered.map((photo, index) => `
-        <div class="gallery-photo-item ${selectedGalleryPhotos.includes(photo.url) ? 'selected' : ''}"
+        <div class="gallery-photo-item lazy ${selectedGalleryPhotos.includes(photo.url) ? 'selected' : ''}"
              data-url="${photo.url}"
              data-index="${index}"
              onclick="toggleGalleryPhotoSelection('${photo.url}')">
-            <img src="${photo.url}" alt="${photo.serviceName}" loading="lazy">
+            <img data-src="${photo.url}" alt="${photo.serviceName}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="photo-service-name">${photo.serviceName}</div>
         </div>
     `).join('');
+
+    // Iniciar lazy loading com Intersection Observer
+    setupLazyLoading();
+}
+
+// Configurar Intersection Observer para lazy loading
+function setupLazyLoading() {
+    // Desconectar observer anterior se existir
+    if (galleryObserver) {
+        galleryObserver.disconnect();
+    }
+
+    // Criar novo observer
+    galleryObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const item = entry.target;
+                const img = item.querySelector('img');
+                const src = img.dataset.src;
+
+                if (src) {
+                    // Carregar imagem
+                    img.src = src;
+                    img.onload = () => {
+                        item.classList.remove('lazy');
+                        item.classList.add('loaded');
+                    };
+                    img.onerror = () => {
+                        item.classList.remove('lazy');
+                        item.classList.add('loaded');
+                        img.src = '/iconwpp.jpg'; // Fallback
+                    };
+                }
+
+                // Parar de observar este item
+                observer.unobserve(item);
+            }
+        });
+    }, {
+        root: document.getElementById('galleryGrid'),
+        rootMargin: '100px', // Carregar 100px antes de aparecer
+        threshold: 0
+    });
+
+    // Observar todos os itens da galeria
+    document.querySelectorAll('.gallery-photo-item.lazy').forEach(item => {
+        galleryObserver.observe(item);
+    });
 }
 
 // Filtrar fotos por busca
