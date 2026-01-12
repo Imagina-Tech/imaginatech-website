@@ -262,11 +262,17 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     <!-- Photo -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-camera"></i> Foto Principal</label>
-                        <div class="image-upload-box" id="editPhotoArea" onclick="document.getElementById('editPhoto').click()">
+                        <div class="image-upload-box" id="editPhotoArea">
                             <input type="file" id="editPhoto" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="editPhotoPlaceholder">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Clique para trocar a foto</span>
+                                <span class="upload-text">Arraste uma imagem ou clique para selecionar</span>
+                                <span class="upload-hint">Tamanho recomendado: 1200x800px</span>
+                                <div class="upload-formats">
+                                    <span class="format-badge">JPG</span>
+                                    <span class="format-badge">PNG</span>
+                                    <span class="format-badge">WebP</span>
+                                </div>
                             </div>
                             <div class="image-preview" id="editPhotoPreview" style="display: none;">
                                 <img id="editPhotoImg" src="" alt="Preview">
@@ -350,11 +356,12 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     <!-- Logo -->
                     <div class="form-group full-width">
                         <label><i class="fas fa-building"></i> Logo (opcional)</label>
-                        <div class="image-upload-box small" id="editLogoArea" onclick="document.getElementById('editLogo').click()">
+                        <div class="image-upload-box small" id="editLogoArea">
                             <input type="file" id="editLogo" accept="image/png,image/svg+xml,image/webp" onchange="handleLogoSelect(event)" style="display: none;">
                             <div class="upload-placeholder" id="editLogoPlaceholder">
                                 <i class="fas fa-image"></i>
-                                <span>Logo PNG transparente</span>
+                                <span class="upload-text">Arraste ou clique</span>
+                                <span class="upload-hint">PNG com fundo transparente</span>
                             </div>
                             <div class="image-preview" id="editLogoPreview" style="display: none;">
                                 <img id="editLogoImg" src="" alt="Logo">

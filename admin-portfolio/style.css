@@ -6,6 +6,16 @@
    ================================================== */
 
 /* ===========================
+   VARIAVEIS COMPLEMENTARES
+   (Variaveis que nao existem no base styles.css)
+   =========================== */
+
+:root {
+    --neon-cyan: #00D4FF;
+    --text-muted: #6b7280;
+}
+
+/* ===========================
    PORTFOLIO STATS (Botoes de Filtro)
    =========================== */
 
@@ -428,9 +438,133 @@
    MODALS - Complementos
    =========================== */
 
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: linear-gradient(145deg, rgba(20, 25, 45, 0.98), rgba(10, 14, 26, 0.98));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
 /* Modal pequeno para confirmacao */
 .modal-content.modal-sm {
     max-width: 450px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.modal-header h2 i {
+    color: var(--neon-cyan);
+}
+
+.modal-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: #f44336;
+    color: #f44336;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+/* Botoes do footer */
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary,
+.modal-footer .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: inherit;
+}
+
+.modal-footer .btn-primary {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--primary-blue));
+    color: white;
+}
+
+.modal-footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+}
+
+.modal-footer .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+}
+
+.modal-footer .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 /* Service Link Badge */
@@ -492,14 +626,14 @@
 }
 
 /* ===========================
-   IMAGE UPLOAD BOX
+   IMAGE UPLOAD BOX - Drag & Drop
    =========================== */
 
 .image-upload-box {
     position: relative;
-    border: 2px dashed var(--glass-border);
+    border: 2px dashed rgba(0, 212, 255, 0.3);
     border-radius: 12px;
-    min-height: 200px;
+    min-height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -511,11 +645,36 @@
 
 .image-upload-box:hover {
     border-color: var(--neon-cyan);
-    background: rgba(0, 212, 255, 0.05);
+    background: rgba(0, 212, 255, 0.08);
+    box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.05);
+}
+
+/* Estado de drag over */
+.image-upload-box.drag-over {
+    border-color: var(--neon-cyan);
+    border-style: solid;
+    background: rgba(0, 212, 255, 0.15);
+    box-shadow: inset 0 0 50px rgba(0, 212, 255, 0.1), 0 0 20px rgba(0, 212, 255, 0.2);
+    transform: scale(1.01);
+}
+
+.image-upload-box.drag-over .upload-placeholder {
+    transform: scale(1.05);
+}
+
+.image-upload-box.drag-over .upload-placeholder i {
+    color: var(--neon-cyan);
+    opacity: 1;
+    animation: bounce-icon 0.5s ease infinite alternate;
+}
+
+@keyframes bounce-icon {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
 }
 
 .image-upload-box.small {
-    min-height: 120px;
+    min-height: 130px;
 }
 
 .image-upload-box .upload-placeholder {
@@ -524,16 +683,49 @@
     align-items: center;
     gap: 0.75rem;
     color: var(--text-muted);
-    padding: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
 }
 
 .image-upload-box .upload-placeholder i {
-    font-size: 2.5rem;
-    opacity: 0.5;
+    font-size: 3rem;
+    opacity: 0.4;
+    color: var(--neon-cyan);
+    transition: all 0.3s ease;
 }
 
-.image-upload-box .upload-placeholder span {
-    font-size: 0.85rem;
+.image-upload-box:hover .upload-placeholder i {
+    opacity: 0.8;
+}
+
+.image-upload-box .upload-placeholder .upload-text {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.image-upload-box .upload-placeholder .upload-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.image-upload-box .upload-placeholder .upload-formats {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.image-upload-box .upload-placeholder .format-badge {
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 4px;
+    font-size: 0.65rem;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    font-weight: 600;
 }
 
 /* Image Preview - Posicionamento correto */
@@ -691,11 +883,9 @@
     z-index: 3;
 }
 
-.form-hint {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 0.5rem;
+/* Hint abaixo de checkbox */
+.checkbox-label + .form-hint,
+.form-group:has(.checkbox-label) .form-hint {
     margin-left: calc(22px + 0.75rem);
 }
 
@@ -905,6 +1095,21 @@
    FORM GROUP NO MODAL
    =========================== */
 
+.modal .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.modal .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
 .modal .form-group label {
     display: flex;
     align-items: center;
@@ -918,6 +1123,83 @@
 .modal .form-group label i {
     color: var(--neon-cyan);
     font-size: 0.9rem;
+}
+
+/* Form Inputs */
+.modal .form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.modal .form-input:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.modal .form-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Textarea */
+.modal .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+/* Select */
+.modal .form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+.modal .form-select:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.modal .form-select option {
+    background: #1a1a2e;
+    color: var(--text-primary);
+    padding: 0.5rem;
+}
+
+/* Form Hint */
+.modal .form-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.375rem;
+    margin-left: 0;
+}
+
+/* Responsive form grid */
+@media (max-width: 600px) {
+    .modal .form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ===========================

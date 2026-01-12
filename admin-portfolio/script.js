@@ -225,6 +225,82 @@ function setupEventListeners() {
         currentSearch = this.value.toLowerCase().trim();
         renderPortfolioItems();
     });
+
+    // Setup drag and drop for upload areas
+    setupDragAndDrop();
+}
+
+// ==========================================
+// DRAG AND DROP SETUP
+// ==========================================
+
+function setupDragAndDrop() {
+    // Photo upload area
+    const photoArea = document.getElementById('editPhotoArea');
+    if (photoArea) {
+        setupDropZone(photoArea, 'editPhoto', handlePhotoSelect);
+    }
+
+    // Logo upload area
+    const logoArea = document.getElementById('editLogoArea');
+    if (logoArea) {
+        setupDropZone(logoArea, 'editLogo', handleLogoSelect);
+    }
+}
+
+function setupDropZone(dropZone, inputId, handler) {
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.add('drag-over');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove('drag-over');
+        }, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length > 0) {
+            const file = files[0];
+            // Verificar se e uma imagem
+            if (file.type.startsWith('image/')) {
+                // Criar evento fake para o handler
+                const fakeEvent = {
+                    target: {
+                        files: [file]
+                    }
+                };
+                handler(fakeEvent);
+            } else {
+                showToast('Por favor, selecione apenas arquivos de imagem', 'error');
+            }
+        }
+    }, false);
+
+    // Handle click to open file dialog
+    dropZone.addEventListener('click', (e) => {
+        // Nao abrir se clicou no botao de remover
+        if (e.target.closest('.btn-remove-img')) return;
+        document.getElementById(inputId).click();
+    });
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
 }
 
 // ==========================================
