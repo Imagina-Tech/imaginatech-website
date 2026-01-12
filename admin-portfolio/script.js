@@ -1301,7 +1301,7 @@ async function loadGalleryPhotos() {
             const client = data.client || '';
             const displayName = client ? `${serviceName} - ${client}` : serviceName;
 
-            // Foto principal (mainPhoto)
+            // Foto principal (mainPhoto - objeto com url)
             if (data.mainPhoto?.url) {
                 galleryPhotos.push({
                     url: data.mainPhoto.url,
@@ -1309,6 +1309,20 @@ async function loadGalleryPhotos() {
                     serviceId: doc.id,
                     type: 'main'
                 });
+            }
+
+            // Foto legada (imageUrl - string direta, formato antigo)
+            if (data.imageUrl && typeof data.imageUrl === 'string') {
+                // Evitar duplicatas se ja foi adicionada como mainPhoto
+                const alreadyAdded = galleryPhotos.some(p => p.url === data.imageUrl && p.serviceId === doc.id);
+                if (!alreadyAdded) {
+                    galleryPhotos.push({
+                        url: data.imageUrl,
+                        serviceName: displayName,
+                        serviceId: doc.id,
+                        type: 'legacy'
+                    });
+                }
             }
 
             // Imagens gerais (images)
@@ -1328,13 +1342,17 @@ async function loadGalleryPhotos() {
             }
 
             // Foto Instagram (produto finalizado)
-            if (data.instagramPhoto) {
-                galleryPhotos.push({
-                    url: data.instagramPhoto,
-                    serviceName: `${displayName} (Finalizado)`,
-                    serviceId: doc.id,
-                    type: 'instagram'
-                });
+            if (data.instagramPhoto && typeof data.instagramPhoto === 'string') {
+                // Evitar duplicatas
+                const alreadyAdded = galleryPhotos.some(p => p.url === data.instagramPhoto && p.serviceId === doc.id);
+                if (!alreadyAdded) {
+                    galleryPhotos.push({
+                        url: data.instagramPhoto,
+                        serviceName: `${displayName} (Finalizado)`,
+                        serviceId: doc.id,
+                        type: 'instagram'
+                    });
+                }
             }
 
             // Fotos embaladas
@@ -1369,7 +1387,10 @@ async function loadGalleryPhotos() {
             }
         });
 
-        console.log(`Carregadas ${galleryPhotos.length} fotos da galeria`);
+        console.log(`Carregadas ${galleryPhotos.length} fotos da galeria de ${snapshot.size} servicos`);
+        if (galleryPhotos.length === 0) {
+            console.log('Nenhuma foto encontrada. Estrutura do primeiro servico:', snapshot.docs[0]?.data());
+        }
         renderGalleryPhotos();
 
     } catch (error) {
