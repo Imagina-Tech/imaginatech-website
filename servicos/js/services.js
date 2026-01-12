@@ -2321,6 +2321,12 @@ function clearExtraPhotos() {
     if (container) {
         container.innerHTML = '';
     }
+    // Resetar estado da area de drop
+    const area = document.getElementById('upExtraPhotosDropArea');
+    if (area) {
+        area.classList.remove('has-photos');
+        area.classList.remove('drag-over');
+    }
 }
 
 /**
@@ -2406,6 +2412,9 @@ export function removeExtraPhoto(slotId) {
     if (slot) {
         slot.remove();
     }
+
+    // Atualizar estado da area de drop
+    updateExtraPhotosDropAreaState();
 }
 
 /**
@@ -2425,6 +2434,7 @@ let upLogoDragCounter = 0;
 export function setupUpModalDragDrop() {
     const photoArea = document.getElementById('upPhotoUploadArea');
     const logoArea = document.getElementById('upLogoUploadArea');
+    const extraPhotosArea = document.getElementById('upExtraPhotosDropArea');
 
     if (photoArea) {
         photoArea.addEventListener('dragenter', handleUpPhotoDragEnter, false);
@@ -2438,6 +2448,13 @@ export function setupUpModalDragDrop() {
         logoArea.addEventListener('dragover', handleUpLogoDragOver, false);
         logoArea.addEventListener('dragleave', handleUpLogoDragLeave, false);
         logoArea.addEventListener('drop', handleUpLogoDrop, false);
+    }
+
+    if (extraPhotosArea) {
+        extraPhotosArea.addEventListener('dragenter', handleExtraPhotosDragEnter, false);
+        extraPhotosArea.addEventListener('dragover', handleExtraPhotosDragOver, false);
+        extraPhotosArea.addEventListener('dragleave', handleExtraPhotosDragLeave, false);
+        extraPhotosArea.addEventListener('drop', handleExtraPhotosDrop, false);
     }
 }
 
@@ -2567,6 +2584,132 @@ function processUpLogoFile(file) {
     };
     reader.readAsDataURL(file);
     showToast('Logo carregado!', 'success');
+}
+
+// === EXTRA PHOTOS DRAG & DROP ===
+let extraPhotosDragCounter = 0;
+
+function handleExtraPhotosDragEnter(e) {
+    preventUpDefaults(e);
+    extraPhotosDragCounter++;
+    const area = document.getElementById('upExtraPhotosDropArea');
+    if (area) area.classList.add('drag-over');
+}
+
+function handleExtraPhotosDragOver(e) {
+    preventUpDefaults(e);
+    const area = document.getElementById('upExtraPhotosDropArea');
+    if (area && !area.classList.contains('drag-over')) {
+        area.classList.add('drag-over');
+    }
+}
+
+function handleExtraPhotosDragLeave(e) {
+    preventUpDefaults(e);
+    extraPhotosDragCounter--;
+    if (extraPhotosDragCounter === 0) {
+        const area = document.getElementById('upExtraPhotosDropArea');
+        if (area) area.classList.remove('drag-over');
+    }
+}
+
+function handleExtraPhotosDrop(e) {
+    preventUpDefaults(e);
+    extraPhotosDragCounter = 0;
+    const area = document.getElementById('upExtraPhotosDropArea');
+    if (area) area.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processDroppedExtraPhotos(files);
+    }
+}
+
+function processDroppedExtraPhotos(files) {
+    // Verificar quantas fotos ainda podem ser adicionadas
+    const currentCount = upExtraPhotosFiles.filter(f => f !== null).length;
+    const maxAllowed = 5 - currentCount;
+
+    if (maxAllowed <= 0) {
+        showToast('Maximo de 5 fotos extras atingido', 'warning');
+        return;
+    }
+
+    let addedCount = 0;
+    const filesToProcess = Array.from(files).slice(0, maxAllowed);
+
+    for (const file of filesToProcess) {
+        // Validar tipo
+        if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+            showToast(`${file.name}: formato invalido`, 'error');
+            continue;
+        }
+
+        // Validar tamanho (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast(`${file.name}: muito grande (max 10MB)`, 'error');
+            continue;
+        }
+
+        // Adicionar foto
+        addExtraPhotoWithFile(file);
+        addedCount++;
+    }
+
+    if (addedCount > 0) {
+        showToast(`${addedCount} foto(s) adicionada(s)!`, 'success');
+        updateExtraPhotosDropAreaState();
+    }
+}
+
+function addExtraPhotoWithFile(file) {
+    const container = document.getElementById('upExtraPhotosContainer');
+    if (!container) return;
+
+    const slotId = extraPhotoSlotCounter++;
+
+    // Expandir o array para acomodar o novo slot
+    while (upExtraPhotosFiles.length <= slotId) {
+        upExtraPhotosFiles.push(null);
+    }
+
+    upExtraPhotosFiles[slotId] = file;
+
+    const slotHtml = `
+        <div class="extra-photo-slot has-image" id="extraSlot_${slotId}">
+            <input type="file" id="extraPhotoInput_${slotId}" accept="image/jpeg,image/jpg,image/png,image/webp"
+                   onchange="window.handleExtraPhotoSelect(event, ${slotId})" style="display: none;">
+            <div class="slot-preview">
+                <img id="extraPhotoImg_${slotId}" src="" alt="Preview">
+            </div>
+            <button type="button" class="btn-remove-slot" onclick="event.stopPropagation(); window.removeExtraPhoto(${slotId})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', slotHtml);
+
+    // Carregar preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.getElementById(`extraPhotoImg_${slotId}`);
+        if (img) img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function updateExtraPhotosDropAreaState() {
+    const area = document.getElementById('upExtraPhotosDropArea');
+    const count = upExtraPhotosFiles.filter(f => f !== null).length;
+
+    if (area) {
+        if (count > 0) {
+            area.classList.add('has-photos');
+        } else {
+            area.classList.remove('has-photos');
+        }
+    }
 }
 
 export async function saveToPortfolio() {

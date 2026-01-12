@@ -588,6 +588,37 @@
     color: #ff6b35;
 }
 
+/* Toggle Landing Page */
+.checkbox-label.landing-toggle .checkbox-text i {
+    color: var(--neon-cyan);
+}
+
+.checkbox-custom.landing {
+    border-color: var(--neon-cyan);
+}
+
+.form-checkbox:checked + .checkbox-custom.landing {
+    background: linear-gradient(135deg, #00D4FF, #00FF88);
+    border-color: #00FF88;
+}
+
+/* Badge na Landing */
+.portfolio-card .landing-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #00D4FF, #00FF88);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    color: #0a0e1a;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 3;
+}
+
 .form-hint {
     display: block;
     font-size: 0.75rem;
@@ -727,6 +758,28 @@
 
 .portfolio-card .gallery-badge i {
     color: var(--neon-cyan);
+}
+
+/* Badge de landing page */
+.portfolio-card .landing-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 200, 83, 0.9);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    border: 1px solid rgba(0, 255, 136, 0.5);
+}
+
+.portfolio-card .landing-badge i {
+    color: white;
+    font-size: 0.65rem;
 }
 
 /* ===========================

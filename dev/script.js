@@ -515,6 +515,7 @@ async function loadPortfolioGrid() {
         const snapshot = await db.collection('portfolio')
             .where('destination', '==', 'projetos')
             .where('active', '==', true)
+            .where('showOnLanding', '==', true)
             .orderBy('createdAt', 'desc')
             .limit(6)
             .get();

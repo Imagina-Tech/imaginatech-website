@@ -3689,6 +3689,55 @@ input[type="file"]::file-selector-button {
     border-style: solid;
 }
 
+/* Area de drop para fotos extras */
+.extra-photos-drop-area {
+    border: 2px dashed var(--glass-border);
+    border-radius: 12px;
+    padding: 1rem;
+    min-height: 120px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.extra-photos-drop-area.drag-over {
+    border-color: #43e97b !important;
+    background: rgba(67, 233, 123, 0.1) !important;
+}
+
+.extra-photos-drop-area.drag-over .extra-photos-drop-hint {
+    color: #43e97b;
+}
+
+.extra-photos-drop-area.drag-over .extra-photos-drop-hint i {
+    animation: pulse-icon 0.8s ease-in-out infinite;
+}
+
+.extra-photos-drop-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.extra-photos-drop-hint i {
+    font-size: 2rem;
+    color: var(--neon-cyan);
+    opacity: 0.5;
+}
+
+.extra-photos-drop-hint span {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.extra-photos-drop-area.has-photos .extra-photos-drop-hint {
+    display: none;
+}
+
 /* ===========================
    LISTA DE UPS EXISTENTES
    =========================== */

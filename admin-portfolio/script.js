@@ -279,6 +279,12 @@ function createPortfolioCard(item) {
         galleryBadgeHtml = `<span class="gallery-badge"><i class="fas fa-images"></i> ${1 + extraPhotosCount}</span>`;
     }
 
+    // Badge de landing page
+    let landingBadgeHtml = '';
+    if (item.destination === 'projetos' && item.showOnLanding) {
+        landingBadgeHtml = `<span class="landing-badge"><i class="fas fa-home"></i></span>`;
+    }
+
     return `
         <div class="portfolio-card" data-id="${item.id}">
             <div class="card-image">
@@ -286,6 +292,7 @@ function createPortfolioCard(item) {
                 <span class="card-badge ${badgeClass}${isOrphan ? ' orphan' : ''}">${badgeText}</span>
                 ${newBadgeHtml}
                 ${galleryBadgeHtml}
+                ${landingBadgeHtml}
                 ${logoHtml}
             </div>
             <div class="card-body">
@@ -343,6 +350,7 @@ function openEditModal(itemId) {
     document.getElementById('editDestination').value = editingItem.destination || '';
     document.getElementById('editCategory').value = editingItem.category || '';
     document.getElementById('editIsNew').checked = editingItem.isNew || false;
+    document.getElementById('editShowOnLanding').checked = editingItem.showOnLanding || false;
 
     // Show/hide category based on destination
     toggleCategory();
@@ -419,13 +427,16 @@ function toggleCategory() {
     const destination = document.getElementById('editDestination').value;
     const categoryGroup = document.getElementById('editCategoryGroup');
     const extraPhotosGroup = document.getElementById('editExtraPhotosGroup');
+    const showOnLandingGroup = document.getElementById('editShowOnLandingGroup');
 
     if (destination === 'projetos') {
         categoryGroup.style.display = 'block';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'block';
+        if (showOnLandingGroup) showOnLandingGroup.style.display = 'block';
     } else {
         categoryGroup.style.display = 'none';
         if (extraPhotosGroup) extraPhotosGroup.style.display = 'none';
+        if (showOnLandingGroup) showOnLandingGroup.style.display = 'none';
     }
 }
 
@@ -632,6 +643,7 @@ async function saveItem() {
     const destination = document.getElementById('editDestination').value;
     const category = document.getElementById('editCategory').value;
     const isNew = document.getElementById('editIsNew').checked;
+    const showOnLanding = document.getElementById('editShowOnLanding').checked;
 
     // Validation
     if (!title) {
@@ -657,6 +669,7 @@ async function saveItem() {
             destination: destination,
             category: destination === 'projetos' ? category : null,
             isNew: isNew,
+            showOnLanding: destination === 'projetos' ? showOnLanding : false,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
