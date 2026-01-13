@@ -1036,17 +1036,35 @@
             box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
         }
 
+        /* Shimmer Animation */
+        @keyframes shimmer-dev {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         .portfolio-image {
             position: relative;
             height: 220px;
             overflow: hidden;
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .portfolio-image.loading {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+            background-size: 200% 100%;
+            animation: shimmer-dev 1.5s ease-in-out infinite;
         }
 
         .portfolio-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s ease;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .portfolio-image.loaded img {
+            opacity: 1;
         }
 
         .portfolio-card:hover .portfolio-image img {
@@ -1793,12 +1811,23 @@
             position: relative;
         }
 
+        .projeto-image.loading {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+            background-size: 200% 100%;
+            animation: shimmer-dev 1.5s ease-in-out infinite;
+        }
+
         .projeto-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s ease;
+            transition: transform 0.6s ease, opacity 0.4s ease;
             filter: brightness(0.9);
+            opacity: 0;
+        }
+
+        .projeto-image.loaded img {
+            opacity: 1;
         }
 
         .projeto-card:hover .projeto-image img {
@@ -2077,7 +2106,7 @@
                 <div class="projetos-track">
                     <!-- SET 1 (original) -->
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader">
                         </div>
                         <div class="projeto-info">
@@ -2086,7 +2115,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-2.svg" alt="Busto Iron Man">
                         </div>
                         <div class="projeto-info">
@@ -2095,7 +2124,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-3.svg" alt="Peça Automotiva Customizada">
                         </div>
                         <div class="projeto-info">
@@ -2104,7 +2133,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-4.svg" alt="Protótipo Arquitetônico">
                         </div>
                         <div class="projeto-info">
@@ -2113,7 +2142,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-5.svg" alt="Réplica Baby Yoda">
                         </div>
                         <div class="projeto-info">
@@ -2122,7 +2151,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-6.svg" alt="Suporte Ergonômico">
                         </div>
                         <div class="projeto-info">
@@ -2131,7 +2160,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-7.svg" alt="Miniatura Pokémon">
                         </div>
                         <div class="projeto-info">
@@ -2140,7 +2169,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-8.svg" alt="Engrenagem Industrial">
                         </div>
                         <div class="projeto-info">
@@ -2150,7 +2179,7 @@
 
                     <!-- SET 2 (duplicado para loop infinito) -->
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader">
                         </div>
                         <div class="projeto-info">
@@ -2159,7 +2188,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-2.svg" alt="Busto Iron Man">
                         </div>
                         <div class="projeto-info">
@@ -2168,7 +2197,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-3.svg" alt="Peça Automotiva Customizada">
                         </div>
                         <div class="projeto-info">
@@ -2177,7 +2206,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-4.svg" alt="Protótipo Arquitetônico">
                         </div>
                         <div class="projeto-info">
@@ -2186,7 +2215,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-5.svg" alt="Réplica Baby Yoda">
                         </div>
                         <div class="projeto-info">
@@ -2195,7 +2224,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-6.svg" alt="Suporte Ergonômico">
                         </div>
                         <div class="projeto-info">
@@ -2204,7 +2233,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-7.svg" alt="Miniatura Pokémon">
                         </div>
                         <div class="projeto-info">
@@ -2213,7 +2242,7 @@
                     </div>
 
                     <div class="projeto-card">
-                        <div class="projeto-image">
+                        <div class="projeto-image loading">
                             <img src="assets/images/projetos/projeto-8.svg" alt="Engrenagem Industrial">
                         </div>
                         <div class="projeto-info">
@@ -2334,7 +2363,7 @@
         <div class="portfolio-grid">
             <!-- Projeto 1 -->
             <div class="portfolio-card" data-aos="fade-up">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto+1" alt="Projeto de peça industrial" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Peça Industrial</span>
@@ -2352,7 +2381,7 @@
 
             <!-- Projeto 2 -->
             <div class="portfolio-card" data-aos="fade-up" data-aos-delay="100">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/00FF88?text=Projeto+2" alt="Projeto personalizado" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Personalizado</span>
@@ -2370,7 +2399,7 @@
 
             <!-- Projeto 3 -->
             <div class="portfolio-card" data-aos="fade-up" data-aos-delay="200">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/FF6B6B?text=Projeto+3" alt="Projeto de prototipagem" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Prototipagem</span>
@@ -2388,7 +2417,7 @@
 
             <!-- Projeto 4 -->
             <div class="portfolio-card" data-aos="fade-up">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/FFD93D?text=Projeto+4" alt="Projeto de reposição" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Reposição</span>
@@ -2406,7 +2435,7 @@
 
             <!-- Projeto 5 -->
             <div class="portfolio-card" data-aos="fade-up" data-aos-delay="100">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/C084FC?text=Projeto+5" alt="Projeto decorativo" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Decorativo</span>
@@ -2424,7 +2453,7 @@
 
             <!-- Projeto 6 -->
             <div class="portfolio-card" data-aos="fade-up" data-aos-delay="200">
-                <div class="portfolio-image">
+                <div class="portfolio-image loading">
                     <img src="https://via.placeholder.com/400x300/0a1420/4ADE80?text=Projeto+6" alt="Projeto técnico" loading="lazy">
                     <div class="portfolio-overlay">
                         <span class="portfolio-category">Técnico</span>
@@ -2633,6 +2662,38 @@
                 navbar.classList.remove('scrolled');
             }
         });
+
+        // Shimmer Loading - Transicao suave quando imagens carregam
+        function initShimmerLoading() {
+            // Seleciona todos os containers de imagem com loading
+            const imageContainers = document.querySelectorAll('.projeto-image.loading, .portfolio-image.loading');
+
+            imageContainers.forEach(container => {
+                const img = container.querySelector('img');
+                if (!img) return;
+
+                // Se a imagem ja carregou (cached)
+                if (img.complete && img.naturalHeight !== 0) {
+                    container.classList.remove('loading');
+                    container.classList.add('loaded');
+                } else {
+                    // Aguarda o carregamento
+                    img.addEventListener('load', function() {
+                        container.classList.remove('loading');
+                        container.classList.add('loaded');
+                    });
+
+                    // Fallback para erro de carregamento
+                    img.addEventListener('error', function() {
+                        container.classList.remove('loading');
+                        container.classList.add('loaded');
+                    });
+                }
+            });
+        }
+
+        // Inicializa shimmer loading
+        initShimmerLoading();
     </script>
 
     <!-- Firebase SDK -->
