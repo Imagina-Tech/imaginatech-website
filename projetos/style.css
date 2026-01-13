@@ -557,72 +557,13 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.4);
 }
 
-/* ========== SKELETON LOADING (Nubank Style) ========== */
-.skeleton-card {
-    background: rgba(15, 23, 42, 0.8);
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 212, 255, 0.1);
-}
-
-.skeleton-image {
-    aspect-ratio: 4 / 3;
-    background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.03) 0%,
-        rgba(255, 255, 255, 0.08) 50%,
-        rgba(255, 255, 255, 0.03) 100%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-info {
-    padding: 20px;
-}
-
-.skeleton-title {
-    height: 24px;
-    width: 75%;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.03) 0%,
-        rgba(255, 255, 255, 0.08) 50%,
-        rgba(255, 255, 255, 0.03) 100%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-    animation-delay: 0.1s;
-}
-
-.skeleton-specs {
-    display: flex;
-    gap: 10px;
-}
-
-.skeleton-badge {
-    height: 28px;
-    width: 80px;
-    border-radius: 6px;
-    background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.03) 0%,
-        rgba(255, 255, 255, 0.08) 50%,
-        rgba(255, 255, 255, 0.03) 100%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-    animation-delay: 0.2s;
-}
-
-@keyframes skeleton-shimmer {
+/* ========== IMAGE LOADING (Nubank Style Shimmer) ========== */
+@keyframes shimmer-loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
 
-/* Image loading state dentro do card real */
+/* Image loading state */
 .projeto-image {
     position: relative;
     aspect-ratio: 4 / 3;
@@ -638,7 +579,7 @@ body {
         rgba(255, 255, 255, 0.03) 100%
     );
     background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation: shimmer-loading 1.5s ease-in-out infinite;
 }
 
 .projeto-image img {

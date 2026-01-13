@@ -118,37 +118,6 @@ async function initializeApp() {
 }
 
 // ============================================
-// SKELETON LOADING
-// ============================================
-
-function showSkeletonLoading(count) {
-    const grid = document.getElementById('projetos-grid');
-
-    let skeletonsHTML = '';
-    for (let i = 0; i < count; i++) {
-        skeletonsHTML += `
-            <div class="skeleton-card" data-aos="fade-up" data-aos-delay="${(i % 6) * 50}">
-                <div class="skeleton-image"></div>
-                <div class="skeleton-info">
-                    <div class="skeleton-title"></div>
-                    <div class="skeleton-specs">
-                        <div class="skeleton-badge"></div>
-                        <div class="skeleton-badge"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    grid.innerHTML = skeletonsHTML;
-
-    // Refresh AOS para os skeletons
-    if (typeof AOS !== 'undefined') {
-        AOS.refresh();
-    }
-}
-
-// ============================================
 // LOAD PROJECTS
 // ============================================
 
@@ -172,17 +141,11 @@ async function loadProjects() {
             return;
         }
 
-        // Mostrar skeletons com a quantidade exata de projetos
-        showSkeletonLoading(snapshot.size);
-
         // Processar projetos
         allProjects = [];
         snapshot.forEach(doc => {
             allProjects.push({ id: doc.id, ...doc.data() });
         });
-
-        // Pequeno delay para mostrar o skeleton antes de renderizar
-        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Render projects
         renderProjects(allProjects);
