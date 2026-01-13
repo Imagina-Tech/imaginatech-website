@@ -356,67 +356,102 @@ function createColorEntryHTML(index) {
 
 /**
  * Atualiza dropdown de cores para uma entrada especifica
+ * Mostra cada filamento individualmente com marca (igual ao single-color)
  */
-export function updateColorDropdownForEntry(index, material, existingColor = null) {
+export function updateColorDropdownForEntry(index, material, existingColor = null, existingFilamentId = null) {
     const select = document.querySelector(`.color-select[data-index="${index}"]`);
     if (!select || !material) return;
 
-    // Filtrar filamentos pelo material (incluir todos, mesmo sem estoque, para referencia)
-    const allFilaments = availableFilaments.filter(f => {
+    // Filtrar filamentos pelo material e ordenar
+    const filtered = availableFilaments.filter(f => {
         if (!f.type || f.type.toLowerCase() !== material.toLowerCase()) return false;
-        return true;
+        return true; // Incluir todos, mesmo sem estoque
     });
 
-    // Agrupar por cor para mostrar quantidade total disponivel
-    const colorGroups = {};
-    allFilaments.forEach(f => {
-        const colorKey = f.color.toLowerCase();
-        if (!colorGroups[colorKey]) {
-            colorGroups[colorKey] = {
-                color: f.color,
-                totalWeight: 0,
-                filaments: []
-            };
-        }
-        colorGroups[colorKey].totalWeight += f.weight * 1000; // kg to g
-        colorGroups[colorKey].filaments.push(f);
+    // Ordenar por cor (alfabetico) e depois por peso (maior primeiro)
+    filtered.sort((a, b) => {
+        const colorCompare = a.color.localeCompare(b.color);
+        if (colorCompare !== 0) return colorCompare;
+        return b.weight - a.weight;
+    });
+
+    // Contar quantos filamentos de cada cor existem (para saber se precisa mostrar marca)
+    const colorCounts = {};
+    filtered.forEach(f => {
+        colorCounts[f.color] = (colorCounts[f.color] || 0) + 1;
     });
 
     const currentValue = select.value;
+    const currentFilamentId = select.dataset.selectedFilamentId;
     select.innerHTML = '<option value="">Selecione a cor</option>';
 
-    // Se tem cor existente (editando) e ela nao esta nos grupos, adicionar
-    if (existingColor && !colorGroups[existingColor.toLowerCase()]) {
-        colorGroups[existingColor.toLowerCase()] = {
-            color: existingColor,
-            totalWeight: 0,
-            filaments: [],
-            isExisting: true // Flag para indicar que e cor do servico
-        };
+    // Se tem cor existente (editando) e nao esta nos filamentos, adicionar opcao virtual
+    const existingInFilaments = existingColor && filtered.some(f =>
+        f.color.toLowerCase() === existingColor.toLowerCase()
+    );
+
+    if (existingColor && !existingInFilaments) {
+        const option = document.createElement('option');
+        option.value = existingColor.toLowerCase();
+        option.dataset.filamentId = existingFilamentId || 'existing';
+        option.textContent = `${existingColor} (em uso - sem estoque)`;
+        select.appendChild(option);
     }
 
-    if (Object.keys(colorGroups).length === 0) {
+    if (filtered.length === 0 && !existingColor) {
         select.innerHTML += '<option value="" disabled>Nenhuma cor cadastrada</option>';
     } else {
-        Object.values(colorGroups)
-            .sort((a, b) => a.color.localeCompare(b.color))
-            .forEach(group => {
-                const option = document.createElement('option');
-                option.value = group.color.toLowerCase();
-                if (group.totalWeight > 0) {
-                    option.textContent = `${group.color} (${group.totalWeight.toFixed(0)}g)`;
-                } else if (group.isExisting) {
-                    option.textContent = `${group.color} (em uso)`;
+        // Adicionar cada filamento como opcao individual
+        filtered.forEach(filament => {
+            const option = document.createElement('option');
+            const weightGrams = (filament.weight * 1000).toFixed(0);
+            const brand = filament.brand || 'S/marca';
+            const hasStock = filament.weight > 0;
+
+            // Valor e valor combinado com ID para identificacao unica
+            option.value = filament.color.toLowerCase();
+            option.dataset.filamentId = filament.id;
+            option.dataset.brand = brand;
+            option.dataset.weight = weightGrams;
+
+            // Se ha multiplos da mesma cor, mostrar marca para diferenciar
+            if (colorCounts[filament.color] > 1) {
+                if (hasStock) {
+                    option.textContent = `${filament.color} - ${brand} (${weightGrams}g)`;
                 } else {
-                    option.textContent = `${group.color} (sem estoque)`;
+                    option.textContent = `${filament.color} - ${brand} (sem estoque)`;
+                    option.classList.add('no-stock-option');
                 }
-                select.appendChild(option);
-            });
+            } else {
+                if (hasStock) {
+                    option.textContent = `${filament.color} (${weightGrams}g)`;
+                } else {
+                    option.textContent = `${filament.color} (sem estoque)`;
+                    option.classList.add('no-stock-option');
+                }
+            }
+
+            select.appendChild(option);
+        });
     }
 
-    // Restaurar valor se existia
-    if (currentValue) {
+    // Restaurar valor se existia (tentar pelo filamentId primeiro, depois pela cor)
+    if (currentFilamentId) {
+        const optionById = select.querySelector(`option[data-filament-id="${currentFilamentId}"]`);
+        if (optionById) {
+            select.value = optionById.value;
+            select.dataset.selectedFilamentId = currentFilamentId;
+        } else if (currentValue) {
+            select.value = currentValue;
+        }
+    } else if (currentValue) {
         select.value = currentValue;
+    }
+
+    // Inicializar CustomSelect se ainda nao foi
+    if (!select.dataset.customized && window.CustomSelect) {
+        new window.CustomSelect(select);
+        select.dataset.customized = 'true';
     }
 
     // Sincronizar CustomSelect
@@ -449,14 +484,24 @@ export function handleColorEntryChange(index) {
     const color = select.value;
     const weight = parseFloat(weightInput?.value) || 0;
 
+    // Obter dados do filamento selecionado
+    const selectedOption = select.options[select.selectedIndex];
+    const filamentId = selectedOption?.dataset?.filamentId || null;
+    const brand = selectedOption?.dataset?.brand || '';
+
+    // Guardar filamentId no select para referencia
+    select.dataset.selectedFilamentId = filamentId || '';
+
     // Atualizar estado
     const entry = colorEntries.find(e => e.index === index);
     if (entry) {
         entry.color = color;
+        entry.filamentId = filamentId;
+        entry.brand = brand;
     }
 
     // Atualizar status do estoque
-    updateStockStatusForEntry(index, color, weight);
+    updateStockStatusForEntry(index, color, weight, filamentId);
 }
 
 /**
@@ -484,8 +529,12 @@ export function handleWeightEntryChange(index) {
 
 /**
  * Atualiza indicador de status do estoque para uma entrada
+ * @param {number} index - Indice da entrada de cor
+ * @param {string} color - Cor selecionada
+ * @param {number} weight - Peso em gramas
+ * @param {string} filamentId - ID do filamento especifico (opcional)
  */
-function updateStockStatusForEntry(index, color, weight) {
+function updateStockStatusForEntry(index, color, weight, filamentId = null) {
     const statusDiv = document.querySelector(`.stock-status[data-index="${index}"]`);
     if (!statusDiv) return;
 
@@ -503,12 +552,34 @@ function updateStockStatusForEntry(index, color, weight) {
         return;
     }
 
-    const stockInfo = checkStockAvailability(material, color, weight);
+    let stockInfo;
+
+    // Se tem filamentId, verificar estoque do filamento especifico
+    if (filamentId && filamentId !== 'existing') {
+        const filament = availableFilaments.find(f => f.id === filamentId);
+        if (filament) {
+            const availableGrams = Math.floor(filament.weight * 1000);
+            const hasStock = availableGrams >= weight;
+            stockInfo = {
+                hasStock,
+                available: availableGrams,
+                needed: weight,
+                filament,
+                notFound: false
+            };
+        } else {
+            stockInfo = { hasStock: false, available: 0, needed: weight, filament: null, notFound: true };
+        }
+    } else {
+        // Sem filamentId especifico, usar verificacao geral
+        stockInfo = checkStockAvailability(material, color, weight);
+    }
 
     // Atualizar flag de compra necessaria
     const entry = colorEntries.find(e => e.index === index);
     if (entry) {
         entry.needsPurchase = !stockInfo.hasStock;
+        entry.filamentId = filamentId || stockInfo.filament?.id || null;
     }
 
     if (stockInfo.notFound) {
@@ -586,16 +657,37 @@ export function collectMultiColorData() {
         const color = select?.value || entry.color;
         const weight = parseFloat(weightInput?.value) || entry.weight;
 
+        // Obter filamentId da opcao selecionada ou do estado da entrada
+        const selectedOption = select?.options[select?.selectedIndex];
+        const filamentId = selectedOption?.dataset?.filamentId || entry.filamentId || null;
+        const brand = selectedOption?.dataset?.brand || entry.brand || '';
+
         if (color && weight > 0) {
-            const stockInfo = checkStockAvailability(material, color, weight);
-            const needsPurchase = !stockInfo.hasStock;
+            let needsPurchase;
+            let finalFilamentId = filamentId;
+
+            // Se tem filamentId especifico, verificar estoque desse filamento
+            if (filamentId && filamentId !== 'existing') {
+                const filament = availableFilaments.find(f => f.id === filamentId);
+                if (filament) {
+                    const availableGrams = Math.floor(filament.weight * 1000);
+                    needsPurchase = availableGrams < weight;
+                } else {
+                    needsPurchase = true;
+                }
+            } else {
+                // Sem filamentId especifico, usar verificacao geral
+                const stockInfo = checkStockAvailability(material, color, weight);
+                needsPurchase = !stockInfo.hasStock;
+                finalFilamentId = stockInfo.filament?.id || null;
+            }
 
             entries.push({
                 color: color,
                 weight: weight,
                 needsPurchase: needsPurchase,
-                filamentId: stockInfo.filament?.id || null,
-                brand: stockInfo.filament?.brand || ''
+                filamentId: finalFilamentId,
+                brand: brand
             });
 
             totalWeight += weight;
@@ -665,17 +757,35 @@ export function loadMultiColorData(service) {
         const entry = colorEntries[colorEntries.length - 1];
         if (!entry) return;
 
+        // Guardar dados no estado da entrada
+        entry.color = m.color;
+        entry.filamentId = m.filamentId || null;
+        entry.brand = m.brand || '';
+        entry.weight = m.weight;
+        entry.needsPurchase = m.needsPurchase;
+
         // Usar setTimeout para aguardar o DOM e CustomSelect
         setTimeout(() => {
             const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
             const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
 
-            // Atualizar dropdown COM a cor existente (garante que apareca mesmo sem estoque)
+            // Atualizar dropdown COM a cor e filamentId existentes
             if (select && material) {
-                updateColorDropdownForEntry(entry.index, material, m.color);
+                updateColorDropdownForEntry(entry.index, material, m.color, m.filamentId);
 
                 setTimeout(() => {
-                    select.value = m.color.toLowerCase();
+                    // Tentar selecionar pelo filamentId primeiro
+                    if (m.filamentId) {
+                        const optionById = select.querySelector(`option[data-filament-id="${m.filamentId}"]`);
+                        if (optionById) {
+                            select.value = optionById.value;
+                            select.dataset.selectedFilamentId = m.filamentId;
+                        } else {
+                            select.value = m.color.toLowerCase();
+                        }
+                    } else {
+                        select.value = m.color.toLowerCase();
+                    }
                     select.dispatchEvent(new Event('change', { bubbles: true }));
                 }, 10);
             }
@@ -708,8 +818,8 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
         );
 
         if (!stillExists && wasDeducted && oldM.weight > 0) {
-            console.log(`↩️ Devolvendo ${oldM.weight}g de ${oldM.color} ao estoque (cor removida)`);
-            const success = await deductMaterialFromStock(material, oldM.color, -oldM.weight);
+            console.log(`↩️ Devolvendo ${oldM.weight}g de ${oldM.color} (${oldM.brand || 'sem marca'}) ao estoque (cor removida)`);
+            const success = await deductMaterialFromStock(material, oldM.color, -oldM.weight, oldM.filamentId);
             if (success) {
                 results.devolvidos.push({ color: oldM.color, weight: oldM.weight });
             } else {
@@ -727,8 +837,8 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
         if (!oldM) {
             // Cor nova - deduzir se tem estoque
             if (!newM.needsPurchase && newM.weight > 0) {
-                console.log(`🔽 Deduzindo ${newM.weight}g de ${newM.color} (nova cor)`);
-                const success = await deductMaterialFromStock(material, newM.color, newM.weight);
+                console.log(`🔽 Deduzindo ${newM.weight}g de ${newM.color} (${newM.brand || 'sem marca'}) - nova cor`);
+                const success = await deductMaterialFromStock(material, newM.color, newM.weight, newM.filamentId);
                 if (success) {
                     results.deduzidos.push({ color: newM.color, weight: newM.weight });
                 } else {
@@ -740,6 +850,9 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
             // Cor existente - verificar diferenca de peso
             const wasDeducted = !oldM.needsPurchase;
             const weightDiff = newM.weight - oldM.weight;
+            // Usar o filamentId do material antigo para devolucoes, novo para deducoes
+            const filamentIdForReturn = oldM.filamentId;
+            const filamentIdForDeduct = newM.filamentId || oldM.filamentId;
 
             if (wasDeducted) {
                 if (weightDiff > 0) {
@@ -747,20 +860,20 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
                     const stockInfo = checkStockAvailability(material, newM.color, weightDiff);
                     if (stockInfo.hasStock) {
                         console.log(`📈 Deduzindo diferenca de ${weightDiff}g de ${newM.color}`);
-                        const success = await deductMaterialFromStock(material, newM.color, weightDiff);
+                        const success = await deductMaterialFromStock(material, newM.color, weightDiff, filamentIdForDeduct);
                         if (success) {
                             results.deduzidos.push({ color: newM.color, weight: weightDiff });
                             newM.needsPurchase = false;
                         } else {
                             // Falhou - devolver tudo e marcar para compra
-                            await deductMaterialFromStock(material, newM.color, -oldM.weight);
+                            await deductMaterialFromStock(material, newM.color, -oldM.weight, filamentIdForReturn);
                             newM.needsPurchase = true;
                             results.devolvidos.push({ color: newM.color, weight: oldM.weight });
                         }
                     } else {
                         // Nao tem estoque para aumento - devolver tudo
                         console.log(`❌ Sem estoque para aumento. Devolvendo ${oldM.weight}g de ${newM.color}`);
-                        await deductMaterialFromStock(material, newM.color, -oldM.weight);
+                        await deductMaterialFromStock(material, newM.color, -oldM.weight, filamentIdForReturn);
                         newM.needsPurchase = true;
                         results.devolvidos.push({ color: newM.color, weight: oldM.weight });
                     }
@@ -768,7 +881,7 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
                     // Diminuiu - devolver diferenca
                     const returnAmount = Math.abs(weightDiff);
                     console.log(`📉 Devolvendo diferenca de ${returnAmount}g de ${newM.color}`);
-                    await deductMaterialFromStock(material, newM.color, weightDiff);
+                    await deductMaterialFromStock(material, newM.color, weightDiff, filamentIdForReturn);
                     results.devolvidos.push({ color: newM.color, weight: returnAmount });
                     newM.needsPurchase = false;
                 } else {
@@ -782,7 +895,7 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
                 if (!newM.needsPurchase && newM.weight > 0) {
                     // Agora TEM estoque - deduzir
                     console.log(`✅ Agora ha estoque! Deduzindo ${newM.weight}g de ${newM.color}`);
-                    const success = await deductMaterialFromStock(material, newM.color, newM.weight);
+                    const success = await deductMaterialFromStock(material, newM.color, newM.weight, newM.filamentId);
                     if (success) {
                         results.deduzidos.push({ color: newM.color, weight: newM.weight });
                         newM.needsPurchase = false;
@@ -816,29 +929,40 @@ window.handleWeightEntryChange = handleWeightEntryChange;
  * @param {number} weightInGrams - Peso em gramas (positivo = deduzir, negativo = devolver)
  * @returns {Promise<boolean>} true se sucesso, false se falhou
  */
-export async function deductMaterialFromStock(material, color, weightInGrams) {
+export async function deductMaterialFromStock(material, color, weightInGrams, filamentId = null) {
     if (!state.db || !material || !color || weightInGrams === 0) return false;
 
     try {
         const isReturn = weightInGrams < 0;
         const absWeightInGrams = Math.abs(weightInGrams);
 
-        // CORRIGIDO: Busca case-insensitive para TODOS os casos
         let filament;
-        if (isReturn) {
-            // Para devolução, buscar qualquer filamento correspondente (case-insensitive)
-            filament = availableFilaments.find(f =>
-                f.type && f.color &&
-                f.type.toLowerCase() === material.toLowerCase() &&
-                f.color.toLowerCase() === color.toLowerCase()
-            );
-        } else {
-            // Para dedução, buscar o que tem mais estoque (já é case-insensitive)
-            filament = findBestFilament(material, color);
+
+        // Se foi fornecido um filamentId especifico, usar esse
+        if (filamentId && filamentId !== 'existing') {
+            filament = availableFilaments.find(f => f.id === filamentId);
+            if (filament) {
+                console.log(`🎯 Usando filamento especifico: ${filament.brand} ${filament.color}`);
+            }
+        }
+
+        // Se nao encontrou pelo ID, fazer busca normal
+        if (!filament) {
+            if (isReturn) {
+                // Para devolução, buscar qualquer filamento correspondente (case-insensitive)
+                filament = availableFilaments.find(f =>
+                    f.type && f.color &&
+                    f.type.toLowerCase() === material.toLowerCase() &&
+                    f.color.toLowerCase() === color.toLowerCase()
+                );
+            } else {
+                // Para dedução, buscar o que tem mais estoque (já é case-insensitive)
+                filament = findBestFilament(material, color);
+            }
         }
 
         if (!filament) {
-            console.warn('⚠️ Filamento não encontrado no estoque:', { material, color });
+            console.warn('⚠️ Filamento não encontrado no estoque:', { material, color, filamentId });
             // Para devolução, se não encontrar, não é erro crítico
             if (isReturn) {
                 console.warn('↩️ Devolução ignorada - filamento não existe mais no sistema');
@@ -1206,8 +1330,8 @@ export async function saveService(event) {
                     // Deduzir novas cores que têm estoque
                     for (const m of service.materials) {
                         if (!m.needsPurchase && m.weight > 0) {
-                            console.log(`🔽 Deduzindo ${m.weight}g de ${m.color}`);
-                            await deductMaterialFromStock(service.material, m.color, m.weight);
+                            console.log(`🔽 Deduzindo ${m.weight}g de ${m.color} (${m.brand || 'sem marca'})`);
+                            await deductMaterialFromStock(service.material, m.color, m.weight, m.filamentId);
                         }
                     }
 
@@ -1221,8 +1345,8 @@ export async function saveService(event) {
 
             for (const m of service.materials) {
                 if (!m.needsPurchase && m.weight > 0) {
-                    console.log(`🔽 Deduzindo ${m.weight}g de ${m.color}`);
-                    await deductMaterialFromStock(service.material, m.color, m.weight);
+                    console.log(`🔽 Deduzindo ${m.weight}g de ${m.color} (${m.brand || 'sem marca'})`);
+                    await deductMaterialFromStock(service.material, m.color, m.weight, m.filamentId);
                 }
             }
 
@@ -1764,8 +1888,8 @@ export async function deleteService(serviceId) {
             for (const m of service.materials) {
                 // Só devolve se foi deduzido (needsPurchase === false)
                 if (!m.needsPurchase && m.weight > 0) {
-                    console.log(`↩️ Devolvendo ${m.weight}g de ${m.color} ao estoque`);
-                    await deductMaterialFromStock(service.material, m.color, -m.weight);
+                    console.log(`↩️ Devolvendo ${m.weight}g de ${m.color} (${m.brand || 'sem marca'}) ao estoque`);
+                    await deductMaterialFromStock(service.material, m.color, -m.weight, m.filamentId);
                 }
             }
         } else {
