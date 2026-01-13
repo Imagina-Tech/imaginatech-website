@@ -311,7 +311,7 @@ body {
 
 /* ========== FILTER SECTION ========== */
 .filter-section {
-    padding: 120px 20px 40px;
+    padding: 140px 20px 40px;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -1191,7 +1191,7 @@ footer p {
     }
 
     .filter-section {
-        padding-top: 140px;
+        padding-top: 160px;
     }
 
     .filter-container {
