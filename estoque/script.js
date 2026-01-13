@@ -440,7 +440,9 @@ function createFilamentCard(filament) {
                 </div>
             </div>` : ''}
 
-            <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image">
+            <div class="filament-image-container loading" id="filament-img-${filament.id}">
+                <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image" onload="handleFilamentImageLoaded('${filament.id}')" onerror="handleFilamentImageLoaded('${filament.id}')">
+            </div>
             <div class="filament-info">
                 <div class="filament-type">${filamentType || 'N/A'}</div>
                 <div class="filament-color">${filamentColor || 'N/A'}</div>
@@ -1349,7 +1351,7 @@ function sortEquipment(sortOrder) {
 // Criar HTML do card de equipamento
 function createEquipmentCard(item) {
     const imageHtml = item.imageUrl
-        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${item.name}">`
+        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${item.name}" onload="handleEquipmentImageLoaded('${item.id}')" onerror="handleEquipmentImageLoaded('${item.id}')">`
         : `<i class="fas fa-tools equipment-image-placeholder"></i>`;
 
     const notesHtml = item.notes
@@ -1373,10 +1375,11 @@ function createEquipmentCard(item) {
     const statusText = status === 'operational' ? 'Operacional' : 'Reparo';
     const statusBadge = `<div class="equipment-status-badge ${status}"><i class="fas ${statusIcon}"></i> ${statusText}</div>`;
 
+    const hasImage = !!item.imageUrl;
     return `
         <div class="equipment-card" onclick="openEquipmentActionsModal('${item.id}')">
             ${statusBadge}
-            <div class="equipment-image-container">
+            <div class="equipment-image-container ${hasImage ? 'loading' : ''}" id="equipment-img-${item.id}">
                 ${imageHtml}
             </div>
             <div class="equipment-info">
@@ -1728,8 +1731,29 @@ function previewEquipmentImage(event) {
 }
 
 // ===========================
+// SHIMMER IMAGE LOAD HANDLERS
+// ===========================
+function handleFilamentImageLoaded(filamentId) {
+    const container = document.getElementById(`filament-img-${filamentId}`);
+    if (container) {
+        container.classList.remove('loading');
+        container.classList.add('loaded');
+    }
+}
+
+function handleEquipmentImageLoaded(equipmentId) {
+    const container = document.getElementById(`equipment-img-${equipmentId}`);
+    if (container) {
+        container.classList.remove('loading');
+        container.classList.add('loaded');
+    }
+}
+
+// ===========================
 // GLOBAL FUNCTIONS FOR ONCLICK
 // ===========================
+window.handleFilamentImageLoaded = handleFilamentImageLoaded;
+window.handleEquipmentImageLoaded = handleEquipmentImageLoaded;
 window.signInWithGoogle = signInWithGoogle;
 window.signOut = signOut;
 window.openAddFilamentModal = openAddFilamentModal;

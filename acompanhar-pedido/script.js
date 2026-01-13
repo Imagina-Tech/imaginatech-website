@@ -547,8 +547,8 @@ function showOrderDetails(orderId, orderData) {
             </div>
             <div class="photos-gallery">
                 ${orderData.images.map((image, index) => `
-                    <div class="photo-item" onclick="openPhotoModal('${image.url}', ${index}, ${orderData.images.length})">
-                        <img src="${image.url}" alt="Foto do produto ${index + 1}" loading="lazy">
+                    <div class="photo-item loading" id="photo-item-${index}" onclick="openPhotoModal('${image.url}', ${index}, ${orderData.images.length})">
+                        <img src="${image.url}" alt="Foto do produto ${index + 1}" loading="lazy" onload="handleProductPhotoLoaded(${index})" onerror="handleProductPhotoLoaded(${index})">
                         <div class="photo-overlay">
                             <i class="fas fa-search-plus"></i>
                         </div>
@@ -1423,6 +1423,19 @@ document.addEventListener('keydown', (e) => {
 window.openPhotoModal = openPhotoModal;
 window.closePhotoModal = closePhotoModal;
 window.navigatePhoto = navigatePhoto;
+
+// ===========================
+// SHIMMER IMAGE LOAD HANDLER
+// ===========================
+function handleProductPhotoLoaded(index) {
+    const container = document.getElementById(`photo-item-${index}`);
+    if (container) {
+        container.classList.remove('loading');
+        container.classList.add('loaded');
+    }
+}
+
+window.handleProductPhotoLoaded = handleProductPhotoLoaded;
 
 // ===========================
 // ACTIVITY LOGGING

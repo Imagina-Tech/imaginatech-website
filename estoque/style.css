@@ -2144,3 +2144,62 @@
         font-size: 1.2rem;
     }
 }
+
+/* ===========================
+   SHIMMER LOADING ANIMATION
+   =========================== */
+@keyframes shimmer-estoque {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Shimmer para imagem de filamento */
+.filament-image-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    min-width: 80px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.filament-image-container.loading {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-estoque 1.5s ease-in-out infinite;
+}
+
+.filament-image-container .filament-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease, opacity 0.4s ease;
+    opacity: 0;
+}
+
+.filament-image-container.loaded .filament-image {
+    opacity: 1;
+}
+
+.filament-card:hover .filament-image-container .filament-image {
+    transform: scale(1.05);
+}
+
+/* Shimmer para imagem de equipamento */
+.equipment-image-container.loading {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-estoque 1.5s ease-in-out infinite;
+}
+
+.equipment-image-container .equipment-image {
+    transition: transform 0.3s ease, opacity 0.4s ease;
+    opacity: 0;
+}
+
+.equipment-image-container.loaded .equipment-image {
+    opacity: 1;
+}

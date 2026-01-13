@@ -1697,3 +1697,26 @@ body {
 }
 .mb-2 { margin-bottom: 1rem; }
 .mb-3 { margin-bottom: 1.5rem; }
+
+/* ===========================
+   SHIMMER LOADING ANIMATION
+   =========================== */
+@keyframes shimmer-photo {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.photo-item.loading {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-photo 1.5s ease-in-out infinite;
+}
+
+.photo-item img {
+    transition: opacity 0.4s ease;
+    opacity: 0;
+}
+
+.photo-item.loaded img {
+    opacity: 1;
+}
