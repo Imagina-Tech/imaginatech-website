@@ -1850,6 +1850,7 @@ class CustomSelect {
         // Container principal
         this.customSelect = document.createElement('div');
         this.customSelect.className = 'custom-select';
+        this.customSelect.setAttribute('tabindex', '0'); // Permite receber foco e eventos de teclado
 
         // Trigger (botão que abre/fecha)
         this.trigger = document.createElement('div');
