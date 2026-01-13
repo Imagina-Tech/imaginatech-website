@@ -107,6 +107,9 @@ function initializeFirebase() {
 // ============================================
 
 async function initializeApp() {
+    // Mostrar skeletons imediatamente
+    showSkeletonLoading();
+
     // Aguardar Firebase carregar
     setTimeout(async () => {
         if (initializeFirebase()) {
@@ -115,6 +118,38 @@ async function initializeApp() {
             showEmptyState('Erro ao conectar com o servidor');
         }
     }, 100);
+}
+
+// ============================================
+// SKELETON LOADING
+// ============================================
+
+function showSkeletonLoading() {
+    const grid = document.getElementById('projetos-grid');
+    const skeletonCount = 6; // Mostrar 6 skeletons
+
+    let skeletonsHTML = '';
+    for (let i = 0; i < skeletonCount; i++) {
+        skeletonsHTML += `
+            <div class="skeleton-card" data-aos="fade-up" data-aos-delay="${i * 50}">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-specs">
+                        <div class="skeleton-badge"></div>
+                        <div class="skeleton-badge"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    grid.innerHTML = skeletonsHTML;
+
+    // Refresh AOS para os skeletons
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
 }
 
 // ============================================
@@ -181,6 +216,18 @@ function renderProjects(projects) {
 }
 
 // ============================================
+// IMAGE LOAD HANDLER
+// ============================================
+
+function handleImageLoaded(projectId) {
+    const container = document.getElementById(`img-container-${projectId}`);
+    if (container) {
+        container.classList.remove('loading');
+        container.classList.add('loaded');
+    }
+}
+
+// ============================================
 // CREATE PROJECT CARD
 // ============================================
 
@@ -237,6 +284,7 @@ function createProjectCard(project, index) {
     `;
 
     const imageUrl = project.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto';
+    const projectId = project.id;
 
     return `
         <div class="projeto-card"
@@ -244,8 +292,8 @@ function createProjectCard(project, index) {
              data-aos="fade-up"
              data-aos-delay="${delay}"
              onclick="openModal('${project.id}')">
-            <div class="projeto-image">
-                <img src="${imageUrl}" alt="${project.title}" loading="lazy">
+            <div class="projeto-image loading" id="img-container-${projectId}">
+                <img src="${imageUrl}" alt="${project.title}" loading="lazy" onload="handleImageLoaded('${projectId}')" onerror="handleImageLoaded('${projectId}')"  >
                 <div class="projeto-overlay">
                     <span class="projeto-category">${categoryDisplay}</span>
                 </div>

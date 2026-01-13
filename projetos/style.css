@@ -384,20 +384,6 @@ body {
     box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
 }
 
-.projeto-image {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    background: rgba(15, 23, 42, 0.9);
-}
-
-.projeto-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
 .projeto-card:hover .projeto-image img {
     transform: scale(1.1);
     filter: brightness(1.1);
@@ -571,12 +557,109 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.4);
 }
 
-/* ========== LOADING STATE ========== */
+/* ========== SKELETON LOADING (Nubank Style) ========== */
+.skeleton-card {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.skeleton-image {
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-info {
+    padding: 20px;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 75%;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation-delay: 0.1s;
+}
+
+.skeleton-specs {
+    display: flex;
+    gap: 10px;
+}
+
+.skeleton-badge {
+    height: 28px;
+    width: 80px;
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation-delay: 0.2s;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Image loading state dentro do card real */
+.projeto-image {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.projeto-image.loading {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.projeto-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease, filter 0.5s ease, opacity 0.4s ease;
+    opacity: 0;
+}
+
+.projeto-image.loaded img {
+    opacity: 1;
+}
+
+/* ========== LOADING STATE (fallback) ========== */
 .loading-state {
     grid-column: 1 / -1;
     text-align: center;
     padding: 60px 20px;
     color: #94a3b8;
+    display: none;
 }
 
 .loading-spinner {
