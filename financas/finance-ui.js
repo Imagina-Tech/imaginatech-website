@@ -1936,6 +1936,33 @@ class CustomSelect {
             }
         });
 
+        // Navegacao por digitacao - pula para opcao que comeca com a letra
+        this.searchBuffer = '';
+        this.searchTimeout = null;
+        this.customSelect.addEventListener('keypress', (e) => {
+            const char = e.key.toLowerCase();
+            if (/[a-zA-Z0-9]/.test(char)) {
+                e.preventDefault();
+
+                // Limpar timeout anterior
+                if (this.searchTimeout) clearTimeout(this.searchTimeout);
+
+                // Adicionar ao buffer
+                this.searchBuffer += char;
+
+                // Abrir dropdown se fechado
+                if (!this.isOpen) this.open();
+
+                // Buscar opcao
+                this.jumpToText(this.searchBuffer);
+
+                // Limpar buffer apos 1 segundo
+                this.searchTimeout = setTimeout(() => {
+                    this.searchBuffer = '';
+                }, 1000);
+            }
+        });
+
         // Observar mudanças no select original
         const observer = new MutationObserver(() => {
             this.updateDropdownOptions();
@@ -2123,6 +2150,28 @@ class CustomSelect {
             if (this.isOpen) {
                 options[newIndex].scrollIntoView({ block: 'nearest' });
             }
+        }
+    }
+
+    jumpToText(text) {
+        const options = this.dropdown.querySelectorAll('.custom-select-option:not(.disabled)');
+        const searchText = text.toLowerCase();
+
+        for (let option of options) {
+            const optionText = option.textContent.trim().toLowerCase();
+            if (optionText.startsWith(searchText)) {
+                // Highlight visual
+                options.forEach(opt => opt.classList.remove('highlighted'));
+                option.classList.add('highlighted');
+                option.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                return;
+            }
+        }
+
+        // Se nao encontrou e tem mais de 1 caractere, tenta so com o ultimo
+        if (text.length > 1) {
+            this.searchBuffer = text.charAt(text.length - 1);
+            this.jumpToText(this.searchBuffer);
         }
     }
 }
