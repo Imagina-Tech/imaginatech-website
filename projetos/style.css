@@ -705,6 +705,30 @@ body {
     display: block;
 }
 
+/* Scrollbar estilizado do modal */
+.modal-overlay::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-overlay::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-overlay::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00D4FF, #0077FF);
+    border-radius: 4px;
+}
+
+.modal-overlay::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00E5FF, #0088FF);
+}
+
+/* Firefox */
+.modal-overlay {
+    scrollbar-width: thin;
+    scrollbar-color: #00D4FF rgba(255, 255, 255, 0.05);
+}
+
 .modal-content {
     background: transparent;
     border: none;
