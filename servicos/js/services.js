@@ -227,6 +227,553 @@ export function updateColorDropdown(selectedMaterial) {
     }
 }
 
+// ===========================
+// MULTI-COLOR MODE FUNCTIONS
+// ===========================
+
+let colorEntries = []; // Array para gerenciar entradas de cor
+let colorEntryCounter = 0; // Contador para IDs unicos
+
+/**
+ * Toggle entre modo single-color e multi-color
+ */
+export function toggleMultiColorMode() {
+    const isMultiColor = document.getElementById('isMultiColor')?.checked || false;
+    const singleContainer = document.getElementById('singleColorContainer');
+    const multiContainer = document.getElementById('multiColorContainer');
+    const weightField = document.getElementById('serviceWeight');
+    const weightGroup = weightField?.closest('.form-group');
+
+    if (isMultiColor) {
+        if (singleContainer) singleContainer.style.display = 'none';
+        if (multiContainer) multiContainer.style.display = 'block';
+        if (weightGroup) weightGroup.style.display = 'none'; // Esconder peso individual
+
+        // Se nao tem entradas, adicionar a primeira
+        if (colorEntries.length === 0) {
+            addColorEntry();
+        }
+    } else {
+        if (singleContainer) singleContainer.style.display = 'block';
+        if (multiContainer) multiContainer.style.display = 'none';
+        if (weightGroup) weightGroup.style.display = 'block'; // Mostrar peso individual
+    }
+}
+
+/**
+ * Adiciona uma nova entrada de cor
+ */
+export function addColorEntry() {
+    const container = document.getElementById('colorEntriesContainer');
+    if (!container) return;
+
+    const material = document.getElementById('serviceMaterial')?.value;
+
+    // Limitar a 5 cores
+    if (colorEntries.length >= 5) {
+        showToast('Maximo de 5 cores por servico', 'warning');
+        return;
+    }
+
+    const index = colorEntryCounter++;
+
+    const entryDiv = document.createElement('div');
+    entryDiv.className = 'color-entry';
+    entryDiv.dataset.entryIndex = index;
+    entryDiv.innerHTML = createColorEntryHTML(index);
+    container.appendChild(entryDiv);
+
+    // Atualizar dropdown de cores para esta entrada
+    if (material) {
+        updateColorDropdownForEntry(index, material);
+    }
+
+    colorEntries.push({
+        index: index,
+        color: '',
+        weight: 0,
+        needsPurchase: false
+    });
+
+    updateColorEntryNumbers();
+    updateMultiColorTotal();
+    updateAddColorButton();
+}
+
+/**
+ * Remove uma entrada de cor
+ */
+export function removeColorEntry(index) {
+    // Minimo de 1 entrada em modo multi-cor
+    if (colorEntries.length <= 1) {
+        showToast('Necessario pelo menos 1 cor', 'warning');
+        return;
+    }
+
+    const container = document.getElementById('colorEntriesContainer');
+    const entry = container?.querySelector(`[data-entry-index="${index}"]`);
+    if (entry) {
+        entry.remove();
+    }
+
+    colorEntries = colorEntries.filter(e => e.index !== index);
+
+    updateColorEntryNumbers();
+    updateMultiColorTotal();
+    updateAddColorButton();
+}
+
+/**
+ * Cria HTML para uma entrada de cor
+ */
+function createColorEntryHTML(index) {
+    return `
+        <div class="color-entry-header">
+            <span class="color-entry-number">Cor 1</span>
+            <button type="button" class="btn-remove-color" onclick="removeColorEntry(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="color-entry-fields">
+            <div class="form-group">
+                <label>Cor *</label>
+                <select class="form-select color-select" data-index="${index}" onchange="handleColorEntryChange(${index})">
+                    <option value="">Selecione a cor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Peso (g) *</label>
+                <input type="number" class="form-input color-weight" data-index="${index}"
+                       min="1" placeholder="0" onchange="handleWeightEntryChange(${index})" oninput="handleWeightEntryChange(${index})">
+            </div>
+            <div class="stock-status" data-index="${index}">
+                <i class="fas fa-question-circle"></i>
+                <span>Selecione</span>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Atualiza dropdown de cores para uma entrada especifica
+ */
+export function updateColorDropdownForEntry(index, material) {
+    const select = document.querySelector(`.color-select[data-index="${index}"]`);
+    if (!select || !material) return;
+
+    // Filtrar filamentos pelo material e que tenham estoque
+    const filtered = availableFilaments.filter(f => {
+        if (!f.type || f.type.toLowerCase() !== material.toLowerCase()) return false;
+        if (f.weight <= 0) return false;
+        return true;
+    });
+
+    // Agrupar por cor para mostrar quantidade total disponivel
+    const colorGroups = {};
+    filtered.forEach(f => {
+        const colorKey = f.color.toLowerCase();
+        if (!colorGroups[colorKey]) {
+            colorGroups[colorKey] = {
+                color: f.color,
+                totalWeight: 0,
+                filaments: []
+            };
+        }
+        colorGroups[colorKey].totalWeight += f.weight * 1000; // kg to g
+        colorGroups[colorKey].filaments.push(f);
+    });
+
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">Selecione a cor</option>';
+
+    if (Object.keys(colorGroups).length === 0) {
+        select.innerHTML += '<option value="" disabled>Sem estoque disponivel</option>';
+    } else {
+        Object.values(colorGroups)
+            .sort((a, b) => a.color.localeCompare(b.color))
+            .forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.color.toLowerCase();
+                option.textContent = `${group.color} (${group.totalWeight.toFixed(0)}g)`;
+                select.appendChild(option);
+            });
+    }
+
+    // Restaurar valor se existia
+    if (currentValue) {
+        select.value = currentValue;
+    }
+
+    // Sincronizar CustomSelect
+    setTimeout(() => {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+}
+
+/**
+ * Atualiza todos os dropdowns de cor quando material muda
+ */
+export function updateAllColorEntryDropdowns() {
+    const material = document.getElementById('serviceMaterial')?.value;
+    if (!material) return;
+
+    colorEntries.forEach(entry => {
+        updateColorDropdownForEntry(entry.index, material);
+    });
+}
+
+/**
+ * Handler quando cor de uma entrada muda
+ */
+export function handleColorEntryChange(index) {
+    const select = document.querySelector(`.color-select[data-index="${index}"]`);
+    const weightInput = document.querySelector(`.color-weight[data-index="${index}"]`);
+
+    if (!select) return;
+
+    const color = select.value;
+    const weight = parseFloat(weightInput?.value) || 0;
+
+    // Atualizar estado
+    const entry = colorEntries.find(e => e.index === index);
+    if (entry) {
+        entry.color = color;
+    }
+
+    // Atualizar status do estoque
+    updateStockStatusForEntry(index, color, weight);
+}
+
+/**
+ * Handler quando peso de uma entrada muda
+ */
+export function handleWeightEntryChange(index) {
+    const select = document.querySelector(`.color-select[data-index="${index}"]`);
+    const weightInput = document.querySelector(`.color-weight[data-index="${index}"]`);
+
+    if (!weightInput) return;
+
+    const color = select?.value || '';
+    const weight = parseFloat(weightInput.value) || 0;
+
+    // Atualizar estado
+    const entry = colorEntries.find(e => e.index === index);
+    if (entry) {
+        entry.weight = weight;
+    }
+
+    // Atualizar status do estoque
+    updateStockStatusForEntry(index, color, weight);
+    updateMultiColorTotal();
+}
+
+/**
+ * Atualiza indicador de status do estoque para uma entrada
+ */
+function updateStockStatusForEntry(index, color, weight) {
+    const statusDiv = document.querySelector(`.stock-status[data-index="${index}"]`);
+    if (!statusDiv) return;
+
+    const material = document.getElementById('serviceMaterial')?.value;
+
+    if (!color) {
+        statusDiv.className = 'stock-status';
+        statusDiv.innerHTML = `<i class="fas fa-question-circle"></i><span>Selecione</span>`;
+        return;
+    }
+
+    if (!weight || weight <= 0) {
+        statusDiv.className = 'stock-status';
+        statusDiv.innerHTML = `<i class="fas fa-balance-scale"></i><span>Informe peso</span>`;
+        return;
+    }
+
+    const stockInfo = checkStockAvailability(material, color, weight);
+
+    // Atualizar flag de compra necessaria
+    const entry = colorEntries.find(e => e.index === index);
+    if (entry) {
+        entry.needsPurchase = !stockInfo.hasStock;
+    }
+
+    if (stockInfo.notFound) {
+        statusDiv.className = 'stock-status no-stock';
+        statusDiv.innerHTML = `<i class="fas fa-times-circle"></i><span>Nao encontrado</span>`;
+    } else if (stockInfo.hasStock) {
+        statusDiv.className = 'stock-status has-stock';
+        statusDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>${stockInfo.available}g disp.</span>`;
+    } else {
+        const missing = stockInfo.needed - stockInfo.available;
+        statusDiv.className = 'stock-status no-stock';
+        statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>Faltam ${missing}g</span>`;
+    }
+}
+
+/**
+ * Atualiza numeracao das entradas de cor
+ */
+function updateColorEntryNumbers() {
+    const container = document.getElementById('colorEntriesContainer');
+    if (!container) return;
+
+    const entries = container.querySelectorAll('.color-entry');
+    entries.forEach((entry, i) => {
+        const numberSpan = entry.querySelector('.color-entry-number');
+        if (numberSpan) {
+            numberSpan.textContent = `Cor ${i + 1}`;
+        }
+    });
+}
+
+/**
+ * Atualiza o total de peso multi-cor
+ */
+function updateMultiColorTotal() {
+    const totalDiv = document.getElementById('multiColorTotal');
+    const totalDisplay = document.getElementById('totalWeightDisplay');
+
+    if (!totalDiv || !totalDisplay) return;
+
+    const total = colorEntries.reduce((sum, entry) => sum + (entry.weight || 0), 0);
+
+    if (total > 0) {
+        totalDiv.style.display = 'block';
+        totalDisplay.textContent = `${total}g`;
+    } else {
+        totalDiv.style.display = 'none';
+    }
+}
+
+/**
+ * Atualiza estado do botao adicionar cor
+ */
+function updateAddColorButton() {
+    const btn = document.querySelector('.btn-add-color');
+    if (btn) {
+        btn.disabled = colorEntries.length >= 5;
+    }
+}
+
+/**
+ * Coleta dados do formulario multi-cor
+ * @returns {Object} { materials: Array, totalWeight: number, needsMaterialPurchase: boolean }
+ */
+export function collectMultiColorData() {
+    const material = document.getElementById('serviceMaterial')?.value;
+    const entries = [];
+    let totalWeight = 0;
+    let anyNeedsPurchase = false;
+
+    colorEntries.forEach(entry => {
+        const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
+        const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
+
+        const color = select?.value || entry.color;
+        const weight = parseFloat(weightInput?.value) || entry.weight;
+
+        if (color && weight > 0) {
+            const stockInfo = checkStockAvailability(material, color, weight);
+            const needsPurchase = !stockInfo.hasStock;
+
+            entries.push({
+                color: color,
+                weight: weight,
+                needsPurchase: needsPurchase,
+                filamentId: stockInfo.filament?.id || null,
+                brand: stockInfo.filament?.brand || ''
+            });
+
+            totalWeight += weight;
+            if (needsPurchase) anyNeedsPurchase = true;
+        }
+    });
+
+    return {
+        materials: entries,
+        totalWeight: totalWeight,
+        needsMaterialPurchase: anyNeedsPurchase
+    };
+}
+
+/**
+ * Reseta o estado multi-cor (chamar ao fechar modal)
+ */
+export function resetMultiColorState() {
+    colorEntries = [];
+    colorEntryCounter = 0;
+
+    const container = document.getElementById('colorEntriesContainer');
+    if (container) container.innerHTML = '';
+
+    const isMultiColorCheckbox = document.getElementById('isMultiColor');
+    if (isMultiColorCheckbox) isMultiColorCheckbox.checked = false;
+
+    const singleContainer = document.getElementById('singleColorContainer');
+    const multiContainer = document.getElementById('multiColorContainer');
+    const weightField = document.getElementById('serviceWeight');
+    const weightGroup = weightField?.closest('.form-group');
+
+    if (singleContainer) singleContainer.style.display = 'block';
+    if (multiContainer) multiContainer.style.display = 'none';
+    if (weightGroup) weightGroup.style.display = 'block';
+
+    const totalDiv = document.getElementById('multiColorTotal');
+    if (totalDiv) totalDiv.style.display = 'none';
+}
+
+/**
+ * Carrega dados multi-cor no formulario (ao editar servico)
+ */
+export function loadMultiColorData(service) {
+    if (!service.isMultiColor || !service.materials || service.materials.length === 0) {
+        return false; // Nao e multi-cor
+    }
+
+    const isMultiColorCheckbox = document.getElementById('isMultiColor');
+    if (isMultiColorCheckbox) {
+        isMultiColorCheckbox.checked = true;
+        toggleMultiColorMode();
+    }
+
+    // Limpar entradas existentes
+    colorEntries = [];
+    colorEntryCounter = 0;
+    const container = document.getElementById('colorEntriesContainer');
+    if (container) container.innerHTML = '';
+
+    // Carregar cada cor
+    service.materials.forEach((m, i) => {
+        addColorEntry();
+
+        const entry = colorEntries[colorEntries.length - 1];
+        if (!entry) return;
+
+        // Usar setTimeout para aguardar o DOM e CustomSelect
+        setTimeout(() => {
+            const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
+            const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
+
+            if (select) {
+                select.value = m.color.toLowerCase();
+                setTimeout(() => {
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }, 0);
+            }
+
+            if (weightInput) {
+                weightInput.value = m.weight;
+                handleWeightEntryChange(entry.index);
+            }
+        }, 50 * (i + 1)); // Delay escalonado
+    });
+
+    return true; // Carregou como multi-cor
+}
+
+/**
+ * Processa edicao de servico multi-cor
+ * Compara estados anterior e atual para deduzir/devolver materiais
+ */
+export async function processMultiColorEdit(oldService, newMaterials, material) {
+    const oldMaterials = oldService.materials || [];
+    const results = { devolvidos: [], deduzidos: [], erros: [] };
+
+    // 1. Identificar cores removidas (devolver ao estoque)
+    for (const oldM of oldMaterials) {
+        const wasDeducted = !oldM.needsPurchase;
+        const stillExists = newMaterials.find(nm =>
+            nm.color.toLowerCase() === oldM.color.toLowerCase()
+        );
+
+        if (!stillExists && wasDeducted && oldM.weight > 0) {
+            console.log(`↩️ Devolvendo ${oldM.weight}g de ${oldM.color} ao estoque (cor removida)`);
+            const success = await deductMaterialFromStock(material, oldM.color, -oldM.weight);
+            if (success) {
+                results.devolvidos.push({ color: oldM.color, weight: oldM.weight });
+            } else {
+                results.erros.push({ color: oldM.color, action: 'devolver' });
+            }
+        }
+    }
+
+    // 2. Processar cores existentes e novas
+    for (const newM of newMaterials) {
+        const oldM = oldMaterials.find(om =>
+            om.color.toLowerCase() === newM.color.toLowerCase()
+        );
+
+        if (!oldM) {
+            // Cor nova - deduzir se tem estoque
+            if (!newM.needsPurchase && newM.weight > 0) {
+                console.log(`🔽 Deduzindo ${newM.weight}g de ${newM.color} (nova cor)`);
+                const success = await deductMaterialFromStock(material, newM.color, newM.weight);
+                if (success) {
+                    results.deduzidos.push({ color: newM.color, weight: newM.weight });
+                } else {
+                    newM.needsPurchase = true;
+                    results.erros.push({ color: newM.color, action: 'deduzir' });
+                }
+            }
+        } else {
+            // Cor existente - verificar diferenca de peso
+            const wasDeducted = !oldM.needsPurchase;
+            const weightDiff = newM.weight - oldM.weight;
+
+            if (wasDeducted) {
+                if (weightDiff > 0) {
+                    // Aumentou - verificar e deduzir diferenca
+                    const stockInfo = checkStockAvailability(material, newM.color, weightDiff);
+                    if (stockInfo.hasStock) {
+                        console.log(`📈 Deduzindo diferenca de ${weightDiff}g de ${newM.color}`);
+                        const success = await deductMaterialFromStock(material, newM.color, weightDiff);
+                        if (success) {
+                            results.deduzidos.push({ color: newM.color, weight: weightDiff });
+                            newM.needsPurchase = false;
+                        } else {
+                            // Falhou - devolver tudo e marcar para compra
+                            await deductMaterialFromStock(material, newM.color, -oldM.weight);
+                            newM.needsPurchase = true;
+                            results.devolvidos.push({ color: newM.color, weight: oldM.weight });
+                        }
+                    } else {
+                        // Nao tem estoque para aumento - devolver tudo
+                        console.log(`❌ Sem estoque para aumento. Devolvendo ${oldM.weight}g de ${newM.color}`);
+                        await deductMaterialFromStock(material, newM.color, -oldM.weight);
+                        newM.needsPurchase = true;
+                        results.devolvidos.push({ color: newM.color, weight: oldM.weight });
+                    }
+                } else if (weightDiff < 0) {
+                    // Diminuiu - devolver diferenca
+                    const returnAmount = Math.abs(weightDiff);
+                    console.log(`📉 Devolvendo diferenca de ${returnAmount}g de ${newM.color}`);
+                    await deductMaterialFromStock(material, newM.color, weightDiff);
+                    results.devolvidos.push({ color: newM.color, weight: returnAmount });
+                    newM.needsPurchase = false;
+                }
+                // Se weightDiff === 0, manter como esta
+            } else if (!newM.needsPurchase && newM.weight > 0) {
+                // Antes precisava comprar, agora tem estoque - deduzir
+                console.log(`✅ Agora ha estoque! Deduzindo ${newM.weight}g de ${newM.color}`);
+                const success = await deductMaterialFromStock(material, newM.color, newM.weight);
+                if (success) {
+                    results.deduzidos.push({ color: newM.color, weight: newM.weight });
+                } else {
+                    newM.needsPurchase = true;
+                }
+            }
+        }
+    }
+
+    return results;
+}
+
+// Exportar funcoes para uso global (onclick handlers)
+window.toggleMultiColorMode = toggleMultiColorMode;
+window.addColorEntry = addColorEntry;
+window.removeColorEntry = removeColorEntry;
+window.handleColorEntryChange = handleColorEntryChange;
+window.handleWeightEntryChange = handleWeightEntryChange;
+
 /**
  * Deduz ou devolve material do estoque
  * CORRIGIDO: Busca case-insensitive e remoção de cache local (listener cuida disso)
@@ -465,9 +1012,41 @@ export async function saveService(event) {
         service.color = getFieldValue('serviceColor');
         service.weight = getFieldValue('serviceWeight', true);
         service.deliveryMethod = deliveryMethod;
+
+        // ===========================
+        // DETECÇÃO DE MODO MULTI-COR
+        // ===========================
+        const isMultiColorCheckbox = document.getElementById('isMultiColor');
+        const isMultiColor = isMultiColorCheckbox?.checked || false;
+
+        if (isMultiColor) {
+            const multiColorData = collectMultiColorData();
+
+            if (multiColorData.materials.length === 0) {
+                return showToast('Adicione pelo menos uma cor ao serviço multi-cor', 'error');
+            }
+
+            // Sobrescrever campos single-color com dados multi-cor
+            service.isMultiColor = true;
+            service.materials = multiColorData.materials;
+            service.weight = multiColorData.totalWeight;
+            service.color = multiColorData.materials.map(m => m.color).join(' + ');
+
+            console.log('🎨 Modo Multi-Cor ativado:', {
+                cores: multiColorData.materials.length,
+                pesoTotal: multiColorData.totalWeight,
+                needsMaterialPurchase: multiColorData.needsMaterialPurchase
+            });
+        } else {
+            // Garantir que campos multi-cor sejam limpos em modo single
+            service.isMultiColor = false;
+            service.materials = [];
+        }
     } else {
         // Modelagem não tem entrega física
         service.deliveryMethod = 'digital';
+        service.isMultiColor = false;
+        service.materials = [];
     }
     
     if (state.editingServiceId) {
@@ -558,12 +1137,78 @@ export async function saveService(event) {
     if (serviceType === 'modelagem') {
         needsMaterialPurchase = false;
         materialToDeduct = 0;
+    } else if (service.isMultiColor && service.materials && service.materials.length > 0) {
+        // ========================================
+        // LÓGICA DE ESTOQUE PARA MULTI-COR
+        // ========================================
+        console.log('🎨 Processando estoque multi-cor...');
+
+        if (state.editingServiceId) {
+            // EDITANDO serviço existente
+            const oldService = state.services.find(s => s.id === state.editingServiceId);
+
+            if (oldService) {
+                if (oldService.isMultiColor && oldService.materials) {
+                    // Multi-cor → Multi-cor: usar processMultiColorEdit
+                    console.log('🔄 Editando multi-cor → multi-cor');
+                    const editResults = await processMultiColorEdit(oldService, service.materials, service.material);
+
+                    console.log('📊 Resultado da edição multi-cor:', editResults);
+
+                    // Recalcular needsMaterialPurchase com base nos materiais atualizados
+                    needsMaterialPurchase = service.materials.some(m => m.needsPurchase);
+                    materialToDeduct = 0; // processMultiColorEdit já fez as deduções
+
+                } else {
+                    // Single-cor → Multi-cor: devolver cor antiga (se deduzida), processar novas
+                    console.log('🔄 Editando single-cor → multi-cor');
+
+                    const wasDeducted = oldService.needsMaterialPurchase === false;
+                    if (wasDeducted && oldService.material && oldService.color && oldService.weight > 0) {
+                        console.log(`↩️ Devolvendo ${oldService.weight}g de ${oldService.color} ao estoque (era single-cor)`);
+                        await deductMaterialFromStock(oldService.material, oldService.color, -oldService.weight);
+                    }
+
+                    // Deduzir novas cores que têm estoque
+                    for (const m of service.materials) {
+                        if (!m.needsPurchase && m.weight > 0) {
+                            console.log(`🔽 Deduzindo ${m.weight}g de ${m.color}`);
+                            await deductMaterialFromStock(service.material, m.color, m.weight);
+                        }
+                    }
+
+                    needsMaterialPurchase = service.materials.some(m => m.needsPurchase);
+                    materialToDeduct = 0;
+                }
+            }
+        } else {
+            // CRIANDO novo serviço multi-cor
+            console.log('🆕 Criando novo serviço multi-cor');
+
+            for (const m of service.materials) {
+                if (!m.needsPurchase && m.weight > 0) {
+                    console.log(`🔽 Deduzindo ${m.weight}g de ${m.color}`);
+                    await deductMaterialFromStock(service.material, m.color, m.weight);
+                }
+            }
+
+            needsMaterialPurchase = service.materials.some(m => m.needsPurchase);
+            materialToDeduct = 0; // Já processado acima
+        }
+
+        if (needsMaterialPurchase) {
+            const coresSemEstoque = service.materials.filter(m => m.needsPurchase).map(m => m.color);
+            showToast(`⚠️ Cores sem estoque suficiente: ${coresSemEstoque.join(', ')}`, 'warning');
+        }
+
     } else {
-        // Lógica de estoque para serviços de impressão
+        // ========================================
+        // LÓGICA DE ESTOQUE PARA SINGLE-COR
+        // ========================================
 
     if (state.editingServiceId) {
         // ========================================
-        // EDITANDO SERVIÇO EXISTENTE
+        // EDITANDO SERVIÇO EXISTENTE (Single-Cor)
         // ========================================
         const oldService = state.services.find(s => s.id === state.editingServiceId);
 
@@ -571,6 +1216,36 @@ export async function saveService(event) {
             console.error('❌ Serviço não encontrado para edição');
             return;
         }
+
+        // Verificar transição de multi-cor para single-cor
+        if (oldService.isMultiColor && oldService.materials && oldService.materials.length > 0) {
+            console.log('🔄 Editando multi-cor → single-cor');
+
+            // Devolver todas as cores que estavam deduzidas
+            for (const oldM of oldService.materials) {
+                if (!oldM.needsPurchase && oldM.weight > 0) {
+                    console.log(`↩️ Devolvendo ${oldM.weight}g de ${oldM.color} ao estoque`);
+                    await deductMaterialFromStock(oldService.material, oldM.color, -oldM.weight);
+                }
+            }
+
+            // Agora processar como novo single-cor
+            if (service.material && service.color && service.weight) {
+                stockInfo = checkStockAvailability(service.material, service.color, service.weight);
+
+                if (stockInfo.hasStock) {
+                    materialToDeduct = service.weight;
+                    needsMaterialPurchase = false;
+                    console.log(`✅ TEM estoque para deduzir ${service.weight}g`);
+                } else {
+                    needsMaterialPurchase = true;
+                    const missing = stockInfo.needed - stockInfo.available;
+                    console.log(`⚠️ NÃO TEM estoque. Faltam ${missing}g`);
+                    showToast(`⚠️ Estoque insuficiente! Faltam ${missing}g.`, 'warning');
+                }
+            }
+        } else {
+            // Single-cor → Single-cor (fluxo original)
 
         // CORRIGIDO: Normalizar valores para evitar erros de undefined/null
         const oldMaterial = (oldService.material || '').trim();
@@ -752,9 +1427,11 @@ export async function saveService(event) {
             needsMaterialPurchase = false;
         }
 
+        } // Fecha else single-cor → single-cor
+
     } else {
         // ========================================
-        // CRIANDO NOVO SERVIÇO
+        // CRIANDO NOVO SERVIÇO (Single-Cor)
         // ========================================
         console.log('🆕 CRIANDO NOVO SERVIÇO');
 
@@ -1043,13 +1720,32 @@ export async function deleteService(serviceId) {
         // Devolver material ao estoque antes de excluir (se foi deduzido)
         // CORRIGIDO: Verificar se needsMaterialPurchase é EXPLICITAMENTE false
         // Serviços antigos sem este campo (undefined) não devem tentar devolver
-        const materialWasDeducted = service.needsMaterialPurchase === false;
-        const hasMaterial = service.material && service.color && (parseFloat(service.weight) || 0) > 0;
 
-        if (materialWasDeducted && hasMaterial) {
-            const weightToReturn = parseFloat(service.weight) || 0;
-            console.log(`🔄 Devolvendo ${weightToReturn}g de ${service.material} ${service.color} ao estoque...`);
-            await deductMaterialFromStock(service.material, service.color, -weightToReturn);
+        if (service.isMultiColor && service.materials && service.materials.length > 0) {
+            // ========================================
+            // DEVOLUÇÃO MULTI-COR
+            // ========================================
+            console.log('🎨 Devolvendo materiais multi-cor ao estoque...');
+
+            for (const m of service.materials) {
+                // Só devolve se foi deduzido (needsPurchase === false)
+                if (!m.needsPurchase && m.weight > 0) {
+                    console.log(`↩️ Devolvendo ${m.weight}g de ${m.color} ao estoque`);
+                    await deductMaterialFromStock(service.material, m.color, -m.weight);
+                }
+            }
+        } else {
+            // ========================================
+            // DEVOLUÇÃO SINGLE-COR (fluxo original)
+            // ========================================
+            const materialWasDeducted = service.needsMaterialPurchase === false;
+            const hasMaterial = service.material && service.color && (parseFloat(service.weight) || 0) > 0;
+
+            if (materialWasDeducted && hasMaterial) {
+                const weightToReturn = parseFloat(service.weight) || 0;
+                console.log(`🔄 Devolvendo ${weightToReturn}g de ${service.material} ${service.color} ao estoque...`);
+                await deductMaterialFromStock(service.material, service.color, -weightToReturn);
+            }
         }
 
         await state.db.collection('services').doc(serviceId).delete();
@@ -1871,7 +2567,10 @@ function createServiceCard(service) {
                 <i class="fas fa-exclamation-triangle"></i>
                 <span>COMPRAR MATERIAL PARA FAZER O SERVIÇO</span>
                 <div class="material-info-alert">
-                    ${service.material && service.color ? `${service.material} ${formatColorName(service.color)}${service.weight ? ` - ${service.weight}g` : ''}` : 'Material não especificado'}
+                    ${service.isMultiColor && service.materials && service.materials.length > 0 ?
+                        `${service.material} - ${service.materials.filter(m => m.needsPurchase).map(m => `${formatColorName(m.color)} (${m.weight}g)`).join(', ')}` :
+                        (service.material && service.color ? `${service.material} ${formatColorName(service.color)}${service.weight ? ` - ${service.weight}g` : ''}` : 'Material não especificado')
+                    }
                 </div>
             </div>` : ''}
 
@@ -1902,7 +2601,7 @@ function createServiceCard(service) {
             <div class="service-info">
                 <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
                 ${!isModelagem && service.material ? `<div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material}</span></div>` : ''}
-                ${!isModelagem && service.color ? `<div class="info-item"><i class="fas fa-palette"></i><span>${formatColorName(service.color)}</span></div>` : ''}
+                ${!isModelagem && service.color ? `<div class="info-item${service.isMultiColor ? ' multi-color-badge' : ''}"><i class="fas fa-palette"></i><span>${service.isMultiColor ? '🎨 ' : ''}${formatColorName(service.color)}</span></div>` : ''}
                 <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
                 ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                 ${!isModelagem && service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}

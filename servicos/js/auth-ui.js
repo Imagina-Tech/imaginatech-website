@@ -33,7 +33,10 @@ import {
     saveToPortfolio,
     setupUpModalDragDrop,
     // Extra Photos (Galeria)
-    removeExtraPhoto
+    removeExtraPhoto,
+    // Multi-Cor
+    loadMultiColorData,
+    resetMultiColorState
 } from './services.js';
 
 // Importar utilitários do utils.js
@@ -990,6 +993,14 @@ export async function openEditModal(serviceId) {
         materialSelectListener.addEventListener('change', handleMaterialChange);
     }
 
+    // MULTI-COR: Carregar dados se o serviço for multi-cor
+    // Usar delay para garantir que os dropdowns de material/cor já estão prontos
+    if (service.isMultiColor && service.materials && service.materials.length > 0) {
+        setTimeout(() => {
+            loadMultiColorData(service);
+        }, 150); // Delay maior para permitir que todos os dropdowns inicializem
+    }
+
     document.getElementById('serviceModal')?.classList.add('active');
 }
 
@@ -1001,8 +1012,11 @@ export function closeModal() {
     const trackingInput = document.getElementById('editTrackingCode');
     if (trackingField) trackingField.style.display = 'none';
     if (trackingInput) trackingInput.value = '';
-    
+
     document.getElementById('clientSuggestions').style.display = 'none';
+
+    // MULTI-COR: Resetar estado ao fechar modal
+    resetMultiColorState();
 }
 
 export function closeStatusModal() {
