@@ -837,15 +837,20 @@ export async function openEditModal(serviceId) {
                 materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
                 // 2. Cor (dropdown dinâmico - depende do material)
-                // Só atualizar após o material estar definido
-                updateColorDropdown(service.material);
+                // IMPORTANTE: NÃO definir cor single se o serviço for multicor!
+                // Para multicor, service.color é "Vermelho + Azul" (valor concatenado)
+                // que não existe como opção no dropdown single.
+                // O loadMultiColorData (chamado abaixo) cuidará das cores.
+                if (!service.isMultiColor) {
+                    updateColorDropdown(service.material);
 
-                const colorSelect = document.getElementById('serviceColor');
-                if (colorSelect && service.color) {
-                    setTimeout(() => {
-                        colorSelect.value = service.color;
-                        colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    }, 0);
+                    const colorSelect = document.getElementById('serviceColor');
+                    if (colorSelect && service.color) {
+                        setTimeout(() => {
+                            colorSelect.value = service.color;
+                            colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }, 0);
+                    }
                 }
             }, 0);
         }
@@ -994,11 +999,15 @@ export async function openEditModal(serviceId) {
     }
 
     // MULTI-COR: Carregar dados se o serviço for multi-cor
-    // Usar delay para garantir que os dropdowns de material/cor já estão prontos
+    // Usar delay maior para garantir que:
+    // 1. Material dropdown está populado e valor definido (setTimeout 0 acima)
+    // 2. MutationObserver do CustomSelect processou
+    // 3. DOM está completamente renderizado
     if (service.isMultiColor && service.materials && service.materials.length > 0) {
+        console.log('🎨 openEditModal - Serviço multicor detectado, agendando loadMultiColorData');
         setTimeout(() => {
             loadMultiColorData(service);
-        }, 150); // Delay maior para permitir que todos os dropdowns inicializem
+        }, 250); // Delay aumentado para garantir sincronização
     }
 
     document.getElementById('serviceModal')?.classList.add('active');

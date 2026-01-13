@@ -736,26 +736,39 @@ export function loadMultiColorData(service) {
         return false; // Nao e multi-cor
     }
 
+    // IMPORTANTE: Limpar estado ANTES de ativar modo multicor
+    // Isso evita que toggleMultiColorMode() adicione entrada fantasma
+    colorEntries = [];
+    colorEntryCounter = 0;
+    const container = document.getElementById('colorEntriesContainer');
+    if (container) container.innerHTML = '';
+
+    // Agora sim, ativar modo multicor (toggleMultiColorMode vai ver colorEntries vazio
+    // e adicionar uma entrada, mas vamos sobrescrever com as entradas corretas)
     const isMultiColorCheckbox = document.getElementById('isMultiColor');
     if (isMultiColorCheckbox) {
         isMultiColorCheckbox.checked = true;
         toggleMultiColorMode();
     }
 
-    // Limpar entradas existentes
+    // Limpar novamente para garantir (toggleMultiColorMode pode ter adicionado uma entrada)
     colorEntries = [];
     colorEntryCounter = 0;
-    const container = document.getElementById('colorEntriesContainer');
     if (container) container.innerHTML = '';
 
     const material = service.material;
+
+    console.log('🎨 loadMultiColorData - Carregando', service.materials.length, 'cores para material:', material);
 
     // Carregar cada cor
     service.materials.forEach((m, i) => {
         addColorEntry();
 
         const entry = colorEntries[colorEntries.length - 1];
-        if (!entry) return;
+        if (!entry) {
+            console.error('❌ Entrada não encontrada para índice', i);
+            return;
+        }
 
         // Guardar dados no estado da entrada
         entry.color = m.color;
@@ -764,40 +777,73 @@ export function loadMultiColorData(service) {
         entry.weight = m.weight;
         entry.needsPurchase = m.needsPurchase;
 
-        // Usar setTimeout para aguardar o DOM e CustomSelect
+        console.log(`🎨 Entrada ${i}: cor=${m.color}, filamentId=${m.filamentId}, weight=${m.weight}`);
+
+        // Usar setTimeout para aguardar o DOM e CustomSelect processar
+        // Delay maior e escalonado para cada entrada
+        const baseDelay = 100; // Aumentado de 50ms para 100ms
         setTimeout(() => {
             const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
             const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
 
+            if (!select) {
+                console.error(`❌ Select não encontrado para entrada ${entry.index}`);
+                return;
+            }
+
             // Atualizar dropdown COM a cor e filamentId existentes
-            if (select && material) {
+            if (material) {
                 updateColorDropdownForEntry(entry.index, material, m.color, m.filamentId);
 
+                // Delay para CustomSelect processar as novas opções
                 setTimeout(() => {
+                    let valueSet = false;
+
                     // Tentar selecionar pelo filamentId primeiro
                     if (m.filamentId) {
                         const optionById = select.querySelector(`option[data-filament-id="${m.filamentId}"]`);
                         if (optionById) {
                             select.value = optionById.value;
                             select.dataset.selectedFilamentId = m.filamentId;
-                        } else {
-                            select.value = m.color.toLowerCase();
+                            valueSet = true;
+                            console.log(`✅ Cor ${m.color} selecionada por filamentId`);
                         }
-                    } else {
-                        select.value = m.color.toLowerCase();
                     }
+
+                    // Fallback: tentar pelo valor da cor
+                    if (!valueSet) {
+                        const colorValue = m.color.toLowerCase();
+                        const optionByColor = Array.from(select.options).find(opt => opt.value === colorValue);
+                        if (optionByColor) {
+                            select.value = colorValue;
+                            valueSet = true;
+                            console.log(`✅ Cor ${m.color} selecionada por valor`);
+                        } else {
+                            console.warn(`⚠️ Cor ${m.color} não encontrada no dropdown`);
+                        }
+                    }
+
+                    // Disparar evento para sincronizar CustomSelect
                     select.dispatchEvent(new Event('change', { bubbles: true }));
-                }, 10);
+                }, 50); // Aumentado de 10ms para 50ms
             }
 
+            // Definir peso
             if (weightInput) {
                 weightInput.value = m.weight;
                 setTimeout(() => {
                     handleWeightEntryChange(entry.index);
-                }, 20);
+                }, 60); // Aumentado de 20ms para 60ms
             }
-        }, 50 * (i + 1)); // Delay escalonado
+        }, baseDelay * (i + 1)); // Delay escalonado
     });
+
+    // Atualizar total após todas as entradas serem carregadas
+    const totalDelay = 100 * (service.materials.length + 1) + 100;
+    setTimeout(() => {
+        updateMultiColorTotal();
+        console.log('🎨 loadMultiColorData - Carregamento completo');
+    }, totalDelay);
 
     return true; // Carregou como multi-cor
 }
