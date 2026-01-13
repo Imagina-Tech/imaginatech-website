@@ -357,20 +357,19 @@ function createColorEntryHTML(index) {
 /**
  * Atualiza dropdown de cores para uma entrada especifica
  */
-export function updateColorDropdownForEntry(index, material) {
+export function updateColorDropdownForEntry(index, material, existingColor = null) {
     const select = document.querySelector(`.color-select[data-index="${index}"]`);
     if (!select || !material) return;
 
-    // Filtrar filamentos pelo material e que tenham estoque
-    const filtered = availableFilaments.filter(f => {
+    // Filtrar filamentos pelo material (incluir todos, mesmo sem estoque, para referencia)
+    const allFilaments = availableFilaments.filter(f => {
         if (!f.type || f.type.toLowerCase() !== material.toLowerCase()) return false;
-        if (f.weight <= 0) return false;
         return true;
     });
 
     // Agrupar por cor para mostrar quantidade total disponivel
     const colorGroups = {};
-    filtered.forEach(f => {
+    allFilaments.forEach(f => {
         const colorKey = f.color.toLowerCase();
         if (!colorGroups[colorKey]) {
             colorGroups[colorKey] = {
@@ -386,15 +385,31 @@ export function updateColorDropdownForEntry(index, material) {
     const currentValue = select.value;
     select.innerHTML = '<option value="">Selecione a cor</option>';
 
+    // Se tem cor existente (editando) e ela nao esta nos grupos, adicionar
+    if (existingColor && !colorGroups[existingColor.toLowerCase()]) {
+        colorGroups[existingColor.toLowerCase()] = {
+            color: existingColor,
+            totalWeight: 0,
+            filaments: [],
+            isExisting: true // Flag para indicar que e cor do servico
+        };
+    }
+
     if (Object.keys(colorGroups).length === 0) {
-        select.innerHTML += '<option value="" disabled>Sem estoque disponivel</option>';
+        select.innerHTML += '<option value="" disabled>Nenhuma cor cadastrada</option>';
     } else {
         Object.values(colorGroups)
             .sort((a, b) => a.color.localeCompare(b.color))
             .forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.color.toLowerCase();
-                option.textContent = `${group.color} (${group.totalWeight.toFixed(0)}g)`;
+                if (group.totalWeight > 0) {
+                    option.textContent = `${group.color} (${group.totalWeight.toFixed(0)}g)`;
+                } else if (group.isExisting) {
+                    option.textContent = `${group.color} (em uso)`;
+                } else {
+                    option.textContent = `${group.color} (sem estoque)`;
+                }
                 select.appendChild(option);
             });
     }
@@ -641,6 +656,8 @@ export function loadMultiColorData(service) {
     const container = document.getElementById('colorEntriesContainer');
     if (container) container.innerHTML = '';
 
+    const material = service.material;
+
     // Carregar cada cor
     service.materials.forEach((m, i) => {
         addColorEntry();
@@ -653,16 +670,21 @@ export function loadMultiColorData(service) {
             const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
             const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
 
-            if (select) {
-                select.value = m.color.toLowerCase();
+            // Atualizar dropdown COM a cor existente (garante que apareca mesmo sem estoque)
+            if (select && material) {
+                updateColorDropdownForEntry(entry.index, material, m.color);
+
                 setTimeout(() => {
+                    select.value = m.color.toLowerCase();
                     select.dispatchEvent(new Event('change', { bubbles: true }));
-                }, 0);
+                }, 10);
             }
 
             if (weightInput) {
                 weightInput.value = m.weight;
-                handleWeightEntryChange(entry.index);
+                setTimeout(() => {
+                    handleWeightEntryChange(entry.index);
+                }, 20);
             }
         }, 50 * (i + 1)); // Delay escalonado
     });
@@ -749,16 +771,28 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
                     await deductMaterialFromStock(material, newM.color, weightDiff);
                     results.devolvidos.push({ color: newM.color, weight: returnAmount });
                     newM.needsPurchase = false;
-                }
-                // Se weightDiff === 0, manter como esta
-            } else if (!newM.needsPurchase && newM.weight > 0) {
-                // Antes precisava comprar, agora tem estoque - deduzir
-                console.log(`✅ Agora ha estoque! Deduzindo ${newM.weight}g de ${newM.color}`);
-                const success = await deductMaterialFromStock(material, newM.color, newM.weight);
-                if (success) {
-                    results.deduzidos.push({ color: newM.color, weight: newM.weight });
                 } else {
+                    // weightDiff === 0 - peso nao mudou
+                    // IMPORTANTE: Preservar o estado original - ja estava deduzido
+                    newM.needsPurchase = false;
+                    console.log(`⚖️ Peso de ${newM.color} nao mudou, mantendo como deduzido`);
+                }
+            } else {
+                // Material NAO estava deduzido antes (precisava comprar)
+                if (!newM.needsPurchase && newM.weight > 0) {
+                    // Agora TEM estoque - deduzir
+                    console.log(`✅ Agora ha estoque! Deduzindo ${newM.weight}g de ${newM.color}`);
+                    const success = await deductMaterialFromStock(material, newM.color, newM.weight);
+                    if (success) {
+                        results.deduzidos.push({ color: newM.color, weight: newM.weight });
+                        newM.needsPurchase = false;
+                    } else {
+                        newM.needsPurchase = true;
+                    }
+                } else {
+                    // Ainda nao tem estoque - manter como precisa comprar
                     newM.needsPurchase = true;
+                    console.log(`⚠️ ${newM.color} ainda precisa ser comprado`);
                 }
             }
         }
