@@ -322,9 +322,9 @@ document.querySelectorAll('img').forEach(img => {
 // Preload critical images
 function preloadImages() {
     const imageUrls = [
-        'imaginatech_logo.jpeg'
+        '../imaginatech_logo.jpeg'
     ];
-    
+
     imageUrls.forEach(url => {
         const img = new Image();
         img.src = url;
