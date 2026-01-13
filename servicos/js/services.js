@@ -758,17 +758,12 @@ export function loadMultiColorData(service) {
 
     const material = service.material;
 
-    console.log('🎨 loadMultiColorData - Carregando', service.materials.length, 'cores para material:', material);
-
     // Carregar cada cor
     service.materials.forEach((m, i) => {
         addColorEntry();
 
         const entry = colorEntries[colorEntries.length - 1];
-        if (!entry) {
-            console.error('❌ Entrada não encontrada para índice', i);
-            return;
-        }
+        if (!entry) return;
 
         // Guardar dados no estado da entrada
         entry.color = m.color;
@@ -777,19 +772,13 @@ export function loadMultiColorData(service) {
         entry.weight = m.weight;
         entry.needsPurchase = m.needsPurchase;
 
-        console.log(`🎨 Entrada ${i}: cor=${m.color}, filamentId=${m.filamentId}, weight=${m.weight}`);
-
         // Usar setTimeout para aguardar o DOM e CustomSelect processar
-        // Delay maior e escalonado para cada entrada
-        const baseDelay = 100; // Aumentado de 50ms para 100ms
+        const baseDelay = 100;
         setTimeout(() => {
             const select = document.querySelector(`.color-select[data-index="${entry.index}"]`);
             const weightInput = document.querySelector(`.color-weight[data-index="${entry.index}"]`);
 
-            if (!select) {
-                console.error(`❌ Select não encontrado para entrada ${entry.index}`);
-                return;
-            }
+            if (!select) return;
 
             // Atualizar dropdown COM a cor e filamentId existentes
             if (material) {
@@ -806,7 +795,6 @@ export function loadMultiColorData(service) {
                             select.value = optionById.value;
                             select.dataset.selectedFilamentId = m.filamentId;
                             valueSet = true;
-                            console.log(`✅ Cor ${m.color} selecionada por filamentId`);
                         }
                     }
 
@@ -816,16 +804,12 @@ export function loadMultiColorData(service) {
                         const optionByColor = Array.from(select.options).find(opt => opt.value === colorValue);
                         if (optionByColor) {
                             select.value = colorValue;
-                            valueSet = true;
-                            console.log(`✅ Cor ${m.color} selecionada por valor`);
-                        } else {
-                            console.warn(`⚠️ Cor ${m.color} não encontrada no dropdown`);
                         }
                     }
 
                     // Disparar evento para sincronizar CustomSelect
                     select.dispatchEvent(new Event('change', { bubbles: true }));
-                }, 50); // Aumentado de 10ms para 50ms
+                }, 50);
             }
 
             // Definir peso
@@ -833,16 +817,15 @@ export function loadMultiColorData(service) {
                 weightInput.value = m.weight;
                 setTimeout(() => {
                     handleWeightEntryChange(entry.index);
-                }, 60); // Aumentado de 20ms para 60ms
+                }, 60);
             }
-        }, baseDelay * (i + 1)); // Delay escalonado
+        }, baseDelay * (i + 1));
     });
 
     // Atualizar total após todas as entradas serem carregadas
     const totalDelay = 100 * (service.materials.length + 1) + 100;
     setTimeout(() => {
         updateMultiColorTotal();
-        console.log('🎨 loadMultiColorData - Carregamento completo');
     }, totalDelay);
 
     return true; // Carregou como multi-cor
@@ -1227,14 +1210,8 @@ export async function saveService(event) {
         const isMultiColorCheckbox = document.getElementById('isMultiColor');
         const isMultiColor = isMultiColorCheckbox?.checked || false;
 
-        console.log('=== VERIFICANDO MULTICOR NO SAVE ===');
-        console.log('Checkbox encontrada:', !!isMultiColorCheckbox);
-        console.log('Checkbox checked:', isMultiColorCheckbox?.checked);
-        console.log('isMultiColor final:', isMultiColor);
-
         if (isMultiColor) {
             const multiColorData = collectMultiColorData();
-            console.log('multiColorData:', multiColorData);
 
             if (multiColorData.materials.length === 0) {
                 return showToast('Adicione pelo menos uma cor ao serviço multi-cor', 'error');
@@ -1755,13 +1732,6 @@ export async function saveService(event) {
                 packagedPhotos: [],
                 trackingCode: ''
             });
-
-            // DEBUG: Log do objeto que será salvo
-            console.log('=== SALVANDO NOVO SERVICO ===');
-            console.log('isMultiColor:', service.isMultiColor);
-            console.log('materials:', service.materials);
-            console.log('color:', service.color);
-            console.log('Objeto completo:', JSON.stringify(service, null, 2));
 
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
