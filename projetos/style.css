@@ -155,7 +155,18 @@ body {
 .navbar-left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
+}
+
+.page-name {
+    font: 700 2.8rem 'Orbitron', monospace;
+    background: linear-gradient(135deg, #00D4FF 0%, #0077FF 50%, #00D4FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 .navbar-right {
@@ -302,7 +313,7 @@ body {
 
 /* ========== FILTER SECTION ========== */
 .filter-section {
-    padding: 0 20px 40px;
+    padding: 120px 20px 40px;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -1175,12 +1186,12 @@ footer p {
         flex-wrap: wrap;
     }
 
-    .hero-projetos {
-        padding: 200px 20px 60px;
+    .page-name {
+        font-size: 1.8rem;
     }
 
-    .page-title {
-        font-size: 2rem;
+    .filter-section {
+        padding-top: 140px;
     }
 
     .filter-container {
@@ -1203,6 +1214,11 @@ footer p {
 }
 
 @media (max-width: 480px) {
+    .page-name {
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+    }
+
     .logo {
         font-size: 1.2rem;
     }
