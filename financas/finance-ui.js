@@ -1925,7 +1925,14 @@ class CustomSelect {
         this.customSelect.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                this.toggle();
+                // Se tem opcao highlighted, seleciona ela
+                const highlighted = this.dropdown.querySelector('.custom-select-option.highlighted');
+                if (highlighted && this.isOpen) {
+                    const index = parseInt(highlighted.dataset.index);
+                    this.selectOption(index);
+                } else {
+                    this.toggle();
+                }
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 this.navigateOptions(1);
