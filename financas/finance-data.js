@@ -178,10 +178,15 @@ function populateCategories() {
         });
     }
 
-    // Atualizar CustomSelect se existir
+    // Inicializar ou atualizar CustomSelect
     setTimeout(() => {
         if (categorySelect.dataset.customized === 'true') {
+            // Ja foi customizado, apenas disparar evento para sincronizar
             categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (window.CustomSelect) {
+            // Ainda nao foi customizado, inicializar agora
+            new window.CustomSelect(categorySelect);
+            categorySelect.dataset.customized = 'true';
         }
     }, 0);
 }
