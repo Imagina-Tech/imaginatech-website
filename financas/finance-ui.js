@@ -875,6 +875,55 @@ function closeInstallmentModal() {
     selectInstallmentValueType('total');
 }
 
+// 🎨 Abre modal de gasto avulso no cartao
+function openCardExpenseModal() {
+    const modal = document.getElementById('cardExpenseModal');
+    if (!modal) return;
+
+    // Reset do formulario
+    const form = document.getElementById('cardExpenseForm');
+    if (form) form.reset();
+
+    // Popular dropdown de cartoes
+    const cardSelect = document.getElementById('expenseCard');
+    if (cardSelect && typeof creditCards !== 'undefined') {
+        cardSelect.innerHTML = '<option value="">Selecione um cartao</option>' +
+            creditCards.map(card =>
+                `<option value="${card.id}">${card.name} - ${card.institution}</option>`
+            ).join('');
+    }
+
+    // Popular dropdown de categorias com icones e ordenacao por frequencia
+    const categorySelect = document.getElementById('expenseCategory');
+    if (categorySelect && typeof populateCategoryDropdown === 'function') {
+        populateCategoryDropdown(categorySelect);
+
+        // Inicializar CustomSelect se ainda nao foi
+        setTimeout(() => {
+            if (!categorySelect.dataset.customized && window.CustomSelect) {
+                new window.CustomSelect(categorySelect);
+                categorySelect.dataset.customized = 'true';
+            }
+        }, 0);
+    }
+
+    // Definir data atual como padrao
+    const dateInput = document.getElementById('expenseDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    modal.classList.add('active');
+}
+
+// 🎨 Fecha modal de gasto avulso no cartao
+function closeCardExpenseModal() {
+    const modal = document.getElementById('cardExpenseModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 // 🎨 Abre modal para editar parcelamento existente
 function editInstallment(id) {
     const installment = installments.find(inst => inst.id === id);

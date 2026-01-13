@@ -1119,7 +1119,7 @@ input:focus, select:focus, textarea:focus {
     border-left: 3px solid transparent;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.5rem;
     font-weight: 500;
     position: relative;
     overflow: hidden;
@@ -1180,6 +1180,51 @@ input:focus, select:focus, textarea:focus {
     cursor: not-allowed;
     pointer-events: none;
     font-style: italic;
+}
+
+/* Icones nas opcoes do dropdown */
+.custom-select-option .option-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    color: var(--accent-primary, #00D4FF);
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.custom-select-option:hover .option-icon,
+.custom-select-option.selected .option-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.custom-select-option .option-text {
+    flex: 1;
+}
+
+/* Icone no valor selecionado (trigger) */
+.custom-select-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-select-value .option-icon {
+    color: var(--accent-primary, #00D4FF);
+    font-size: 0.875rem;
+}
+
+/* Estado highlighted (navegacao por teclado) */
+.custom-select-option.highlighted {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border-color: rgba(0, 212, 255, 0.4);
+}
+
+.custom-select-option.highlighted .option-icon {
+    color: #00D4FF;
+    opacity: 1;
 }
 
 /* Animação de entrada das opções */

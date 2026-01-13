@@ -95,6 +95,115 @@ const EXPENSE_CATEGORIES = [
 ];
 
 // ===========================
+// CATEGORIAS COM ICONES (para dropdown customizado)
+// ===========================
+const CARD_EXPENSE_CATEGORIES = [
+    { name: 'Alimentacao', icon: 'fa-utensils' },
+    { name: 'Supermercado', icon: 'fa-shopping-cart' },
+    { name: 'Restaurantes', icon: 'fa-hamburger' },
+    { name: 'iFood/Delivery', icon: 'fa-motorcycle' },
+    { name: 'Transporte', icon: 'fa-car' },
+    { name: 'Combustivel', icon: 'fa-gas-pump' },
+    { name: 'Uber/Taxi', icon: 'fa-taxi' },
+    { name: 'Estacionamento', icon: 'fa-parking' },
+    { name: 'Compras', icon: 'fa-shopping-bag' },
+    { name: 'Roupas', icon: 'fa-tshirt' },
+    { name: 'Eletronicos', icon: 'fa-laptop' },
+    { name: 'Casa e Decoracao', icon: 'fa-couch' },
+    { name: 'Mercado', icon: 'fa-store' },
+    { name: 'Saude', icon: 'fa-heartbeat' },
+    { name: 'Farmacia', icon: 'fa-pills' },
+    { name: 'Consultas', icon: 'fa-stethoscope' },
+    { name: 'Plano de Saude', icon: 'fa-hospital' },
+    { name: 'Educacao', icon: 'fa-graduation-cap' },
+    { name: 'Cursos', icon: 'fa-book-open' },
+    { name: 'Livros', icon: 'fa-book' },
+    { name: 'Lazer', icon: 'fa-gamepad' },
+    { name: 'Streaming', icon: 'fa-tv' },
+    { name: 'Cinema', icon: 'fa-film' },
+    { name: 'Jogos', icon: 'fa-dice' },
+    { name: 'Viagens', icon: 'fa-plane' },
+    { name: 'Hospedagem', icon: 'fa-hotel' },
+    { name: 'Academia', icon: 'fa-dumbbell' },
+    { name: 'Beleza', icon: 'fa-spa' },
+    { name: 'Barbearia', icon: 'fa-cut' },
+    { name: 'Pet', icon: 'fa-paw' },
+    { name: 'Assinaturas', icon: 'fa-repeat' },
+    { name: 'Servicos', icon: 'fa-tools' },
+    { name: 'Manutencao', icon: 'fa-wrench' },
+    { name: 'Presentes', icon: 'fa-gift' },
+    { name: 'Impostos', icon: 'fa-file-invoice-dollar' },
+    { name: 'Contas', icon: 'fa-file-alt' },
+    { name: 'Internet', icon: 'fa-wifi' },
+    { name: 'Celular', icon: 'fa-mobile-alt' },
+    { name: 'Seguros', icon: 'fa-shield-alt' },
+    { name: 'Investimentos', icon: 'fa-chart-line' },
+    { name: 'Outros', icon: 'fa-ellipsis-h' }
+];
+
+// ===========================
+// FUNCOES DE FREQUENCIA DE USO
+// ===========================
+
+/**
+ * Incrementa o contador de uso de uma categoria
+ * @param {string} category - Nome da categoria
+ */
+function incrementCategoryUsage(category) {
+    const usage = JSON.parse(localStorage.getItem('categoryUsageCount') || '{}');
+    usage[category] = (usage[category] || 0) + 1;
+    localStorage.setItem('categoryUsageCount', JSON.stringify(usage));
+}
+
+/**
+ * Retorna as categorias ordenadas por frequencia de uso
+ * @returns {Array} Categorias ordenadas
+ */
+function getCategoriesSortedByUsage() {
+    const usage = JSON.parse(localStorage.getItem('categoryUsageCount') || '{}');
+    // Criar copia para nao modificar o original
+    const sorted = [...CARD_EXPENSE_CATEGORIES].sort((a, b) => {
+        return (usage[b.name] || 0) - (usage[a.name] || 0);
+    });
+    return sorted;
+}
+
+/**
+ * Popula um dropdown de categoria com icones e ordenacao por frequencia
+ * @param {HTMLSelectElement} selectElement - Elemento select a popular
+ * @param {string} selectedValue - Valor pre-selecionado (opcional)
+ */
+function populateCategoryDropdown(selectElement, selectedValue = '') {
+    const categories = getCategoriesSortedByUsage();
+
+    selectElement.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = cat.name;
+        option.dataset.icon = cat.icon;
+
+        if (cat.name === selectedValue) {
+            option.selected = true;
+        }
+
+        selectElement.appendChild(option);
+    });
+
+    // Se o select ja foi customizado, forcar atualizacao
+    if (selectElement.dataset.customized === 'true') {
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+// Exportar funcoes globalmente
+window.incrementCategoryUsage = incrementCategoryUsage;
+window.getCategoriesSortedByUsage = getCategoriesSortedByUsage;
+window.populateCategoryDropdown = populateCategoryDropdown;
+window.CARD_EXPENSE_CATEGORIES = CARD_EXPENSE_CATEGORIES;
+
+// ===========================
 // GLOBAL STATE (Encapsulado)
 // ===========================
 

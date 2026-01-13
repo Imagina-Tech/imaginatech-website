@@ -2029,6 +2029,11 @@ async function handleCardExpenseSubmit(e) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // Incrementar contador de uso da categoria
+        if (typeof incrementCategoryUsage === 'function') {
+            incrementCategoryUsage(category);
+        }
+
         await loadCardExpenses();
         updateAllDisplays();
         closeCardExpenseModal();
