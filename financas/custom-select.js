@@ -23,8 +23,8 @@ class CustomSelect {
         this.createCustomSelect();
         this.bindEvents();
 
-        // Esconder select original
-        this.selectElement.style.display = 'none';
+        // Esconder select original (usando cssText para garantir prioridade)
+        this.selectElement.style.cssText = 'display: none !important; visibility: hidden !important; position: absolute !important; pointer-events: none !important;';
 
         // Adicionar apos o select original
         this.selectElement.parentNode.insertBefore(this.customSelect, this.selectElement.nextSibling);
@@ -404,8 +404,10 @@ class CustomSelect {
 // Inicializar todos os selects customizados
 function initCustomSelects() {
     const selects = document.querySelectorAll('.form-select, select.form-input');
+    console.log('[CustomSelect] Inicializando', selects.length, 'selects');
     selects.forEach(select => {
         if (!select.dataset.customized) {
+            console.log('[CustomSelect] Customizando:', select.id || select.className);
             new CustomSelect(select);
             select.dataset.customized = 'true';
         }
