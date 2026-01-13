@@ -2160,15 +2160,14 @@
     height: 80px;
     min-width: 80px;
     flex-shrink: 0;
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: 8px;
-    overflow: hidden;
+    background: transparent;
 }
 
 .filament-image-container.loading {
     background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
     background-size: 200% 100%;
     animation: shimmer-estoque 1.5s ease-in-out infinite;
+    border-radius: 8px;
 }
 
 .filament-image-container .filament-image {
