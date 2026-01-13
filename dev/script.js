@@ -595,7 +595,7 @@ function createPortfolioCard(item, index) {
     return `
         <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="openPortfolioModal('${item.id}')">
             <div class="portfolio-image">
-                <img src="${item.mainPhoto?.url || 'https://via.placeholder.com/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy">
+                <img src="${item.mainPhoto?.url || 'https://placehold.co/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy">
                 <div class="portfolio-overlay">
                     <span class="portfolio-category">${categoryDisplay}</span>
                 </div>
@@ -682,7 +682,7 @@ function openPortfolioModal(projectId) {
     }
 
     if (portfolioModalPhotos.length === 0) {
-        portfolioModalPhotos.push('https://via.placeholder.com/800x600/0a1420/00D4FF?text=Projeto');
+        portfolioModalPhotos.push('https://placehold.co/800x600/0a1420/00D4FF?text=Projeto');
     }
 
     portfolioModalCurrentIndex = 0;
