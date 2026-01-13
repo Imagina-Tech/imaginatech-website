@@ -153,13 +153,37 @@ function populateCategories() {
 
     categorySelect.innerHTML = '<option value="">Selecione uma categoria</option>';
 
-    const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-    categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        option.textContent = cat;
-        categorySelect.appendChild(option);
-    });
+    // Para saidas, usar categorias com icones e ordenacao por frequencia
+    if (currentTransactionType === 'expense' && typeof CARD_EXPENSE_CATEGORIES !== 'undefined') {
+        const usage = JSON.parse(localStorage.getItem('categoryUsageCount') || '{}');
+        const sortedCategories = [...CARD_EXPENSE_CATEGORIES].sort((a, b) => {
+            return (usage[b.name] || 0) - (usage[a.name] || 0);
+        });
+
+        sortedCategories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.name;
+            option.textContent = cat.name;
+            option.dataset.icon = cat.icon;
+            categorySelect.appendChild(option);
+        });
+    } else {
+        // Para entradas, usar categorias simples
+        const categories = currentTransactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            categorySelect.appendChild(option);
+        });
+    }
+
+    // Atualizar CustomSelect se existir
+    setTimeout(() => {
+        if (categorySelect.dataset.customized === 'true') {
+            categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }, 0);
 }
 // ===========================
 // TRANSACTIONS CRUD
@@ -480,6 +504,12 @@ async function handleTransactionSubmit(e) {
                 ...transactionData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+            // Incrementar contador de uso da categoria (apenas para saidas)
+            if (currentTransactionType === 'expense' && typeof incrementCategoryUsage === 'function') {
+                incrementCategoryUsage(category);
+            }
+
             showToast('Transação adicionada com sucesso', 'success');
         }
 
