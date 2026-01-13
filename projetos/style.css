@@ -163,8 +163,8 @@ body {
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 1px;
     text-transform: uppercase;
-    padding-right: 15px;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding-left: 15px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .navbar-right {
@@ -1186,8 +1186,8 @@ footer p {
 
     .page-name {
         font-size: 1rem;
-        border-right: none;
-        padding-right: 0;
+        border-left: none;
+        padding-left: 0;
     }
 
     .filter-section {
