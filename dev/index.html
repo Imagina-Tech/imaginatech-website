@@ -2672,28 +2672,37 @@
                 const img = container.querySelector('img');
                 if (!img) return;
 
-                // Se a imagem ja carregou (cached)
-                if (img.complete && img.naturalHeight !== 0) {
+                const markAsLoaded = () => {
                     container.classList.remove('loading');
                     container.classList.add('loaded');
+                };
+
+                // Se a imagem ja carregou (cached)
+                if (img.complete) {
+                    markAsLoaded();
                 } else {
                     // Aguarda o carregamento
-                    img.addEventListener('load', function() {
-                        container.classList.remove('loading');
-                        container.classList.add('loaded');
-                    });
+                    img.addEventListener('load', markAsLoaded);
 
                     // Fallback para erro de carregamento
-                    img.addEventListener('error', function() {
-                        container.classList.remove('loading');
-                        container.classList.add('loaded');
-                    });
+                    img.addEventListener('error', markAsLoaded);
+
+                    // Fallback com timeout (3 segundos) caso eventos nao disparem
+                    setTimeout(markAsLoaded, 3000);
                 }
             });
         }
 
         // Inicializa shimmer loading
         initShimmerLoading();
+
+        // Fallback global: garantir que todas as imagens aparecem apos 5 segundos
+        setTimeout(() => {
+            document.querySelectorAll('.portfolio-image.loading').forEach(el => {
+                el.classList.remove('loading');
+                el.classList.add('loaded');
+            });
+        }, 5000);
     </script>
 
     <!-- Firebase SDK -->

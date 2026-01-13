@@ -550,6 +550,11 @@ async function loadPortfolioGrid() {
             if (typeof AOS !== 'undefined') {
                 AOS.refresh();
             }
+
+            // Reinicializar shimmer loading para novos elementos
+            if (typeof initShimmerLoading === 'function') {
+                initShimmerLoading();
+            }
         }
 
         // Inicializar modal do portfolio
