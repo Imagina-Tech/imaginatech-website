@@ -1122,6 +1122,10 @@ export function startServicesListener() {
                 deliveryMethod: data.deliveryMethod || '',
                 status: data.status || 'pendente',
                 needsMaterialPurchase: data.needsMaterialPurchase || false,
+                // Campos multi-cor
+                isMultiColor: data.isMultiColor || false,
+                materials: data.materials || [],
+                serviceType: data.serviceType || 'impressao',
                 files: data.files || [],
                 fileUrl: data.fileUrl || '',
                 fileName: data.fileName || '',
