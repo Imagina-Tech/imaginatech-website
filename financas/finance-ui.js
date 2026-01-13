@@ -1940,6 +1940,8 @@ class CustomSelect {
         // Navegacao por digitacao - pula para opcao que comeca com a letra
         this.searchBuffer = '';
         this.searchTimeout = null;
+        this.lastSearchChar = '';
+        this.lastMatchIndex = -1;
         this.customSelect.addEventListener('keypress', (e) => {
             const char = e.key.toLowerCase();
             if (/[a-zA-Z0-9]/.test(char)) {
@@ -1948,18 +1950,25 @@ class CustomSelect {
                 // Limpar timeout anterior
                 if (this.searchTimeout) clearTimeout(this.searchTimeout);
 
-                // Adicionar ao buffer
-                this.searchBuffer += char;
-
                 // Abrir dropdown se fechado
                 if (!this.isOpen) this.open();
 
-                // Buscar opcao
-                this.jumpToText(this.searchBuffer);
+                // Se for a mesma letra repetida, pular para proxima opcao
+                if (char === this.lastSearchChar && this.searchBuffer.length <= 1) {
+                    this.jumpToNextMatch(char);
+                } else {
+                    // Adicionar ao buffer e buscar
+                    this.searchBuffer += char;
+                    this.lastSearchChar = char;
+                    this.lastMatchIndex = -1;
+                    this.jumpToText(this.searchBuffer);
+                }
 
                 // Limpar buffer apos 1 segundo
                 this.searchTimeout = setTimeout(() => {
                     this.searchBuffer = '';
+                    this.lastSearchChar = '';
+                    this.lastMatchIndex = -1;
                 }, 1000);
             }
         });
@@ -2155,16 +2164,18 @@ class CustomSelect {
     }
 
     jumpToText(text) {
-        const options = this.dropdown.querySelectorAll('.custom-select-option:not(.disabled)');
+        const options = Array.from(this.dropdown.querySelectorAll('.custom-select-option:not(.disabled)'));
         const searchText = text.toLowerCase();
 
-        for (let option of options) {
-            const optionText = option.textContent.trim().toLowerCase();
+        for (let i = 0; i < options.length; i++) {
+            const optionText = options[i].textContent.trim().toLowerCase();
             if (optionText.startsWith(searchText)) {
+                // Armazenar indice para navegacao repetida
+                this.lastMatchIndex = i;
                 // Highlight visual
                 options.forEach(opt => opt.classList.remove('highlighted'));
-                option.classList.add('highlighted');
-                option.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                options[i].classList.add('highlighted');
+                options[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                 return;
             }
         }
@@ -2172,8 +2183,40 @@ class CustomSelect {
         // Se nao encontrou e tem mais de 1 caractere, tenta so com o ultimo
         if (text.length > 1) {
             this.searchBuffer = text.charAt(text.length - 1);
+            this.lastSearchChar = this.searchBuffer;
+            this.lastMatchIndex = -1;
             this.jumpToText(this.searchBuffer);
         }
+    }
+
+    jumpToNextMatch(char) {
+        const options = Array.from(this.dropdown.querySelectorAll('.custom-select-option:not(.disabled)'));
+        const searchChar = char.toLowerCase();
+
+        // Encontrar todas as opcoes que comecam com a letra
+        const matches = [];
+        options.forEach((opt, idx) => {
+            if (opt.textContent.trim().toLowerCase().startsWith(searchChar)) {
+                matches.push(idx);
+            }
+        });
+
+        if (matches.length === 0) return;
+
+        // Encontrar o proximo indice apos o atual
+        let nextIdx = matches.find(idx => idx > this.lastMatchIndex);
+
+        // Se nao encontrou, volta pro primeiro (ciclo)
+        if (nextIdx === undefined) {
+            nextIdx = matches[0];
+        }
+
+        this.lastMatchIndex = nextIdx;
+
+        // Highlight visual
+        options.forEach(opt => opt.classList.remove('highlighted'));
+        options[nextIdx].classList.add('highlighted');
+        options[nextIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 }
 
