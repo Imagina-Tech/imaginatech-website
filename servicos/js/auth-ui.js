@@ -765,6 +765,14 @@ export async function openEditModal(serviceId) {
     const service = state.services.find(s => s.id === serviceId);
     if (!service) return;
 
+    // DEBUG: Log completo do serviço para diagnóstico multicor
+    console.log('=== EDITANDO SERVICO ===');
+    console.log('ID:', serviceId);
+    console.log('isMultiColor:', service.isMultiColor);
+    console.log('materials:', service.materials);
+    console.log('color:', service.color);
+    console.log('Servico completo:', JSON.stringify(service, null, 2));
+
     state.editingServiceId = serviceId;
     state.selectedFiles = [];
     state.selectedImages = [];
@@ -1003,11 +1011,22 @@ export async function openEditModal(serviceId) {
     // 1. Material dropdown está populado e valor definido (setTimeout 0 acima)
     // 2. MutationObserver do CustomSelect processou
     // 3. DOM está completamente renderizado
+    console.log('=== VERIFICACAO MULTICOR ===');
+    console.log('service.isMultiColor:', service.isMultiColor, '(tipo:', typeof service.isMultiColor, ')');
+    console.log('service.materials:', service.materials);
+    console.log('materials.length:', service.materials ? service.materials.length : 'N/A');
+
     if (service.isMultiColor && service.materials && service.materials.length > 0) {
-        console.log('🎨 openEditModal - Serviço multicor detectado, agendando loadMultiColorData');
+        console.log('PASSOU NA CONDICAO - Agendando loadMultiColorData');
         setTimeout(() => {
+            console.log('EXECUTANDO loadMultiColorData agora');
             loadMultiColorData(service);
-        }, 250); // Delay aumentado para garantir sincronização
+        }, 250);
+    } else {
+        console.log('NAO PASSOU NA CONDICAO - Motivos:');
+        console.log('  - isMultiColor falsy?', !service.isMultiColor);
+        console.log('  - materials falsy?', !service.materials);
+        console.log('  - materials vazio?', service.materials ? service.materials.length === 0 : 'N/A');
     }
 
     document.getElementById('serviceModal')?.classList.add('active');
