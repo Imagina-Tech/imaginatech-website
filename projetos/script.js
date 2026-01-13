@@ -107,9 +107,6 @@ function initializeFirebase() {
 // ============================================
 
 async function initializeApp() {
-    // Mostrar skeletons imediatamente
-    showSkeletonLoading();
-
     // Aguardar Firebase carregar
     setTimeout(async () => {
         if (initializeFirebase()) {
@@ -124,14 +121,13 @@ async function initializeApp() {
 // SKELETON LOADING
 // ============================================
 
-function showSkeletonLoading() {
+function showSkeletonLoading(count) {
     const grid = document.getElementById('projetos-grid');
-    const skeletonCount = 6; // Mostrar 6 skeletons
 
     let skeletonsHTML = '';
-    for (let i = 0; i < skeletonCount; i++) {
+    for (let i = 0; i < count; i++) {
         skeletonsHTML += `
-            <div class="skeleton-card" data-aos="fade-up" data-aos-delay="${i * 50}">
+            <div class="skeleton-card" data-aos="fade-up" data-aos-delay="${(i % 6) * 50}">
                 <div class="skeleton-image"></div>
                 <div class="skeleton-info">
                     <div class="skeleton-title"></div>
@@ -176,10 +172,17 @@ async function loadProjects() {
             return;
         }
 
+        // Mostrar skeletons com a quantidade exata de projetos
+        showSkeletonLoading(snapshot.size);
+
+        // Processar projetos
         allProjects = [];
         snapshot.forEach(doc => {
             allProjects.push({ id: doc.id, ...doc.data() });
         });
+
+        // Pequeno delay para mostrar o skeleton antes de renderizar
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Render projects
         renderProjects(allProjects);
