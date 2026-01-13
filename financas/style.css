@@ -1007,6 +1007,19 @@ input:focus, select:focus, textarea:focus {
     transform: translateY(-1px);
 }
 
+/* Remover outline branco no foco e adicionar glow neon */
+.custom-select:focus {
+    outline: none;
+}
+
+.custom-select:focus .custom-select-trigger {
+    border-color: var(--neon-blue);
+    box-shadow:
+        0 0 20px rgba(0, 212, 255, 0.3),
+        0 4px 15px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
 .custom-select.open .custom-select-trigger {
     border-color: var(--neon-blue);
     box-shadow:

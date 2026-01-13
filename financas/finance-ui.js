@@ -2422,3 +2422,59 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('✅ Privacy Toggle - Loaded');
+
+// ===========================
+// ATALHOS DE TECLADO DO DASHBOARD
+// ===========================
+/**
+ * Atalhos de teclado para navegacao rapida no dashboard financeiro:
+ * - T: Abre modal de nova transacao
+ * - Escape: Fecha modais abertos
+ */
+document.addEventListener('keydown', (e) => {
+    // Ignorar se estiver digitando em input, textarea ou contenteditable
+    const activeElement = document.activeElement;
+    const isTyping = activeElement.tagName === 'INPUT' ||
+                     activeElement.tagName === 'TEXTAREA' ||
+                     activeElement.isContentEditable;
+
+    if (isTyping) return;
+
+    // Verificar se algum modal esta aberto
+    const anyModalOpen = document.querySelector('.modal-overlay.active');
+
+    switch (e.key.toLowerCase()) {
+        case 't':
+            // T: Abrir modal de nova transacao (apenas se nenhum modal estiver aberto)
+            if (!anyModalOpen && typeof openTransactionModal === 'function') {
+                e.preventDefault();
+                openTransactionModal();
+            }
+            break;
+
+        case 'escape':
+            // Escape: Fechar modal ativo
+            if (anyModalOpen) {
+                e.preventDefault();
+                // Tentar fechar na ordem: transacao, lista, cartao, investimento, etc
+                const transactionModal = document.getElementById('transactionModal');
+                if (transactionModal?.classList.contains('active')) {
+                    closeTransactionModal();
+                    return;
+                }
+
+                // Fechar outros modais de lista
+                const listModals = document.querySelectorAll('.modal-list.active');
+                if (listModals.length > 0) {
+                    listModals.forEach(modal => modal.classList.remove('active'));
+                    return;
+                }
+
+                // Fechar qualquer modal generico
+                anyModalOpen.classList.remove('active');
+            }
+            break;
+    }
+});
+
+console.log('✅ Keyboard Shortcuts - Loaded (T: Nova Transacao, Esc: Fechar)');

@@ -46,7 +46,15 @@
       "Bash(\"C:\\\\Users\\\\Trindade\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ffmpeg-8.0.1-full_build\\\\bin\\\\ffmpeg.exe\" -i \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\cubo_novo.mp4\" -vf \"crop=1200:660:40:0,chromakey=0x00FF00:0.3:0.1,format=yuva420p,split[fg][bg];[bg]drawbox=c=0x05070a:replace=1:t=fill[bg];[bg][fg]overlay\" -c:v libx264 -crf 10 -preset veryslow -an -y \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\imaginatech-website\\\\dev\\\\assets\\\\videos\\\\cubo.mp4\")",
       "Bash(git rm:*)",
       "Bash(firebase deploy:*)",
-      "Bash(start \"\" \"admin-portfolio/index.html\")"
+      "Bash(start \"\" \"admin-portfolio/index.html\")",
+      "Bash(echo:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -m1 \"\"<title>\"\" {}')",
+      "Bash(start \"\" \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\imaginatech-website\\\\guia-sites-imaginatech.html\")",
+      "Bash(node --check:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "WebFetch(domain:www.githubstatus.com)"
     ],
     "deny": [],
     "ask": []
