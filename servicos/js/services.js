@@ -1223,8 +1223,14 @@ export async function saveService(event) {
         const isMultiColorCheckbox = document.getElementById('isMultiColor');
         const isMultiColor = isMultiColorCheckbox?.checked || false;
 
+        console.log('=== VERIFICANDO MULTICOR NO SAVE ===');
+        console.log('Checkbox encontrada:', !!isMultiColorCheckbox);
+        console.log('Checkbox checked:', isMultiColorCheckbox?.checked);
+        console.log('isMultiColor final:', isMultiColor);
+
         if (isMultiColor) {
             const multiColorData = collectMultiColorData();
+            console.log('multiColorData:', multiColorData);
 
             if (multiColorData.materials.length === 0) {
                 return showToast('Adicione pelo menos uma cor ao serviço multi-cor', 'error');
@@ -1745,6 +1751,13 @@ export async function saveService(event) {
                 packagedPhotos: [],
                 trackingCode: ''
             });
+
+            // DEBUG: Log do objeto que será salvo
+            console.log('=== SALVANDO NOVO SERVICO ===');
+            console.log('isMultiColor:', service.isMultiColor);
+            console.log('materials:', service.materials);
+            console.log('color:', service.color);
+            console.log('Objeto completo:', JSON.stringify(service, null, 2));
 
             const docRef = await state.db.collection('services').add(service);
             serviceDocId = docRef.id;
