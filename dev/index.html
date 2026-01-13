@@ -1060,6 +1060,11 @@
             height: 100%;
             object-fit: cover;
             transition: transform 0.4s ease, opacity 0.4s ease;
+            opacity: 1; /* Visivel por padrao - fallback seguro */
+        }
+
+        /* Esconder apenas durante loading ativo */
+        .portfolio-image.loading img {
             opacity: 0;
         }
 
@@ -1823,6 +1828,11 @@
             object-fit: cover;
             transition: transform 0.6s ease, opacity 0.4s ease;
             filter: brightness(0.9);
+            opacity: 1; /* Visivel por padrao - fallback seguro */
+        }
+
+        /* Esconder apenas durante loading ativo */
+        .projeto-image.loading img {
             opacity: 0;
         }
 
@@ -2107,7 +2117,7 @@
                     <!-- SET 1 (original) -->
                     <div class="projeto-card">
                         <div class="projeto-image loading">
-                            <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader">
+                            <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                         </div>
                         <div class="projeto-info">
                             <h3 class="projeto-nome">Miniatura Darth Vader</h3>
@@ -2180,7 +2190,7 @@
                     <!-- SET 2 (duplicado para loop infinito) -->
                     <div class="projeto-card">
                         <div class="projeto-image loading">
-                            <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader">
+                            <img src="assets/images/projetos/projeto-1.svg" alt="Miniatura Darth Vader" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                         </div>
                         <div class="projeto-info">
                             <h3 class="projeto-nome">Miniatura Darth Vader</h3>
@@ -2698,7 +2708,7 @@
 
         // Fallback global: garantir que todas as imagens aparecem apos 5 segundos
         setTimeout(() => {
-            document.querySelectorAll('.portfolio-image.loading').forEach(el => {
+            document.querySelectorAll('.portfolio-image.loading, .projeto-image.loading').forEach(el => {
                 el.classList.remove('loading');
                 el.classList.add('loaded');
             });

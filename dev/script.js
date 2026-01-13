@@ -448,6 +448,11 @@ async function loadCarouselItems() {
         const projetosTrack = document.querySelector('.projetos-track');
         if (projetosTrack) {
             projetosTrack.innerHTML = carouselItems.map(item => createProjetoCard(item)).join('');
+
+            // Reinicializar shimmer loading para novos elementos
+            if (typeof initShimmerLoading === 'function') {
+                initShimmerLoading();
+            }
         }
 
         // Se tem logo, adicionar ao carrossel de EMPRESAS
@@ -476,8 +481,8 @@ function createProjetoCard(item) {
 
     return `
         <div class="projeto-card">
-            <div class="projeto-image">
-                <img src="${photoUrl}" alt="${title}">
+            <div class="projeto-image loading">
+                <img src="${photoUrl}" alt="${title}" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                 ${logoHtml}
             </div>
             <div class="projeto-info">
@@ -802,6 +807,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadCarouselItems(),
                 loadPortfolioGrid()
             ]);
+
+            // Fallback final: garantir todas as imagens visiveis apos Firebase carregar
+            setTimeout(() => {
+                document.querySelectorAll('.projeto-image.loading, .portfolio-image.loading').forEach(el => {
+                    el.classList.remove('loading');
+                    el.classList.add('loaded');
+                });
+            }, 1000);
         }
     }, 100);
 });
