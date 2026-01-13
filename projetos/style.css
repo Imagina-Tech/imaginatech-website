@@ -159,14 +159,12 @@ body {
 }
 
 .page-name {
-    font: 700 2.8rem 'Orbitron', monospace;
-    background: linear-gradient(135deg, #00D4FF 0%, #0077FF 50%, #00D4FF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    letter-spacing: 2px;
+    font: 600 1.1rem 'Orbitron', monospace;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
     text-transform: uppercase;
+    padding-right: 15px;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .navbar-right {
@@ -1187,7 +1185,9 @@ footer p {
     }
 
     .page-name {
-        font-size: 1.8rem;
+        font-size: 1rem;
+        border-right: none;
+        padding-right: 0;
     }
 
     .filter-section {
@@ -1215,8 +1215,7 @@ footer p {
 
 @media (max-width: 480px) {
     .page-name {
-        font-size: 1.4rem;
-        letter-spacing: 1px;
+        font-size: 0.9rem;
     }
 
     .logo {
