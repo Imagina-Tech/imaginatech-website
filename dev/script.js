@@ -604,8 +604,8 @@ function createPortfolioCard(item, index) {
 
     return `
         <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="openPortfolioModal('${item.id}')">
-            <div class="portfolio-image">
-                <img src="${item.mainPhoto?.url || 'https://placehold.co/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy">
+            <div class="portfolio-image loading">
+                <img src="${item.mainPhoto?.url || 'https://placehold.co/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                 <div class="portfolio-overlay">
                     <span class="portfolio-category">${categoryDisplay}</span>
                 </div>
