@@ -578,7 +578,7 @@ function openProjectModalFromCarousel(projectId) {
     }
 }
 
-// Criar card de projeto (para o carrossel do hero) - COM DESCRICAO
+// Criar card de projeto (para o carrossel do hero) - COM HOVER OVERLAY
 function createProjetoCard(item) {
     const photoUrl = item.mainPhoto?.url || 'assets/images/projetos/projeto-1.svg';
     const logoUrl = item.logo?.url;
@@ -591,12 +591,8 @@ function createProjetoCard(item) {
         </div>
     ` : '';
 
-    // Truncar descricao para 80 caracteres
-    const shortDesc = description.length > 80 ? description.substring(0, 77) + '...' : description;
-
-    const descHtml = shortDesc ? `
-        <p class="projeto-desc">${shortDesc}</p>
-    ` : '';
+    // Truncar descricao para 100 caracteres no hover
+    const shortDesc = description.length > 100 ? description.substring(0, 97) + '...' : description;
 
     // Indicador de galeria
     const extraCount = item.extraPhotos?.length || 0;
@@ -604,16 +600,26 @@ function createProjetoCard(item) {
         <span class="projeto-gallery-badge"><i class="fas fa-images"></i> ${1 + extraCount}</span>
     ` : '';
 
+    // Hover overlay com descricao e botao
+    const hoverOverlay = `
+        <div class="projeto-hover-overlay">
+            ${shortDesc ? `<p class="projeto-hover-desc">${shortDesc}</p>` : ''}
+            <span class="projeto-hover-cta">
+                <i class="fas fa-expand"></i> Ver Projeto
+            </span>
+        </div>
+    `;
+
     return `
         <div class="projeto-card" data-project-id="${item.id}" style="cursor: pointer;">
             <div class="projeto-image loading">
                 <img src="${photoUrl}" alt="${title}" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                 ${logoHtml}
                 ${galleryHtml}
+                ${hoverOverlay}
             </div>
             <div class="projeto-info">
                 <h3 class="projeto-nome">${title}</h3>
-                ${descHtml}
             </div>
         </div>
     `;
@@ -719,6 +725,10 @@ function createPortfolioCard(item, index) {
     };
 
     const categoryDisplay = categoryMap[item.category] || item.category || 'Projeto';
+    const description = item.description || '';
+
+    // Truncar descricao para 100 caracteres
+    const shortDesc = description.length > 100 ? description.substring(0, 97) + '...' : description;
 
     // Logo overlay se disponivel
     const logoOverlay = item.logo && item.logo.url ? `
@@ -735,6 +745,16 @@ function createPortfolioCard(item, index) {
         </div>
     ` : '';
 
+    // Hover overlay com descricao e botao
+    const hoverOverlay = `
+        <div class="portfolio-hover-overlay">
+            ${shortDesc ? `<p class="portfolio-hover-desc">${shortDesc}</p>` : ''}
+            <span class="portfolio-hover-cta">
+                <i class="fas fa-expand"></i> Ver Projeto
+            </span>
+        </div>
+    `;
+
     return `
         <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="openPortfolioModal('${item.id}')">
             <div class="portfolio-image loading">
@@ -744,6 +764,7 @@ function createPortfolioCard(item, index) {
                 </div>
                 ${logoOverlay}
                 ${galleryIndicator}
+                ${hoverOverlay}
             </div>
             <div class="portfolio-info">
                 <h3>${item.title}</h3>
