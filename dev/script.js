@@ -655,12 +655,19 @@ async function loadPortfolioGrid() {
             return;
         }
 
-        // Filtrar projetos para o grid da home (showInGrid=true OU showOnLanding=true para compatibilidade)
+        // Filtrar projetos para o grid da home
         portfolioItems = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Novo sistema: showInGrid=true, OU sistema antigo: showOnLanding=true
-            const shouldShowInGrid = data.showInGrid === true || data.showOnLanding === true;
+
+            // SISTEMA DE 3 NIVEIS: Verificar showInGrid
+            // Se showInGrid existe (novo sistema), usar ele
+            // Se showInGrid NAO existe (item antigo), usar showOnLanding como fallback
+            const isNewSystem = data.showInGrid !== undefined;
+            const shouldShowInGrid = isNewSystem
+                ? data.showInGrid === true
+                : data.showOnLanding === true; // fallback para items antigos
+
             if (shouldShowInGrid && portfolioItems.length < 6) {
                 portfolioItems.push({ id: doc.id, ...data });
             }
