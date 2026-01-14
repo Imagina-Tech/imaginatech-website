@@ -340,19 +340,22 @@ async function loadPortfolioItems() {
 }
 
 // ==========================================
-// UPDATE STATS
+// UPDATE STATS - NOVO SISTEMA DE NIVEIS
 // ==========================================
 
 function updateStats() {
     const total = portfolioItems.length;
-    const carrossel = portfolioItems.filter(i => i.destination === 'carrossel').length;
-    const projetos = portfolioItems.filter(i => i.destination === 'projetos').length;
-    const orphan = portfolioItems.filter(i => !i.serviceId).length;
+    // QAP = nao publicado (rascunho)
+    const qap = portfolioItems.filter(i => !i.published).length;
+    // Publicados = published true (inclui featured)
+    const published = portfolioItems.filter(i => i.published).length;
+    // Featured = published + featured (destaque no hero)
+    const featured = portfolioItems.filter(i => i.published && i.featured).length;
 
     document.getElementById('totalItems').textContent = total;
-    document.getElementById('carrosselItems').textContent = carrossel;
-    document.getElementById('projetosItems').textContent = projetos;
-    document.getElementById('orphanItems').textContent = orphan;
+    document.getElementById('qapItems').textContent = qap;
+    document.getElementById('publishedItems').textContent = published;
+    document.getElementById('featuredItems').textContent = featured;
 }
 
 // ==========================================
@@ -363,15 +366,18 @@ function renderPortfolioItems() {
     const grid = document.getElementById('portfolioGrid');
     const emptyState = document.getElementById('emptyState');
 
-    // Filter items
+    // Filter items - NOVO SISTEMA DE NIVEIS
     let filtered = portfolioItems;
 
-    if (currentFilter === 'carrossel') {
-        filtered = filtered.filter(i => i.destination === 'carrossel');
-    } else if (currentFilter === 'projetos') {
-        filtered = filtered.filter(i => i.destination === 'projetos');
-    } else if (currentFilter === 'orphan') {
-        filtered = filtered.filter(i => !i.serviceId);
+    if (currentFilter === 'qap') {
+        // QAP = rascunhos nao publicados
+        filtered = filtered.filter(i => !i.published);
+    } else if (currentFilter === 'published') {
+        // Publicados (inclui featured)
+        filtered = filtered.filter(i => i.published);
+    } else if (currentFilter === 'featured') {
+        // Apenas destaques
+        filtered = filtered.filter(i => i.published && i.featured);
     }
 
     // Search filter
@@ -395,11 +401,20 @@ function renderPortfolioItems() {
 
 function createPortfolioCard(item) {
     const imageUrl = item.mainPhoto?.url || item.imageUrl || '/iconwpp.jpg';
-    const badgeClass = item.destination || 'orphan';
-    const badgeText = item.destination === 'carrossel' ? 'Carrossel' :
-                      item.destination === 'projetos' ? 'Projetos' : 'Sem Destino';
 
-    const isOrphan = !item.serviceId;
+    // NOVO SISTEMA DE NIVEIS
+    let badgeClass, badgeText;
+    if (item.published && item.featured) {
+        badgeClass = 'featured';
+        badgeText = 'Destaque';
+    } else if (item.published) {
+        badgeClass = 'published';
+        badgeText = 'Publicado';
+    } else {
+        badgeClass = 'qap';
+        badgeText = 'QAP';
+    }
+
     const createdDate = item.createdAt ? formatDate(item.createdAt) : '-';
 
     let logoHtml = '';
@@ -415,7 +430,7 @@ function createPortfolioCard(item) {
     // Badge NOVO
     let newBadgeHtml = '';
     if (item.isNew) {
-        newBadgeHtml = `<span class="card-badge-new"><i class="fas fa-star"></i> NOVO</span>`;
+        newBadgeHtml = `<span class="card-badge-new"><i class="fas fa-certificate"></i> NOVO</span>`;
     }
 
     // Indicador de galeria
@@ -425,27 +440,27 @@ function createPortfolioCard(item) {
         galleryBadgeHtml = `<span class="gallery-badge"><i class="fas fa-images"></i> ${1 + extraPhotosCount}</span>`;
     }
 
-    // Badge de landing page
-    let landingBadgeHtml = '';
-    if (item.destination === 'projetos' && item.showOnLanding) {
-        landingBadgeHtml = `<span class="landing-badge"><i class="fas fa-home"></i></span>`;
+    // Badge de destaque (estrela)
+    let featuredBadgeHtml = '';
+    if (item.published && item.featured) {
+        featuredBadgeHtml = `<span class="card-badge-featured"><i class="fas fa-star"></i></span>`;
     }
 
     return `
         <div class="portfolio-card" data-id="${item.id}">
             <div class="card-image">
                 <img src="${imageUrl}" alt="${item.title || 'Portfolio item'}" onerror="this.src='/iconwpp.jpg'">
-                <span class="card-badge ${badgeClass}${isOrphan ? ' orphan' : ''}">${badgeText}</span>
+                <span class="card-badge ${badgeClass}">${badgeText}</span>
                 ${newBadgeHtml}
                 ${galleryBadgeHtml}
-                ${landingBadgeHtml}
+                ${featuredBadgeHtml}
                 ${logoHtml}
             </div>
             <div class="card-body">
                 <h3 class="card-title">${item.title || 'Sem titulo'}</h3>
                 <div class="card-meta">
                     <span><i class="fas fa-calendar"></i> ${createdDate}</span>
-                    ${item.serviceId ? `<span><i class="fas fa-link"></i> Vinculado</span>` : `<span><i class="fas fa-unlink"></i> Sem vinculo</span>`}
+                    ${item.serviceId ? `<span><i class="fas fa-link"></i> Vinculado</span>` : `<span><i class="fas fa-unlink"></i> Avulso</span>`}
                 </div>
                 ${categoryHtml}
                 <div class="card-actions">
@@ -499,12 +514,14 @@ function openAddModal() {
     document.getElementById('editItemId').value = '';
     document.getElementById('editTitle').value = '';
     document.getElementById('editDescription').value = '';
-    document.getElementById('editDestination').value = '';
     document.getElementById('editCategory').value = '';
     document.getElementById('editMaterial').value = '';
     document.getElementById('editColor').value = '';
     document.getElementById('editIsNew').checked = true; // Novo por padrao
-    document.getElementById('editShowOnLanding').checked = false;
+
+    // NOVO SISTEMA: Niveis de publicacao
+    document.getElementById('editPublished').checked = false;
+    document.getElementById('editFeatured').checked = false;
 
     // Reset photo
     document.getElementById('editPhotoPreview').style.display = 'none';
@@ -525,8 +542,8 @@ function openAddModal() {
     extraPhotoSlotCounterAdmin = 0;
     document.getElementById('editExtraPhotosGrid').innerHTML = '';
 
-    // Hide category and extra options until destination is selected
-    toggleCategory();
+    // Atualizar status de publicacao
+    onPublicationLevelChange();
 
     // Populate and reset service dropdown
     populateServicesDropdown('');
@@ -539,7 +556,6 @@ function openAddModal() {
 
     // Sync custom selects
     setTimeout(() => {
-        document.getElementById('editDestination').dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
     }, 50);
 }
@@ -614,15 +630,21 @@ function openEditModal(itemId) {
     document.getElementById('editItemId').value = itemId;
     document.getElementById('editTitle').value = editingItem.title || '';
     document.getElementById('editDescription').value = editingItem.description || '';
-    document.getElementById('editDestination').value = editingItem.destination || '';
     document.getElementById('editCategory').value = editingItem.category || '';
     document.getElementById('editMaterial').value = editingItem.material || '';
     document.getElementById('editColor').value = editingItem.color || '';
     document.getElementById('editIsNew').checked = editingItem.isNew || false;
-    document.getElementById('editShowOnLanding').checked = editingItem.showOnLanding || false;
 
-    // Show/hide category based on destination
-    toggleCategory();
+    // NOVO SISTEMA: Niveis de publicacao
+    // Compatibilidade: se tem destination="projetos" e nao tem published, assume published=true
+    const isPublished = editingItem.published !== undefined ? editingItem.published : (editingItem.destination === 'projetos');
+    const isFeatured = editingItem.featured !== undefined ? editingItem.featured : editingItem.showOnLanding;
+
+    document.getElementById('editPublished').checked = isPublished;
+    document.getElementById('editFeatured').checked = isFeatured;
+
+    // Atualizar status de publicacao
+    onPublicationLevelChange();
 
     // Populate service dropdown and select current service if linked
     populateServicesDropdown(editingItem.serviceId || '');
@@ -687,7 +709,6 @@ function openEditModal(itemId) {
 
     // Sync custom selects after a small delay
     setTimeout(() => {
-        document.getElementById('editDestination').dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
     }, 50);
 }
@@ -702,30 +723,50 @@ function closeEditModal() {
     extraPhotoSlotCounterAdmin = 0;
 }
 
-function toggleCategory() {
-    const destination = document.getElementById('editDestination').value;
-    const categoryGroup = document.getElementById('editCategoryGroup');
-    const extraPhotosGroup = document.getElementById('editExtraPhotosGroup');
-    const showOnLandingGroup = document.getElementById('editShowOnLandingGroup');
-    const descriptionGroup = document.getElementById('editDescriptionGroup');
-    const materialGroup = document.getElementById('editMaterialGroup');
-    const colorGroup = document.getElementById('editColorGroup');
+// NOVO SISTEMA: Handler de niveis de publicacao
+function onPublicationLevelChange() {
+    const isPublished = document.getElementById('editPublished').checked;
+    const isFeatured = document.getElementById('editFeatured').checked;
 
-    if (destination === 'projetos') {
-        categoryGroup.style.display = 'block';
-        if (extraPhotosGroup) extraPhotosGroup.style.display = 'block';
-        if (showOnLandingGroup) showOnLandingGroup.style.display = 'block';
-        if (descriptionGroup) descriptionGroup.style.display = 'block';
-        if (materialGroup) materialGroup.style.display = 'block';
-        if (colorGroup) colorGroup.style.display = 'block';
-    } else {
-        categoryGroup.style.display = 'none';
-        if (extraPhotosGroup) extraPhotosGroup.style.display = 'none';
-        if (showOnLandingGroup) showOnLandingGroup.style.display = 'none';
-        if (descriptionGroup) descriptionGroup.style.display = 'none';
-        if (materialGroup) materialGroup.style.display = 'none';
-        if (colorGroup) colorGroup.style.display = 'none';
+    const statusEl = document.getElementById('publicationStatus');
+    const descReqBadge = document.getElementById('descRequiredBadge');
+    const catReqBadge = document.getElementById('catRequiredBadge');
+    const matReqBadge = document.getElementById('matRequiredBadge');
+    const colorReqBadge = document.getElementById('colorRequiredBadge');
+
+    // Se featured esta marcado, published deve estar tambem
+    if (isFeatured && !isPublished) {
+        document.getElementById('editPublished').checked = true;
     }
+
+    // Atualizar status visual
+    statusEl.classList.remove('qap', 'published', 'featured');
+
+    if (isFeatured) {
+        statusEl.className = 'form-hint publication-status featured';
+        statusEl.innerHTML = '<i class="fas fa-star"></i> Status: <strong>Destaque</strong> - Visivel em /projetos/ e no carrossel hero';
+        // Descricao obrigatoria para destaque
+        if (descReqBadge) descReqBadge.style.display = 'inline';
+    } else if (isPublished) {
+        statusEl.className = 'form-hint publication-status published';
+        statusEl.innerHTML = '<i class="fas fa-eye"></i> Status: <strong>Publicado</strong> - Visivel apenas em /projetos/';
+        if (descReqBadge) descReqBadge.style.display = 'none';
+    } else {
+        statusEl.className = 'form-hint publication-status qap';
+        statusEl.innerHTML = '<i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado';
+        if (descReqBadge) descReqBadge.style.display = 'none';
+    }
+
+    // Mostrar badges de obrigatorio quando publicado
+    const showRequired = isPublished;
+    if (catReqBadge) catReqBadge.style.display = showRequired ? 'inline' : 'none';
+    if (matReqBadge) matReqBadge.style.display = showRequired ? 'inline' : 'none';
+    if (colorReqBadge) colorReqBadge.style.display = showRequired ? 'inline' : 'none';
+}
+
+// Manter funcao antiga para compatibilidade (pode ser removida depois)
+function toggleCategory() {
+    onPublicationLevelChange();
 }
 
 // Photo handling
@@ -930,12 +971,15 @@ async function saveItem() {
     const itemId = document.getElementById('editItemId').value;
     const title = document.getElementById('editTitle').value.trim();
     const description = document.getElementById('editDescription')?.value.trim() || '';
-    const destination = document.getElementById('editDestination').value;
     const category = document.getElementById('editCategory').value;
     const material = document.getElementById('editMaterial')?.value.trim() || '';
     const color = document.getElementById('editColor')?.value.trim() || '';
     const isNew = document.getElementById('editIsNew').checked;
-    const showOnLanding = document.getElementById('editShowOnLanding').checked;
+
+    // NOVO SISTEMA: Niveis de publicacao
+    const isPublished = document.getElementById('editPublished').checked;
+    const isFeatured = document.getElementById('editFeatured').checked;
+
     const serviceId = document.getElementById('editServiceLink').value;
     const inheritPhoto = document.getElementById('inheritServicePhoto').checked;
 
@@ -945,23 +989,25 @@ async function saveItem() {
         return;
     }
 
-    if (!destination) {
-        showToast('Selecione um destino', 'error');
-        return;
+    // Validacoes quando publicado
+    if (isPublished) {
+        if (!category) {
+            showToast('Selecione uma categoria para publicar', 'error');
+            return;
+        }
+        if (!material) {
+            showToast('Informe o material para publicar', 'error');
+            return;
+        }
+        if (!color) {
+            showToast('Informe a cor para publicar', 'error');
+            return;
+        }
     }
 
-    if (destination === 'projetos' && !category) {
-        showToast('Selecione uma categoria', 'error');
-        return;
-    }
-
-    if (destination === 'projetos' && !material) {
-        showToast('Informe o material utilizado', 'error');
-        return;
-    }
-
-    if (destination === 'projetos' && !color) {
-        showToast('Informe a cor do projeto', 'error');
+    // Validacao para destaque: precisa de descricao
+    if (isFeatured && !description) {
+        showToast('Descricao e obrigatoria para destaque no hero', 'error');
         return;
     }
 
@@ -979,13 +1025,18 @@ async function saveItem() {
 
         const saveData = {
             title: title,
-            description: destination === 'projetos' ? description : null,
-            destination: destination,
-            category: destination === 'projetos' ? category : null,
-            material: destination === 'projetos' ? material : null,
-            color: destination === 'projetos' ? color : null,
+            description: description || null,
+            category: category || null,
+            material: material || null,
+            color: color || null,
             isNew: isNew,
-            showOnLanding: destination === 'projetos' ? showOnLanding : false,
+            // NOVO SISTEMA
+            published: isPublished,
+            featured: isFeatured,
+            // Manter campos antigos para compatibilidade (migracao gradual)
+            destination: isPublished ? 'projetos' : null,
+            showOnLanding: isFeatured,
+            // Dados do servico
             serviceId: serviceId || null,
             serviceName: linkedService ? `${linkedService.name} - ${linkedService.client}` : null,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1061,8 +1112,8 @@ async function saveItem() {
             saveData.logo = { url: logoUrl, path: logoPath };
         }
 
-        // Handle extra photos (only for projetos)
-        if (destination === 'projetos') {
+        // Handle extra photos (apenas para itens publicados)
+        if (isPublished) {
             // Start with existing photos (filtering out deleted ones)
             let currentExtraPhotos = [];
             if (!isAddMode && editingItem?.extraPhotos && Array.isArray(editingItem.extraPhotos)) {
@@ -1666,6 +1717,7 @@ window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
 window.toggleCategory = toggleCategory;
+window.onPublicationLevelChange = onPublicationLevelChange;
 window.handlePhotoSelect = handlePhotoSelect;
 window.removePhoto = removePhoto;
 window.handleLogoSelect = handleLogoSelect;

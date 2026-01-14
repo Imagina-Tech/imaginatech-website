@@ -484,13 +484,17 @@ function initializeFirebasePublic() {
     return true;
 }
 
-// Carregar itens do carrossel de PROJETOS (hero)
+// Carregar itens do carrossel de PROJETOS (hero) - NOVO SISTEMA: featured
+// Armazena projetos featured para uso no modal
+let featuredProjects = [];
+
 async function loadCarouselItems() {
     if (!db) return;
 
     try {
-        const snapshot = await db.collection('portfolio')
-            .where('destination', '==', 'carrossel')
+        // NOVO SISTEMA: Busca projetos com featured=true OU showOnLanding=true (compatibilidade)
+        // Primeiro tenta o novo campo, depois fallback para o antigo
+        let snapshot = await db.collection('portfolio')
             .where('active', '==', true)
             .orderBy('createdAt', 'desc')
             .get();
@@ -500,10 +504,23 @@ async function loadCarouselItems() {
             return;
         }
 
+        // Filtrar no cliente: featured=true OU (showOnLanding=true para compatibilidade)
         const items = [];
         snapshot.forEach(doc => {
-            items.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            // Novo sistema: featured=true, OU sistema antigo: showOnLanding=true
+            if (data.featured === true || data.showOnLanding === true) {
+                items.push({ id: doc.id, ...data });
+            }
         });
+
+        if (items.length === 0) {
+            console.log('Nenhum projeto com destaque - mantendo estaticos');
+            return;
+        }
+
+        // Armazenar para uso no modal
+        featuredProjects = items;
 
         // Duplicar itens para efeito infinito (minimo 8 itens)
         let carouselItems = [...items];
@@ -520,6 +537,16 @@ async function loadCarouselItems() {
             if (typeof initShimmerLoading === 'function') {
                 initShimmerLoading();
             }
+
+            // Adicionar event listeners para abrir modal
+            projetosTrack.querySelectorAll('.projeto-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const projectId = this.dataset.projectId;
+                    if (projectId) {
+                        openProjectModalFromCarousel(projectId);
+                    }
+                });
+            });
         }
 
         // Se tem logo, adicionar ao carrossel de EMPRESAS
@@ -528,17 +555,30 @@ async function loadCarouselItems() {
             addLogosToClientsCarousel(itemsComLogo);
         }
 
-        console.log(`Carrossel de projetos atualizado com ${items.length} item(s)`);
+        console.log(`Carrossel de projetos atualizado com ${items.length} item(s) com destaque`);
     } catch (error) {
         console.error('Erro ao carregar carrossel:', error);
     }
 }
 
-// Criar card de projeto (para o carrossel do hero)
+// Abrir modal do projeto a partir do carrossel hero
+function openProjectModalFromCarousel(projectId) {
+    // Buscar projeto nos featured ou no portfolioData
+    let project = featuredProjects.find(p => p.id === projectId);
+    if (!project) {
+        project = portfolioData.find(p => p.id === projectId);
+    }
+    if (project) {
+        openPortfolioModal(project);
+    }
+}
+
+// Criar card de projeto (para o carrossel do hero) - COM DESCRICAO
 function createProjetoCard(item) {
     const photoUrl = item.mainPhoto?.url || 'assets/images/projetos/projeto-1.svg';
     const logoUrl = item.logo?.url;
     const title = item.title || 'Projeto';
+    const description = item.description || '';
 
     const logoHtml = logoUrl ? `
         <div class="projeto-logo">
@@ -546,14 +586,29 @@ function createProjetoCard(item) {
         </div>
     ` : '';
 
+    // Truncar descricao para 80 caracteres
+    const shortDesc = description.length > 80 ? description.substring(0, 77) + '...' : description;
+
+    const descHtml = shortDesc ? `
+        <p class="projeto-desc">${shortDesc}</p>
+    ` : '';
+
+    // Indicador de galeria
+    const extraCount = item.extraPhotos?.length || 0;
+    const galleryHtml = extraCount > 0 ? `
+        <span class="projeto-gallery-badge"><i class="fas fa-images"></i> ${1 + extraCount}</span>
+    ` : '';
+
     return `
-        <div class="projeto-card">
+        <div class="projeto-card" data-project-id="${item.id}" style="cursor: pointer;">
             <div class="projeto-image loading">
                 <img src="${photoUrl}" alt="${title}" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                 ${logoHtml}
+                ${galleryHtml}
             </div>
             <div class="projeto-info">
                 <h3 class="projeto-nome">${title}</h3>
+                ${descHtml}
             </div>
         </div>
     `;
@@ -771,8 +826,18 @@ function initPortfolioModal() {
     }
 }
 
-function openPortfolioModal(projectId) {
-    const project = portfolioItems.find(p => p.id === projectId);
+function openPortfolioModal(projectIdOrObject) {
+    // Aceita tanto ID (string) quanto objeto completo
+    let project;
+    if (typeof projectIdOrObject === 'string') {
+        // Busca por ID nos portfolioItems (grid) ou featuredProjects (carrossel)
+        project = portfolioItems.find(p => p.id === projectIdOrObject) ||
+                  featuredProjects.find(p => p.id === projectIdOrObject);
+    } else if (typeof projectIdOrObject === 'object' && projectIdOrObject !== null) {
+        // Objeto passado diretamente
+        project = projectIdOrObject;
+    }
+
     if (!project) return;
 
     // Construir array de todas as fotos
@@ -796,6 +861,7 @@ function openPortfolioModal(projectId) {
 
     const modalTitle = document.getElementById('portfolio-modal-title');
     const modalSpecs = document.getElementById('portfolio-modal-specs');
+    const modalDescription = document.getElementById('portfolio-modal-description');
 
     if (modalTitle) {
         modalTitle.textContent = project.title;
@@ -806,6 +872,10 @@ function openPortfolioModal(projectId) {
             <span class="spec-badge"><i class="fas fa-cube"></i> ${project.material || 'PLA'}</span>
             <span class="spec-badge"><i class="fas fa-palette"></i> ${project.color || 'Variado'}</span>
         `;
+    }
+
+    if (modalDescription) {
+        modalDescription.textContent = project.description || '';
     }
 
     setupPortfolioPhotoNavigation();

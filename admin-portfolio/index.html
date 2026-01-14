@@ -158,7 +158,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
 
         <main class="main-content">
             <div class="container">
-                <!-- Stats Bar (agora funcionam como filtros) -->
+                <!-- Stats Bar (filtros por nivel de publicacao) -->
                 <div class="portfolio-stats">
                     <button class="stat-card active" data-filter="todos">
                         <div class="stat-icon">
@@ -169,31 +169,31 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                             <span class="stat-label">Total</span>
                         </div>
                     </button>
-                    <button class="stat-card carrossel" data-filter="carrossel">
+                    <button class="stat-card qap" data-filter="qap">
                         <div class="stat-icon">
-                            <i class="fas fa-film"></i>
+                            <i class="fas fa-clock"></i>
                         </div>
                         <div class="stat-info">
-                            <span class="stat-value" id="carrosselItems">0</span>
-                            <span class="stat-label">Carrossel</span>
+                            <span class="stat-value" id="qapItems">0</span>
+                            <span class="stat-label">QAP</span>
                         </div>
                     </button>
-                    <button class="stat-card projetos" data-filter="projetos">
+                    <button class="stat-card projetos" data-filter="published">
                         <div class="stat-icon">
                             <i class="fas fa-th-large"></i>
                         </div>
                         <div class="stat-info">
-                            <span class="stat-value" id="projetosItems">0</span>
-                            <span class="stat-label">Projetos</span>
+                            <span class="stat-value" id="publishedItems">0</span>
+                            <span class="stat-label">Publicados</span>
                         </div>
                     </button>
-                    <button class="stat-card orphan" data-filter="orphan">
+                    <button class="stat-card carrossel" data-filter="featured">
                         <div class="stat-icon">
-                            <i class="fas fa-unlink"></i>
+                            <i class="fas fa-star"></i>
                         </div>
                         <div class="stat-info">
-                            <span class="stat-value" id="orphanItems">0</span>
-                            <span class="stat-label">Sem Vinculo</span>
+                            <span class="stat-value" id="featuredItems">0</span>
+                            <span class="stat-label">Destaques</span>
                         </div>
                     </button>
                 </div>
@@ -312,27 +312,17 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                         <input type="text" id="editTitle" class="form-input" placeholder="Titulo do projeto">
                     </div>
 
-                    <!-- Description (apenas para Projetos) -->
-                    <div class="form-group full-width" id="editDescriptionGroup" style="display: none;">
-                        <label><i class="fas fa-align-left"></i> Descricao</label>
+                    <!-- Description -->
+                    <div class="form-group full-width" id="editDescriptionGroup">
+                        <label><i class="fas fa-align-left"></i> Descricao <span id="descRequiredBadge" class="required-badge" style="display: none;">* obrigatorio para destaque</span></label>
                         <textarea id="editDescription" class="form-input form-textarea" rows="3"
-                                  placeholder="Descricao do projeto para exibir no hover e ajudar na indexacao"></textarea>
-                        <small class="form-hint">Ajuda na indexacao do site (SEO)</small>
-                    </div>
-
-                    <!-- Destination -->
-                    <div class="form-group">
-                        <label><i class="fas fa-map-marker-alt"></i> Destino *</label>
-                        <select id="editDestination" class="form-select" onchange="toggleCategory()">
-                            <option value="">Selecione</option>
-                            <option value="carrossel">Carrossel (Hero)</option>
-                            <option value="projetos">Projetos Anteriores</option>
-                        </select>
+                                  placeholder="Descricao do projeto - aparece no modal de detalhes"></textarea>
+                        <small class="form-hint">Obrigatoria para aparecer no carrossel hero</small>
                     </div>
 
                     <!-- Category -->
-                    <div class="form-group" id="editCategoryGroup" style="display: none;">
-                        <label><i class="fas fa-tag"></i> Categoria *</label>
+                    <div class="form-group" id="editCategoryGroup">
+                        <label><i class="fas fa-tag"></i> Categoria <span id="catRequiredBadge" class="required-badge" style="display: none;">*</span></label>
                         <select id="editCategory" class="form-select">
                             <option value="">Selecione</option>
                             <option value="industrial">Industrial</option>
@@ -345,17 +335,54 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                     </div>
 
                     <!-- Material -->
-                    <div class="form-group" id="editMaterialGroup" style="display: none;">
-                        <label><i class="fas fa-cube"></i> Material *</label>
+                    <div class="form-group" id="editMaterialGroup">
+                        <label><i class="fas fa-cube"></i> Material <span id="matRequiredBadge" class="required-badge" style="display: none;">*</span></label>
                         <input type="text" id="editMaterial" class="form-input" placeholder="Ex: PLA, PETG, ABS, Resina...">
-                        <small class="form-hint">Digite o material utilizado na impressao</small>
                     </div>
 
                     <!-- Cor -->
-                    <div class="form-group" id="editColorGroup" style="display: none;">
-                        <label><i class="fas fa-palette"></i> Cor *</label>
+                    <div class="form-group" id="editColorGroup">
+                        <label><i class="fas fa-palette"></i> Cor <span id="colorRequiredBadge" class="required-badge" style="display: none;">*</span></label>
                         <input type="text" id="editColor" class="form-input" placeholder="Ex: Preto, Branco, Azul...">
-                        <small class="form-hint">Digite a cor do projeto</small>
+                    </div>
+
+                    <!-- NIVEIS DE PUBLICACAO -->
+                    <div class="form-group full-width publication-levels">
+                        <label><i class="fas fa-layer-group"></i> Nivel de Publicacao</label>
+                        <div class="publication-toggles">
+                            <!-- Toggle Publicado -->
+                            <label class="toggle-card" id="publishedToggleCard">
+                                <input type="checkbox" id="editPublished" class="toggle-input" onchange="onPublicationLevelChange()">
+                                <div class="toggle-content">
+                                    <div class="toggle-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                    <div class="toggle-info">
+                                        <span class="toggle-title">Publicado</span>
+                                        <span class="toggle-desc">Visivel em /projetos/</span>
+                                    </div>
+                                    <div class="toggle-switch"></div>
+                                </div>
+                            </label>
+
+                            <!-- Toggle Destaque -->
+                            <label class="toggle-card featured" id="featuredToggleCard">
+                                <input type="checkbox" id="editFeatured" class="toggle-input" onchange="onPublicationLevelChange()">
+                                <div class="toggle-content">
+                                    <div class="toggle-icon">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="toggle-info">
+                                        <span class="toggle-title">Destaque Hero</span>
+                                        <span class="toggle-desc">Carrossel da home</span>
+                                    </div>
+                                    <div class="toggle-switch"></div>
+                                </div>
+                            </label>
+                        </div>
+                        <small class="form-hint publication-status" id="publicationStatus">
+                            <i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado
+                        </small>
                     </div>
 
                     <!-- Selo NOVO -->
@@ -363,19 +390,9 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                         <label class="checkbox-label">
                             <input type="checkbox" id="editIsNew" class="form-checkbox">
                             <span class="checkbox-custom"></span>
-                            <span class="checkbox-text"><i class="fas fa-star"></i> Marcar como NOVO</span>
+                            <span class="checkbox-text"><i class="fas fa-certificate"></i> Marcar como NOVO</span>
                         </label>
-                        <small class="form-hint">Exibe um selo "NOVO" no item do portfolio</small>
-                    </div>
-
-                    <!-- Publicar na Landing Page (apenas para projetos) -->
-                    <div class="form-group full-width" id="editShowOnLandingGroup" style="display: none;">
-                        <label class="checkbox-label landing-toggle">
-                            <input type="checkbox" id="editShowOnLanding" class="form-checkbox">
-                            <span class="checkbox-custom landing"></span>
-                            <span class="checkbox-text"><i class="fas fa-home"></i> Publicar na Landing Page</span>
-                        </label>
-                        <small class="form-hint">Exibe este projeto na pagina principal (dev/)</small>
+                        <small class="form-hint">Exibe um selo "NOVO" no item</small>
                     </div>
 
                     <!-- Logo -->

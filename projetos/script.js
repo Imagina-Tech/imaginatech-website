@@ -128,9 +128,9 @@ async function loadProjects() {
     const emptyState = document.getElementById('empty-state');
 
     try {
-        // Carregar apenas projetos com destino "projetos" (nao carrossel)
+        // NOVO SISTEMA: Busca todos os projetos ativos e filtra no cliente
+        // Aceita: published=true OU destination='projetos' (compatibilidade retroativa)
         const snapshot = await db.collection('portfolio')
-            .where('destination', '==', 'projetos')
             .where('active', '==', true)
             .orderBy('createdAt', 'desc')
             .get();
@@ -141,11 +141,21 @@ async function loadProjects() {
             return;
         }
 
-        // Processar projetos
+        // Processar projetos - filtra por published=true OU destination='projetos'
         allProjects = [];
         snapshot.forEach(doc => {
-            allProjects.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            // Novo sistema: published=true, OU sistema antigo: destination='projetos'
+            if (data.published === true || data.destination === 'projetos') {
+                allProjects.push({ id: doc.id, ...data });
+            }
         });
+
+        if (allProjects.length === 0) {
+            grid.innerHTML = '';
+            showEmptyState('Nenhum projeto disponivel ainda');
+            return;
+        }
 
         // Render projects
         renderProjects(allProjects);

@@ -1550,6 +1550,19 @@
             flex-wrap: wrap;
         }
 
+        .portfolio-modal-description {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-top: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .portfolio-modal-description:empty {
+            display: none;
+        }
+
         .portfolio-modal-thumbnails {
             display: flex;
             gap: 8px;
@@ -1978,6 +1991,48 @@
             font-family: 'Orbitron', sans-serif;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Descricao do projeto no carrossel */
+        .projeto-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin: 8px 0 0 0;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Badge de galeria no carrossel */
+        .projeto-gallery-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            z-index: 3;
+        }
+
+        .projeto-gallery-badge i {
+            color: #00D4FF;
+        }
+
+        /* Hover no card do carrossel para indicar que e clicavel */
+        .projeto-card[data-project-id]:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .projeto-card[data-project-id]:hover .projeto-image img {
+            transform: scale(1.05);
         }
 
         /* Responsive */
@@ -3280,6 +3335,7 @@
             <div class="portfolio-modal-info">
                 <h3 id="portfolio-modal-title"></h3>
                 <div class="portfolio-modal-specs" id="portfolio-modal-specs"></div>
+                <p class="portfolio-modal-description" id="portfolio-modal-description"></p>
             </div>
             <div class="portfolio-modal-thumbnails" id="portfolio-modal-thumbnails" style="display: none;">
             </div>
