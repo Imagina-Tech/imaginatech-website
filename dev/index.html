@@ -2233,8 +2233,6 @@
             .projetos-carousel {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-                scroll-snap-type: x mandatory;
-                scroll-behavior: smooth;
                 scrollbar-width: none; /* Firefox */
                 -ms-overflow-style: none; /* IE/Edge */
             }
@@ -2243,16 +2241,12 @@
                 display: none; /* Chrome/Safari */
             }
 
+            /* Animacao automatica mais lenta em mobile */
             .projetos-track {
-                animation: none !important; /* Desabilita auto-scroll em mobile */
+                animation: scroll-projetos 25s linear infinite;
             }
 
-            .projeto-card {
-                scroll-snap-align: center;
-                scroll-snap-stop: always;
-            }
-
-            /* Esconder setas em mobile - usar swipe */
+            /* Esconder setas em mobile - usar swipe ou deixar rolar */
             .carousel-nav {
                 display: none;
             }
