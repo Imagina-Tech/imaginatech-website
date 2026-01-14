@@ -1273,16 +1273,36 @@ footer p {
     }
 
     .filter-section {
-        padding-top: 120px;
+        padding: 100px 0 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .filter-container {
-        gap: 8px;
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 0 15px;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .filter-container::-webkit-scrollbar {
+        display: none;
     }
 
     .filter-btn {
-        padding: 10px 15px;
-        font-size: 0.8rem;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 20px;
+    }
+
+    .filter-btn i {
+        font-size: 0.7rem;
     }
 
     .filter-btn span {
@@ -1315,6 +1335,25 @@ footer p {
 
     .btn-nav i {
         font-size: 0.9rem;
+    }
+
+    .filter-section {
+        padding-top: 90px;
+    }
+
+    .filter-container {
+        gap: 5px;
+        padding: 0 10px;
+    }
+
+    .filter-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+    }
+
+    .filter-btn i {
+        font-size: 0.65rem;
     }
 
     .page-title {
