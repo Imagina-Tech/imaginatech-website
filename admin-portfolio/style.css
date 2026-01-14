@@ -1257,12 +1257,7 @@
     }
 }
 
-/* Breakpoint intermediario para toggles */
-@media (max-width: 900px) {
-    .publication-toggles.three-cols {
-        grid-template-columns: 1fr;
-    }
-}
+/* Toggles sempre em linha (sao compactos agora) */
 
 @media (max-width: 768px) {
     .portfolio-filters {
@@ -1332,21 +1327,6 @@
         height: 70px;
     }
 
-    /* Toggles em mobile - mais compactos */
-    .toggle-card .toggle-content {
-        padding: 0.75rem;
-        min-height: 70px;
-    }
-
-    .toggle-card .toggle-icon {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-    }
-
-    .toggle-card .toggle-icon i {
-        font-size: 1rem;
-    }
 }
 
 /* ===========================
@@ -1751,19 +1731,19 @@
     display: block;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 0; /* Permite que o grid controle o tamanho */
 }
 
 .toggle-card .toggle-content {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
-    padding: 0.875rem;
+    padding: 0.75rem 1rem;
     background: var(--glass-bg);
     border: 2px solid var(--glass-border);
     border-radius: 12px;
     transition: all 0.3s ease;
-    min-height: 80px;
+    min-height: 56px;
     box-sizing: border-box;
 }
 
@@ -1801,19 +1781,18 @@
 }
 
 .toggle-card .toggle-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    border-radius: 8px;
     flex-shrink: 0;
 }
 
 .toggle-card .toggle-icon i {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--text-secondary);
     transition: all 0.3s ease;
 }
@@ -1848,29 +1827,6 @@
 
 .toggle-card.featured .toggle-input:checked + .toggle-content .toggle-icon i {
     color: #ffd700;
-}
-
-.toggle-card .toggle-info {
-    flex: 1;
-    min-width: 0; /* Permite truncamento de texto */
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.toggle-card .toggle-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.toggle-card .toggle-desc {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    line-height: 1.3;
 }
 
 .toggle-card .toggle-switch {
