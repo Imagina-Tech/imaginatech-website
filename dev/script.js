@@ -504,12 +504,17 @@ async function loadCarouselItems() {
             return;
         }
 
-        // Filtrar no cliente: featured=true OU (showOnLanding=true para compatibilidade)
+        // Filtrar no cliente: APENAS featured=true para o carrossel hero
+        // showOnLanding agora eh usado apenas para compatibilidade quando featured nao existe
         const items = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Novo sistema: featured=true, OU sistema antigo: showOnLanding=true
-            if (data.featured === true || data.showOnLanding === true) {
+            // Prioridade: featured=true (novo sistema)
+            // Fallback: showOnLanding=true E showInGrid nao definido (projeto antigo pre-refatoracao)
+            const isFeatured = data.featured === true;
+            const isLegacyHero = data.showOnLanding === true && data.showInGrid === undefined && data.featured === undefined;
+
+            if (isFeatured || isLegacyHero) {
                 items.push({ id: doc.id, ...data });
             }
         });

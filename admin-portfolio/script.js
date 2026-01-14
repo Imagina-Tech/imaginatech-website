@@ -1068,7 +1068,7 @@ async function saveItem() {
             featured: isFeatured,
             // Manter campos antigos para compatibilidade (migracao gradual)
             destination: isPublished ? 'projetos' : null,
-            showOnLanding: isInGrid || isFeatured, // compatibilidade
+            showOnLanding: isFeatured, // apenas hero, nao grid
             // Dados do servico
             serviceId: serviceId || null,
             serviceName: linkedService ? `${linkedService.name} - ${linkedService.client}` : null,
