@@ -1355,9 +1355,7 @@ footer p {
 }
 
 /* ========== 3. ASPECT-RATIO PARA PREVENIR LAYOUT SHIFT ========== */
-.projeto-image {
-    aspect-ratio: 4 / 3;
-}
+/* projeto-image ja tem aspect-ratio definido no CSS principal */
 
 .related-card-image {
     aspect-ratio: 16 / 10;
@@ -1370,9 +1368,6 @@ footer p {
     }
     .related-card-image {
         height: 120px !important;
-    }
-    @media (max-width: 768px) {
-        .projeto-image { height: 200px !important; }
     }
 }
 
@@ -1646,10 +1641,6 @@ footer p {
         border-radius: 16px;
     }
 
-    .projeto-image {
-        height: 200px;
-    }
-
     .projeto-overlay {
         padding: 12px;
     }
@@ -1676,10 +1667,6 @@ footer p {
 @media (max-width: 480px) {
     .projeto-card {
         border-radius: 12px;
-    }
-
-    .projeto-image {
-        height: 180px;
     }
 
     .projeto-category {
@@ -1780,32 +1767,66 @@ footer p {
 /* ========== 11. NAVBAR MOBILE OTIMIZADO ========== */
 @media (max-width: 768px) {
     .navbar {
-        padding: 12px 15px;
+        padding: 10px 15px;
         backdrop-filter: blur(10px);
+        border-radius: 20px;
     }
 
     .navbar-container {
-        gap: 10px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .navbar-left {
+        flex-shrink: 0;
+    }
+
+    .navbar-right {
+        flex: 1;
+        justify-content: flex-end;
+        gap: 6px;
+        width: auto;
     }
 
     .logo {
         font-size: 1.1rem;
     }
 
+    .page-name {
+        display: none; /* Esconde nome da pagina em mobile */
+    }
+
+    /* Botoes viram icones */
     .btn-nav {
-        padding: 8px 12px;
-        font-size: 0.85rem;
+        padding: 8px 10px;
+        border-radius: 10px;
+        min-width: 40px;
+        justify-content: center;
+    }
+
+    .btn-nav span {
+        display: none; /* Esconde texto, mostra so icone */
+    }
+
+    .btn-nav i {
+        font-size: 1rem;
+        margin: 0;
     }
 
     .btn-orcamento {
-        padding: 8px 16px;
-        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    .btn-orcamento span {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
     .navbar {
-        padding: 10px 12px;
+        padding: 8px 12px;
+        border-radius: 16px;
     }
 
     .logo {
@@ -1813,17 +1834,16 @@ footer p {
     }
 
     .btn-nav {
-        padding: 6px 10px;
-        font-size: 0.8rem;
+        padding: 6px 8px;
+        min-width: 36px;
+    }
+
+    .btn-nav i {
+        font-size: 0.9rem;
     }
 
     .btn-orcamento {
-        padding: 6px 14px;
-        font-size: 0.8rem;
-    }
-
-    .btn-orcamento span {
-        display: none;
+        padding: 6px 10px;
     }
 }
 
