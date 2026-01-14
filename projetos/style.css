@@ -1614,11 +1614,6 @@ footer p {
     }
 
     /* Espacamento entre secoes */
-    .filter-section {
-        padding-top: 140px;
-        padding-bottom: 30px;
-    }
-
     .projetos-section {
         padding: 40px 15px;
     }
@@ -1761,43 +1756,7 @@ footer p {
     }
 }
 
-/* ========== 9. FILTROS RESPONSIVOS ========== */
-@media (max-width: 768px) {
-    .filter-container {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 10px;
-    }
-
-    .filter-btn {
-        padding: 10px 14px;
-        font-size: 0.8rem;
-        flex: 0 0 auto;
-    }
-
-    /* Scroll horizontal nos filtros se necessario */
-    .filter-section .container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .filter-section .container::-webkit-scrollbar {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .filter-btn {
-        padding: 8px 12px;
-        font-size: 0.75rem;
-    }
-
-    .filter-btn i {
-        font-size: 0.8rem;
-    }
-}
+/* Filtros responsivos consolidados na secao RESPONSIVE principal (linha ~1275) */
 
 /* ========== 10. CTA SECTION RESPONSIVO ========== */
 @media (max-width: 768px) {
