@@ -21,7 +21,7 @@
 
 .portfolio-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -481,6 +481,25 @@
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom Scrollbar para modal */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--neon-cyan), var(--primary-blue));
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00e5ff, var(--neon-cyan));
 }
 
 /* Modal pequeno para confirmacao */
@@ -1219,9 +1238,29 @@
    RESPONSIVE
    =========================== */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+    .portfolio-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
     .portfolio-stats {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Stats card orfao centralizado quando sozinho */
+    .portfolio-stats .stat-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        max-width: 300px;
+        justify-self: center;
+    }
+}
+
+/* Breakpoint intermediario para toggles */
+@media (max-width: 900px) {
+    .publication-toggles.three-cols {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1252,15 +1291,19 @@
 
 @media (max-width: 480px) {
     .portfolio-stats {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 0.75rem;
     }
 
+    .portfolio-stats .stat-card:last-child:nth-child(odd) {
+        max-width: 100%;
+    }
+
     .stat-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
-        padding: 1rem;
+        flex-direction: row;
+        text-align: left;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
     }
 
     .stat-card .stat-icon {
@@ -1287,6 +1330,22 @@
     .delete-preview img {
         width: 100px;
         height: 70px;
+    }
+
+    /* Toggles em mobile - mais compactos */
+    .toggle-card .toggle-content {
+        padding: 0.75rem;
+        min-height: 70px;
+    }
+
+    .toggle-card .toggle-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+
+    .toggle-card .toggle-icon i {
+        font-size: 1rem;
     }
 }
 
@@ -1692,17 +1751,20 @@
     display: block;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-width: 0; /* Permite que o grid controle o tamanho */
 }
 
 .toggle-card .toggle-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.875rem;
     background: var(--glass-bg);
     border: 2px solid var(--glass-border);
     border-radius: 12px;
     transition: all 0.3s ease;
+    min-height: 80px;
+    box-sizing: border-box;
 }
 
 .toggle-card:hover .toggle-content {
@@ -1739,8 +1801,9 @@
 }
 
 .toggle-card .toggle-icon {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1750,7 +1813,7 @@
 }
 
 .toggle-card .toggle-icon i {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
     transition: all 0.3s ease;
 }
@@ -1789,27 +1852,33 @@
 
 .toggle-card .toggle-info {
     flex: 1;
+    min-width: 0; /* Permite truncamento de texto */
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.2rem;
 }
 
 .toggle-card .toggle-title {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .toggle-card .toggle-desc {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
+    line-height: 1.3;
 }
 
 .toggle-card .toggle-switch {
-    width: 44px;
-    height: 24px;
+    width: 40px;
+    min-width: 40px;
+    height: 22px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 11px;
     position: relative;
     transition: all 0.3s ease;
     flex-shrink: 0;
@@ -1820,8 +1889,8 @@
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: var(--text-secondary);
     border-radius: 50%;
     transition: all 0.3s ease;
@@ -1832,7 +1901,7 @@
 }
 
 .toggle-card .toggle-input:checked + .toggle-content .toggle-switch::after {
-    left: 23px;
+    left: 21px;
     background: white;
 }
 
@@ -1931,18 +2000,19 @@
 .portfolio-card .card-badge-featured {
     position: absolute;
     top: 0.75rem;
-    right: 0.75rem;
-    width: 32px;
-    height: 32px;
+    right: 2.5rem; /* Espaco para badge grid ao lado */
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
     border-radius: 50%;
     color: #0a0a0f;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
     animation: starPulse 2s ease-in-out infinite;
+    z-index: 5;
 }
 
 @keyframes starPulse {
@@ -1954,28 +2024,18 @@
 .portfolio-card .card-badge-grid {
     position: absolute;
     top: 0.75rem;
-    right: 3rem; /* ao lado do featured */
-    width: 32px;
-    height: 32px;
+    right: 0.75rem;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--neon-green) 0%, #00cc6a 100%);
     border-radius: 50%;
     color: #0a0a0f;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     box-shadow: 0 2px 10px rgba(0, 255, 136, 0.4);
-}
-
-/* Ajustar posicao do featured quando tem grid badge */
-.portfolio-card .card-badge-grid + .card-badge-featured {
-    right: 0.75rem;
-}
-
-/* Badge published (cyan) */
-.portfolio-card .card-badge.published {
-    background: linear-gradient(135deg, var(--neon-cyan) 0%, #0099cc 100%);
-    color: #0a0a0f;
+    z-index: 4;
 }
 
 /* Responsive toggles */
