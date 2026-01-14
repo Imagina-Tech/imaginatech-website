@@ -162,6 +162,9 @@ async function loadProjects() {
         emptyState.style.display = 'none';
 
         console.log(`Carregados ${allProjects.length} projetos`);
+
+        // Verificar se há projeto para abrir via URL (vindo do /dev)
+        checkUrlForProject();
     } catch (error) {
         console.error('Erro ao carregar projetos:', error);
         showEmptyState('Erro ao carregar projetos');
@@ -584,6 +587,24 @@ function closeModal() {
 // Make functions available globally
 window.openModal = openModal;
 window.goToPhoto = goToPhoto;
+
+// ============================================
+// URL PARAMETER - Abrir projeto via link direto
+// ============================================
+
+function checkUrlForProject() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projeto');
+
+    if (projectId) {
+        // Pequeno delay para garantir que o DOM esta pronto
+        setTimeout(() => {
+            openModal(projectId);
+            // Limpar o parametro da URL sem recarregar a pagina
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 300);
+    }
+}
 
 // ============================================
 // EMPTY STATE

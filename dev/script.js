@@ -543,12 +543,12 @@ async function loadCarouselItems() {
                 initShimmerLoading();
             }
 
-            // Adicionar event listeners para abrir modal
+            // Adicionar event listeners para redirecionar para /projetos/
             projetosTrack.querySelectorAll('.projeto-card').forEach(card => {
                 card.addEventListener('click', function() {
                     const projectId = this.dataset.projectId;
                     if (projectId) {
-                        openProjectModalFromCarousel(projectId);
+                        window.location.href = `/projetos/?projeto=${projectId}`;
                     }
                 });
             });
@@ -756,7 +756,7 @@ function createPortfolioCard(item, index) {
     `;
 
     return `
-        <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="openPortfolioModal('${item.id}')">
+        <div class="portfolio-card" data-aos="fade-up" data-aos-delay="${delay}" onclick="window.location.href='/projetos/?projeto=${item.id}'">
             <div class="portfolio-image loading">
                 <img src="${item.mainPhoto?.url || 'https://placehold.co/400x300/0a1420/00D4FF?text=Projeto'}" alt="${item.title}" loading="lazy" onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');" onerror="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded');">
                 <div class="portfolio-overlay">
