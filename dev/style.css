@@ -580,6 +580,21 @@ footer {
         bottom: 20px;
         right: 20px;
     }
+
+    /* Performance mobile: reduzir animacoes */
+    .grid-lines {
+        animation-duration: 30s !important;
+        opacity: 0.5;
+    }
+}
+
+/* Acessibilidade: respeitar preferencia do usuario */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 @media (max-width: 480px) {

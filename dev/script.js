@@ -8,19 +8,31 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
-// Create Animated Particles
+// Create Animated Particles - OTIMIZADO PARA MOBILE
 function createParticles() {
     const particlesContainer = document.getElementById('particles');
     if (!particlesContainer) return;
-    
-    const particleCount = 50;
+
+    // Detecta se e mobile ou se usuario prefere menos movimento
+    const isMobile = window.innerWidth <= 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Nao cria particulas se reduced motion ou mobile pequeno
+    if (prefersReducedMotion || window.innerWidth <= 480) {
+        return;
+    }
+
+    // Menos particulas em mobile para melhor performance
+    const particleCount = isMobile ? 15 : 50;
 
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
         particle.style.left = Math.random() * 100 + '%';
         particle.style.animationDelay = -(Math.random() * 20) + 's';
-        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        // Animacao mais lenta em mobile = menos processamento
+        const duration = isMobile ? (25 + Math.random() * 15) : (15 + Math.random() * 10);
+        particle.style.animationDuration = duration + 's';
         particlesContainer.appendChild(particle);
     }
 }
@@ -169,7 +181,17 @@ function trackMetaPixel(eventName, parameters = {}) {
 
 // Add Hover Effect to Service Cards with Mouse Position
 // CORRIGIDO: Efeito 3D apenas quando card estiver visivel (apos scroll animation)
+// OTIMIZADO: Desabilitado em mobile e touch devices
 document.addEventListener('DOMContentLoaded', () => {
+    // Nao aplica efeito 3D em touch devices ou mobile
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isMobile = window.innerWidth <= 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (isTouchDevice || isMobile || prefersReducedMotion) {
+        return; // Sai da funcao, nao aplica efeito 3D
+    }
+
     document.querySelectorAll('.service-card').forEach(card => {
         card.addEventListener('mousemove', (e) => {
             // Apenas aplicar efeito 3D se o card ja estiver visivel
@@ -249,18 +271,37 @@ function debounce(func, wait) {
 
 // Optimized scroll handler - apenas para parallax
 // NOTA: Navbar scroll eh tratado pelo inline script em index.html para evitar duplicacao
-const optimizedScrollHandler = debounce(() => {
-    // Parallax effect para cube-container (se existir)
-    const scrolled = window.pageYOffset;
-    const parallaxElements = document.querySelectorAll('.cube-container');
-    parallaxElements.forEach(el => {
-        const speed = 0.3;
-        el.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-}, 16); // 16ms = ~60fps
+// OTIMIZADO: Desabilitado em mobile para performance
 
-// Registrar handler otimizado para parallax
-window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
+const isMobileDevice = window.innerWidth <= 768;
+const prefersReducedMotionGlobal = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Parallax apenas em desktop e sem reduced motion
+if (!isMobileDevice && !prefersReducedMotionGlobal) {
+    const optimizedScrollHandler = debounce(() => {
+        // Parallax effect para cube-container (se existir)
+        const scrolled = window.pageYOffset;
+        const parallaxElements = document.querySelectorAll('.cube-container');
+        parallaxElements.forEach(el => {
+            const speed = 0.3;
+            el.style.transform = `translateY(${scrolled * speed}px)`;
+        });
+    }, 16); // 16ms = ~60fps
+
+    // Registrar handler otimizado para parallax
+    window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
+}
+
+// Recarrega particulas ao mudar orientacao (mobile)
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        const particlesContainer = document.getElementById('particles');
+        if (particlesContainer) {
+            particlesContainer.innerHTML = ''; // Limpa particulas
+            createParticles(); // Recria com novo tamanho de tela
+        }
+    }, 100);
+});
 
 // Page Visibility API - Pause animations when page is not visible
 document.addEventListener('visibilitychange', () => {
@@ -360,6 +401,55 @@ function moveCarousel(direction) {
 
 // Expor funcao globalmente
 window.moveCarousel = moveCarousel;
+
+// ============================================
+// TOUCH GESTURES PARA CARROSSEL (MOBILE)
+// ============================================
+(function initCarouselTouch() {
+    const carousel = document.querySelector('.projetos-carousel');
+    if (!carousel) return;
+
+    // Apenas ativa em touch devices
+    if (!('ontouchstart' in window)) return;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let touchStartTime = 0;
+    const minSwipeDistance = 50; // pixels minimos para considerar swipe
+    const maxSwipeTime = 300; // tempo maximo em ms para swipe rapido
+
+    carousel.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartTime = Date.now();
+    }, { passive: true });
+
+    carousel.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        const touchEndTime = Date.now();
+        const swipeTime = touchEndTime - touchStartTime;
+
+        handleSwipe(swipeTime);
+    }, { passive: true });
+
+    function handleSwipe(swipeTime) {
+        const distance = touchEndX - touchStartX;
+        const isQuickSwipe = swipeTime < maxSwipeTime;
+
+        // Swipe para esquerda (proximo)
+        if (distance < -minSwipeDistance) {
+            if (isQuickSwipe) {
+                moveCarousel(1);
+            }
+        }
+
+        // Swipe para direita (anterior)
+        if (distance > minSwipeDistance) {
+            if (isQuickSwipe) {
+                moveCarousel(-1);
+            }
+        }
+    }
+})();
 
 // ============================================
 // PORTFOLIO DINAMICO - Firebase Integration
@@ -609,6 +699,7 @@ function initPortfolioModal() {
     const closeBtn = document.getElementById('portfolio-modal-close');
     const prevBtn = document.getElementById('portfolio-modal-prev');
     const nextBtn = document.getElementById('portfolio-modal-next');
+    const imageContainer = document.querySelector('.portfolio-modal-image-container');
 
     if (closeBtn) {
         closeBtn.addEventListener('click', closePortfolioModal);
@@ -649,6 +740,35 @@ function initPortfolioModal() {
             navigatePortfolioPhoto(1);
         }
     });
+
+    // TOUCH GESTURES para navegacao no modal (mobile)
+    if (imageContainer && 'ontouchstart' in window) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const minSwipeDistance = 50;
+
+        imageContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        imageContainer.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // Verifica se foi swipe horizontal (nao vertical)
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+                if (deltaX < 0) {
+                    navigatePortfolioPhoto(1); // Swipe esquerda = proximo
+                } else {
+                    navigatePortfolioPhoto(-1); // Swipe direita = anterior
+                }
+            }
+        }, { passive: true });
+    }
 }
 
 function openPortfolioModal(projectId) {
