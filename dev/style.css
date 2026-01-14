@@ -1,3 +1,28 @@
+/*
+ * ============================================================================
+ * STYLE.CSS - Base Layer (Fallback)
+ * ============================================================================
+ *
+ * ARQUITETURA CSS:
+ * Este arquivo serve como camada base/fallback. Os estilos principais estao
+ * inline no index.html para:
+ *   1. Eliminar FOUC (Flash of Unstyled Content)
+ *   2. Reducao de requests em landing pages
+ *   3. Critical CSS inline para melhor LCP (Largest Contentful Paint)
+ *
+ * HIERARQUIA:
+ *   1. style.css (este arquivo) - Base, variaveis, reset
+ *   2. index.html <style> - Estilos principais com !important
+ *
+ * NOTA: Este arquivo NAO deve ser removido pois define:
+ *   - CSS Variables (:root) usadas pelos estilos inline
+ *   - Reset CSS (* e body)
+ *   - Scrollbar customizada
+ *   - Fallbacks para componentes
+ *
+ * ============================================================================
+ */
+
 :root {
     --primary-blue: #2A6EA7;
     --secondary-blue: #57D4CA;

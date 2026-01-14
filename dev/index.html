@@ -2110,8 +2110,17 @@
 
             <div class="hero-visual">
                 <div class="cube-video-container">
-                    <video class="cube-video" autoplay loop muted playsinline>
+                    <!-- Video com fallbacks para compatibilidade -->
+                    <video class="cube-video"
+                           autoplay loop muted playsinline
+                           poster="assets/images/cube-face-1.png"
+                           aria-label="Animacao de cubo 3D rotacionando">
+                        <!-- WebM: Chrome, Firefox, Edge -->
                         <source src="assets/videos/cubo.webm" type="video/webm">
+                        <!-- MP4: Safari, iOS (adicionar quando disponivel) -->
+                        <!-- <source src="assets/videos/cubo.mp4" type="video/mp4"> -->
+                        <!-- Fallback para navegadores sem suporte a video -->
+                        <img src="assets/images/cube-face-1.png" alt="Cubo 3D ImaginaTech" class="video-fallback">
                     </video>
                 </div>
                 <div class="cube-reflection"></div>
@@ -2640,7 +2649,7 @@
                     <i class="fas fa-envelope"></i>
                 </a>
             </div>
-            <p>&copy; 2024 ImaginaTech - Construindo o Futuro, Hoje</p>
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> ImaginaTech - Construindo o Futuro, Hoje</p>
         </div>
     </footer>
 
@@ -2676,24 +2685,40 @@
             offset: 100
         });
 
-        // Barra de progresso de leitura
-        window.addEventListener('scroll', function() {
+        // ========== SCROLL HANDLER UNIFICADO ==========
+        // Performance: Um unico listener, referencias cacheadas, passive: true
+        (function() {
             const scrollProgress = document.getElementById('scroll-progress');
-            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrollPercentage = (scrollTop / scrollHeight) * 100;
-            scrollProgress.style.width = scrollPercentage + '%';
-        });
-
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+            let ticking = false;
+
+            function onScroll() {
+                // Barra de progresso
+                if (scrollProgress) {
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    const percentage = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+                    scrollProgress.style.width = percentage + '%';
+                }
+
+                // Navbar scroll effect
+                if (navbar) {
+                    navbar.classList.toggle('scrolled', window.scrollY > 50);
+                }
+
+                ticking = false;
             }
-        });
+
+            window.addEventListener('scroll', function() {
+                if (!ticking) {
+                    requestAnimationFrame(onScroll);
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            // Executar uma vez no load para estado inicial
+            onScroll();
+        })();
 
         // Shimmer Loading - Transicao suave quando imagens carregam
         function initShimmerLoading() {

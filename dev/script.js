@@ -38,20 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
 // O efeito de scroll da navbar eh tratado pelo inline script em index.html
 
 // Smooth Scrolling for Anchor Links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+// CORRIGIDO: Usa event delegation para capturar links dinamicos tambem
+document.addEventListener('click', function(e) {
+    const anchor = e.target.closest('a[href^="#"]');
+    if (!anchor) return;
+
+    const targetId = anchor.getAttribute('href');
+    if (!targetId || targetId === '#') return;
+
+    const target = document.querySelector(targetId);
+    if (target) {
         e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const target = document.querySelector(targetId);
-        
-        if (target) {
-            const offsetTop = target.offsetTop - 80; // Account for fixed navbar
-            window.scrollTo({
-                top: offsetTop,
-                behavior: 'smooth'
-            });
-        }
-    });
+        const navbarHeight = 80;
+        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+        window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+        });
+    }
 });
 
 // Initialize Scroll Animations
@@ -156,13 +161,8 @@ function trackMetaPixel(eventName, parameters = {}) {
 }
 
 // Dynamic Copyright Year
-function updateCopyrightYear() {
-    const currentYear = new Date().getFullYear();
-    document.querySelectorAll('footer p').forEach(el => {
-        el.innerHTML = el.innerHTML.replace(/\d{4}/, currentYear);
-    });
-}
-updateCopyrightYear();
+// REMOVIDO: Ano agora eh renderizado inline no HTML via document.write()
+// Isso elimina flash de ano errado e simplifica o codigo
 
 // Parallax Effect for Hero Section
 // NOTA: Movido para optimizedScrollHandler com debounce para melhor performance
@@ -227,18 +227,12 @@ window.addEventListener('load', () => {
 });
 */
 
-// Mobile Menu Toggle (for future enhancement)
-function initializeMobileMenu() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    
-    if (menuToggle && mobileMenu) {
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
-            menuToggle.classList.toggle('active');
-        });
-    }
-}
+// Mobile Menu Toggle
+// TODO: Implementar menu hamburguer quando necessario para mobile
+// A navbar atual usa layout responsivo que esconde itens em telas pequenas
+// Para implementar, adicionar ao HTML:
+//   <button id="menu-toggle" aria-label="Menu">...</button>
+//   <nav id="mobile-menu">...</nav>
 
 // Performance Optimization: Debounce scroll events
 function debounce(func, wait) {
