@@ -347,14 +347,17 @@ function updateStats() {
     const total = portfolioItems.length;
     // QAP = nao publicado (rascunho)
     const qap = portfolioItems.filter(i => !i.published).length;
-    // Publicados = published true (inclui featured)
+    // Publicados em /projetos/
     const published = portfolioItems.filter(i => i.published).length;
-    // Featured = published + featured (destaque no hero)
+    // Grid = publicados que aparecem no grid da home
+    const grid = portfolioItems.filter(i => i.published && i.showInGrid).length;
+    // Featured = publicados que aparecem no carrossel hero
     const featured = portfolioItems.filter(i => i.published && i.featured).length;
 
     document.getElementById('totalItems').textContent = total;
     document.getElementById('qapItems').textContent = qap;
     document.getElementById('publishedItems').textContent = published;
+    document.getElementById('gridItems').textContent = grid;
     document.getElementById('featuredItems').textContent = featured;
 }
 
@@ -366,17 +369,20 @@ function renderPortfolioItems() {
     const grid = document.getElementById('portfolioGrid');
     const emptyState = document.getElementById('emptyState');
 
-    // Filter items - NOVO SISTEMA DE NIVEIS
+    // Filter items - SISTEMA DE 3 NIVEIS INDEPENDENTES
     let filtered = portfolioItems;
 
     if (currentFilter === 'qap') {
         // QAP = rascunhos nao publicados
         filtered = filtered.filter(i => !i.published);
     } else if (currentFilter === 'published') {
-        // Publicados (inclui featured)
+        // Publicados em /projetos/
         filtered = filtered.filter(i => i.published);
+    } else if (currentFilter === 'grid') {
+        // Aparecem no grid da home
+        filtered = filtered.filter(i => i.published && i.showInGrid);
     } else if (currentFilter === 'featured') {
-        // Apenas destaques
+        // Aparecem no carrossel hero
         filtered = filtered.filter(i => i.published && i.featured);
     }
 
@@ -402,14 +408,12 @@ function renderPortfolioItems() {
 function createPortfolioCard(item) {
     const imageUrl = item.mainPhoto?.url || item.imageUrl || '/iconwpp.jpg';
 
-    // NOVO SISTEMA DE NIVEIS
+    // SISTEMA DE 3 NIVEIS INDEPENDENTES
+    // Badge principal: QAP ou Publicado
     let badgeClass, badgeText;
-    if (item.published && item.featured) {
-        badgeClass = 'featured';
-        badgeText = 'Destaque';
-    } else if (item.published) {
+    if (item.published) {
         badgeClass = 'published';
-        badgeText = 'Publicado';
+        badgeText = '/projetos/';
     } else {
         badgeClass = 'qap';
         badgeText = 'QAP';
@@ -440,10 +444,16 @@ function createPortfolioCard(item) {
         galleryBadgeHtml = `<span class="gallery-badge"><i class="fas fa-images"></i> ${1 + extraPhotosCount}</span>`;
     }
 
-    // Badge de destaque (estrela)
+    // Badge de grid (aparece no grid da home)
+    let gridBadgeHtml = '';
+    if (item.published && item.showInGrid) {
+        gridBadgeHtml = `<span class="card-badge-grid" title="Grid da Home"><i class="fas fa-th-large"></i></span>`;
+    }
+
+    // Badge de destaque (aparece no carrossel hero)
     let featuredBadgeHtml = '';
     if (item.published && item.featured) {
-        featuredBadgeHtml = `<span class="card-badge-featured"><i class="fas fa-star"></i></span>`;
+        featuredBadgeHtml = `<span class="card-badge-featured" title="Carrossel Hero"><i class="fas fa-star"></i></span>`;
     }
 
     return `
@@ -453,6 +463,7 @@ function createPortfolioCard(item) {
                 <span class="card-badge ${badgeClass}">${badgeText}</span>
                 ${newBadgeHtml}
                 ${galleryBadgeHtml}
+                ${gridBadgeHtml}
                 ${featuredBadgeHtml}
                 ${logoHtml}
             </div>
@@ -519,8 +530,9 @@ function openAddModal() {
     document.getElementById('editColor').value = '';
     document.getElementById('editIsNew').checked = true; // Novo por padrao
 
-    // NOVO SISTEMA: Niveis de publicacao
+    // SISTEMA DE 3 NIVEIS INDEPENDENTES
     document.getElementById('editPublished').checked = false;
+    document.getElementById('editShowInGrid').checked = false;
     document.getElementById('editFeatured').checked = false;
 
     // Reset photo
@@ -635,12 +647,14 @@ function openEditModal(itemId) {
     document.getElementById('editColor').value = editingItem.color || '';
     document.getElementById('editIsNew').checked = editingItem.isNew || false;
 
-    // NOVO SISTEMA: Niveis de publicacao
-    // Compatibilidade: se tem destination="projetos" e nao tem published, assume published=true
+    // SISTEMA DE 3 NIVEIS INDEPENDENTES
+    // Compatibilidade retroativa com campos antigos
     const isPublished = editingItem.published !== undefined ? editingItem.published : (editingItem.destination === 'projetos');
-    const isFeatured = editingItem.featured !== undefined ? editingItem.featured : editingItem.showOnLanding;
+    const isInGrid = editingItem.showInGrid !== undefined ? editingItem.showInGrid : editingItem.showOnLanding;
+    const isFeatured = editingItem.featured !== undefined ? editingItem.featured : false;
 
     document.getElementById('editPublished').checked = isPublished;
+    document.getElementById('editShowInGrid').checked = isInGrid;
     document.getElementById('editFeatured').checked = isFeatured;
 
     // Atualizar status de publicacao
@@ -723,9 +737,10 @@ function closeEditModal() {
     extraPhotoSlotCounterAdmin = 0;
 }
 
-// NOVO SISTEMA: Handler de niveis de publicacao
+// SISTEMA DE 3 NIVEIS INDEPENDENTES: Handler de niveis de publicacao
 function onPublicationLevelChange() {
     const isPublished = document.getElementById('editPublished').checked;
+    const isInGrid = document.getElementById('editShowInGrid').checked;
     const isFeatured = document.getElementById('editFeatured').checked;
 
     const statusEl = document.getElementById('publicationStatus');
@@ -734,31 +749,47 @@ function onPublicationLevelChange() {
     const matReqBadge = document.getElementById('matRequiredBadge');
     const colorReqBadge = document.getElementById('colorRequiredBadge');
 
-    // Se featured esta marcado, published deve estar tambem
-    if (isFeatured && !isPublished) {
+    // Grid e Featured requerem que esteja publicado
+    if ((isInGrid || isFeatured) && !isPublished) {
         document.getElementById('editPublished').checked = true;
     }
 
-    // Atualizar status visual
-    statusEl.classList.remove('qap', 'published', 'featured');
-
-    if (isFeatured) {
-        statusEl.className = 'form-hint publication-status featured';
-        statusEl.innerHTML = '<i class="fas fa-star"></i> Status: <strong>Destaque</strong> - Visivel em /projetos/ e no carrossel hero';
-        // Descricao obrigatoria para destaque
-        if (descReqBadge) descReqBadge.style.display = 'inline';
-    } else if (isPublished) {
-        statusEl.className = 'form-hint publication-status published';
-        statusEl.innerHTML = '<i class="fas fa-eye"></i> Status: <strong>Publicado</strong> - Visivel apenas em /projetos/';
-        if (descReqBadge) descReqBadge.style.display = 'none';
-    } else {
-        statusEl.className = 'form-hint publication-status qap';
-        statusEl.innerHTML = '<i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado';
-        if (descReqBadge) descReqBadge.style.display = 'none';
+    // Se desmarcar publicado, desmarca os outros
+    if (!isPublished) {
+        document.getElementById('editShowInGrid').checked = false;
+        document.getElementById('editFeatured').checked = false;
     }
 
+    // Reler valores apos ajustes
+    const finalPublished = document.getElementById('editPublished').checked;
+    const finalInGrid = document.getElementById('editShowInGrid').checked;
+    const finalFeatured = document.getElementById('editFeatured').checked;
+
+    // Atualizar status visual - mostrar onde vai aparecer
+    statusEl.classList.remove('qap', 'published', 'featured');
+
+    if (!finalPublished) {
+        statusEl.className = 'form-hint publication-status qap';
+        statusEl.innerHTML = '<i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado';
+    } else {
+        // Construir lista de onde aparece
+        let locations = ['/projetos/'];
+        if (finalInGrid) locations.push('Grid Home');
+        if (finalFeatured) locations.push('Carrossel Hero');
+
+        const locationText = locations.join(' + ');
+        const iconClass = finalFeatured ? 'fa-star' : (finalInGrid ? 'fa-th-large' : 'fa-globe');
+        const statusClass = finalFeatured ? 'featured' : (finalInGrid ? 'grid' : 'published');
+
+        statusEl.className = `form-hint publication-status ${statusClass}`;
+        statusEl.innerHTML = `<i class="fas ${iconClass}"></i> Visivel em: <strong>${locationText}</strong>`;
+    }
+
+    // Descricao obrigatoria para destaque hero
+    if (descReqBadge) descReqBadge.style.display = finalFeatured ? 'inline' : 'none';
+
     // Mostrar badges de obrigatorio quando publicado
-    const showRequired = isPublished;
+    const showRequired = finalPublished;
     if (catReqBadge) catReqBadge.style.display = showRequired ? 'inline' : 'none';
     if (matReqBadge) matReqBadge.style.display = showRequired ? 'inline' : 'none';
     if (colorReqBadge) colorReqBadge.style.display = showRequired ? 'inline' : 'none';
@@ -976,8 +1007,9 @@ async function saveItem() {
     const color = document.getElementById('editColor')?.value.trim() || '';
     const isNew = document.getElementById('editIsNew').checked;
 
-    // NOVO SISTEMA: Niveis de publicacao
+    // SISTEMA DE 3 NIVEIS INDEPENDENTES
     const isPublished = document.getElementById('editPublished').checked;
+    const isInGrid = document.getElementById('editShowInGrid').checked;
     const isFeatured = document.getElementById('editFeatured').checked;
 
     const serviceId = document.getElementById('editServiceLink').value;
@@ -1030,12 +1062,13 @@ async function saveItem() {
             material: material || null,
             color: color || null,
             isNew: isNew,
-            // NOVO SISTEMA
+            // SISTEMA DE 3 NIVEIS INDEPENDENTES
             published: isPublished,
+            showInGrid: isInGrid,
             featured: isFeatured,
             // Manter campos antigos para compatibilidade (migracao gradual)
             destination: isPublished ? 'projetos' : null,
-            showOnLanding: isFeatured,
+            showOnLanding: isInGrid || isFeatured, // compatibilidade
             // Dados do servico
             serviceId: serviceId || null,
             serviceName: linkedService ? `${linkedService.name} - ${linkedService.client}` : null,

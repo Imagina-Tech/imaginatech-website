@@ -60,6 +60,12 @@
 }
 
 .stat-card.projetos.active {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+}
+
+.stat-card.grid.active {
     border-color: var(--neon-green);
     background: rgba(0, 255, 136, 0.1);
     box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
@@ -96,10 +102,18 @@
 }
 
 .stat-card.projetos .stat-icon {
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(0, 212, 255, 0.1);
 }
 
 .stat-card.projetos .stat-icon i {
+    color: var(--neon-cyan);
+}
+
+.stat-card.grid .stat-icon {
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.stat-card.grid .stat-icon i {
     color: var(--neon-green);
 }
 
@@ -1670,6 +1684,10 @@
     margin-top: 0.75rem;
 }
 
+.publication-toggles.three-cols {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .toggle-card {
     display: block;
     cursor: pointer;
@@ -1697,6 +1715,18 @@
 }
 
 .toggle-card .toggle-input:checked + .toggle-content {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 136, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+}
+
+.toggle-card.published .toggle-input:checked + .toggle-content {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+}
+
+.toggle-card.grid .toggle-input:checked + .toggle-content {
     border-color: var(--neon-green);
     background: rgba(0, 255, 136, 0.1);
     box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
@@ -1730,6 +1760,22 @@
 }
 
 .toggle-card .toggle-input:checked + .toggle-content .toggle-icon i {
+    color: var(--neon-green);
+}
+
+.toggle-card.published .toggle-input:checked + .toggle-content .toggle-icon {
+    background: rgba(0, 212, 255, 0.15);
+}
+
+.toggle-card.published .toggle-input:checked + .toggle-content .toggle-icon i {
+    color: var(--neon-cyan);
+}
+
+.toggle-card.grid .toggle-input:checked + .toggle-content .toggle-icon {
+    background: rgba(0, 255, 136, 0.15);
+}
+
+.toggle-card.grid .toggle-input:checked + .toggle-content .toggle-icon i {
     color: var(--neon-green);
 }
 
@@ -1819,10 +1865,18 @@
 }
 
 .publication-status.published {
-    border-left: 3px solid var(--neon-green);
+    border-left: 3px solid var(--neon-cyan);
 }
 
 .publication-status.published i {
+    color: var(--neon-cyan);
+}
+
+.publication-status.grid {
+    border-left: 3px solid var(--neon-green);
+}
+
+.publication-status.grid i {
     color: var(--neon-green);
 }
 
@@ -1894,6 +1948,34 @@
 @keyframes starPulse {
     0%, 100% { transform: scale(1); box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4); }
     50% { transform: scale(1.1); box-shadow: 0 4px 20px rgba(255, 215, 0, 0.6); }
+}
+
+/* Badge grid para showInGrid */
+.portfolio-card .card-badge-grid {
+    position: absolute;
+    top: 0.75rem;
+    right: 3rem; /* ao lado do featured */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--neon-green) 0%, #00cc6a 100%);
+    border-radius: 50%;
+    color: #0a0a0f;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 10px rgba(0, 255, 136, 0.4);
+}
+
+/* Ajustar posicao do featured quando tem grid badge */
+.portfolio-card .card-badge-grid + .card-badge-featured {
+    right: 0.75rem;
+}
+
+/* Badge published (cyan) */
+.portfolio-card .card-badge.published {
+    background: linear-gradient(135deg, var(--neon-cyan) 0%, #0099cc 100%);
+    color: #0a0a0f;
 }
 
 /* Responsive toggles */

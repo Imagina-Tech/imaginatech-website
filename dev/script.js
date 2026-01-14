@@ -639,10 +639,8 @@ async function loadPortfolioGrid() {
     if (!db) return;
 
     try {
-        // Query simplificada para evitar necessidade de indice composto
-        // Filtramos showOnLanding no cliente
+        // SISTEMA DE 3 NIVEIS: Busca todos ativos e filtra por showInGrid
         const snapshot = await db.collection('portfolio')
-            .where('destination', '==', 'projetos')
             .where('active', '==', true)
             .orderBy('createdAt', 'desc')
             .get();
@@ -652,19 +650,20 @@ async function loadPortfolioGrid() {
             return;
         }
 
-        // Filtrar apenas projetos marcados para landing e limitar a 6
+        // Filtrar projetos para o grid da home (showInGrid=true OU showOnLanding=true para compatibilidade)
         portfolioItems = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            console.log(`Projeto: ${data.title}, showOnLanding: ${data.showOnLanding}`);
-            if (data.showOnLanding === true && portfolioItems.length < 6) {
+            // Novo sistema: showInGrid=true, OU sistema antigo: showOnLanding=true
+            const shouldShowInGrid = data.showInGrid === true || data.showOnLanding === true;
+            if (shouldShowInGrid && portfolioItems.length < 6) {
                 portfolioItems.push({ id: doc.id, ...data });
             }
         });
 
-        // Se nao houver projetos marcados para landing, manter estaticos
+        // Se nao houver projetos marcados para o grid, manter estaticos
         if (portfolioItems.length === 0) {
-            console.log('Nenhum projeto marcado para landing - mantendo estaticos');
+            console.log('Nenhum projeto marcado para grid - mantendo estaticos');
             return;
         }
 
@@ -687,7 +686,7 @@ async function loadPortfolioGrid() {
         // Inicializar modal do portfolio
         initPortfolioModal();
 
-        console.log(`Portfolio landing atualizado com ${portfolioItems.length} projeto(s) marcados`);
+        console.log(`Grid portfolio atualizado com ${portfolioItems.length} projeto(s)`);
     } catch (error) {
         console.error('Erro ao carregar portfolio:', error);
     }
