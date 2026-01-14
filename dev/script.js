@@ -33,16 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Navbar Scroll Effect
-window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar');
-    if (navbar) {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    }
-});
+// NOTA: Este listener eh redundante - existe versao otimizada abaixo (optimizedScrollHandler)
+// e outra no inline script do index.html. Mantido comentado para referencia.
+// O efeito de scroll da navbar eh tratado pelo inline script em index.html
 
 // Smooth Scrolling for Anchor Links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -62,6 +55,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // Initialize Scroll Animations
+// CORRIGIDO: Usa classes CSS ao inves de inline styles para evitar conflito com hover 3D
 function initializeAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -71,26 +65,23 @@ function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                // Usar classe ao inves de inline style para nao conflitar com hover 3D
                 entry.target.classList.add('visible');
+                entry.target.classList.remove('hidden-initial');
             }
         });
     }, observerOptions);
 
-    // Observe all service cards
+    // Observe all service cards - usar classes CSS
     document.querySelectorAll('.service-card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease';
+        card.classList.add('hidden-initial');
         observer.observe(card);
     });
 
-    // Observe tech items
+    // Observe tech items - usar classes CSS
     document.querySelectorAll('.tech-item').forEach((item, index) => {
-        item.style.opacity = '0';
-        item.style.transform = 'translateY(30px)';
-        item.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        item.classList.add('hidden-initial');
+        item.style.transitionDelay = `${index * 0.1}s`;
         observer.observe(item);
     });
 }
@@ -174,49 +165,52 @@ function updateCopyrightYear() {
 updateCopyrightYear();
 
 // Parallax Effect for Hero Section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const parallaxElements = document.querySelectorAll('.cube-container');
-    
-    parallaxElements.forEach(el => {
-        const speed = 0.5;
-        el.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-});
+// NOTA: Movido para optimizedScrollHandler com debounce para melhor performance
 
 // Add Hover Effect to Service Cards with Mouse Position
-document.querySelectorAll('.service-card').forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const rotateX = (y - centerY) / 10;
-        const rotateY = (centerX - x) / 10;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+// CORRIGIDO: Efeito 3D apenas quando card estiver visivel (apos scroll animation)
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            // Apenas aplicar efeito 3D se o card ja estiver visivel
+            if (!card.classList.contains('visible')) return;
+
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = (y - centerY) / 15; // Suavizado
+            const rotateY = (centerX - x) / 15;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (!card.classList.contains('visible')) return;
+            card.style.transform = '';
+        });
     });
 });
 
 // Add Typing Effect to Hero Title (optional enhancement)
+// DESATIVADO: Conflita com animacao CSS glitch que eh mais impactante visualmente
+// O efeito glitch eh parte da identidade visual futuristica da marca
+// Mantido comentado para referencia caso queira reativar no futuro
+/*
 function typewriterEffect() {
     const element = document.querySelector('.glitch-text');
     if (!element) return;
-    
+
     const text = element.textContent;
     element.textContent = '';
     element.style.visibility = 'visible';
-    
+
     let index = 0;
     const speed = 100;
-    
+
     function type() {
         if (index < text.length) {
             element.textContent += text.charAt(index);
@@ -224,15 +218,14 @@ function typewriterEffect() {
             setTimeout(type, speed);
         }
     }
-    
-    // Start typing after loader disappears
+
     setTimeout(type, 1500);
 }
 
-// Initialize typing effect on load
 window.addEventListener('load', () => {
     setTimeout(typewriterEffect, 500);
 });
+*/
 
 // Mobile Menu Toggle (for future enhancement)
 function initializeMobileMenu() {
@@ -260,30 +253,20 @@ function debounce(func, wait) {
     };
 }
 
-// Optimized scroll handler
+// Optimized scroll handler - apenas para parallax
+// NOTA: Navbar scroll eh tratado pelo inline script em index.html para evitar duplicacao
 const optimizedScrollHandler = debounce(() => {
-    // Navbar scroll effect
-    const navbar = document.getElementById('navbar');
-    if (navbar) {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    }
-    
-    // Parallax effect
+    // Parallax effect para cube-container (se existir)
     const scrolled = window.pageYOffset;
     const parallaxElements = document.querySelectorAll('.cube-container');
     parallaxElements.forEach(el => {
-        const speed = 0.5;
+        const speed = 0.3;
         el.style.transform = `translateY(${scrolled * speed}px)`;
     });
-}, 10);
+}, 16); // 16ms = ~60fps
 
-// Replace individual scroll listeners with optimized version
-window.removeEventListener('scroll', () => {});
-window.addEventListener('scroll', optimizedScrollHandler);
+// Registrar handler otimizado para parallax
+window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
 
 // Page Visibility API - Pause animations when page is not visible
 document.addEventListener('visibilitychange', () => {
