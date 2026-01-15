@@ -554,12 +554,6 @@ async function loadCarouselItems() {
             });
         }
 
-        // Se tem logo, adicionar ao carrossel de EMPRESAS
-        const itemsComLogo = items.filter(item => item.logo && item.logo.url);
-        if (itemsComLogo.length > 0) {
-            addLogosToClientsCarousel(itemsComLogo);
-        }
-
         console.log(`Carrossel de projetos atualizado com ${items.length} item(s) com destaque`);
     } catch (error) {
         console.error('Erro ao carregar carrossel:', error);
@@ -643,6 +637,41 @@ function addLogosToClientsCarousel(items) {
     clientsTrack.insertAdjacentHTML('beforeend', newLogosHtml);
 
     console.log(`${items.length} logo(s) adicionado(s) ao carrossel de empresas`);
+}
+
+// Carregar logos de TODOS os projetos ativos para o carrossel de empresas
+async function loadAllLogosToCarousel() {
+    if (!db) return;
+
+    try {
+        // Buscar TODOS os projetos ativos
+        const snapshot = await db.collection('portfolio')
+            .where('active', '==', true)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        if (snapshot.empty) {
+            console.log('Nenhum projeto para logos');
+            return;
+        }
+
+        // Filtrar apenas projetos que tem logo
+        const itemsComLogo = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.logo && data.logo.url) {
+                itemsComLogo.push({ id: doc.id, ...data });
+            }
+        });
+
+        if (itemsComLogo.length > 0) {
+            addLogosToClientsCarousel(itemsComLogo);
+        }
+
+        console.log(`${itemsComLogo.length} logo(s) de projetos carregado(s)`);
+    } catch (error) {
+        console.error('Erro ao carregar logos:', error);
+    }
 }
 
 // Carregar grid de portfolio (projetos anteriores)
@@ -1004,7 +1033,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (initializeFirebasePublic()) {
             await Promise.all([
                 loadCarouselItems(),
-                loadPortfolioGrid()
+                loadPortfolioGrid(),
+                loadAllLogosToCarousel()
             ]);
 
             // Fallback final: garantir todas as imagens visiveis apos Firebase carregar
