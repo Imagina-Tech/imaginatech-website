@@ -125,8 +125,9 @@ async function deleteProduct(productId) {
     }
 }
 
-// URL da Cloud Function de upload
-const UPLOAD_FUNCTION_URL = 'https://us-central1-imaginatech-servicos.cloudfunctions.net/uploadImages';
+// Cloudinary - Upload direto do frontend (unsigned)
+const CLOUDINARY_CLOUD_NAME = 'ds2x4wiy5';
+const CLOUDINARY_UPLOAD_PRESET = 'imaginatech_unsigned'; // Criar no Cloudinary Dashboard
 
 // ========== UPLOAD DE IMAGENS PARA CLOUDINARY ==========
 async function uploadImagesToCloudinary(images) {
@@ -157,31 +158,45 @@ async function uploadImagesToCloudinary(images) {
         return existingUrls;
     }
 
-    try {
-        window.showToast(`Enviando ${needsUpload.length} imagem(ns)...`, 'info');
+    window.showToast(`Enviando ${needsUpload.length} imagem(ns)...`, 'info');
 
-        const response = await fetch(UPLOAD_FUNCTION_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ images: needsUpload })
-        });
+    // Upload direto para Cloudinary (unsigned upload)
+    const uploadedUrls = [];
 
-        const data = await response.json();
+    for (let i = 0; i < needsUpload.length; i++) {
+        try {
+            const formData = new FormData();
+            formData.append('file', needsUpload[i]);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('folder', 'imaginatech/marketplace');
 
-        if (data.success || data.urls?.length > 0) {
-            console.log(`[UPLOAD] Sucesso: ${data.urls.length} imagens enviadas`);
-            // Combina URLs existentes com novas URLs do Cloudinary
-            return [...existingUrls, ...data.urls];
-        } else {
-            console.error('[UPLOAD] Erro:', data.error);
-            window.showToast('Erro ao enviar algumas imagens', 'warning');
-            return existingUrls; // Retorna pelo menos as URLs existentes
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                { method: 'POST', body: formData }
+            );
+
+            const data = await response.json();
+
+            if (data.secure_url) {
+                console.log(`[UPLOAD] Imagem ${i + 1} enviada:`, data.secure_url);
+                uploadedUrls.push(data.secure_url);
+            } else {
+                console.error(`[UPLOAD] Erro na imagem ${i + 1}:`, data.error?.message);
+            }
+        } catch (error) {
+            console.error(`[UPLOAD] Erro na imagem ${i + 1}:`, error);
         }
-    } catch (error) {
-        console.error('[UPLOAD] Erro de rede:', error);
-        window.showToast('Erro ao enviar imagens para o servidor', 'error');
-        return existingUrls;
     }
+
+    console.log(`[UPLOAD] ${uploadedUrls.length}/${needsUpload.length} imagens enviadas`);
+
+    if (uploadedUrls.length > 0) {
+        window.showToast(`${uploadedUrls.length} imagem(ns) enviada(s)!`, 'success');
+    } else {
+        window.showToast('Erro ao enviar imagens. Verifique o upload preset.', 'error');
+    }
+
+    return [...existingUrls, ...uploadedUrls];
 }
 
 // ========== HANDLER DO FORMULARIO ==========
