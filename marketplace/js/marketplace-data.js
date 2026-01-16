@@ -245,15 +245,12 @@ async function handleProductSubmit(event) {
         description: document.getElementById('productDescription').value.trim(),
         labelCode: document.getElementById('labelCode').value.trim(),
         internalCode: document.getElementById('internalCode').value.trim(),
-        category: document.getElementById('productCategory').value,
-        subcategory: document.getElementById('productSubcategory').value,
+        // Producao
         saleType: document.getElementById('saleType').value,
-        minStockQuantity: parseInt(document.getElementById('minStockQuantity').value) || 0,
-        isCompetitor: document.getElementById('isCompetitor').checked,
         materialType: document.getElementById('materialType').value,
         printColor: document.getElementById('printColor').value,
         printerMachine: document.getElementById('printerMachine').value,
-        needsGluing: document.getElementById('needsGluing').checked,
+        // Dimensoes
         dimensions: {
             length: parseFloat(document.getElementById('dimLength').value) || 0,
             width: parseFloat(document.getElementById('dimWidth').value) || 0,
@@ -288,11 +285,6 @@ async function handleProductSubmit(event) {
     // Validacoes
     if (!productData.name) {
         window.showToast('Nome do produto e obrigatorio', 'warning');
-        return;
-    }
-
-    if (!productData.category) {
-        window.showToast('Categoria e obrigatoria', 'warning');
         return;
     }
 

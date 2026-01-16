@@ -29,15 +29,6 @@ function setupFilterListeners() {
         });
     }
 
-    // Filtro de categoria
-    const filterCategory = document.getElementById('filterCategory');
-    if (filterCategory) {
-        filterCategory.addEventListener('change', (e) => {
-            window.currentFilters.category = e.target.value;
-            renderProducts();
-        });
-    }
-
     // Filtro de tipo de venda
     const filterSaleType = document.getElementById('filterSaleType');
     if (filterSaleType) {
@@ -55,15 +46,6 @@ function setupFilterListeners() {
             renderProducts();
         });
     }
-
-    // Filtro de concorrente
-    const filterCompetitor = document.getElementById('filterCompetitor');
-    if (filterCompetitor) {
-        filterCompetitor.addEventListener('change', (e) => {
-            window.currentFilters.competitor = e.target.checked;
-            renderProducts();
-        });
-    }
 }
 
 // ========== LIMPAR FILTROS ==========
@@ -71,21 +53,13 @@ function clearFilters() {
     // Resetar estado
     window.currentFilters = {
         search: '',
-        category: '',
         saleType: '',
-        material: '',
-        competitor: false
+        material: ''
     };
 
     // Resetar elementos
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.value = '';
-
-    const filterCategory = document.getElementById('filterCategory');
-    if (filterCategory) {
-        filterCategory.value = '';
-        filterCategory.dispatchEvent(new Event('change', { bubbles: true }));
-    }
 
     const filterSaleType = document.getElementById('filterSaleType');
     if (filterSaleType) {
@@ -98,9 +72,6 @@ function clearFilters() {
         filterMaterial.value = '';
         filterMaterial.dispatchEvent(new Event('change', { bubbles: true }));
     }
-
-    const filterCompetitor = document.getElementById('filterCompetitor');
-    if (filterCompetitor) filterCompetitor.checked = false;
 
     renderProducts();
     window.showToast('Filtros limpos', 'success');
@@ -123,11 +94,6 @@ function applyFilters(productsList) {
             }
         }
 
-        // Filtro de categoria
-        if (window.currentFilters.category && product.category !== window.currentFilters.category) {
-            return false;
-        }
-
         // Filtro de tipo de venda
         if (window.currentFilters.saleType && product.saleType !== window.currentFilters.saleType) {
             return false;
@@ -135,11 +101,6 @@ function applyFilters(productsList) {
 
         // Filtro de material
         if (window.currentFilters.material && product.materialType !== window.currentFilters.material) {
-            return false;
-        }
-
-        // Filtro de concorrente
-        if (window.currentFilters.competitor && !product.isCompetitor) {
             return false;
         }
 
@@ -172,26 +133,20 @@ function renderProducts() {
             <td class="sticky-col col-name">
                 ${escapeHtml(product.name || '-')}
             </td>
-            <td>${escapeHtml(product.category || '-')}</td>
-            <td>${escapeHtml(product.subcategory || '-')}</td>
             <td>
                 ${getSaleTypeBadge(product.saleType)}
+            </td>
+            <td class="col-price">
+                ${product.price ? 'R$ ' + product.price.toFixed(2) : '-'}
             </td>
             <td>${escapeHtml(product.materialType || '-')}</td>
             <td>
                 ${getColorChip(product.printColor)}
             </td>
             <td>${escapeHtml(product.printerMachine || '-')}</td>
-            <td>
-                ${product.isCompetitor ? '<i class="fas fa-check text-warning"></i>' : '-'}
-            </td>
-            <td>
-                ${product.needsGluing ? '<i class="fas fa-check text-info"></i>' : '-'}
-            </td>
             <td>${formatDimensions(product.dimensions)}</td>
             <td>${formatDimensions(product.packagingDimensions)}</td>
             <td>${product.weight ? product.weight + 'g' : '-'}</td>
-            <td>${product.minStockQuantity || 0}</td>
             <td>${escapeHtml(product.labelCode || '-')}</td>
             <td>${escapeHtml(product.internalCode || '-')}</td>
             <td>
@@ -374,15 +329,6 @@ function openProductModal(productId = null) {
 
         document.getElementById('productIdField').value = 'Auto';
 
-        // Reset subcategorias
-        const subcatSelect = document.getElementById('productSubcategory');
-        if (subcatSelect) {
-            subcatSelect.innerHTML = '<option value="">Selecione categoria primeiro</option>';
-            setTimeout(() => {
-                subcatSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 0);
-        }
-
         // Reset formulario ML (categoria, fotos, atributos)
         if (window.resetMlForm) {
             window.resetMlForm();
@@ -440,11 +386,6 @@ function populateFormWithProduct(product) {
     setFieldValue('productDescription', product.description || '');
     setFieldValue('labelCode', product.labelCode || '');
     setFieldValue('internalCode', product.internalCode || '');
-    setFieldValue('minStockQuantity', product.minStockQuantity || 0);
-
-    // ========== CHECKBOXES ==========
-    setCheckbox('isCompetitor', product.isCompetitor);
-    setCheckbox('needsGluing', product.needsGluing);
 
     // ========== DIMENSOES ==========
     if (product.dimensions) {
@@ -469,24 +410,11 @@ function populateFormWithProduct(product) {
         }
     }, 100);
 
-    // ========== DROPDOWNS (CustomSelect) ==========
-    // Categoria interna + subcategoria
-    setSelectValue('productCategory', product.category, 10);
-
-    if (product.category) {
-        setTimeout(() => {
-            window.updateSubcategories(product.category);
-            setTimeout(() => {
-                setSelectValue('productSubcategory', product.subcategory, 0);
-            }, 100);
-        }, 50);
-    }
-
-    // Outros dropdowns
-    setSelectValue('saleType', product.saleType, 20);
-    setSelectValue('materialType', product.materialType, 30);
-    setSelectValue('printColor', product.printColor, 40);
-    setSelectValue('printerMachine', product.printerMachine, 50);
+    // ========== DROPDOWNS ==========
+    setSelectValue('saleType', product.saleType, 10);
+    setSelectValue('materialType', product.materialType, 20);
+    setSelectValue('printColor', product.printColor, 30);
+    setSelectValue('printerMachine', product.printerMachine, 40);
 
     // ========== CAMPOS MERCADO LIVRE ==========
     setFieldValue('productPrice', product.price || '');

@@ -38,17 +38,7 @@ const AUTHORIZED_ADMINS = window.ENV_CONFIG?.AUTHORIZED_ADMINS || [
 // Lista de emails autorizados
 const AUTHORIZED_EMAILS = AUTHORIZED_ADMINS.map(admin => admin.email);
 
-// ========== CATEGORIAS E OPCOES ==========
-const CATEGORIES = {
-    'Decoracao': ['Estatuas', 'Porta-retratos', 'Vasos', 'Luminarias', 'Quadros 3D', 'Outros'],
-    'Games': ['Miniaturas', 'Acessorios', 'Dioramas', 'Props', 'Cosplay', 'Outros'],
-    'Funcional': ['Organizadores', 'Suportes', 'Ganchos', 'Caixas', 'Ferramentas', 'Outros'],
-    'Personalizados': ['Chaveiros', 'Brindes', 'Topos de Bolo', 'Placas', 'Presentes', 'Outros'],
-    'Pecas Tecnicas': ['Engrenagens', 'Conectores', 'Prototipos', 'Pecas de Reposicao', 'Outros'],
-    'Infantil': ['Brinquedos', 'Educativos', 'Personagens', 'Puzzles', 'Outros'],
-    'Trofeus e Premios': ['Trofeus', 'Medalhas', 'Placas Comemorativas', 'Outros']
-};
-
+// ========== OPCOES DE PRODUCAO ==========
 const PRINT_COLORS = [
     'Branco',
     'Preto',
@@ -177,10 +167,8 @@ let productsListener = null;
 let editingProductId = null;
 let currentFilters = {
     search: '',
-    category: '',
     saleType: '',
-    material: '',
-    competitor: false
+    material: ''
 };
 
 // ========== ELEMENTOS DOM ==========
@@ -341,17 +329,6 @@ function showToast(message, type = 'success') {
 
 // ========== POPULAR DROPDOWNS ==========
 function populateDropdownOptions() {
-    // Categorias no filtro
-    const filterCategory = document.getElementById('filterCategory');
-    if (filterCategory) {
-        Object.keys(CATEGORIES).forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
-            filterCategory.appendChild(option);
-        });
-    }
-
     // Materiais no filtro
     const filterMaterial = document.getElementById('filterMaterial');
     if (filterMaterial) {
@@ -360,22 +337,6 @@ function populateDropdownOptions() {
             option.value = mat;
             option.textContent = mat;
             filterMaterial.appendChild(option);
-        });
-    }
-
-    // Categorias no modal
-    const productCategory = document.getElementById('productCategory');
-    if (productCategory) {
-        Object.keys(CATEGORIES).forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
-            productCategory.appendChild(option);
-        });
-
-        // Listener para atualizar subcategorias
-        productCategory.addEventListener('change', () => {
-            updateSubcategories(productCategory.value);
         });
     }
 
@@ -420,32 +381,6 @@ function populateDropdownOptions() {
     }, 100);
 }
 
-function updateSubcategories(category) {
-    const subcategorySelect = document.getElementById('productSubcategory');
-    if (!subcategorySelect) return;
-
-    const currentValue = subcategorySelect.value;
-
-    subcategorySelect.innerHTML = '<option value="">Selecione...</option>';
-
-    if (category && CATEGORIES[category]) {
-        CATEGORIES[category].forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub;
-            option.textContent = sub;
-            subcategorySelect.appendChild(option);
-        });
-    }
-
-    // Sincronizar CustomSelect
-    setTimeout(() => {
-        if (currentValue && CATEGORIES[category]?.includes(currentValue)) {
-            subcategorySelect.value = currentValue;
-        }
-        subcategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-}
-
 // ========== LISTENER DE PRODUTOS ==========
 function stopProductsListener() {
     if (productsListener) {
@@ -463,7 +398,6 @@ window.hideLoading = hideLoading;
 window.db = db;
 window.auth = auth;
 window.COMPANY_USER_ID = COMPANY_USER_ID;
-window.CATEGORIES = CATEGORIES;
 window.PRINT_COLORS = PRINT_COLORS;
 window.MATERIALS = MATERIALS;
 window.PRINTERS = PRINTERS;
@@ -471,4 +405,3 @@ window.products = products;
 window.currentFilters = currentFilters;
 window.editingProductId = editingProductId;
 window.elements = elements;
-window.updateSubcategories = updateSubcategories;

@@ -206,12 +206,6 @@ VERSAO: 1.0
                 </div>
 
                 <div class="filter-group">
-                    <select id="filterCategory" class="form-select">
-                        <option value="">Todas Categorias</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
                     <select id="filterSaleType" class="form-select">
                         <option value="">Todos Tipos</option>
                         <option value="estoque">Estoque Imediato</option>
@@ -223,14 +217,6 @@ VERSAO: 1.0
                     <select id="filterMaterial" class="form-select">
                         <option value="">Todos Materiais</option>
                     </select>
-                </div>
-
-                <div class="filter-group checkbox-filter">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="filterCompetitor">
-                        <span class="checkmark"></span>
-                        <span>Apenas Concorrentes</span>
-                    </label>
                 </div>
 
                 <button class="btn-clear-filters" onclick="clearFilters()" title="Limpar filtros">
@@ -250,18 +236,14 @@ VERSAO: 1.0
                         <tr>
                             <th class="sticky-col col-id">ID</th>
                             <th class="sticky-col col-name">Nome</th>
-                            <th>Categoria</th>
-                            <th>Subcategoria</th>
                             <th>Tipo Venda</th>
+                            <th>Preco</th>
                             <th>Material</th>
                             <th>Cor</th>
                             <th>Maquina</th>
-                            <th>Concorrente</th>
-                            <th>Colar</th>
                             <th>Dimensoes</th>
                             <th>Embalagem</th>
                             <th>Peso</th>
-                            <th>Qtd. Min</th>
                             <th>Cod. Etiqueta</th>
                             <th>Cod. Interno</th>
                             <th>ML</th>
@@ -321,76 +303,6 @@ VERSAO: 1.0
                     </div>
                 </div>
 
-                <!-- Secao: Classificacao -->
-                <div class="form-section">
-                    <h3><i class="fas fa-folder"></i> Classificacao</h3>
-                    <div class="form-grid">
-                        <div class="form-group span-2">
-                            <label for="productCategory">Categoria *</label>
-                            <select id="productCategory" class="form-select" required>
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-2">
-                            <label for="productSubcategory">Subcategoria</label>
-                            <select id="productSubcategory" class="form-select">
-                                <option value="">Selecione categoria primeiro</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-2">
-                            <label for="saleType">Tipo de Venda *</label>
-                            <select id="saleType" class="form-select" required>
-                                <option value="">Selecione...</option>
-                                <option value="estoque">Estoque Imediato</option>
-                                <option value="personalizacao">Personalizacao</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-2">
-                            <label for="minStockQuantity">Qtd. Minima Estoque</label>
-                            <input type="number" id="minStockQuantity" class="form-input" min="0" value="0" placeholder="0">
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="isCompetitor">
-                                <span class="checkmark"></span>
-                                <span>Produto de Concorrente</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Secao: Producao -->
-                <div class="form-section">
-                    <h3><i class="fas fa-industry"></i> Producao</h3>
-                    <div class="form-grid">
-                        <div class="form-group span-2">
-                            <label for="materialType">Tipo de Material</label>
-                            <select id="materialType" class="form-select">
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-2">
-                            <label for="printColor">Cor de Impressao</label>
-                            <select id="printColor" class="form-select">
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-2">
-                            <label for="printerMachine">Maquina Possivel</label>
-                            <select id="printerMachine" class="form-select">
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="needsGluing">
-                                <span class="checkmark"></span>
-                                <span>Precisa Colar Pecas</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Secao: Mercado Livre -->
                 <div class="form-section ml-section">
                     <div class="ml-section-header">
@@ -444,6 +356,51 @@ VERSAO: 1.0
                                         <i class="fas fa-chevron-down"></i>
                                     </div>
                                     <span class="ml-field-hint">Classico e gratuito com menor visibilidade</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subsecao: Producao -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-industry"></i> Producao</h4>
+                            <div class="ml-form-grid">
+                                <div class="ml-form-group">
+                                    <label for="saleType">Tipo de Venda *</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="saleType" class="ml-select" required>
+                                            <option value="">Selecione...</option>
+                                            <option value="estoque">Estoque Imediato</option>
+                                            <option value="personalizacao">Personalizacao</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="materialType">Tipo de Material</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="materialType" class="ml-select">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="printColor">Cor de Impressao</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="printColor" class="ml-select">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="printerMachine">Maquina Possivel</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="printerMachine" class="ml-select">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
