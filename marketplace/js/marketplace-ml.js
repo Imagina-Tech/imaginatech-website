@@ -268,9 +268,76 @@ function closeMlLinkModal() {
     }
 }
 
+// ========== PUBLICAR NOVO ANUNCIO NO ML ==========
+async function publishToML(productId) {
+    if (!mlConnected) {
+        window.showToast('Conecte ao Mercado Livre primeiro', 'warning');
+        return;
+    }
+
+    // Buscar produto localmente
+    const product = window.products.find(p => p.id === productId);
+    if (!product) {
+        window.showToast('Produto nao encontrado', 'error');
+        return;
+    }
+
+    // Validar campos obrigatorios para publicacao
+    if (!product.name || !product.price || !product.mlCategoryId) {
+        window.showToast('Preencha nome, preco e categoria ML antes de publicar', 'warning');
+        // Abrir modal de edicao
+        window.editProduct(productId);
+        return;
+    }
+
+    if (!product.photos || product.photos.length === 0) {
+        window.showToast('Adicione pelo menos uma foto antes de publicar', 'warning');
+        window.editProduct(productId);
+        return;
+    }
+
+    // Confirmar publicacao
+    if (!confirm(`Deseja publicar "${product.name}" no Mercado Livre por R$ ${product.price.toFixed(2)}?`)) {
+        return;
+    }
+
+    try {
+        window.showLoading();
+
+        const response = await fetch(`${ML_FUNCTIONS_URL}/createMLItem`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            window.showToast(`Anuncio criado com sucesso! MLB ID: ${data.mlbId}`, 'success');
+
+            // Atualizar produto local com mlbId
+            await window.db.collection('products').doc(productId).update({
+                mlbId: data.mlbId,
+                mlPublishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                mlPermalink: data.permalink
+            });
+
+        } else {
+            window.showToast(data.error || 'Erro ao criar anuncio', 'error');
+            console.error('Erro ML:', data);
+        }
+    } catch (error) {
+        console.error('Erro ao publicar no ML:', error);
+        window.showToast('Erro ao publicar no Mercado Livre', 'error');
+    } finally {
+        window.hideLoading();
+    }
+}
+
 // ========== EXPORTAR PARA GLOBAL ==========
 window.connectMercadoLivre = connectMercadoLivre;
 window.syncProductToML = syncProductToML;
 window.linkProductToML = linkProductToML;
 window.checkMlStatus = checkMlStatus;
 window.closeMlLinkModal = closeMlLinkModal;
+window.publishToML = publishToML;

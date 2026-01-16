@@ -232,10 +232,23 @@ function getMlStatusBadge(product) {
 
 function getMlActionButton(product) {
     if (product.mlbId) {
+        // Produto ja publicado - mostrar botao de sincronizar
         return `<button class="btn-icon btn-ml-sync" onclick="syncProductToML('${product.id}')" title="Sincronizar com ML">
             <i class="fas fa-sync"></i>
         </button>`;
     }
+
+    // Verificar se tem dados para publicar
+    const canPublish = product.price && product.mlCategoryId && product.photos && product.photos.length > 0;
+
+    if (canPublish) {
+        // Pronto para publicar - mostrar botao verde
+        return `<button class="btn-icon btn-publish-ml" onclick="publishToML('${product.id}')" title="Publicar no Mercado Livre">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </button>`;
+    }
+
+    // Nao tem dados completos - mostrar botao de vincular
     return `<button class="btn-icon btn-ml-link" onclick="linkProductToML('${product.id}')" title="Vincular ao ML">
         <i class="fas fa-plug"></i>
     </button>`;
@@ -436,6 +449,52 @@ function populateFormWithProduct(product) {
         printerSelect.value = product.printerMachine || '';
         printerSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }, 0);
+
+    // ========== CAMPOS MERCADO LIVRE ==========
+    document.getElementById('productPrice').value = product.price || '';
+    document.getElementById('productPhotos').value = (product.photos || []).join(', ');
+
+    // Condicao
+    const conditionSelect = document.getElementById('productCondition');
+    setTimeout(() => {
+        conditionSelect.value = product.condition || 'new';
+        conditionSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+
+    // Tipo de listagem
+    const listingSelect = document.getElementById('listingType');
+    setTimeout(() => {
+        listingSelect.value = product.listingType || 'gold_special';
+        listingSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+
+    // Categoria ML
+    const mlCategorySelect = document.getElementById('mlCategoryId');
+    setTimeout(() => {
+        mlCategorySelect.value = product.mlCategoryId || '';
+        mlCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+
+    // Status ML
+    const mlStatusDiv = document.getElementById('mlProductStatus');
+    if (mlStatusDiv) {
+        if (product.mlbId) {
+            mlStatusDiv.innerHTML = `
+                <span class="ml-badge ml-published">
+                    <i class="fas fa-check-circle"></i> Publicado: ${product.mlbId}
+                </span>
+                <a href="https://www.mercadolivre.com.br/p/${product.mlbId}" target="_blank" class="btn-icon" title="Ver no ML">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            `;
+        } else {
+            mlStatusDiv.innerHTML = `
+                <span class="ml-badge ml-not-published">
+                    <i class="fas fa-cloud-upload-alt"></i> Nao publicado no ML
+                </span>
+            `;
+        }
+    }
 }
 
 function closeProductModal() {
