@@ -1813,50 +1813,6 @@ thead .col-actions {
     box-shadow: none;
 }
 
-/* ========== RESPONSIVO ML ========== */
-@media (max-width: 1024px) {
-    .ml-form-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .ml-attributes-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .ml-section-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
-    }
-
-    .ml-form-content {
-        padding: 16px;
-    }
-
-    .ml-form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .ml-category-search-row {
-        flex-direction: column;
-    }
-
-    .ml-btn-predict {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .ml-photos-url-input {
-        flex-direction: column;
-    }
-
-    .ml-btn-add-url {
-        width: 100%;
-        justify-content: center;
-    }
-}
 
 /* Hint Label generico */
 .label-hint {
@@ -2289,140 +2245,59 @@ textarea.form-input {
     font-size: 0.9rem;
 }
 
-/* ========== RESPONSIVE ========== */
-
-/* Tablet e telas menores */
-@media (max-width: 1200px) {
-    .navbar-right .btn-nav span {
-        display: none;
-    }
-
-    .filter-bar {
-        flex-wrap: wrap;
-    }
-
-    .filter-group {
-        min-width: 140px;
-    }
+/* ========== MOBILE BLOCK - DESKTOP ONLY ========== */
+.mobile-block {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #0a0e1a 100%);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
 }
 
-/* ========== RESPONSIVIDADE MOBILE - NAVBAR COMPACTA ========== */
-@media (max-width: 768px) {
-    /* Navbar compacta em uma linha */
-    .navbar {
-        top: 10px;
-        padding: 10px 15px;
-        width: 95%;
-        border-radius: 30px !important;
-    }
-
-    .navbar-container {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .navbar-left {
-        flex-shrink: 0;
-    }
-
-    .navbar-right {
-        flex: 1;
-        justify-content: flex-end;
-        gap: 6px;
-    }
-
-    .logo {
-        font-size: 1rem;
-    }
-
-    .logo-subtitle {
-        display: none; /* Esconde subtitulo em mobile */
-    }
-
-    .connection-status {
-        display: none; /* Esconde status em mobile */
-    }
-
-    /* Botoes iconizados - esconde texto */
-    .btn-nav {
-        padding: 8px 10px;
-        border-radius: 10px;
-        min-width: 40px;
-        min-height: 40px;
-        justify-content: center;
-    }
-
-    .btn-nav span {
-        display: none; /* Esconde texto, mostra so icone */
-    }
-
-    .btn-nav i {
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    .user-info {
-        display: none; /* Esconde info do usuario em mobile */
-    }
-
-    .main-content {
-        padding-top: 80px;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
+.mobile-block-content {
+    text-align: center;
+    max-width: 400px;
 }
 
-/* Mobile muito pequeno */
-@media (max-width: 480px) {
-    .navbar {
-        top: 8px;
-        padding: 8px 12px;
-        border-radius: 25px !important;
+.mobile-block-content i {
+    font-size: 5rem;
+    color: var(--neon-blue);
+    margin-bottom: 2rem;
+    display: block;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+.mobile-block-content h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.mobile-block-content p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* Mostrar bloqueio em telas menores que 1024px */
+@media (max-width: 1024px) {
+    .mobile-block {
+        display: flex;
     }
 
-    .logo {
-        font-size: 0.9rem;
-    }
-
-    .btn-nav {
-        padding: 7px 9px;
-        min-width: 36px;
-        min-height: 36px;
-    }
-
-    .btn-nav i {
-        font-size: 0.9rem;
-    }
-
-    .main-content {
-        padding-top: 70px;
-    }
-
-    .page-header {
-        flex-direction: column;
-    }
-
-    .page-stats {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-group.span-2,
-    .form-group.span-3,
-    .form-group.span-4 {
-        grid-column: span 1;
-    }
-
-    .stat-card {
-        padding: 0.75rem 1rem;
-    }
-
-    .stat-value {
-        font-size: 1.25rem;
+    .dashboard,
+    .auth-screen,
+    .access-denied-screen,
+    .loading-overlay {
+        display: none !important;
     }
 }
