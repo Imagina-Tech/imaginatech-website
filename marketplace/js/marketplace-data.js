@@ -262,7 +262,8 @@ async function handleProductSubmit(event) {
         packagingDimensions: {
             length: parseFloat(document.getElementById('packLength').value) || 0,
             width: parseFloat(document.getElementById('packWidth').value) || 0,
-            height: parseFloat(document.getElementById('packHeight').value) || 0
+            height: parseFloat(document.getElementById('packHeight').value) || 0,
+            weight: parseFloat(document.getElementById('packWeight').value) || 0
         },
         weight: parseFloat(document.getElementById('productWeight').value) || 0,
         // Campos Mercado Livre

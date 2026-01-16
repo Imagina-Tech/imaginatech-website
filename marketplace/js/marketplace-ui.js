@@ -457,9 +457,17 @@ function populateFormWithProduct(product) {
         setFieldValue('packLength', product.packagingDimensions.length || '');
         setFieldValue('packWidth', product.packagingDimensions.width || '');
         setFieldValue('packHeight', product.packagingDimensions.height || '');
+        setFieldValue('packWeight', product.packagingDimensions.weight || '');
     }
 
     setFieldValue('productWeight', product.weight || '');
+
+    // Recalcular peso para frete
+    setTimeout(() => {
+        if (window.calculateShippingWeight) {
+            window.calculateShippingWeight();
+        }
+    }, 100);
 
     // ========== DROPDOWNS (CustomSelect) ==========
     // Categoria interna + subcategoria

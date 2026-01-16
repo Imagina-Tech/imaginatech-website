@@ -23,6 +23,7 @@ let mlFormState = {
 document.addEventListener('DOMContentLoaded', () => {
     setupCategorySearch();
     setupPhotoUpload();
+    setupDimensionsCalculator();
 });
 
 // ========== BUSCA DE CATEGORIAS ==========
@@ -508,6 +509,58 @@ function handlePhotoDragEnd(e) {
     draggedPhotoId = null;
 }
 
+// ========== CALCULADORA DE DIMENSOES PARA FRETE ==========
+function setupDimensionsCalculator() {
+    const fields = ['packLength', 'packWidth', 'packHeight', 'packWeight'];
+
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', calculateShippingWeight);
+        }
+    });
+}
+
+// Calcular peso cubado e peso para frete
+function calculateShippingWeight() {
+    const length = parseFloat(document.getElementById('packLength')?.value) || 0;
+    const width = parseFloat(document.getElementById('packWidth')?.value) || 0;
+    const height = parseFloat(document.getElementById('packHeight')?.value) || 0;
+    const weight = parseFloat(document.getElementById('packWeight')?.value) || 0;
+
+    const cubicWeightEl = document.getElementById('mlCubicWeight');
+    const shippingWeightEl = document.getElementById('mlShippingWeight');
+
+    if (!cubicWeightEl || !shippingWeightEl) return;
+
+    // Se nao tem dimensoes, mostrar "--"
+    if (length === 0 || width === 0 || height === 0) {
+        cubicWeightEl.textContent = '--';
+        shippingWeightEl.textContent = '--';
+        return;
+    }
+
+    // Peso cubado (formula do Mercado Livre: C x L x A / 6000 em cm)
+    // Resultado em kg
+    const cubicWeight = (length * width * height) / 6000;
+
+    // Peso real em kg
+    const realWeightKg = weight / 1000;
+
+    // Peso para frete = maior entre peso real e peso cubado
+    const shippingWeight = Math.max(cubicWeight, realWeightKg);
+
+    // Exibir valores
+    cubicWeightEl.textContent = cubicWeight.toFixed(3) + ' kg';
+
+    if (weight > 0) {
+        const usedWeight = shippingWeight === cubicWeight ? 'cubado' : 'real';
+        shippingWeightEl.textContent = shippingWeight.toFixed(3) + ' kg (' + usedWeight + ')';
+    } else {
+        shippingWeightEl.textContent = cubicWeight.toFixed(3) + ' kg (cubado)';
+    }
+}
+
 // ========== HELPERS ==========
 function escapeHtml(text) {
     if (!text) return '';
@@ -632,7 +685,9 @@ function resetMlForm() {
     const fields = [
         'productPhotos', 'productPrice', 'mlPhotoUrlInput', 'mlCategorySearch',
         'mlQuantity', 'mlShippingMode', 'mlFreeShipping', 'mlLocalPickup',
-        'mlShippingDays', 'mlWarrantyType', 'mlWarrantyDays'
+        'mlShippingDays', 'mlWarrantyType', 'mlWarrantyDays',
+        'dimLength', 'dimWidth', 'dimHeight', 'productWeight',
+        'packLength', 'packWidth', 'packHeight', 'packWeight'
     ];
 
     fields.forEach(id => {
@@ -649,6 +704,12 @@ function resetMlForm() {
     // Reset quantidade para 1
     const qtyField = document.getElementById('mlQuantity');
     if (qtyField) qtyField.value = '1';
+
+    // Reset preview de dimensoes
+    const cubicWeightEl = document.getElementById('mlCubicWeight');
+    const shippingWeightEl = document.getElementById('mlShippingWeight');
+    if (cubicWeightEl) cubicWeightEl.textContent = '--';
+    if (shippingWeightEl) shippingWeightEl.textContent = '--';
 }
 
 // ========== EXPORTAR PARA GLOBAL ==========
@@ -666,3 +727,4 @@ window.collectMlAttributes = collectMlAttributes;
 window.populateMlFormWithProduct = populateMlFormWithProduct;
 window.resetMlForm = resetMlForm;
 window.mlFormState = mlFormState;
+window.calculateShippingWeight = calculateShippingWeight;

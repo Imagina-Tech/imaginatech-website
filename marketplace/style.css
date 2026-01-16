@@ -1129,6 +1129,45 @@ thead .col-actions {
     gap: 20px;
 }
 
+.ml-form-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Preview de Dimensoes para Frete */
+.ml-dimensions-preview {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(255, 230, 0, 0.08);
+    border: 1px solid rgba(255, 230, 0, 0.2);
+    border-radius: 8px;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.ml-dim-calc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ml-dim-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.ml-dim-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-family: 'Orbitron', monospace;
+}
+
+.ml-dim-highlight {
+    color: #FFE600;
+    font-size: 1.05rem;
+}
+
 .ml-form-group {
     display: flex;
     flex-direction: column;

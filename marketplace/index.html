@@ -607,47 +607,64 @@ VERSAO: 1.0
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Secao: Dimensoes -->
-                <div class="form-section">
-                    <h3><i class="fas fa-ruler-combined"></i> Dimensoes</h3>
-                    <div class="form-grid">
-                        <div class="form-group-label span-4">
-                            <span class="group-label">Dimensoes do Produto (mm)</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="dimLength">Comprimento</label>
-                            <input type="number" id="dimLength" class="form-input" min="0" step="0.1" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="dimWidth">Largura</label>
-                            <input type="number" id="dimWidth" class="form-input" min="0" step="0.1" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="dimHeight">Altura</label>
-                            <input type="number" id="dimHeight" class="form-input" min="0" step="0.1" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="productWeight">Peso (g)</label>
-                            <input type="number" id="productWeight" class="form-input" min="0" step="0.1" placeholder="0">
+                        <!-- Subsecao: Dimensoes do Produto -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-cube"></i> Dimensoes do Produto</h4>
+                            <p class="ml-subsection-desc">Dimensoes reais do produto (usado para atributos do anuncio)</p>
+                            <div class="ml-form-grid ml-form-grid-4">
+                                <div class="ml-form-group">
+                                    <label for="dimLength">Comprimento (cm)</label>
+                                    <input type="number" id="dimLength" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="dimWidth">Largura (cm)</label>
+                                    <input type="number" id="dimWidth" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="dimHeight">Altura (cm)</label>
+                                    <input type="number" id="dimHeight" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="productWeight">Peso (g)</label>
+                                    <input type="number" id="productWeight" class="ml-input" min="0" step="1" placeholder="0">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group-label span-4">
-                            <span class="group-label">Dimensoes da Embalagem (mm)</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="packLength">Comprimento</label>
-                            <input type="number" id="packLength" class="form-input" min="0" step="0.1" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="packWidth">Largura</label>
-                            <input type="number" id="packWidth" class="form-input" min="0" step="0.1" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="packHeight">Altura</label>
-                            <input type="number" id="packHeight" class="form-input" min="0" step="0.1" placeholder="0">
+                        <!-- Subsecao: Dimensoes da Embalagem (Frete) -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-box"></i> Dimensoes da Embalagem (Frete)</h4>
+                            <p class="ml-subsection-desc">Dimensoes da embalagem para calculo de frete no Mercado Livre</p>
+                            <div class="ml-form-grid ml-form-grid-4">
+                                <div class="ml-form-group">
+                                    <label for="packLength">Comprimento (cm)</label>
+                                    <input type="number" id="packLength" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="packWidth">Largura (cm)</label>
+                                    <input type="number" id="packWidth" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="packHeight">Altura (cm)</label>
+                                    <input type="number" id="packHeight" class="ml-input" min="0" step="0.1" placeholder="0">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="packWeight">Peso Embalado (g)</label>
+                                    <input type="number" id="packWeight" class="ml-input" min="0" step="1" placeholder="0">
+                                    <span class="ml-field-hint">Peso total com embalagem</span>
+                                </div>
+                            </div>
+                            <div class="ml-dimensions-preview" id="mlDimensionsPreview">
+                                <div class="ml-dim-calc">
+                                    <span class="ml-dim-label">Peso cubado:</span>
+                                    <span class="ml-dim-value" id="mlCubicWeight">--</span>
+                                </div>
+                                <div class="ml-dim-calc">
+                                    <span class="ml-dim-label">Peso para frete:</span>
+                                    <span class="ml-dim-value ml-dim-highlight" id="mlShippingWeight">--</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
