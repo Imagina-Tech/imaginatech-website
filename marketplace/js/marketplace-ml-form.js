@@ -538,33 +538,87 @@ function collectMlAttributes() {
 
 // Popular formulario com dados existentes
 function populateMlFormWithProduct(product) {
-    // Categoria
-    if (product.mlCategoryId && product.mlCategoryName) {
-        selectCategory(product.mlCategoryId, product.mlCategoryName, '');
+    console.log('[ML-FORM] Populando dados ML:', {
+        mlCategoryId: product.mlCategoryId,
+        mlCategoryName: product.mlCategoryName,
+        photos: product.photos,
+        mlAttributes: product.mlAttributes
+    });
+
+    // ========== CATEGORIA ML ==========
+    if (product.mlCategoryId) {
+        const categoryName = product.mlCategoryName || 'Categoria ' + product.mlCategoryId;
+        console.log('[ML-FORM] Selecionando categoria:', product.mlCategoryId, categoryName);
+
+        // Popular categoria diretamente sem chamar API
+        const selectedContainer = document.getElementById('mlCategorySelected');
+        const hiddenInput = document.getElementById('mlCategoryId');
+
+        if (selectedContainer && hiddenInput) {
+            mlFormState.selectedCategory = { id: product.mlCategoryId, name: categoryName };
+
+            selectedContainer.classList.add('has-category');
+            selectedContainer.innerHTML = `
+                <div class="ml-selected-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="ml-selected-info">
+                    <span class="ml-selected-label">${escapeHtml(categoryName)}</span>
+                    <span class="ml-selected-hint">${product.mlCategoryId}</span>
+                </div>
+                <button type="button" class="btn-clear-category" onclick="clearSelectedCategory()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            hiddenInput.value = product.mlCategoryId;
+            console.log('[ML-FORM] Categoria definida com sucesso');
+
+            // Carregar atributos da categoria
+            loadCategoryDetails(product.mlCategoryId);
+        }
     }
 
-    // Fotos
+    // ========== FOTOS ==========
     mlFormState.photos = [];
-    if (product.photos && product.photos.length > 0) {
-        product.photos.forEach(url => {
-            addPhoto({
-                type: 'url',
-                data: url,
-                name: url.split('/').pop().split('?')[0]
-            });
+    console.log('[ML-FORM] Fotos do produto:', product.photos);
+
+    if (product.photos && Array.isArray(product.photos) && product.photos.length > 0) {
+        product.photos.forEach((url, index) => {
+            if (url && typeof url === 'string' && url.trim()) {
+                console.log(`[ML-FORM] Adicionando foto ${index + 1}:`, url);
+                const photoId = 'photo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                mlFormState.photos.push({
+                    id: photoId,
+                    type: 'url',
+                    data: url.trim(),
+                    name: url.split('/').pop().split('?')[0] || 'foto'
+                });
+            }
         });
+
+        // Renderizar fotos
+        renderPhotosList();
+        updatePhotosHiddenInput();
+        console.log('[ML-FORM] Total de fotos carregadas:', mlFormState.photos.length);
+    } else {
+        renderPhotosList();
+        console.log('[ML-FORM] Nenhuma foto para carregar');
     }
 
-    // Atributos
-    if (product.mlAttributes) {
+    // ========== ATRIBUTOS ML ==========
+    if (product.mlAttributes && Array.isArray(product.mlAttributes) && product.mlAttributes.length > 0) {
+        // Esperar atributos serem carregados pela API antes de popular
         setTimeout(() => {
+            console.log('[ML-FORM] Populando atributos:', product.mlAttributes);
             product.mlAttributes.forEach(attr => {
                 const input = document.querySelector(`[data-attr-id="${attr.id}"]`);
                 if (input) {
                     input.value = attr.value_name || attr.value_id || '';
+                    console.log(`[ML-FORM] Atributo ${attr.id} = "${input.value}"`);
                 }
             });
-        }, 500); // Esperar atributos carregarem
+        }, 800); // Tempo maior para garantir que atributos foram carregados
     }
 }
 

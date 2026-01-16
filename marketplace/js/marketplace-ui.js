@@ -343,22 +343,35 @@ function openProductModal(productId = null) {
 
     if (!modal || !form) return;
 
-    // Reset form
-    form.reset();
+    // Mostrar modal primeiro
+    modal.classList.add('active');
 
     if (productId) {
         // Modo edicao
         const product = window.products.find(p => p.id === productId);
         if (!product) {
             window.showToast('Produto nao encontrado', 'error');
+            modal.classList.remove('active');
             return;
         }
 
+        console.log('[EDIT] Carregando produto:', product.name, product);
+
         modalTitle.innerHTML = '<i class="fas fa-edit"></i> Editar Produto';
-        populateFormWithProduct(product);
+
+        // Reset form DEPOIS de mostrar modal, ANTES de popular
+        form.reset();
+
+        // Popular com pequeno delay para garantir que o DOM esteja pronto
+        setTimeout(() => {
+            populateFormWithProduct(product);
+        }, 50);
+
     } else {
-        // Modo criacao
+        // Modo criacao - reset completo
         modalTitle.innerHTML = '<i class="fas fa-box"></i> Novo Produto';
+        form.reset();
+
         document.getElementById('productIdField').value = 'Auto';
 
         // Reset subcategorias
@@ -385,111 +398,118 @@ function openProductModal(productId = null) {
             `;
         }
     }
-
-    modal.classList.add('active');
 }
 
 function populateFormWithProduct(product) {
-    // Campos de texto
-    document.getElementById('productIdField').value = String(product.productId || 0).padStart(3, '0');
-    document.getElementById('productName').value = product.name || '';
-    document.getElementById('productDescription').value = product.description || '';
-    document.getElementById('labelCode').value = product.labelCode || '';
-    document.getElementById('internalCode').value = product.internalCode || '';
-    document.getElementById('minStockQuantity').value = product.minStockQuantity || 0;
+    console.log('[POPULATE] Iniciando preenchimento do formulario:', product);
 
-    // Checkboxes
-    document.getElementById('isCompetitor').checked = product.isCompetitor || false;
-    document.getElementById('needsGluing').checked = product.needsGluing || false;
+    // Helper para definir valor com seguranca
+    function setFieldValue(id, value) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+            console.log(`[POPULATE] ${id} = "${value}"`);
+        } else {
+            console.warn(`[POPULATE] Campo nao encontrado: ${id}`);
+        }
+    }
 
-    // Dimensoes
+    // Helper para definir checkbox
+    function setCheckbox(id, checked) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = !!checked;
+        }
+    }
+
+    // Helper para definir select com sincronizacao CustomSelect
+    function setSelectValue(id, value, delay = 0) {
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = value || '';
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                console.log(`[POPULATE] SELECT ${id} = "${value}"`);
+            }
+        }, delay);
+    }
+
+    // ========== CAMPOS DE TEXTO ==========
+    setFieldValue('productIdField', String(product.productId || 0).padStart(3, '0'));
+    setFieldValue('productName', product.name || '');
+    setFieldValue('productDescription', product.description || '');
+    setFieldValue('labelCode', product.labelCode || '');
+    setFieldValue('internalCode', product.internalCode || '');
+    setFieldValue('minStockQuantity', product.minStockQuantity || 0);
+
+    // ========== CHECKBOXES ==========
+    setCheckbox('isCompetitor', product.isCompetitor);
+    setCheckbox('needsGluing', product.needsGluing);
+
+    // ========== DIMENSOES ==========
     if (product.dimensions) {
-        document.getElementById('dimLength').value = product.dimensions.length || '';
-        document.getElementById('dimWidth').value = product.dimensions.width || '';
-        document.getElementById('dimHeight').value = product.dimensions.height || '';
+        setFieldValue('dimLength', product.dimensions.length || '');
+        setFieldValue('dimWidth', product.dimensions.width || '');
+        setFieldValue('dimHeight', product.dimensions.height || '');
     }
 
     if (product.packagingDimensions) {
-        document.getElementById('packLength').value = product.packagingDimensions.length || '';
-        document.getElementById('packWidth').value = product.packagingDimensions.width || '';
-        document.getElementById('packHeight').value = product.packagingDimensions.height || '';
+        setFieldValue('packLength', product.packagingDimensions.length || '');
+        setFieldValue('packWidth', product.packagingDimensions.width || '');
+        setFieldValue('packHeight', product.packagingDimensions.height || '');
     }
 
-    document.getElementById('productWeight').value = product.weight || '';
+    setFieldValue('productWeight', product.weight || '');
 
-    // IMPORTANTE: Dropdowns com setTimeout para sincronizar CustomSelect
-    // Categoria
-    const categorySelect = document.getElementById('productCategory');
-    setTimeout(() => {
-        categorySelect.value = product.category || '';
-        categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    // ========== DROPDOWNS (CustomSelect) ==========
+    // Categoria interna + subcategoria
+    setSelectValue('productCategory', product.category, 10);
 
-        // Atualizar subcategorias apos categoria
-        if (product.category) {
+    if (product.category) {
+        setTimeout(() => {
             window.updateSubcategories(product.category);
-
-            // Subcategoria (esperar subcategorias serem populadas)
             setTimeout(() => {
-                const subcatSelect = document.getElementById('productSubcategory');
-                subcatSelect.value = product.subcategory || '';
-                subcatSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 50);
-        }
-    }, 0);
+                setSelectValue('productSubcategory', product.subcategory, 0);
+            }, 100);
+        }, 50);
+    }
 
-    // Tipo de venda
-    const saleTypeSelect = document.getElementById('saleType');
-    setTimeout(() => {
-        saleTypeSelect.value = product.saleType || '';
-        saleTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-
-    // Material
-    const materialSelect = document.getElementById('materialType');
-    setTimeout(() => {
-        materialSelect.value = product.materialType || '';
-        materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-
-    // Cor
-    const colorSelect = document.getElementById('printColor');
-    setTimeout(() => {
-        colorSelect.value = product.printColor || '';
-        colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-
-    // Maquina
-    const printerSelect = document.getElementById('printerMachine');
-    setTimeout(() => {
-        printerSelect.value = product.printerMachine || '';
-        printerSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
+    // Outros dropdowns
+    setSelectValue('saleType', product.saleType, 20);
+    setSelectValue('materialType', product.materialType, 30);
+    setSelectValue('printColor', product.printColor, 40);
+    setSelectValue('printerMachine', product.printerMachine, 50);
 
     // ========== CAMPOS MERCADO LIVRE ==========
-    document.getElementById('productPrice').value = product.price || '';
+    setFieldValue('productPrice', product.price || '');
 
-    // Condicao
-    const conditionSelect = document.getElementById('productCondition');
-    setTimeout(() => {
-        conditionSelect.value = product.condition || 'new';
-        conditionSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-
-    // Tipo de listagem
-    const listingSelect = document.getElementById('listingType');
-    setTimeout(() => {
-        listingSelect.value = product.listingType || 'gold_special';
-        listingSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
-
-    // Popular formulario ML (categoria, fotos, atributos) usando novo sistema
-    if (window.populateMlFormWithProduct) {
-        setTimeout(() => {
-            window.populateMlFormWithProduct(product);
-        }, 100);
+    // Quantidade ML
+    const qtyField = document.getElementById('mlQuantity');
+    if (qtyField) {
+        qtyField.value = product.mlQuantity || product.minStockQuantity || 1;
     }
 
-    // Status ML
+    // Selects ML
+    setSelectValue('productCondition', product.condition || 'new', 60);
+    setSelectValue('listingType', product.listingType || 'gold_special', 70);
+    setSelectValue('mlShippingMode', product.mlShippingMode || 'me2', 80);
+    setSelectValue('mlFreeShipping', product.mlFreeShipping ? 'true' : 'false', 90);
+    setSelectValue('mlLocalPickup', product.mlLocalPickup ? 'true' : 'false', 100);
+    setSelectValue('mlShippingDays', product.mlShippingDays || '2', 110);
+    setSelectValue('mlWarrantyType', product.mlWarrantyType || 'seller', 120);
+    setSelectValue('mlWarrantyDays', product.mlWarrantyDays || '90', 130);
+
+    // ========== FORMULARIO ML (categoria, fotos, atributos) ==========
+    setTimeout(() => {
+        if (window.populateMlFormWithProduct) {
+            console.log('[POPULATE] Chamando populateMlFormWithProduct');
+            window.populateMlFormWithProduct(product);
+        } else {
+            console.warn('[POPULATE] populateMlFormWithProduct nao disponivel');
+        }
+    }, 150);
+
+    // ========== STATUS ML ==========
     const mlStatusDiv = document.getElementById('mlProductStatus');
     if (mlStatusDiv) {
         if (product.mlbId) {
@@ -509,6 +529,8 @@ function populateFormWithProduct(product) {
             `;
         }
     }
+
+    console.log('[POPULATE] Preenchimento concluido');
 }
 
 function closeProductModal() {
