@@ -382,6 +382,63 @@ body {
     letter-spacing: 1px;
 }
 
+/* ========== MERCADO LIVRE STATUS ========== */
+.ml-status-card {
+    position: relative;
+    border-color: rgba(255, 230, 0, 0.2);
+}
+
+.ml-status-card .ml-icon {
+    width: 32px;
+    height: 32px;
+    filter: grayscale(1) opacity(0.5);
+    transition: var(--transition-normal);
+}
+
+.ml-status-card.connected .ml-icon {
+    filter: none;
+}
+
+.ml-status-card .ml-status {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.ml-status-card.connected .ml-status {
+    color: #00FF94;
+}
+
+.ml-status-card.connected {
+    border-color: rgba(0, 255, 148, 0.3);
+}
+
+.btn-ml-connect {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+    margin-left: auto;
+}
+
+.btn-ml-connect:hover {
+    background: rgba(255, 230, 0, 0.1);
+    border-color: rgba(255, 230, 0, 0.4);
+    color: #FFE600;
+}
+
+.ml-status-card.connected .btn-ml-connect {
+    background: rgba(0, 255, 148, 0.1);
+    border-color: rgba(0, 255, 148, 0.3);
+    color: #00FF94;
+}
+
 /* ========== FILTER BAR ========== */
 .filter-bar {
     display: flex;
@@ -932,6 +989,44 @@ thead .col-actions {
     background: rgba(139, 92, 246, 0.15);
     color: var(--neon-purple);
     border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Badges Mercado Livre */
+.badge-ml-linked {
+    background: rgba(255, 230, 0, 0.15);
+    color: #FFE600;
+    border: 1px solid rgba(255, 230, 0, 0.3);
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.badge-ml-unlinked {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed var(--glass-border);
+    padding: 0.25rem 0.5rem;
+}
+
+/* Botoes ML na tabela */
+.btn-ml-sync {
+    color: #FFE600 !important;
+}
+
+.btn-ml-sync:hover {
+    background: rgba(255, 230, 0, 0.15) !important;
+    border-color: rgba(255, 230, 0, 0.4) !important;
+}
+
+.btn-ml-link {
+    color: var(--text-muted) !important;
+    border-style: dashed !important;
+}
+
+.btn-ml-link:hover {
+    color: #FFE600 !important;
+    background: rgba(255, 230, 0, 0.1) !important;
+    border-color: rgba(255, 230, 0, 0.4) !important;
+    border-style: solid !important;
 }
 
 /* Color Chip */

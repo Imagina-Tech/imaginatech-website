@@ -175,6 +175,17 @@ VERSAO: 1.0
                             <span class="stat-label">Personaliz.</span>
                         </div>
                     </div>
+                    <!-- Mercado Livre Status -->
+                    <div class="stat-card ml-status-card" id="mlStatusCard">
+                        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML" class="ml-icon">
+                        <div class="stat-info">
+                            <span class="stat-value ml-status" id="mlStatusText">Desconectado</span>
+                            <span class="stat-label" id="mlNickname">Mercado Livre</span>
+                        </div>
+                        <button class="btn-ml-connect" id="btnMlConnect" onclick="connectMercadoLivre()">
+                            <i class="fas fa-plug"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -244,6 +255,7 @@ VERSAO: 1.0
                             <th>Qtd. Min</th>
                             <th>Cod. Etiqueta</th>
                             <th>Cod. Interno</th>
+                            <th>ML</th>
                             <th class="col-actions">Acoes</th>
                         </tr>
                     </thead>
@@ -434,5 +446,6 @@ VERSAO: 1.0
     <script src="js/marketplace-core.js"></script>
     <script src="js/marketplace-data.js"></script>
     <script src="js/marketplace-ui.js"></script>
+    <script src="js/marketplace-ml.js"></script>
 </body>
 </html>

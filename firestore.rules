@@ -196,5 +196,21 @@ service cloud.firestore {
     match /products/{document} {
       allow read, write: if isAdmin();
     }
+
+    // ===========================
+    // MERCADO LIVRE (Integracao)
+    // ===========================
+
+    // Credenciais ML (tokens OAuth) - apenas admins
+    match /mlCredentials/{document} {
+      allow read: if isAdmin();
+      allow write: if false;  // Apenas Cloud Functions escrevem
+    }
+
+    // Notificacoes ML (webhooks) - apenas Cloud Functions escrevem
+    match /mlNotifications/{document} {
+      allow read: if isAdmin();
+      allow write: if false;  // Apenas Cloud Functions escrevem
+    }
   }
 }

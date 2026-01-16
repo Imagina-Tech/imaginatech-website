@@ -194,11 +194,15 @@ function renderProducts() {
             <td>${product.minStockQuantity || 0}</td>
             <td>${escapeHtml(product.labelCode || '-')}</td>
             <td>${escapeHtml(product.internalCode || '-')}</td>
+            <td>
+                ${getMlStatusBadge(product)}
+            </td>
             <td class="col-actions">
                 <div class="actions-cell">
                     <button class="btn-icon" onclick="editProduct('${product.id}')" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
+                    ${getMlActionButton(product)}
                     <button class="btn-icon btn-danger" onclick="deleteProduct('${product.id}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -214,6 +218,27 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ========== HELPERS MERCADO LIVRE ==========
+function getMlStatusBadge(product) {
+    if (product.mlbId) {
+        return `<span class="badge badge-ml-linked" title="${product.mlbId}">
+            <i class="fas fa-link"></i> ${product.mlbId.substring(0, 10)}...
+        </span>`;
+    }
+    return '<span class="badge badge-ml-unlinked"><i class="fas fa-unlink"></i></span>';
+}
+
+function getMlActionButton(product) {
+    if (product.mlbId) {
+        return `<button class="btn-icon btn-ml-sync" onclick="syncProductToML('${product.id}')" title="Sincronizar com ML">
+            <i class="fas fa-sync"></i>
+        </button>`;
+    }
+    return `<button class="btn-icon btn-ml-link" onclick="linkProductToML('${product.id}')" title="Vincular ao ML">
+        <i class="fas fa-plug"></i>
+    </button>`;
 }
 
 function getSaleTypeBadge(saleType) {

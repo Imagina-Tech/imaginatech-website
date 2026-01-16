@@ -54,7 +54,11 @@
       "Bash(git checkout:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "WebFetch(domain:www.githubstatus.com)"
+      "WebFetch(domain:www.githubstatus.com)",
+      "Bash(gh api:*)",
+      "Bash(git show:*)",
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:developers.mercadolivre.com.br)"
     ],
     "deny": [],
     "ask": []
