@@ -369,6 +369,21 @@ function openProductModal(productId = null) {
                 subcatSelect.dispatchEvent(new Event('change', { bubbles: true }));
             }, 0);
         }
+
+        // Reset formulario ML (categoria, fotos, atributos)
+        if (window.resetMlForm) {
+            window.resetMlForm();
+        }
+
+        // Reset status ML
+        const mlStatusDiv = document.getElementById('mlProductStatus');
+        if (mlStatusDiv) {
+            mlStatusDiv.innerHTML = `
+                <span class="ml-badge ml-not-published">
+                    <i class="fas fa-cloud-upload-alt"></i> Nao publicado no ML
+                </span>
+            `;
+        }
     }
 
     modal.classList.add('active');
@@ -452,7 +467,6 @@ function populateFormWithProduct(product) {
 
     // ========== CAMPOS MERCADO LIVRE ==========
     document.getElementById('productPrice').value = product.price || '';
-    document.getElementById('productPhotos').value = (product.photos || []).join(', ');
 
     // Condicao
     const conditionSelect = document.getElementById('productCondition');
@@ -468,12 +482,12 @@ function populateFormWithProduct(product) {
         listingSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }, 0);
 
-    // Categoria ML
-    const mlCategorySelect = document.getElementById('mlCategoryId');
-    setTimeout(() => {
-        mlCategorySelect.value = product.mlCategoryId || '';
-        mlCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
+    // Popular formulario ML (categoria, fotos, atributos) usando novo sistema
+    if (window.populateMlFormWithProduct) {
+        setTimeout(() => {
+            window.populateMlFormWithProduct(product);
+        }, 100);
+    }
 
     // Status ML
     const mlStatusDiv = document.getElementById('mlProductStatus');
@@ -483,7 +497,7 @@ function populateFormWithProduct(product) {
                 <span class="ml-badge ml-published">
                     <i class="fas fa-check-circle"></i> Publicado: ${product.mlbId}
                 </span>
-                <a href="https://www.mercadolivre.com.br/p/${product.mlbId}" target="_blank" class="btn-icon" title="Ver no ML">
+                <a href="https://produto.mercadolivre.com.br/${product.mlbId}" target="_blank" class="btn-icon" title="Ver no ML">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
             `;

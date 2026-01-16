@@ -520,3 +520,252 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
         }
     });
 });
+
+/**
+ * Busca categorias do ML por termo de pesquisa
+ * GET /mlSearchCategories?q=decoracao
+ */
+exports.mlSearchCategories = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        const query = req.query.q || '';
+
+        if (!query || query.length < 2) {
+            return res.json({ categories: [] });
+        }
+
+        try {
+            // Buscar categorias usando predictor do ML
+            const response = await axios.get(
+                `${ML_CONFIG.apiUrl}/sites/MLB/domain_discovery/search?q=${encodeURIComponent(query)}`
+            );
+
+            const categories = response.data.map(item => ({
+                id: item.category_id,
+                name: item.category_name,
+                domain: item.domain_name,
+                path: item.attributes?.find(a => a.id === 'BRAND')?.value_name || ''
+            }));
+
+            res.json({ categories });
+        } catch (error) {
+            console.error('Erro ao buscar categorias:', error.response?.data || error.message);
+
+            // Fallback: buscar nas categorias raiz
+            try {
+                const fallback = await axios.get(`${ML_CONFIG.apiUrl}/sites/MLB/categories`);
+                const filtered = fallback.data.filter(cat =>
+                    cat.name.toLowerCase().includes(query.toLowerCase())
+                );
+                res.json({
+                    categories: filtered.map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        domain: '',
+                        path: ''
+                    }))
+                });
+            } catch {
+                res.json({ categories: [] });
+            }
+        }
+    });
+});
+
+/**
+ * Obtem categorias raiz do ML
+ * GET /mlRootCategories
+ */
+exports.mlRootCategories = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        try {
+            const response = await axios.get(`${ML_CONFIG.apiUrl}/sites/MLB/categories`);
+
+            const categories = response.data.map(cat => ({
+                id: cat.id,
+                name: cat.name
+            }));
+
+            res.json({ categories });
+        } catch (error) {
+            console.error('Erro ao buscar categorias raiz:', error.message);
+            res.status(500).json({ error: 'Erro ao buscar categorias' });
+        }
+    });
+});
+
+/**
+ * Obtem subcategorias de uma categoria
+ * GET /mlSubcategories?id=MLB1039
+ */
+exports.mlSubcategories = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        const categoryId = req.query.id;
+
+        if (!categoryId) {
+            return res.status(400).json({ error: 'ID da categoria obrigatorio' });
+        }
+
+        try {
+            const response = await axios.get(`${ML_CONFIG.apiUrl}/categories/${categoryId}`);
+
+            const data = response.data;
+            const subcategories = (data.children_categories || []).map(cat => ({
+                id: cat.id,
+                name: cat.name,
+                totalItems: cat.total_items_in_this_category
+            }));
+
+            res.json({
+                category: {
+                    id: data.id,
+                    name: data.name,
+                    pathFromRoot: data.path_from_root
+                },
+                subcategories,
+                hasChildren: subcategories.length > 0
+            });
+        } catch (error) {
+            console.error('Erro ao buscar subcategorias:', error.message);
+            res.status(500).json({ error: 'Erro ao buscar subcategorias' });
+        }
+    });
+});
+
+/**
+ * Obtem atributos obrigatorios de uma categoria
+ * GET /mlCategoryAttributes?id=MLB1039
+ */
+exports.mlCategoryAttributes = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        const categoryId = req.query.id;
+
+        if (!categoryId) {
+            return res.status(400).json({ error: 'ID da categoria obrigatorio' });
+        }
+
+        try {
+            const response = await axios.get(`${ML_CONFIG.apiUrl}/categories/${categoryId}/attributes`);
+
+            const attributes = response.data
+                .filter(attr => attr.tags && (attr.tags.required || attr.tags.catalog_required))
+                .map(attr => ({
+                    id: attr.id,
+                    name: attr.name,
+                    type: attr.value_type,
+                    required: true,
+                    values: attr.values || [],
+                    allowedUnits: attr.allowed_units || [],
+                    hint: attr.hint || '',
+                    tags: attr.tags
+                }));
+
+            // Tambem pegar alguns atributos importantes nao obrigatorios
+            const recommended = response.data
+                .filter(attr => !attr.tags?.required && !attr.tags?.catalog_required &&
+                    ['BRAND', 'MODEL', 'GTIN', 'MPN', 'COLOR', 'SIZE'].includes(attr.id))
+                .map(attr => ({
+                    id: attr.id,
+                    name: attr.name,
+                    type: attr.value_type,
+                    required: false,
+                    values: attr.values || [],
+                    allowedUnits: attr.allowed_units || [],
+                    hint: attr.hint || ''
+                }));
+
+            res.json({
+                required: attributes,
+                recommended: recommended,
+                total: response.data.length
+            });
+        } catch (error) {
+            console.error('Erro ao buscar atributos:', error.message);
+            res.status(500).json({ error: 'Erro ao buscar atributos' });
+        }
+    });
+});
+
+/**
+ * Faz upload de imagem para o ML
+ * POST /mlUploadImage
+ * Body: { imageUrl: "https://...", productId: "xxx" }
+ */
+exports.mlUploadImage = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { imageUrl } = req.body;
+
+        if (!imageUrl) {
+            return res.status(400).json({ error: 'imageUrl obrigatoria' });
+        }
+
+        try {
+            const accessToken = await getValidAccessToken();
+
+            // Fazer upload da imagem para o ML
+            const response = await axios.post(
+                `${ML_CONFIG.apiUrl}/pictures/items/upload`,
+                { source: imageUrl },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            res.json({
+                success: true,
+                pictureId: response.data.id,
+                url: response.data.secure_url || response.data.url,
+                variations: response.data.variations
+            });
+        } catch (error) {
+            console.error('Erro ao fazer upload:', error.response?.data || error.message);
+            res.status(500).json({
+                error: 'Erro ao fazer upload da imagem',
+                details: error.response?.data || error.message
+            });
+        }
+    });
+});
+
+/**
+ * Prediz a categoria baseada no titulo do produto
+ * POST /mlPredictCategory
+ * Body: { title: "Kit 10 Miniaturas Pokemon" }
+ */
+exports.mlPredictCategory = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { title } = req.body;
+
+        if (!title || title.length < 3) {
+            return res.status(400).json({ error: 'Titulo obrigatorio (min 3 caracteres)' });
+        }
+
+        try {
+            const response = await axios.get(
+                `${ML_CONFIG.apiUrl}/sites/MLB/domain_discovery/search?q=${encodeURIComponent(title)}`
+            );
+
+            if (response.data.length === 0) {
+                return res.json({ predictions: [] });
+            }
+
+            const predictions = response.data.slice(0, 5).map(item => ({
+                categoryId: item.category_id,
+                categoryName: item.category_name,
+                domainId: item.domain_id,
+                domainName: item.domain_name,
+                confidence: item.match_score || 0
+            }));
+
+            res.json({ predictions });
+        } catch (error) {
+            console.error('Erro ao predizer categoria:', error.message);
+            res.status(500).json({ error: 'Erro ao predizer categoria' });
+        }
+    });
+});

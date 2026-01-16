@@ -129,9 +129,25 @@ async function deleteProduct(productId) {
 async function handleProductSubmit(event) {
     event.preventDefault();
 
-    // Coletar dados do formulario
-    const photosInput = document.getElementById('productPhotos').value.trim();
-    const photos = photosInput ? photosInput.split(',').map(url => url.trim()).filter(url => url) : [];
+    // Coletar fotos do mlFormState (inclui URL e arquivos)
+    let photos = [];
+    if (window.mlFormState && window.mlFormState.photos) {
+        photos = window.mlFormState.photos
+            .filter(p => p.type === 'url')
+            .map(p => p.data);
+    }
+
+    // Fallback para input hidden
+    if (photos.length === 0) {
+        const photosInput = document.getElementById('productPhotos').value.trim();
+        photos = photosInput ? photosInput.split(',').map(url => url.trim()).filter(url => url) : [];
+    }
+
+    // Coletar atributos ML
+    const mlAttributes = window.collectMlAttributes ? window.collectMlAttributes() : [];
+
+    // Pegar nome da categoria selecionada
+    const mlCategoryName = window.mlFormState?.selectedCategory?.name || '';
 
     const productData = {
         name: document.getElementById('productName').value.trim(),
@@ -163,6 +179,8 @@ async function handleProductSubmit(event) {
         condition: document.getElementById('productCondition').value || 'new',
         listingType: document.getElementById('listingType').value || 'gold_special',
         mlCategoryId: document.getElementById('mlCategoryId').value,
+        mlCategoryName: mlCategoryName,
+        mlAttributes: mlAttributes,
         photos: photos
     };
 
