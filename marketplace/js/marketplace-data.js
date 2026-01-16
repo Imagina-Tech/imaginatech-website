@@ -129,18 +129,27 @@ async function deleteProduct(productId) {
 async function handleProductSubmit(event) {
     event.preventDefault();
 
-    // Coletar fotos do mlFormState (inclui URL e arquivos)
+    // Coletar fotos do mlFormState (URLs e arquivos base64)
     let photos = [];
-    if (window.mlFormState && window.mlFormState.photos) {
-        photos = window.mlFormState.photos
-            .filter(p => p.type === 'url')
-            .map(p => p.data);
+    if (window.mlFormState && window.mlFormState.photos && window.mlFormState.photos.length > 0) {
+        console.log('[SAVE] Fotos no mlFormState:', window.mlFormState.photos.length);
+
+        // Coletar todas as fotos (URLs e base64 de arquivos)
+        photos = window.mlFormState.photos.map(p => {
+            console.log(`[SAVE] Foto tipo=${p.type}, data=${p.data?.substring(0, 50)}...`);
+            return p.data; // Retorna URL ou base64
+        }).filter(data => data && data.trim());
+
+        console.log('[SAVE] Total de fotos coletadas:', photos.length);
     }
 
-    // Fallback para input hidden
+    // Fallback para input hidden (se mlFormState vazio)
     if (photos.length === 0) {
-        const photosInput = document.getElementById('productPhotos').value.trim();
-        photos = photosInput ? photosInput.split(',').map(url => url.trim()).filter(url => url) : [];
+        const photosInput = document.getElementById('productPhotos');
+        if (photosInput && photosInput.value.trim()) {
+            photos = photosInput.value.split(',').map(url => url.trim()).filter(url => url);
+            console.log('[SAVE] Fotos do input hidden:', photos.length);
+        }
     }
 
     // Coletar atributos ML
