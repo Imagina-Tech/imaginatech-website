@@ -20,7 +20,7 @@ VERSAO: 1.0
     --darker-bg: #060812;
     --card-bg: rgba(255, 255, 255, 0.03);
     --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.08);
 
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.8);
@@ -143,11 +143,12 @@ body {
     transform: translateX(-50%);
     width: 90%;
     max-width: 1400px;
-    padding: 12px 25px;
-    background: rgba(10, 14, 26, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 15px 30px;
+    background: rgba(10, 14, 26, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-bottom: none;
     border-radius: 50px;
     z-index: 1000;
     box-sizing: border-box;
