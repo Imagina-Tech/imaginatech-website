@@ -125,6 +125,65 @@ async function deleteProduct(productId) {
     }
 }
 
+// URL da Cloud Function de upload
+const UPLOAD_FUNCTION_URL = 'https://us-central1-imaginatech-servicos.cloudfunctions.net/uploadImages';
+
+// ========== UPLOAD DE IMAGENS PARA CLOUDINARY ==========
+async function uploadImagesToCloudinary(images) {
+    if (!images || images.length === 0) {
+        return [];
+    }
+
+    // Separar URLs existentes de base64 que precisam upload
+    const existingUrls = [];
+    const needsUpload = [];
+
+    images.forEach(img => {
+        if (!img) return;
+
+        // Se ja e URL (http), nao precisa upload
+        if (img.startsWith('http')) {
+            existingUrls.push(img);
+        } else if (img.startsWith('data:')) {
+            // Base64 precisa upload
+            needsUpload.push(img);
+        }
+    });
+
+    console.log(`[UPLOAD] ${existingUrls.length} URLs existentes, ${needsUpload.length} para upload`);
+
+    // Se nao tem nada para upload, retorna URLs existentes
+    if (needsUpload.length === 0) {
+        return existingUrls;
+    }
+
+    try {
+        window.showToast(`Enviando ${needsUpload.length} imagem(ns)...`, 'info');
+
+        const response = await fetch(UPLOAD_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ images: needsUpload })
+        });
+
+        const data = await response.json();
+
+        if (data.success || data.urls?.length > 0) {
+            console.log(`[UPLOAD] Sucesso: ${data.urls.length} imagens enviadas`);
+            // Combina URLs existentes com novas URLs do Cloudinary
+            return [...existingUrls, ...data.urls];
+        } else {
+            console.error('[UPLOAD] Erro:', data.error);
+            window.showToast('Erro ao enviar algumas imagens', 'warning');
+            return existingUrls; // Retorna pelo menos as URLs existentes
+        }
+    } catch (error) {
+        console.error('[UPLOAD] Erro de rede:', error);
+        window.showToast('Erro ao enviar imagens para o servidor', 'error');
+        return existingUrls;
+    }
+}
+
 // ========== HANDLER DO FORMULARIO ==========
 async function handleProductSubmit(event) {
     event.preventDefault();
@@ -136,8 +195,9 @@ async function handleProductSubmit(event) {
 
         // Coletar todas as fotos (URLs e base64 de arquivos)
         photos = window.mlFormState.photos.map(p => {
-            console.log(`[SAVE] Foto tipo=${p.type}, data=${p.data?.substring(0, 50)}...`);
-            return p.data; // Retorna URL ou base64
+            const preview = p.data?.substring(0, 50) || 'vazio';
+            console.log(`[SAVE] Foto tipo=${p.type}, data=${preview}...`);
+            return p.data;
         }).filter(data => data && data.trim());
 
         console.log('[SAVE] Total de fotos coletadas:', photos.length);
@@ -150,6 +210,13 @@ async function handleProductSubmit(event) {
             photos = photosInput.value.split(',').map(url => url.trim()).filter(url => url);
             console.log('[SAVE] Fotos do input hidden:', photos.length);
         }
+    }
+
+    // ========== UPLOAD DAS IMAGENS PARA CLOUDINARY ==========
+    if (photos.length > 0) {
+        console.log('[SAVE] Iniciando upload de imagens...');
+        photos = await uploadImagesToCloudinary(photos);
+        console.log('[SAVE] Fotos apos upload:', photos.length, photos);
     }
 
     // Coletar atributos ML

@@ -1,6 +1,6 @@
 /**
  * Cloud Functions - ImaginaTech
- * Integracao com Mercado Livre
+ * Integracao com Mercado Livre + Cloudinary
  */
 
 const functions = require('firebase-functions');
@@ -8,9 +8,17 @@ const admin = require('firebase-admin');
 const axios = require('axios');
 const cors = require('cors')({ origin: true });
 const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// ========== CONFIGURACAO CLOUDINARY ==========
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // ========== PKCE HELPERS ==========
 function generateCodeVerifier() {
@@ -766,6 +774,164 @@ exports.mlPredictCategory = functions.https.onRequest(async (req, res) => {
         } catch (error) {
             console.error('Erro ao predizer categoria:', error.message);
             res.status(500).json({ error: 'Erro ao predizer categoria' });
+        }
+    });
+});
+
+/**
+ * ========================================
+ * CLOUDINARY - Upload de Imagens
+ * ========================================
+ */
+
+/**
+ * Faz upload de imagem base64 para o Cloudinary
+ * POST /uploadImage
+ * Body: { image: "data:image/jpeg;base64,..." } ou { image: "https://..." }
+ * Returns: { url: "https://res.cloudinary.com/..." }
+ */
+exports.uploadImage = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { image, folder = 'marketplace' } = req.body;
+
+        if (!image) {
+            return res.status(400).json({ error: 'Imagem obrigatoria' });
+        }
+
+        // Verificar se Cloudinary esta configurado
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+            console.error('Cloudinary nao configurado');
+            return res.status(500).json({ error: 'Servico de imagens nao configurado' });
+        }
+
+        try {
+            console.log(`[CLOUDINARY] Upload iniciado, tamanho: ${image.length} chars`);
+
+            // Upload para Cloudinary (aceita base64 ou URL)
+            const result = await cloudinary.uploader.upload(image, {
+                folder: `imaginatech/${folder}`,
+                resource_type: 'image',
+                transformation: [
+                    { width: 1200, height: 1200, crop: 'limit' }, // Limita tamanho maximo
+                    { quality: 'auto:good' }, // Otimiza qualidade
+                    { fetch_format: 'auto' } // Formato otimizado (webp quando suportado)
+                ]
+            });
+
+            console.log(`[CLOUDINARY] Upload concluido: ${result.secure_url}`);
+
+            res.json({
+                success: true,
+                url: result.secure_url,
+                publicId: result.public_id,
+                width: result.width,
+                height: result.height,
+                format: result.format,
+                bytes: result.bytes
+            });
+
+        } catch (error) {
+            console.error('[CLOUDINARY] Erro no upload:', error.message);
+            res.status(500).json({
+                error: 'Erro ao fazer upload da imagem',
+                details: error.message
+            });
+        }
+    });
+});
+
+/**
+ * Faz upload de multiplas imagens para o Cloudinary
+ * POST /uploadImages
+ * Body: { images: ["data:image/...", "https://..."] }
+ * Returns: { urls: ["https://res.cloudinary.com/..."] }
+ */
+exports.uploadImages = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { images, folder = 'marketplace' } = req.body;
+
+        if (!images || !Array.isArray(images) || images.length === 0) {
+            return res.status(400).json({ error: 'Array de imagens obrigatorio' });
+        }
+
+        if (images.length > 10) {
+            return res.status(400).json({ error: 'Maximo de 10 imagens por vez' });
+        }
+
+        // Verificar se Cloudinary esta configurado
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+            return res.status(500).json({ error: 'Servico de imagens nao configurado' });
+        }
+
+        try {
+            console.log(`[CLOUDINARY] Upload de ${images.length} imagens iniciado`);
+
+            const uploadPromises = images.map(async (image, index) => {
+                try {
+                    // Se ja e URL do Cloudinary, retorna direto
+                    if (image.includes('res.cloudinary.com')) {
+                        console.log(`[CLOUDINARY] Imagem ${index + 1} ja e URL Cloudinary`);
+                        return { success: true, url: image, skipped: true };
+                    }
+
+                    // Se e URL externa (nao base64), retorna direto
+                    if (image.startsWith('http') && !image.startsWith('data:')) {
+                        console.log(`[CLOUDINARY] Imagem ${index + 1} e URL externa, mantendo`);
+                        return { success: true, url: image, external: true };
+                    }
+
+                    // Upload base64 para Cloudinary
+                    const result = await cloudinary.uploader.upload(image, {
+                        folder: `imaginatech/${folder}`,
+                        resource_type: 'image',
+                        transformation: [
+                            { width: 1200, height: 1200, crop: 'limit' },
+                            { quality: 'auto:good' },
+                            { fetch_format: 'auto' }
+                        ]
+                    });
+
+                    console.log(`[CLOUDINARY] Imagem ${index + 1} uploaded: ${result.secure_url}`);
+                    return { success: true, url: result.secure_url };
+
+                } catch (err) {
+                    console.error(`[CLOUDINARY] Erro na imagem ${index + 1}:`, err.message);
+                    return { success: false, error: err.message, original: image.substring(0, 50) };
+                }
+            });
+
+            const results = await Promise.all(uploadPromises);
+
+            const urls = results
+                .filter(r => r.success)
+                .map(r => r.url);
+
+            const errors = results.filter(r => !r.success);
+
+            console.log(`[CLOUDINARY] Upload concluido: ${urls.length} sucesso, ${errors.length} erros`);
+
+            res.json({
+                success: errors.length === 0,
+                urls: urls,
+                total: images.length,
+                uploaded: urls.length,
+                errors: errors.length > 0 ? errors : undefined
+            });
+
+        } catch (error) {
+            console.error('[CLOUDINARY] Erro geral:', error.message);
+            res.status(500).json({
+                error: 'Erro ao fazer upload das imagens',
+                details: error.message
+            });
         }
     });
 });
