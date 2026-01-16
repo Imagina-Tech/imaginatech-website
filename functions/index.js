@@ -11,11 +11,11 @@ const cors = require('cors')({ origin: true });
 admin.initializeApp();
 const db = admin.firestore();
 
-// Configuracoes do Mercado Livre
+// Configuracoes do Mercado Livre (usando variaveis de ambiente)
 const ML_CONFIG = {
-    appId: functions.config().mercadolivre?.app_id || process.env.ML_APP_ID,
-    secretKey: functions.config().mercadolivre?.secret_key || process.env.ML_SECRET_KEY,
-    redirectUri: functions.config().mercadolivre?.redirect_uri || 'https://us-central1-imaginatech-servicos.cloudfunctions.net/mlOAuthCallback',
+    appId: process.env.ML_APP_ID,
+    secretKey: process.env.ML_SECRET_KEY,
+    redirectUri: process.env.ML_REDIRECT_URI || 'https://us-central1-imaginatech-servicos.cloudfunctions.net/mlOAuthCallback',
     authUrl: 'https://auth.mercadolivre.com.br/authorization',
     tokenUrl: 'https://api.mercadolibre.com/oauth/token',
     apiUrl: 'https://api.mercadolibre.com'
