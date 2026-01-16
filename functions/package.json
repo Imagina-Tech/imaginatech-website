@@ -3,7 +3,7 @@
   "description": "Cloud Functions para ImaginaTech - Integracao Mercado Livre",
   "version": "1.0.0",
   "engines": {
-    "node": "18"
+    "node": "22"
   },
   "main": "index.js",
   "scripts": {
