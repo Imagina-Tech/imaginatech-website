@@ -181,6 +181,15 @@ async function handleProductSubmit(event) {
         mlCategoryId: document.getElementById('mlCategoryId').value,
         mlCategoryName: mlCategoryName,
         mlAttributes: mlAttributes,
+        mlQuantity: parseInt(document.getElementById('mlQuantity')?.value) || 1,
+        // Envio
+        mlShippingMode: document.getElementById('mlShippingMode')?.value || 'me2',
+        mlFreeShipping: document.getElementById('mlFreeShipping')?.value === 'true',
+        mlLocalPickup: document.getElementById('mlLocalPickup')?.value === 'true',
+        mlShippingDays: parseInt(document.getElementById('mlShippingDays')?.value) || 2,
+        // Garantia
+        mlWarrantyType: document.getElementById('mlWarrantyType')?.value || 'seller',
+        mlWarrantyDays: parseInt(document.getElementById('mlWarrantyDays')?.value) || 90,
         photos: photos
     };
 

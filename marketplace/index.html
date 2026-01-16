@@ -384,82 +384,218 @@ VERSAO: 1.0
 
                 <!-- Secao: Mercado Livre -->
                 <div class="form-section ml-section">
-                    <h3><img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML" style="width:20px;height:20px;margin-right:8px;vertical-align:middle;"> Mercado Livre</h3>
-
-                    <!-- Status de publicacao -->
-                    <div class="ml-status-banner" id="mlProductStatus">
-                        <span class="ml-badge ml-not-published"><i class="fas fa-cloud-upload-alt"></i> Nao publicado no ML</span>
+                    <div class="ml-section-header">
+                        <h3><img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML"> Mercado Livre</h3>
+                        <div class="ml-status-banner" id="mlProductStatus">
+                            <span class="ml-badge ml-not-published"><i class="fas fa-cloud-upload-alt"></i> Nao publicado</span>
+                        </div>
                     </div>
 
-                    <div class="form-grid">
-                        <!-- Preco e Condicao -->
-                        <div class="form-group span-2">
-                            <label for="productPrice">Preco (R$) *</label>
-                            <input type="number" id="productPrice" class="form-input" min="0" step="0.01" placeholder="99.90">
-                        </div>
-                        <div class="form-group span-1">
-                            <label for="productCondition">Condicao *</label>
-                            <select id="productCondition" class="form-select">
-                                <option value="new">Novo</option>
-                                <option value="used">Usado</option>
-                                <option value="refurbished">Recondicionado</option>
-                            </select>
-                        </div>
-                        <div class="form-group span-1">
-                            <label for="listingType">Tipo de Anuncio</label>
-                            <select id="listingType" class="form-select">
-                                <option value="gold_special">Classico (Gratis)</option>
-                                <option value="gold_pro">Premium</option>
-                            </select>
+                    <div class="ml-form-content">
+                        <!-- Subsecao: Informacoes do Anuncio -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-tag"></i> Informacoes do Anuncio</h4>
+                            <div class="ml-form-grid">
+                                <div class="ml-form-group">
+                                    <label for="productPrice">Preco de Venda *</label>
+                                    <div class="ml-input-with-prefix">
+                                        <span class="input-prefix">R$</span>
+                                        <input type="number" id="productPrice" class="ml-input" min="0" step="0.01" placeholder="0,00">
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlQuantity">Quantidade Disponivel *</label>
+                                    <input type="number" id="mlQuantity" class="ml-input" min="1" value="1" placeholder="1">
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="productCondition">Condicao do Produto *</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="productCondition" class="ml-select">
+                                            <option value="new">Novo</option>
+                                            <option value="used">Usado - Como novo</option>
+                                            <option value="used_good">Usado - Bom estado</option>
+                                            <option value="used_fair">Usado - Estado razoavel</option>
+                                            <option value="refurbished">Recondicionado</option>
+                                            <option value="not_specified">Nao especificado</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="listingType">Tipo de Anuncio</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="listingType" class="ml-select">
+                                            <option value="gold_special">Classico - Gratis</option>
+                                            <option value="gold_pro">Premium - 11% taxa</option>
+                                            <option value="gold">Ouro - 10% taxa</option>
+                                            <option value="silver">Prata - 9% taxa</option>
+                                            <option value="bronze">Bronze - 7% taxa</option>
+                                            <option value="free">Gratuito - Limitado</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <span class="ml-field-hint">Classico e gratuito com menor visibilidade</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Seletor de Categoria ML -->
-                        <div class="form-group span-4">
-                            <label>Categoria do Mercado Livre *</label>
+                        <!-- Subsecao: Categoria -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-folder-tree"></i> Categoria do Produto</h4>
                             <div class="ml-category-picker">
-                                <div class="ml-category-search">
-                                    <input type="text" id="mlCategorySearch" class="form-input" placeholder="Digite para buscar categoria (ex: miniaturas, decoracao, action figure...)">
-                                    <button type="button" class="btn-predict-category" onclick="predictCategoryFromTitle()" title="Sugerir categoria baseado no nome do produto">
+                                <div class="ml-category-search-row">
+                                    <div class="ml-search-input-wrapper">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="mlCategorySearch" class="ml-input" placeholder="Buscar categoria (ex: miniaturas, action figure, decoracao...)">
+                                    </div>
+                                    <button type="button" class="ml-btn-predict" onclick="predictCategoryFromTitle()" title="Sugerir categoria baseado no nome do produto">
                                         <i class="fas fa-magic"></i>
+                                        <span>Sugerir</span>
                                     </button>
                                 </div>
                                 <div class="ml-category-results" id="mlCategoryResults"></div>
                                 <input type="hidden" id="mlCategoryId" name="mlCategoryId">
-                                <div class="ml-category-selected" id="mlCategorySelected">
-                                    <span class="selected-label">Nenhuma categoria selecionada</span>
+                                <div class="ml-category-selected-box" id="mlCategorySelected">
+                                    <div class="ml-selected-icon">
+                                        <i class="fas fa-folder"></i>
+                                    </div>
+                                    <div class="ml-selected-info">
+                                        <span class="ml-selected-label">Nenhuma categoria selecionada</span>
+                                        <span class="ml-selected-hint">Use a busca acima ou clique em "Sugerir"</span>
+                                    </div>
                                 </div>
                                 <div class="ml-category-breadcrumb" id="mlCategoryBreadcrumb"></div>
                             </div>
                         </div>
 
-                        <!-- Atributos Dinamicos -->
-                        <div class="form-group span-4">
+                        <!-- Subsecao: Atributos -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-sliders-h"></i> Especificacoes Tecnicas</h4>
                             <div class="ml-attributes-container" id="mlAttributesContainer">
                                 <div class="ml-attributes-placeholder">
-                                    <i class="fas fa-tags"></i>
-                                    <span>Selecione uma categoria para ver os atributos obrigatorios</span>
+                                    <i class="fas fa-list-check"></i>
+                                    <span>Selecione uma categoria para carregar os atributos</span>
+                                    <small>Os campos obrigatorios serao exibidos aqui</small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Upload de Fotos Drag-and-Drop -->
-                        <div class="form-group span-4">
-                            <label>Fotos do Produto * <span class="label-hint">(Arraste para reordenar, maximo 10 fotos)</span></label>
+                        <!-- Subsecao: Fotos -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-images"></i> Fotos do Produto</h4>
+                            <p class="ml-subsection-desc">Adicione ate 10 fotos. A primeira sera a foto principal do anuncio.</p>
                             <div class="ml-photos-upload">
                                 <div class="ml-photos-dropzone" id="mlPhotosDropzone">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <p>Arraste imagens aqui ou clique para selecionar</p>
-                                    <span>Formatos: JPG, PNG, WEBP (max 5MB cada)</span>
+                                    <div class="dropzone-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="dropzone-text">
+                                        <p>Arraste imagens aqui</p>
+                                        <span>ou clique para selecionar</span>
+                                    </div>
+                                    <div class="dropzone-formats">
+                                        <span>JPG, PNG, WEBP</span>
+                                        <span>Max 5MB por imagem</span>
+                                    </div>
                                     <input type="file" id="mlPhotosInput" multiple accept="image/jpeg,image/png,image/webp" style="display:none">
                                 </div>
                                 <div class="ml-photos-list" id="mlPhotosList"></div>
-                                <div class="ml-photos-url-input">
-                                    <input type="text" id="mlPhotoUrlInput" class="form-input" placeholder="Ou adicione URL de imagem...">
-                                    <button type="button" class="btn-add-url" onclick="addPhotoFromUrl()">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
+                                <div class="ml-photos-url-section">
+                                    <span class="ml-url-label">Ou adicione por URL:</span>
+                                    <div class="ml-photos-url-input">
+                                        <input type="text" id="mlPhotoUrlInput" class="ml-input" placeholder="https://exemplo.com/foto.jpg">
+                                        <button type="button" class="ml-btn-add-url" onclick="addPhotoFromUrl()">
+                                            <i class="fas fa-plus"></i>
+                                            Adicionar
+                                        </button>
+                                    </div>
                                 </div>
                                 <input type="hidden" id="productPhotos" name="productPhotos">
+                            </div>
+                        </div>
+
+                        <!-- Subsecao: Envio (Opcional) -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-truck"></i> Opcoes de Envio</h4>
+                            <div class="ml-form-grid">
+                                <div class="ml-form-group">
+                                    <label for="mlShippingMode">Modo de Envio</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlShippingMode" class="ml-select">
+                                            <option value="me2">Mercado Envios (Recomendado)</option>
+                                            <option value="custom">Frete Proprio</option>
+                                            <option value="not_specified">A combinar</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlFreeShipping">Frete Gratis</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlFreeShipping" class="ml-select">
+                                            <option value="false">Nao oferecer</option>
+                                            <option value="true">Oferecer frete gratis</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <span class="ml-field-hint">Frete gratis aumenta muito as vendas</span>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlLocalPickup">Retirada em Maos</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlLocalPickup" class="ml-select">
+                                            <option value="false">Nao permitir</option>
+                                            <option value="true">Permitir retirada</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlShippingDays">Prazo de Envio</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlShippingDays" class="ml-select">
+                                            <option value="1">1 dia util</option>
+                                            <option value="2" selected>2 dias uteis</option>
+                                            <option value="3">3 dias uteis</option>
+                                            <option value="5">5 dias uteis</option>
+                                            <option value="7">7 dias uteis</option>
+                                            <option value="10">10 dias uteis</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subsecao: Garantia -->
+                        <div class="ml-subsection">
+                            <h4><i class="fas fa-shield-alt"></i> Garantia e Devolucao</h4>
+                            <div class="ml-form-grid">
+                                <div class="ml-form-group">
+                                    <label for="mlWarrantyType">Tipo de Garantia</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlWarrantyType" class="ml-select">
+                                            <option value="seller">Garantia do Vendedor</option>
+                                            <option value="factory">Garantia de Fabrica</option>
+                                            <option value="none">Sem garantia</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlWarrantyDays">Periodo de Garantia</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlWarrantyDays" class="ml-select">
+                                            <option value="30">30 dias</option>
+                                            <option value="60">60 dias</option>
+                                            <option value="90" selected>90 dias</option>
+                                            <option value="180">6 meses</option>
+                                            <option value="365">1 ano</option>
+                                            <option value="730">2 anos</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

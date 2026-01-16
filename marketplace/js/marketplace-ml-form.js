@@ -108,7 +108,13 @@ async function selectCategory(categoryId, categoryName, domain) {
 
     selectedContainer.classList.add('has-category');
     selectedContainer.innerHTML = `
-        <span class="selected-label"><i class="fas fa-folder-open"></i> ${escapeHtml(categoryName)} <small style="opacity:0.7">(${categoryId})</small></span>
+        <div class="ml-selected-icon">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <div class="ml-selected-info">
+            <span class="ml-selected-label">${escapeHtml(categoryName)}</span>
+            <span class="ml-selected-hint">${categoryId}</span>
+        </div>
         <button type="button" class="btn-clear-category" onclick="clearSelectedCategory()">
             <i class="fas fa-times"></i>
         </button>
@@ -243,10 +249,24 @@ function clearSelectedCategory() {
     mlFormState.categoryPath = [];
 
     selectedContainer.classList.remove('has-category');
-    selectedContainer.innerHTML = '<span class="selected-label">Nenhuma categoria selecionada</span>';
+    selectedContainer.innerHTML = `
+        <div class="ml-selected-icon">
+            <i class="fas fa-folder"></i>
+        </div>
+        <div class="ml-selected-info">
+            <span class="ml-selected-label">Nenhuma categoria selecionada</span>
+            <span class="ml-selected-hint">Use a busca acima ou clique em "Sugerir"</span>
+        </div>
+    `;
     breadcrumbContainer.innerHTML = '';
     hiddenInput.value = '';
-    attributesContainer.innerHTML = '<div class="ml-attributes-placeholder"><i class="fas fa-tags"></i><span>Selecione uma categoria para ver os atributos obrigatorios</span></div>';
+    attributesContainer.innerHTML = `
+        <div class="ml-attributes-placeholder">
+            <i class="fas fa-list-check"></i>
+            <span>Selecione uma categoria para carregar os atributos</span>
+            <small>Os campos obrigatorios serao exibidos aqui</small>
+        </div>
+    `;
 }
 
 // Predizer categoria baseado no titulo
@@ -553,10 +573,28 @@ function resetMlForm() {
     clearSelectedCategory();
     mlFormState.photos = [];
     renderPhotosList();
-    document.getElementById('productPhotos').value = '';
-    document.getElementById('productPrice').value = '';
-    document.getElementById('mlPhotoUrlInput').value = '';
-    document.getElementById('mlCategorySearch').value = '';
+
+    // Reset campos
+    const fields = [
+        'productPhotos', 'productPrice', 'mlPhotoUrlInput', 'mlCategorySearch',
+        'mlQuantity', 'mlShippingMode', 'mlFreeShipping', 'mlLocalPickup',
+        'mlShippingDays', 'mlWarrantyType', 'mlWarrantyDays'
+    ];
+
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
+            } else {
+                el.value = '';
+            }
+        }
+    });
+
+    // Reset quantidade para 1
+    const qtyField = document.getElementById('mlQuantity');
+    if (qtyField) qtyField.value = '1';
 }
 
 // ========== EXPORTAR PARA GLOBAL ==========
