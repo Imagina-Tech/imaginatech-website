@@ -56,8 +56,7 @@ async function checkMlStatus() {
 function updateMlStatusUI(status) {
     const statusCard = document.getElementById('mlStatusCard');
     const statusText = document.getElementById('mlStatusText');
-    const nicknameText = document.getElementById('mlNickname');
-    const connectBtn = document.getElementById('btnMlConnect');
+    const connectBtn = document.getElementById('mlConnectBtn');
 
     if (!statusCard) return;
 
@@ -66,16 +65,18 @@ function updateMlStatusUI(status) {
 
     if (status.connected) {
         statusCard.classList.add('connected');
-        statusText.textContent = 'Conectado';
-        nicknameText.textContent = status.nickname || 'Mercado Livre';
-        connectBtn.innerHTML = '<i class="fas fa-check"></i>';
-        connectBtn.title = 'Reconectar';
+        statusText.innerHTML = `<strong>${status.nickname || 'Conectado'}</strong>`;
+        if (connectBtn) {
+            connectBtn.innerHTML = '<i class="fas fa-check"></i>';
+            connectBtn.title = 'Conectado - Clique para reconectar';
+        }
     } else {
         statusCard.classList.remove('connected');
-        statusText.textContent = 'Desconectado';
-        nicknameText.textContent = 'Mercado Livre';
-        connectBtn.innerHTML = '<i class="fas fa-plug"></i>';
-        connectBtn.title = 'Conectar ao Mercado Livre';
+        statusText.textContent = 'Nao conectado';
+        if (connectBtn) {
+            connectBtn.innerHTML = '<i class="fas fa-plug"></i>';
+            connectBtn.title = 'Conectar ao Mercado Livre';
+        }
     }
 }
 
@@ -336,8 +337,11 @@ async function publishToML(productId) {
 
 // ========== EXPORTAR PARA GLOBAL ==========
 window.connectMercadoLivre = connectMercadoLivre;
+window.connectMl = connectMercadoLivre; // Alias para o botao do HTML
 window.syncProductToML = syncProductToML;
 window.linkProductToML = linkProductToML;
 window.checkMlStatus = checkMlStatus;
 window.closeMlLinkModal = closeMlLinkModal;
 window.publishToML = publishToML;
+window.saveMlbId = saveMlbId;
+window.selectMlItem = selectMlItem;
