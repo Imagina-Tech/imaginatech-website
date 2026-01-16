@@ -188,5 +188,13 @@ service cloud.firestore {
       allow read: if true;  // Público pode ler (homepage e /projetos)
       allow write: if isAdmin();  // Só admin pode criar/editar/deletar
     }
+
+    // ===========================
+    // PRODUCTS (Marketplace)
+    // Admins escrevem e leem
+    // ===========================
+    match /products/{document} {
+      allow read, write: if isAdmin();
+    }
   }
 }
