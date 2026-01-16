@@ -172,7 +172,7 @@ async function openMlLinkModal(productId) {
                             <i class="fas fa-exclamation-triangle" style="color:var(--neon-orange);margin-right:6px;"></i>
                             Campos faltando: <strong style="color:var(--neon-orange);">${missingFields.join(', ')}</strong>
                         </p>
-                        <button class="btn-secondary" onclick="closeMlLinkModal(); window.editProduct('${productId}');" style="width:100%;">
+                        <button class="btn-secondary" onclick="openEditFromMlModal('${productId}')" style="width:100%;">
                             <i class="fas fa-edit"></i> Completar dados do produto
                         </button>
                     ` : `
@@ -180,7 +180,7 @@ async function openMlLinkModal(productId) {
                             <i class="fas fa-check-circle" style="color:var(--neon-green);margin-right:6px;"></i>
                             Produto pronto para publicar: <strong>R$ ${product.price?.toFixed(2) || '0,00'}</strong>
                         </p>
-                        <button class="btn-primary" onclick="closeMlLinkModal(); publishToML('${productId}');" style="width:100%;background:linear-gradient(135deg, var(--neon-green), #00cc7a);">
+                        <button class="btn-primary" onclick="publishFromMlModal('${productId}')" style="width:100%;background:linear-gradient(135deg, var(--neon-green), #00cc7a);">
                             <i class="fas fa-cloud-upload-alt"></i> Criar Anuncio no ML
                         </button>
                     `}
@@ -326,6 +326,35 @@ function closeMlLinkModal() {
     }
 }
 
+// ========== ABRIR EDICAO A PARTIR DO MODAL ML ==========
+// Fecha o modal ML primeiro, depois abre o modal de edicao
+function openEditFromMlModal(productId) {
+    const modal = document.getElementById('mlLinkModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.remove(); // Remove imediatamente para evitar conflitos
+    }
+
+    // Pequeno delay para garantir que o DOM esta limpo
+    setTimeout(() => {
+        console.log('[ML-MODAL] Abrindo edicao do produto:', productId);
+        window.editProduct(productId);
+    }, 100);
+}
+
+// ========== PUBLICAR A PARTIR DO MODAL ML ==========
+function publishFromMlModal(productId) {
+    const modal = document.getElementById('mlLinkModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.remove();
+    }
+
+    setTimeout(() => {
+        publishToML(productId);
+    }, 100);
+}
+
 // ========== PUBLICAR NOVO ANUNCIO NO ML ==========
 async function publishToML(productId) {
     if (!mlConnected) {
@@ -399,6 +428,8 @@ window.syncProductToML = syncProductToML;
 window.linkProductToML = linkProductToML;
 window.checkMlStatus = checkMlStatus;
 window.closeMlLinkModal = closeMlLinkModal;
+window.openEditFromMlModal = openEditFromMlModal;
+window.publishFromMlModal = publishFromMlModal;
 window.publishToML = publishToML;
 window.saveMlbId = saveMlbId;
 window.selectMlItem = selectMlItem;
