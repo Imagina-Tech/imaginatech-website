@@ -7,9 +7,19 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const axios = require('axios');
 const cors = require('cors')({ origin: true });
+const crypto = require('crypto');
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// ========== PKCE HELPERS ==========
+function generateCodeVerifier() {
+    return crypto.randomBytes(32).toString('base64url');
+}
+
+function generateCodeChallenge(verifier) {
+    return crypto.createHash('sha256').update(verifier).digest('base64url');
+}
 
 // Configuracoes do Mercado Livre (usando variaveis de ambiente)
 const ML_CONFIG = {
@@ -22,19 +32,36 @@ const ML_CONFIG = {
 };
 
 /**
- * Gera URL de autorizacao do Mercado Livre
+ * Gera URL de autorizacao do Mercado Livre com PKCE
  * GET /mlAuth
  */
-exports.mlAuth = functions.https.onRequest((req, res) => {
-    cors(req, res, () => {
-        const authUrl = `${ML_CONFIG.authUrl}?response_type=code&client_id=${ML_CONFIG.appId}&redirect_uri=${encodeURIComponent(ML_CONFIG.redirectUri)}`;
+exports.mlAuth = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        try {
+            // Gerar PKCE code_verifier e code_challenge
+            const codeVerifier = generateCodeVerifier();
+            const codeChallenge = generateCodeChallenge(codeVerifier);
 
-        // Se for chamada AJAX, retorna a URL
-        if (req.headers.accept?.includes('application/json')) {
-            res.json({ authUrl });
-        } else {
-            // Se for acesso direto, redireciona
-            res.redirect(authUrl);
+            // Salvar code_verifier no Firestore (expira em 10 min)
+            await db.collection('mlCredentials').doc('pkce').set({
+                codeVerifier: codeVerifier,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutos
+            });
+
+            // URL com PKCE
+            const authUrl = `${ML_CONFIG.authUrl}?response_type=code&client_id=${ML_CONFIG.appId}&redirect_uri=${encodeURIComponent(ML_CONFIG.redirectUri)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+
+            // Se for chamada AJAX, retorna a URL
+            if (req.headers.accept?.includes('application/json')) {
+                res.json({ authUrl });
+            } else {
+                // Se for acesso direto, redireciona
+                res.redirect(authUrl);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar URL de auth:', error);
+            res.status(500).send('Erro ao iniciar autenticacao');
         }
     });
 });
@@ -91,11 +118,65 @@ exports.mlOAuthCallback = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Webhook do Mercado Livre - Recebe notificacoes
- * POST /mlwebhook
+ * Webhook do Mercado Livre - Recebe notificacoes E OAuth callback
+ * GET /mlwebhook?code=XXX (OAuth callback)
+ * POST /mlwebhook (Webhook notificacoes)
  */
 exports.mlwebhook = functions.https.onRequest(async (req, res) => {
-    // ML envia POST com notificacoes
+    // GET com code = OAuth callback
+    if (req.method === 'GET' && req.query.code) {
+        const { code } = req.query;
+
+        try {
+            // Recuperar code_verifier do Firestore (PKCE)
+            const pkceDoc = await db.collection('mlCredentials').doc('pkce').get();
+            if (!pkceDoc.exists) {
+                console.error('PKCE code_verifier nao encontrado');
+                return res.redirect('https://imaginatech.com.br/marketplace/?ml_error=true');
+            }
+            const { codeVerifier } = pkceDoc.data();
+
+            // Trocar code por access_token (com PKCE)
+            const tokenResponse = await axios.post(ML_CONFIG.tokenUrl, {
+                grant_type: 'authorization_code',
+                client_id: ML_CONFIG.appId,
+                client_secret: ML_CONFIG.secretKey,
+                code: code,
+                redirect_uri: ML_CONFIG.redirectUri,
+                code_verifier: codeVerifier
+            });
+
+            const { access_token, refresh_token, expires_in, user_id } = tokenResponse.data;
+
+            // Buscar informacoes do usuario ML
+            const userResponse = await axios.get(`${ML_CONFIG.apiUrl}/users/${user_id}`, {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+
+            const mlUser = userResponse.data;
+
+            // Salvar tokens no Firestore
+            await db.collection('mlCredentials').doc('tokens').set({
+                accessToken: access_token,
+                refreshToken: refresh_token,
+                expiresAt: admin.firestore.Timestamp.fromDate(
+                    new Date(Date.now() + expires_in * 1000)
+                ),
+                userId: user_id,
+                nickname: mlUser.nickname,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Redirecionar para pagina de sucesso
+            return res.redirect('https://imaginatech.com.br/marketplace/?ml_connected=true');
+
+        } catch (error) {
+            console.error('Erro no OAuth ML:', error.response?.data || error.message);
+            return res.redirect('https://imaginatech.com.br/marketplace/?ml_error=true');
+        }
+    }
+
+    // POST = Webhook de notificacoes do ML
     if (req.method === 'POST') {
         const notification = req.body;
 
@@ -325,6 +406,115 @@ exports.mlListItems = functions.https.onRequest(async (req, res) => {
             console.error('Erro ao listar anuncios ML:', error.response?.data || error.message);
             res.status(500).json({
                 error: 'Erro ao listar anuncios',
+                details: error.response?.data || error.message
+            });
+        }
+    });
+});
+
+/**
+ * Criar novo anuncio no Mercado Livre
+ * POST /createMLItem
+ * Body: { productId: "xxx" }
+ */
+exports.createMLItem = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { productId } = req.body;
+
+        if (!productId) {
+            return res.status(400).json({ error: 'productId obrigatorio' });
+        }
+
+        try {
+            // Buscar produto no Firestore
+            const productDoc = await db.collection('products').doc(productId).get();
+
+            if (!productDoc.exists) {
+                return res.status(404).json({ error: 'Produto nao encontrado' });
+            }
+
+            const product = productDoc.data();
+
+            // Validar campos obrigatorios para ML
+            if (!product.name) {
+                return res.status(400).json({ error: 'Nome do produto obrigatorio' });
+            }
+            if (!product.price || product.price <= 0) {
+                return res.status(400).json({ error: 'Preco obrigatorio e deve ser maior que zero' });
+            }
+            if (!product.mlCategoryId) {
+                return res.status(400).json({ error: 'Categoria ML obrigatoria' });
+            }
+
+            // Se ja tem mlbId, nao criar novo
+            if (product.mlbId) {
+                return res.status(400).json({
+                    error: 'Produto ja publicado no ML',
+                    mlbId: product.mlbId
+                });
+            }
+
+            const accessToken = await getValidAccessToken();
+
+            // Preparar fotos
+            const pictures = (product.photos || []).map(url => ({ source: url }));
+            if (pictures.length === 0) {
+                return res.status(400).json({ error: 'Pelo menos uma foto e obrigatoria' });
+            }
+
+            // Preparar dados para criar anuncio
+            const mlData = {
+                title: product.name.substring(0, 60), // ML limita a 60 caracteres
+                category_id: product.mlCategoryId,
+                price: product.price,
+                currency_id: 'BRL',
+                available_quantity: product.minStockQuantity || 1,
+                buying_mode: 'buy_it_now',
+                listing_type_id: product.listingType || 'gold_special',
+                condition: product.condition || 'new',
+                pictures: pictures,
+                description: {
+                    plain_text: product.description || product.name
+                }
+            };
+
+            console.log('Criando anuncio ML:', JSON.stringify(mlData));
+
+            // Criar anuncio no ML
+            const response = await axios.post(
+                `${ML_CONFIG.apiUrl}/items`,
+                mlData,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            const mlbId = response.data.id;
+            const permalink = response.data.permalink;
+
+            console.log(`Anuncio criado com sucesso: ${mlbId}`);
+
+            // Salvar mlbId no produto
+            await db.collection('products').doc(productId).update({
+                mlbId: mlbId,
+                mlPermalink: permalink,
+                mlCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                mlLastSync: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            res.json({
+                success: true,
+                message: 'Anuncio criado com sucesso!',
+                mlbId: mlbId,
+                permalink: permalink
+            });
+
+        } catch (error) {
+            console.error('Erro ao criar anuncio ML:', error.response?.data || error.message);
+            res.status(500).json({
+                error: 'Erro ao criar anuncio',
                 details: error.response?.data || error.message
             });
         }

@@ -382,6 +382,52 @@ VERSAO: 1.0
                     </div>
                 </div>
 
+                <!-- Secao: Mercado Livre -->
+                <div class="form-section ml-section">
+                    <h3><img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML" style="width:20px;height:20px;margin-right:8px;vertical-align:middle;"> Mercado Livre</h3>
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="productPrice">Preco (R$) *</label>
+                            <input type="number" id="productPrice" class="form-input" min="0" step="0.01" placeholder="99.90">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="productCondition">Condicao *</label>
+                            <select id="productCondition" class="form-select">
+                                <option value="new">Novo</option>
+                                <option value="used">Usado</option>
+                            </select>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="listingType">Tipo de Anuncio</label>
+                            <select id="listingType" class="form-select">
+                                <option value="gold_special">Classico (Gratis)</option>
+                                <option value="gold_pro">Premium</option>
+                            </select>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="mlCategoryId">Categoria ML</label>
+                            <select id="mlCategoryId" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="MLB1039">Decoracao</option>
+                                <option value="MLB1144">Games e Acessorios</option>
+                                <option value="MLB268601">Action Figures</option>
+                                <option value="MLB1132">Brinquedos</option>
+                                <option value="MLB1574">Casa e Decoracao</option>
+                                <option value="MLB1499">Industria e Comercio</option>
+                            </select>
+                        </div>
+                        <div class="form-group span-4">
+                            <label for="productPhotos">Fotos (URLs separadas por virgula)</label>
+                            <textarea id="productPhotos" class="form-input" rows="2" placeholder="https://exemplo.com/foto1.jpg, https://exemplo.com/foto2.jpg"></textarea>
+                        </div>
+                        <div class="form-group span-4">
+                            <div class="ml-status-info" id="mlProductStatus">
+                                <span class="ml-badge ml-not-published"><i class="fas fa-cloud-upload-alt"></i> Nao publicado no ML</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Secao: Dimensoes -->
                 <div class="form-section">
                     <h3><i class="fas fa-ruler-combined"></i> Dimensoes</h3>

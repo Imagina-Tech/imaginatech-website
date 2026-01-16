@@ -130,6 +130,9 @@ async function handleProductSubmit(event) {
     event.preventDefault();
 
     // Coletar dados do formulario
+    const photosInput = document.getElementById('productPhotos').value.trim();
+    const photos = photosInput ? photosInput.split(',').map(url => url.trim()).filter(url => url) : [];
+
     const productData = {
         name: document.getElementById('productName').value.trim(),
         description: document.getElementById('productDescription').value.trim(),
@@ -154,7 +157,13 @@ async function handleProductSubmit(event) {
             width: parseFloat(document.getElementById('packWidth').value) || 0,
             height: parseFloat(document.getElementById('packHeight').value) || 0
         },
-        weight: parseFloat(document.getElementById('productWeight').value) || 0
+        weight: parseFloat(document.getElementById('productWeight').value) || 0,
+        // Campos Mercado Livre
+        price: parseFloat(document.getElementById('productPrice').value) || 0,
+        condition: document.getElementById('productCondition').value || 'new',
+        listingType: document.getElementById('listingType').value || 'gold_special',
+        mlCategoryId: document.getElementById('mlCategoryId').value,
+        photos: photos
     };
 
     // Validacoes
