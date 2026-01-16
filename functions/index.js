@@ -790,11 +790,21 @@ exports.mlPredictCategory = functions.https.onRequest(async (req, res) => {
  * Body: { image: "data:image/jpeg;base64,..." } ou { image: "https://..." }
  * Returns: { url: "https://res.cloudinary.com/..." }
  */
-exports.uploadImage = functions.https.onRequest(async (req, res) => {
-    cors(req, res, async () => {
-        if (req.method !== 'POST') {
-            return res.status(405).json({ error: 'Metodo nao permitido' });
-        }
+exports.uploadImage = functions.https.onRequest((req, res) => {
+    // CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Metodo nao permitido' });
+    }
+
+    (async () => {
 
         const { image, folder = 'marketplace' } = req.body;
 
@@ -841,7 +851,7 @@ exports.uploadImage = functions.https.onRequest(async (req, res) => {
                 details: error.message
             });
         }
-    });
+    })();
 });
 
 /**
@@ -850,27 +860,36 @@ exports.uploadImage = functions.https.onRequest(async (req, res) => {
  * Body: { images: ["data:image/...", "https://..."] }
  * Returns: { urls: ["https://res.cloudinary.com/..."] }
  */
-exports.uploadImages = functions.https.onRequest(async (req, res) => {
-    cors(req, res, async () => {
-        if (req.method !== 'POST') {
-            return res.status(405).json({ error: 'Metodo nao permitido' });
-        }
+exports.uploadImages = functions.https.onRequest((req, res) => {
+    // CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-        const { images, folder = 'marketplace' } = req.body;
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
 
-        if (!images || !Array.isArray(images) || images.length === 0) {
-            return res.status(400).json({ error: 'Array de imagens obrigatorio' });
-        }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Metodo nao permitido' });
+    }
 
-        if (images.length > 10) {
-            return res.status(400).json({ error: 'Maximo de 10 imagens por vez' });
-        }
+    const { images, folder = 'marketplace' } = req.body;
 
-        // Verificar se Cloudinary esta configurado
-        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
-            return res.status(500).json({ error: 'Servico de imagens nao configurado' });
-        }
+    if (!images || !Array.isArray(images) || images.length === 0) {
+        return res.status(400).json({ error: 'Array de imagens obrigatorio' });
+    }
 
+    if (images.length > 10) {
+        return res.status(400).json({ error: 'Maximo de 10 imagens por vez' });
+    }
+
+    // Verificar se Cloudinary esta configurado
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+        return res.status(500).json({ error: 'Servico de imagens nao configurado' });
+    }
+
+    (async () => {
         try {
             console.log(`[CLOUDINARY] Upload de ${images.length} imagens iniciado`);
 
@@ -933,5 +952,5 @@ exports.uploadImages = functions.https.onRequest(async (req, res) => {
                 details: error.message
             });
         }
-    });
+    })();
 });
