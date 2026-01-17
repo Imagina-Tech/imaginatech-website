@@ -298,7 +298,7 @@ exports.syncProductToML = functions.https.onRequest(async (req, res) => {
             // Preparar dados para ML
             const mlData = {
                 title: product.name,
-                available_quantity: product.minStockQuantity || 1,
+                available_quantity: product.mlQuantity || 1,
                 // Adicionar mais campos conforme necessario
             };
 
@@ -480,7 +480,7 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 category_id: product.mlCategoryId,
                 price: product.price,
                 currency_id: 'BRL',
-                available_quantity: product.minStockQuantity || 1,
+                available_quantity: product.mlQuantity || 1,
                 buying_mode: 'buy_it_now',
                 listing_type_id: product.listingType || 'gold_special',
                 condition: product.condition || 'new',
