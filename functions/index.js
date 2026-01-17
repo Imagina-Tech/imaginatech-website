@@ -321,6 +321,14 @@ exports.syncProductToML = functions.https.onRequest(async (req, res) => {
                 mlData.manufacturing_time = null;
             }
 
+            // Adicionar video do YouTube se informado
+            if (product.videoUrl) {
+                const videoMatch = product.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+                if (videoMatch && videoMatch[1]) {
+                    mlData.video_id = videoMatch[1];
+                }
+            }
+
             let response;
 
             if (product.mlbId) {
@@ -562,6 +570,16 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                     production_time: product.mlManufacturingTime,
                     time_unit: 'days'
                 };
+            }
+
+            // Adicionar video do YouTube se informado
+            if (product.videoUrl) {
+                // Extrair video ID do YouTube
+                const videoMatch = product.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+                if (videoMatch && videoMatch[1]) {
+                    mlData.video_id = videoMatch[1];
+                    console.log('Video ID extraido:', mlData.video_id);
+                }
             }
 
             // Se categoria tem catalogo, usa family_name; senao usa title

@@ -334,7 +334,9 @@ async function handleProductSubmit(event) {
         // Garantia
         mlWarrantyType: document.getElementById('mlWarrantyType')?.value || 'seller',
         mlWarrantyDays: parseInt(document.getElementById('mlWarrantyDays')?.value) || 90,
-        photos: photos
+        photos: photos,
+        // Video
+        videoUrl: document.getElementById('productVideo')?.value.trim() || ''
     };
 
     // Validacoes

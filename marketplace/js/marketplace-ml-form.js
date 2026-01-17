@@ -720,6 +720,122 @@ function resetMlForm() {
     const shippingWeightEl = document.getElementById('mlShippingWeight');
     if (cubicWeightEl) cubicWeightEl.textContent = '--';
     if (shippingWeightEl) shippingWeightEl.textContent = '--';
+
+    // Reset video
+    const videoInput = document.getElementById('mlVideoUrl');
+    const videoPreview = document.getElementById('mlVideoPreview');
+    if (videoInput) videoInput.value = '';
+    if (videoPreview) {
+        videoPreview.classList.remove('has-video');
+        videoPreview.innerHTML = `
+            <div class="video-preview-placeholder">
+                <i class="fas fa-film"></i>
+                <span>Preview do video aparecera aqui</span>
+            </div>
+        `;
+    }
+}
+
+// ========== VIDEO DO YOUTUBE ==========
+function extractYouTubeId(url) {
+    if (!url) return null;
+
+    // Formatos suportados:
+    // https://www.youtube.com/watch?v=VIDEO_ID
+    // https://youtu.be/VIDEO_ID
+    // https://www.youtube.com/embed/VIDEO_ID
+
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    ];
+
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
+function previewVideo() {
+    const urlInput = document.getElementById('mlVideoUrl');
+    const previewContainer = document.getElementById('mlVideoPreview');
+    const hiddenInput = document.getElementById('productVideo');
+
+    if (!urlInput || !previewContainer) return;
+
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        window.showToast('Digite a URL do video do YouTube', 'warning');
+        return;
+    }
+
+    const videoId = extractYouTubeId(url);
+
+    if (!videoId) {
+        window.showToast('URL do YouTube invalida. Use o formato: youtube.com/watch?v=...', 'error');
+        return;
+    }
+
+    // Montar URL do embed
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+
+    // Atualizar preview
+    previewContainer.classList.add('has-video');
+    previewContainer.style.position = 'relative';
+    previewContainer.innerHTML = `
+        <iframe
+            src="${embedUrl}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+        <button type="button" class="ml-video-remove" onclick="removeVideo()" title="Remover video">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    // Salvar no hidden input
+    if (hiddenInput) {
+        hiddenInput.value = `https://www.youtube.com/watch?v=${videoId}`;
+    }
+
+    window.showToast('Video carregado!', 'success');
+}
+
+function removeVideo() {
+    const urlInput = document.getElementById('mlVideoUrl');
+    const previewContainer = document.getElementById('mlVideoPreview');
+    const hiddenInput = document.getElementById('productVideo');
+
+    if (urlInput) urlInput.value = '';
+    if (hiddenInput) hiddenInput.value = '';
+
+    if (previewContainer) {
+        previewContainer.classList.remove('has-video');
+        previewContainer.style.position = '';
+        previewContainer.innerHTML = `
+            <div class="video-preview-placeholder">
+                <i class="fas fa-film"></i>
+                <span>Preview do video aparecera aqui</span>
+            </div>
+        `;
+    }
+
+    window.showToast('Video removido', 'info');
+}
+
+function setVideoUrl(url) {
+    const urlInput = document.getElementById('mlVideoUrl');
+    if (urlInput && url) {
+        urlInput.value = url;
+        // Disparar preview automaticamente
+        previewVideo();
+    }
 }
 
 // ========== EXPORTAR PARA GLOBAL ==========
@@ -738,3 +854,7 @@ window.populateMlFormWithProduct = populateMlFormWithProduct;
 window.resetMlForm = resetMlForm;
 window.mlFormState = mlFormState;
 window.calculateShippingWeight = calculateShippingWeight;
+window.previewVideo = previewVideo;
+window.removeVideo = removeVideo;
+window.setVideoUrl = setVideoUrl;
+window.extractYouTubeId = extractYouTubeId;

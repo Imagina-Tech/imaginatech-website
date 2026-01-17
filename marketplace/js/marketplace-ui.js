@@ -484,6 +484,14 @@ function populateFormWithProduct(product) {
         }
     }, 150);
 
+    // ========== VIDEO ==========
+    setTimeout(() => {
+        if (product.videoUrl && window.setVideoUrl) {
+            console.log('[POPULATE] Carregando video:', product.videoUrl);
+            window.setVideoUrl(product.videoUrl);
+        }
+    }, 200);
+
     // ========== STATUS ML ==========
     const mlStatusDiv = document.getElementById('mlProductStatus');
     const mlActionsDiv = document.getElementById('mlListingActions');
