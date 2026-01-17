@@ -1195,93 +1195,143 @@ thead .col-actions {
     line-height: 1.5;
 }
 
-/* Preview da Maquina */
-.machine-preview-container {
-    margin-top: 16px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(20, 20, 40, 0.4) 100%);
-    border: 1px dashed rgba(255, 230, 0, 0.25);
-    border-radius: 12px;
+/* Secao de Impressoras */
+.ml-printers-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ml-printers-section > label {
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 120px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 12px;
 }
 
-.machine-preview-container:has(.machine-preview-image) {
-    border-style: solid;
-    border-color: rgba(255, 230, 0, 0.4);
-    background: linear-gradient(135deg, rgba(255, 230, 0, 0.08) 0%, rgba(255, 200, 0, 0.03) 100%);
-    box-shadow: 0 4px 20px rgba(255, 230, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.ml-printers-section > label i {
+    color: #FFE600;
 }
 
-.machine-preview-placeholder {
+.ml-printers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.ml-printers-loading {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    padding: 30px;
     color: var(--text-muted);
-    text-align: center;
 }
 
-.machine-preview-placeholder i {
-    font-size: 2.5rem;
-    opacity: 0.4;
-    color: rgba(255, 230, 0, 0.5);
-}
-
-.machine-preview-placeholder span {
-    font-size: 0.9rem;
-    opacity: 0.7;
-}
-
-.machine-preview-placeholder.has-name i {
-    font-size: 2rem;
-    opacity: 0.6;
-    color: #FFE600;
-}
-
-.machine-preview-placeholder.has-name span {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #FFE600;
-    opacity: 1;
-}
-
-.machine-preview-image {
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease;
-}
-
-.machine-preview-container:hover .machine-preview-image {
-    transform: scale(1.05);
-}
-
-.machine-preview-info {
+.ml-printer-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-left: 20px;
+    align-items: center;
+    padding: 12px 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.machine-preview-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #FFE600;
-    text-shadow: 0 0 20px rgba(255, 230, 0, 0.3);
+.ml-printer-card:hover {
+    border-color: rgba(255, 230, 0, 0.4);
+    background: rgba(255, 230, 0, 0.05);
 }
 
-.machine-preview-brand {
-    font-size: 0.85rem;
+.ml-printer-card.selected {
+    border-color: #FFE600;
+    background: rgba(255, 230, 0, 0.1);
+    box-shadow: 0 0 20px rgba(255, 230, 0, 0.2);
+}
+
+.ml-printer-card.selected::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    background: #FFE600;
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.ml-printer-image {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    /* Fundo transparente */
+    background: transparent;
+}
+
+.ml-printer-card:not(.selected) .ml-printer-image {
+    filter: grayscale(30%) opacity(0.8);
+}
+
+.ml-printer-card.selected .ml-printer-image {
+    filter: none;
+}
+
+.ml-printer-placeholder {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+}
+
+.ml-printer-name {
+    font-size: 0.75rem;
+    font-weight: 500;
     color: var(--text-secondary);
-    opacity: 0.8;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.ml-printer-card.selected .ml-printer-name {
+    color: #FFE600;
+}
+
+/* Secao compacta */
+.form-section-compact {
+    padding: 16px 20px;
+}
+
+.form-section-compact .form-grid {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 /* Inputs ML */

@@ -304,6 +304,15 @@ function showToast(message, type = 'success') {
 }
 
 // ========== CARREGAR EQUIPAMENTOS DO FIRESTORE ==========
+// Palavras-chave para identificar impressoras 3D
+const PRINTER_KEYWORDS = [
+    'ender', 'prusa', 'creality', 'elegoo', 'anycubic', 'bambu', 'voron',
+    'artillery', 'flashforge', 'qidi', 'sovol', 'tronxy', 'biqu', 'kingroon',
+    'neptune', 'kobra', 'vyper', 'photon', 'mars', 'saturn', 'jupiter',
+    'form', 'formlabs', 'resin', 'fdm', 'sla', 'dlp', 'msla',
+    'impressora', 'printer', '3d', 'k1', 'p1p', 'x1', 'a1'
+];
+
 function loadEquipment() {
     db.collection('equipment')
         .orderBy('name', 'asc')
@@ -315,95 +324,107 @@ function loadEquipment() {
             // Atualizar referencia global
             window.equipment = equipment;
             console.log('[EQUIPMENT] Carregados:', equipment.length, 'equipamentos');
-            populatePrinterDropdown();
+            renderPrintersGrid();
         }, error => {
             console.error('[EQUIPMENT] Erro ao carregar:', error);
         });
 }
 
-// Popular dropdown de maquinas com equipamentos do Firestore
-function populatePrinterDropdown() {
-    const printerMachine = document.getElementById('printerMachine');
-    if (!printerMachine) return;
-
-    // Guardar valor atual antes de limpar
-    const currentValue = printerMachine.value;
-
-    // Limpar opcoes existentes
-    printerMachine.innerHTML = '<option value="">Selecione...</option>';
-
-    // Adicionar equipamentos
-    equipment.forEach(eq => {
-        const option = document.createElement('option');
-        option.value = eq.name;
-        option.textContent = eq.name;
-        option.dataset.imageUrl = eq.imageUrl || '';
-        printerMachine.appendChild(option);
-    });
-
-    // Restaurar valor se existia
-    if (currentValue) {
-        printerMachine.value = currentValue;
-    }
-
-    // Remover customizacao anterior para permitir reinicializacao
-    if (printerMachine.dataset.customized) {
-        // Encontrar e remover o CustomSelect existente
-        const existingCustomSelect = printerMachine.nextElementSibling;
-        if (existingCustomSelect && existingCustomSelect.classList.contains('custom-select')) {
-            existingCustomSelect.remove();
-        }
-        delete printerMachine.dataset.customized;
-        printerMachine.style.display = '';
-    }
-
-    // Reinicializar CustomSelect para este dropdown
-    setTimeout(() => {
-        if (window.CustomSelect && !printerMachine.dataset.customized) {
-            new window.CustomSelect(printerMachine);
-            printerMachine.dataset.customized = 'true';
-        }
-        // Disparar change para atualizar UI
-        printerMachine.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 50);
+// Verificar se um equipamento e uma impressora 3D
+function isPrinter(eq) {
+    const searchText = `${eq.name} ${eq.brand || ''} ${eq.notes || ''}`.toLowerCase();
+    return PRINTER_KEYWORDS.some(keyword => searchText.includes(keyword));
 }
 
-// Atualizar preview da maquina selecionada
-function updateMachinePreview(machineName) {
-    const previewContainer = document.getElementById('machinePreview');
-    if (!previewContainer) return;
-
-    // Usar window.equipment para garantir acesso aos dados atualizados
+// Obter apenas impressoras
+function getPrinters() {
     const equipmentList = window.equipment || equipment || [];
+    return equipmentList.filter(isPrinter);
+}
 
-    if (!machineName) {
-        previewContainer.innerHTML = `
-            <div class="machine-preview-placeholder">
-                <i class="fas fa-print"></i>
-                <span>Selecione uma maquina</span>
+// Estado das impressoras selecionadas
+let selectedPrinters = [];
+
+// Renderizar grid de impressoras
+function renderPrintersGrid() {
+    const grid = document.getElementById('printersGrid');
+    if (!grid) return;
+
+    const printers = getPrinters();
+
+    if (printers.length === 0) {
+        grid.innerHTML = `
+            <div class="ml-printers-loading">
+                <i class="fas fa-print" style="font-size: 2rem; opacity: 0.5;"></i>
+                <span>Nenhuma impressora encontrada no inventario</span>
             </div>
         `;
         return;
     }
 
-    const machine = equipmentList.find(eq => eq.name === machineName);
+    grid.innerHTML = printers.map(printer => {
+        const isSelected = selectedPrinters.includes(printer.name);
+        const imageHtml = printer.imageUrl
+            ? `<img src="${printer.imageUrl}" alt="${escapeHtml(printer.name)}" class="ml-printer-image" onerror="this.outerHTML='<div class=\\'ml-printer-placeholder\\'><i class=\\'fas fa-print\\'></i></div>'">`
+            : `<div class="ml-printer-placeholder"><i class="fas fa-print"></i></div>`;
 
-    if (machine && machine.imageUrl) {
-        previewContainer.innerHTML = `
-            <img src="${machine.imageUrl}" alt="${escapeHtml(machine.name)}" class="machine-preview-image" onerror="this.style.display='none'">
-            <div class="machine-preview-info">
-                <span class="machine-preview-name">${escapeHtml(machine.name)}</span>
-                ${machine.brand ? `<span class="machine-preview-brand">${escapeHtml(machine.brand)}</span>` : ''}
+        return `
+            <div class="ml-printer-card ${isSelected ? 'selected' : ''}"
+                 data-printer="${escapeHtml(printer.name)}"
+                 onclick="togglePrinterSelection('${escapeHtml(printer.name).replace(/'/g, "\\'")}')">
+                ${imageHtml}
+                <span class="ml-printer-name">${escapeHtml(printer.name)}</span>
             </div>
         `;
+    }).join('');
+
+    // Atualizar input hidden
+    updateSelectedPrintersInput();
+}
+
+// Alternar selecao de impressora
+function togglePrinterSelection(printerName) {
+    const index = selectedPrinters.indexOf(printerName);
+    if (index === -1) {
+        selectedPrinters.push(printerName);
     } else {
-        previewContainer.innerHTML = `
-            <div class="machine-preview-placeholder has-name">
-                <i class="fas fa-print"></i>
-                <span>${escapeHtml(machineName)}</span>
-            </div>
-        `;
+        selectedPrinters.splice(index, 1);
     }
+
+    // Atualizar UI
+    const card = document.querySelector(`.ml-printer-card[data-printer="${printerName}"]`);
+    if (card) {
+        card.classList.toggle('selected', selectedPrinters.includes(printerName));
+    }
+
+    updateSelectedPrintersInput();
+}
+
+// Atualizar input hidden com impressoras selecionadas
+function updateSelectedPrintersInput() {
+    const input = document.getElementById('selectedPrinters');
+    if (input) {
+        input.value = JSON.stringify(selectedPrinters);
+    }
+}
+
+// Definir impressoras selecionadas (para edicao)
+function setSelectedPrinters(printers) {
+    if (Array.isArray(printers)) {
+        selectedPrinters = [...printers];
+    } else if (typeof printers === 'string' && printers) {
+        // Compatibilidade com formato antigo (string unica)
+        selectedPrinters = [printers];
+    } else {
+        selectedPrinters = [];
+    }
+    renderPrintersGrid();
+}
+
+// Limpar selecao de impressoras
+function clearSelectedPrinters() {
+    selectedPrinters = [];
+    renderPrintersGrid();
 }
 
 // Helper para escapar HTML
@@ -494,5 +515,12 @@ window.products = products;
 window.currentFilters = currentFilters;
 window.editingProductId = editingProductId;
 window.elements = elements;
-window.updateMachinePreview = updateMachinePreview;
 window.loadEquipment = loadEquipment;
+// Funcoes de selecao de impressoras
+window.getPrinters = getPrinters;
+window.isPrinter = isPrinter;
+window.togglePrinterSelection = togglePrinterSelection;
+window.setSelectedPrinters = setSelectedPrinters;
+window.clearSelectedPrinters = clearSelectedPrinters;
+window.renderPrintersGrid = renderPrintersGrid;
+window.selectedPrinters = selectedPrinters;

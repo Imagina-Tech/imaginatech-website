@@ -276,23 +276,19 @@ VERSAO: 1.0
             </div>
 
             <form id="productForm" onsubmit="handleProductSubmit(event)">
-                <!-- Secao: Identificacao -->
-                <div class="form-section">
-                    <h3><i class="fas fa-tag"></i> Identificacao</h3>
+                <!-- Secao: Identificacao Interna -->
+                <div class="form-section form-section-compact">
+                    <h3><i class="fas fa-barcode"></i> Codigos Internos</h3>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="productIdField">ID</label>
+                            <label for="productIdField">ID (1-200)</label>
                             <input type="text" id="productIdField" class="form-input readonly" readonly placeholder="Auto">
                         </div>
-                        <div class="form-group span-3">
-                            <label for="productName">Nome do Produto *</label>
-                            <input type="text" id="productName" class="form-input" required placeholder="Ex: Leao Decorativo">
-                        </div>
-                        <div class="form-group span-2">
+                        <div class="form-group">
                             <label for="labelCode">Codigo Etiqueta</label>
                             <input type="text" id="labelCode" class="form-input" placeholder="Ex: ETQ-001">
                         </div>
-                        <div class="form-group span-2">
+                        <div class="form-group">
                             <label for="internalCode">Codigo Interno</label>
                             <input type="text" id="internalCode" class="form-input" placeholder="Ex: INT-ABC123">
                         </div>
@@ -312,6 +308,11 @@ VERSAO: 1.0
                         <!-- Subsecao: Informacoes do Anuncio -->
                         <div class="ml-subsection">
                             <h4><i class="fas fa-tag"></i> Informacoes do Anuncio</h4>
+                            <div class="ml-form-group ml-full-width" style="margin-bottom: 16px;">
+                                <label for="productName">Titulo do Anuncio *</label>
+                                <input type="text" id="productName" class="ml-input" required placeholder="Ex: Miniatura Leao Decorativo Impressao 3D" maxlength="60">
+                                <span class="ml-field-hint">Maximo 60 caracteres - seja claro e use palavras-chave</span>
+                            </div>
                             <div class="ml-form-grid">
                                 <div class="ml-form-group">
                                     <label for="productPrice">Preco de Venda *</label>
@@ -394,22 +395,18 @@ VERSAO: 1.0
                                         <i class="fas fa-chevron-down"></i>
                                     </div>
                                 </div>
-                                <div class="ml-form-group">
-                                    <label for="printerMachine">Maquina Possivel</label>
-                                    <div class="ml-select-wrapper">
-                                        <select id="printerMachine" class="ml-select">
-                                            <option value="">Selecione...</option>
-                                        </select>
-                                        <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <!-- Selecao de Impressoras -->
+                            <div class="ml-printers-section">
+                                <label><i class="fas fa-print"></i> Impressoras Compativeis</label>
+                                <div class="ml-printers-grid" id="printersGrid">
+                                    <!-- Impressoras serao carregadas dinamicamente -->
+                                    <div class="ml-printers-loading">
+                                        <div class="loading-spinner"></div>
+                                        <span>Carregando impressoras...</span>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Preview da Maquina Selecionada -->
-                            <div class="machine-preview-container" id="machinePreview">
-                                <div class="machine-preview-placeholder">
-                                    <i class="fas fa-print"></i>
-                                    <span>Selecione uma maquina</span>
-                                </div>
+                                <input type="hidden" id="selectedPrinters" name="selectedPrinters">
                             </div>
                         </div>
 

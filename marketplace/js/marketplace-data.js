@@ -249,6 +249,17 @@ async function handleProductSubmit(event) {
     // Pegar nome da categoria selecionada
     const mlCategoryName = window.mlFormState?.selectedCategory?.name || '';
 
+    // Coletar impressoras selecionadas
+    let printerMachines = [];
+    const selectedPrintersInput = document.getElementById('selectedPrinters');
+    if (selectedPrintersInput && selectedPrintersInput.value) {
+        try {
+            printerMachines = JSON.parse(selectedPrintersInput.value);
+        } catch (e) {
+            console.warn('[SAVE] Erro ao parsear impressoras selecionadas:', e);
+        }
+    }
+
     const productData = {
         name: document.getElementById('productName').value.trim(),
         description: document.getElementById('productDescription').value.trim(),
@@ -258,7 +269,7 @@ async function handleProductSubmit(event) {
         saleType: document.getElementById('saleType').value,
         materialType: document.getElementById('materialType').value,
         printColor: document.getElementById('printColor').value,
-        printerMachine: document.getElementById('printerMachine').value,
+        printerMachines: printerMachines,
         // Dimensoes
         dimensions: {
             length: parseFloat(document.getElementById('dimLength').value) || 0,

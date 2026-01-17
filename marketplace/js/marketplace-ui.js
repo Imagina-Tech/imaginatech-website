@@ -143,7 +143,7 @@ function renderProducts() {
             <td>
                 ${getColorChip(product.printColor)}
             </td>
-            <td>${escapeHtml(product.printerMachine || '-')}</td>
+            <td>${formatPrinters(product.printerMachines, product.printerMachine)}</td>
             <td>${formatDimensions(product.dimensions)}</td>
             <td>${formatDimensions(product.packagingDimensions)}</td>
             <td>${product.weight ? product.weight + 'g' : '-'}</td>
@@ -288,6 +288,28 @@ function formatDimensions(dims) {
     return `${length || 0}x${width || 0}x${height || 0}`;
 }
 
+function formatPrinters(printerMachines, printerMachine) {
+    // Compatibilidade: array novo ou string antigo
+    let printers = [];
+
+    if (Array.isArray(printerMachines) && printerMachines.length > 0) {
+        printers = printerMachines;
+    } else if (printerMachine) {
+        printers = [printerMachine];
+    }
+
+    if (printers.length === 0) return '-';
+
+    if (printers.length === 1) {
+        return escapeHtml(printers[0]);
+    }
+
+    // Multiplas impressoras - mostrar count com tooltip
+    return `<span class="printers-count" title="${printers.map(p => escapeHtml(p)).join(', ')}">
+        <i class="fas fa-print"></i> ${printers.length} impressoras
+    </span>`;
+}
+
 // ========== MODAL DE PRODUTO ==========
 function openProductModal(productId = null) {
     window.editingProductId = productId;
@@ -334,9 +356,9 @@ function openProductModal(productId = null) {
             window.resetMlForm();
         }
 
-        // Reset preview da maquina
-        if (window.updateMachinePreview) {
-            window.updateMachinePreview(null);
+        // Reset selecao de impressoras
+        if (window.clearSelectedPrinters) {
+            window.clearSelectedPrinters();
         }
 
         // Reset status ML
@@ -419,12 +441,14 @@ function populateFormWithProduct(product) {
     setSelectValue('saleType', product.saleType, 10);
     setSelectValue('materialType', product.materialType, 20);
     setSelectValue('printColor', product.printColor, 30);
-    setSelectValue('printerMachine', product.printerMachine, 40);
 
-    // Atualizar preview da maquina
+    // ========== IMPRESSORAS (MULTI-SELECT) ==========
     setTimeout(() => {
-        if (window.updateMachinePreview) {
-            window.updateMachinePreview(product.printerMachine);
+        if (window.setSelectedPrinters) {
+            // Compatibilidade: printerMachines (array) ou printerMachine (string antigo)
+            const printers = product.printerMachines || (product.printerMachine ? [product.printerMachine] : []);
+            window.setSelectedPrinters(printers);
+            console.log('[POPULATE] Impressoras selecionadas:', printers);
         }
     }, 50);
 
