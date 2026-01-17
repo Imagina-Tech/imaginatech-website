@@ -474,6 +474,21 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 return res.status(400).json({ error: 'Pelo menos uma foto e obrigatoria' });
             }
 
+            // Preparar atributos do ML
+            const attributes = [];
+
+            // Adicionar atributos salvos no produto
+            if (product.mlAttributes && Array.isArray(product.mlAttributes)) {
+                product.mlAttributes.forEach(attr => {
+                    if (attr.id && attr.value_name) {
+                        attributes.push({
+                            id: attr.id,
+                            value_name: attr.value_name
+                        });
+                    }
+                });
+            }
+
             // Preparar dados para criar anuncio
             const mlData = {
                 title: product.name.substring(0, 60), // ML limita a 60 caracteres
@@ -489,6 +504,11 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                     plain_text: product.description || product.name
                 }
             };
+
+            // Adicionar atributos se existirem
+            if (attributes.length > 0) {
+                mlData.attributes = attributes;
+            }
 
             console.log('Criando anuncio ML:', JSON.stringify(mlData));
 
