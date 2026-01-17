@@ -44,25 +44,34 @@ async function loadProducts() {
     }
 }
 
-// ========== OBTER PROXIMO ID ==========
+// ========== OBTER PROXIMO ID (RANGE 1-200) ==========
+const MAX_PRODUCT_ID = 200;
+
 async function getNextProductId() {
     try {
+        // Buscar todos os IDs usados
         const snapshot = await window.db.collection('products')
             .where('userId', '==', window.COMPANY_USER_ID)
-            .orderBy('productId', 'desc')
-            .limit(1)
             .get();
 
-        if (snapshot.empty) {
-            return 1;
+        const usedIds = new Set();
+        snapshot.forEach(doc => {
+            const productId = doc.data().productId;
+            if (productId) usedIds.add(productId);
+        });
+
+        // Encontrar o primeiro ID disponivel no range 1-200
+        for (let id = 1; id <= MAX_PRODUCT_ID; id++) {
+            if (!usedIds.has(id)) {
+                return id;
+            }
         }
 
-        const lastProduct = snapshot.docs[0].data();
-        return (lastProduct.productId || 0) + 1;
+        // Se todos os IDs estao ocupados
+        throw new Error('Limite de 200 produtos atingido');
     } catch (error) {
         console.error('Erro ao obter proximo ID:', error);
-        // Fallback: contar produtos existentes
-        return window.products.length + 1;
+        throw error;
     }
 }
 

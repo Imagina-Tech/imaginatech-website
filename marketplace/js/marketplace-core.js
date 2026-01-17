@@ -133,32 +133,8 @@ const MATERIALS = [
     'Outros'
 ];
 
-const PRINTERS = [
-    'Ender 3',
-    'Ender 3 Pro',
-    'Ender 3 V2',
-    'Ender 3 S1',
-    'Ender 5',
-    'CR-10',
-    'Creality K1',
-    'Creality K1 Max',
-    'Prusa MK3S+',
-    'Prusa Mini+',
-    'Prusa XL',
-    'Anycubic Kobra',
-    'Anycubic Vyper',
-    'Elegoo Mars 3',
-    'Elegoo Saturn 2',
-    'Elegoo Jupiter',
-    'Anycubic Photon',
-    'Formlabs Form 3',
-    'Bambu Lab X1',
-    'Bambu Lab P1P',
-    'Voron 2.4',
-    'Qualquer FDM',
-    'Qualquer Resina',
-    'Todas'
-];
+// Equipamentos (carregados do Firestore)
+let equipment = [];
 
 // ========== STATE GLOBAL ==========
 let currentUser = null;
@@ -327,6 +303,85 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// ========== CARREGAR EQUIPAMENTOS DO FIRESTORE ==========
+function loadEquipment() {
+    db.collection('equipment')
+        .orderBy('name', 'asc')
+        .onSnapshot(snapshot => {
+            equipment = [];
+            snapshot.forEach(doc => {
+                equipment.push({ id: doc.id, ...doc.data() });
+            });
+            console.log('[EQUIPMENT] Carregados:', equipment.length, 'equipamentos');
+            populatePrinterDropdown();
+        }, error => {
+            console.error('[EQUIPMENT] Erro ao carregar:', error);
+        });
+}
+
+// Popular dropdown de maquinas com equipamentos do Firestore
+function populatePrinterDropdown() {
+    const printerMachine = document.getElementById('printerMachine');
+    if (!printerMachine) return;
+
+    // Limpar opcoes existentes (manter apenas a primeira "Selecione...")
+    const firstOption = printerMachine.options[0];
+    printerMachine.innerHTML = '';
+    if (firstOption) {
+        printerMachine.appendChild(firstOption);
+    } else {
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Selecione...';
+        printerMachine.appendChild(defaultOpt);
+    }
+
+    // Adicionar equipamentos
+    equipment.forEach(eq => {
+        const option = document.createElement('option');
+        option.value = eq.name;
+        option.textContent = eq.name;
+        option.dataset.imageUrl = eq.imageUrl || '';
+        printerMachine.appendChild(option);
+    });
+
+    // Disparar evento para sincronizar CustomSelect
+    setTimeout(() => {
+        printerMachine.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+}
+
+// Atualizar preview da maquina selecionada
+function updateMachinePreview(machineName) {
+    const previewContainer = document.getElementById('machinePreview');
+    if (!previewContainer) return;
+
+    if (!machineName) {
+        previewContainer.innerHTML = `
+            <div class="machine-preview-placeholder">
+                <i class="fas fa-print"></i>
+                <span>Selecione uma maquina</span>
+            </div>
+        `;
+        return;
+    }
+
+    const machine = equipment.find(eq => eq.name === machineName);
+    if (machine && machine.imageUrl) {
+        previewContainer.innerHTML = `
+            <img src="${machine.imageUrl}" alt="${machine.name}" class="machine-preview-image">
+            <span class="machine-preview-name">${machine.name}</span>
+        `;
+    } else {
+        previewContainer.innerHTML = `
+            <div class="machine-preview-placeholder">
+                <i class="fas fa-print"></i>
+                <span>${machineName}</span>
+            </div>
+        `;
+    }
+}
+
 // ========== POPULAR DROPDOWNS ==========
 function populateDropdownOptions() {
     // Materiais no filtro
@@ -362,14 +417,13 @@ function populateDropdownOptions() {
         });
     }
 
-    // Maquinas no modal
+    // Maquinas - serao populadas dinamicamente via loadEquipment()
+
+    // Listener para atualizar preview da maquina
     const printerMachine = document.getElementById('printerMachine');
     if (printerMachine) {
-        PRINTERS.forEach(printer => {
-            const option = document.createElement('option');
-            option.value = printer;
-            option.textContent = printer;
-            printerMachine.appendChild(option);
+        printerMachine.addEventListener('change', (e) => {
+            updateMachinePreview(e.target.value);
         });
     }
 
@@ -379,6 +433,9 @@ function populateDropdownOptions() {
             window.initCustomSelects();
         }
     }, 100);
+
+    // Carregar equipamentos do Firestore
+    loadEquipment();
 }
 
 // ========== LISTENER DE PRODUTOS ==========
@@ -400,8 +457,10 @@ window.auth = auth;
 window.COMPANY_USER_ID = COMPANY_USER_ID;
 window.PRINT_COLORS = PRINT_COLORS;
 window.MATERIALS = MATERIALS;
-window.PRINTERS = PRINTERS;
+window.equipment = equipment;
 window.products = products;
 window.currentFilters = currentFilters;
 window.editingProductId = editingProductId;
 window.elements = elements;
+window.updateMachinePreview = updateMachinePreview;
+window.loadEquipment = loadEquipment;

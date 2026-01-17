@@ -327,11 +327,16 @@ function openProductModal(productId = null) {
         modalTitle.innerHTML = '<i class="fas fa-box"></i> Novo Produto';
         form.reset();
 
-        document.getElementById('productIdField').value = 'Auto';
+        document.getElementById('productIdField').value = 'Auto (1-200)';
 
         // Reset formulario ML (categoria, fotos, atributos)
         if (window.resetMlForm) {
             window.resetMlForm();
+        }
+
+        // Reset preview da maquina
+        if (window.updateMachinePreview) {
+            window.updateMachinePreview(null);
         }
 
         // Reset status ML
@@ -415,6 +420,13 @@ function populateFormWithProduct(product) {
     setSelectValue('materialType', product.materialType, 20);
     setSelectValue('printColor', product.printColor, 30);
     setSelectValue('printerMachine', product.printerMachine, 40);
+
+    // Atualizar preview da maquina
+    setTimeout(() => {
+        if (window.updateMachinePreview) {
+            window.updateMachinePreview(product.printerMachine);
+        }
+    }, 50);
 
     // ========== CAMPOS MERCADO LIVRE ==========
     setFieldValue('productPrice', product.price || '');
