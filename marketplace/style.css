@@ -1198,51 +1198,90 @@ thead .col-actions {
 /* Preview da Maquina */
 .machine-preview-container {
     margin-top: 16px;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px dashed rgba(255, 230, 0, 0.3);
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(20, 20, 40, 0.4) 100%);
+    border: 1px dashed rgba(255, 230, 0, 0.25);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 120px;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .machine-preview-container:has(.machine-preview-image) {
     border-style: solid;
-    background: rgba(255, 230, 0, 0.05);
+    border-color: rgba(255, 230, 0, 0.4);
+    background: linear-gradient(135deg, rgba(255, 230, 0, 0.08) 0%, rgba(255, 200, 0, 0.03) 100%);
+    box-shadow: 0 4px 20px rgba(255, 230, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .machine-preview-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     color: var(--text-muted);
+    text-align: center;
 }
 
 .machine-preview-placeholder i {
-    font-size: 2rem;
-    opacity: 0.5;
+    font-size: 2.5rem;
+    opacity: 0.4;
+    color: rgba(255, 230, 0, 0.5);
 }
 
 .machine-preview-placeholder span {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.machine-preview-placeholder.has-name i {
+    font-size: 2rem;
+    opacity: 0.6;
+    color: #FFE600;
+}
+
+.machine-preview-placeholder.has-name span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #FFE600;
+    opacity: 1;
 }
 
 .machine-preview-image {
-    max-width: 100px;
-    max-height: 100px;
+    width: 90px;
+    height: 90px;
     object-fit: contain;
-    border-radius: 8px;
-    margin-right: 16px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.machine-preview-container:hover .machine-preview-image {
+    transform: scale(1.05);
+}
+
+.machine-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 20px;
 }
 
 .machine-preview-name {
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: #FFE600;
+    text-shadow: 0 0 20px rgba(255, 230, 0, 0.3);
+}
+
+.machine-preview-brand {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
 }
 
 /* Inputs ML */

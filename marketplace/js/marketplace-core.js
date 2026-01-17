@@ -312,6 +312,8 @@ function loadEquipment() {
             snapshot.forEach(doc => {
                 equipment.push({ id: doc.id, ...doc.data() });
             });
+            // Atualizar referencia global
+            window.equipment = equipment;
             console.log('[EQUIPMENT] Carregados:', equipment.length, 'equipamentos');
             populatePrinterDropdown();
         }, error => {
@@ -324,17 +326,11 @@ function populatePrinterDropdown() {
     const printerMachine = document.getElementById('printerMachine');
     if (!printerMachine) return;
 
-    // Limpar opcoes existentes (manter apenas a primeira "Selecione...")
-    const firstOption = printerMachine.options[0];
-    printerMachine.innerHTML = '';
-    if (firstOption) {
-        printerMachine.appendChild(firstOption);
-    } else {
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = '';
-        defaultOpt.textContent = 'Selecione...';
-        printerMachine.appendChild(defaultOpt);
-    }
+    // Guardar valor atual antes de limpar
+    const currentValue = printerMachine.value;
+
+    // Limpar opcoes existentes
+    printerMachine.innerHTML = '<option value="">Selecione...</option>';
 
     // Adicionar equipamentos
     equipment.forEach(eq => {
@@ -345,16 +341,40 @@ function populatePrinterDropdown() {
         printerMachine.appendChild(option);
     });
 
-    // Disparar evento para sincronizar CustomSelect
+    // Restaurar valor se existia
+    if (currentValue) {
+        printerMachine.value = currentValue;
+    }
+
+    // Remover customizacao anterior para permitir reinicializacao
+    if (printerMachine.dataset.customized) {
+        // Encontrar e remover o CustomSelect existente
+        const existingCustomSelect = printerMachine.nextElementSibling;
+        if (existingCustomSelect && existingCustomSelect.classList.contains('custom-select')) {
+            existingCustomSelect.remove();
+        }
+        delete printerMachine.dataset.customized;
+        printerMachine.style.display = '';
+    }
+
+    // Reinicializar CustomSelect para este dropdown
     setTimeout(() => {
+        if (window.CustomSelect && !printerMachine.dataset.customized) {
+            new window.CustomSelect(printerMachine);
+            printerMachine.dataset.customized = 'true';
+        }
+        // Disparar change para atualizar UI
         printerMachine.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
+    }, 50);
 }
 
 // Atualizar preview da maquina selecionada
 function updateMachinePreview(machineName) {
     const previewContainer = document.getElementById('machinePreview');
     if (!previewContainer) return;
+
+    // Usar window.equipment para garantir acesso aos dados atualizados
+    const equipmentList = window.equipment || equipment || [];
 
     if (!machineName) {
         previewContainer.innerHTML = `
@@ -366,20 +386,32 @@ function updateMachinePreview(machineName) {
         return;
     }
 
-    const machine = equipment.find(eq => eq.name === machineName);
+    const machine = equipmentList.find(eq => eq.name === machineName);
+
     if (machine && machine.imageUrl) {
         previewContainer.innerHTML = `
-            <img src="${machine.imageUrl}" alt="${machine.name}" class="machine-preview-image">
-            <span class="machine-preview-name">${machine.name}</span>
+            <img src="${machine.imageUrl}" alt="${escapeHtml(machine.name)}" class="machine-preview-image" onerror="this.style.display='none'">
+            <div class="machine-preview-info">
+                <span class="machine-preview-name">${escapeHtml(machine.name)}</span>
+                ${machine.brand ? `<span class="machine-preview-brand">${escapeHtml(machine.brand)}</span>` : ''}
+            </div>
         `;
     } else {
         previewContainer.innerHTML = `
-            <div class="machine-preview-placeholder">
+            <div class="machine-preview-placeholder has-name">
                 <i class="fas fa-print"></i>
-                <span>${machineName}</span>
+                <span>${escapeHtml(machineName)}</span>
             </div>
         `;
     }
+}
+
+// Helper para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ========== POPULAR DROPDOWNS ==========
