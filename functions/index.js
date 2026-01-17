@@ -575,6 +575,62 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * Finalizar/Excluir anuncio no Mercado Livre
+ * POST /deleteMLItem
+ * Body: { mlbId: "MLB123456789" }
+ */
+exports.deleteMLItem = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { mlbId } = req.body;
+
+        if (!mlbId) {
+            return res.status(400).json({ error: 'mlbId obrigatorio' });
+        }
+
+        try {
+            const accessToken = await getValidAccessToken();
+
+            // Finalizar anuncio no ML (muda status para "closed")
+            // No ML nao e possivel deletar, apenas fechar
+            const response = await axios.put(
+                `${ML_CONFIG.apiUrl}/items/${mlbId}`,
+                { status: 'closed' },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            console.log(`Anuncio ${mlbId} finalizado com sucesso`);
+
+            res.json({
+                success: true,
+                message: 'Anuncio finalizado no Mercado Livre',
+                mlbId: mlbId
+            });
+
+        } catch (error) {
+            console.error('Erro ao finalizar anuncio ML:', error.response?.data || error.message);
+
+            // Se o anuncio ja estava fechado ou nao existe, considera sucesso
+            if (error.response?.status === 400 || error.response?.status === 404) {
+                res.json({
+                    success: true,
+                    message: 'Anuncio ja estava finalizado ou nao existe',
+                    mlbId: mlbId
+                });
+            } else {
+                res.status(500).json({
+                    error: 'Erro ao finalizar anuncio',
+                    details: error.response?.data || error.message
+                });
+            }
+        }
+    });
+});
+
+/**
  * Busca categorias do ML por termo de pesquisa
  * GET /mlSearchCategories?q=decoracao
  */

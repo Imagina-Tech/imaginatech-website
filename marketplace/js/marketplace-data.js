@@ -116,13 +116,44 @@ async function saveProduct(productData) {
 
 // ========== EXCLUIR PRODUTO ==========
 async function deleteProduct(productId) {
-    if (!confirm('Deseja realmente excluir este produto? Esta acao nao pode ser desfeita.')) {
+    // Buscar produto para verificar se tem mlbId
+    const product = window.products.find(p => p.id === productId);
+
+    let confirmMsg = 'Deseja realmente excluir este produto?';
+    if (product?.mlbId) {
+        confirmMsg += '\n\nATENCAO: O anuncio no Mercado Livre tambem sera FINALIZADO.';
+    }
+    confirmMsg += '\n\nEsta acao nao pode ser desfeita.';
+
+    if (!confirm(confirmMsg)) {
         return;
     }
 
     try {
         window.showLoading();
 
+        // Se tem mlbId, finalizar anuncio no ML primeiro
+        if (product?.mlbId) {
+            try {
+                window.showToast('Finalizando anuncio no Mercado Livre...', 'info');
+                const response = await fetch('https://us-central1-imaginatech-servicos.cloudfunctions.net/deleteMLItem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mlbId: product.mlbId })
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    console.warn('Aviso: Erro ao finalizar no ML:', data.error);
+                    // Continua com a exclusao local mesmo se falhar no ML
+                }
+            } catch (mlError) {
+                console.warn('Aviso: Erro ao finalizar no ML:', mlError);
+                // Continua com a exclusao local mesmo se falhar no ML
+            }
+        }
+
+        // Excluir do Firestore
         await window.db.collection('products').doc(productId).delete();
 
         window.showToast('Produto excluido com sucesso!', 'success');
