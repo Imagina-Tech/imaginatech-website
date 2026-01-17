@@ -258,6 +258,7 @@ function initializeCalculator() {
     const profitMarginInput = document.getElementById("profit-margin");
     const consumablesInput = document.getElementById("consumables");
     const customMaterialPriceInput = document.getElementById("custom-material-price");
+    const divideByQuantityCheckbox = document.getElementById("divide-by-quantity");
 
     // Material Selection
     const materialSelection = document.getElementById("material-selection");
@@ -465,11 +466,16 @@ function initializeCalculator() {
         }
 
         // Get input values
-        const totalTimeHours = timeHours + timeMinutes / 60;
-        const materialUsed = materialAmount; // Using global variable
+        const totalTimeHoursRaw = timeHours + timeMinutes / 60;
+        const materialUsedRaw = materialAmount; // Using global variable
         const printQuantity = getInputValue(printQuantityInput, 1);
         const profitMargin = getInputValue(profitMarginInput, 280) / 100;
         const consumables = getInputValue(consumablesInput, 2);
+        const divideByQuantity = divideByQuantityCheckbox && divideByQuantityCheckbox.checked;
+
+        // Se "dividir pela quantidade" estiver marcado, divide material e tempo
+        const totalTimeHours = divideByQuantity ? totalTimeHoursRaw / printQuantity : totalTimeHoursRaw;
+        const materialUsed = divideByQuantity ? materialUsedRaw / printQuantity : materialUsedRaw;
 
         // Get material price
         let materialPrice = 0;
@@ -923,12 +929,17 @@ function initializeCalculator() {
         profitMarginInput,
         consumablesInput
     ];
-    
+
     mainInputs.forEach(input => {
         if (input) {
             input.addEventListener("input", calculateCost);
         }
     });
+
+    // Checkbox "dividir pela quantidade" - recalculate when changed
+    if (divideByQuantityCheckbox) {
+        divideByQuantityCheckbox.addEventListener("change", calculateCost);
+    }
 
     // Initial state
     resultsOutput.innerHTML = `
