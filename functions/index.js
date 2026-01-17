@@ -582,6 +582,50 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 }
             }
 
+            // Adicionar variacoes se informadas
+            if (product.variations && product.variations.items && product.variations.items.length > 0) {
+                const variationType = product.variations.type;
+
+                mlData.variations = product.variations.items.map(v => {
+                    const variation = {
+                        attribute_combinations: [],
+                        available_quantity: v.quantity || 1
+                    };
+
+                    // Adicionar cor se presente
+                    if ((variationType === 'COLOR' || variationType === 'COLOR_SIZE') && v.colorId) {
+                        variation.attribute_combinations.push({
+                            id: 'COLOR',
+                            value_id: v.colorId
+                        });
+                    }
+
+                    // Adicionar tamanho se presente
+                    if ((variationType === 'SIZE' || variationType === 'COLOR_SIZE') && v.size) {
+                        variation.attribute_combinations.push({
+                            id: 'SIZE',
+                            value_name: v.size
+                        });
+                    }
+
+                    // Adicionar preco especifico se diferente
+                    if (v.price && v.price > 0) {
+                        variation.price = v.price;
+                    }
+
+                    return variation;
+                }).filter(v => v.attribute_combinations.length > 0);
+
+                // Se tem variacoes, remover available_quantity do nivel superior
+                // pois a quantidade vai em cada variacao
+                if (mlData.variations.length > 0) {
+                    delete mlData.available_quantity;
+                    console.log('Variacoes adicionadas:', JSON.stringify(mlData.variations));
+                } else {
+                    delete mlData.variations;
+                }
+            }
+
             // Se categoria tem catalogo, usa family_name; senao usa title
             if (categoryHasCatalog) {
                 mlData.family_name = product.name.substring(0, 60);

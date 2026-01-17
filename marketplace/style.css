@@ -2182,6 +2182,244 @@ thead .col-actions {
     transform: scale(1.1);
 }
 
+/* ========== VARIACOES ========== */
+.ml-variations-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ml-variations-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-stroke);
+    border-radius: 10px;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 26px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--neon-green) 0%, #00cc7a 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.ml-variations-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(255, 230, 0, 0.05);
+    border: 1px solid rgba(255, 230, 0, 0.2);
+    border-radius: 12px;
+}
+
+.ml-variations-content.hidden {
+    display: none;
+}
+
+.ml-variations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ml-variation-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 100px 100px 40px;
+    gap: 12px;
+    align-items: end;
+    padding: 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-stroke);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.ml-variation-item:hover {
+    border-color: rgba(255, 230, 0, 0.3);
+}
+
+.ml-variation-item.color-only {
+    grid-template-columns: 1fr 100px 100px 40px;
+}
+
+.ml-variation-item.size-only {
+    grid-template-columns: 1fr 100px 100px 40px;
+}
+
+.ml-variation-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ml-variation-field label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.ml-variation-field input,
+.ml-variation-field select {
+    padding: 10px 12px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-stroke);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.ml-variation-field input:focus,
+.ml-variation-field select:focus {
+    outline: none;
+    border-color: #FFE600;
+}
+
+.ml-variation-field input[type="number"] {
+    text-align: center;
+}
+
+.ml-variation-color-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variation-color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-remove-variation {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    border-radius: 8px;
+    color: #FF3B30;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: end;
+}
+
+.btn-remove-variation:hover {
+    background: rgba(255, 59, 48, 0.2);
+    border-color: #FF3B30;
+}
+
+.ml-btn-add-variation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: transparent;
+    border: 2px dashed rgba(255, 230, 0, 0.3);
+    border-radius: 10px;
+    color: #FFE600;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ml-btn-add-variation:hover {
+    background: rgba(255, 230, 0, 0.1);
+    border-color: #FFE600;
+}
+
+/* Cores padrao ML */
+.ml-color-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ml-color-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-stroke);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ml-color-option:hover {
+    border-color: #FFE600;
+}
+
+.ml-color-option.selected {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 148, 0.1);
+}
+
+.ml-color-option .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.ml-color-option .color-name {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
 /* Botao Publicar ML */
 .btn-publish-ml {
     display: inline-flex;

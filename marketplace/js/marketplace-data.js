@@ -336,18 +336,36 @@ async function handleProductSubmit(event) {
         mlWarrantyDays: parseInt(document.getElementById('mlWarrantyDays')?.value) || 90,
         photos: photos,
         // Video
-        videoUrl: document.getElementById('productVideo')?.value.trim() || ''
+        videoUrl: document.getElementById('productVideo')?.value.trim() || '',
+        // Variacoes
+        variations: window.collectVariations ? window.collectVariations() : null
     };
 
-    // Validacoes
+    // Validacoes basicas
     if (!productData.name) {
         window.showToast('Nome do produto e obrigatorio', 'warning');
+        document.getElementById('productName')?.focus();
         return;
     }
 
     if (!productData.saleType) {
         window.showToast('Tipo de venda e obrigatorio', 'warning');
         return;
+    }
+
+    // Validar atributos ML obrigatorios (somente se tiver categoria selecionada)
+    if (productData.mlCategoryId) {
+        const requiredFields = document.querySelectorAll('[data-ml-required="true"]');
+        for (const field of requiredFields) {
+            if (!field.value || field.value.trim() === '') {
+                const label = field.closest('.ml-attribute-field')?.querySelector('label')?.textContent?.replace('*', '').trim();
+                window.showToast(`Preencha o campo obrigatorio: ${label || 'Atributo ML'}`, 'warning');
+                field.focus();
+                // Scroll para o campo
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+        }
     }
 
     await saveProduct(productData);

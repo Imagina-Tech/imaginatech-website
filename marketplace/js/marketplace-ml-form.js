@@ -199,21 +199,26 @@ function renderAttributes(data) {
 }
 
 // Renderizar campo de atributo
+// NOTA: Nao usar 'required' HTML pois causa erro de foco em campos dinamicos
+// A validacao e feita via JavaScript no submit
 function renderAttributeField(attr, required) {
     const fieldId = `mlAttr_${attr.id}`;
     let inputHtml = '';
 
+    // Marcar como obrigatorio via data-attribute para validacao JS
+    const requiredAttr = required ? 'data-ml-required="true"' : '';
+
     if (attr.values && attr.values.length > 0) {
         // Dropdown com opcoes predefinidas (usa value_id)
         inputHtml = `
-            <select id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" data-has-values="true" ${required ? 'required' : ''}>
+            <select id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" data-has-values="true" ${requiredAttr}>
                 <option value="">Selecione...</option>
                 ${attr.values.map(v => `<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('')}
             </select>
         `;
     } else if (attr.type === 'number' || attr.type === 'number_unit') {
         // Input numerico
-        inputHtml = `<input type="number" id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" placeholder="${attr.hint || ''}" ${required ? 'required' : ''}>`;
+        inputHtml = `<input type="number" id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" placeholder="${attr.hint || ''}" ${requiredAttr}>`;
     } else if (attr.type === 'boolean') {
         // Checkbox
         inputHtml = `
@@ -225,11 +230,11 @@ function renderAttributeField(attr, required) {
         `;
     } else {
         // Input texto
-        inputHtml = `<input type="text" id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" placeholder="${attr.hint || ''}" ${required ? 'required' : ''}>`;
+        inputHtml = `<input type="text" id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" placeholder="${attr.hint || ''}" ${requiredAttr}>`;
     }
 
     return `
-        <div class="ml-attribute-field">
+        <div class="ml-attribute-field" ${required ? 'data-required="true"' : ''}>
             <label for="${fieldId}">
                 ${escapeHtml(attr.name)}
                 ${required ? '<span class="required">*</span>' : ''}
@@ -734,6 +739,9 @@ function resetMlForm() {
             </div>
         `;
     }
+
+    // Reset variacoes
+    resetVariations();
 }
 
 // ========== VIDEO DO YOUTUBE ==========
@@ -838,6 +846,280 @@ function setVideoUrl(url) {
     }
 }
 
+// ========== VARIACOES DO PRODUTO ==========
+// Cores padrao do Mercado Livre
+const ML_COLORS = [
+    { id: '52049', name: 'Preto', hex: '#000000' },
+    { id: '52007', name: 'Branco', hex: '#FFFFFF' },
+    { id: '52051', name: 'Cinza', hex: '#808080' },
+    { id: '52014', name: 'Vermelho', hex: '#FF0000' },
+    { id: '52005', name: 'Azul', hex: '#0000FF' },
+    { id: '52010', name: 'Verde', hex: '#00FF00' },
+    { id: '52003', name: 'Amarelo', hex: '#FFFF00' },
+    { id: '52028', name: 'Laranja', hex: '#FFA500' },
+    { id: '52012', name: 'Rosa', hex: '#FFC0CB' },
+    { id: '52013', name: 'Roxo', hex: '#800080' },
+    { id: '52008', name: 'Marrom', hex: '#8B4513' },
+    { id: '52019', name: 'Bege', hex: '#F5F5DC' },
+    { id: '283164', name: 'Dourado', hex: '#FFD700' },
+    { id: '52055', name: 'Prata', hex: '#C0C0C0' },
+    { id: '51993', name: 'Azul-marinho', hex: '#000080' },
+    { id: '51994', name: 'Azul-claro', hex: '#ADD8E6' },
+    { id: '52000', name: 'Verde-escuro', hex: '#006400' },
+    { id: '51998', name: 'Verde-claro', hex: '#90EE90' },
+    { id: '52053', name: 'Transparente', hex: 'transparent' }
+];
+
+// Estado das variacoes
+let variationsState = {
+    enabled: false,
+    type: 'COLOR',
+    items: []
+};
+
+// Inicializar com uma variacao
+function initVariations() {
+    variationsState.items = [];
+    renderVariationsList();
+}
+
+// Toggle variacoes
+function toggleVariations() {
+    const checkbox = document.getElementById('mlEnableVariations');
+    const content = document.getElementById('mlVariationsContent');
+
+    variationsState.enabled = checkbox?.checked || false;
+
+    if (variationsState.enabled) {
+        content?.classList.remove('hidden');
+        if (variationsState.items.length === 0) {
+            addVariation(); // Adicionar primeira variacao
+        }
+    } else {
+        content?.classList.add('hidden');
+        variationsState.items = [];
+        renderVariationsList();
+    }
+
+    updateVariationsHidden();
+}
+
+// Atualizar campos baseado no tipo de variacao
+function updateVariationFields() {
+    const typeSelect = document.getElementById('mlVariationType');
+    variationsState.type = typeSelect?.value || 'COLOR';
+
+    // Re-renderizar lista com novo tipo
+    renderVariationsList();
+}
+
+// Adicionar nova variacao
+function addVariation() {
+    const newVariation = {
+        id: Date.now(),
+        color: '',
+        colorId: '',
+        size: '',
+        quantity: 1,
+        price: ''
+    };
+
+    variationsState.items.push(newVariation);
+    renderVariationsList();
+}
+
+// Remover variacao
+function removeVariation(variationId) {
+    variationsState.items = variationsState.items.filter(v => v.id !== variationId);
+    renderVariationsList();
+    updateVariationsHidden();
+}
+
+// Renderizar lista de variacoes
+function renderVariationsList() {
+    const container = document.getElementById('mlVariationsList');
+    if (!container) return;
+
+    if (variationsState.items.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">Nenhuma variacao adicionada</p>';
+        return;
+    }
+
+    const type = variationsState.type;
+    let gridClass = '';
+
+    if (type === 'COLOR') gridClass = 'color-only';
+    else if (type === 'SIZE') gridClass = 'size-only';
+
+    container.innerHTML = variationsState.items.map((v, index) => `
+        <div class="ml-variation-item ${gridClass}" data-variation-id="${v.id}">
+            ${type === 'COLOR' || type === 'COLOR_SIZE' ? `
+                <div class="ml-variation-field">
+                    <label>Cor</label>
+                    <select onchange="updateVariationColor(${v.id}, this.value)">
+                        <option value="">Selecione a cor...</option>
+                        ${ML_COLORS.map(c => `
+                            <option value="${c.id}" ${v.colorId === c.id ? 'selected' : ''} data-hex="${c.hex}">
+                                ${c.name}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+            ` : ''}
+            ${type === 'SIZE' || type === 'COLOR_SIZE' ? `
+                <div class="ml-variation-field">
+                    <label>Tamanho</label>
+                    <input type="text" value="${escapeHtml(v.size || '')}" placeholder="Ex: P, M, G, GG"
+                           onchange="updateVariationSize(${v.id}, this.value)">
+                </div>
+            ` : ''}
+            <div class="ml-variation-field">
+                <label>Qtd.</label>
+                <input type="number" min="1" value="${v.quantity || 1}"
+                       onchange="updateVariationQuantity(${v.id}, this.value)">
+            </div>
+            <div class="ml-variation-field">
+                <label>Preco (R$)</label>
+                <input type="number" min="0" step="0.01" value="${v.price || ''}" placeholder="Padrao"
+                       onchange="updateVariationPrice(${v.id}, this.value)">
+            </div>
+            <button type="button" class="btn-remove-variation" onclick="removeVariation(${v.id})" title="Remover">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// Atualizar cor da variacao
+function updateVariationColor(variationId, colorId) {
+    const variation = variationsState.items.find(v => v.id === variationId);
+    if (variation) {
+        variation.colorId = colorId;
+        const color = ML_COLORS.find(c => c.id === colorId);
+        variation.color = color ? color.name : '';
+    }
+    updateVariationsHidden();
+}
+
+// Atualizar tamanho da variacao
+function updateVariationSize(variationId, size) {
+    const variation = variationsState.items.find(v => v.id === variationId);
+    if (variation) {
+        variation.size = size;
+    }
+    updateVariationsHidden();
+}
+
+// Atualizar quantidade da variacao
+function updateVariationQuantity(variationId, quantity) {
+    const variation = variationsState.items.find(v => v.id === variationId);
+    if (variation) {
+        variation.quantity = parseInt(quantity) || 1;
+    }
+    updateVariationsHidden();
+}
+
+// Atualizar preco da variacao
+function updateVariationPrice(variationId, price) {
+    const variation = variationsState.items.find(v => v.id === variationId);
+    if (variation) {
+        variation.price = price ? parseFloat(price) : '';
+    }
+    updateVariationsHidden();
+}
+
+// Atualizar campo hidden com dados das variacoes
+function updateVariationsHidden() {
+    const hidden = document.getElementById('productVariations');
+    if (hidden) {
+        if (variationsState.enabled && variationsState.items.length > 0) {
+            hidden.value = JSON.stringify({
+                enabled: true,
+                type: variationsState.type,
+                items: variationsState.items
+            });
+        } else {
+            hidden.value = '';
+        }
+    }
+}
+
+// Coletar variacoes para salvar
+function collectVariations() {
+    if (!variationsState.enabled || variationsState.items.length === 0) {
+        return null;
+    }
+
+    return {
+        type: variationsState.type,
+        items: variationsState.items.map(v => ({
+            colorId: v.colorId || null,
+            colorName: v.color || null,
+            size: v.size || null,
+            quantity: v.quantity || 1,
+            price: v.price || null
+        })).filter(v => v.colorId || v.size) // Filtrar variacoes vazias
+    };
+}
+
+// Carregar variacoes do produto
+function loadVariations(productVariations) {
+    if (!productVariations || !productVariations.enabled) {
+        variationsState.enabled = false;
+        variationsState.items = [];
+
+        const checkbox = document.getElementById('mlEnableVariations');
+        const content = document.getElementById('mlVariationsContent');
+
+        if (checkbox) checkbox.checked = false;
+        if (content) content.classList.add('hidden');
+
+        return;
+    }
+
+    variationsState.enabled = true;
+    variationsState.type = productVariations.type || 'COLOR';
+    variationsState.items = (productVariations.items || []).map((item, index) => ({
+        id: Date.now() + index,
+        colorId: item.colorId || '',
+        color: item.colorName || '',
+        size: item.size || '',
+        quantity: item.quantity || 1,
+        price: item.price || ''
+    }));
+
+    const checkbox = document.getElementById('mlEnableVariations');
+    const content = document.getElementById('mlVariationsContent');
+    const typeSelect = document.getElementById('mlVariationType');
+
+    if (checkbox) checkbox.checked = true;
+    if (content) content.classList.remove('hidden');
+    if (typeSelect) typeSelect.value = variationsState.type;
+
+    renderVariationsList();
+}
+
+// Reset variacoes
+function resetVariations() {
+    variationsState = {
+        enabled: false,
+        type: 'COLOR',
+        items: []
+    };
+
+    const checkbox = document.getElementById('mlEnableVariations');
+    const content = document.getElementById('mlVariationsContent');
+    const typeSelect = document.getElementById('mlVariationType');
+    const hidden = document.getElementById('productVariations');
+
+    if (checkbox) checkbox.checked = false;
+    if (content) content.classList.add('hidden');
+    if (typeSelect) typeSelect.value = 'COLOR';
+    if (hidden) hidden.value = '';
+
+    renderVariationsList();
+}
+
 // ========== EXPORTAR PARA GLOBAL ==========
 window.searchCategories = searchCategories;
 window.selectCategory = selectCategory;
@@ -858,3 +1140,15 @@ window.previewVideo = previewVideo;
 window.removeVideo = removeVideo;
 window.setVideoUrl = setVideoUrl;
 window.extractYouTubeId = extractYouTubeId;
+window.toggleVariations = toggleVariations;
+window.updateVariationFields = updateVariationFields;
+window.addVariation = addVariation;
+window.removeVariation = removeVariation;
+window.updateVariationColor = updateVariationColor;
+window.updateVariationSize = updateVariationSize;
+window.updateVariationQuantity = updateVariationQuantity;
+window.updateVariationPrice = updateVariationPrice;
+window.collectVariations = collectVariations;
+window.loadVariations = loadVariations;
+window.resetVariations = resetVariations;
+window.variationsState = variationsState;

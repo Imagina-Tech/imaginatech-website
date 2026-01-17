@@ -492,6 +492,14 @@ function populateFormWithProduct(product) {
         }
     }, 200);
 
+    // ========== VARIACOES ==========
+    setTimeout(() => {
+        if (window.loadVariations) {
+            console.log('[POPULATE] Carregando variacoes:', product.variations);
+            window.loadVariations(product.variations);
+        }
+    }, 250);
+
     // ========== STATUS ML ==========
     const mlStatusDiv = document.getElementById('mlProductStatus');
     const mlActionsDiv = document.getElementById('mlListingActions');
