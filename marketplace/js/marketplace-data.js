@@ -294,6 +294,9 @@ async function handleProductSubmit(event) {
     const productData = {
         name: document.getElementById('productName').value.trim(),
         description: document.getElementById('productDescription').value.trim(),
+        // Codigos de identificacao
+        sku: document.getElementById('productSku')?.value.trim() || '',
+        gtin: document.getElementById('productGtin')?.value.trim() || '',
         labelCode: document.getElementById('labelCode').value.trim(),
         internalCode: document.getElementById('internalCode').value.trim(),
         // Producao
@@ -327,6 +330,7 @@ async function handleProductSubmit(event) {
         mlFreeShipping: document.getElementById('mlFreeShipping')?.value === 'true',
         mlLocalPickup: document.getElementById('mlLocalPickup')?.value === 'true',
         mlShippingDays: parseInt(document.getElementById('mlShippingDays')?.value) || 2,
+        mlManufacturingTime: parseInt(document.getElementById('mlManufacturingTime')?.value) || 0,
         // Garantia
         mlWarrantyType: document.getElementById('mlWarrantyType')?.value || 'seller',
         mlWarrantyDays: parseInt(document.getElementById('mlWarrantyDays')?.value) || 90,

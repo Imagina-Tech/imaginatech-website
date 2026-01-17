@@ -1069,6 +1069,58 @@ thead .col-actions {
     border-bottom: 1px solid rgba(255, 230, 0, 0.15);
 }
 
+.ml-status-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.ml-listing-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.ml-listing-actions.hidden {
+    display: none;
+}
+
+.btn-ml-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-ml-pause {
+    background: rgba(255, 165, 0, 0.15);
+    color: #FFA500;
+    border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.btn-ml-pause:hover {
+    background: rgba(255, 165, 0, 0.25);
+}
+
+.btn-ml-pause.paused {
+    background: rgba(0, 255, 148, 0.15);
+    color: var(--neon-green);
+    border: 1px solid rgba(0, 255, 148, 0.3);
+}
+
+.btn-ml-pause.paused i::before {
+    content: "\f04b";
+}
+
+.btn-ml-pause.paused span::after {
+    content: "Ativar";
+}
+
 .ml-section-header h3 {
     display: flex;
     align-items: center;
@@ -1471,6 +1523,12 @@ thead .col-actions {
     background: rgba(0, 255, 148, 0.15);
     color: #00FF94;
     border: 1px solid rgba(0, 255, 148, 0.4);
+}
+
+.ml-paused {
+    background: rgba(255, 165, 0, 0.15);
+    color: #FFA500;
+    border: 1px solid rgba(255, 165, 0, 0.4);
 }
 
 /* ========== CATEGORY PICKER ========== */
@@ -2265,6 +2323,16 @@ thead .col-actions {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
+}
+
+.form-grid-5 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.field-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 2px;
 }
 
 .form-group {

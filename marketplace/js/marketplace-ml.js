@@ -421,6 +421,96 @@ async function publishToML(productId) {
     }
 }
 
+// ========== PAUSAR/ATIVAR ANUNCIO NO ML ==========
+async function toggleListingStatus() {
+    // Buscar produto sendo editado
+    const productId = window.editingProductId;
+    if (!productId) {
+        window.showToast('Nenhum produto selecionado', 'warning');
+        return;
+    }
+
+    const product = window.products.find(p => p.id === productId);
+    if (!product || !product.mlbId) {
+        window.showToast('Produto nao esta publicado no ML', 'warning');
+        return;
+    }
+
+    const isPaused = product.mlStatus === 'paused';
+    const newStatus = isPaused ? 'active' : 'paused';
+    const actionText = isPaused ? 'ativar' : 'pausar';
+
+    if (!confirm(`Deseja ${actionText} o anuncio "${product.name}" no Mercado Livre?`)) {
+        return;
+    }
+
+    try {
+        window.showLoading();
+        window.showToast(`${isPaused ? 'Ativando' : 'Pausando'} anuncio...`, 'info');
+
+        const response = await fetch(`${ML_FUNCTIONS_URL}/updateMLItemStatus`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mlbId: product.mlbId,
+                status: newStatus
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Atualizar status no Firestore
+            await window.db.collection('products').doc(productId).update({
+                mlStatus: newStatus,
+                mlStatusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            window.showToast(`Anuncio ${isPaused ? 'ativado' : 'pausado'} com sucesso!`, 'success');
+
+            // Atualizar UI
+            const btnPause = document.getElementById('btnPauseListing');
+            const mlStatusDiv = document.getElementById('mlProductStatus');
+
+            if (btnPause) {
+                if (newStatus === 'paused') {
+                    btnPause.classList.add('paused');
+                    btnPause.innerHTML = '<i class="fas fa-play"></i><span>Ativar</span>';
+                    btnPause.title = 'Ativar anuncio';
+                } else {
+                    btnPause.classList.remove('paused');
+                    btnPause.innerHTML = '<i class="fas fa-pause"></i><span>Pausar</span>';
+                    btnPause.title = 'Pausar anuncio';
+                }
+            }
+
+            if (mlStatusDiv) {
+                const statusText = newStatus === 'paused' ? 'Pausado' : 'Ativo';
+                const statusClass = newStatus === 'paused' ? 'ml-paused' : 'ml-published';
+                const statusIcon = newStatus === 'paused' ? 'fa-pause-circle' : 'fa-check-circle';
+
+                mlStatusDiv.innerHTML = `
+                    <span class="ml-badge ${statusClass}">
+                        <i class="fas ${statusIcon}"></i> ${statusText}: ${product.mlbId}
+                    </span>
+                    <a href="https://produto.mercadolivre.com.br/${product.mlbId}" target="_blank" class="btn-icon" title="Ver no ML">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                `;
+            }
+
+        } else {
+            window.showToast(data.error || `Erro ao ${actionText} anuncio`, 'error');
+            console.error('Erro ML:', data);
+        }
+    } catch (error) {
+        console.error('Erro ao alterar status do anuncio:', error);
+        window.showToast(`Erro ao ${actionText} anuncio`, 'error');
+    } finally {
+        window.hideLoading();
+    }
+}
+
 // ========== EXPORTAR PARA GLOBAL ==========
 window.connectMercadoLivre = connectMercadoLivre;
 window.connectMl = connectMercadoLivre; // Alias para o botao do HTML
@@ -433,3 +523,4 @@ window.publishFromMlModal = publishFromMlModal;
 window.publishToML = publishToML;
 window.saveMlbId = saveMlbId;
 window.selectMlItem = selectMlItem;
+window.toggleListingStatus = toggleListingStatus;

@@ -278,19 +278,29 @@ VERSAO: 1.0
             <form id="productForm" onsubmit="handleProductSubmit(event)">
                 <!-- Secao: Identificacao Interna -->
                 <div class="form-section form-section-compact">
-                    <h3><i class="fas fa-barcode"></i> Codigos Internos</h3>
-                    <div class="form-grid">
+                    <h3><i class="fas fa-barcode"></i> Codigos e Identificacao</h3>
+                    <div class="form-grid form-grid-5">
                         <div class="form-group">
                             <label for="productIdField">ID (1-200)</label>
                             <input type="text" id="productIdField" class="form-input readonly" readonly placeholder="Auto">
                         </div>
                         <div class="form-group">
-                            <label for="labelCode">Codigo Etiqueta</label>
+                            <label for="productSku">SKU</label>
+                            <input type="text" id="productSku" class="form-input" placeholder="Ex: SKU-001">
+                            <span class="field-hint">Codigo unico seu</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="productGtin">GTIN/EAN</label>
+                            <input type="text" id="productGtin" class="form-input" placeholder="Ex: 7891234567890">
+                            <span class="field-hint">Codigo de barras</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="labelCode">Cod. Etiqueta</label>
                             <input type="text" id="labelCode" class="form-input" placeholder="Ex: ETQ-001">
                         </div>
                         <div class="form-group">
-                            <label for="internalCode">Codigo Interno</label>
-                            <input type="text" id="internalCode" class="form-input" placeholder="Ex: INT-ABC123">
+                            <label for="internalCode">Cod. Interno</label>
+                            <input type="text" id="internalCode" class="form-input" placeholder="Ex: INT-ABC">
                         </div>
                     </div>
                 </div>
@@ -299,8 +309,16 @@ VERSAO: 1.0
                 <div class="form-section ml-section">
                     <div class="ml-section-header">
                         <h3><img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML"> Mercado Livre</h3>
-                        <div class="ml-status-banner" id="mlProductStatus">
-                            <span class="ml-badge ml-not-published"><i class="fas fa-cloud-upload-alt"></i> Nao publicado</span>
+                        <div class="ml-status-controls">
+                            <div class="ml-status-banner" id="mlProductStatus">
+                                <span class="ml-badge ml-not-published"><i class="fas fa-cloud-upload-alt"></i> Nao publicado</span>
+                            </div>
+                            <div class="ml-listing-actions hidden" id="mlListingActions">
+                                <button type="button" class="btn-ml-action btn-ml-pause" id="btnPauseListing" onclick="toggleListingStatus()" title="Pausar/Ativar anuncio">
+                                    <i class="fas fa-pause"></i>
+                                    <span>Pausar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -534,6 +552,23 @@ VERSAO: 1.0
                                         </select>
                                         <i class="fas fa-chevron-down"></i>
                                     </div>
+                                </div>
+                                <div class="ml-form-group">
+                                    <label for="mlManufacturingTime">Prazo de Disponibilidade</label>
+                                    <div class="ml-select-wrapper">
+                                        <select id="mlManufacturingTime" class="ml-select">
+                                            <option value="0">Pronta entrega</option>
+                                            <option value="1">1 dia para preparar</option>
+                                            <option value="2">2 dias para preparar</option>
+                                            <option value="3">3 dias para preparar</option>
+                                            <option value="5">5 dias para preparar</option>
+                                            <option value="7">7 dias para preparar</option>
+                                            <option value="10">10 dias para preparar</option>
+                                            <option value="15">15 dias para preparar</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <span class="ml-field-hint">Tempo para produto ficar pronto</span>
                                 </div>
                             </div>
                         </div>

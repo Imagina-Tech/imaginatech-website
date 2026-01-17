@@ -297,10 +297,29 @@ exports.syncProductToML = functions.https.onRequest(async (req, res) => {
 
             // Preparar dados para ML
             const mlData = {
-                title: product.name,
+                title: product.name.substring(0, 60),
+                price: product.price,
                 available_quantity: product.mlQuantity || 1,
-                // Adicionar mais campos conforme necessario
+                description: {
+                    plain_text: product.description || product.name
+                }
             };
+
+            // Adicionar SKU se informado
+            if (product.sku) {
+                mlData.seller_custom_field = product.sku;
+            }
+
+            // Adicionar prazo de fabricacao se maior que 0
+            if (product.mlManufacturingTime && product.mlManufacturingTime > 0) {
+                mlData.manufacturing_time = {
+                    production_time: product.mlManufacturingTime,
+                    time_unit: 'days'
+                };
+            } else if (product.mlManufacturingTime === 0) {
+                // Remover prazo de fabricacao se for 0 (pronta entrega)
+                mlData.manufacturing_time = null;
+            }
 
             let response;
 
@@ -522,6 +541,29 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 }
             };
 
+            // Adicionar SKU se informado
+            if (product.sku) {
+                mlData.seller_custom_field = product.sku;
+            }
+
+            // Adicionar GTIN se informado
+            if (product.gtin) {
+                // GTIN vai como atributo
+                if (!mlData.attributes) mlData.attributes = [];
+                mlData.attributes.push({
+                    id: 'GTIN',
+                    value_name: product.gtin
+                });
+            }
+
+            // Adicionar prazo de fabricacao/disponibilidade se maior que 0
+            if (product.mlManufacturingTime && product.mlManufacturingTime > 0) {
+                mlData.manufacturing_time = {
+                    production_time: product.mlManufacturingTime,
+                    time_unit: 'days'
+                };
+            }
+
             // Se categoria tem catalogo, usa family_name; senao usa title
             if (categoryHasCatalog) {
                 mlData.family_name = product.name.substring(0, 60);
@@ -626,6 +668,56 @@ exports.deleteMLItem = functions.https.onRequest(async (req, res) => {
                     details: error.response?.data || error.message
                 });
             }
+        }
+    });
+});
+
+/**
+ * Pausar/Ativar anuncio no Mercado Livre
+ * POST /updateMLItemStatus
+ * Body: { mlbId: "MLB123456789", status: "paused" | "active" }
+ */
+exports.updateMLItemStatus = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Metodo nao permitido' });
+        }
+
+        const { mlbId, status } = req.body;
+
+        if (!mlbId) {
+            return res.status(400).json({ error: 'mlbId obrigatorio' });
+        }
+
+        if (!status || !['paused', 'active'].includes(status)) {
+            return res.status(400).json({ error: 'status deve ser "paused" ou "active"' });
+        }
+
+        try {
+            const accessToken = await getValidAccessToken();
+
+            // Atualizar status do anuncio no ML
+            const response = await axios.put(
+                `${ML_CONFIG.apiUrl}/items/${mlbId}`,
+                { status: status },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            console.log(`Anuncio ${mlbId} alterado para status: ${status}`);
+
+            res.json({
+                success: true,
+                message: `Anuncio ${status === 'paused' ? 'pausado' : 'ativado'} com sucesso`,
+                mlbId: mlbId,
+                status: status
+            });
+
+        } catch (error) {
+            console.error('Erro ao alterar status do anuncio ML:', error.response?.data || error.message);
+            res.status(500).json({
+                error: 'Erro ao alterar status do anuncio',
+                details: error.response?.data || error.message
+            });
         }
     });
 });

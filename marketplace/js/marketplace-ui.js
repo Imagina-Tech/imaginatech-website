@@ -411,6 +411,8 @@ function populateFormWithProduct(product) {
     setFieldValue('productIdField', String(product.productId || 0).padStart(3, '0'));
     setFieldValue('productName', product.name || '');
     setFieldValue('productDescription', product.description || '');
+    setFieldValue('productSku', product.sku || '');
+    setFieldValue('productGtin', product.gtin || '');
     setFieldValue('labelCode', product.labelCode || '');
     setFieldValue('internalCode', product.internalCode || '');
 
@@ -468,6 +470,7 @@ function populateFormWithProduct(product) {
     setSelectValue('mlFreeShipping', product.mlFreeShipping ? 'true' : 'false', 90);
     setSelectValue('mlLocalPickup', product.mlLocalPickup ? 'true' : 'false', 100);
     setSelectValue('mlShippingDays', product.mlShippingDays || '2', 110);
+    setSelectValue('mlManufacturingTime', product.mlManufacturingTime || '0', 115);
     setSelectValue('mlWarrantyType', product.mlWarrantyType || 'seller', 120);
     setSelectValue('mlWarrantyDays', product.mlWarrantyDays || '90', 130);
 
@@ -483,22 +486,54 @@ function populateFormWithProduct(product) {
 
     // ========== STATUS ML ==========
     const mlStatusDiv = document.getElementById('mlProductStatus');
+    const mlActionsDiv = document.getElementById('mlListingActions');
+    const btnPause = document.getElementById('btnPauseListing');
+
     if (mlStatusDiv) {
         if (product.mlbId) {
+            // Determinar status do anuncio
+            const isPaused = product.mlStatus === 'paused';
+            const statusText = isPaused ? 'Pausado' : 'Ativo';
+            const statusClass = isPaused ? 'ml-paused' : 'ml-published';
+            const statusIcon = isPaused ? 'fa-pause-circle' : 'fa-check-circle';
+
             mlStatusDiv.innerHTML = `
-                <span class="ml-badge ml-published">
-                    <i class="fas fa-check-circle"></i> Publicado: ${product.mlbId}
+                <span class="ml-badge ${statusClass}">
+                    <i class="fas ${statusIcon}"></i> ${statusText}: ${product.mlbId}
                 </span>
                 <a href="https://produto.mercadolivre.com.br/${product.mlbId}" target="_blank" class="btn-icon" title="Ver no ML">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
             `;
+
+            // Mostrar acoes do anuncio
+            if (mlActionsDiv) {
+                mlActionsDiv.classList.remove('hidden');
+            }
+
+            // Atualizar botao pause/activate
+            if (btnPause) {
+                if (isPaused) {
+                    btnPause.classList.add('paused');
+                    btnPause.innerHTML = '<i class="fas fa-play"></i><span>Ativar</span>';
+                    btnPause.title = 'Ativar anuncio';
+                } else {
+                    btnPause.classList.remove('paused');
+                    btnPause.innerHTML = '<i class="fas fa-pause"></i><span>Pausar</span>';
+                    btnPause.title = 'Pausar anuncio';
+                }
+            }
         } else {
             mlStatusDiv.innerHTML = `
                 <span class="ml-badge ml-not-published">
                     <i class="fas fa-cloud-upload-alt"></i> Nao publicado no ML
                 </span>
             `;
+
+            // Esconder acoes do anuncio
+            if (mlActionsDiv) {
+                mlActionsDiv.classList.add('hidden');
+            }
         }
     }
 
