@@ -510,22 +510,15 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 pictures: pictures,
                 description: {
                     plain_text: product.description || product.name
-                }
+                },
+                // family_name como campo de nivel superior (requerido por categorias com catalogo)
+                family_name: product.name.substring(0, 60)
             };
 
-            // Adicionar atributos
-            // Sempre incluir FAMILY_NAME se nao existir (requerido por categorias com catalogo)
-            const hasFamilyName = attributes.some(a => a.id === 'FAMILY_NAME');
-            if (!hasFamilyName) {
-                // Usar o titulo como family_name (permite criar item sem vincular a catalogo existente)
-                attributes.push({
-                    id: 'FAMILY_NAME',
-                    value_name: product.name.substring(0, 60)
-                });
-            }
-
-            if (attributes.length > 0) {
-                mlData.attributes = attributes;
+            // Adicionar atributos (exceto FAMILY_NAME que vai no nivel superior)
+            const filteredAttributes = attributes.filter(a => a.id !== 'FAMILY_NAME');
+            if (filteredAttributes.length > 0) {
+                mlData.attributes = filteredAttributes;
             }
 
             console.log('Criando anuncio ML:', JSON.stringify(mlData));
