@@ -513,7 +513,17 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 }
             };
 
-            // Adicionar atributos se existirem
+            // Adicionar atributos
+            // Sempre incluir FAMILY_NAME se nao existir (requerido por categorias com catalogo)
+            const hasFamilyName = attributes.some(a => a.id === 'FAMILY_NAME');
+            if (!hasFamilyName) {
+                // Usar o titulo como family_name (permite criar item sem vincular a catalogo existente)
+                attributes.push({
+                    id: 'FAMILY_NAME',
+                    value_name: product.name.substring(0, 60)
+                });
+            }
+
             if (attributes.length > 0) {
                 mlData.attributes = attributes;
             }
