@@ -142,13 +142,12 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 1400px;
-    padding: 15px 30px;
+    max-width: 1200px;
+    padding: 20px 40px;
     background: rgba(10, 14, 26, 0.6);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
-    border-bottom: none;
     border-radius: 50px;
     z-index: 1000;
     box-sizing: border-box;
@@ -157,7 +156,7 @@ body {
 }
 
 .navbar-container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -186,17 +185,20 @@ body {
 
 .logo {
     font-family: 'Orbitron', monospace;
-    font-size: 1.2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--neon-blue), #57D4CA);
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #00D4FF, #0077FF);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: 2px;
     line-height: 1;
 }
 
 .logo-subtitle {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     color: rgba(0, 212, 255, 0.7);
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -243,8 +245,7 @@ body {
     color: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 25px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s;
     text-decoration: none;
