@@ -497,9 +497,18 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 });
             }
 
+            // Verificar se categoria tem catalogo (via atributos ou dominio)
+            // Se tem catalogo, usa family_name em vez de title
+            let categoryHasCatalog = false;
+            try {
+                const catResponse = await axios.get(`${ML_CONFIG.apiUrl}/categories/${product.mlCategoryId}`);
+                categoryHasCatalog = !!catResponse.data?.settings?.catalog_domain;
+            } catch (e) {
+                console.log('Nao foi possivel verificar catalogo da categoria:', e.message);
+            }
+
             // Preparar dados para criar anuncio
             const mlData = {
-                title: product.name.substring(0, 60), // ML limita a 60 caracteres
                 category_id: product.mlCategoryId,
                 price: product.price,
                 currency_id: 'BRL',
@@ -510,10 +519,15 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
                 pictures: pictures,
                 description: {
                     plain_text: product.description || product.name
-                },
-                // family_name como campo de nivel superior (requerido por categorias com catalogo)
-                family_name: product.name.substring(0, 60)
+                }
             };
+
+            // Se categoria tem catalogo, usa family_name; senao usa title
+            if (categoryHasCatalog) {
+                mlData.family_name = product.name.substring(0, 60);
+            } else {
+                mlData.title = product.name.substring(0, 60);
+            }
 
             // Adicionar atributos (exceto FAMILY_NAME que vai no nivel superior)
             const filteredAttributes = attributes.filter(a => a.id !== 'FAMILY_NAME');
