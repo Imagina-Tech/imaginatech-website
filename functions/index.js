@@ -480,11 +480,19 @@ exports.createMLItem = functions.https.onRequest(async (req, res) => {
             // Adicionar atributos salvos no produto
             if (product.mlAttributes && Array.isArray(product.mlAttributes)) {
                 product.mlAttributes.forEach(attr => {
-                    if (attr.id && attr.value_name) {
-                        attributes.push({
-                            id: attr.id,
-                            value_name: attr.value_name
-                        });
+                    if (attr.id) {
+                        // Suporta value_id (selects predefinidos) e value_name (texto livre)
+                        if (attr.value_id) {
+                            attributes.push({
+                                id: attr.id,
+                                value_id: attr.value_id
+                            });
+                        } else if (attr.value_name) {
+                            attributes.push({
+                                id: attr.id,
+                                value_name: attr.value_name
+                            });
+                        }
                     }
                 });
             }

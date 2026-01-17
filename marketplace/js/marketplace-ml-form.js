@@ -204,9 +204,9 @@ function renderAttributeField(attr, required) {
     let inputHtml = '';
 
     if (attr.values && attr.values.length > 0) {
-        // Dropdown com opcoes
+        // Dropdown com opcoes predefinidas (usa value_id)
         inputHtml = `
-            <select id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" ${required ? 'required' : ''}>
+            <select id="${fieldId}" name="${fieldId}" data-attr-id="${attr.id}" data-has-values="true" ${required ? 'required' : ''}>
                 <option value="">Selecione...</option>
                 ${attr.values.map(v => `<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('')}
             </select>
@@ -580,10 +580,20 @@ function collectMlAttributes() {
     document.querySelectorAll('[data-attr-id]').forEach(input => {
         const value = input.value.trim();
         if (value) {
-            attributes.push({
-                id: input.dataset.attrId,
-                value_name: value
-            });
+            // Se tem valores predefinidos (select), usa value_id
+            // Senao (input texto), usa value_name
+            const hasValues = input.dataset.hasValues === 'true';
+            if (hasValues) {
+                attributes.push({
+                    id: input.dataset.attrId,
+                    value_id: value
+                });
+            } else {
+                attributes.push({
+                    id: input.dataset.attrId,
+                    value_name: value
+                });
+            }
         }
     });
     return attributes;
