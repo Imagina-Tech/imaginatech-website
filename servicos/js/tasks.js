@@ -1,0 +1,1490 @@
+// ===========================
+// SISTEMA DE TAREFAS
+// ImaginaTech - Gestão de Tarefas
+// FASE 1 - MVP
+// ===========================
+
+import { state, AUTHORIZED_ADMINS, logger } from './config.js';
+import { showToast } from './auth-ui.js';
+import {
+    escapeHtml,
+    formatDateTime,
+    formatTimeAgo,
+    formatDateTimeLocal,
+    formatFileSize,
+    isRecentAccess,
+    PRIORITY_CONFIG
+} from './utils.js';
+
+// ===========================
+// ESTADO DO SISTEMA
+// ===========================
+
+const tasksState = {
+    tasks: [],
+    filteredTasks: [],
+    viewMode: 'mine', // 'mine' | 'all' | email do admin
+    statusFilter: 'all', // 'all' | 'pendente' | 'concluida'
+    unsubscribe: null,
+    unsubscribeAdminAccess: null, // Listener de último acesso
+    adminAccessData: [], // Dados de último acesso dos admins
+    dropdownOpen: false,
+    currentUser: null,
+    adminsPhotos: {} // Cache de fotos dos admins
+};
+
+// ===========================
+// INICIALIZAÇÃO
+// ===========================
+
+export function initTasksSystem() {
+    logger.log('🎯 Inicializando sistema de tarefas...');
+
+    if (!state.currentUser) {
+        logger.warn('Usuário não autenticado. Sistema de tarefas não será inicializado.');
+        return;
+    }
+
+    tasksState.currentUser = state.currentUser;
+
+    // Criar elementos do UI
+    createTasksUI();
+
+    // Iniciar listener de tarefas
+    startTasksListener();
+
+    // Iniciar listener de último acesso dos admins
+    startAdminAccessListener();
+
+    // Event listeners
+    setupEventListeners();
+
+    logger.log('✅ Sistema de tarefas inicializado');
+}
+
+// ===========================
+// CRIAÇÃO DO UI
+// ===========================
+
+function createTasksUI() {
+    // Verificar se o botão já existe
+    if (document.getElementById('tasksIconWrapper')) {
+        logger.log('UI de tarefas já existe');
+        return;
+    }
+
+    // Encontrar navbar-right
+    const navbarRight = document.querySelector('.navbar-right');
+    if (!navbarRight) {
+        logger.error('navbar-right não encontrado');
+        return;
+    }
+
+    // Criar wrapper do ícone
+    const wrapper = document.createElement('div');
+    wrapper.id = 'tasksIconWrapper';
+    wrapper.className = 'tasks-icon-wrapper';
+
+    // Criar botão de tarefas
+    wrapper.innerHTML = `
+        <button class="btn-nav btn-tasks" id="btnTasks" title="Tarefas">
+            <i class="fas fa-clipboard-list"></i>
+        </button>
+        <span class="tasks-badge hidden" id="tasksBadge">0</span>
+
+        <!-- Dropdown -->
+        <div class="tasks-dropdown" id="tasksDropdown">
+            <div class="tasks-dropdown-header">
+                <div class="tasks-dropdown-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span id="dropdownTitle">Minhas Tarefas (0)</span>
+                </div>
+                <div class="tasks-dropdown-actions">
+                    <button class="btn-close-dropdown" id="btnCloseDropdown" title="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="btn-new-task" id="btnNewTask">
+                        <i class="fas fa-plus"></i>
+                        Nova
+                    </button>
+                </div>
+            </div>
+
+            <!-- Container principal com layout lado a lado -->
+            <div class="tasks-dropdown-content">
+                <!-- Painel de último acesso (coluna esquerda no desktop) -->
+                <div class="admin-access-panel" id="adminAccessPanel">
+                    <div class="admin-access-header">
+                        <i class="fas fa-clock"></i>
+                        <span>Último Acesso</span>
+                    </div>
+                    <div class="admin-access-list" id="adminAccessList">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Seção de tarefas (coluna direita no desktop) -->
+                <div class="tasks-main-section">
+                    <div class="tasks-filters">
+                        <select class="tasks-status-filter" id="statusFilter">
+                            <option value="all">Todas as Tarefas</option>
+                            <option value="pendente">Apenas Pendentes</option>
+                            <option value="concluida">Apenas Concluídas</option>
+                        </select>
+                    </div>
+
+                    <div class="tasks-list" id="tasksList">
+                        <div class="tasks-empty">
+                            <i class="fas fa-clipboard-check"></i>
+                            <p><strong>Nenhuma tarefa encontrada</strong></p>
+                            <p>Crie uma nova tarefa ou ajuste os filtros</p>
+                        </div>
+                    </div>
+
+                    <div class="tasks-footer">
+                        <a href="#" id="btnViewCompleted">Ver tarefas concluídas (0)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Inserir antes do user-info
+    const userInfo = navbarRight.querySelector('.user-info');
+    if (userInfo) {
+        navbarRight.insertBefore(wrapper, userInfo);
+    } else {
+        navbarRight.appendChild(wrapper);
+    }
+
+    // Inject Clientes button after Tarefas
+    const clientsButton = document.createElement('button');
+    clientsButton.className = 'btn-nav';
+    clientsButton.id = 'btnClientes';
+    clientsButton.title = 'Clientes';
+    clientsButton.onclick = () => window.openClientsModal && window.openClientsModal();
+    clientsButton.innerHTML = `<i class="fas fa-users"></i>`;
+
+    if (userInfo) {
+        navbarRight.insertBefore(clientsButton, userInfo);
+    } else {
+        navbarRight.appendChild(clientsButton);
+    }
+
+    // Criar modal
+    createTaskModal();
+}
+
+function createTaskModal() {
+    // Verificar se já existe
+    if (document.getElementById('taskModalOverlay')) {
+        return;
+    }
+
+    const modalHTML = `
+        <div class="task-modal-overlay" id="taskModalOverlay">
+            <div class="task-modal">
+                <div class="task-modal-header">
+                    <div class="task-modal-title">
+                        <i class="fas fa-plus-circle"></i>
+                        <span id="modalTitle">Nova Tarefa</span>
+                    </div>
+                    <button class="btn-close-modal" id="btnCloseModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="task-modal-body">
+                    <form id="taskForm">
+                        <!-- Título -->
+                        <div class="task-form-group">
+                            <label class="task-form-label required">
+                                <i class="fas fa-heading"></i>
+                                Título
+                            </label>
+                            <input type="text" class="task-form-input" id="taskTitle"
+                                   placeholder="Ex: Embalar pedido #ABC123" required>
+                        </div>
+
+                        <!-- Categoria -->
+                        <div class="task-form-group">
+                            <label class="task-form-label required">
+                                <i class="fas fa-tag"></i>
+                                Categoria
+                            </label>
+                            <input type="text" class="task-form-input" id="taskCategory"
+                                   placeholder="Ex: Produção, Atendimento, Financeiro" required>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="task-form-group">
+                            <label class="task-form-label">
+                                <i class="fas fa-align-left"></i>
+                                Descrição (opcional)
+                            </label>
+                            <textarea class="task-form-textarea" id="taskDescription"
+                                      placeholder="Detalhes adicionais..."></textarea>
+                        </div>
+
+                        <!-- Responsáveis -->
+                        <div class="task-form-group">
+                            <label class="task-form-label required">
+                                <i class="fas fa-users"></i>
+                                Responsável(is)
+                            </label>
+                            <div class="assignees-list" id="assigneesList"></div>
+                        </div>
+
+                        <!-- Prazo -->
+                        <div class="task-form-group">
+                            <label class="task-form-label required">
+                                <i class="fas fa-calendar-alt"></i>
+                                Prazo
+                            </label>
+                            <input type="datetime-local" class="task-form-input" id="taskDueDate" required>
+                        </div>
+
+                        <!-- Prioridade -->
+                        <div class="task-form-group">
+                            <label class="task-form-label required">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Prioridade
+                            </label>
+                            <div class="priority-selector">
+                                <div class="priority-option alta" data-priority="alta">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Alta</span>
+                                </div>
+                                <div class="priority-option media selected" data-priority="media">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Média</span>
+                                </div>
+                                <div class="priority-option baixa" data-priority="baixa">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Baixa</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pedido vinculado (opcional) -->
+                        <div class="task-form-group">
+                            <label class="task-form-label">
+                                <i class="fas fa-link"></i>
+                                Código do Pedido (opcional)
+                            </label>
+                            <input type="text" class="task-form-input" id="taskOrderCode"
+                                   placeholder="Ex: ABC123" style="text-transform: uppercase;">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="task-modal-footer">
+                    <button type="button" class="btn-task btn-task-secondary" id="btnCancelTask">
+                        Cancelar
+                    </button>
+                    <button type="submit" form="taskForm" class="btn-task btn-task-primary" id="btnSaveTask">
+                        <i class="fas fa-check"></i>
+                        Criar Tarefa
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Popular lista de responsáveis
+    populateAssigneesList();
+}
+
+function populateAssigneesList() {
+    const list = document.getElementById('assigneesList');
+    if (!list) return;
+
+    list.innerHTML = AUTHORIZED_ADMINS.map(admin => `
+        <label class="assignee-option">
+            <input type="checkbox" class="assignee-checkbox" value="${admin.email}">
+            <span class="assignee-name">${admin.name}</span>
+        </label>
+    `).join('');
+}
+
+// ===========================
+// EVENT LISTENERS
+// ===========================
+
+function setupEventListeners() {
+    // Delegacao de eventos centralizada (seguranca: evita onclick inline)
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+
+        const action = el.dataset.action;
+        const id = el.dataset.id;
+        const handlers = {
+            'toggle-task-complete': () => {
+                const completed = el.dataset.completed === 'true';
+                if (typeof toggleTaskComplete === 'function') toggleTaskComplete(id, completed);
+            },
+            'close-task-details': () => typeof closeTaskDetailsModal === 'function' && closeTaskDetailsModal(),
+            'add-comment': () => typeof addComment === 'function' && addComment(id),
+            'open-transfer-modal': () => typeof openTransferModal === 'function' && openTransferModal(id),
+            'open-attachments-modal': () => typeof openAttachmentsModal === 'function' && openAttachmentsModal(id),
+            'mark-not-feasible': () => typeof markAsNotFeasible === 'function' && markAsNotFeasible(id),
+            'close-transfer-modal': () => typeof closeTransferModal === 'function' && closeTransferModal(),
+            'confirm-transfer': () => typeof confirmTransfer === 'function' && confirmTransfer(id),
+            'close-attach-modal': () => typeof closeAttachModal === 'function' && closeAttachModal(),
+            'upload-attachment': () => typeof uploadAttachment === 'function' && uploadAttachment(id),
+            'filter-by-admin': () => {
+                const email = el.dataset.email;
+                if (typeof filterByAdmin === 'function') filterByAdmin(email, e);
+            }
+        };
+        if (handlers[action]) handlers[action]();
+    });
+
+    // Toggle dropdown
+    const btnTasks = document.getElementById('btnTasks');
+    btnTasks?.addEventListener('click', toggleDropdown);
+
+    // Botão fechar dropdown
+    document.getElementById('btnCloseDropdown')?.addEventListener('click', closeDropdown);
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', (e) => {
+        const wrapper = document.getElementById('tasksIconWrapper');
+        if (wrapper && !wrapper.contains(e.target) && tasksState.dropdownOpen) {
+            closeDropdown();
+        }
+    });
+
+    // Nova tarefa
+    document.getElementById('btnNewTask')?.addEventListener('click', openTaskModal);
+
+    // Status filter
+    document.getElementById('statusFilter')?.addEventListener('change', (e) => {
+        tasksState.statusFilter = e.target.value;
+        filterAndRenderTasks();
+    });
+
+    // Modal events
+    document.getElementById('btnCloseModal')?.addEventListener('click', closeTaskModal);
+    document.getElementById('btnCancelTask')?.addEventListener('click', closeTaskModal);
+    document.getElementById('taskModalOverlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'taskModalOverlay') closeTaskModal();
+    });
+
+    // Form submit
+    document.getElementById('taskForm')?.addEventListener('submit', handleCreateTask);
+
+    // Priority selector
+    document.querySelectorAll('.priority-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+
+    // Ver concluídas
+    document.getElementById('btnViewCompleted')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('statusFilter').value = 'concluida';
+        tasksState.statusFilter = 'concluida';
+        filterAndRenderTasks();
+    });
+}
+
+function toggleDropdown() {
+    const dropdown = document.getElementById('tasksDropdown');
+    if (!dropdown) return;
+
+    if (tasksState.dropdownOpen) {
+        closeDropdown();
+    } else {
+        dropdown.classList.add('active');
+        tasksState.dropdownOpen = true;
+    }
+}
+
+function closeDropdown() {
+    const dropdown = document.getElementById('tasksDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('active');
+        tasksState.dropdownOpen = false;
+    }
+}
+
+function openTaskModal() {
+    const modal = document.getElementById('taskModalOverlay');
+    if (!modal) return;
+
+    // Reset form
+    document.getElementById('taskForm')?.reset();
+    document.querySelectorAll('.assignee-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+    document.querySelector('.priority-option.media')?.classList.add('selected');
+
+    // Set default due date (tomorrow 18:00)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(18, 0, 0, 0);
+    document.getElementById('taskDueDate').value = formatDateTimeLocal(tomorrow);
+
+    modal.classList.add('active');
+}
+
+function closeTaskModal() {
+    const modal = document.getElementById('taskModalOverlay');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// ===========================
+// FIRESTORE LISTENER
+// ===========================
+
+function startTasksListener() {
+    if (tasksState.unsubscribe) {
+        tasksState.unsubscribe();
+    }
+
+    logger.log('📡 Iniciando listener de tarefas...');
+
+    tasksState.unsubscribe = state.db.collection('tasks')
+        .orderBy('priority', 'asc') // alta=0, media=1, baixa=2
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            tasksState.tasks = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            logger.log(`📋 ${tasksState.tasks.length} tarefas carregadas`);
+
+            filterAndRenderTasks();
+            updateBadge();
+        }, error => {
+            logger.error('Erro ao carregar tarefas:', error);
+            showToast('Erro ao carregar tarefas', 'error');
+        });
+}
+
+// ===========================
+// FILTROS E RENDERIZAÇÃO
+// ===========================
+
+function getAdminPhotoURL(email) {
+    // Se já temos no cache, retorna
+    if (tasksState.adminsPhotos[email]) {
+        return tasksState.adminsPhotos[email];
+    }
+
+    // Primeiro, verificar nos dados de adminAccess (tem as fotos reais de todos os admins)
+    const adminAccessInfo = tasksState.adminAccessData.find(a => a.email === email);
+    if (adminAccessInfo && adminAccessInfo.photoURL) {
+        tasksState.adminsPhotos[email] = adminAccessInfo.photoURL;
+        return adminAccessInfo.photoURL;
+    }
+
+    // Lógica IGUAL ao header: user.photoURL do Firebase Auth ou fallback
+    const user = firebase.auth().currentUser;
+
+    // Se for o usuário logado, usa a foto dele
+    if (user && user.email === email) {
+        const photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff&bold=true&size=128`;
+        tasksState.adminsPhotos[email] = photoURL;
+        return photoURL;
+    }
+
+    // Para outros admins, gera fallback com o nome
+    const name = AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email.split('@')[0];
+    const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00D4FF&color=fff&bold=true&size=128`;
+    tasksState.adminsPhotos[email] = photoURL;
+    return photoURL;
+}
+
+// Função global para filtrar por admin (chamada pelo onclick)
+window.filterByAdmin = function(viewMode, event) {
+    // Prevenir que o click feche o dropdown
+    if (event) {
+        event.stopPropagation();
+    }
+    tasksState.viewMode = viewMode;
+    filterAndRenderTasks();
+};
+
+function filterAndRenderTasks() {
+    const userEmail = tasksState.currentUser?.email;
+    let filtered = [...tasksState.tasks];
+
+    // Filtro por responsável
+    if (tasksState.viewMode === 'mine') {
+        // Minhas tarefas
+        filtered = filtered.filter(task =>
+            task.assignedTo && task.assignedTo.includes(userEmail)
+        );
+    } else if (tasksState.viewMode !== 'all') {
+        // Tarefas de um admin específico (viewMode = email)
+        filtered = filtered.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.viewMode)
+        );
+    }
+    // Se viewMode === 'all', mostra todas (sem filtro de responsável)
+
+    // Filtro por status
+    if (tasksState.statusFilter !== 'all') {
+        filtered = filtered.filter(task => task.status === tasksState.statusFilter);
+    } else {
+        // Mostrar apenas pendentes por padrão
+        filtered = filtered.filter(task => task.status === 'pendente');
+    }
+
+    tasksState.filteredTasks = filtered;
+    renderAdminAccessPanel(); // Atualizar painel com contagem de tarefas
+    renderTasksList();
+    updateDropdownTitle();
+    updateBadge(); // Atualizar badge e contador de concluídas
+}
+
+function renderTasksList() {
+    const container = document.getElementById('tasksList');
+    if (!container) return;
+
+    if (tasksState.filteredTasks.length === 0) {
+        container.innerHTML = `
+            <div class="tasks-empty">
+                <i class="fas fa-clipboard-check"></i>
+                <p><strong>Nenhuma tarefa encontrada</strong></p>
+                <p>Crie uma nova tarefa ou ajuste os filtros</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por prioridade e data
+    const sorted = [...tasksState.filteredTasks].sort((a, b) => {
+        const priorityOrder = { alta: 0, media: 1, baixa: 2 };
+        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    container.innerHTML = sorted.map(task => renderTaskCard(task)).join('');
+
+    // Add event listeners
+    attachTaskEventListeners();
+}
+
+function renderTaskCard(task) {
+    const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.media;
+    const isCompleted = task.status === 'concluida';
+    const dueDate = new Date(task.dueDate);
+    const now = new Date();
+    const isOverdue = dueDate < now && !isCompleted;
+    const creatorName = AUTHORIZED_ADMINS.find(a => a.email === task.createdBy)?.name || 'Desconhecido';
+
+    return `
+        <div class="task-card priority-${task.priority} ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
+            <div class="task-card-header">
+                <div class="task-checkbox ${isCompleted ? 'checked' : ''}"
+                     data-action="toggle-task-complete" data-id="${escapeHtml(task.id)}" data-completed="${!isCompleted}"
+                </div>
+                <div class="task-card-content">
+                    <div class="task-title-row">
+                        <span class="task-priority-icon">${priority.icon}</span>
+                        <span class="task-title">${escapeHtml(task.title)}</span>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            ${isOverdue ? '⚠️ ' : ''}${formatDueDate(task.dueDate)}
+                        </span>
+                        ${task.category ? `<span class="task-category">${escapeHtml(task.category)}</span>` : ''}
+                        ${task.createdBy !== tasksState.currentUser.email ?
+                            `<span class="task-meta-item">
+                                <i class="fas fa-user"></i>
+                                ${creatorName}
+                            </span>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function attachTaskEventListeners() {
+    document.querySelectorAll('.task-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Ignorar clique no checkbox
+            if (e.target.closest('.task-checkbox')) return;
+
+            const taskId = card.dataset.taskId;
+            const task = tasksState.tasks.find(t => t.id === taskId);
+            if (task) {
+                showTaskDetails(task);
+            }
+        });
+    });
+}
+
+// ===========================
+// AÇÕES DE TAREFA
+// ===========================
+
+window.toggleTaskComplete = async function(taskId, completed) {
+    try {
+        await state.db.collection('tasks').doc(taskId).update({
+            status: completed ? 'concluida' : 'pendente',
+            completedAt: completed ? new Date().toISOString() : null,
+            completedBy: completed ? tasksState.currentUser.email : null,
+            updatedAt: new Date().toISOString()
+        });
+
+        showToast(
+            completed ? '✓ Tarefa concluída!' : 'Tarefa reaberta',
+            completed ? 'success' : 'info'
+        );
+    } catch (error) {
+        logger.error('Erro ao atualizar tarefa:', error);
+        showToast('Erro ao atualizar tarefa', 'error');
+    }
+};
+
+function showTaskDetails(task) {
+    // Criar modal de detalhes
+    const detailsModal = createTaskDetailsModal(task);
+    document.body.appendChild(detailsModal);
+
+    // Listener de comentários em tempo real
+    startCommentsListener(task.id);
+
+    // Setup event listeners
+    setupDetailsModalListeners(task);
+}
+
+function createTaskDetailsModal(task) {
+    const modal = document.createElement('div');
+    modal.className = 'task-modal-overlay active';
+    modal.id = 'taskDetailsModal';
+
+    const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.media;
+    const creatorName = AUTHORIZED_ADMINS.find(a => a.email === task.createdBy)?.name || task.createdBy;
+    const assignedNames = task.assignedTo.map(email =>
+        AUTHORIZED_ADMINS.find(a => a.email === email)?.name || email
+    ).join(', ');
+
+    const isCompleted = task.status === 'concluida';
+    const isNotFeasible = task.status === 'nao_factivel';
+
+    modal.innerHTML = `
+        <div class="task-modal" style="max-width: 700px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <span style="font-size: 1.5rem;">${priority.icon}</span>
+                    <span>Detalhes da Tarefa</span>
+                </div>
+                <button class="btn-close-modal" data-action="close-task-details">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Título -->
+                <div class="task-detail-section">
+                    <h2 style="margin: 0 0 1rem 0; color: ${priority.color}; font-size: 1.3rem;">
+                        ${escapeHtml(task.title)}
+                    </h2>
+
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        ${task.category ? `<span class="task-category">${escapeHtml(task.category)}</span>` : ''}
+                        <span class="task-category" style="background: ${priority.color}20; color: ${priority.color};">
+                            ${priority.label} Prioridade
+                        </span>
+                        ${isCompleted ? '<span class="task-category" style="background: rgba(0,255,136,0.2); color: var(--neon-green);">✓ Concluída</span>' : ''}
+                        ${isNotFeasible ? '<span class="task-category" style="background: rgba(255,0,85,0.2); color: var(--neon-red);">✗ Não Factível</span>' : ''}
+                    </div>
+                </div>
+
+                <!-- Informações -->
+                <div class="task-detail-section">
+                    <div class="task-detail-grid">
+                        <div class="task-detail-item">
+                            <i class="fas fa-user"></i>
+                            <div>
+                                <strong>Criado por</strong>
+                                <p>${creatorName}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-users"></i>
+                            <div>
+                                <strong>Responsável(is)</strong>
+                                <p>${assignedNames}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-calendar-plus"></i>
+                            <div>
+                                <strong>Criada em</strong>
+                                <p>${formatDateTime(task.createdAt)}</p>
+                            </div>
+                        </div>
+
+                        <div class="task-detail-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div>
+                                <strong>Prazo</strong>
+                                <p>${formatDateTime(task.dueDate)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                ${task.description ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-align-left"></i> Descrição</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">${escapeHtml(task.description)}</p>
+                </div>
+                ` : ''}
+
+                <!-- Pedido vinculado -->
+                ${task.linkedOrderCode ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-link"></i> Pedido Vinculado</h3>
+                    <p>
+                        <span class="task-category" style="font-family: 'Orbitron', monospace; font-size: 1rem;">
+                            #${task.linkedOrderCode}
+                        </span>
+                    </p>
+                </div>
+                ` : ''}
+
+                <!-- Anexos -->
+                ${task.attachments && task.attachments.length > 0 ? `
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-paperclip"></i> Anexos (${task.attachments.length})</h3>
+                    <div class="attachments-list">
+                        ${task.attachments.map(att => `
+                            <a href="${att.url}" target="_blank" class="attachment-item">
+                                <i class="fas fa-file"></i>
+                                <span>${att.name}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Comentários -->
+                <div class="task-detail-section">
+                    <h3><i class="fas fa-comments"></i> Comentários <span id="commentsCount">(0)</span></h3>
+                    <div class="comments-container" id="commentsContainer">
+                        <div class="comments-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Carregando comentários...
+                        </div>
+                    </div>
+
+                    ${!isCompleted && !isNotFeasible ? `
+                    <div class="comment-input-container">
+                        <textarea id="commentInput" placeholder="Adicionar comentário..."
+                                  class="task-form-textarea" style="min-height: 80px;"></textarea>
+                        <button class="btn-task btn-task-primary" data-action="add-comment" data-id="${escapeHtml(task.id)}">
+                            <i class="fas fa-paper-plane"></i>
+                            Enviar
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                ${!isCompleted && !isNotFeasible ? `
+                    <button class="btn-task btn-task-secondary" data-action="open-transfer-modal" data-id="${escapeHtml(task.id)}">
+                        <i class="fas fa-exchange-alt"></i>
+                        Transferir
+                    </button>
+                    <button class="btn-task btn-task-secondary" data-action="open-attachments-modal" data-id="${escapeHtml(task.id)}">
+                        <i class="fas fa-paperclip"></i>
+                        Anexar
+                    </button>
+                    <button class="btn-task btn-task-secondary" style="border-color: var(--neon-red); color: var(--neon-red);"
+                            data-action="mark-not-feasible" data-id="${escapeHtml(task.id)}">
+                        <i class="fas fa-times-circle"></i>
+                        Não Factível
+                    </button>
+                    <button class="btn-task btn-task-primary" data-action="toggle-task-complete" data-id="${escapeHtml(task.id)}" data-completed="true">
+                        <i class="fas fa-check"></i>
+                        Concluir
+                    </button>
+                ` : `
+                    <button class="btn-task btn-task-secondary" data-action="close-task-details">
+                        Fechar
+                    </button>
+                `}
+            </div>
+        </div>
+    `;
+
+    return modal;
+}
+
+function setupDetailsModalListeners(task) {
+    // Fechar ao clicar fora
+    const overlay = document.getElementById('taskDetailsModal');
+    overlay?.addEventListener('click', (e) => {
+        if (e.target.id === 'taskDetailsModal') {
+            closeTaskDetailsModal();
+        }
+    });
+
+    // Esc para fechar
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeTaskDetailsModal();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+}
+
+window.closeTaskDetailsModal = function() {
+    const modal = document.getElementById('taskDetailsModal');
+    if (modal) {
+        // Parar listener de comentários
+        if (tasksState.commentsUnsubscribe) {
+            tasksState.commentsUnsubscribe();
+            tasksState.commentsUnsubscribe = null;
+        }
+        modal.remove();
+    }
+};
+
+// ===========================
+// COMENTÁRIOS
+// ===========================
+
+function startCommentsListener(taskId) {
+    if (tasksState.commentsUnsubscribe) {
+        tasksState.commentsUnsubscribe();
+    }
+
+    tasksState.commentsUnsubscribe = state.db.collection('tasks').doc(taskId)
+        .onSnapshot(doc => {
+            if (doc.exists) {
+                const task = doc.data();
+                const comments = task.comments || [];
+                renderComments(comments);
+            }
+        });
+}
+
+function renderComments(comments) {
+    const container = document.getElementById('commentsContainer');
+    const countSpan = document.getElementById('commentsCount');
+
+    if (!container) return;
+
+    countSpan.textContent = `(${comments.length})`;
+
+    if (comments.length === 0) {
+        container.innerHTML = `
+            <div class="comments-empty">
+                <i class="fas fa-comments"></i>
+                <p>Nenhum comentário ainda</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por data (mais recentes por último)
+    const sorted = [...comments].sort((a, b) =>
+        new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    container.innerHTML = sorted.map(comment => {
+        const authorName = AUTHORIZED_ADMINS.find(a => a.email === comment.author)?.name || comment.author;
+        const isOwn = comment.author === tasksState.currentUser.email;
+
+        return `
+            <div class="comment-item ${isOwn ? 'own' : ''}">
+                <div class="comment-header">
+                    <strong>${authorName}</strong>
+                    <span class="comment-time">${formatCommentTime(comment.timestamp)}</span>
+                </div>
+                <div class="comment-text">${escapeHtml(comment.text)}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Scroll para o final
+    container.scrollTop = container.scrollHeight;
+}
+
+window.addComment = async function(taskId) {
+    const input = document.getElementById('commentInput');
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) {
+        showToast('Digite um comentário', 'error');
+        return;
+    }
+
+    try {
+        const task = tasksState.tasks.find(t => t.id === taskId);
+        const comments = task.comments || [];
+
+        comments.push({
+            author: tasksState.currentUser.email,
+            text,
+            timestamp: new Date().toISOString()
+        });
+
+        await state.db.collection('tasks').doc(taskId).update({
+            comments,
+            updatedAt: new Date().toISOString()
+        });
+
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar responsáveis sobre novo comentário
+        // Ver: /servicos/push-system/integration-points.md (PONTO 5)
+        // ===========================
+
+        input.value = '';
+        showToast('✓ Comentário adicionado', 'success');
+    } catch (error) {
+        logger.error('Erro ao adicionar comentário:', error);
+        showToast('Erro ao adicionar comentário', 'error');
+    }
+};
+
+// ===========================
+// TRANSFERIR TAREFA
+// ===========================
+
+window.openTransferModal = function(taskId) {
+    const task = tasksState.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const transferModal = document.createElement('div');
+    transferModal.className = 'task-modal-overlay active';
+    transferModal.id = 'transferModal';
+    transferModal.style.zIndex = '10001';
+
+    transferModal.innerHTML = `
+        <div class="task-modal" style="max-width: 500px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transferir Tarefa</span>
+                </div>
+                <button class="btn-close-modal" data-action="close-transfer-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Selecione os novos responsáveis para: <strong>${escapeHtml(task.title)}</strong>
+                </p>
+
+                <div class="assignees-list" id="transferAssigneesList">
+                    ${AUTHORIZED_ADMINS.map(admin => `
+                        <label class="assignee-option">
+                            <input type="checkbox" class="assignee-checkbox" value="${escapeHtml(admin.email)}"
+                                   ${task.assignedTo.includes(admin.email) ? 'checked' : ''}>
+                            <span class="assignee-name">${escapeHtml(admin.name)}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                <button class="btn-task btn-task-secondary" data-action="close-transfer-modal">
+                    Cancelar
+                </button>
+                <button class="btn-task btn-task-primary" data-action="confirm-transfer" data-id="${escapeHtml(taskId)}">
+                    <i class="fas fa-check"></i>
+                    Transferir
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(transferModal);
+};
+
+window.closeTransferModal = function() {
+    document.getElementById('transferModal')?.remove();
+};
+
+window.confirmTransfer = async function(taskId) {
+    const checkboxes = document.querySelectorAll('#transferAssigneesList .assignee-checkbox:checked');
+    const newAssignedTo = Array.from(checkboxes).map(cb => cb.value);
+
+    if (newAssignedTo.length === 0) {
+        showToast('Selecione pelo menos um responsável', 'error');
+        return;
+    }
+
+    try {
+        await state.db.collection('tasks').doc(taskId).update({
+            assignedTo: newAssignedTo,
+            status: 'transferida',
+            updatedAt: new Date().toISOString()
+        });
+
+        // Voltar para pendente imediatamente
+        await state.db.collection('tasks').doc(taskId).update({
+            status: 'pendente'
+        });
+
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar novos responsáveis sobre transferência
+        // Ver: /servicos/push-system/integration-points.md (PONTO 4)
+        // ===========================
+
+        showToast('✓ Tarefa transferida!', 'success');
+        closeTransferModal();
+        closeTaskDetailsModal();
+    } catch (error) {
+        logger.error('Erro ao transferir:', error);
+        showToast('Erro ao transferir tarefa', 'error');
+    }
+};
+
+// ===========================
+// NÃO FACTÍVEL
+// ===========================
+
+window.markAsNotFeasible = async function(taskId) {
+    if (!confirm('Tem certeza que deseja marcar esta tarefa como Não Factível?')) {
+        return;
+    }
+
+    try {
+        await state.db.collection('tasks').doc(taskId).update({
+            status: 'nao_factivel',
+            completedAt: new Date().toISOString(),
+            completedBy: tasksState.currentUser.email,
+            updatedAt: new Date().toISOString()
+        });
+
+        showToast('✓ Tarefa marcada como Não Factível', 'success');
+        closeTaskDetailsModal();
+    } catch (error) {
+        logger.error('Erro ao marcar como não factível:', error);
+        showToast('Erro ao atualizar tarefa', 'error');
+    }
+};
+
+// ===========================
+// ANEXOS
+// ===========================
+
+window.openAttachmentsModal = function(taskId) {
+    const attachModal = document.createElement('div');
+    attachModal.className = 'task-modal-overlay active';
+    attachModal.id = 'attachModal';
+    attachModal.style.zIndex = '10001';
+
+    attachModal.innerHTML = `
+        <div class="task-modal" style="max-width: 500px;">
+            <div class="task-modal-header">
+                <div class="task-modal-title">
+                    <i class="fas fa-paperclip"></i>
+                    <span>Anexar Arquivo</span>
+                </div>
+                <button class="btn-close-modal" data-action="close-attach-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="task-modal-body">
+                <div class="task-form-group">
+                    <label class="task-form-label">
+                        <i class="fas fa-file-upload"></i>
+                        Selecione um arquivo
+                    </label>
+                    <input type="file" id="attachmentInput" class="task-form-input"
+                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                    <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">
+                        Máximo: 10MB
+                    </small>
+                </div>
+
+                <div id="attachmentPreview" style="display: none; margin-top: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem;
+                                background: var(--glass-bg); border-radius: 8px;">
+                        <i class="fas fa-file" style="font-size: 2rem; color: var(--neon-blue);"></i>
+                        <div style="flex: 1;">
+                            <div id="attachmentName" style="font-weight: 600;"></div>
+                            <div id="attachmentSize" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-modal-footer">
+                <button class="btn-task btn-task-secondary" data-action="close-attach-modal">
+                    Cancelar
+                </button>
+                <button class="btn-task btn-task-primary" data-action="upload-attachment" data-id="${escapeHtml(taskId)}" id="btnUploadAttachment" disabled>
+                    <i class="fas fa-upload"></i>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(attachModal);
+
+    // Preview do arquivo
+    document.getElementById('attachmentInput')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const preview = document.getElementById('attachmentPreview');
+            if (preview) preview.style.display = 'block';
+            const nameEl = document.getElementById('attachmentName');
+            if (nameEl) nameEl.textContent = file.name;
+            const sizeEl = document.getElementById('attachmentSize');
+            if (sizeEl) sizeEl.textContent = formatFileSize(file.size);
+            const btn = document.getElementById('btnUploadAttachment');
+            if (btn) btn.disabled = false;
+        }
+    });
+};
+
+window.closeAttachModal = function() {
+    document.getElementById('attachModal')?.remove();
+};
+
+window.uploadAttachment = async function(taskId) {
+    const input = document.getElementById('attachmentInput');
+    const file = input?.files[0];
+
+    if (!file) {
+        showToast('Selecione um arquivo', 'error');
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Arquivo muito grande (máx: 10MB)', 'error');
+        return;
+    }
+
+    try {
+        showToast('Enviando arquivo...', 'info');
+
+        // Upload para Firebase Storage
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`tasks/${taskId}/${Date.now()}_${file.name}`);
+        const uploadTask = await fileRef.put(file);
+        const url = await uploadTask.ref.getDownloadURL();
+
+        // Adicionar aos anexos da tarefa
+        const task = tasksState.tasks.find(t => t.id === taskId);
+        const attachments = task.attachments || [];
+
+        attachments.push({
+            name: file.name,
+            url,
+            uploadedBy: tasksState.currentUser.email,
+            uploadedAt: new Date().toISOString(),
+            size: file.size
+        });
+
+        await state.db.collection('tasks').doc(taskId).update({
+            attachments,
+            updatedAt: new Date().toISOString()
+        });
+
+        showToast('✓ Arquivo anexado!', 'success');
+        closeAttachModal();
+
+        // Recarregar modal de detalhes
+        closeTaskDetailsModal();
+        const updatedTask = tasksState.tasks.find(t => t.id === taskId);
+        if (updatedTask) {
+            setTimeout(() => showTaskDetails(updatedTask), 300);
+        }
+    } catch (error) {
+        logger.error('Erro ao enviar anexo:', error);
+        showToast('Erro ao enviar arquivo', 'error');
+    }
+};
+
+// ===========================
+// UTILITÁRIOS FASE 2 (movidas para utils.js)
+// ===========================
+
+// formatCommentTime usa formatTimeAgo de utils.js
+function formatCommentTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Agora';
+    if (minutes < 60) return `Há ${minutes} min`;
+    if (hours < 24) return `Há ${hours}h`;
+    if (days === 1) return 'Ontem';
+    if (days < 7) return `Há ${days} dias`;
+
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+// Adicionar ao estado
+tasksState.commentsUnsubscribe = null;
+
+
+async function handleCreateTask(e) {
+    e.preventDefault();
+
+    const title = document.getElementById('taskTitle')?.value.trim();
+    const category = document.getElementById('taskCategory')?.value.trim();
+    const description = document.getElementById('taskDescription')?.value.trim();
+    const dueDate = document.getElementById('taskDueDate')?.value;
+    const orderCode = document.getElementById('taskOrderCode')?.value.trim().toUpperCase();
+
+    // Pegar responsáveis selecionados
+    const assignedTo = Array.from(document.querySelectorAll('.assignee-checkbox:checked'))
+        .map(cb => cb.value);
+
+    if (assignedTo.length === 0) {
+        showToast('Selecione pelo menos um responsável', 'error');
+        return;
+    }
+
+    // Pegar prioridade selecionada
+    const selectedPriority = document.querySelector('.priority-option.selected');
+    const priority = selectedPriority?.dataset.priority || 'media';
+
+    try {
+        const taskData = {
+            title,
+            category,
+            description: description || null,
+            assignedTo,
+            createdBy: tasksState.currentUser.email,
+            createdAt: new Date().toISOString(),
+            dueDate: new Date(dueDate).toISOString(),
+            priority,
+            status: 'pendente',
+            linkedOrderCode: orderCode || null,
+            updatedAt: new Date().toISOString()
+        };
+
+        await state.db.collection('tasks').add(taskData);
+
+        // ===========================
+        // 🔔 PONTO DE INTEGRAÇÃO: PUSH NOTIFICATIONS
+        // ===========================
+        // INSTRUÇÕES FUTURAS: Notificar responsáveis sobre nova tarefa
+        // Ver: /servicos/push-system/integration-points.md (PONTO 3)
+        // ===========================
+
+        showToast('✓ Tarefa criada com sucesso!', 'success');
+        closeTaskModal();
+    } catch (error) {
+        logger.error('Erro ao criar tarefa:', error);
+        showToast('Erro ao criar tarefa', 'error');
+    }
+}
+
+// ===========================
+// BADGE E NOTIFICAÇÕES
+// ===========================
+
+function updateBadge() {
+    const badge = document.getElementById('tasksBadge');
+    if (!badge) return;
+
+    // Contar tarefas pendentes do usuário
+    const myPendingTasks = tasksState.tasks.filter(task =>
+        task.status === 'pendente' &&
+        task.assignedTo &&
+        task.assignedTo.includes(tasksState.currentUser.email)
+    );
+
+    const count = myPendingTasks.length;
+
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+        badge.classList.add('pulsing');
+    } else {
+        badge.classList.add('hidden');
+        badge.classList.remove('pulsing');
+    }
+
+    // Atualizar contador de concluídas baseado no viewMode atual
+    let completedTasks = tasksState.tasks.filter(task => task.status === 'concluida');
+
+    // Filtrar por viewMode
+    if (tasksState.viewMode === 'mine') {
+        completedTasks = completedTasks.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.currentUser.email)
+        );
+    } else if (tasksState.viewMode !== 'all') {
+        // viewMode é o email de um admin específico
+        completedTasks = completedTasks.filter(task =>
+            task.assignedTo && task.assignedTo.includes(tasksState.viewMode)
+        );
+    }
+    // Se viewMode === 'all', mostra todas as concluídas
+
+    const btnViewCompleted = document.getElementById('btnViewCompleted');
+    if (btnViewCompleted) {
+        btnViewCompleted.textContent = `Ver tarefas concluídas (${completedTasks.length})`;
+    }
+}
+
+function updateDropdownTitle() {
+    const title = document.getElementById('dropdownTitle');
+    if (!title) return;
+
+    const count = tasksState.filteredTasks.length;
+    const viewText = tasksState.viewMode === 'mine' ? 'Minhas Tarefas' : 'Todas as Tarefas';
+    title.textContent = `${viewText} (${count})`;
+}
+
+// ===========================
+// UTILITÁRIOS
+// ===========================
+
+function formatDueDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = date - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+
+    if (days < 0) return 'Atrasada';
+    if (days === 0) {
+        if (hours <= 0) return 'Vence agora!';
+        return `Vence em ${hours}h`;
+    }
+    if (days === 1) return 'Vence amanhã';
+    if (days <= 7) return `Vence em ${days} dias`;
+
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+// formatDateTimeLocal e escapeHtml movidas para utils.js
+
+// ===========================
+// ADMIN ACCESS TRACKING
+// ===========================
+
+function startAdminAccessListener() {
+    if (tasksState.unsubscribeAdminAccess) {
+        tasksState.unsubscribeAdminAccess();
+    }
+
+    logger.log('📡 Iniciando listener de último acesso dos admins...');
+
+    tasksState.unsubscribeAdminAccess = state.db.collection('adminAccess')
+        .onSnapshot(snapshot => {
+            tasksState.adminAccessData = [];
+            tasksState.adminsPhotos = {}; // Limpar cache para usar fotos atualizadas
+
+            snapshot.forEach(doc => {
+                tasksState.adminAccessData.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            logger.log(`✅ ${tasksState.adminAccessData.length} registros de acesso carregados`);
+            renderAdminAccessPanel();
+        }, error => {
+            logger.error('❌ Erro no listener de acesso:', error);
+        });
+}
+
+function renderAdminAccessPanel() {
+    const container = document.getElementById('adminAccessList');
+    if (!container) return;
+
+    if (tasksState.adminAccessData.length === 0) {
+        container.innerHTML = '<div class="admin-access-empty">Nenhum acesso registrado</div>';
+        return;
+    }
+
+    // Calcular tarefas pendentes por admin
+    const pendingTasksByAdmin = {};
+    tasksState.tasks
+        .filter(task => task.status === 'pendente')
+        .forEach(task => {
+            if (task.assignedTo && Array.isArray(task.assignedTo)) {
+                task.assignedTo.forEach(email => {
+                    pendingTasksByAdmin[email] = (pendingTasksByAdmin[email] || 0) + 1;
+                });
+            }
+        });
+
+    // Ordenar por último acesso (mais recente primeiro)
+    const sortedData = [...tasksState.adminAccessData].sort((a, b) => {
+        return new Date(b.lastAccess) - new Date(a.lastAccess);
+    });
+
+    const accessHTML = sortedData.map(admin => {
+        const adminInfo = AUTHORIZED_ADMINS.find(a => a.email === admin.email);
+        const displayName = adminInfo ? adminInfo.name : (admin.name || admin.email.split('@')[0]);
+        const photoURL = admin.photoURL || getAdminPhotoURL(admin.email);
+        const timeAgo = formatTimeAgo(admin.lastAccess);
+        const isOnline = isRecentAccess(admin.lastAccess);
+        const pendingCount = pendingTasksByAdmin[admin.email] || 0;
+        const deviceType = admin.deviceType || 'Computador';
+        const deviceIcon = deviceType === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop';
+
+        return `
+            <div class="admin-access-item ${isOnline ? 'online' : ''}" data-action="filter-by-admin" data-email="${escapeHtml(admin.email)}"
+                <div class="admin-access-avatar" style="background-image: url('${photoURL}')">
+                    ${isOnline ? '<span class="online-indicator"></span>' : ''}
+                </div>
+                <div class="admin-access-info">
+                    <span class="admin-access-name">${escapeHtml(displayName)}</span>
+                    <span class="admin-access-time" title="${new Date(admin.lastAccess).toLocaleString('pt-BR')}">
+                        <i class="fas ${deviceIcon}"></i> ${timeAgo}
+                    </span>
+                </div>
+                ${pendingCount > 0 ? `<span class="admin-pending-count">${pendingCount}</span>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = accessHTML;
+}
+
+// formatTimeAgo e isRecentAccess movidas para utils.js
+
+// ===========================
+// CLEANUP
+// ===========================
+
+export function destroyTasksSystem() {
+    if (tasksState.unsubscribe) {
+        tasksState.unsubscribe();
+        tasksState.unsubscribe = null;
+    }
+    if (tasksState.unsubscribeAdminAccess) {
+        tasksState.unsubscribeAdminAccess();
+        tasksState.unsubscribeAdminAccess = null;
+    }
+    logger.log('🗑️ Sistema de tarefas destruído');
+}
+
+// Expor globalmente para evitar dependência circular com auth-ui
+window.destroyTasksSystem = destroyTasksSystem;

@@ -1,0 +1,453 @@
+<!--
+==================================================
+ARQUIVO: admin/index.html
+MODULO: Painel de Gerenciamento de Administradores
+SISTEMA: ImaginaTech - Gestao de Impressao 3D
+VERSAO: 2.0 - Security Hardened
+IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - ImaginaTech</title>
+    <meta name="description" content="Gerenciamento de administradores - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com;
+        frame-src 'self' https://accounts.google.com https://*.firebaseapp.com;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/admin/">
+    <meta property="og:title" content="Admin - ImaginaTech">
+    <meta property="og:description" content="Painel de gerenciamento de administradores">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Estilos base compartilhados -->
+    <link rel="stylesheet" href="/servicos/styles.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+    <!-- Customizacoes do modulo Admin -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando painel...</div>
+        </div>
+    </div>
+
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Painel de Administradores</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h2 class="auth-title">Acesso Super Admin</h2>
+            <p class="auth-message">
+                Area exclusiva para o administrador principal da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" data-action="sign-in-google">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Funcionario? <a href="/servicos/">Ir para Servicos</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Restrito</h1>
+            <p class="access-denied-message" id="deniedMessage">
+                Este painel e exclusivo para o Super Admin.
+            </p>
+            <p class="access-denied-submessage">
+                O gerenciamento de administradores requer nivel de acesso especial.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <div class="access-denied-actions">
+                <a href="/servicos/" class="access-denied-btn btn-primary">
+                    <i class="fas fa-tasks"></i>
+                    Ir para Servicos
+                </a>
+                <a href="/" class="access-denied-btn btn-secondary">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Inicio
+                </a>
+            </div>
+            <button class="access-denied-btn btn-logout" data-action="sign-out">
+                <i class="fas fa-sign-out-alt"></i>
+                Fazer Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="dashboard hidden" id="dashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Gerenciamento de Admins</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="nav-buttons-desktop">
+                        <a href="/servicos/" class="btn-nav" title="Servicos">
+                            <i class="fas fa-tasks"></i>
+                            <span>Servicos</span>
+                        </a>
+                        <a href="/financas/" class="btn-nav" title="Financas">
+                            <i class="fas fa-wallet"></i>
+                            <span>Financas</span>
+                        </a>
+                        <a href="/estoque/" class="btn-nav" title="Estoque">
+                            <i class="fas fa-boxes"></i>
+                            <span>Estoque</span>
+                        </a>
+                    </div>
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Super Admin</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-logout" data-action="sign-out" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/servicos/" class="mobile-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Servicos</span>
+            </a>
+            <a href="/financas/" class="mobile-nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>Financas</span>
+            </a>
+            <a href="/estoque/" class="mobile-nav-item">
+                <i class="fas fa-boxes"></i>
+                <span>Estoque</span>
+            </a>
+        </div>
+
+        <main class="main-content">
+            <div class="container">
+                <!-- Tabs de Navegacao -->
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="admins" data-action="switch-tab" data-value="admins">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Administradores</span>
+                    </button>
+                    <button class="tab-btn" data-tab="whatsapp" data-action="switch-tab" data-value="whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="tab-btn" data-tab="sistema" data-action="switch-tab" data-value="sistema">
+                        <i class="fas fa-cog"></i>
+                        <span>Sistema</span>
+                    </button>
+                </div>
+
+                <!-- ========== TAB: ADMINISTRADORES ========== -->
+                <section id="admins-tab" class="tab-content active">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-shield"></i> Administradores</h2>
+                        <button class="btn-primary" data-action="open-add-admin-modal">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Admin
+                        </button>
+                    </div>
+
+                    <div class="admins-grid" id="adminsGrid">
+                        <!-- Cards de admins serao inseridos aqui -->
+                    </div>
+
+                    <div class="empty-state hidden" id="adminsEmptyState">
+                        <div class="empty-icon"><i class="fas fa-user-plus"></i></div>
+                        <h3>Nenhum administrador cadastrado</h3>
+                        <p>Adicione o primeiro administrador ao sistema</p>
+                        <button class="btn-primary" data-action="open-add-admin-modal">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Admin
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ========== TAB: WHATSAPP ========== -->
+                <section id="whatsapp-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2><i class="fab fa-whatsapp"></i> Usuarios WhatsApp</h2>
+                        <button class="btn-primary" data-action="open-add-whatsapp-modal">
+                            <i class="fas fa-plus"></i>
+                            Vincular Numero
+                        </button>
+                    </div>
+
+                    <div class="whatsapp-list" id="whatsappList">
+                        <!-- Lista de usuarios WhatsApp sera inserida aqui -->
+                    </div>
+
+                    <div class="empty-state hidden" id="whatsappEmptyState">
+                        <div class="empty-icon"><i class="fab fa-whatsapp"></i></div>
+                        <h3>Nenhum numero vinculado</h3>
+                        <p>Vincule um numero de WhatsApp a um usuario</p>
+                        <button class="btn-primary" data-action="open-add-whatsapp-modal">
+                            <i class="fas fa-plus"></i>
+                            Vincular Numero
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ========== TAB: SISTEMA ========== -->
+                <section id="sistema-tab" class="tab-content">
+                    <div class="system-info-card">
+                        <div class="system-card-header">
+                            <i class="fas fa-building"></i>
+                            <h3>Conta da Empresa</h3>
+                        </div>
+                        <div class="system-card-body">
+                            <div class="info-row">
+                                <span class="info-label">User ID:</span>
+                                <span class="info-value" id="companyUserId">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value" id="companyEmail">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="system-info-card">
+                        <div class="system-card-header">
+                            <i class="fas fa-chart-bar"></i>
+                            <h3>Estatisticas</h3>
+                        </div>
+                        <div class="system-card-body">
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="statAdmins">0</span>
+                                    <span class="stat-label">Admins ativos</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="statWhatsApp">0</span>
+                                    <span class="stat-label">Numeros WhatsApp</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="system-info-card">
+                        <div class="system-card-header">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Super Admin</h3>
+                        </div>
+                        <div class="system-card-body">
+                            <p class="info-text">
+                                <i class="fas fa-info-circle"></i>
+                                O Super Admin (3d3printers@gmail.com) tem acesso total ao sistema e nao pode ser removido.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Adicionar Admin -->
+    <div class="modal" id="addAdminModal" role="dialog" aria-modal="true" aria-labelledby="addAdminModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="addAdminModalTitle"><i class="fas fa-user-plus"></i> Adicionar Administrador</h2>
+                <button class="modal-close" data-action="close-add-admin-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addAdminForm" data-form="add-admin">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="adminEmail"><i class="fas fa-envelope"></i> Email do Usuario *</label>
+                        <input type="email" id="adminEmail" class="form-input" required placeholder="email@exemplo.com">
+                        <small class="form-hint">O usuario deve ter uma conta Google vinculada ao Firebase Auth</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="adminName"><i class="fas fa-user"></i> Nome de Exibicao *</label>
+                        <input type="text" id="adminName" class="form-input" required placeholder="Nome do Admin">
+                    </div>
+
+                    <div class="form-info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>O usuario sera adicionado como administrador e tera acesso a todos os paineis do sistema.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-action="close-add-admin-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save" id="btnSaveAdmin">
+                        <i class="fas fa-plus"></i> Adicionar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Vincular WhatsApp -->
+    <div class="modal" id="addWhatsAppModal" role="dialog" aria-modal="true" aria-labelledby="addWhatsAppModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="addWhatsAppModalTitle"><i class="fab fa-whatsapp"></i> Vincular Numero WhatsApp</h2>
+                <button class="modal-close" data-action="close-add-whatsapp-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addWhatsAppForm" data-form="add-whatsapp">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="whatsappNumber"><i class="fas fa-phone"></i> Numero do WhatsApp *</label>
+                        <input type="text" id="whatsappNumber" class="form-input" required placeholder="5521999999999">
+                        <small class="form-hint">Formato: 55 + DDD + Numero (sem espacos ou caracteres especiais)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="whatsappEmail"><i class="fas fa-envelope"></i> Email do Usuario *</label>
+                        <input type="email" id="whatsappEmail" class="form-input" required placeholder="email@exemplo.com">
+                        <small class="form-hint">Deve estar cadastrado no Firebase Auth</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="whatsappName"><i class="fas fa-user"></i> Nome de Exibicao</label>
+                        <input type="text" id="whatsappName" class="form-input" placeholder="Nome do Usuario">
+                    </div>
+
+                    <div class="form-info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>O numero sera vinculado ao usuario e podera interagir com o bot de financas.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-action="close-add-whatsapp-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save" id="btnSaveWhatsApp">
+                        <i class="fas fa-link"></i> Vincular
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Remocao -->
+    <div class="modal" id="confirmRemoveModal" role="dialog" aria-modal="true" aria-labelledby="confirmRemoveModalTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header modal-header-danger">
+                <h2 id="confirmRemoveModalTitle"><i class="fas fa-exclamation-triangle"></i> Confirmar Remocao</h2>
+                <button class="modal-close" data-action="close-confirm-remove-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-message" id="confirmMessage">
+                    Deseja realmente remover este item?
+                </p>
+                <p class="confirm-warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Esta acao nao pode ser desfeita.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-action="close-confirm-remove-modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-danger" id="btnConfirmRemove" data-action="confirm-remove">
+                    <i class="fas fa-trash"></i> Remover
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Configuracoes de Ambiente -->
+    <script src="../js/env-config.js"></script>
+
+    <script src="script.js"></script>
+
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+</body>
+</html>

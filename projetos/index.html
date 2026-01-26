@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://unpkg.com https://www.gstatic.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://firestore.googleapis.com https://*.googleapis.com https://www.gstatic.com;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- SEO Meta Tags -->
+    <title>Projetos de Impressao 3D | Portfolio ImaginaTech</title>
+    <meta name="description" content="Explore nosso portfolio de projetos de impressao 3D. Pecas industriais, prototipos, personalizados e muito mais. Veja a qualidade ImaginaTech.">
+    <meta name="keywords" content="portfolio impressao 3d, projetos 3d, pecas industriais, prototipos, personalizados, impressao 3d rio de janeiro">
+    <meta name="author" content="ImaginaTech">
+    <meta name="robots" content="index, follow">
+
+    <!-- Robots Avancados -->
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="bingbot" content="index, follow">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0a0e1a">
+
+    <!-- Mobile Web App -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Portfolio de Projetos - ImaginaTech Impressao 3D">
+    <meta property="og:description" content="Explore nosso portfolio de projetos de impressao 3D. Pecas industriais, prototipos, personalizados e muito mais.">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+    <meta property="og:url" content="https://imaginatech.com.br/projetos/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="ImaginaTech">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Portfolio de Projetos - ImaginaTech">
+    <meta name="twitter:description" content="Explore nosso portfolio de projetos de impressao 3D.">
+    <meta name="twitter:image" content="https://imaginatech.com.br/imaginatech_logo.jpeg">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://imaginatech.com.br/projetos/">
+
+    <!-- Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Inicio",
+                "item": "https://imaginatech.com.br"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Projetos",
+                "item": "https://imaginatech.com.br/projetos/"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Schema.org - CollectionPage -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Portfolio de Projetos ImaginaTech",
+        "description": "Galeria de projetos de impressao 3D realizados pela ImaginaTech",
+        "url": "https://imaginatech.com.br/projetos/",
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "ImaginaTech",
+            "url": "https://imaginatech.com.br"
+        },
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://imaginatech.com.br"},
+                {"@type": "ListItem", "position": 2, "name": "Projetos", "item": "https://imaginatech.com.br/projetos/"}
+            ]
+        }
+    }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w==" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/loading.css">
+</head>
+<body>
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg">
+        <div class="particles" id="particles"></div>
+        <div class="grid-lines"></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <div class="logo-section">
+                    <h1 class="logo">ImaginaTech</h1>
+                    <span class="logo-subtitle">IMPRESSAO 3D</span>
+                </div>
+                <span class="page-name">Projetos</span>
+            </div>
+            <div class="navbar-right">
+                <a href="/" class="btn-nav">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+                <a href="../acompanhar-pedido/" class="btn-nav">
+                    <i class="fas fa-search"></i>
+                    <span>Acompanhar</span>
+                </a>
+                <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-nav btn-orcamento">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Orcamento</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Filter Section -->
+    <section class="filter-section">
+        <div class="filter-scroll-wrapper">
+            <div class="filter-container">
+                <button class="filter-btn active" data-filter="todos">
+                    <i class="fas fa-th-large"></i> Todos
+                </button>
+                <button class="filter-btn" data-filter="industrial">
+                    <i class="fas fa-industry"></i> Industrial
+                </button>
+                <button class="filter-btn" data-filter="personalizado">
+                    <i class="fas fa-gift"></i> Personalizado
+                </button>
+                <button class="filter-btn" data-filter="prototipagem">
+                    <i class="fas fa-flask"></i> Prototipagem
+                </button>
+                <button class="filter-btn" data-filter="reposicao">
+                    <i class="fas fa-tools"></i> Reposicao
+                </button>
+                <button class="filter-btn" data-filter="decorativo">
+                    <i class="fas fa-star"></i> Decorativo
+                </button>
+                <button class="filter-btn" data-filter="tecnico">
+                    <i class="fas fa-cog"></i> Tecnico
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Grid -->
+    <section class="projetos-section">
+        <div class="projetos-grid" id="projetos-grid">
+            <!-- Projetos serao carregados dinamicamente com skeleton loading -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-folder-open"></i>
+            <h3>Nenhum projeto encontrado</h3>
+            <p>Nao ha projetos nesta categoria ainda.</p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content" data-aos="fade-up">
+            <h2>Tem um projeto em mente?</h2>
+            <p>Transformamos suas ideias em realidade com tecnologia de ponta.</p>
+            <a href="https://wa.me/5521968972539?text=Olá,%20vim%20da%20página%20de%20projetos%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-cta">
+                <i class="fab fa-whatsapp"></i> Solicitar Orcamento
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://www.instagram.com/imaginatech3d/" target="_blank" rel="noopener noreferrer" class="social-link">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://wa.me/5521968972539" target="_blank" rel="noopener noreferrer" class="social-link">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="mailto:contato@imaginatech.com.br" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+            <p>&copy; 2024 ImaginaTech - Construindo o Futuro, Hoje</p>
+        </div>
+    </footer>
+
+    <!-- Modal de Visualizacao -->
+    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-layout">
+                <!-- Lado Esquerdo: Foto -->
+                <div class="modal-left">
+                    <div class="modal-image-container">
+                        <button class="modal-nav modal-prev" id="modal-prev" style="display: none;">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <img src="" alt="" id="modal-image">
+                        <button class="modal-nav modal-next" id="modal-next" style="display: none;">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div class="modal-photo-counter" id="modal-photo-counter" style="display: none;">
+                            <span id="modal-current-photo">1</span> / <span id="modal-total-photos">1</span>
+                        </div>
+                    </div>
+                    <div class="modal-thumbnails" id="modal-thumbnails" style="display: none;">
+                        <!-- Miniaturas serao inseridas aqui -->
+                    </div>
+                </div>
+
+                <!-- Lado Direito: Informacoes -->
+                <div class="modal-right">
+                    <div class="modal-info">
+                        <h3 id="modal-title"></h3>
+                        <div class="modal-specs" id="modal-specs"></div>
+                        <div class="modal-description-container">
+                            <p id="modal-description" class="modal-description"></p>
+                        </div>
+                        <div class="modal-cta">
+                            <p>Gostou desse projeto? Podemos criar algo assim para voce!</p>
+                            <a href="https://wa.me/5521968972539?text=Olá,%20vi%20um%20projeto%20no%20site%20e%20gostaria%20de%20um%20orçamento!"
+                               target="_blank" rel="noopener noreferrer" class="btn-whatsapp">
+                                <i class="fab fa-whatsapp"></i> Solicitar Orcamento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outros Projetos -->
+            <div class="modal-related" id="modal-related">
+                <h4>Outros projetos que podem te interessar</h4>
+                <div class="related-grid" id="related-grid">
+                    <!-- Projetos relacionados serao inseridos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <a href="https://wa.me/5521968972539?text=Olá,%20vim%20da%20página%20de%20projetos%20e%20gostaria%20de%20um%20orçamento!"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="fab fab-whatsapp">
+            <i class="fab fa-whatsapp"></i>
+            <span class="fab-tooltip">WhatsApp</span>
+        </a>
+    </div>
+
+    <!-- AOS Library -->
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js" integrity="sha512-A7AYk1fGKX6S2SsHywmPkrnzTZHrgiVT7GcQkLGDe2ev0aWb8zejytzS8wjo7PGEXKqJOrjQ4oORtnimIRZBtw==" crossorigin="anonymous"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
+
+    <!-- Configuracoes de Ambiente -->
+    <script src="../js/env-config.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

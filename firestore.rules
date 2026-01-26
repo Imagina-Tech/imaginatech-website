@@ -1,0 +1,248 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===========================
+    // FUNCOES DE AUTORIZACAO DINAMICA
+    // Admins sao verificados na colecao /admins/{uid}
+    // ===========================
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null &&
+        request.auth.token.email == "3d3printers@gmail.com";
+    }
+
+    function isCompanyAccount() {
+      return request.auth != null &&
+        request.auth.token.email == "3d3printers@gmail.com";
+    }
+
+    // ===========================
+    // COLECAO: ADMINS
+    // Gerenciamento centralizado de administradores
+    // ===========================
+    match /admins/{userId} {
+      // Qualquer admin pode ler a lista de admins
+      allow read: if isAdmin() || isSuperAdmin();
+      // Apenas super admin pode adicionar/editar/remover admins
+      allow write: if isSuperAdmin();
+    }
+
+    // ===========================
+    // COLECAO: WHATSAPP USERS
+    // Vinculacao de numeros WhatsApp a usuarios
+    // ===========================
+    match /whatsappUsers/{phoneNumber} {
+      // Admins podem ler
+      allow read: if isAdmin();
+      // Apenas super admin pode gerenciar
+      allow write: if isSuperAdmin();
+    }
+
+    // Função para verificar se pode acessar dados financeiros
+    // - Qualquer usuário autenticado pode acessar SEUS PRÓPRIOS dados
+    // - Admins podem acessar seus dados E os dados da empresa
+    function canAccessFinancialData(userId) {
+      return request.auth != null && (
+        // Próprios dados - qualquer usuário autenticado
+        userId == request.auth.uid ||
+        // Dados da empresa - apenas admins
+        (isAdmin() && userId == get(/databases/$(database)/documents/systemConfig/companyAccount).data.userId)
+      );
+    }
+
+    // Verifica se o usuário está criando dados para si mesmo OU admin criando para empresa
+    function isCreatingOwnData() {
+      return request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+    }
+
+    // Verifica se admin está criando dados para a conta da empresa
+    function isAdminCreatingCompanyData() {
+      return isAdmin() &&
+        request.resource.data.userId == get(/databases/$(database)/documents/systemConfig/companyAccount).data.userId;
+    }
+
+    // Função combinada: pode criar se for dado próprio OU admin criando para empresa
+    function canCreateFinancialData() {
+      return isCreatingOwnData() || isAdminCreatingCompanyData();
+    }
+
+    // ===========================
+    // CONFIGURAÇÃO DO SISTEMA
+    // ===========================
+    match /systemConfig/{document} {
+      allow read: if isAdmin();
+      allow write: if isCompanyAccount();
+    }
+
+    // Services: qualquer autenticado lê, só admin escreve
+    match /services/{document} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ===========================
+    // FINANÇAS PESSOAIS (Multi-usuário)
+    // Qualquer usuário autenticado pode usar suas finanças pessoais
+    // Admins também podem acessar dados da empresa
+    // ===========================
+
+    // Transactions (transações financeiras pessoais)
+    match /transactions/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // creditCards (cartões de crédito)
+    match /creditCards/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // cardExpenses (gastos de cartão)
+    match /cardExpenses/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // creditCardPayments (pagamentos de faturas)
+    match /creditCardPayments/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // Subscriptions (assinaturas recorrentes)
+    match /subscriptions/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // Installments (parcelamentos)
+    match /installments/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // Projections (projeções de receita)
+    match /projections/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // Investments (investimentos)
+    match /investments/{document} {
+      allow create: if canCreateFinancialData();
+      allow read: if canAccessFinancialData(resource.data.userId);
+      allow update, delete: if canAccessFinancialData(resource.data.userId);
+    }
+
+    // User Settings (configurações de usuário - metas, limites, data de corte)
+    match /userSettings/{userId} {
+      allow read, write: if canAccessFinancialData(userId);
+    }
+
+    // ===========================
+    // FIM FINANÇAS PESSOAIS
+    // ===========================
+
+    // Tasks (sistema de tarefas) - acesso restrito a admins
+    match /tasks/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin Access (último acesso dos admins)
+    match /adminAccess/{userId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && request.auth.uid == userId;
+    }
+
+    // Push tokens (notificacoes push)
+    // CORRIGIDO: Restrito por usuario - cada um so pode acessar seus proprios tokens
+    match /pushTokens/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Subcollection de tokens por usuario
+    match /pushTokens/{userId}/{tokenId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // User orders - histórico de pedidos do cliente
+    match /user_orders/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Activity logs - cliente cria, admin gerencia
+    match /activity_logs/{document} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Clients - admin tem acesso total
+    match /clients/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // Tracking access - registro de acessos de clientes
+    match /tracking_access/{document} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Filaments (estoque) - acesso restrito a admins
+    match /filaments/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // Equipment (inventário) - acesso restrito a admins
+    match /equipment/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // ===========================
+    // PORTFOLIO (Projetos Públicos)
+    // Admins escrevem, público lê
+    // ===========================
+    match /portfolio/{document} {
+      allow read: if true;  // Público pode ler (homepage e /projetos)
+      allow write: if isAdmin();  // Só admin pode criar/editar/deletar
+    }
+
+    // ===========================
+    // PRODUCTS (Marketplace)
+    // Admins escrevem e leem
+    // ===========================
+    match /products/{document} {
+      allow read, write: if isAdmin();
+    }
+
+    // ===========================
+    // MERCADO LIVRE (Integracao)
+    // ===========================
+
+    // Credenciais ML (tokens OAuth) - apenas admins
+    match /mlCredentials/{document} {
+      allow read: if isAdmin();
+      allow write: if false;  // Apenas Cloud Functions escrevem
+    }
+
+    // Notificacoes ML (webhooks) - apenas Cloud Functions escrevem
+    match /mlNotifications/{document} {
+      allow read: if isAdmin();
+      allow write: if false;  // Apenas Cloud Functions escrevem
+    }
+  }
+}

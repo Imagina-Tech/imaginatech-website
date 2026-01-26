@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Serviços - ImaginaTech Admin</title>
+    <meta name="description" content="Painel administrativo de serviços - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://cdn.emailjs.com https://cdn.jsdelivr.net 'unsafe-inline';
+        style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://viacep.com.br https://api.emailjs.com https://www.gstatic.com wss://*.firebaseio.com;
+        frame-src 'self' https://*.firebaseapp.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/servicos/">
+    <meta property="og:title" content="Painel de Serviços - ImaginaTech">
+    <meta property="og:description" content="Sistema de gerenciamento de serviços de impressão 3D - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="ImaginaTech - Impressão 3D">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/custom-select.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+    <link rel="stylesheet" href="/shared/z-index.css">
+    <link rel="stylesheet" href="css/tasks.css">
+</head>
+<body>
+    <!-- Skip Link para Acessibilidade -->
+    <a href="#mainContent" class="skip-link">Pular para conteudo principal</a>
+
+    <div class="loading-overlay" id="loadingOverlay" role="alert" aria-live="assertive" aria-busy="true">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Conectando ao servidor...</div>
+        </div>
+    </div>
+
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Painel de Servicos</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para funcionarios autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" data-action="signInWithGoogle">
+                <i class="fab fa-google" aria-hidden="true"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Cliente? <a href="/acompanhar-pedido/">Acompanhe seu pedido</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-dashboard hidden" id="adminDashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Painel de Serviços</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <!-- Botoes de navegacao (desktop e tablet) -->
+                    <div class="nav-buttons-desktop">
+                        <a href="/estoque/" class="btn-nav" title="Estoque">
+                            <i class="fas fa-box-open"></i>
+                        </a>
+                        <a href="/custo/" class="btn-nav" title="Custo">
+                            <i class="fas fa-calculator"></i>
+                        </a>
+                        <a href="/financas/" class="btn-nav" title="Financas">
+                            <i class="fas fa-wallet"></i>
+                        </a>
+                        <a href="/admin-portfolio/" class="btn-nav" title="Portfolio">
+                            <i class="fas fa-images"></i>
+                        </a>
+                        <a href="/marketplace/" class="btn-nav" title="Marketplace">
+                            <i class="fas fa-store"></i>
+                        </a>
+                    </div>
+                    <!-- Botao menu mobile (telas muito pequenas) -->
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggleMobileMenu">
+                        <i class="fas fa-chevron-down" id="mobileMenuIcon"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto" src="https://ui-avatars.com/api/?name=User&background=00D4FF&color=fff">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-logout" data-action="signOutGlobal" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile (fora da navbar para evitar overflow:hidden) -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/estoque/" class="mobile-nav-item">
+                <i class="fas fa-box-open"></i>
+                <span>Estoque</span>
+            </a>
+            <a href="/custo/" class="mobile-nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Custo</span>
+            </a>
+            <a href="/financas/" class="mobile-nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>Finanças</span>
+            </a>
+            <a href="/admin-portfolio/" class="mobile-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Portfolio</span>
+            </a>
+            <a href="/marketplace/" class="mobile-nav-item">
+                <i class="fas fa-store"></i>
+                <span>Marketplace</span>
+            </a>
+            <div class="mobile-nav-divider"></div>
+            <button class="mobile-nav-item" id="btnMobileTarefas">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Tarefas</span>
+            </button>
+            <button class="mobile-nav-item" id="btnMobileClientes">
+                <i class="fas fa-users"></i>
+                <span>Clientes</span>
+            </button>
+        </div>
+
+        <main class="main-content" id="mainContent" tabindex="-1">
+            <div class="container">
+                <div class="action-bar">
+                    <h2 class="page-title">
+                        <i class="fas fa-tasks"></i>
+                        Gerenciamento de Serviços
+                    </h2>
+                    <div class="action-buttons">
+                        <button class="btn-primary" data-action="openAddModal">
+                            <i class="fas fa-plus"></i>
+                            Novo Serviço
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card clickable" data-filter="todos" data-action="filterTodos">
+                        <div class="stat-icon stat-icon--todos">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-active">0</div>
+                            <div class="stat-label">Serviços Ativos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" data-filter="pendente" data-action="filterPendente">
+                        <div class="stat-icon stat-icon--pendente">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-pending">0</div>
+                            <div class="stat-label">Pendentes</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" data-filter="producao" data-action="filterProducao">
+                        <div class="stat-icon stat-icon--producao">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-production">0</div>
+                            <div class="stat-label">Em Produção</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" data-filter="concluido" data-action="filterConcluido">
+                        <div class="stat-icon stat-icon--concluido">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-completed">0</div>
+                            <div class="stat-label">Concluídos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" data-filter="retirada" data-action="filterRetirada">
+                        <div class="stat-icon stat-icon--retirada">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-ready">0</div>
+                            <div class="stat-label">Em Processo de Entrega</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" data-filter="entregue" data-action="filterEntregue">
+                        <div class="stat-icon stat-icon--entregue">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stat-delivered">0</div>
+                            <div class="stat-label">Entregues</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="services-grid" id="servicesGrid"></div>
+
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                    <h3>Nenhum serviço encontrado</h3>
+                    <p id="emptyText">Clique no botão abaixo para adicionar seu primeiro serviço</p>
+                    <button class="btn-primary" data-action="openAddModal">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Serviço
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Seleção de Tipo de Serviço -->
+    <div class="modal" id="serviceTypeModal" role="dialog" aria-modal="true" aria-labelledby="serviceTypeModalTitle" aria-hidden="true">
+        <div class="modal-content max-w-500">
+            <div class="modal-header">
+                <h2 id="serviceTypeModalTitle">Selecione o Tipo de Serviço</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeServiceTypeModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="service-type-selection">
+                <button class="service-type-btn" data-action="selectServiceTypeImpressao">
+                    <i class="fas fa-print"></i>
+                    <span class="service-type-title">Serviço de Impressão</span>
+                    <span class="service-type-desc">Impressão 3D com entrega física</span>
+                </button>
+                <button class="service-type-btn" data-action="selectServiceTypeModelagem">
+                    <i class="fas fa-cube"></i>
+                    <span class="service-type-title">Serviço de Modelagem</span>
+                    <span class="service-type-desc">Modelagem 3D digital (sem impressão)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Criar/Editar Serviço -->
+    <div class="modal" id="serviceModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Serviço</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            
+            <form id="serviceForm" onsubmit="saveService(event)">
+                <div class="form-grid">
+                    <div class="order-code-section col-full" id="orderCodeSection">
+                        <div class="form-group mb-0">
+                            <label for="orderCodeInput"><i class="fas fa-hashtag"></i> Código do Pedido</label>
+                            <div class="order-code-input-wrapper">
+                                <input type="text" id="orderCodeInput" class="form-input order-code-input order-code-style"
+                                    placeholder="Ex: ABC12" maxlength="10" autocomplete="off">
+                                <button type="button" class="btn-regenerate" id="btnRegenerateCode" data-action="regenerateOrderCode" title="Gerar novo código aleatório">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="order-code-info" id="orderCodeInfo">
+                                <span id="orderCodeNewInfo" class="d-none"><i class="fas fa-info-circle"></i> Código será usado para acompanhamento do pedido</span>
+                                <span id="orderCodeEditInfo" class="d-none"><i class="fas fa-exclamation-triangle"></i> Alterar o código invalidará links antigos enviados ao cliente</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceName"><i class="fas fa-cube"></i> Nome do Serviço *</label>
+                        <input type="text" id="serviceName" class="form-input" required autocomplete="off">
+                    </div>
+                    <div class="form-group pos-relative">
+                        <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente *</label>
+                        <input type="text" id="clientName" class="form-input" required autocomplete="off" data-action="handleClientNameInput" data-event="input">
+                        <div id="clientSuggestions" class="client-suggestions d-none"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientCPF"><i class="fas fa-id-card"></i> CPF/CNPJ do Cliente</label>
+                        <input type="text" id="clientCPF" class="form-input" placeholder="CPF ou CNPJ" autocomplete="off" data-input="formatCPFCNPJ">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail"><i class="fas fa-envelope"></i> E-mail do Cliente</label>
+                        <input type="email" id="clientEmail" class="form-input" autocomplete="off" data-input="formatEmailInput">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone"><i class="fas fa-phone"></i> WhatsApp do Cliente</label>
+                        <input type="tel" id="clientPhone" class="form-input" placeholder="(11) 99999-9999" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceMaterial"><i class="fas fa-layer-group"></i> Material *</label>
+                        <select id="serviceMaterial" class="form-select" required>
+                            <option value="">Selecione o material</option>
+                            <option value="PLA">PLA</option>
+                            <option value="PLA Flex">PLA Flex</option>
+                            <option value="ABS">ABS</option>
+                            <option value="PETG">PETG</option>
+                            <option value="TPU">TPU</option>
+                            <option value="PC">PC (Policarbonato)</option>
+                            <option value="PP">PP (Polipropileno)</option>
+                            <option value="Nylon PA6">Nylon PA6</option>
+                            <option value="Nylon PA12">Nylon PA12</option>
+                            <option value="Nylon">Nylon (Outros)</option>
+                            <option value="ASA">ASA</option>
+                            <option value="HIPS">HIPS</option>
+                            <option value="PVA">PVA</option>
+                            <option value="Resina">Resina</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- Toggle Multi-Cor -->
+                    <div class="form-group full-width" id="multiColorToggleGroup">
+                        <label class="checkbox-label multi-color-toggle">
+                            <input type="checkbox" id="isMultiColor" data-change="toggleMultiColorMode">
+                            <span class="checkbox-custom"></span>
+                            <span><i class="fas fa-palette"></i> Servico Multi-Cor (varias cores do mesmo material)</span>
+                        </label>
+                    </div>
+
+                    <!-- Container Single-Color (modo padrao) -->
+                    <div id="singleColorContainer" class="form-group">
+                        <label for="serviceColor"><i class="fas fa-palette"></i> Cor</label>
+                        <select id="serviceColor" class="form-select">
+                            <option value="">Selecione a cor</option>
+                            <option value="preto">Preto</option>
+                            <option value="branco">Branco</option>
+                            <option value="vermelho">Vermelho</option>
+                            <option value="azul">Azul</option>
+                            <option value="verde">Verde</option>
+                            <option value="amarelo">Amarelo</option>
+                            <option value="laranja">Laranja</option>
+                            <option value="roxo">Roxo</option>
+                            <option value="cinza">Cinza</option>
+                            <option value="transparente">Transparente</option>
+                            <option value="colorido">Colorido</option>
+                            <option value="outros">Outras</option>
+                        </select>
+                    </div>
+
+                    <!-- Container Multi-Color (modo multi-cor) -->
+                    <div id="multiColorContainer" class="full-width d-none">
+                        <div class="multi-color-header">
+                            <h4 class="section-title"><i class="fas fa-palette"></i> Cores Utilizadas</h4>
+                            <button type="button" class="btn-add-color" data-action="addColorEntry">
+                                <i class="fas fa-plus"></i> Adicionar Cor
+                            </button>
+                        </div>
+                        <div id="colorEntriesContainer">
+                            <!-- Entradas de cor serao adicionadas dinamicamente -->
+                        </div>
+                        <div class="multi-color-total" id="multiColorTotal" class="d-none">
+                            <span>Peso Total: <strong id="totalWeightDisplay">0g</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryMethod"><i class="fas fa-truck"></i> Método de Entrega *</label>
+                        <select id="deliveryMethod" class="form-select" required data-change="toggleDeliveryFields">
+                            <option value="">Selecione o método</option>
+                            <option value="retirada">Retirada no Local</option>
+                            <option value="sedex">Sedex/Correios</option>
+                            <option value="uber">Uber Flash</option>
+                            <option value="definir">A Definir</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="servicePriority"><i class="fas fa-flag"></i> Prioridade *</label>
+                        <select id="servicePriority" class="form-select" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startDate"><i class="fas fa-calendar-plus"></i> Data de Início *</label>
+                        <input type="date" id="startDate" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDate" id="dueDateLabel"><i class="fas fa-calendar-check"></i> <span id="dueDateLabelText">Prazo de Entrega</span> *</label>
+                        <div class="input-group">
+                            <input type="date" id="dueDate" class="form-input" required>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dateUndefined" data-change="toggleDateInput">
+                                <span>Data ainda a definir</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceValue"><i class="fas fa-dollar-sign"></i> Valor (R$)</label>
+                        <input type="number" id="serviceValue" class="form-input" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceWeight"><i class="fas fa-weight"></i> Peso (gramas)</label>
+                        <input type="number" id="serviceWeight" class="form-input" min="0" placeholder="0">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="serviceFiles"><i class="fas fa-file-upload"></i> Arquivos do Projeto (STL, OBJ, STEP, 3MF, ZIP, TXT, MTL, etc)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="serviceFiles" accept=".stl,.obj,.step,.stp,.3mf,.zip,.txt,.mtl,.rar,.7z,.pdf" multiple data-change="handleFileSelect">
+                            <div class="files-preview" id="filesPreview" class="d-none">
+                                <div class="files-preview-container" id="filesPreviewContainer"></div>
+                            </div>
+                        </div>
+                        <label class="checkbox-label mt-3">
+                            <input type="checkbox" id="fileInDrive">
+                            <span class="checkbox-custom"></span>
+                            <span><i class="fab fa-microsoft mr-auto"></i> Arquivo no OneDrive</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="serviceImage"><i class="fas fa-image"></i> Imagens de Referência (Múltiplas)</label>
+                        <div class="image-input-wrapper">
+                            <input type="file" id="serviceImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp" multiple data-change="handleImageSelect">
+                            <div class="image-preview" id="imagePreview" class="d-none">
+                                <div class="image-preview-grid" id="imagePreviewContainer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pickup-fields" id="pickupFields">
+                        <h4 class="section-title"><i class="fas fa-store"></i> Informações para Retirada</h4>
+                        <button type="button" class="btn-secondary mb-3 w-full" data-action="copyClientDataToPickup">
+                            <i class="fas fa-copy"></i> Copiar Dados do Cliente
+                        </button>
+                        <div class="form-group">
+                            <label for="pickupName">Nome de quem vai retirar *</label>
+                            <input type="text" id="pickupName" class="form-input" placeholder="Nome completo">
+                        </div>
+                        <div class="form-group">
+                            <label for="pickupWhatsapp">WhatsApp para contato *</label>
+                            <input type="tel" id="pickupWhatsapp" class="form-input" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+
+                    <div class="delivery-fields" id="deliveryFields">
+                        <h4 class="section-title"><i class="fas fa-shipping-fast"></i> Dados para Entrega</h4>
+                        <button type="button" class="btn-secondary mb-3 w-full" data-action="copyClientDataToDelivery">
+                            <i class="fas fa-copy"></i> Copiar Dados do Cliente
+                        </button>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fullName">Nome Completo *</label>
+                                <input type="text" id="fullName" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="cpfCnpj">CPF/CNPJ *</label>
+                                <input type="text" id="cpfCnpj" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail *</label>
+                                <input type="email" id="email" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone *</label>
+                                <input type="tel" id="telefone" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cep">CEP *</label>
+                                <input type="text" id="cep" class="form-input" maxlength="9" data-blur="buscarCEP">
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">Estado *</label>
+                                <input type="text" id="estado" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cidade">Cidade *</label>
+                            <input type="text" id="cidade" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="bairro">Bairro *</label>
+                            <input type="text" id="bairro" class="form-input">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-3">
+                                <label for="rua">Rua *</label>
+                                <input type="text" id="rua" class="form-input">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="numero">Número *</label>
+                                <input type="text" id="numero" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="complemento">Complemento</label>
+                            <input type="text" id="complemento" class="form-input" placeholder="Apto, Bloco, etc">
+                        </div>
+                        
+                        <div class="form-group" id="trackingCodeField" class="d-none">
+                            <label for="editTrackingCode">
+                                <i class="fas fa-barcode"></i> Código de Rastreio (Correios)
+                            </label>
+                            <input type="text" id="editTrackingCode" class="form-input" 
+                                   placeholder="Ex: BR123456789BR" 
+                                   class="text-uppercase">
+                            <small class="text-secondary text-sm">
+                                Digite o código de rastreio dos Correios para este pedido
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="serviceDescription"><i class="fas fa-align-left"></i> Descrição do Serviço</label>
+                        <textarea id="serviceDescription" class="form-textarea" rows="3" placeholder="Detalhes sobre o serviço..." autocomplete="off"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="serviceObservations"><i class="fas fa-exclamation-triangle"></i> Observações</label>
+                        <textarea id="serviceObservations" class="form-textarea" rows="2" placeholder="Observações importantes..." autocomplete="off"></textarea>
+                    </div>
+                </div>
+
+                <div class="notification-section" id="notificationSection" style="grid-column: 1 / -1; display: none;">
+                    <h4 class="section-title"><i class="fas fa-bell"></i> Notificações ao Cliente</h4>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div class="whatsapp-option" id="createWhatsappOption" style="display: none; margin: 0; flex: 1;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sendWhatsappOnCreate" checked>
+                                <span><i class="fab fa-whatsapp"></i> Enviar WhatsApp</span>
+                            </label>
+                        </div>
+                        <div class="email-option" id="createEmailOption" style="display: none; margin: 0; flex: 1;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sendEmailOnCreate" checked>
+                                <span><i class="fas fa-envelope"></i> Enviar Email</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="serviceId">
+                <input type="hidden" id="serviceStatus" value="pendente">
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-action="closeModal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span id="saveButtonText">Salvar Serviço</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Código de Rastreio -->
+    <div class="modal" id="trackingModal" role="dialog" aria-modal="true" aria-labelledby="trackingModalTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="trackingModalTitle">Código de Rastreio</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeTrackingModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Digite o código de rastreio dos Correios:</p>
+                <input type="text" id="trackingCode" placeholder="Ex: BR123456789BR" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-action="closeTrackingModal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-confirm" data-action="confirmTrackingCode">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Informações de Entrega -->
+    <div class="modal" id="deliveryInfoModal" role="dialog" aria-modal="true" aria-labelledby="deliveryInfoModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="deliveryInfoModalTitle"><i class="fas fa-truck" aria-hidden="true"></i> Informações de Entrega</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeDeliveryModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="deliveryInfoContent" class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-primary" data-action="closeDeliveryModal">
+                    <i class="fas fa-check"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Status -->
+    <div class="modal" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="statusModalTitle">Confirmar Mudança de Status</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeStatusModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
+                
+                <!-- Fotos do Produto Finalizado (Instagramáveis) -->
+                <div id="instagramPhotoField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert">
+                        <i class="fas fa-camera"></i>
+                        <p><strong>Fotos Instagramaveis Obrigatorias</strong></p>
+                        <p class="helper-text">Anexe uma ou mais fotos de alta qualidade do produto finalizado.</p>
+                        <div class="vertical-photo-warning">
+                            <span>FOTOS APENAS NA VERTICAL</span>
+                        </div>
+                    </div>
+                    
+                    <div class="instagram-upload">
+                        <label for="instagramPhotoInput" class="instagram-label">
+                            <i class="fas fa-upload"></i> Selecionar Foto(s)
+                        </label>
+                        <input type="file" id="instagramPhotoInput" accept="image/jpeg,image/jpg,image/png" data-change="handleInstagramPhotoSelect" class="d-none" multiple>
+                    </div>
+                    
+                    <div class="image-preview" id="instagramPhotoPreview" class="d-none">
+                        <div class="image-preview-grid" id="instagramPhotoPreviewGrid"></div>
+                    </div>
+                </div>
+                
+                <!-- Fotos do Produto Embalado -->
+                <div id="packagedPhotoField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert instagram-alert--packaged">
+                        <i class="fas fa-box"></i>
+                        <p><strong>Fotos do Produto Embalado Obrigatorias</strong></p>
+                        <p class="helper-text">Anexe uma ou mais fotos do produto ja embalado e pronto para envio/retirada.</p>
+                    </div>
+                    
+                    <div class="instagram-upload">
+                        <label for="packagedPhotoInput" class="instagram-label instagram-label--packaged">
+                            <i class="fas fa-upload"></i> Selecionar Foto(s) da Embalagem
+                        </label>
+               
+                        <input type="file" id="packagedPhotoInput" accept="image/jpeg,image/jpg,image/png" data-change="handlePackagedPhotoSelect" class="d-none" multiple>
+                    </div>
+                    
+                    <div class="image-preview" id="packagedPhotoPreview" class="d-none">
+                        <div class="image-preview-grid" id="packagedPhotoPreviewGrid"></div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Código de Rastreio (Sedex) -->
+                <div id="statusTrackingCodeField" style="display: none; margin-top: 1.5rem;">
+                    <div class="instagram-alert instagram-alert--tracking">
+                          <i class="fas fa-barcode"></i>
+                        <p><strong>Codigo de Rastreio Obrigatorio</strong></p>
+                        <p class="helper-text">Digite o codigo de rastreio dos Correios para este pedido.</p>
+                    </div>
+    
+                    <div class="form-group mt-3">
+                        <input type="text" id="statusTrackingCodeInput" class="form-input tracking-code-style"
+                            placeholder="Ex: BR123456789BR">
+                        <small class="text-secondary text-sm d-block mt-2">
+                            <i class="fas fa-info-circle"></i> Formato: 13 caracteres (Ex: BR123456789BR)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="whatsapp-option" id="whatsappOption" class="d-none">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sendWhatsappNotification">
+                        <span>Notificar cliente via WhatsApp</span>
+                    </label>
+                </div>
+                <div class="email-option" id="emailOption" class="d-none">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sendEmailNotification">
+                        <span>Enviar email de notificação</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" data-action="closeStatusModal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-confirm" data-action="confirmStatusChange">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Bypass de Foto Obrigatória -->
+    <div class="modal" id="bypassPasswordModal" role="dialog" aria-modal="true" aria-labelledby="bypassModalTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="bypassModalTitle"><i class="fas fa-lock" aria-hidden="true"></i> Autorização Necessária</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeBypassModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3 text-secondary">
+                    Para prosseguir sem anexar foto, insira a senha de autorizacao:
+                </p>
+                <div class="form-group">
+                    <label for="bypassPasswordInput">Senha de Bypass</label>
+                    <input type="password" id="bypassPasswordInput" class="form-input"
+                           placeholder="Digite a senha..."
+                           data-keydown="confirmBypassOnEnter">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" data-action="closeBypassModal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-confirm" data-action="confirmBypassPassword">
+                    <i class="fas fa-unlock"></i> Autorizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Visualizar Imagens -->
+    <div class="modal" id="imageViewerModal" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" aria-hidden="true">
+        <div class="modal-content modal-image">
+            <div class="modal-header">
+                <h2 id="viewerTitle">Imagem do Serviço</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeImageModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body modal-image-body">
+                <button class="image-nav-btn prev-btn" id="prevImageBtn" data-action="prevImage">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <img id="viewerImage" src="" alt="Imagem do Serviço">
+                <button class="image-nav-btn next-btn" id="nextImageBtn" data-action="nextImage">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="image-counter" id="imageCounter">1 / 1</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="downloadImageBtn">
+                    <i class="fas fa-download"></i> Baixar Imagem
+                </button>
+                <button class="btn-secondary" data-action="openImageInNewTab">
+                    <i class="fas fa-external-link-alt"></i> Abrir em Nova Aba
+                </button>
+                <button class="btn-secondary" data-action="closeImageModal">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL para Visualizar Múltiplos Arquivos -->
+    <div class="modal" id="filesViewerModal" role="dialog" aria-modal="true" aria-labelledby="filesViewerTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="filesViewerTitle"><i class="fas fa-file" aria-hidden="true"></i> Arquivos do Serviço</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeFilesModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="filesListContainer" class="files-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" data-action="closeFilesModal">
+                    <i class="fas fa-check"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer" role="alert" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- MODAL: Lista de Clientes -->
+    <div class="modal" id="clientsModal" role="dialog" aria-modal="true" aria-labelledby="clientsModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="clientsModalTitle"><i class="fas fa-users" aria-hidden="true"></i> Clientes ImaginaTech</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeClientsModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="clientsListContainer" class="clients-list-container">
+                    <div class="loading-clients">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Carregando clientes...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" data-action="closeClientsModal">
+                    <i class="fas fa-check"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Promover para Portfolio -->
+    <div class="modal" id="upModal" role="dialog" aria-modal="true" aria-labelledby="upModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="upModalTitle"><i class="fas fa-arrow-up" aria-hidden="true"></i> Promover para Portfolio</h2>
+                <button class="modal-close" type="button" aria-label="Fechar modal" data-action="closeUpModal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Info do Servico Original -->
+                <div class="up-service-info" id="upServiceInfo">
+                    <div class="info-badge">
+                        <i class="fas fa-cube"></i>
+                        <span id="upServiceName">Nome do Servico</span>
+                    </div>
+                    <div class="info-details">
+                        <span><i class="fas fa-layer-group"></i> <span id="upServiceMaterial">Material</span></span>
+                        <span><i class="fas fa-palette"></i> <span id="upServiceColor">Cor</span></span>
+                    </div>
+                </div>
+
+                <!-- Lista de Ups Existentes -->
+                <div class="existing-ups-section" id="existingUpsSection" class="d-none">
+                    <div class="existing-ups-header">
+                        <h3><i class="fas fa-images"></i> Ups deste Servico</h3>
+                        <button type="button" class="btn-new-up" data-action="showUpForm">
+                            <i class="fas fa-plus"></i> Novo Up
+                        </button>
+                    </div>
+                    <div class="existing-ups-list" id="existingUpsList">
+                        <!-- Lista de ups existentes sera inserida aqui -->
+                    </div>
+                </div>
+
+                <!-- Formulario de Up (pode ser escondido quando mostrar lista) -->
+                <div class="up-form-section" id="upFormSection">
+                <div class="form-grid">
+                    <!-- Foto Principal -->
+                    <div class="form-group full-width">
+                        <label for="upPhoto"><i class="fas fa-camera"></i> Foto Principal *</label>
+                        <div class="image-upload-area" id="upPhotoUploadArea" data-action="triggerUpPhoto">
+                            <input type="file" id="upPhoto" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                   data-change="handleUpPhotoSelect" class="d-none">
+                            <div class="upload-placeholder" id="upPhotoPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Arraste uma foto ou clique aqui</span>
+                                <small>JPG, PNG ou WebP (max 10MB)</small>
+                            </div>
+                            <div class="image-preview" id="upPhotoPreview" class="d-none">
+                                <img id="upPhotoImg" src="" alt="Preview">
+                                <button type="button" class="btn-remove-image" data-action="removeUpPhoto">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fotos Adicionais (apenas para Projetos) -->
+                    <div class="form-group full-width" id="upExtraPhotosGroup" class="d-none">
+                        <label><i class="fas fa-images"></i> Fotos Adicionais (opcional)</label>
+                        <small class="form-hint">Adicione mais fotos para criar uma galeria navegavel (max 5)</small>
+                        <input type="file" id="upExtraPhotosInput" accept="image/jpeg,image/jpg,image/png,image/webp" multiple class="d-none">
+                        <div class="extra-photos-drop-area" id="upExtraPhotosDropArea" data-action="triggerUpExtraPhotos">
+                            <div class="extra-photos-container" id="upExtraPhotosContainer">
+                                <!-- Fotos adicionais serao inseridas aqui -->
+                            </div>
+                            <div class="extra-photos-drop-hint" id="upExtraPhotosDropHint">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Arraste fotos aqui ou clique para adicionar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Titulo -->
+                    <div class="form-group full-width">
+                        <label for="upTitle"><i class="fas fa-heading"></i> Titulo do Projeto *</label>
+                        <input type="text" id="upTitle" class="form-input"
+                               placeholder="Ex: Busto Darth Vader em PLA Preto">
+                    </div>
+
+                    <!-- Descricao (apenas para Projetos) -->
+                    <div class="form-group full-width" id="upDescriptionGroup" class="d-none">
+                        <label for="upDescription"><i class="fas fa-align-left"></i> Descricao do Projeto</label>
+                        <textarea id="upDescription" class="form-input form-textarea" rows="3"
+                                  placeholder="Ex: Projeto desenvolvido para exposicao em feira de tecnologia. Impressao de alta precisao com acabamento premium..."></textarea>
+                        <small class="form-hint">Uma boa descricao ajuda na indexacao do site e conta a historia do projeto</small>
+                    </div>
+
+                    <!-- Destino -->
+                    <div class="form-group">
+                        <label for="upDestination"><i class="fas fa-map-marker-alt"></i> Destino *</label>
+                        <select id="upDestination" class="form-select" data-change="toggleCategoryField">
+                            <option value="">Selecione o destino</option>
+                            <option value="carrossel">Carrossel (Hero da Homepage)</option>
+                            <option value="projetos">Projetos Anteriores</option>
+                        </select>
+                    </div>
+
+                    <!-- Categoria (condicional) -->
+                    <div class="form-group" id="upCategoryGroup" class="d-none">
+                        <label for="upCategory"><i class="fas fa-tag"></i> Categoria *</label>
+                        <select id="upCategory" class="form-select">
+                            <option value="">Selecione a categoria</option>
+                            <option value="industrial">Peca Industrial</option>
+                            <option value="personalizado">Personalizado</option>
+                            <option value="prototipagem">Prototipagem</option>
+                            <option value="reposicao">Reposicao</option>
+                            <option value="decorativo">Decorativo</option>
+                            <option value="tecnico">Tecnico</option>
+                        </select>
+                    </div>
+
+                    <!-- Logo Transparente (opcional) -->
+                    <div class="form-group full-width">
+                        <label for="upLogo"><i class="fas fa-building"></i> Logo do Cliente (opcional)</label>
+                        <div class="image-upload-area small" id="upLogoUploadArea" data-action="triggerUpLogo">
+                            <input type="file" id="upLogo" accept="image/png,image/webp"
+                                   data-change="handleUpLogoSelect" class="d-none">
+                            <div class="upload-placeholder" id="upLogoPlaceholder">
+                                <i class="fas fa-image"></i>
+                                <span>Arraste ou clique - PNG transparente</span>
+                            </div>
+                            <div class="image-preview" id="upLogoPreview" class="d-none">
+                                <img id="upLogoImg" src="" alt="Logo Preview">
+                                <button type="button" class="btn-remove-image" data-action="removeUpLogo">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- Fecha up-form-section -->
+
+                <input type="hidden" id="upServiceId">
+                <input type="hidden" id="upEditingId">
+            </div>
+            <div class="modal-footer" id="upModalFooter">
+                <button type="button" class="btn-cancel" data-action="closeUpModal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-confirm btn-up-confirm" id="upSaveBtn" data-action="saveToPortfolio">
+                    <i class="fas fa-arrow-up"></i> Promover
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <!-- Configurações de Ambiente (carregado antes dos scripts de aplicação) -->
+    <script src="../js/env-config.js"></script>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/accessibility.js"></script>
+    <script src="/shared/custom-select.js"></script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+
+    <!-- Botoes especificos do painel Servicos (Tarefas e Clientes) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnMobileTarefas = document.getElementById('btnMobileTarefas');
+        const btnMobileClientes = document.getElementById('btnMobileClientes');
+
+        if (btnMobileTarefas) {
+            btnMobileTarefas.addEventListener('click', function() {
+                closeMobileMenu();
+                const btnTasks = document.getElementById('btnTasks');
+                if (btnTasks) btnTasks.click();
+            });
+        }
+
+        if (btnMobileClientes) {
+            btnMobileClientes.addEventListener('click', function() {
+                closeMobileMenu();
+                if (window.openClientsModal) window.openClientsModal();
+            });
+        }
+    });
+    </script>
+</body>
+</html>

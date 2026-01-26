@@ -1,0 +1,54 @@
+# ===========================================
+# GITIGNORE - IMAGINATECH
+# ===========================================
+
+# Environment files (CREDENCIAIS SENSÍVEIS)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# NOTA: js/env-config.js NÃO é ignorado pois contém configurações
+# públicas do Firebase (segurança via Firestore Rules)
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+backup/
+
+# Firebase config (gerenciado localmente)
+.firebaserc
+
+# Documentacao interna (nao versionar)
+ExplainToOwner.md
+tmpclaude-0609-cwd tmpclaude-1a0c-cwd tmpclaude-25c5-cwd tmpclaude-2ae0-cwd tmpclaude-3c63-cwd tmpclaude-3cdd-cwd tmpclaude-487a-cwd tmpclaude-6197-cwd tmpclaude-7114-cwd tmpclaude-78d0-cwd tmpclaude-7b5e-cwd tmpclaude-7ef7-cwd tmpclaude-9641-cwd tmpclaude-9875-cwd tmpclaude-b965-cwd tmpclaude-bf7e-cwd tmpclaude-c64a-cwd tmpclaude-c672-cwd tmpclaude-e758-cwd
+nul
+tmpclaude-*
+test-xss-scanner.py

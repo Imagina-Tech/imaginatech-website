@@ -1,0 +1,246 @@
+<!--
+==================================================
+ARQUIVO: index.html
+MÓDULO: Página de Agradecimento (Pós-Compra)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 1.0
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obrigado pela Compra! - ImaginaTech</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Obrigado por sua compra! Seu pedido foi confirmado com sucesso. ImaginaTech - Transformando ideias em realidade.">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self';
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/obrigado/">
+    <meta property="og:title" content="Obrigado pela Compra! - ImaginaTech">
+    <meta property="og:description" content="Seu pedido foi confirmado com sucesso!">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/loading.css">
+</head>
+<body>
+    <!-- Background Animado -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Confetti Animation -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <!-- Header -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <div class="logo-section">
+                    <h1 class="logo">ImaginaTech</h1>
+                    <span class="logo-subtitle">Pedido Confirmado</span>
+                </div>
+            </div>
+            <div class="navbar-right">
+                <a href="/" class="btn-nav">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="https://wa.me/5521968972539" class="btn-nav whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Container Principal -->
+    <main class="main-container">
+        <!-- Card Principal de Agradecimento -->
+        <div class="thank-you-card">
+            <!-- Ícone de Sucesso -->
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <!-- Mensagem Principal -->
+            <div class="thank-you-header">
+                <h1>Obrigado pela sua compra!</h1>
+                <p class="subtitle">Seu pagamento foi confirmado com sucesso</p>
+                <p class="email-notice">
+                    <i class="fas fa-envelope"></i>
+                    <span>Em breve você receberá no seu <strong>e-mail</strong> e no <strong>WhatsApp</strong> o código do pedido para acompanhamento.</span>
+                </p>
+            </div>
+
+            <!-- Resumo do Pedido -->
+            <div class="order-summary" id="orderSummary">
+                <div class="summary-header">
+                    <i class="fas fa-receipt"></i>
+                    <span>Resumo do Pedido</span>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-row">
+                        <span class="label">Código do Pedido</span>
+                        <span class="value" id="orderCode">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Status</span>
+                        <span class="value status-badge">
+                            <i class="fas fa-check"></i> Pagamento Confirmado
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Próximos Passos -->
+            <div class="next-steps">
+                <h3><i class="fas fa-tasks"></i> Próximos Passos</h3>
+                <div class="steps-list">
+                    <div class="step-item completed">
+                        <div class="step-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="step-content">
+                            <strong>Pagamento Confirmado</strong>
+                            <span>Seu pagamento foi processado com sucesso</span>
+                        </div>
+                    </div>
+                    <div class="step-item active">
+                        <div class="step-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="step-content">
+                            <strong>Produção Iniciada</strong>
+                            <span>Sua peça já está sendo preparada</span>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-icon">
+                            <i class="fas fa-print"></i>
+                        </div>
+                        <div class="step-content">
+                            <strong>Impressão 3D</strong>
+                            <span>Daremos início à impressão em breve</span>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="step-content">
+                            <strong>Envio/Retirada</strong>
+                            <span>Você será notificado quando estiver pronto</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Principal - Acompanhar Pedido -->
+            <div class="cta-section">
+                <a href="/acompanhar-pedido/" class="btn-primary btn-large">
+                    <i class="fas fa-search-location"></i>
+                    Acompanhar Meu Pedido
+                </a>
+                <p class="cta-hint">Use o código acima para acompanhar o status em tempo real</p>
+            </div>
+
+            <!-- Contato WhatsApp -->
+            <div class="contact-section">
+                <p>Dúvidas sobre seu pedido?</p>
+                <a href="https://wa.me/5521968972539" class="btn-whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    Falar no WhatsApp
+                </a>
+            </div>
+
+            <!-- Compartilhar -->
+            <div class="share-section">
+                <p>Gostou do nosso serviço?</p>
+                <div class="share-buttons">
+                    <button class="share-btn instagram" data-action="share-instagram">
+                        <i class="fab fa-instagram"></i>
+                    </button>
+                    <button class="share-btn facebook" data-action="share-facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </button>
+                    <button class="share-btn twitter" data-action="share-twitter">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="share-btn copy" data-action="copy-link">
+                        <i class="fas fa-link"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Secundário - Newsletter -->
+        <div class="newsletter-card">
+            <div class="newsletter-content">
+                <i class="fas fa-envelope-open-text"></i>
+                <div class="newsletter-text">
+                    <h4>Receba novidades exclusivas</h4>
+                    <p>Promoções, lançamentos e dicas de impressão 3D</p>
+                </div>
+            </div>
+            <form class="newsletter-form" id="newsletterForm">
+                <input type="email" placeholder="Seu melhor e-mail" required>
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 ImaginaTech. Todos os direitos reservados.</p>
+            <div class="footer-links">
+                <a href="/">Início</a>
+                <a href="/acompanhar-pedido/">Acompanhar Pedido</a>
+                <a href="https://wa.me/5521968972539" target="_blank">Contato</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Script Principal -->
+    <script src="script.js"></script>
+</body>
+</html>

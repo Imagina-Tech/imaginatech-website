@@ -1,0 +1,1177 @@
+<!--
+==================================================
+ARQUIVO: financas/index.html
+MÓDULO: Dashboard Financeiro Pessoal Profissional
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 2.0 - Sistema Completo com Assinaturas e Parcelamentos
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças - ImaginaTech Admin</title>
+    <meta name="description" content="Dashboard financeiro pessoal profissional - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com;
+        frame-src 'self' https://accounts.google.com https://*.firebaseapp.com;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/financas/">
+    <meta property="og:title" content="Finanças - ImaginaTech">
+    <meta property="og:description" content="Dashboard financeiro pessoal profissional - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
+
+    <!-- ApexCharts - Biblioteca Profissional de Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@5.3.6/dist/apexcharts.min.js"></script>
+
+    <!-- D3.js - Para Liquid Fill Gauge -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="style.css?v=2024121803">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/custom-select.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+</head>
+<body>
+    <!-- Mobile Block Screen -->
+    <div class="mobile-block" id="mobileBlock">
+        <div class="mobile-block-content">
+            <i class="fas fa-desktop"></i>
+            <h1>ESSE DASHBOARD É ACESSÍVEL APENAS EM COMPUTADORES</h1>
+            <p>Por favor, acesse este sistema em um computador ou notebook para uma melhor experiência.</p>
+        </div>
+    </div>
+
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando...</div>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Dashboard Financeiro</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h2 class="auth-title">Gestao Financeira</h2>
+            <p class="auth-message">
+                Gerencie suas financas pessoais de forma simples e organizada.
+            </p>
+            <button class="auth-btn-google" data-action="sign-in-google">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Qualquer conta Google pode acessar</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Selection Modal -->
+    <div class="modal-overlay" id="accountSelectionModal">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Selecione a Conta</h2>
+            </div>
+            <div class="modal-form" style="gap: 1rem; display: flex; flex-direction: column;">
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Escolha qual conta você deseja acessar:
+                </p>
+                <button class="account-option-btn" data-action="select-account" data-account="company" style="width: 100%; padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 224, 255, 0.1), rgba(0, 149, 255, 0.1)); border: 2px solid rgba(0, 224, 255, 0.3); border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-building" style="font-size: 1.5rem; color: var(--neon-blue);"></i>
+                    <div style="text-align: left; flex: 1;">
+                        <div style="font-size: 1.1rem; margin-bottom: 0.25rem;">Caixa Interno da Empresa</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">Conta empresarial</div>
+                    </div>
+                </button>
+                <button class="account-option-btn" data-action="select-account" data-account="personal" style="width: 100%; padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 255, 148, 0.1), rgba(0, 200, 100, 0.1)); border: 2px solid rgba(0, 255, 148, 0.3); border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-user" style="font-size: 1.5rem; color: var(--neon-green);"></i>
+                    <div style="text-align: left; flex: 1;">
+                        <div style="font-size: 1.1rem; margin-bottom: 0.25rem;">Minha Conta Pessoal</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);" id="personalAccountEmail">seu@email.com</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado (Admin da Empresa) -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-ban"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Negado</h1>
+            <p class="access-denied-message">
+                Voce nao possui permissao de administrador.
+            </p>
+            <p class="access-denied-submessage">
+                O acesso aos dados financeiros da empresa e restrito apenas para usuarios autorizados.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <button class="access-denied-btn" data-action="close-access-denied">
+                <i class="fas fa-arrow-left"></i>
+                Voltar para minha conta pessoal
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard hidden" id="dashboard">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Dashboard Financeiro</span>
+                    </div>
+                    <div class="month-selector">
+                        <button class="month-nav-btn" data-action="change-month" data-direction="-1" title="Mes anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month" id="currentMonthDisplay">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="monthName">Janeiro 2024</span>
+                        </div>
+                        <button class="month-nav-btn" data-action="change-month" data-direction="1" title="Proximo mes">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="nav-buttons-desktop">
+                        <a href="/servicos/" class="btn-nav" title="Servicos">
+                            <i class="fas fa-tasks"></i>
+                        </a>
+                        <a href="/estoque/" class="btn-nav" title="Estoque">
+                            <i class="fas fa-box-open"></i>
+                        </a>
+                        <a href="/custo/" class="btn-nav" title="Custo">
+                            <i class="fas fa-calculator"></i>
+                        </a>
+                        <a href="/admin-portfolio/" class="btn-nav btn-portfolio" title="Portfolio">
+                            <i class="fas fa-images"></i>
+                        </a>
+                        <a href="/marketplace/" class="btn-nav" title="Marketplace">
+                            <i class="fas fa-store"></i>
+                        </a>
+                    </div>
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu" title="Menu">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role" id="userRole">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav" data-action="switch-account" title="Trocar Conta">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                    <button class="btn-nav" data-action="open-settings" title="Configuracoes">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="btn-nav btn-logout" data-action="sign-out" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/servicos/" class="mobile-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="/estoque/" class="mobile-nav-item">
+                <i class="fas fa-box-open"></i>
+                <span>Estoque</span>
+            </a>
+            <a href="/custo/" class="mobile-nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Custo</span>
+            </a>
+            <a href="/admin-portfolio/" class="mobile-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Portfolio</span>
+            </a>
+            <a href="/marketplace/" class="mobile-nav-item">
+                <i class="fas fa-store"></i>
+                <span>Marketplace</span>
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar: 8 KPIs + Quick Actions -->
+            <div class="top-info-grid">
+                <!-- KPI 1: Entradas -->
+                <div class="kpi-card kpi-income" data-action="open-kpi-list" data-type="income" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Entradas</h3>
+                        <p class="kpi-value" id="totalIncome">R$ 0,00</p>
+                        <p class="kpi-projection" id="totalIncomeProjection" style="font-size: 0.7rem; color: #10b981; margin: 0; display: none;">= R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #10b981;">Total projetado</span></small>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Saídas (atual + projeção) -->
+                <div class="kpi-card kpi-expense" data-action="open-kpi-list" data-type="expense" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Saídas</h3>
+                        <p class="kpi-value" id="totalExpense">R$ 0,00</p>
+                        <p class="kpi-projection" id="totalExpenseProjection" style="font-size: 0.7rem; color: #f59e0b; margin: 0;">= R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #f59e0b;">Total projetado</span></small>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Saldo -->
+                <div class="kpi-card kpi-balance">
+                    <div class="kpi-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Saldo</h3>
+                        <p class="kpi-value" id="totalBalance">R$ 0,00</p>
+                        <p class="kpi-projection" id="balanceProjection" style="font-size: 0.7rem; color: #3b82f6; margin: 0;">Proj: R$ 0,00</p>
+                        <small class="kpi-subtitle">Atual • <span style="color: #3b82f6;">Projeção</span></small>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Investimentos -->
+                <div class="kpi-card kpi-investments" style="position: relative;">
+                    <button class="btn-toggle-privacy" id="btnToggleInvestments" data-action="toggle-investment-visibility" title="Ocultar/Revelar valor">
+                        <i class="fas fa-eye-slash"></i>
+                    </button>
+                    <div data-action="open-investments-modal" style="cursor: pointer;" title="Clique para gerenciar investimentos">
+                        <div class="kpi-icon" style="background-color: rgba(16, 185, 129, 0.1); color: #10B981;">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Investimentos</h3>
+                            <p class="kpi-value blurred" id="totalInvestments">R$ 0,00</p>
+                            <small class="kpi-subtitle">Total aplicado • Clique para gerenciar</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Assinaturas -->
+                <div class="kpi-card kpi-subscriptions" data-action="open-kpi-list" data-type="subscriptions" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Assinaturas</h3>
+                        <p class="kpi-value" id="totalSubscriptions">R$ 0,00</p>
+                        <small class="kpi-subtitle">/mês • Clique para detalhes</small>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Parcelamentos -->
+                <div class="kpi-card kpi-installments" data-action="open-kpi-list" data-type="installments" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Parcelas</h3>
+                        <p class="kpi-value" id="totalInstallments">R$ 0,00</p>
+                        <small class="kpi-subtitle">
+                            Mês: <span id="installmentsMonthly">R$ 0,00</span>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- KPI 6: Projecao -->
+                <div class="kpi-card kpi-projection" data-action="open-kpi-list" data-type="projections" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Projeção</h3>
+                        <p class="kpi-value" id="totalProjection">R$ 0,00</p>
+                        <small class="kpi-subtitle">Mês atual • Clique para detalhes</small>
+                    </div>
+                </div>
+
+                <!-- KPI 7: Cartoes -->
+                <div class="kpi-card" data-action="open-kpi-list" data-type="creditCards" style="cursor: pointer;" title="Clique para ver detalhes">
+                    <div class="kpi-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Cartões</h3>
+                        <p class="kpi-value" id="totalCreditCards">R$ 0,00</p>
+                        <small class="kpi-subtitle">Fatura • Clique para detalhes</small>
+                    </div>
+                </div>
+
+                <!-- Quick Actions - Coluna vertical a direita -->
+                <div class="quick-actions">
+                    <button class="btn-action btn-transaction" data-action="open-transaction-modal">
+                        <i class="fas fa-plus"></i>
+                        <span>Transacao</span>
+                    </button>
+                    <button class="btn-action btn-installment" data-action="open-installment-modal">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Parcela</span>
+                    </button>
+                    <button class="btn-action btn-subscription" data-action="open-subscription-modal">
+                        <i class="fas fa-sync"></i>
+                        <span>Assinatura</span>
+                    </button>
+                    <button class="btn-action btn-projection" data-action="open-projection-modal">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Projecao</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid: Gráfico Principal + Mini Charts + Gauges -->
+            <div class="dashboard-main-grid">
+                <!-- GRÁFICO: Distribuição por Categoria (Esquerda, Linha 1) -->
+                <div class="chart-card chart-category">
+                    <div class="chart-header">
+                        <h3>Distribuição por Categoria</h3>
+                    </div>
+                    <div id="categoryChart" style="flex: 1;"></div>
+                </div>
+
+                <!-- GRÁFICO: Análise de Pagamentos (Esquerda, Linha 2) -->
+                <div class="chart-card chart-payment-method">
+                    <div class="chart-header">
+                        <h3>Análise de Pagamentos</h3>
+                    </div>
+                    <div id="paymentMethodChart" style="flex: 1;"></div>
+                </div>
+
+                <!-- CHARTS TOP: Fluxo de Caixa + Comparativo (Linha 1, Colunas 2-3) -->
+                <div class="charts-section-top">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Fluxo de Caixa</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="dot income"></span>Entradas</span>
+                                <span class="legend-item"><span class="dot expense"></span>Saídas</span>
+                            </div>
+                        </div>
+                        <div id="cashFlowChart" style="flex: 1;"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header" style="display: flex; align-items: center;">
+                            <h3>Mês Atual vs Anterior</h3>
+                        </div>
+                        <div id="comparisonChart" style="flex: 1;"></div>
+                    </div>
+                </div>
+
+                <!-- CHARTS BOTTOM: Top Categorias + Evolução Semanal (Linha 2, Colunas 2-3) -->
+                <div class="charts-section-bottom">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Top 5 Despesas</h3>
+                        </div>
+                        <div id="topCategoriesChart" style="flex: 1;"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Gastos por Semana</h3>
+                        </div>
+                        <div id="weeklyTrendChart" style="flex: 1;"></div>
+                    </div>
+                </div>
+
+                <!-- Mini Gauges Container - Coluna 4, ocupa 2 linhas -->
+                <div class="mini-gauges-container">
+                    <div class="mini-chart-card liquid-gauge-card">
+                        <div class="mini-chart-header">
+                            <div class="gauge-header-top">
+                                <h4>Reservas do Mes</h4>
+                                <button data-action="open-settings" class="btn-settings-mini" title="Configurar meta">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
+                            <span class="gauge-percentage" id="savingsGoalPercent">0%</span>
+                            <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                        </div>
+                        <svg id="savingsGoalChart" class="liquid-gauge"></svg>
+                    </div>
+
+                    <div class="mini-chart-card liquid-gauge-card">
+                        <div class="mini-chart-header">
+                            <div class="gauge-header-top">
+                                <h4>Gastos do Mes</h4>
+                                <button data-action="open-settings" class="btn-settings-mini" title="Configurar limite">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
+                            <span class="gauge-percentage" id="expenseLimitPercent">0%</span>
+                            <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+                        </div>
+                        <svg id="expenseLimitChart" class="liquid-gauge"></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden containers for data (mantidos para funcionalidade) -->
+            <div id="growthSparkline" style="display: none;"></div>
+            <div id="expenseTrendSparkline" style="display: none;"></div>
+            <div id="growthValue" style="display: none;"></div>
+            <div id="trendValue" style="display: none;"></div>
+            <span id="installmentsTotal" style="display: none;">R$ 0,00</span>
+
+        </main>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal-overlay" id="transactionModal" role="dialog" aria-modal="true" aria-labelledby="transactionModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="transactionModalTitle">Nova Transacao</h2>
+                <button class="modal-close" data-action="close-transaction-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="transactionForm" class="modal-form">
+                <div class="form-group">
+                    <label>Tipo de Transacao</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-type="income" data-action="select-transaction-type" data-value="income">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Entrada</span>
+                        </button>
+                        <button type="button" class="type-btn" data-type="expense" data-action="select-transaction-type" data-value="expense">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>Saida</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="paymentMethodGroup" style="display: none;">
+                    <label>Metodo de Pagamento</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-method="debit" data-action="select-payment-method" data-value="debit">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Debito</span>
+                        </button>
+                        <button type="button" class="type-btn" data-method="credit" data-action="select-payment-method" data-value="credit">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Credito</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="creditCardGroup" style="display: none;">
+                    <label for="transactionCard">Cartão de Crédito</label>
+                    <select id="transactionCard" class="form-select">
+                        <option value="">Selecione um cartão</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descrição</label>
+                    <input type="text" id="description" required placeholder="Ex: Salário, Aluguel, Mercado...">
+                </div>
+
+                <div class="form-group">
+                    <label for="value">Valor</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="value" required placeholder="0,00" data-format="currency">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Categoria</label>
+                    <select id="category" class="form-select" required>
+                        <option value="">Selecione uma categoria</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Data</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-transaction-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal-overlay" id="subscriptionModal" role="dialog" aria-modal="true" aria-labelledby="subscriptionModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="subscriptionModalTitle">Nova Assinatura</h2>
+                <button class="modal-close" data-action="close-subscription-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="subscriptionForm" class="modal-form">
+                <div class="form-group">
+                    <label for="subName">Nome do Serviço</label>
+                    <input type="text" id="subName" required placeholder="Ex: Netflix, Spotify, Adobe...">
+                </div>
+
+                <div class="form-group">
+                    <label for="subValue">Valor Mensal</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="subValue" required placeholder="0,00" data-format="currency">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subDueDay">Dia do Vencimento</label>
+                    <input type="number" id="subDueDay" required min="1" max="31" placeholder="1-31">
+                </div>
+
+                <div class="form-group">
+                    <label for="subCategory">Categoria</label>
+                    <select id="subCategory" class="form-select" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="Streaming">Streaming</option>
+                        <option value="Software">Software</option>
+                        <option value="Música">Música</option>
+                        <option value="Academia">Academia</option>
+                        <option value="Educação">Educação</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="subCard">Cartão (Opcional)</label>
+                    <select id="subCard" class="form-select">
+                        <option value="">Sem cartão</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="subStatus">Status</label>
+                    <select id="subStatus" class="form-select" required>
+                        <option value="active">Ativa</option>
+                        <option value="inactive">Inativa</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-subscription-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Installment Modal -->
+    <div class="modal-overlay" id="installmentModal" role="dialog" aria-modal="true" aria-labelledby="installmentModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="installmentModalTitle">Novo Parcelamento</h2>
+                <button class="modal-close" data-action="close-installment-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="installmentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="instDescription">Descrição</label>
+                    <input type="text" id="instDescription" required placeholder="Ex: Notebook, Celular...">
+                </div>
+
+                <div class="form-group">
+                    <label for="instCard">Cartão de Crédito</label>
+                    <select id="instCard" class="form-select" required>
+                        <option value="">Selecione um cartão</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Valor</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-type="total" data-action="select-installment-value-type" data-value="total">
+                            <i class="fas fa-calculator"></i>
+                            <span>Valor Total</span>
+                        </button>
+                        <button type="button" class="type-btn" data-type="installment" data-action="select-installment-value-type" data-value="installment">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Valor da Parcela</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="totalValueGroup">
+                    <label for="instTotalValue">Valor Total</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="instTotalValue" required placeholder="0,00" data-format="currency" data-calculate="installment">
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="installmentValueGroup">
+                    <label for="instInstallmentValue">Valor da Parcela</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="instInstallmentValue" placeholder="0,00" data-format="currency" data-calculate="installment">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="instTotalInstallments">Total de Parcelas</label>
+                        <input type="number" id="instTotalInstallments" required min="2" max="99" placeholder="12" data-calculate="installment">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="instCurrentInstallment">Parcela Atual</label>
+                        <input type="number" id="instCurrentInstallment" required min="1" value="1" placeholder="1">
+                        <small style="color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 0.25rem; display: block;">Número da parcela que aparece na fatura atual</small>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-installment-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Projection Modal -->
+    <div class="modal-overlay" id="projectionModal" role="dialog" aria-modal="true" aria-labelledby="projectionModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="projectionModalTitle">Nova Projecao</h2>
+                <button class="modal-close" data-action="close-projection-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="projectionForm" class="modal-form">
+                <div class="form-group">
+                    <label>Tipo de Projecao</label>
+                    <div class="transaction-type-selector">
+                        <button type="button" class="type-btn active" data-type="income" data-action="select-projection-type" data-value="income">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Entrada</span>
+                        </button>
+                        <button type="button" class="type-btn" data-type="expense" data-action="select-projection-type" data-value="expense">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>Saida</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="projDescription">Descricao</label>
+                    <input type="text" id="projDescription" required placeholder="Ex: Salario, Freelance, Conta de luz...">
+                </div>
+
+                <div class="form-group">
+                    <label for="projValue">Valor Estimado</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="projValue" required placeholder="0,00" data-format="currency">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="projDate">Data Prevista</label>
+                    <input type="date" id="projDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="projStatus" id="projStatusLabel">Status</label>
+                    <select id="projStatus" class="form-select" required>
+                        <option value="pending">Pendente</option>
+                        <option value="received">Recebido</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-projection-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Credit Card Modal -->
+    <div class="modal-overlay" id="creditCardModal" role="dialog" aria-modal="true" aria-labelledby="creditCardModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="creditCardModalTitle">Novo Cartao de Credito</h2>
+                <button class="modal-close" data-action="close-credit-card-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="creditCardForm" class="modal-form">
+                <div class="form-group">
+                    <label for="cardName">Nome do Cartão</label>
+                    <input type="text" id="cardName" required placeholder="Ex: Meu Visa">
+                </div>
+
+                <div class="form-group">
+                    <label for="cardInstitution">Instituição</label>
+                    <input type="text" id="cardInstitution" required placeholder="Ex: Nubank, Itaú, Bradesco">
+                </div>
+
+                <div class="form-group">
+                    <label for="cardLimit">Limite</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="cardLimit" required placeholder="0,00" data-format="currency">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cardClosingDay">Dia Fechamento</label>
+                        <input type="number" id="cardClosingDay" required min="1" max="31" placeholder="1-31">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardDueDay">Dia Vencimento</label>
+                        <input type="number" id="cardDueDay" required min="1" max="31" placeholder="1-31">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-credit-card-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Card Expense Modal -->
+    <div class="modal-overlay" id="cardExpenseModal" role="dialog" aria-modal="true" aria-labelledby="cardExpenseModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="cardExpenseModalTitle">Adicionar Gasto no Cartao</h2>
+                <button class="modal-close" data-action="close-card-expense-modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="cardExpenseForm" class="modal-form">
+                <div class="form-group">
+                    <label for="expenseCard">Cartão</label>
+                    <select id="expenseCard" class="form-select" required>
+                        <option value="">Selecione um cartão</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseDescription">Descrição</label>
+                    <input type="text" id="expenseDescription" required placeholder="Ex: Supermercado, Restaurante...">
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseValue">Valor</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">R$</span>
+                        <input type="text" id="expenseValue" required placeholder="0,00" data-format="currency">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseDate">Data da Compra</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseCategory">Categoria</label>
+                    <select id="expenseCategory" class="form-select" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="Alimentação">Alimentação</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Compras">Compras</option>
+                        <option value="Lazer">Lazer</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Educação">Educação</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-action="close-card-expense-modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Modais de Lista para KPIs -->
+    <div class="modal-overlay modal-list" id="transactionsListModal" role="dialog" aria-modal="true" aria-labelledby="transactionsListModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="transactionsListModalTitle">Transacoes do Mes</h2>
+                <button class="modal-close" data-action="close-list-modal" data-modal="transactionsListModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="transactionsListContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay modal-list" id="subscriptionsListModal" role="dialog" aria-modal="true" aria-labelledby="subscriptionsListModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="subscriptionsListModalTitle">Assinaturas Ativas</h2>
+                <button class="modal-close" data-action="close-list-modal" data-modal="subscriptionsListModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="subscriptionsListContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay modal-list" id="installmentsListModal" role="dialog" aria-modal="true" aria-labelledby="installmentsListModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="installmentsListModalTitle">Parcelamentos Ativos</h2>
+                <button class="modal-close" data-action="close-list-modal" data-modal="installmentsListModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="installmentsListContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay modal-list" id="projectionsListModal" role="dialog" aria-modal="true" aria-labelledby="projectionsListModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="projectionsListModalTitle">Projecoes de Receita</h2>
+                <button class="modal-close" data-action="close-list-modal" data-modal="projectionsListModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="projectionsListContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay modal-list" id="creditCardsListModal" role="dialog" aria-modal="true" aria-labelledby="creditCardsListModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="creditCardsListModalTitle">Cartoes de Credito</h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn-add" data-action="add-credit-card-from-list" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-plus"></i> Adicionar Cartao
+                    </button>
+                    <button class="modal-close" data-action="close-list-modal" data-modal="creditCardsListModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="creditCardsListContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes da Fatura do Cartão -->
+    <div class="modal-overlay" id="cardBillDetailsModal" role="dialog" aria-modal="true" aria-labelledby="cardBillDetailsTitle" aria-hidden="true">
+        <div class="modal-container" style="max-width: 1200px; width: 95%;">
+            <div class="modal-header">
+                <h2 id="cardBillDetailsTitle">Detalhes da Fatura</h2>
+                <button class="modal-close" data-action="close-modal" data-modal="cardBillDetailsModal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-form" id="cardBillDetailsContent">
+                <!-- Conteudo sera preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Investments Modal -->
+    <div class="modal-overlay" id="investmentsModal" role="dialog" aria-modal="true" aria-labelledby="investmentsModalTitle" aria-hidden="true">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="investmentsModalTitle"><i class="fas fa-piggy-bank" style="color: #10B981; margin-right: 0.5rem;"></i> Investimentos</h2>
+                <button class="modal-close" data-action="close-investments-modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-form">
+                <!-- Total Investido -->
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Total Investido</div>
+                    <div id="investmentsTotalDisplay" style="font-size: 1.75rem; font-weight: 700; color: #10B981;">R$ 0,00</div>
+                </div>
+
+                <!-- Formulário para novo investimento -->
+                <form id="investmentForm" style="margin-bottom: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 120px 120px auto; gap: 0.75rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentName" style="font-size: 0.75rem;">Nome</label>
+                            <input type="text" id="investmentName" required placeholder="Ex: Tesouro Selic, CDB...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentValue" style="font-size: 0.75rem;">Valor (R$)</label>
+                            <input type="text" id="investmentValue" required placeholder="0,00" data-format="currency">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="investmentDate" style="font-size: 0.75rem;">Data</label>
+                            <input type="date" id="investmentDate" required>
+                        </div>
+                        <button type="submit" class="btn-submit" style="height: 42px; padding: 0 1rem;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Lista de Investimentos -->
+                <div style="max-height: 350px; overflow-y: auto;">
+                    <div id="investmentsList">
+                        <div class="empty-state">
+                            <i class="fas fa-piggy-bank"></i>
+                            <p>Nenhum investimento cadastrado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (Configuracoes + WhatsApp) -->
+    <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" aria-hidden="true">
+        <div class="modal-container settings-modal">
+            <div class="modal-header">
+                <h2 id="settingsModalTitle"><i class="fas fa-cog"></i> Configuracoes</h2>
+                <button class="modal-close" data-action="close-settings-modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Coluna Esquerda: Metas Financeiras -->
+                <div class="settings-column">
+                    <div class="settings-section-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Metas Financeiras</span>
+                    </div>
+
+                    <form id="settingsForm" class="settings-form">
+                        <div class="settings-field">
+                            <label for="savingsGoalInput">
+                                <i class="fas fa-piggy-bank"></i>
+                                Meta de Economia
+                            </label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">R$</span>
+                                <input type="text" id="savingsGoalInput" required placeholder="2.000,00" data-format="currency">
+                            </div>
+                            <span class="field-hint">Quanto economizar por mes</span>
+                        </div>
+
+                        <div class="settings-field">
+                            <label for="expenseLimitInput">
+                                <i class="fas fa-hand-holding-usd"></i>
+                                Limite de Gastos
+                            </label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">R$</span>
+                                <input type="text" id="expenseLimitInput" required placeholder="3.000,00" data-format="currency">
+                            </div>
+                            <span class="field-hint">Maximo mensal de despesas</span>
+                        </div>
+
+                        <div class="settings-field">
+                            <label for="cutoffDateInput">
+                                <i class="fas fa-calendar-alt"></i>
+                                Data de Corte
+                            </label>
+                            <input type="date" id="cutoffDateInput" class="form-input">
+                            <span class="field-hint">Transacoes apos esta data contam no saldo</span>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button type="button" class="btn-cancel" data-action="close-settings-modal">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Coluna Direita: WhatsApp -->
+                <div class="settings-column">
+                    <div class="settings-section-header whatsapp-header">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Bot WhatsApp</span>
+                    </div>
+
+                    <div class="whatsapp-content">
+                        <div class="whatsapp-bot-info">
+                            <div class="bot-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="bot-details">
+                                <span class="bot-name">Claytinho</span>
+                                <span class="bot-desc">Seu assistente financeiro</span>
+                            </div>
+                        </div>
+
+                        <div id="whatsappStatus" class="whatsapp-status">
+                            <div class="whatsapp-loading">
+                                <i class="fas fa-spinner fa-spin"></i> Verificando...
+                            </div>
+                        </div>
+
+                        <div id="whatsappLinkForm" class="whatsapp-link-form" style="display: none;">
+                            <div class="settings-field">
+                                <label for="whatsappNumberInput">
+                                    <i class="fas fa-phone"></i>
+                                    Seu Numero
+                                </label>
+                                <input type="tel" id="whatsappNumberInput" class="form-input"
+                                       placeholder="5521999999999" maxlength="13">
+                                <span class="field-hint">DDI + DDD + Numero</span>
+                            </div>
+                            <button type="button" class="btn-whatsapp-link" data-action="link-whatsapp">
+                                <i class="fas fa-link"></i> Vincular Numero
+                            </button>
+                        </div>
+
+                        <div class="whatsapp-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Registrar gastos por mensagem</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Consultar saldo e extrato</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Resumo financeiro do mes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações de Ambiente -->
+    <script src="../js/env-config.js"></script>
+
+    <script src="finance-core.js"></script>
+    <script src="finance-data.js"></script>
+    <script src="liquid-fill-gauge.js"></script>
+    <script src="finance-ui.js"></script>
+    <script src="dashboard-enhanced.js"></script>
+
+    <!-- Particles Animation Script -->
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+</body>
+</html>

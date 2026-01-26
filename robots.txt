@@ -1,0 +1,37 @@
+# Robots.txt - ImaginaTech
+# https://imaginatech.com.br
+
+# Permitir todos os crawlers
+User-agent: *
+Allow: /
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Arquivos e diretórios bloqueados
+Disallow: /financas/
+Disallow: /admin/
+Disallow: /*.json$
+Disallow: /*_dev.html$
+
+# Permitir recursos estáticos
+Allow: /assets/
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.webp$
+Allow: /*.svg$
+
+# Sitemap
+Sitemap: https://imaginatech.com.br/sitemap.xml
+
+# Host canônico
+Host: https://imaginatech.com.br

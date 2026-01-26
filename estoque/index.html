@@ -1,0 +1,713 @@
+<!--
+==================================================
+ARQUIVO: estoque/index.html
+MÓDULO: Gestão de Estoque (Filamentos)
+SISTEMA: ImaginaTech - Gestão de Impressão 3D
+VERSÃO: 2.0 - Security Hardened
+IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - ImaginaTech Admin</title>
+    <meta name="description" content="Gestão de estoque de filamentos - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com wss://*.firebaseio.com;
+        frame-src 'self' https://accounts.google.com https://*.firebaseapp.com;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/estoque/">
+    <meta property="og:title" content="Estoque - ImaginaTech">
+    <meta property="og:description" content="Sistema de gestão de estoque de filamentos - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Estilos base compartilhados -->
+    <link rel="stylesheet" href="/servicos/styles.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/custom-select.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+    <!-- Customizacoes do modulo Estoque -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando estoque...</div>
+        </div>
+    </div>
+
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Gestao de Estoque</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para funcionarios autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" data-action="sign-in-google">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Cliente? <a href="/">Voltar ao site</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Restrito</h1>
+            <p class="access-denied-message" id="deniedMessage">
+                Esta area e exclusiva para administradores.
+            </p>
+            <p class="access-denied-submessage">
+                O gerenciamento de estoque requer permissao especial de acesso.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <div class="access-denied-actions">
+                <a href="/" class="access-denied-btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Inicio
+                </a>
+                <a href="/acompanhar-pedido/" class="access-denied-btn btn-secondary">
+                    <i class="fas fa-cube"></i>
+                    Acompanhar Pedido
+                </a>
+            </div>
+            <button class="access-denied-btn btn-logout" data-action="sign-out">
+                <i class="fas fa-sign-out-alt"></i>
+                Fazer Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="dashboard hidden" id="dashboard">
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Gestão de Estoque</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="nav-buttons-desktop">
+                        <a href="/servicos/" class="btn-nav" title="Servicos">
+                            <i class="fas fa-tasks"></i>
+                        </a>
+                        <a href="/custo/" class="btn-nav" title="Custo">
+                            <i class="fas fa-calculator"></i>
+                        </a>
+                        <a href="/financas/" class="btn-nav" title="Financas">
+                            <i class="fas fa-wallet"></i>
+                        </a>
+                        <a href="/admin-portfolio/" class="btn-nav" title="Portfolio">
+                            <i class="fas fa-images"></i>
+                        </a>
+                        <a href="/marketplace/" class="btn-nav" title="Marketplace">
+                            <i class="fas fa-store"></i>
+                        </a>
+                    </div>
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-logout" data-action="sign-out" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/servicos/" class="mobile-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="/custo/" class="mobile-nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Custo</span>
+            </a>
+            <a href="/financas/" class="mobile-nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>Finanças</span>
+            </a>
+            <a href="/admin-portfolio/" class="mobile-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Portfolio</span>
+            </a>
+            <a href="/marketplace/" class="mobile-nav-item">
+                <i class="fas fa-store"></i>
+                <span>Marketplace</span>
+            </a>
+        </div>
+
+        <main class="main-content">
+            <div class="container">
+                <!-- ========== SEÇÃO: FILAMENTOS ========== -->
+                <section id="filamentos-section" class="inventory-section active">
+
+                <!-- Header com Ações -->
+                <div class="action-bar">
+                    <div class="section-selector" id="selectorFilamentos">
+                        <button class="selector-btn active" data-section="filamentos" data-action="switch-section" data-value="filamentos">
+                            <i class="fas fa-scroll"></i>
+                            Filamentos
+                        </button>
+                        <button class="selector-btn" data-section="inventario" data-action="switch-section" data-value="inventario">
+                            <i class="fas fa-toolbox"></i>
+                            Equipamentos
+                        </button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" data-action="open-add-filament-modal">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Filamento
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards de Estatísticas (Clicáveis como filtros) -->
+                <div class="stats-grid">
+                    <div class="stat-card clickable active" id="statCardTotal" data-action="filter-stat-card" data-value="total">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalFilaments">0</div>
+                            <div class="stat-label">Total de Filamentos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" id="statCardOk" data-action="filter-stat-card" data-value="ok">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stockOk">0</div>
+                            <div class="stat-label">Estoque OK (>800g)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" id="statCardLow" data-action="filter-stat-card" data-value="low">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="stockLow">0</div>
+                            <div class="stat-label">Estoque Baixo (600g ou menos)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" id="statCardWeight" data-action="filter-stat-card" data-value="weight">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalWeight">0 kg</div>
+                            <div class="stat-label">Peso Total em Estoque</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-bar">
+                    <div class="filter-group" id="filterGroupType">
+                        <button class="filter-btn active" data-filter="type" data-value="todos" data-action="filter-type">
+                            <i class="fas fa-list"></i> Todos
+                        </button>
+                        <button class="filter-btn" data-filter="type" data-value="PLA" data-action="filter-type">
+                            PLA
+                        </button>
+                        <button class="filter-btn" data-filter="type" data-value="ABS" data-action="filter-type">
+                            ABS
+                        </button>
+                        <button class="filter-btn" data-filter="type" data-value="PETG" data-action="filter-type">
+                            PETG
+                        </button>
+                        <button class="filter-btn" data-filter="type" data-value="TPU" data-action="filter-type">
+                            TPU
+                        </button>
+                        <button class="filter-btn" data-filter="type" data-value="outros" data-action="filter-type">
+                            <i class="fas fa-ellipsis-h"></i> Outros
+                        </button>
+                    </div>
+                    <div class="filter-group" id="filterGroupBrand">
+                        <!-- Marcas serao populadas dinamicamente -->
+                    </div>
+                    <div class="filter-group" id="filterGroupStock">
+                        <button class="filter-btn" data-filter="stock" data-value="low" data-action="filter-stock">
+                            <i class="fas fa-battery-quarter"></i> Baixo
+                        </button>
+                        <button class="filter-btn" data-filter="stock" data-value="ok" data-action="filter-stock">
+                            <i class="fas fa-battery-full"></i> OK
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de Filamentos -->
+                <div class="filaments-grid" id="filamentsGrid">
+                    <!-- Cards dinâmicos aqui -->
+                </div>
+
+                <!-- Estado Vazio -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+                    <h3>Nenhum filamento cadastrado</h3>
+                    <p>Adicione seu primeiro filamento ao estoque</p>
+                    <button class="btn-primary" data-action="open-add-filament-modal">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Filamento
+                    </button>
+                </div>
+
+                </section>
+                <!-- ========== FIM SEÇÃO: FILAMENTOS ========== -->
+
+                <!-- ========== SEÇÃO: INVENTÁRIO ========== -->
+                <section id="inventario-section" class="inventory-section">
+
+                    <!-- Header com Ações -->
+                    <div class="action-bar">
+                        <div class="section-selector" id="selectorInventario">
+                            <button class="selector-btn" data-section="filamentos" data-action="switch-section" data-value="filamentos">
+                                <i class="fas fa-scroll"></i>
+                                Filamentos
+                            </button>
+                            <button class="selector-btn active" data-section="inventario" data-action="switch-section" data-value="inventario">
+                                <i class="fas fa-toolbox"></i>
+                                Equipamentos
+                            </button>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-primary" data-action="open-add-equipment-modal">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Equipamento
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card de Total Investido -->
+                    <div class="total-invested-card">
+                        <div class="invested-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="invested-info">
+                            <span class="invested-label">Total Investido</span>
+                            <span class="invested-value" id="totalInvested">R$ 0,00</span>
+                        </div>
+                        <div class="invested-count">
+                            <span id="equipmentCount">0</span> equipamentos
+                        </div>
+                        <div class="invested-sort">
+                            <select id="equipmentSortSelect" class="sort-select-compact" data-action="sort-equipment">
+                                <option value="price-desc">Preço ↓</option>
+                                <option value="price-asc">Preço ↑</option>
+                                <option value="name-asc">Nome A-Z</option>
+                                <option value="name-desc">Nome Z-A</option>
+                                <option value="date-desc">Recentes</option>
+                                <option value="date-asc">Antigos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Equipamentos -->
+                    <div class="equipment-grid" id="equipmentGrid">
+                        <!-- Cards dinâmicos aqui -->
+                    </div>
+
+                    <!-- Estado Vazio -->
+                    <div class="empty-state" id="equipmentEmptyState">
+                        <div class="empty-icon"><i class="fas fa-tools"></i></div>
+                        <h3>Nenhum equipamento cadastrado</h3>
+                        <p>Adicione seu primeiro equipamento ao inventário</p>
+                        <button class="btn-primary" data-action="open-add-equipment-modal">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Equipamento
+                        </button>
+                    </div>
+
+                </section>
+                <!-- ========== FIM SEÇÃO: INVENTÁRIO ========== -->
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Adicionar/Editar Filamento -->
+    <div class="modal" id="filamentModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> Adicionar Filamento</h2>
+                <button class="modal-close" data-action="close-filament-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="filamentForm" data-form="filament">
+                <div class="modal-body">
+                    <input type="hidden" id="filamentId">
+
+                    <!-- Upload de Imagem -->
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Foto do Rolo (PNG com fundo transparente) *</label>
+                        <div class="image-upload-area" id="imageUploadArea" data-action="trigger-filament-upload">
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Arraste uma imagem ou clique aqui</p>
+                                <small>PNG, JPEG ou WebP (transparência recomendada)</small>
+                            </div>
+                            <img id="imagePreview" class="image-preview-img" style="display: none;" alt="Preview">
+                        </div>
+                        <input type="file" id="filamentImage" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" data-action="preview-filament-image">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filamentType"><i class="fas fa-cube"></i> Tipo *</label>
+                            <select id="filamentType" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="PLA">PLA</option>
+                                <option value="PLA Flex">PLA Flex</option>
+                                <option value="ABS">ABS</option>
+                                <option value="PETG">PETG</option>
+                                <option value="TPU">TPU</option>
+                                <option value="PC">PC (Policarbonato)</option>
+                                <option value="PP">PP (Polipropileno)</option>
+                                <option value="Nylon PA6">Nylon PA6</option>
+                                <option value="Nylon PA12">Nylon PA12</option>
+                                <option value="Nylon">Nylon (Outros)</option>
+                                <option value="ASA">ASA</option>
+                                <option value="HIPS">HIPS</option>
+                                <option value="PVA">PVA</option>
+                                <option value="Resina">Resina</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filamentBrand"><i class="fas fa-copyright"></i> Marca *</label>
+                            <select id="filamentBrand" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="3DLab">3DLab</option>
+                                <option value="3D Fila">3D Fila</option>
+                                <option value="Creality">Creality</option>
+                                <option value="Cotrim">Cotrim</option>
+                                <option value="eSUN">eSUN</option>
+                                <option value="F3D">F3D</option>
+                                <option value="Flashforge">Flashforge</option>
+                                <option value="Frisotech">Frisotech</option>
+                                <option value="PrintaLot">PrintaLot</option>
+                                <option value="Sethi3D">Sethi3D</option>
+                                <option value="StlFlix">StlFlix</option>
+                                <option value="Sunlu">Sunlu</option>
+                                <option value="Voolt 3D">Voolt 3D</option>
+                                <option value="Xiaozhuz">Xiaozhuz</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filamentColor"><i class="fas fa-palette"></i> Cor *</label>
+                            <input type="text" id="filamentColor" class="form-input" required placeholder="Ex: Preto, Branco, Azul...">
+                        </div>
+                        <div class="form-group">
+                            <label for="filamentWeight"><i class="fas fa-weight"></i> Peso (kg) *</label>
+                            <input type="number" id="filamentWeight" class="form-input" step="0.001" min="0" required placeholder="1.000">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filamentNotes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <textarea id="filamentNotes" class="form-textarea" rows="2" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-action="close-filament-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar Filamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Ações ao clicar no card -->
+    <div class="modal" id="cardActionsModal" role="dialog" aria-modal="true" aria-labelledby="cardActionsTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="cardActionsTitle"><i class="fas fa-cog"></i> O que deseja fazer?</h2>
+                <button class="modal-close" data-action="close-card-actions-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-info-summary" id="cardInfoSummary">
+                    <!-- Informações do filamento serão inseridas aqui -->
+                </div>
+
+                <!-- Dedução Rápida -->
+                <div class="quick-deduction-section">
+                    <div class="quick-deduction-header">
+                        <i class="fas fa-minus-circle"></i>
+                        <span>Dedução Rápida</span>
+                    </div>
+                    <div class="quick-deduction-form">
+                        <input type="number" id="quickDeductionAmount" class="form-input" placeholder="Quantidade em gramas" min="1" step="1">
+                        <button type="button" class="btn-deduct" data-action="quick-deduction">
+                            <i class="fas fa-minus"></i>
+                            Deduzir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-options">
+                    <button class="action-option-btn" data-action="restock-1kg">
+                        <i class="fas fa-box"></i>
+                        <span>Recompra 1kg</span>
+                        <small>Adicionar um rolo completo de 1kg</small>
+                    </button>
+                    <button class="action-option-btn" data-action="add-fractional">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Adicionar Quantidade Fracionada</span>
+                        <small>Adicionar quantidade personalizada</small>
+                    </button>
+                    <button class="action-option-btn" data-action="edit-filament">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar Filamento</span>
+                        <small>Modificar informações do filamento</small>
+                    </button>
+                    <button class="action-option-btn delete-option" data-action="delete-filament">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir Filamento</span>
+                        <small>Remover permanentemente</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Adicionar/Editar Equipamento -->
+    <div class="modal" id="equipmentModal" role="dialog" aria-modal="true" aria-labelledby="equipmentModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="equipmentModalTitle"><i class="fas fa-plus"></i> Adicionar Equipamento</h2>
+                <button class="modal-close" data-action="close-equipment-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="equipmentForm" data-form="equipment">
+                <div class="modal-body">
+                    <input type="hidden" id="equipmentId">
+
+                    <!-- Upload de Imagem -->
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Foto do Equipamento</label>
+                        <div class="image-upload-area" id="equipmentImageUpload" data-action="trigger-equipment-upload">
+                            <div class="upload-placeholder" id="equipmentUploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Arraste uma imagem ou clique aqui</p>
+                                <small>PNG, JPEG ou WebP</small>
+                            </div>
+                            <img id="equipmentImagePreview" class="image-preview-img" style="display: none;" alt="Preview">
+                        </div>
+                        <input type="file" id="equipmentImage" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" data-action="preview-equipment-image">
+                    </div>
+
+                    <!-- Nome -->
+                    <div class="form-group">
+                        <label for="equipmentName"><i class="fas fa-tag"></i> Nome do Equipamento *</label>
+                        <input type="text" id="equipmentName" class="form-input" required placeholder="Ex: Impressora 3D K1">
+                    </div>
+
+                    <!-- Marca -->
+                    <div class="form-group">
+                        <label for="equipmentBrand"><i class="fas fa-copyright"></i> Marca *</label>
+                        <input type="text" id="equipmentBrand" class="form-input" required placeholder="Ex: Creality">
+                    </div>
+
+                    <!-- Preço -->
+                    <div class="form-group">
+                        <label for="equipmentPrice"><i class="fas fa-dollar-sign"></i> Preço (R$) *</label>
+                        <input type="number" id="equipmentPrice" class="form-input" required min="0" step="0.01" placeholder="0,00">
+                    </div>
+
+                    <!-- Mês e Ano de Aquisição -->
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar-alt"></i> Data de Aquisição *</label>
+                        <div class="form-row acquisition-date-row">
+                            <select id="equipmentAcquisitionMonth" class="form-select">
+                                <option value="">Mês</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                            <select id="equipmentAcquisitionYear" class="form-select">
+                                <option value="">Ano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Status do Equipamento -->
+                    <div class="form-group">
+                        <label><i class="fas fa-heartbeat"></i> Status do Equipamento *</label>
+                        <div class="status-buttons">
+                            <button type="button" class="status-btn operational active" data-status="operational" data-action="select-equipment-status" data-value="operational">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Operacional</span>
+                            </button>
+                            <button type="button" class="status-btn repair" data-status="repair" data-action="select-equipment-status" data-value="repair">
+                                <i class="fas fa-tools"></i>
+                                <span>Em Reparo</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="equipmentStatus" value="operational">
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="form-group">
+                        <label for="equipmentNotes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <textarea id="equipmentNotes" class="form-textarea" rows="2" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-action="close-equipment-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar Equipamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Ações do Equipamento -->
+    <div class="modal" id="equipmentActionsModal" role="dialog" aria-modal="true" aria-labelledby="equipmentActionsTitle" aria-hidden="true">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="equipmentActionsTitle"><i class="fas fa-cog"></i> O que deseja fazer?</h2>
+                <button class="modal-close" data-action="close-equipment-actions-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-info-summary" id="equipmentInfoSummary">
+                    <!-- Informações do equipamento serão inseridas aqui -->
+                </div>
+                <div class="action-options">
+                    <button class="action-option-btn" data-action="edit-equipment">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar Equipamento</span>
+                        <small>Modificar informações</small>
+                    </button>
+                    <button class="action-option-btn delete-option" data-action="delete-equipment">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir Equipamento</span>
+                        <small>Remover permanentemente</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Configurações de Ambiente -->
+    <script src="../js/env-config.js"></script>
+
+    <script src="script.js"></script>
+    <script src="/shared/custom-select.js"></script>
+
+    <script>
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = window.innerWidth < 768 ? 15 : 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `left:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${20+Math.random()*10}s`;
+                container.appendChild(particle);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+</body>
+</html>

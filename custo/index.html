@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento ImaginaTech - Sistema de Cálculo</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistema de orçamento para impressão 3D. ImaginaTech - Tecnologia e Inovação.">
+    <meta name="keywords" content="orçamento, impressão 3d, custo, imaginatech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com;
+        frame-src 'self' https://accounts.google.com https://*.firebaseapp.com;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/custo/">
+    <meta property="og:title" content="Orçamento - ImaginaTech">
+    <meta property="og:description" content="Sistema de cálculo e orçamento para serviços de impressão 3D - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="ImaginaTech - Impressão 3D">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="styles-custo.css">
+    <!-- CSS Compartilhado - /shared -->
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- html2canvas para gerar prints -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Verificando autenticação...</div>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Sistema de Orcamento</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <h2 class="auth-title">Acesso Restrito</h2>
+            <p class="auth-message">
+                Area exclusiva para colaboradores autorizados da ImaginaTech.
+            </p>
+            <button class="auth-btn-google" data-action="login-google">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Apenas emails autorizados tem acesso</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Restrito</h1>
+            <p class="access-denied-message" id="deniedMessage">
+                Esta area e exclusiva para administradores.
+            </p>
+            <p class="access-denied-submessage">
+                O sistema de calculo e orcamento requer permissao especial de acesso.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <div class="access-denied-actions">
+                <a href="/" class="access-denied-btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Inicio
+                </a>
+                <a href="/acompanhar-pedido/" class="access-denied-btn btn-secondary">
+                    <i class="fas fa-cube"></i>
+                    Acompanhar Pedido
+                </a>
+            </div>
+            <button class="access-denied-btn btn-logout" data-action="logout">
+                <i class="fas fa-sign-out-alt"></i>
+                Fazer Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until authenticated) -->
+    <div class="main-app" id="mainApp" style="display: none;">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Sistema de Orçamento</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="nav-buttons-desktop">
+                        <a href="/servicos" class="btn-nav" title="Servicos">
+                            <i class="fas fa-tasks"></i>
+                        </a>
+                        <a href="/estoque/" class="btn-nav" title="Estoque">
+                            <i class="fas fa-box-open"></i>
+                        </a>
+                        <a href="/financas/" class="btn-nav" title="Financas">
+                            <i class="fas fa-wallet"></i>
+                        </a>
+                        <a href="/admin-portfolio/" class="btn-nav btn-portfolio" title="Portfolio">
+                            <i class="fas fa-images"></i>
+                        </a>
+                        <a href="/marketplace/" class="btn-nav" title="Marketplace">
+                            <i class="fas fa-store"></i>
+                        </a>
+                    </div>
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-logout" data-action="logout" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/servicos/" class="mobile-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="/estoque/" class="mobile-nav-item">
+                <i class="fas fa-box-open"></i>
+                <span>Estoque</span>
+            </a>
+            <a href="/financas/" class="mobile-nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>Finanças</span>
+            </a>
+            <a href="/admin-portfolio/" class="mobile-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Portfolio</span>
+            </a>
+            <a href="/marketplace/" class="mobile-nav-item">
+                <i class="fas fa-store"></i>
+                <span>Marketplace</span>
+            </a>
+        </div>
+
+        <!-- Main Container -->
+        <div class="container">
+            <div class="calculator-wrapper">
+                <!-- Coluna do Formulário -->
+                <div class="form-column">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h2 class="form-title">
+                                <i class="fas fa-calculator"></i>
+                                Dados da Impressão
+                            </h2>
+                        </div>
+
+                        <!-- Seleção de Impressora e Material -->
+                        <div class="form-row">
+                            <!-- Seleção de Impressora -->
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-print"></i>
+                                    Impressora / Máquina
+                                </label>
+                                <div class="printer-buttons">
+                                    <button type="button" class="printer-btn" data-printer="M7">M7</button>
+                                    <button type="button" class="printer-btn" data-printer="K1">K1</button>
+                                    <button type="button" class="printer-btn" data-printer="K1M">K1M</button>
+                                    <button type="button" class="printer-btn" data-printer="K2PLUS">K2+</button>
+                                    <button type="button" class="printer-btn" data-printer="LASER">CO2</button>
+                                </div>
+                            </div>
+
+                            <!-- Seleção de Material (aparece após selecionar impressora) -->
+                            <div class="form-section" id="material-selection" style="display: none;">
+                                <label class="form-label">
+                                    <i class="fas fa-cube"></i>
+                                    Tipo de Material
+                                </label>
+                                <div class="material-buttons" id="material-buttons">
+                                    <!-- Botões serão inseridos dinamicamente via JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Price Field (se necessário) -->
+                        <div class="custom-price-field" id="custom-price-field" style="display: none;">
+                            <label class="form-label">Preço do Material (R$/<span id="custom-unit">kg</span>)</label>
+                            <input type="number" id="custom-material-price" class="form-input" min="0" step="0.01" placeholder="Digite o preço">
+                        </div>
+
+                        <!-- Tempo de Produção -->
+                        <div class="form-section">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Tempo de Produção
+                            </label>
+                            <div class="control-with-buttons">
+                                <div class="display-box">
+                                    <div class="time-display">
+                                        <span id="time-hours-display">0</span>h
+                                        <span id="time-minutes-display">00</span>min
+                                    </div>
+                                </div>
+                                <div class="buttons-grid buttons-grid-2x3">
+                                    <button type="button" class="increment-btn" id="btn-add-24h">
+                                        <i class="fas fa-plus"></i> 24h
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-24h">
+                                        <i class="fas fa-minus"></i> 24h
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-add-1h">
+                                        <i class="fas fa-plus"></i> 1h
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-1h">
+                                        <i class="fas fa-minus"></i> 1h
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-add-15m">
+                                        <i class="fas fa-plus"></i> 15min
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-15m">
+                                        <i class="fas fa-minus"></i> 15min
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Material Utilizado -->
+                        <div class="form-section">
+                            <label class="form-label" id="material-usage-label">
+                                <i class="fas fa-cube"></i>
+                                Material Utilizado (<span id="material-unit">g</span>)
+                            </label>
+                            <div class="control-with-buttons">
+                                <div class="display-box">
+                                    <div class="material-display">
+                                        <span id="material-amount-display">0</span><span id="material-unit-display">g</span>
+                                    </div>
+                                </div>
+                                <div class="buttons-grid buttons-grid-2x3">
+                                    <button type="button" class="increment-btn" id="btn-add-500">
+                                        <i class="fas fa-plus"></i> 500<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-500">
+                                        <i class="fas fa-minus"></i> 500<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-add-100">
+                                        <i class="fas fa-plus"></i> 100<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-100">
+                                        <i class="fas fa-minus"></i> 100<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-add-10">
+                                        <i class="fas fa-plus"></i> 10<span class="material-btn-unit">g</span>
+                                    </button>
+                                    <button type="button" class="increment-btn" id="btn-sub-10">
+                                        <i class="fas fa-minus"></i> 10<span class="material-btn-unit">g</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantidade e Margem de Lucro -->
+                        <div class="form-row">
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    Quantidade
+                                </label>
+                                <input type="number" id="print-quantity" class="form-input" min="1" value="1">
+                                <label class="checkbox-label" style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: var(--text-secondary);">
+                                    <input type="checkbox" id="divide-by-quantity" style="width: 18px; height: 18px; accent-color: var(--neon-cyan); cursor: pointer;">
+                                    <span>Dividir pela quantidade</span>
+                                </label>
+                            </div>
+                            <div class="form-section">
+                                <label class="form-label">
+                                    <i class="fas fa-percentage"></i>
+                                    Margem de Lucro (%)
+                                </label>
+                                <input type="number" id="profit-margin" class="form-input" min="0" value="280" step="1">
+                            </div>
+                        </div>
+
+                        <!-- Consumíveis (apenas para resina) -->
+                        <div class="form-section" id="consumables-field" style="display: none;">
+                            <label class="form-label">
+                                <i class="fas fa-tools"></i>
+                                Consumíveis (R$)
+                            </label>
+                            <input type="number" id="consumables" class="form-input" min="0" value="2" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna de Resultados -->
+                <div class="results-column">
+                    <!-- Card de Resultados do Cálculo -->
+                    <div class="results-card" id="results-card-main">
+                        <div class="results-header">
+                            <h2 class="results-title">
+                                <i class="fas fa-chart-line"></i>
+                                Análise de Custos
+                            </h2>
+                        </div>
+                        <div id="results-output" class="results-content">
+                            <div class="empty-state">
+                                <i class="fas fa-calculator"></i>
+                                <p>Selecione uma impressora e preencha os dados para calcular</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo Nome do Modelo e Botão Gerar Print -->
+                    <div class="print-actions-card">
+                        <div class="form-section">
+                            <label class="form-label">
+                                <i class="fas fa-tag"></i>
+                                Nome do Modelo
+                            </label>
+                            <input type="text" id="model-name" class="form-input" placeholder="Digite o nome do modelo">
+                        </div>
+                        <button id="generate-print-btn" class="btn btn-print" data-action="generate-print">
+                            <i class="fas fa-camera"></i>
+                            Gerar em Print
+                        </button>
+                        <button id="generate-colors-btn" class="btn btn-print" data-action="generate-color-print" style="margin-top: 0.5rem; background: linear-gradient(135deg, #9945FF, #00D4FF);">
+                            <i class="fas fa-palette"></i>
+                            Gerar Print de Cores
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Resultado do Print de Cores -->
+    <div class="modal" id="colorPrintResultModal" role="dialog" aria-modal="true" aria-labelledby="colorPrintModalTitle" aria-hidden="true">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="colorPrintModalTitle"><i class="fas fa-palette"></i> Cores Disponíveis</h2>
+                <button class="modal-close" data-action="close-color-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="print-info" style="display: flex; gap: 2rem; margin-bottom: 1.5rem; justify-content: center;">
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Quantidade Necessária</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-cyan);" id="colorPrintRequiredAmount">0g</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Material</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-purple);" id="colorPrintMaterialType">PLA</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Cores Disponíveis</span>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: var(--neon-green);" id="colorPrintAvailableCount">0</p>
+                    </div>
+                </div>
+                <div id="colorPrintPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; padding: 1rem; background: #ffffff; border-radius: 12px; min-height: 200px;">
+                    <!-- Cores serão inseridas aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-action="close-color-modal">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+                <button class="btn-primary" data-action="download-color-print">
+                    <i class="fas fa-download"></i> Baixar Imagem
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações de Ambiente -->
+    <script src="../js/env-config.js"></script>
+
+    <!-- JavaScript -->
+    <script src="script-custo.js"></script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+</body>
+</html>

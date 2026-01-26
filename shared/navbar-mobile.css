@@ -1,0 +1,115 @@
+/* ===========================
+   NAVBAR MOBILE - CSS Compartilhado
+   /shared/navbar-mobile.css
+
+   Sistema responsivo que troca botoes inline por dropdown em telas pequenas.
+   Breakpoint: 600px
+
+   Uso:
+   1. Adicionar <link rel="stylesheet" href="/shared/navbar-mobile.css"> no HTML
+   2. Usar as classes .nav-buttons-desktop e .mobile-nav-dropdown no HTML
+   3. Incluir /shared/navbar-mobile.js para a logica de toggle
+   =========================== */
+
+/* Container dos botoes de navegacao (desktop/tablet) */
+.nav-buttons-desktop {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Botao que abre o menu mobile - oculto por padrao */
+.btn-mobile-menu {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Menu dropdown mobile - oculto por padrao, posicionado fora da navbar */
+.mobile-nav-dropdown {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    background: rgba(10, 14, 26, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 15px;
+    padding: 10px;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+}
+
+/* Estado aberto do dropdown */
+.mobile-nav-dropdown.open {
+    display: flex;
+}
+
+/* Item individual do menu mobile */
+.mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+}
+
+.mobile-nav-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: #00D4FF;
+}
+
+.mobile-nav-item i {
+    width: 20px;
+    text-align: center;
+    color: #00D4FF;
+}
+
+/* Divisor entre secoes do menu */
+.mobile-nav-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+}
+
+/* ===========================
+   MEDIA QUERY - Ativacao Mobile (<=600px)
+   =========================== */
+@media (max-width: 600px) {
+    /* Esconder botoes de navegacao desktop */
+    .nav-buttons-desktop {
+        display: none;
+    }
+
+    /* Mostrar botao menu mobile */
+    .btn-mobile-menu {
+        display: flex;
+        padding: 6px 10px;
+        min-width: 34px;
+    }
+
+    /* Animacao do icone (chevron) */
+    .btn-mobile-menu i {
+        transition: transform 0.3s;
+    }
+
+    /* Rotacionar icone quando aberto */
+    .btn-mobile-menu.open i {
+        transform: rotate(180deg);
+    }
+}

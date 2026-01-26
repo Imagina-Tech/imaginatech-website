@@ -1,0 +1,156 @@
+/* =============================================
+   LOADING - Componente Compartilhado
+   /shared/loading.css
+
+   Overlay de carregamento com spinner
+   Usado em: todos os paineis administrativos
+   ============================================= */
+
+/* ===== OVERLAY ===== */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-loading, 1080);  /* Acima de tudo exceto casos extremos */
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Versao alternativa para display none */
+.loading-overlay[hidden] {
+    display: none !important;
+}
+
+/* ===== CONTEUDO ===== */
+.loading-content {
+    text-align: center;
+}
+
+/* ===== SPINNER ===== */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(0, 212, 255, 0.2);
+    border-top-color: var(--neon-blue, #00D4FF);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+/* Spinner pequeno para botoes */
+.loading-spinner.small {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+    margin: 0;
+}
+
+/* Spinner grande para tela inteira */
+.loading-spinner.large {
+    width: 80px;
+    height: 80px;
+    border-width: 4px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== TEXTO ===== */
+.loading-text {
+    color: var(--neon-blue, #00D4FF);
+    font-size: 0.9rem;
+    animation: pulseFade 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseFade {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ===== VARIANTE COM LOGO ===== */
+.loading-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+    animation: pulse-logo 2s ease-in-out infinite;
+}
+
+@keyframes pulse-logo {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+/* ===== INLINE LOADING (para secoes) ===== */
+.section-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    min-height: 200px;
+}
+
+.section-loading .loading-spinner {
+    margin-bottom: 0;
+}
+
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md, 8px);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+    }
+
+    .loading-spinner.large {
+        width: 60px;
+        height: 60px;
+    }
+
+    .loading-text {
+        font-size: 0.85rem;
+    }
+}

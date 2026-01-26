@@ -1,0 +1,95 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ===========================
+    // VERIFICACAO DE ADMIN VIA CUSTOM CLAIMS
+    // Custom claim 'admin' e definido automaticamente pela Cloud Function
+    // quando um admin e adicionado/ativado na colecao /admins
+    // ===========================
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Super Admin tem acesso total
+    function isSuperAdmin() {
+      return request.auth != null &&
+        request.auth.token.email == "3d3printers@gmail.com";
+    }
+
+    // Usuario autenticado com email verificado
+    function isAuthenticatedAndVerified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // ===========================
+    // ARQUIVOS DE SERVICOS
+    // Admins podem ler/escrever, usuarios autenticados podem ler
+    // ===========================
+    match /services/{serviceId}/{fileName} {
+      allow read: if isAuthenticatedAndVerified();
+      allow write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ===========================
+    // PORTFOLIO (Projetos Publicos)
+    // Leitura publica, escrita apenas admins
+    // ===========================
+    match /portfolio/{fileName} {
+      allow read: if true;
+      allow write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ===========================
+    // ARQUIVOS DE TAREFAS
+    // Apenas admins
+    // ===========================
+    match /tasks/{taskId}/{fileName} {
+      allow read: if isAdmin() || isSuperAdmin();
+      allow write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ===========================
+    // ARQUIVOS DE ESTOQUE
+    // Apenas admins
+    // ===========================
+    match /filaments/{fileName} {
+      allow read, write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    match /equipment/{fileName} {
+      allow read, write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ===========================
+    // ARQUIVOS DE PRODUTOS (Marketplace)
+    // Apenas admins
+    // ===========================
+    match /products/{fileName} {
+      allow read: if isAdmin() || isSuperAdmin();
+      allow write, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ===========================
+    // REGRA PADRAO - BLOQUEAR TUDO NAO ESPECIFICADO
+    // ===========================
+    match /{allPaths=**} {
+      // Bloquear por padrao - apenas paths especificos acima tem acesso
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ===========================
+    // VALIDACOES DE SEGURANCA
+    // ===========================
+    // Limite de tamanho de arquivo: 10MB
+    // Tipos permitidos: imagens, PDFs, arquivos 3D
+    match /{allPaths=**} {
+      allow write: if request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('application/pdf')
+            || request.resource.contentType.matches('model/.*')
+            || request.resource.contentType.matches('application/octet-stream'));
+    }
+  }
+}

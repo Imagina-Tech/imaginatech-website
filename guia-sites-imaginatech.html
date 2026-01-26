@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Sites - ImaginaTech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #00D4FF;
+        }
+
+        .header h1 {
+            color: #0a1428;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section h2 {
+            color: #0a1428;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section h2 span {
+            margin-right: 10px;
+        }
+
+        .site-item {
+            margin-bottom: 18px;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #00D4FF;
+        }
+
+        .site-item a {
+            color: #0077FF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .site-item a:hover {
+            text-decoration: underline;
+        }
+
+        .site-item p {
+            color: #555;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .admin-section .site-item {
+            border-left-color: #8B5CF6;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #eee;
+            text-align: center;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .footer .email {
+            color: #0077FF;
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ImaginaTech - Guia de Sites</h1>
+            <p>Acesso rapido a todas as paginas do sistema</p>
+        </div>
+
+        <div class="section">
+            <h2><span>🌐</span> Paginas Publicas (Clientes)</h2>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/" target="_blank">www.imaginatech.com.br</a>
+                <p>Site principal da empresa - apresenta servicos, portfolio e informacoes de contato</p>
+            </div>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/acompanhar-pedido/" target="_blank">www.imaginatech.com.br/acompanhar-pedido/</a>
+                <p>Cliente acompanha o status do pedido pelo codigo de rastreio</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span>📸</span> Portfolio e Projetos</h2>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/projetos/" target="_blank">www.imaginatech.com.br/projetos/</a>
+                <p>Galeria de projetos realizados - mostra trabalhos anteriores para clientes</p>
+            </div>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/admin-portfolio/" target="_blank">www.imaginatech.com.br/admin-portfolio/</a>
+                <p>Gerenciar projetos e fotos do portfolio - painel admin</p>
+            </div>
+        </div>
+
+        <div class="section admin-section">
+            <h2><span>🔐</span> Paginas Administrativas (Socios)</h2>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/servicos/" target="_blank">www.imaginatech.com.br/servicos/</a>
+                <p>Gerenciar os cards de servicos que aparecem no site principal</p>
+            </div>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/estoque/" target="_blank">www.imaginatech.com.br/estoque/</a>
+                <p>Controlar estoque de filamentos e equipamentos</p>
+            </div>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/financas/" target="_blank">www.imaginatech.com.br/financas/</a>
+                <p>Registrar entradas, saidas e acompanhar fluxo de caixa</p>
+            </div>
+
+            <div class="site-item">
+                <a href="https://www.imaginatech.com.br/custo/" target="_blank">www.imaginatech.com.br/custo/</a>
+                <p>Calculadora interna para montar orcamentos de impressao 3D</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Acesso administrativo:</strong> Fazer login com seu e-mail autorizado via Google</p>
+            <p>Seu e-mail de acesso: <span class="email">contato.elainesas@gmail.com</span></p>
+        </div>
+    </div>
+</body>
+</html>

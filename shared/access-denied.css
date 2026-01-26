@@ -1,0 +1,262 @@
+/* ===========================
+   ACCESS DENIED - CSS CENTRALIZADO
+   Estilo padrao vermelho para todas as telas de bloqueio
+   Usado por: Financas, Servicos, Estoque, Custo
+   =========================== */
+
+/* Tela de bloqueio fullscreen */
+.access-denied-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #1a0a0a 0%, #2d0a0a 50%, #0a0a0a 100%);
+    justify-content: center;
+    align-items: center;
+    animation: fadeInDenied 0.3s ease-out;
+}
+
+.access-denied-screen.active {
+    display: flex;
+}
+
+/* Efeito de luz vermelha no fundo */
+.access-denied-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 50, 50, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Container do conteudo */
+.access-denied-content {
+    position: relative;
+    text-align: center;
+    padding: 3rem;
+    max-width: 500px;
+    animation: slideUpDenied 0.4s ease-out;
+}
+
+/* Icone circular com glow */
+.access-denied-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(200, 0, 0, 0.3));
+    border: 3px solid #ff3333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.4),
+        0 0 60px rgba(255, 0, 0, 0.2),
+        inset 0 0 30px rgba(255, 0, 0, 0.1);
+    animation: pulseDenied 2s infinite;
+}
+
+.access-denied-icon i {
+    font-size: 3.5rem;
+    color: #ff3333;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+}
+
+/* Titulo */
+.access-denied-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ff3333;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+/* Mensagem principal */
+.access-denied-message {
+    font-size: 1.25rem;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+/* Submensagem */
+.access-denied-submessage {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Info do usuario */
+.access-denied-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    border-radius: 50px;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.access-denied-user i {
+    color: #ff5555;
+}
+
+/* Container de botoes */
+.access-denied-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+/* Botao padrao (neutro/voltar) */
+.access-denied-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.access-denied-btn:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 200, 100, 0.1));
+    border-color: #00ff88;
+    color: #00ff88;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+}
+
+.access-denied-btn i {
+    font-size: 1.1rem;
+}
+
+/* Botao primario (acao principal) */
+.access-denied-btn.btn-primary {
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    border-color: #00d4ff;
+    color: #000;
+}
+
+.access-denied-btn.btn-primary:hover {
+    background: linear-gradient(135deg, #00e5ff, #00aadd);
+    border-color: #00e5ff;
+    color: #000;
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+}
+
+/* Botao secundario */
+.access-denied-btn.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.access-denied-btn.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+
+/* Botao de logout (vermelho) */
+.access-denied-btn.btn-logout {
+    background: transparent;
+    border-color: rgba(255, 0, 0, 0.4);
+    color: #ff5555;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.access-denied-btn.btn-logout:hover {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: #ff3333;
+    color: #ff3333;
+    box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2);
+}
+
+/* Animacoes */
+@keyframes fadeInDenied {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUpDenied {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseDenied {
+    0%, 100% {
+        box-shadow:
+            0 0 30px rgba(255, 0, 0, 0.4),
+            0 0 60px rgba(255, 0, 0, 0.2),
+            inset 0 0 30px rgba(255, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow:
+            0 0 50px rgba(255, 0, 0, 0.6),
+            0 0 80px rgba(255, 0, 0, 0.3),
+            inset 0 0 40px rgba(255, 0, 0, 0.2);
+    }
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+    .access-denied-content {
+        padding: 2rem 1.5rem;
+    }
+
+    .access-denied-icon {
+        width: 100px;
+        height: 100px;
+    }
+
+    .access-denied-icon i {
+        font-size: 2.5rem;
+    }
+
+    .access-denied-title {
+        font-size: 1.75rem;
+        letter-spacing: 2px;
+    }
+
+    .access-denied-message {
+        font-size: 1.1rem;
+    }
+
+    .access-denied-submessage {
+        font-size: 0.9rem;
+    }
+
+    .access-denied-actions {
+        flex-direction: column;
+    }
+
+    .access-denied-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

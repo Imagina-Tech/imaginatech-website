@@ -1,0 +1,999 @@
+<!--
+==================================================
+ARQUIVO: marketplace/index.html
+MODULO: Monitor de Vendas - Marketplace
+SISTEMA: ImaginaTech - Gestao de Impressao 3D
+VERSAO: 2.0 - Simplificado (apenas monitoramento)
+==================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - ImaginaTech Admin</title>
+    <meta name="description" content="Monitor de vendas marketplace - ImaginaTech">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- SEGURANCA: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' https: data: blob:;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.cloudfunctions.net wss://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com;
+        frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://www.youtube.com;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- Open Graph / WhatsApp Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imaginatech.com.br/marketplace/">
+    <meta property="og:title" content="Marketplace - ImaginaTech Admin">
+    <meta property="og:description" content="Monitor de vendas marketplace - ImaginaTech">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
+
+    <!-- CSS Compartilhado - /shared (carregar ANTES do style.css para permitir overrides locais) -->
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="/shared/variables.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/auth-screen.css">
+    <link rel="stylesheet" href="/shared/access-denied.css">
+    <link rel="stylesheet" href="/shared/custom-select.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+    <!-- CSS Local (depois do shared para overrides) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Mobile Block -->
+    <div class="mobile-block" id="mobileBlock">
+        <div class="mobile-block-content">
+            <i class="fas fa-desktop"></i>
+            <h1>ESSE DASHBOARD E ACESSIVEL APENAS EM COMPUTADORES</h1>
+            <p>Por favor, acesse este sistema em um computador ou notebook para uma melhor experiencia.</p>
+        </div>
+    </div>
+
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg">
+        <div class="grid-lines"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Carregando...</div>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="auth-screen" id="loginScreen">
+        <div class="auth-content">
+            <div class="auth-logo">
+                <h1>ImaginaTech</h1>
+                <p>Marketplace</p>
+            </div>
+            <div class="auth-icon">
+                <i class="fas fa-store"></i>
+            </div>
+            <h2 class="auth-title">Monitor de Vendas</h2>
+            <p class="auth-message">
+                Monitore vendas e gerencie produtos do marketplace.
+            </p>
+            <button class="auth-btn-google" data-action="sign-in-google">
+                <i class="fab fa-google"></i>
+                <span>Entrar com Google</span>
+            </button>
+            <div class="auth-footer">
+                <p>Acesso restrito a administradores</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Acesso Negado -->
+    <div class="access-denied-screen" id="accessDeniedScreen">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <i class="fas fa-ban"></i>
+            </div>
+            <h1 class="access-denied-title">Acesso Negado</h1>
+            <p class="access-denied-message">
+                Voce nao possui permissao de administrador.
+            </p>
+            <p class="access-denied-submessage">
+                O acesso ao marketplace e restrito apenas para usuarios autorizados.
+            </p>
+            <div class="access-denied-user">
+                <i class="fas fa-user-slash"></i>
+                <span id="deniedUserEmail">email@exemplo.com</span>
+            </div>
+            <button class="access-denied-btn" data-action="sign-out">
+                <i class="fas fa-arrow-left"></i>
+                Sair e tentar outra conta
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard hidden" id="dashboard">
+        <!-- Header/Navbar -->
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-left">
+                    <div class="logo-section">
+                        <h1 class="logo">ImaginaTech</h1>
+                        <span class="logo-subtitle">Marketplace</span>
+                    </div>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span id="statusText">Conectado</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="nav-buttons-desktop">
+                        <a href="/financas/" class="btn-nav" title="Financas">
+                            <i class="fas fa-wallet"></i>
+                        </a>
+                        <a href="/servicos/" class="btn-nav" title="Servicos">
+                            <i class="fas fa-tasks"></i>
+                        </a>
+                        <a href="/estoque/" class="btn-nav" title="Estoque">
+                            <i class="fas fa-box-open"></i>
+                        </a>
+                        <a href="/custo/" class="btn-nav" title="Custo">
+                            <i class="fas fa-calculator"></i>
+                        </a>
+                        <a href="/admin-portfolio/" class="btn-nav" title="Portfolio">
+                            <i class="fas fa-images"></i>
+                        </a>
+                    </div>
+                    <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userPhoto" class="user-photo" alt="Foto">
+                        <div class="user-details">
+                            <span class="user-name" id="userName">Carregando...</span>
+                            <span class="user-role" id="userRole">Administrador</span>
+                        </div>
+                    </div>
+                    <button class="btn-nav btn-logout" data-action="sign-out" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu dropdown mobile -->
+        <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+            <a href="/financas/" class="mobile-nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>Financas</span>
+            </a>
+            <a href="/servicos/" class="mobile-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Servicos</span>
+            </a>
+            <a href="/estoque/" class="mobile-nav-item">
+                <i class="fas fa-box-open"></i>
+                <span>Estoque</span>
+            </a>
+            <a href="/custo/" class="mobile-nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Custo</span>
+            </a>
+            <a href="/admin-portfolio/" class="mobile-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Portfolio</span>
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1><i class="fas fa-store"></i> Monitor de Vendas</h1>
+                    <p>Gerencie produtos e monitore vendas do Mercado Livre</p>
+                </div>
+                <div class="page-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-box"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalProducts">0</span>
+                            <span class="stat-label">Produtos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-link"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="linkedProducts">0</span>
+                            <span class="stat-label">Vinculados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-pending">
+                        <i class="fas fa-clock"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="pendingOrdersCount">0</span>
+                            <span class="stat-label">Pendentes</span>
+                        </div>
+                    </div>
+                    <!-- Mercado Livre Status -->
+                    <div class="stat-card ml-status-card" id="mlStatusCard">
+                        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML" class="ml-icon">
+                        <div class="stat-info">
+                            <span class="stat-value ml-status" id="mlStatusText">Nao conectado</span>
+                            <span class="stat-label">Mercado Livre</span>
+                        </div>
+                        <button class="btn-ml-connect" id="mlConnectBtn" data-action="connect-ml">
+                            <i class="fas fa-plug"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="products" data-action="switch-tab">
+                    <i class="fas fa-box"></i>
+                    <span>Produtos</span>
+                </button>
+                <button class="tab-btn" data-tab="pending" data-action="switch-tab">
+                    <i class="fas fa-clock"></i>
+                    <span>Pedidos Pendentes</span>
+                    <span class="tab-badge" id="pendingBadge">0</span>
+                </button>
+                <button class="tab-btn" data-tab="history" data-action="switch-tab">
+                    <i class="fas fa-history"></i>
+                    <span>Historico de Vendas</span>
+                </button>
+            </div>
+
+            <!-- TAB: Produtos -->
+            <div class="tab-content active" id="tabProducts">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por nome, codigo, MLB...">
+                    </div>
+
+                    <div class="filter-group">
+                        <select id="filterSaleType" class="form-select">
+                            <option value="">Todos Tipos</option>
+                            <option value="estoque">Estoque Imediato</option>
+                            <option value="personalizacao">Personalizacao</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <select id="filterMaterial" class="form-select">
+                            <option value="">Todos Materiais</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-clear-filters" data-action="clear-filters" title="Limpar filtros">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                    <button class="btn-add-product" data-action="new-product">
+                        <i class="fas fa-plus"></i>
+                        <span>Novo Produto</span>
+                    </button>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-container">
+                    <table class="products-table" id="productsTable">
+                        <!-- Colgroup: Controla largura das colunas (redimensionamento estilo Excel) -->
+                        <colgroup id="tableColgroup">
+                            <col data-col-id="id" style="width: 55px;">
+                            <col data-col-id="name" style="width: 150px;">
+                            <col data-col-id="price" style="width: 100px;">
+                            <col data-col-id="type" style="width: 100px;">
+                            <col data-col-id="description" style="width: 180px;">
+                            <col data-col-id="machines" style="width: 100px;">
+                            <col data-col-id="material" style="width: 100px;">
+                            <col data-col-id="dimensions" style="width: 90px;">
+                            <col data-col-id="packaging" style="width: 90px;">
+                            <col data-col-id="weight" style="width: 70px;">
+                            <col data-col-id="gcode" style="width: 70px;">
+                            <col data-col-id="spacer" class="col-spacer">
+                            <col data-col-id="actions" style="width: 130px;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th data-col-id="id" class="sticky-col col-id">ID</th>
+                                <th data-col-id="name" class="col-name">Nome</th>
+                                <th data-col-id="price">Preco</th>
+                                <th data-col-id="type">Tipo</th>
+                                <th data-col-id="description">Descricao</th>
+                                <th data-col-id="machines">Maquinas</th>
+                                <th data-col-id="material">Material</th>
+                                <th data-col-id="dimensions">Dimensoes</th>
+                                <th data-col-id="packaging">Embalagem</th>
+                                <th data-col-id="weight">Peso</th>
+                                <th data-col-id="gcode">GCode</th>
+                                <th data-col-id="spacer" class="col-spacer"></th>
+                                <th data-col-id="actions" class="col-actions">Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                        </tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div class="empty-state hidden" id="emptyState">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Nenhum produto encontrado</h3>
+                        <p>Adicione produtos ou ajuste os filtros</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Pedidos Pendentes -->
+            <div class="tab-content" id="tabPending">
+                <div class="pending-header">
+                    <div class="pending-info">
+                        <h2><i class="fas fa-clock"></i> Pedidos Aguardando Envio</h2>
+                        <p>Vendas pagas que precisam ser enviadas</p>
+                    </div>
+                    <button class="btn-refresh" data-action="load-pending-orders">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Atualizar</span>
+                    </button>
+                </div>
+
+                <!-- Pending Orders List -->
+                <div class="orders-grid" id="pendingOrdersList">
+                    <!-- Cards serao inseridos via JS -->
+                </div>
+
+                <!-- Empty State Pending -->
+                <div class="empty-state-orders hidden" id="emptyPending">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Nenhum pedido pendente</h3>
+                    <p>Todos os pedidos foram enviados!</p>
+                </div>
+
+                <!-- Loading State -->
+                <div class="orders-loading hidden" id="pendingLoading">
+                    <div class="loading-spinner"></div>
+                    <span>Carregando pedidos...</span>
+                </div>
+            </div>
+
+            <!-- TAB: Historico de Vendas -->
+            <div class="tab-content" id="tabHistory">
+                <div class="history-header">
+                    <div class="history-info">
+                        <h2><i class="fas fa-history"></i> Historico de Vendas</h2>
+                        <p>Vendas entregues e concluidas</p>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyDays" class="form-select" data-action-change="load-sales-history">
+                            <option value="7">Ultimos 7 dias</option>
+                            <option value="15">Ultimos 15 dias</option>
+                            <option value="30" selected>Ultimos 30 dias</option>
+                            <option value="60">Ultimos 60 dias</option>
+                            <option value="90">Ultimos 90 dias</option>
+                        </select>
+                        <button class="btn-refresh" data-action="load-sales-history">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sales Summary -->
+                <div class="sales-summary" id="salesSummary">
+                    <div class="summary-card">
+                        <i class="fas fa-shopping-bag"></i>
+                        <div class="summary-info">
+                            <span class="summary-value" id="totalSales">0</span>
+                            <span class="summary-label">Vendas</span>
+                        </div>
+                    </div>
+                    <div class="summary-card summary-revenue">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="summary-info">
+                            <span class="summary-value" id="totalRevenue">R$ 0,00</span>
+                            <span class="summary-label">Receita Total</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <i class="fas fa-box"></i>
+                        <div class="summary-info">
+                            <span class="summary-value" id="totalItems">0</span>
+                            <span class="summary-label">Itens Vendidos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="table-container">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Pedido</th>
+                                <th>Produto</th>
+                                <th>Comprador</th>
+                                <th>Qtd</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State History -->
+                <div class="empty-state-orders hidden" id="emptyHistory">
+                    <i class="fas fa-inbox"></i>
+                    <h3>Nenhuma venda encontrada</h3>
+                    <p>Nao ha vendas no periodo selecionado</p>
+                </div>
+
+                <!-- Loading State -->
+                <div class="orders-loading hidden" id="historyLoading">
+                    <div class="loading-spinner"></div>
+                    <span>Carregando historico...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Vincular MLB -->
+    <div class="modal-overlay" id="linkMlbModal" role="dialog" aria-modal="true" aria-labelledby="linkMlbModalTitle" aria-hidden="true">
+        <div class="modal-container modal-link-mlb">
+            <div class="modal-header modal-header-ml">
+                <h2 id="linkMlbModalTitle"><i class="fas fa-link"></i> Vincular ao Mercado Livre</h2>
+                <button class="modal-close" data-action="close-link-mlb-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Produto sendo vinculado -->
+                <div class="linking-product-info" id="linkingProductInfo">
+                    <span class="linking-label">Vinculando produto:</span>
+                    <span class="linking-name" id="linkingProductName">-</span>
+                </div>
+
+                <!-- Busca -->
+                <div class="mlb-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="mlbSearchInput" class="form-input" placeholder="Buscar anuncio por titulo...">
+                </div>
+
+                <!-- Lista de Anuncios -->
+                <div class="mlb-items-list" id="mlbItemsList">
+                    <!-- Items inseridos via JS -->
+                </div>
+
+                <!-- Loading -->
+                <div class="mlb-items-loading hidden" id="mlbItemsLoading">
+                    <div class="loading-spinner"></div>
+                    <span>Carregando anuncios...</span>
+                </div>
+
+                <!-- Empty -->
+                <div class="mlb-items-empty hidden" id="mlbItemsEmpty">
+                    <i class="fas fa-inbox"></i>
+                    <span>Nenhum anuncio encontrado</span>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" data-action="close-link-mlb-modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-primary btn-ml-save" id="btnSaveMlbLink" data-action="save-mlb-link" disabled>
+                    <i class="fas fa-link"></i> Vincular Selecionado
+                </button>
+            </div>
+            <input type="hidden" id="linkingProductId">
+            <input type="hidden" id="selectedMlbId">
+        </div>
+    </div>
+
+    <!-- Modal Detalhes do Pedido -->
+    <div class="modal-overlay" id="orderDetailsModal" role="dialog" aria-modal="true" aria-labelledby="orderDetailsModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="orderDetailsModalTitle"><i class="fas fa-receipt"></i> Detalhes do Pedido</h2>
+                <button class="modal-close" data-action="close-order-details-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="order-details-content" id="orderDetailsContent">
+                    <!-- Conteudo via JS -->
+                </div>
+                <div class="order-details-loading hidden" id="orderDetailsLoading">
+                    <div class="loading-spinner"></div>
+                    <span>Carregando detalhes...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Produto Simplificado -->
+    <div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <!-- Overlay de sincronizacao -->
+            <div class="sync-overlay hidden" id="syncOverlay">
+                <div class="sync-content">
+                    <div class="sync-spinner"></div>
+                    <div class="sync-text">Sincronizando com Mercado Livre...</div>
+                    <div class="sync-progress">
+                        <div class="sync-progress-bar" id="syncProgressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-header">
+                <h2 id="productModalTitle"><i class="fas fa-box"></i> Novo Produto</h2>
+                <button class="modal-close" data-action="close-product-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="productForm" novalidate>
+                <div class="modal-body">
+                    <!-- Informacoes Basicas -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-tag"></i> Informacoes Basicas</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productIdField">ID</label>
+                                <input type="text" id="productIdField" class="form-input" readonly value="Auto">
+                            </div>
+                            <div class="form-group span-3">
+                                <label for="productName">Nome do Produto *</label>
+                                <input type="text" id="productName" class="form-input" required placeholder="Nome do produto" maxlength="60">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productPrice">
+                                    Preco (R$)
+                                    <span class="ml-sync-badge" title="Sincronizado com Mercado Livre"><i class="fas fa-sync"></i> ML</span>
+                                </label>
+                                <input type="number" id="productPrice" class="form-input ml-synced-field" min="0" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="productQuantity">
+                                    Quantidade
+                                    <span class="ml-sync-badge" title="Sincronizado com Mercado Livre"><i class="fas fa-sync"></i> ML</span>
+                                </label>
+                                <input type="number" id="productQuantity" class="form-input ml-synced-field" min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="productSku">SKU</label>
+                                <input type="text" id="productSku" class="form-input" placeholder="Codigo interno">
+                            </div>
+                            <div class="form-group">
+                                <label for="productGtin">GTIN/EAN</label>
+                                <input type="text" id="productGtin" class="form-input" placeholder="Codigo de barras">
+                            </div>
+                        </div>
+                        <!-- Descricoes lado a lado -->
+                        <div class="descriptions-row">
+                            <div class="description-col">
+                                <label for="productDescription">
+                                    Descricao
+                                    <span class="ml-sync-badge" title="Sincronizado com Mercado Livre"><i class="fas fa-sync"></i> ML</span>
+                                </label>
+                                <textarea id="productDescription" class="form-input ml-synced-field auto-resize" rows="3" placeholder="Descricao do produto..."></textarea>
+                            </div>
+                            <div class="description-col">
+                                <label for="pendingDescription">
+                                    Descricao Pendente
+                                    <span class="pending-badge" title="Rascunho local - nao sincroniza"><i class="fas fa-edit"></i> Rascunho</span>
+                                    <button type="button" class="btn-copy-inline" data-action="copy-pending-to-description" title="Copiar para Descricao ML">
+                                        <i class="fas fa-arrow-left"></i>
+                                    </button>
+                                </label>
+                                <textarea id="pendingDescription" class="form-input pending-textarea auto-resize" rows="3" placeholder="Rascunho de descricao (nao sincroniza com ML)..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producao -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-industry"></i> Producao</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="saleType">Tipo de Venda *</label>
+                                <select id="saleType" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="estoque">Estoque Imediato</option>
+                                    <option value="personalizacao">Personalizacao</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="materialType">Material</label>
+                                <select id="materialType" class="form-select">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="printColor">Cor de Impressao</label>
+                                <select id="printColor" class="form-select">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group span-4">
+                                <label><i class="fas fa-print"></i> Impressoras Compativeis</label>
+                                <div class="printers-grid" id="printersGrid">
+                                    <div class="printers-loading">
+                                        <div class="loading-spinner"></div>
+                                        <span>Carregando impressoras...</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="selectedPrinters" name="selectedPrinters">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="printTimeEstimate"><i class="fas fa-clock"></i> Tempo de Impressao</label>
+                                <input type="number" id="printTimeEstimate" class="form-input" min="0" step="0.5" placeholder="horas">
+                                <span class="form-hint">Estimativa em horas</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="materialEstimate"><i class="fas fa-weight-hanging"></i> Material Estimado</label>
+                                <input type="number" id="materialEstimate" class="form-input" min="0" step="1" placeholder="gramas">
+                                <span class="form-hint">Quantidade em gramas</span>
+                            </div>
+                            <div class="form-group"></div>
+                            <div class="form-group"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dimensoes e Embalagem em 2 colunas -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-ruler-combined"></i> Dimensoes e Embalagem</h3>
+                        <div class="form-row">
+                            <div class="form-group span-2">
+                                <label><i class="fas fa-cube"></i> Dimensoes do Produto</label>
+                                <div class="form-row" style="margin-top: 0.5rem;">
+                                    <div class="form-group">
+                                        <label for="dimLength">Compr.</label>
+                                        <input type="number" id="dimLength" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dimWidth">Larg.</label>
+                                        <input type="number" id="dimWidth" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dimHeight">Alt.</label>
+                                        <input type="number" id="dimHeight" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="productWeight">Peso</label>
+                                        <input type="number" id="productWeight" class="form-input" min="0" step="1" placeholder="g">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group span-2">
+                                <label><i class="fas fa-box"></i> Embalagem (Frete)</label>
+                                <div class="form-row" style="margin-top: 0.5rem;">
+                                    <div class="form-group">
+                                        <label for="packLength">Compr.</label>
+                                        <input type="number" id="packLength" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="packWidth">Larg.</label>
+                                        <input type="number" id="packWidth" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="packHeight">Alt.</label>
+                                        <input type="number" id="packHeight" class="form-input" min="0" step="0.1" placeholder="cm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="packWeight">Peso</label>
+                                        <input type="number" id="packWeight" class="form-input" min="0" step="1" placeholder="g">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Midia -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-images"></i> Midia
+                            <span class="ml-sync-badge" title="Fotos sincronizadas com Mercado Livre"><i class="fas fa-sync"></i> ML</span>
+                        </h3>
+
+                        <!-- Dropzone para upload -->
+                        <div class="photos-dropzone" id="photosDropzone">
+                            <div class="dropzone-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span class="dropzone-text">Arraste fotos aqui ou clique para selecionar</span>
+                                <span class="dropzone-hint">JPG, PNG ou WebP - Max 5MB cada - Ate 10 fotos</span>
+                            </div>
+                            <input type="file" id="photoUploadInput" multiple accept="image/jpeg,image/png,image/webp" hidden>
+                        </div>
+
+                        <!-- Grid de fotos (ML + Locais) -->
+                        <div class="form-row">
+                            <div class="form-group span-4">
+                                <label><i class="fas fa-camera"></i> Fotos do Produto</label>
+                                <div class="photos-grid" id="photosGrid">
+                                    <div class="photos-empty" id="photosEmpty">
+                                        <i class="fas fa-image"></i>
+                                        <span>Nenhuma foto adicionada</span>
+                                    </div>
+                                </div>
+                                <span class="form-hint">Arraste para reordenar. A primeira foto sera a principal no anuncio.</span>
+                            </div>
+                        </div>
+
+                        <!-- Video YouTube -->
+                        <div class="form-row">
+                            <div class="form-group span-4">
+                                <label for="youtubeVideoUrl"><i class="fab fa-youtube" style="color: #ff0000;"></i> Video do YouTube</label>
+                                <input type="url" id="youtubeVideoUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=...">
+                                <span class="form-hint">Cole a URL do video do YouTube para exibir no anuncio</span>
+                                <!-- Preview do video -->
+                                <div class="youtube-preview hidden" id="youtubePreview">
+                                    <iframe id="youtubeIframe" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gerenciador de GCODEs -->
+                        <div class="form-row">
+                            <div class="form-group span-4">
+                                <label><i class="fas fa-file-code"></i> Arquivos GCode</label>
+                                <div class="gcode-manager" id="gcodeManager">
+                                    <!-- Lista de GCODEs existentes -->
+                                    <div class="gcode-list" id="gcodeList">
+                                        <div class="gcode-empty-state" id="gcodeEmptyState">
+                                            <i class="fas fa-file-code"></i>
+                                            <span>Nenhum GCode adicionado</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Formulario para adicionar novo GCODE -->
+                                    <div class="gcode-add-form" id="gcodeAddForm">
+                                        <div class="gcode-dropzone" id="gcodeDropzone">
+                                            <input type="file" id="gcodeFileInput" accept=".gcode,.gc,.g" multiple hidden>
+                                            <div class="gcode-dropzone-content" id="gcodeDropzoneContent">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <span>Clique ou arraste arquivos .gcode</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="form-hint">Adicione arquivos GCode e vincule cada um a pelo menos uma impressora</span>
+                                <input type="hidden" id="gcodeFilesData" name="gcodeFilesData">
+                            </div>
+                        </div>
+
+                        <!-- Modal de selecao de impressoras para GCODE -->
+                        <div class="gcode-printer-modal hidden" id="gcodePrinterModal" role="dialog" aria-modal="true" aria-labelledby="gcodePrinterModalTitle" aria-hidden="true">
+                            <div class="gcode-printer-modal-content">
+                                <div class="gcode-printer-modal-header">
+                                    <h4 id="gcodePrinterModalTitle"><i class="fas fa-print"></i> Selecionar Impressoras</h4>
+                                    <button type="button" class="gcode-printer-modal-close" data-action="close-gcode-printer-modal">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="gcode-printer-modal-body">
+                                    <p class="gcode-file-name-display" id="gcodeFileNameDisplay">arquivo.gcode</p>
+                                    <div class="gcode-printers-grid" id="gcodePrintersGrid">
+                                        <!-- Grid de impressoras preenchida via JS -->
+                                    </div>
+                                </div>
+                                <div class="gcode-printer-modal-footer">
+                                    <button type="button" class="btn-secondary" data-action="close-gcode-printer-modal">Cancelar</button>
+                                    <button type="button" class="btn-primary" data-action="confirm-gcode-printers">
+                                        <i class="fas fa-check"></i> Confirmar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botoes -->
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" data-action="close-product-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Escolha Novo Produto -->
+    <div class="modal-overlay" id="newProductChoiceModal" role="dialog" aria-modal="true" aria-labelledby="newProductChoiceModalTitle" aria-hidden="true">
+        <div class="modal-container modal-choice">
+            <div class="modal-header">
+                <h2 id="newProductChoiceModalTitle"><i class="fas fa-plus-circle"></i> Novo Produto</h2>
+                <button class="modal-close" data-action="close-new-product-choice-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="choice-description">Como deseja criar o novo produto?</p>
+
+                <!-- Opcoes de escolha -->
+                <div class="choice-options" id="choiceOptions">
+                    <div class="choice-card" data-action="create-blank-product">
+                        <div class="choice-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>Criar Rascunho</h3>
+                        <p>Criar produto do zero com formulario em branco</p>
+                    </div>
+                    <div class="choice-card choice-ml" data-action="show-ml-import-list">
+                        <div class="choice-icon">
+                            <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML">
+                        </div>
+                        <h3>Importar do ML</h3>
+                        <p>Importar dados de anuncio existente no Mercado Livre</p>
+                    </div>
+                </div>
+
+                <!-- Lista de anuncios nao vinculados (oculta inicialmente) -->
+                <div class="ml-import-section hidden" id="mlImportSection">
+                    <div class="ml-import-header">
+                        <button class="btn-back" data-action="hide-ml-import-list">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                        <h3>Selecione um anuncio</h3>
+                    </div>
+                    <div class="ml-import-list" id="mlImportList">
+                        <!-- Lista preenchida via JS -->
+                    </div>
+                    <div class="ml-import-loading hidden" id="mlImportLoading">
+                        <div class="loading-spinner"></div>
+                        <span>Carregando anuncios...</span>
+                    </div>
+                    <div class="ml-import-empty hidden" id="mlImportEmpty">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Todos os anuncios ja estao vinculados!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes do Material -->
+    <div class="modal-overlay" id="materialDetailsModal" role="dialog" aria-modal="true" aria-labelledby="materialDetailsModalTitle" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="materialDetailsModalTitle"><i class="fas fa-cube"></i> Detalhes do Material</h2>
+                <button class="modal-close" data-action="close-material-details-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="material-details-content" id="materialDetailsContent">
+                    <!-- Conteudo preenchido via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editor de Descricao -->
+    <div class="modal-overlay" id="descriptionEditorModal" role="dialog" aria-modal="true" aria-labelledby="descriptionEditorModalTitle" aria-hidden="true">
+        <div class="modal-container modal-description-editor">
+            <div class="modal-header">
+                <h2 id="descriptionEditorModalTitle"><i class="fas fa-align-left"></i> Editor de Descricao</h2>
+                <div class="modal-header-actions">
+                    <span class="product-name-badge" id="descEditorProductName">Produto</span>
+                    <button class="modal-close" data-action="close-description-editor-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="description-editor-grid">
+                    <!-- Coluna Esquerda: Rascunho -->
+                    <div class="desc-column desc-draft">
+                        <div class="desc-column-header">
+                            <div class="desc-column-title">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Rascunho</span>
+                            </div>
+                            <span class="desc-column-hint">Descricao pendente (local)</span>
+                        </div>
+                        <textarea id="descEditorDraft" class="desc-textarea" placeholder="Escreva aqui o rascunho da descricao..."></textarea>
+                        <div class="desc-column-footer">
+                            <span class="char-count" id="draftCharCount">0 caracteres</span>
+                            <button class="btn-copy-to" data-action="copy-draft-to-published" title="Copiar para Anuncio">
+                                <span>Usar no Anuncio</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Separador Central -->
+                    <div class="desc-separator">
+                        <div class="separator-line"></div>
+                        <button class="btn-swap" data-action="swap-descriptions" title="Trocar">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <div class="separator-line"></div>
+                    </div>
+
+                    <!-- Coluna Direita: Anuncio -->
+                    <div class="desc-column desc-published">
+                        <div class="desc-column-header">
+                            <div class="desc-column-title">
+                                <i class="fas fa-store"></i>
+                                <span>Anuncio</span>
+                                <span class="ml-badge" id="descEditorMlBadge" style="display:none;">
+                                    <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.73/mercadolibre/favicon.svg" alt="ML">
+                                </span>
+                            </div>
+                            <span class="desc-column-hint">Descricao do produto/anuncio</span>
+                        </div>
+                        <textarea id="descEditorPublished" class="desc-textarea" placeholder="Descricao que aparece no anuncio..."></textarea>
+                        <div class="desc-column-footer">
+                            <span class="char-count" id="publishedCharCount">0 caracteres</span>
+                            <button class="btn-copy-to btn-copy-left" data-action="copy-published-to-draft" title="Copiar para Rascunho">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Salvar Rascunho</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-action="close-description-editor-modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-sync" id="btnSyncDescription" data-action="sync-description-from-editor">
+                    <i class="fas fa-sync-alt"></i> Salvar e Sincronizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="/js/env-config.js"></script>
+    <script src="/shared/custom-select.js"></script>
+    <script src="js/marketplace-core.js"></script>
+    <script src="js/marketplace-data.js"></script>
+    <script src="js/marketplace-ui.js"></script>
+    <script src="js/marketplace-ml.js"></script>
+
+    <!-- Navbar Mobile - Compartilhado -->
+    <script src="/shared/navbar-mobile.js"></script>
+</body>
+</html>
