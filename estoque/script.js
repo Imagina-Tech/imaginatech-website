@@ -1031,6 +1031,65 @@ function setupDragAndDrop() {
         equipmentUploadArea.addEventListener('drop', handleEquipmentDrop, false);
         logger.log('Drag & Drop configurado para equipamentos');
     }
+
+    // Configurar Ctrl+V para colar imagens
+    setupPasteUpload();
+}
+
+/**
+ * Configura Ctrl+V para colar imagens do clipboard nos modais
+ */
+function setupPasteUpload() {
+    document.addEventListener('paste', async (e) => {
+        // Verificar se algum modal de edição está aberto
+        const filamentModal = document.getElementById('filamentModal');
+        const equipmentModal = document.getElementById('equipmentModal');
+
+        const isFilamentModalOpen = filamentModal?.classList.contains('active');
+        const isEquipmentModalOpen = equipmentModal?.classList.contains('active');
+
+        // Se nenhum modal estiver aberto, ignorar
+        if (!isFilamentModalOpen && !isEquipmentModalOpen) {
+            return;
+        }
+
+        // Verificar se o foco está em um campo de texto (não interceptar paste em inputs)
+        const activeElement = document.activeElement;
+        if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.isContentEditable
+        )) {
+            return;
+        }
+
+        // Obter itens do clipboard
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        // Procurar por imagem no clipboard
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+
+                const file = item.getAsFile();
+                if (!file) continue;
+
+                // Chamar o handler apropriado baseado no modal aberto
+                if (isFilamentModalOpen) {
+                    logger.log('Ctrl+V: Colando imagem no modal de filamento');
+                    handleImageFile(file);
+                } else if (isEquipmentModalOpen) {
+                    logger.log('Ctrl+V: Colando imagem no modal de equipamento');
+                    handleEquipmentImageFile(file);
+                }
+
+                break; // Processar apenas a primeira imagem
+            }
+        }
+    });
+
+    logger.log('Ctrl+V paste configurado para upload de imagens');
 }
 
 function preventDefaults(e) {
