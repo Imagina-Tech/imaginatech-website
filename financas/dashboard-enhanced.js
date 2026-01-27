@@ -83,6 +83,9 @@ function openKPIList(type) {
         case 'expense':
             showTransactionsList('expense');
             break;
+        case 'balance':
+            showTransactionsList('balance');
+            break;
         case 'subscriptions':
             showSubscriptionsList();
             break;
@@ -101,6 +104,18 @@ function openKPIList(type) {
 function showTransactionsList(filterType) {
     const modal = document.getElementById('transactionsListModal');
     const content = document.getElementById('transactionsListContent');
+    const titleEl = document.getElementById('transactionsListModalTitle');
+
+    // Atualizar titulo do modal baseado no filtro
+    const titles = {
+        'income': 'Entradas do Mes',
+        'expense': 'Saidas do Mes',
+        'balance': 'Extrato do Mes',
+        'all': 'Transacoes do Mes'
+    };
+    if (titleEl) {
+        titleEl.textContent = titles[filterType] || 'Transacoes do Mes';
+    }
 
     if (!transactions || transactions.length === 0) {
         content.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma transacao neste mes</p></div>';
@@ -130,7 +145,27 @@ function showTransactionsList(filterType) {
             return match && t.type === 'income' && t.paymentMethod !== 'credit';
         }
 
+        // Se for filtro de balance (extrato), mostrar entradas e saidas (exceto credito)
+        if (filterType === 'balance') {
+            return match && t.paymentMethod !== 'credit';
+        }
+
         return filterType === 'all' ? match : (match && t.type === filterType);
+    });
+
+    // Ordenar por data (mais recente primeiro)
+    filtered.sort((a, b) => {
+        // Ordenar por data decrescente
+        if (a.date !== b.date) {
+            return b.date.localeCompare(a.date);
+        }
+        // Se mesma data, ordenar por createdAt se disponivel
+        if (a.createdAt && b.createdAt) {
+            const aTime = a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+            const bTime = b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
+            return bTime - aTime;
+        }
+        return 0;
     });
 
     if (filtered.length === 0) {
