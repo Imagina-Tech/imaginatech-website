@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politica de Privacidade - ImaginaTech</title>
+    <meta name="description" content="Politica de Privacidade da ImaginaTech - Como coletamos, usamos e protegemos seus dados.">
+    <meta name="robots" content="index, follow">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https: data:;
+    ">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent: #00e0ff;
+            --accent-green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .last-updated {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 224, 255, 0.2);
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, rgba(0, 224, 255, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(0, 224, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-info h3 {
+            color: var(--accent);
+            margin-top: 0;
+        }
+
+        .contact-info a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            margin-top: 3rem;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 224, 255, 0.1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem 1rem 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo">ImaginaTech</a>
+            <h1>Politica de Privacidade</h1>
+            <p class="last-updated">Ultima atualizacao: 27 de Janeiro de 2026</p>
+        </header>
+
+        <main>
+            <section>
+                <h2>1. Introducao</h2>
+                <p>A <strong>ImaginaTech</strong> ("nos", "nosso" ou "empresa") esta comprometida em proteger a privacidade dos usuarios de nossos servicos. Esta Politica de Privacidade descreve como coletamos, usamos, armazenamos e protegemos suas informacoes pessoais quando voce utiliza nosso site, servicos de impressao 3D, e nosso assistente virtual via WhatsApp ("Claytinho").</p>
+
+                <div class="highlight-box">
+                    <p><strong>Importante:</strong> Ao utilizar nossos servicos, voce concorda com a coleta e uso de informacoes de acordo com esta politica.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. Informacoes que Coletamos</h2>
+
+                <h3>2.1 Informacoes Fornecidas por Voce</h3>
+                <ul>
+                    <li><strong>Dados de Cadastro:</strong> Nome, e-mail, telefone, endereco (incluindo CEP, cidade, estado)</li>
+                    <li><strong>Dados de Pedidos:</strong> Arquivos para impressao 3D, especificacoes do servico, preferencias de entrega</li>
+                    <li><strong>Dados Financeiros:</strong> Transacoes registradas via assistente WhatsApp (para usuarios do painel financeiro)</li>
+                    <li><strong>Comunicacoes:</strong> Mensagens enviadas via WhatsApp, e-mail ou formularios de contato</li>
+                </ul>
+
+                <h3>2.2 Informacoes Coletadas Automaticamente</h3>
+                <ul>
+                    <li><strong>Dados de Uso:</strong> Paginas visitadas, tempo de permanencia, acoes realizadas</li>
+                    <li><strong>Dados Tecnicos:</strong> Endereco IP, tipo de navegador, dispositivo, sistema operacional</li>
+                    <li><strong>Cookies:</strong> Utilizamos cookies essenciais para funcionamento do site e autenticacao</li>
+                </ul>
+
+                <h3>2.3 Dados do WhatsApp (Assistente Claytinho)</h3>
+                <ul>
+                    <li>Numero de telefone WhatsApp</li>
+                    <li>Mensagens enviadas ao assistente (para processamento de comandos)</li>
+                    <li>Dados financeiros informados pelo usuario (gastos, receitas, categorias)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>3. Como Usamos Suas Informacoes</h2>
+                <p>Utilizamos as informacoes coletadas para:</p>
+                <ul>
+                    <li><strong>Prestacao de Servicos:</strong> Processar pedidos de impressao 3D, gerenciar entregas</li>
+                    <li><strong>Assistente Virtual:</strong> Responder comandos, registrar transacoes financeiras, fornecer resumos</li>
+                    <li><strong>Comunicacao:</strong> Enviar atualizacoes de pedidos, notificacoes importantes, responder duvidas</li>
+                    <li><strong>Melhoria dos Servicos:</strong> Analisar uso para aprimorar funcionalidades e experiencia</li>
+                    <li><strong>Seguranca:</strong> Prevenir fraudes, proteger contas, garantir integridade dos sistemas</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>4. Compartilhamento de Dados</h2>
+                <p><strong>Nao vendemos suas informacoes pessoais.</strong> Compartilhamos dados apenas nas seguintes situacoes:</p>
+                <ul>
+                    <li><strong>Provedores de Servico:</strong> Firebase (Google) para autenticacao e armazenamento, Meta/WhatsApp para comunicacao via assistente</li>
+                    <li><strong>Transportadoras:</strong> Dados de endereco para envio de pedidos (ex: Melhor Envio)</li>
+                    <li><strong>Obrigacoes Legais:</strong> Quando exigido por lei ou ordem judicial</li>
+                    <li><strong>Protecao de Direitos:</strong> Para proteger nossos direitos, privacidade, seguranca ou propriedade</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Armazenamento e Seguranca</h2>
+
+                <h3>5.1 Onde Armazenamos</h3>
+                <p>Seus dados sao armazenados em servidores seguros do Google Firebase, localizados nos Estados Unidos, em conformidade com padroes internacionais de seguranca.</p>
+
+                <h3>5.2 Medidas de Seguranca</h3>
+                <ul>
+                    <li>Criptografia de dados em transito (HTTPS/TLS)</li>
+                    <li>Autenticacao segura via Google Sign-In</li>
+                    <li>Regras de seguranca do Firestore para controle de acesso</li>
+                    <li>Monitoramento continuo contra acessos nao autorizados</li>
+                    <li>Backups regulares dos dados</li>
+                </ul>
+
+                <h3>5.3 Retencao de Dados</h3>
+                <p>Mantemos seus dados pelo tempo necessario para fornecer os servicos ou conforme exigido por lei. Dados financeiros do painel sao mantidos enquanto sua conta estiver ativa.</p>
+            </section>
+
+            <section>
+                <h2>6. Seus Direitos (LGPD)</h2>
+                <p>Em conformidade com a Lei Geral de Protecao de Dados (LGPD - Lei 13.709/2018), voce tem direito a:</p>
+                <ul>
+                    <li><strong>Acesso:</strong> Solicitar copia dos seus dados pessoais</li>
+                    <li><strong>Correcao:</strong> Corrigir dados incompletos ou desatualizados</li>
+                    <li><strong>Exclusao:</strong> Solicitar a exclusao dos seus dados (quando aplicavel)</li>
+                    <li><strong>Portabilidade:</strong> Receber seus dados em formato estruturado</li>
+                    <li><strong>Revogacao:</strong> Revogar consentimento a qualquer momento</li>
+                    <li><strong>Informacao:</strong> Saber com quem seus dados foram compartilhados</li>
+                </ul>
+                <p>Para exercer seus direitos, entre em contato conosco pelos canais indicados abaixo.</p>
+            </section>
+
+            <section>
+                <h2>7. Uso do WhatsApp Business API</h2>
+                <p>Nosso assistente "Claytinho" utiliza a API oficial do WhatsApp Business (Meta). Ao interagir com nosso assistente:</p>
+                <ul>
+                    <li>Suas mensagens sao processadas para entender comandos e fornecer respostas</li>
+                    <li>Dados financeiros informados sao armazenados em sua conta pessoal no Firebase</li>
+                    <li>Nao armazenamos historico de conversas alem do necessario para processar comandos</li>
+                    <li>Voce pode desvincular seu numero a qualquer momento nas configuracoes do painel</li>
+                </ul>
+                <p>O uso do WhatsApp tambem esta sujeito a <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">Politica de Privacidade do WhatsApp</a>.</p>
+            </section>
+
+            <section>
+                <h2>8. Cookies e Tecnologias Similares</h2>
+                <p>Utilizamos cookies para:</p>
+                <ul>
+                    <li><strong>Autenticacao:</strong> Manter voce logado em sua conta</li>
+                    <li><strong>Preferencias:</strong> Lembrar suas configuracoes</li>
+                    <li><strong>Analiticos:</strong> Google Analytics para entender uso do site (dados anonimizados)</li>
+                </ul>
+                <p>Voce pode configurar seu navegador para recusar cookies, mas isso pode afetar a funcionalidade do site.</p>
+            </section>
+
+            <section>
+                <h2>9. Menores de Idade</h2>
+                <p>Nossos servicos nao sao direcionados a menores de 18 anos. Nao coletamos intencionalmente dados de menores. Se tomarmos conhecimento de que coletamos dados de um menor, tomaremos medidas para excluir essas informacoes.</p>
+            </section>
+
+            <section>
+                <h2>10. Alteracoes nesta Politica</h2>
+                <p>Podemos atualizar esta Politica de Privacidade periodicamente. Notificaremos sobre mudancas significativas por e-mail ou aviso em nosso site. A data de "ultima atualizacao" no topo indica quando a politica foi revisada pela ultima vez.</p>
+            </section>
+
+            <section>
+                <h2>11. Contato</h2>
+                <div class="contact-info">
+                    <h3>Duvidas sobre Privacidade?</h3>
+                    <p>Se voce tiver duvidas sobre esta Politica de Privacidade ou sobre como tratamos seus dados, entre em contato:</p>
+                    <ul>
+                        <li><strong>E-mail:</strong> <a href="mailto:3d3printers@gmail.com">3d3printers@gmail.com</a></li>
+                        <li><strong>WhatsApp:</strong> <a href="https://wa.me/5521968972539">+55 21 96897-2539</a></li>
+                        <li><strong>Site:</strong> <a href="https://imaginatech.com.br">imaginatech.com.br</a></li>
+                    </ul>
+                    <p style="margin-top: 1rem; margin-bottom: 0;"><strong>Responsavel pelo Tratamento de Dados:</strong><br>ImaginaTech - Rio de Janeiro, RJ, Brasil</p>
+                </div>
+            </section>
+
+            <a href="/" class="back-link">
+                <span>&larr;</span> Voltar para o Site
+            </a>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 ImaginaTech. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>
