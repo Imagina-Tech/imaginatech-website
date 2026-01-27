@@ -178,8 +178,9 @@ async function initializeDashboard() {
             }
         });
 
-        // Iniciar listener de serviÃ§os em tempo real
+        // Iniciar listeners em tempo real
         startServicesListener();
+        startTransactionsListener();
 
         logger.log('Dados carregados:', {
             transactions: transactions.length,
@@ -441,6 +442,77 @@ async function deleteTransactionByServiceId(serviceId) {
 
 // 👂 Listener em tempo real para serviços
 let servicesListener = null;
+
+// 👂 Listener em tempo real para transações (sincroniza com WhatsApp bot)
+let transactionsListener = null;
+let transactionsListenerRetryCount = 0;
+const TRANSACTIONS_LISTENER_MAX_RETRIES = 3;
+
+// Para o listener de transações (chamado ao trocar de conta)
+function stopTransactionsListener() {
+    if (transactionsListener) {
+        transactionsListener();
+        transactionsListener = null;
+        logger.log('Listener de transações parado');
+    }
+}
+
+// Inicia listener em tempo real para transações
+function startTransactionsListener() {
+    if (!activeUserId) {
+        logger.warn('activeUserId não definido, não iniciando listener de transações');
+        return;
+    }
+
+    // Parar listener anterior se existir
+    stopTransactionsListener();
+
+    logger.log('Iniciando listener de transações em tempo real...');
+
+    transactionsListener = db.collection('transactions')
+        .where('userId', '==', activeUserId)
+        .orderBy('date', 'desc')
+        .onSnapshot(
+            // Callback de sucesso
+            snapshot => {
+                // Reset retry count on success
+                transactionsListenerRetryCount = 0;
+
+                // Não processar se dashboard escondido
+                const dashboard = document.getElementById('dashboard');
+                if (dashboard?.classList.contains('hidden')) {
+                    return;
+                }
+
+                // Atualizar array global de transações
+                transactions = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                logger.log(`[Realtime] ${transactions.length} transações sincronizadas`);
+
+                // Atualizar KPIs e gráficos
+                if (typeof updateKPIs === 'function') {
+                    updateKPIs();
+                }
+            },
+            // Callback de erro
+            error => {
+                logger.error('Erro no listener de transações:', error);
+
+                // Tentar reconectar se não excedeu limite
+                if (transactionsListenerRetryCount < TRANSACTIONS_LISTENER_MAX_RETRIES) {
+                    transactionsListenerRetryCount++;
+                    const delay = Math.min(1000 * Math.pow(2, transactionsListenerRetryCount), 30000);
+                    logger.log(`Tentando reconectar listener de transações (${transactionsListenerRetryCount}/${TRANSACTIONS_LISTENER_MAX_RETRIES}) em ${delay}ms...`);
+                    setTimeout(() => startTransactionsListener(), delay);
+                } else {
+                    logger.error('Máximo de tentativas de reconexão atingido para transações');
+                }
+            }
+        );
+}
 
 // Para o listener de serviços (chamado ao trocar de conta)
 function stopServicesListener() {
