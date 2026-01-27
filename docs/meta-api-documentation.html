@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaginaTech - Documentacao de Integracao Meta APIs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            background: #fff;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 60px 0;
+            border-bottom: 3px solid #1877f2;
+            margin-bottom: 40px;
+            page-break-after: always;
+        }
+
+        .cover h1 {
+            font-size: 2.5rem;
+            color: #1877f2;
+            margin-bottom: 10px;
+        }
+
+        .cover h2 {
+            font-size: 1.5rem;
+            color: #666;
+            font-weight: normal;
+            margin-bottom: 30px;
+        }
+
+        .cover .meta-logo {
+            font-size: 3rem;
+            color: #1877f2;
+            margin: 30px 0;
+        }
+
+        .cover .info {
+            margin-top: 40px;
+            color: #666;
+        }
+
+        .cover .info p {
+            margin: 5px 0;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #1877f2;
+            border-bottom: 2px solid #1877f2;
+            padding-bottom: 10px;
+            margin: 30px 0 20px;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: #333;
+            margin: 25px 0 15px;
+            padding-left: 10px;
+            border-left: 4px solid #25D366;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 20px 0 10px;
+        }
+
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #f0f7ff;
+            border-left: 4px solid #1877f2;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: #fff8e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 4px solid #25D366;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #1877f2;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.85rem;
+        }
+
+        .flow-diagram {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .flow-step {
+            display: inline-block;
+            background: #1877f2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 5px;
+        }
+
+        .flow-arrow {
+            display: inline-block;
+            color: #666;
+            margin: 0 10px;
+        }
+
+        .screenshot-placeholder {
+            background: #eee;
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #666;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .toc {
+            background: #f9f9f9;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .toc h2 {
+            border: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .toc li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #ddd;
+        }
+
+        .toc a {
+            color: #1877f2;
+            text-decoration: none;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            body {
+                padding: 15mm;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CAPA -->
+    <div class="cover">
+        <div class="meta-logo">&#9679; Meta</div>
+        <h1>ImaginaTech</h1>
+        <h2>Documentacao de Integracao com APIs Meta</h2>
+        <p style="font-size: 1.2rem; color: #25D366; margin: 20px 0;">
+            WhatsApp Business Platform
+        </p>
+        <div class="info">
+            <p><strong>Versao:</strong> 1.0</p>
+            <p><strong>Data:</strong> Janeiro de 2026</p>
+            <p><strong>Website:</strong> https://imaginatech.com.br</p>
+            <p><strong>Contato:</strong> 3d3printers@gmail.com</p>
+        </div>
+    </div>
+
+    <!-- SUMARIO -->
+    <div class="toc">
+        <h2>Sumario</h2>
+        <ul>
+            <li><a href="#section1">1. Visao Geral do Aplicativo</a></li>
+            <li><a href="#section2">2. APIs Meta Utilizadas</a></li>
+            <li><a href="#section3">3. Fluxo do Usuario</a></li>
+            <li><a href="#section4">4. Arquitetura Tecnica</a></li>
+            <li><a href="#section5">5. Funcionalidades do WhatsApp</a></li>
+            <li><a href="#section6">6. Tratamento de Dados</a></li>
+            <li><a href="#section7">7. Seguranca e Conformidade</a></li>
+            <li><a href="#section8">8. Capturas de Tela</a></li>
+            <li><a href="#section9">9. Contato e Suporte</a></li>
+        </ul>
+    </div>
+
+    <!-- SECAO 1 -->
+    <h1 id="section1">1. Visao Geral do Aplicativo</h1>
+
+    <p>O <strong>ImaginaTech</strong> e uma plataforma brasileira de servicos de impressao 3D que utiliza as APIs do Meta para fornecer duas funcionalidades principais:</p>
+
+    <div class="highlight-box">
+        <h3>1.1 Assistente Financeiro "Claytinho"</h3>
+        <p>Um chatbot inteligente via WhatsApp que permite aos usuarios gerenciar suas financas pessoais de forma pratica e instantanea.</p>
+    </div>
+
+    <div class="highlight-box">
+        <h3>1.2 Notificacoes de Pedidos</h3>
+        <p>Sistema automatizado de notificacoes transacionais para clientes da loja de impressao 3D, informando sobre status de pedidos.</p>
+    </div>
+
+    <h2>Informacoes da Empresa</h2>
+    <table>
+        <tr>
+            <th>Campo</th>
+            <th>Informacao</th>
+        </tr>
+        <tr>
+            <td>Nome da Empresa</td>
+            <td>ImaginaTech</td>
+        </tr>
+        <tr>
+            <td>Website</td>
+            <td>https://imaginatech.com.br</td>
+        </tr>
+        <tr>
+            <td>Localizacao</td>
+            <td>Rio de Janeiro, RJ, Brasil</td>
+        </tr>
+        <tr>
+            <td>Numero WhatsApp Business</td>
+            <td>+55 21 96897-2539</td>
+        </tr>
+        <tr>
+            <td>Email de Contato</td>
+            <td>3d3printers@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Politica de Privacidade</td>
+            <td>https://imaginatech.com.br/politica-privacidade.html</td>
+        </tr>
+    </table>
+
+    <!-- SECAO 2 -->
+    <h1 id="section2" class="page-break">2. APIs Meta Utilizadas</h1>
+
+    <h2>2.1 WhatsApp Business Messaging API</h2>
+    <p>Utilizamos esta API para enviar e receber mensagens do WhatsApp, permitindo a comunicacao bidirecional entre o bot Claytinho e os usuarios.</p>
+
+    <table>
+        <tr>
+            <th>Funcionalidade</th>
+            <th>Endpoint</th>
+            <th>Uso</th>
+        </tr>
+        <tr>
+            <td>Enviar Mensagens</td>
+            <td>POST /messages</td>
+            <td>Respostas do bot e notificacoes</td>
+        </tr>
+        <tr>
+            <td>Receber Mensagens</td>
+            <td>Webhook</td>
+            <td>Comandos dos usuarios</td>
+        </tr>
+        <tr>
+            <td>Templates</td>
+            <td>Message Templates</td>
+            <td>Notificacoes de pedidos</td>
+        </tr>
+    </table>
+
+    <h2>2.2 WhatsApp Business Management API</h2>
+    <p>Utilizamos esta API para gerenciar nossa conta comercial do WhatsApp:</p>
+    <ul>
+        <li><strong>Registro de Numero:</strong> Registrar o numero comercial na plataforma Meta</li>
+        <li><strong>Webhooks:</strong> Configurar endpoints para receber mensagens em tempo real</li>
+        <li><strong>Templates:</strong> Criar e gerenciar templates de mensagens transacionais</li>
+        <li><strong>Perfil Comercial:</strong> Manter informacoes da empresa atualizadas</li>
+    </ul>
+
+    <div class="success-box">
+        <strong>Importante:</strong> Utilizamos as APIs exclusivamente para nossa propria conta comercial. NAO oferecemos servicos de WhatsApp para terceiros.
+    </div>
+
+    <!-- SECAO 3 -->
+    <h1 id="section3" class="page-break">3. Fluxo do Usuario</h1>
+
+    <h2>3.1 Fluxo do Assistente Financeiro</h2>
+
+    <div class="flow-diagram">
+        <div class="flow-step">1. Login no Painel</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">2. Vincular WhatsApp</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">3. Enviar Comando</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">4. Bot Processa</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">5. Dados Sincronizados</div>
+    </div>
+
+    <h3>Passo 1: Acesso ao Painel Financeiro</h3>
+    <p>O usuario acessa <code>https://imaginatech.com.br/financas/</code> e faz login utilizando sua conta Google (autenticacao via Firebase).</p>
+
+    <h3>Passo 2: Vinculacao do WhatsApp</h3>
+    <p>Nas configuracoes do painel, o usuario insere seu numero de WhatsApp para vincular ao assistente Claytinho.</p>
+
+    <h3>Passo 3: Interacao via WhatsApp</h3>
+    <p>O usuario envia mensagens para o numero comercial com comandos como:</p>
+    <ul>
+        <li><code>"gastei 50 no mercado"</code> - Registra uma despesa</li>
+        <li><code>"recebi 1000 de salario"</code> - Registra uma receita</li>
+        <li><code>"qual meu saldo?"</code> - Consulta o saldo atual</li>
+        <li><code>"extrato"</code> - Lista transacoes do mes</li>
+    </ul>
+
+    <h3>Passo 4: Processamento pelo Bot</h3>
+    <p>O webhook recebe a mensagem, o sistema processa o comando utilizando IA (processamento de linguagem natural) e executa a acao correspondente.</p>
+
+    <h3>Passo 5: Sincronizacao</h3>
+    <p>Os dados sao armazenados no Firebase e sincronizados em tempo real com o painel web.</p>
+
+    <h2>3.2 Fluxo de Notificacoes de Pedidos</h2>
+
+    <div class="flow-diagram">
+        <div class="flow-step">1. Cliente faz Pedido</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">2. Status Atualizado</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">3. Notificacao Enviada</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">4. Cliente Recebe</div>
+    </div>
+
+    <p>Tipos de notificacoes transacionais enviadas:</p>
+    <table>
+        <tr>
+            <th>Evento</th>
+            <th>Mensagem</th>
+        </tr>
+        <tr>
+            <td>Pedido Confirmado</td>
+            <td>"Seu pedido #123 foi confirmado! Iniciaremos a producao em breve."</td>
+        </tr>
+        <tr>
+            <td>Em Producao</td>
+            <td>"Seu pedido #123 esta sendo produzido."</td>
+        </tr>
+        <tr>
+            <td>Enviado</td>
+            <td>"Seu pedido #123 foi enviado! Codigo de rastreio: XX123456789BR"</td>
+        </tr>
+        <tr>
+            <td>Entregue</td>
+            <td>"Seu pedido #123 foi entregue. Obrigado pela preferencia!"</td>
+        </tr>
+    </table>
+
+    <!-- SECAO 4 -->
+    <h1 id="section4" class="page-break">4. Arquitetura Tecnica</h1>
+
+    <h2>4.1 Diagrama de Arquitetura</h2>
+
+    <pre>
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  Usuario        │────▶│  WhatsApp       │────▶│  Meta Cloud     │
+│  (WhatsApp)     │     │  App            │     │  API            │
+│                 │◀────│                 │◀────│                 │
+└─────────────────┘     └─────────────────┘     └────────┬────────┘
+                                                         │
+                                                         │ Webhook
+                                                         ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  Painel Web     │◀───▶│  Firebase       │◀───▶│  Cloud          │
+│  (Frontend)     │     │  (Database)     │     │  Functions      │
+│                 │     │                 │     │  (Backend)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+    </pre>
+
+    <h2>4.2 Componentes do Sistema</h2>
+
+    <table>
+        <tr>
+            <th>Componente</th>
+            <th>Tecnologia</th>
+            <th>Funcao</th>
+        </tr>
+        <tr>
+            <td>Frontend</td>
+            <td>HTML, CSS, JavaScript</td>
+            <td>Interface do painel financeiro</td>
+        </tr>
+        <tr>
+            <td>Backend</td>
+            <td>Firebase Cloud Functions (Node.js)</td>
+            <td>Processamento de webhooks e logica de negocio</td>
+        </tr>
+        <tr>
+            <td>Banco de Dados</td>
+            <td>Firebase Firestore</td>
+            <td>Armazenamento de transacoes e dados de usuario</td>
+        </tr>
+        <tr>
+            <td>Autenticacao</td>
+            <td>Firebase Auth (Google Sign-In)</td>
+            <td>Login seguro dos usuarios</td>
+        </tr>
+        <tr>
+            <td>Hospedagem</td>
+            <td>Firebase Hosting</td>
+            <td>Servir o site e painel web</td>
+        </tr>
+        <tr>
+            <td>Mensagens</td>
+            <td>WhatsApp Business API</td>
+            <td>Comunicacao com usuarios</td>
+        </tr>
+    </table>
+
+    <h2>4.3 Webhook de Mensagens</h2>
+    <p>O webhook recebe mensagens do WhatsApp e as processa:</p>
+
+    <pre>
+// Endpoint: POST /webhooks/whatsapp
+// Hospedado em: Firebase Cloud Functions
+
+exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
+    // 1. Verificar assinatura do Meta
+    // 2. Extrair mensagem do payload
+    // 3. Identificar usuario pelo numero
+    // 4. Processar comando (IA)
+    // 5. Executar acao (registrar transacao, consultar saldo, etc)
+    // 6. Enviar resposta via API do WhatsApp
+});
+    </pre>
+
+    <!-- SECAO 5 -->
+    <h1 id="section5" class="page-break">5. Funcionalidades do WhatsApp</h1>
+
+    <h2>5.1 Comandos do Assistente Claytinho</h2>
+
+    <table>
+        <tr>
+            <th>Comando</th>
+            <th>Exemplo</th>
+            <th>Acao</th>
+        </tr>
+        <tr>
+            <td>Registrar Gasto</td>
+            <td>"gastei 50 no mercado"</td>
+            <td>Cria transacao de saida com valor R$50 na categoria Alimentacao</td>
+        </tr>
+        <tr>
+            <td>Registrar Receita</td>
+            <td>"recebi 1000 de salario"</td>
+            <td>Cria transacao de entrada com valor R$1000</td>
+        </tr>
+        <tr>
+            <td>Consultar Saldo</td>
+            <td>"saldo" ou "quanto tenho?"</td>
+            <td>Retorna saldo atual do mes</td>
+        </tr>
+        <tr>
+            <td>Ver Extrato</td>
+            <td>"extrato" ou "transacoes"</td>
+            <td>Lista ultimas transacoes do mes</td>
+        </tr>
+        <tr>
+            <td>Resumo Mensal</td>
+            <td>"resumo"</td>
+            <td>Envia resumo com entradas, saidas e saldo</td>
+        </tr>
+        <tr>
+            <td>Ajuda</td>
+            <td>"ajuda" ou "comandos"</td>
+            <td>Lista comandos disponiveis</td>
+        </tr>
+    </table>
+
+    <h2>5.2 Exemplo de Conversa</h2>
+
+    <div style="background: #e5ddd5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <div style="background: #dcf8c6; padding: 10px 15px; border-radius: 10px; margin: 10px 0; max-width: 70%;">
+            <strong>Usuario:</strong> gastei 85 no almoco
+        </div>
+        <div style="background: #fff; padding: 10px 15px; border-radius: 10px; margin: 10px 0 10px auto; max-width: 70%;">
+            <strong>Claytinho:</strong> Registrado! Despesa de R$ 85,00 na categoria Alimentacao. Seu saldo atual e R$ 1.250,00.
+        </div>
+        <div style="background: #dcf8c6; padding: 10px 15px; border-radius: 10px; margin: 10px 0; max-width: 70%;">
+            <strong>Usuario:</strong> saldo
+        </div>
+        <div style="background: #fff; padding: 10px 15px; border-radius: 10px; margin: 10px 0 10px auto; max-width: 70%;">
+            <strong>Claytinho:</strong> Seu saldo atual e R$ 1.250,00. Entradas: R$ 3.000,00 | Saidas: R$ 1.750,00
+        </div>
+    </div>
+
+    <h2>5.3 Templates de Mensagem</h2>
+    <p>Templates utilizados para notificacoes transacionais (iniciadas pela empresa):</p>
+
+    <div class="highlight-box">
+        <h3>Template: order_confirmation</h3>
+        <p><code>Ola {{1}}! Seu pedido #{{2}} foi confirmado. Valor: R$ {{3}}. Previsao de entrega: {{4}}. Acompanhe em: {{5}}</code></p>
+    </div>
+
+    <div class="highlight-box">
+        <h3>Template: order_shipped</h3>
+        <p><code>Ola {{1}}! Seu pedido #{{2}} foi enviado. Codigo de rastreio: {{3}}. Rastreie em: {{4}}</code></p>
+    </div>
+
+    <!-- SECAO 6 -->
+    <h1 id="section6" class="page-break">6. Tratamento de Dados</h1>
+
+    <h2>6.1 Dados Coletados via WhatsApp</h2>
+
+    <table>
+        <tr>
+            <th>Dado</th>
+            <th>Finalidade</th>
+            <th>Retencao</th>
+        </tr>
+        <tr>
+            <td>Numero de Telefone</td>
+            <td>Identificar usuario e enviar mensagens</td>
+            <td>Enquanto conta ativa</td>
+        </tr>
+        <tr>
+            <td>Conteudo das Mensagens</td>
+            <td>Processar comandos do bot</td>
+            <td>Nao armazenado apos processamento</td>
+        </tr>
+        <tr>
+            <td>Dados Financeiros</td>
+            <td>Registrar transacoes solicitadas</td>
+            <td>Enquanto conta ativa</td>
+        </tr>
+    </table>
+
+    <h2>6.2 Operadores de Dados</h2>
+
+    <table>
+        <tr>
+            <th>Operador</th>
+            <th>Servico</th>
+            <th>Localizacao</th>
+        </tr>
+        <tr>
+            <td>Google LLC (Firebase)</td>
+            <td>Banco de dados, autenticacao, hospedagem</td>
+            <td>Estados Unidos</td>
+        </tr>
+        <tr>
+            <td>Meta Platforms, Inc.</td>
+            <td>WhatsApp Business API</td>
+            <td>Estados Unidos</td>
+        </tr>
+        <tr>
+            <td>Cloudinary Ltd</td>
+            <td>Armazenamento de midia</td>
+            <td>Estados Unidos</td>
+        </tr>
+    </table>
+
+    <h2>6.3 Direitos dos Usuarios (LGPD)</h2>
+    <p>Em conformidade com a Lei Geral de Protecao de Dados (Lei 13.709/2018), os usuarios podem:</p>
+    <ul>
+        <li>Solicitar acesso aos seus dados pessoais</li>
+        <li>Corrigir dados incompletos ou desatualizados</li>
+        <li>Solicitar exclusao dos dados</li>
+        <li>Revogar consentimento a qualquer momento</li>
+        <li>Desvincular o numero de WhatsApp nas configuracoes do painel</li>
+    </ul>
+
+    <!-- SECAO 7 -->
+    <h1 id="section7" class="page-break">7. Seguranca e Conformidade</h1>
+
+    <h2>7.1 Medidas de Seguranca</h2>
+
+    <div class="success-box">
+        <ul>
+            <li><strong>Criptografia em Transito:</strong> Todas as comunicacoes usam HTTPS/TLS</li>
+            <li><strong>Autenticacao Segura:</strong> Login via Google Sign-In (OAuth 2.0)</li>
+            <li><strong>Validacao de Webhook:</strong> Verificacao de assinatura do Meta</li>
+            <li><strong>Firestore Rules:</strong> Controle de acesso granular aos dados</li>
+            <li><strong>Content Security Policy:</strong> Headers de seguranca implementados</li>
+        </ul>
+    </div>
+
+    <h2>7.2 Conformidade com Politicas do Meta</h2>
+
+    <table>
+        <tr>
+            <th>Requisito</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>Politica de Privacidade publicada</td>
+            <td>Conforme</td>
+        </tr>
+        <tr>
+            <td>Nao envio de spam ou marketing nao solicitado</td>
+            <td>Conforme</td>
+        </tr>
+        <tr>
+            <td>Mensagens transacionais apenas</td>
+            <td>Conforme</td>
+        </tr>
+        <tr>
+            <td>Usuarios podem optar por sair</td>
+            <td>Conforme</td>
+        </tr>
+        <tr>
+            <td>Dados protegidos adequadamente</td>
+            <td>Conforme</td>
+        </tr>
+    </table>
+
+    <h2>7.3 O Que NAO Fazemos</h2>
+
+    <div class="warning-box">
+        <ul>
+            <li>NAO enviamos mensagens de marketing ou promocionais</li>
+            <li>NAO compartilhamos dados com terceiros para publicidade</li>
+            <li>NAO vendemos dados de usuarios</li>
+            <li>NAO armazenamos historico de conversas alem do necessario</li>
+            <li>NAO oferecemos servicos de WhatsApp para outras empresas</li>
+        </ul>
+    </div>
+
+    <!-- SECAO 8 -->
+    <h1 id="section8" class="page-break">8. Capturas de Tela</h1>
+
+    <h2>8.1 Painel de Login</h2>
+    <div class="screenshot-placeholder">
+        <p><strong>Tela de Login</strong></p>
+        <p>URL: https://imaginatech.com.br/financas/</p>
+        <p>Usuario faz login com conta Google</p>
+    </div>
+
+    <h2>8.2 Dashboard Financeiro</h2>
+    <div class="screenshot-placeholder">
+        <p><strong>Dashboard Principal</strong></p>
+        <p>Exibe saldo, entradas, saidas e graficos</p>
+        <p>Transacoes registradas via WhatsApp aparecem aqui</p>
+    </div>
+
+    <h2>8.3 Configuracoes - Vinculacao WhatsApp</h2>
+    <div class="screenshot-placeholder">
+        <p><strong>Modal de Configuracoes</strong></p>
+        <p>Secao "Bot WhatsApp" com campo para vincular numero</p>
+        <p>Usuario insere numero e clica em "Vincular"</p>
+    </div>
+
+    <h2>8.4 Conversa no WhatsApp</h2>
+    <div class="screenshot-placeholder">
+        <p><strong>Chat com Claytinho</strong></p>
+        <p>Usuario envia comandos e recebe respostas do bot</p>
+        <p>Exemplo: "gastei 50 no mercado" → Bot confirma registro</p>
+    </div>
+
+    <!-- SECAO 9 -->
+    <h1 id="section9" class="page-break">9. Contato e Suporte</h1>
+
+    <h2>9.1 Informacoes de Contato</h2>
+
+    <table>
+        <tr>
+            <th>Canal</th>
+            <th>Contato</th>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td>3d3printers@gmail.com</td>
+        </tr>
+        <tr>
+            <td>WhatsApp</td>
+            <td>+55 21 96897-2539</td>
+        </tr>
+        <tr>
+            <td>Website</td>
+            <td>https://imaginatech.com.br</td>
+        </tr>
+        <tr>
+            <td>Politica de Privacidade</td>
+            <td>https://imaginatech.com.br/politica-privacidade.html</td>
+        </tr>
+    </table>
+
+    <h2>9.2 Responsavel pelo Tratamento de Dados</h2>
+    <p><strong>ImaginaTech</strong><br>
+    Rio de Janeiro, RJ, Brasil<br>
+    Email: 3d3printers@gmail.com</p>
+
+    <div class="success-box">
+        <h3>Declaracao de Conformidade</h3>
+        <p>Declaramos que o aplicativo ImaginaTech utiliza as APIs do Meta (WhatsApp Business Platform) em conformidade com todas as politicas e termos de uso estabelecidos. Nos comprometemos a manter as praticas de privacidade e seguranca descritas neste documento.</p>
+    </div>
+
+    <footer>
+        <p><strong>ImaginaTech</strong> - Documentacao de Integracao Meta APIs</p>
+        <p>Versao 1.0 | Janeiro de 2026</p>
+        <p>https://imaginatech.com.br</p>
+    </footer>
+
+</body>
+</html>

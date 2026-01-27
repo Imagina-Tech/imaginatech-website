@@ -492,9 +492,12 @@ function startTransactionsListener() {
 
                 logger.log(`[Realtime] ${transactions.length} transações sincronizadas`);
 
-                // Atualizar KPIs e gráficos
+                // Atualizar KPIs, gráficos e gauges
                 if (typeof updateKPIs === 'function') {
                     updateKPIs();
+                }
+                if (typeof updateCharts === 'function') {
+                    updateCharts();
                 }
             },
             // Callback de erro
