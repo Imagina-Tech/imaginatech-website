@@ -83,7 +83,6 @@ function getNextProductId() {
 async function saveProduct(productData) {
     try {
         window.showLoading();
-        console.log('[SAVE] Iniciando salvamento...');
 
         const data = {
             ...productData,
@@ -95,27 +94,16 @@ async function saveProduct(productData) {
         let productIdForSync = null;
 
         if (window.editingProductId) {
-            console.log('[SAVE] Atualizando produto existente:', window.editingProductId);
             await window.db.collection('products')
                 .doc(window.editingProductId)
                 .update(data);
             window.showToast('Produto atualizado com sucesso!', 'success');
             productIdForSync = window.editingProductId;
         } else {
-            console.log('[SAVE] Criando novo produto...');
-            console.log('[SAVE] window.products:', window.products?.length, 'itens');
-
-            const nextId = getNextProductId();
-            console.log('[SAVE] Proximo ID obtido:', nextId);
-
-            data.productId = nextId;
+            data.productId = getNextProductId();
             data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             data.createdBy = window.auth.currentUser.email;
-
-            console.log('[SAVE] Salvando no Firestore...');
             const docRef = await window.db.collection('products').add(data);
-            console.log('[SAVE] Produto criado com sucesso:', docRef.id);
-
             window.showToast('Produto criado com sucesso!', 'success');
             productIdForSync = docRef.id;
         }
@@ -219,10 +207,6 @@ async function saveProduct(productData) {
             }
         }
     } catch (error) {
-        // Log completo para debug (temporario)
-        console.error('[SAVE] ERRO COMPLETO:', error);
-        console.error('[SAVE] Stack:', error.stack);
-        console.error('[SAVE] Message:', error.message);
         window.logger?.error('Erro ao salvar produto:', error);
         window.showToast('Erro ao salvar produto', 'error');
     } finally {
