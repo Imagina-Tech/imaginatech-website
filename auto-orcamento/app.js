@@ -42,10 +42,18 @@ const CONFIG = {
     },
     // Parametros de impressao (bico 0.4mm)
     PRINT_PARAMS: {
-        infillPercentage: 0.20,      // 20% infill
         wallThickness: 0.08,         // ~8% para paredes
         topBottomLayers: 0.05,       // ~5% para topo/fundo
         wasteFactor: 1.10            // 10% desperdicio
+    },
+    // Opcoes de preenchimento
+    INFILL_OPTIONS: {
+        'auto': { value: 0.20, label: 'Automatico (Analise do tecnico)' },
+        '10': { value: 0.10, label: '10%' },
+        '20': { value: 0.20, label: '20%' },
+        '30': { value: 0.30, label: '30%' },
+        '80': { value: 0.80, label: '80%' },
+        '100': { value: 1.00, label: '100% (Solido)' }
     },
     // Cores padrao (fallback)
     DEFAULT_COLORS: ['Branco', 'Preto', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Laranja']
@@ -191,16 +199,20 @@ function updateColorDropdown(material, estimatedWeight = 0) {
 // CALCULO DE PESO
 // ============================================================================
 
-function calculateFilamentWeight(volumeMm3, material) {
+function calculateFilamentWeight(volumeMm3, material, infillOption = '20') {
     const volumeCm3 = volumeMm3 / 1000;
     const density = CONFIG.MATERIAL_DENSITIES[material] || 1.24;
+
+    // Obter valor do infill
+    const infillConfig = CONFIG.INFILL_OPTIONS[infillOption] || CONFIG.INFILL_OPTIONS['20'];
+    const infillPercentage = infillConfig.value;
 
     // Peso base = volume * densidade
     const baseDensityWeight = volumeCm3 * density;
 
-    // Fator de preenchimento efetivo (~33% para peca tipica)
+    // Fator de preenchimento efetivo (infill + paredes + topo/fundo)
     const effectiveFillFactor =
-        CONFIG.PRINT_PARAMS.infillPercentage +
+        infillPercentage +
         CONFIG.PRINT_PARAMS.wallThickness +
         CONFIG.PRINT_PARAMS.topBottomLayers;
 
@@ -358,7 +370,8 @@ async function handleFileSelect(file) {
 
         // Calcular peso estimado
         const material = document.getElementById('materialSelect')?.value || 'PLA';
-        const estimatedWeight = calculateFilamentWeight(state.volume, material);
+        const infill = document.getElementById('infillSelect')?.value || '20';
+        const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
         updateWeightDisplay(estimatedWeight);
 
         // Atualizar estoque com peso minimo e recarregar cores
@@ -506,6 +519,7 @@ function getSelectedOptions() {
     return {
         material: document.getElementById('materialSelect')?.value || 'PLA',
         color: document.getElementById('colorSelect')?.value || 'branco',
+        infill: document.getElementById('infillSelect')?.value || '20',
         finish: document.getElementById('finishSelect')?.value || 'padrao',
         priority: document.getElementById('prioritySelect')?.value || 'normal'
     };
@@ -545,14 +559,35 @@ function setupEventHandlers() {
     if (materialSelect) {
         materialSelect.addEventListener('change', async () => {
             const material = materialSelect.value;
+            const infill = document.getElementById('infillSelect')?.value || '20';
 
             // Atualizar cores disponiveis para este material
             if (state.volume > 0) {
-                const estimatedWeight = calculateFilamentWeight(state.volume, material);
+                const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
                 updateWeightDisplay(estimatedWeight);
                 updateColorDropdown(material, estimatedWeight);
             } else {
                 updateColorDropdown(material, 0);
+            }
+
+            // Recalcular preco
+            if (state.currentFile && state.volume) {
+                calculateQuote();
+            }
+        });
+    }
+
+    // Mudanca de infill: recalcular peso e atualizar cores
+    const infillSelect = document.getElementById('infillSelect');
+    if (infillSelect) {
+        infillSelect.addEventListener('change', async () => {
+            const material = document.getElementById('materialSelect')?.value || 'PLA';
+            const infill = infillSelect.value;
+
+            if (state.volume > 0) {
+                const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
+                updateWeightDisplay(estimatedWeight);
+                updateColorDropdown(material, estimatedWeight);
             }
 
             // Recalcular preco
@@ -601,7 +636,10 @@ function submitQuoteWhatsApp() {
     const options = getSelectedOptions();
     const dims = state.dimensions;
     const volumeCm3 = (state.volume / 1000).toFixed(2);
-    const weightG = state.estimatedWeight || calculateFilamentWeight(state.volume, options.material);
+    const weightG = state.estimatedWeight || calculateFilamentWeight(state.volume, options.material, options.infill);
+
+    // Obter label do infill
+    const infillLabel = CONFIG.INFILL_OPTIONS[options.infill]?.label || '20%';
 
     const message = encodeURIComponent(
         `Ola! Vim do Auto-Orcamento do site.\n\n` +
@@ -612,6 +650,7 @@ function submitQuoteWhatsApp() {
         `*Configuracoes:*\n` +
         `- Material: ${options.material}\n` +
         `- Cor: ${options.color}\n` +
+        `- Preenchimento: ${infillLabel}\n` +
         `- Acabamento: ${options.finish}\n` +
         `- Prioridade: ${options.priority}\n\n` +
         `*Estimativa:* R$ ${state.price.toFixed(2).replace('.', ',')}\n\n` +
