@@ -134,24 +134,53 @@ function isAuthorizedUser(email) {
 }
 
 /**
- * Forca refresh do token de autenticacao para obter custom claims atualizados
- * IMPORTANTE: Necessario quando o backend atualiza o claim 'admin' e o token
- * local ainda nao reflete essa mudanca
- * @returns {Promise<boolean>} true se refresh bem-sucedido
+ * Garante que o admin autenticado tenha o custom claim 'admin: true'
+ * Chama a Cloud Function ensureMyAdminClaim para configurar se necessario
+ * Depois faz refresh do token local para refletir o claim
+ * @returns {Promise<boolean>} true se claim esta configurado
  */
-async function refreshAuthToken() {
+async function ensureAdminClaim() {
     try {
         const user = auth.currentUser;
         if (!user) {
-            logger.warn('refreshAuthToken: Nenhum usuario autenticado');
+            logger.warn('ensureAdminClaim: Nenhum usuario autenticado');
             return false;
         }
-        // Forcar refresh do token (true = forceRefresh)
-        await user.getIdToken(true);
-        logger.log('Token de autenticacao atualizado');
-        return true;
+
+        const idToken = await user.getIdToken(false);
+        const functionsUrl = window.ENV_CONFIG?.FUNCTIONS_URL;
+        if (!functionsUrl) {
+            logger.error('ensureAdminClaim: FUNCTIONS_URL nao configurada');
+            return false;
+        }
+
+        const response = await fetch(`${functionsUrl}/ensureMyAdminClaim`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            }
+        });
+
+        if (!response.ok) {
+            logger.warn('ensureAdminClaim: Resposta nao-ok:', response.status);
+            return false;
+        }
+
+        const data = await response.json();
+
+        if (data.success && !data.alreadySet) {
+            // Claim foi configurado agora - forcar refresh do token local
+            logger.log('Custom claim configurado pelo backend, atualizando token local...');
+            await user.getIdToken(true);
+            logger.log('Token atualizado com custom claim admin');
+        } else if (data.alreadySet) {
+            logger.log('Custom claim admin ja estava configurado');
+        }
+
+        return data.success;
     } catch (error) {
-        logger.error('Erro ao atualizar token:', error);
+        logger.error('Erro ao garantir admin claim:', error);
         return false;
     }
 }
@@ -325,6 +354,8 @@ function setupAuthListener() {
 
         hideLoading();
         if (user && isAuthorizedUser(user.email)) {
+            // Garantir que o custom claim 'admin' esteja configurado para Storage
+            ensureAdminClaim();
             showDashboard(user);
             loadFilaments();
         } else {
@@ -1509,8 +1540,8 @@ async function saveFilament(event) {
 
         // Upload image if selected
         if (selectedImage) {
-            // Forcar refresh do token para garantir custom claims atualizados
-            await refreshAuthToken();
+            // Garantir custom claim admin antes do upload ao Storage
+            await ensureAdminClaim();
 
             // SEGURANCA: Sanitizar nome do arquivo antes do upload
             const safeName = sanitizeFileName(selectedImage.name);
@@ -2359,8 +2390,8 @@ async function saveEquipment(event) {
 
         // Se tem nova imagem selecionada, fazer upload
         if (selectedEquipmentImage) {
-            // Forcar refresh do token para garantir custom claims atualizados
-            await refreshAuthToken();
+            // Garantir custom claim admin antes do upload ao Storage
+            await ensureAdminClaim();
 
             const timestamp = Date.now();
             // SEGURANCA: Sanitizar nome do arquivo antes do upload

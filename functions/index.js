@@ -827,6 +827,82 @@ exports.refreshAdminClaims = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * Garante que o usuario autenticado tenha o custom claim 'admin' configurado
+ * Qualquer admin autenticado pode chamar para si mesmo
+ * POST /ensureMyAdminClaim
+ * Requer: Bearer token de usuario autenticado
+ * Retorna: { success, admin, message }
+ */
+exports.ensureMyAdminClaim = functions.https.onRequest(async (req, res) => {
+    setCorsHeaders(res, req);
+
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
+    if (!applyRateLimit(req, res, 'auth')) return;
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Metodo nao permitido' });
+    }
+
+    // Verificar token de autenticacao
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Token nao fornecido' });
+    }
+
+    try {
+        const idToken = authHeader.split('Bearer ')[1];
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const uid = decodedToken.uid;
+        const email = decodedToken.email;
+
+        // Verificar se o usuario esta na colecao admins com active: true
+        const adminDoc = await db.collection('admins').doc(uid).get();
+        const isActiveAdmin = adminDoc.exists && adminDoc.data().active === true;
+
+        // Super Admin sempre e admin
+        const isSuperAdminUser = email === SUPER_ADMIN_EMAIL;
+
+        if (!isActiveAdmin && !isSuperAdminUser) {
+            return res.status(403).json({
+                success: false,
+                admin: false,
+                message: 'Usuario nao e admin ativo'
+            });
+        }
+
+        // Verificar se o claim ja esta correto
+        if (decodedToken.admin === true) {
+            return res.json({
+                success: true,
+                admin: true,
+                message: 'Custom claim ja configurado',
+                alreadySet: true
+            });
+        }
+
+        // Definir custom claim admin: true
+        await admin.auth().setCustomUserClaims(uid, { admin: true });
+        console.log(`[ensureMyAdminClaim] Claim admin:true definido para ${email} (${uid})`);
+
+        return res.json({
+            success: true,
+            admin: true,
+            message: 'Custom claim configurado com sucesso',
+            alreadySet: false
+        });
+
+    } catch (error) {
+        console.error('[ensureMyAdminClaim] Erro:', error);
+        return res.status(500).json({
+            error: 'Erro ao verificar/configurar claim',
+            message: error.message
+        });
+    }
+});
+
+/**
  * Verificar senha de bypass para acoes especiais (ex: pular foto obrigatoria)
  * POST /verifyBypassPassword
  * Body: { password: string }
