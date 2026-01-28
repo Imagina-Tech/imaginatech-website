@@ -50,20 +50,28 @@ const MAX_PRODUCT_ID = 200;
 
 function getNextProductId() {
     // Usar window.products (atualizado em tempo real pelo listener)
-    // para evitar delay de propagacao do Firestore
     const products = window.products || [];
 
+    // Coletar IDs em uso (converter para numero para garantir comparacao correta)
     const usedIds = new Set();
     products.forEach(product => {
-        if (product.productId) {
-            usedIds.add(product.productId);
+        if (product.productId !== undefined && product.productId !== null) {
+            // Converter para numero para garantir consistencia
+            const id = parseInt(product.productId, 10);
+            if (!isNaN(id)) {
+                usedIds.add(id);
+            }
         }
     });
+
+    // Debug: mostrar IDs em uso
+    const sortedIds = Array.from(usedIds).sort((a, b) => a - b);
+    window.logger?.log('[ID] IDs em uso:', sortedIds.join(', '));
 
     // Encontrar o primeiro ID vago (reutiliza IDs de produtos excluidos)
     for (let id = 1; id <= MAX_PRODUCT_ID; id++) {
         if (!usedIds.has(id)) {
-            window.logger?.log('[ID] Proximo ID disponivel:', id, '| IDs em uso:', usedIds.size);
+            window.logger?.log('[ID] Proximo ID disponivel:', id);
             return id;
         }
     }
