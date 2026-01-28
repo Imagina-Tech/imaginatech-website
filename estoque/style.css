@@ -618,6 +618,38 @@
     object-fit: contain;
 }
 
+/* Botão de colar imagem */
+.btn-paste-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    margin-top: 0.5rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--neon-blue);
+    border-radius: 8px;
+    color: var(--neon-blue);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-paste-image:hover {
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.btn-paste-image:active {
+    transform: scale(0.98);
+}
+
+.btn-paste-image i {
+    font-size: 1rem;
+}
+
 /* ===========================
    DRAG & DROP STATES
    =========================== */

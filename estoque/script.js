@@ -208,6 +208,7 @@ function setupGlobalEventDelegation() {
             'open-add-filament-modal': () => openAddFilamentModal(),
             'close-filament-modal': () => closeFilamentModal(),
             'trigger-filament-upload': () => document.getElementById('filamentImage')?.click(),
+            'paste-filament-image': () => pasteImageFromClipboard('filament'),
 
             // Acoes card filamento
             'close-card-actions-modal': () => closeCardActionsModal(),
@@ -221,6 +222,7 @@ function setupGlobalEventDelegation() {
             'open-add-equipment-modal': () => openAddEquipmentModal(),
             'close-equipment-modal': () => closeEquipmentModal(),
             'trigger-equipment-upload': () => document.getElementById('equipmentImage')?.click(),
+            'paste-equipment-image': () => pasteImageFromClipboard('equipment'),
             'select-equipment-status': () => selectEquipmentStatus(value),
 
             // Acoes card equipamento
@@ -1088,6 +1090,57 @@ function setupPasteUpload() {
     });
 
     logger.log('Ctrl+V paste configurado para upload de imagens');
+}
+
+/**
+ * Lê imagem do clipboard e processa o upload
+ * @param {string} target - 'filament' ou 'equipment'
+ */
+async function pasteImageFromClipboard(target) {
+    try {
+        // Verificar se a API de Clipboard está disponível
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            showToast('Seu navegador não suporta colar imagens. Tente arrastar a imagem.', 'error');
+            return;
+        }
+
+        // Ler conteúdo do clipboard
+        const clipboardItems = await navigator.clipboard.read();
+
+        for (const item of clipboardItems) {
+            // Procurar por tipo de imagem
+            const imageType = item.types.find(type => type.startsWith('image/'));
+
+            if (imageType) {
+                const blob = await item.getType(imageType);
+                const file = new File([blob], `pasted-image.${imageType.split('/')[1]}`, { type: imageType });
+
+                logger.log(`Imagem colada do clipboard: ${file.type}, ${file.size} bytes`);
+
+                // Chamar o handler apropriado
+                if (target === 'filament') {
+                    handleImageFile(file);
+                } else if (target === 'equipment') {
+                    handleEquipmentImageFile(file);
+                }
+
+                return; // Processar apenas a primeira imagem
+            }
+        }
+
+        // Nenhuma imagem encontrada
+        showToast('Nenhuma imagem encontrada no clipboard. Copie uma imagem primeiro.', 'warning');
+
+    } catch (error) {
+        logger.error('Erro ao colar imagem:', error);
+
+        // Erro de permissão
+        if (error.name === 'NotAllowedError') {
+            showToast('Permissão negada para acessar o clipboard. Permita o acesso nas configurações do navegador.', 'error');
+        } else {
+            showToast('Erro ao colar imagem. Tente arrastar a imagem ao invés de colar.', 'error');
+        }
+    }
 }
 
 function preventDefaults(e) {
