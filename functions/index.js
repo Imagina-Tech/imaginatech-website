@@ -4807,3 +4807,101 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
         return res.status(500).json({ error: 'Erro interno ao calcular orcamento' });
     }
 });
+
+// ========== AUTO-ORCAMENTO: CONSULTA DE ESTOQUE ==========
+
+/**
+ * Cloud Function: getAvailableFilaments
+ * Retorna filamentos agrupados por tipo+cor com estoque disponivel
+ * ENDPOINT PUBLICO - NAO requer autenticacao
+ *
+ * Query params:
+ *   - minWeight (opcional): Peso minimo em gramas para filtrar cores disponiveis
+ *
+ * Retorna: {
+ *   success: true,
+ *   materials: {
+ *     'PLA': {
+ *       availableColors: ['Branco', 'Preto'],
+ *       colorStock: {
+ *         'Branco': { totalGrams: 1850, sufficient: true },
+ *         'Preto': { totalGrams: 500, sufficient: false }
+ *       }
+ *     }
+ *   },
+ *   requestedWeight: 45
+ * }
+ *
+ * SEGURANCA: NAO expor marca, notas, imageUrl, IDs
+ */
+exports.getAvailableFilaments = functions.https.onRequest(async (req, res) => {
+    // CORS - permite qualquer origem (endpoint publico)
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
+
+    // Rate limit (readonly - 120 req/min)
+    if (!applyRateLimit(req, res, 'readonly')) return;
+
+    try {
+        const minWeight = parseInt(req.query.minWeight) || 0;
+
+        // Buscar todos os filamentos
+        const snapshot = await db.collection('filaments').get();
+
+        // Agregar por tipo + cor
+        const materials = {};
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const type = (data.type || '').trim();
+            const color = (data.color || '').trim();
+            const weightKg = parseFloat(data.weight) || 0;
+            const weightGrams = Math.round(weightKg * 1000);
+
+            if (!type || !color || weightGrams <= 0) return;
+
+            // Inicializar estrutura do material
+            if (!materials[type]) {
+                materials[type] = {
+                    availableColors: [],
+                    colorStock: {}
+                };
+            }
+
+            // Somar peso (mesmo tipo+cor pode ter multiplas marcas/bobinas)
+            if (!materials[type].colorStock[color]) {
+                materials[type].colorStock[color] = { totalGrams: 0, sufficient: false };
+            }
+            materials[type].colorStock[color].totalGrams += weightGrams;
+        });
+
+        // Determinar cores disponiveis (estoque >= minWeight)
+        for (const type in materials) {
+            for (const color in materials[type].colorStock) {
+                const stock = materials[type].colorStock[color];
+                stock.sufficient = stock.totalGrams >= minWeight;
+                if (stock.sufficient && !materials[type].availableColors.includes(color)) {
+                    materials[type].availableColors.push(color);
+                }
+            }
+            // Ordenar cores alfabeticamente
+            materials[type].availableColors.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        return res.json({
+            success: true,
+            materials,
+            requestedWeight: minWeight,
+            timestamp: Date.now()
+        });
+
+    } catch (error) {
+        console.error('[getAvailableFilaments] Erro:', error);
+        return res.status(500).json({ error: 'Erro ao consultar estoque' });
+    }
+});

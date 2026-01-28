@@ -31,7 +31,24 @@ const CONFIG = {
     PRIORITY_MULTIPLIERS: {
         'normal': 1.0,
         'urgente': 1.5
-    }
+    },
+    // Densidades dos materiais (g/cm3) para calculo de peso
+    MATERIAL_DENSITIES: {
+        'PLA': 1.24,
+        'ABS': 1.04,
+        'PETG': 1.27,
+        'TPU': 1.21,
+        'Resina': 1.10
+    },
+    // Parametros de impressao (bico 0.4mm)
+    PRINT_PARAMS: {
+        infillPercentage: 0.20,      // 20% infill
+        wallThickness: 0.08,         // ~8% para paredes
+        topBottomLayers: 0.05,       // ~5% para topo/fundo
+        wasteFactor: 1.10            // 10% desperdicio
+    },
+    // Cores padrao (fallback)
+    DEFAULT_COLORS: ['Branco', 'Preto', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Laranja']
 };
 
 // ============================================================================
@@ -45,7 +62,9 @@ let state = {
     volume: 0,
     dimensions: null,
     price: 0,
-    isEstimate: true
+    isEstimate: true,
+    estimatedWeight: 0,
+    availableStock: null  // Cache do estoque
 };
 
 // ============================================================================
@@ -54,11 +73,150 @@ let state = {
 
 document.addEventListener('DOMContentLoaded', init);
 
-function init() {
+async function init() {
     setupUploadZone();
     setupEventHandlers();
     // CustomSelects sao inicializados automaticamente pelo /shared/custom-select.js
     // atraves da classe .form-select nos elementos select
+
+    // Carregar estoque disponivel na inicializacao
+    await fetchAvailableFilaments();
+    updateMaterialDropdown();
+}
+
+// ============================================================================
+// INTEGRACAO COM ESTOQUE
+// ============================================================================
+
+async function fetchAvailableFilaments(minWeight = 0) {
+    try {
+        const params = new URLSearchParams();
+        if (minWeight > 0) params.append('minWeight', minWeight);
+
+        const response = await fetch(
+            `${CONFIG.API_URL}/getAvailableFilaments?${params}`,
+            { signal: AbortSignal.timeout(10000) }
+        );
+
+        if (!response.ok) throw new Error('Erro ao consultar estoque');
+
+        const data = await response.json();
+        if (data.success) {
+            state.availableStock = data.materials;
+            return data;
+        }
+        throw new Error('Resposta invalida');
+
+    } catch (error) {
+        console.warn('Estoque indisponivel, usando valores padrao:', error.message);
+        state.availableStock = null;
+        return null;
+    }
+}
+
+function updateMaterialDropdown() {
+    const materialSelect = document.getElementById('materialSelect');
+    if (!materialSelect) return;
+
+    let html = '';
+
+    if (state.availableStock && Object.keys(state.availableStock).length > 0) {
+        // Materiais do estoque
+        const materials = Object.keys(state.availableStock).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        materials.forEach(material => {
+            html += `<option value="${escapeHtml(material)}">${escapeHtml(material)}</option>`;
+        });
+    } else {
+        // Fallback: materiais padrao
+        Object.keys(CONFIG.MATERIAL_COSTS).forEach(material => {
+            html += `<option value="${escapeHtml(material)}">${escapeHtml(material)}</option>`;
+        });
+    }
+
+    materialSelect.innerHTML = html;
+
+    // Atualizar CustomSelect
+    setTimeout(() => {
+        materialSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+}
+
+function updateColorDropdown(material, estimatedWeight = 0) {
+    const colorSelect = document.getElementById('colorSelect');
+    if (!colorSelect) return;
+
+    let html = '';
+
+    if (state.availableStock && state.availableStock[material]) {
+        const materialStock = state.availableStock[material];
+        const colors = materialStock.availableColors || [];
+
+        if (colors.length === 0) {
+            html = '<option value="" disabled>Nenhuma cor disponivel</option>';
+        } else {
+            colors.forEach(color => {
+                const stock = materialStock.colorStock[color];
+                const totalGrams = stock?.totalGrams || 0;
+                const sufficient = totalGrams >= estimatedWeight;
+
+                if (sufficient) {
+                    // Mostrar estoque disponivel
+                    const stockLabel = totalGrams >= 1000
+                        ? `${(totalGrams / 1000).toFixed(1)}kg`
+                        : `${totalGrams}g`;
+                    html += `<option value="${escapeHtml(color.toLowerCase())}">${escapeHtml(color)} (${stockLabel})</option>`;
+                }
+            });
+        }
+
+        if (!html) {
+            html = '<option value="" disabled>Estoque insuficiente</option>';
+        }
+    } else {
+        // Fallback: cores padrao
+        CONFIG.DEFAULT_COLORS.forEach(color => {
+            html += `<option value="${escapeHtml(color.toLowerCase())}">${escapeHtml(color)}</option>`;
+        });
+    }
+
+    colorSelect.innerHTML = html;
+
+    // Atualizar CustomSelect
+    setTimeout(() => {
+        colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 0);
+}
+
+// ============================================================================
+// CALCULO DE PESO
+// ============================================================================
+
+function calculateFilamentWeight(volumeMm3, material) {
+    const volumeCm3 = volumeMm3 / 1000;
+    const density = CONFIG.MATERIAL_DENSITIES[material] || 1.24;
+
+    // Peso base = volume * densidade
+    const baseDensityWeight = volumeCm3 * density;
+
+    // Fator de preenchimento efetivo (~33% para peca tipica)
+    const effectiveFillFactor =
+        CONFIG.PRINT_PARAMS.infillPercentage +
+        CONFIG.PRINT_PARAMS.wallThickness +
+        CONFIG.PRINT_PARAMS.topBottomLayers;
+
+    // Peso estimado com desperdicio
+    const estimatedWeight = baseDensityWeight * effectiveFillFactor * CONFIG.PRINT_PARAMS.wasteFactor;
+
+    return Math.ceil(estimatedWeight); // Arredonda para cima (gramas)
+}
+
+function updateWeightDisplay(weight) {
+    state.estimatedWeight = weight;
+
+    const weightEl = document.getElementById('estimatedWeight');
+    if (weightEl) {
+        weightEl.textContent = weight;
+    }
 }
 
 // ============================================================================
@@ -197,6 +355,16 @@ async function handleFileSelect(file) {
         if (fileNameEl) {
             fileNameEl.textContent = escapeHtml(file.name);
         }
+
+        // Calcular peso estimado
+        const material = document.getElementById('materialSelect')?.value || 'PLA';
+        const estimatedWeight = calculateFilamentWeight(state.volume, material);
+        updateWeightDisplay(estimatedWeight);
+
+        // Atualizar estoque com peso minimo e recarregar cores
+        await fetchAvailableFilaments(estimatedWeight);
+        updateMaterialDropdown();
+        updateColorDropdown(material, estimatedWeight);
 
         // Calcular preco
         await calculateQuote();
@@ -372,9 +540,31 @@ function setupEventHandlers() {
         }
     });
 
-    // Mudanca de opcoes recalcula preco
-    const selectIds = ['materialSelect', 'colorSelect', 'finishSelect', 'prioritySelect'];
-    selectIds.forEach(id => {
+    // Mudanca de material: recalcular peso e atualizar cores
+    const materialSelect = document.getElementById('materialSelect');
+    if (materialSelect) {
+        materialSelect.addEventListener('change', async () => {
+            const material = materialSelect.value;
+
+            // Atualizar cores disponiveis para este material
+            if (state.volume > 0) {
+                const estimatedWeight = calculateFilamentWeight(state.volume, material);
+                updateWeightDisplay(estimatedWeight);
+                updateColorDropdown(material, estimatedWeight);
+            } else {
+                updateColorDropdown(material, 0);
+            }
+
+            // Recalcular preco
+            if (state.currentFile && state.volume) {
+                calculateQuote();
+            }
+        });
+    }
+
+    // Mudanca de outras opcoes recalcula preco
+    const otherSelectIds = ['colorSelect', 'finishSelect', 'prioritySelect'];
+    otherSelectIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('change', () => {
@@ -411,12 +601,14 @@ function submitQuoteWhatsApp() {
     const options = getSelectedOptions();
     const dims = state.dimensions;
     const volumeCm3 = (state.volume / 1000).toFixed(2);
+    const weightG = state.estimatedWeight || calculateFilamentWeight(state.volume, options.material);
 
     const message = encodeURIComponent(
         `Ola! Vim do Auto-Orcamento do site.\n\n` +
         `*Arquivo:* ${state.currentFile.name}\n` +
         `*Dimensoes:* ${dims?.width?.toFixed(1) || '--'} x ${dims?.height?.toFixed(1) || '--'} x ${dims?.depth?.toFixed(1) || '--'} mm\n` +
-        `*Volume:* ${volumeCm3} cm3\n\n` +
+        `*Volume:* ${volumeCm3} cm3\n` +
+        `*Peso estimado:* ${weightG}g de filamento\n\n` +
         `*Configuracoes:*\n` +
         `- Material: ${options.material}\n` +
         `- Cor: ${options.color}\n` +
