@@ -133,6 +133,29 @@ function isAuthorizedUser(email) {
     return AUTHORIZED_EMAILS.includes(email);
 }
 
+/**
+ * Forca refresh do token de autenticacao para obter custom claims atualizados
+ * IMPORTANTE: Necessario quando o backend atualiza o claim 'admin' e o token
+ * local ainda nao reflete essa mudanca
+ * @returns {Promise<boolean>} true se refresh bem-sucedido
+ */
+async function refreshAuthToken() {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            logger.warn('refreshAuthToken: Nenhum usuario autenticado');
+            return false;
+        }
+        // Forcar refresh do token (true = forceRefresh)
+        await user.getIdToken(true);
+        logger.log('Token de autenticacao atualizado');
+        return true;
+    } catch (error) {
+        logger.error('Erro ao atualizar token:', error);
+        return false;
+    }
+}
+
 // ===========================
 // GLOBAL STATE
 // ===========================
@@ -709,7 +732,7 @@ function createFilamentCard(filament) {
             </div>` : ''}
 
             <div class="filament-image-container loading" id="filament-img-${safeId}" data-filament-id="${safeId}">
-                <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image">
+                <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image" onerror="this.onerror=null; this.src='/iconwpp.jpg';">
             </div>
             <div class="filament-info">
                 <div class="filament-type">${filamentType || 'N/A'}</div>
@@ -1046,9 +1069,10 @@ async function removeWhiteBackground(file) {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
 
-                // Configurações de detecção de branco
-                const WHITE_THRESHOLD = 240;  // Pixels com R,G,B > 240 são considerados brancos
-                const EDGE_TOLERANCE = 30;    // Tolerância para suavização de bordas
+                // Configurações de detecção de branco (ajustadas para maior tolerância)
+                const WHITE_THRESHOLD = 230;  // Pixels claros (reduzido de 240 para detectar mais fundos)
+                const EDGE_TOLERANCE = 40;    // Tolerância para suavização de bordas (aumentado para transição mais suave)
+                const COLOR_TOLERANCE = 30;   // Tolerância para variação de cor (aumentado para fundos levemente coloridos)
 
                 // Analisar cantos para detectar cor de fundo
                 const cornerSamples = [
@@ -1058,10 +1082,17 @@ async function removeWhiteBackground(file) {
                     getPixelAt(data, canvas.width, canvas.width - 1, canvas.height - 1) // Bottom-right
                 ];
 
+                // Função auxiliar para verificar se pixel é "branco" (inclui off-white e cinza claro)
+                const isWhiteish = (p) => {
+                    if (!p) return false;
+                    const brightness = (p.r + p.g + p.b) / 3;
+                    const maxDiff = Math.max(Math.abs(p.r - p.g), Math.abs(p.g - p.b), Math.abs(p.r - p.b));
+                    // Pixel é branco se: é claro E tem pouca variação de cor
+                    return brightness > WHITE_THRESHOLD && maxDiff < COLOR_TOLERANCE;
+                };
+
                 // Verificar se a maioria dos cantos é branca
-                const whiteCorners = cornerSamples.filter(p =>
-                    p.r > WHITE_THRESHOLD && p.g > WHITE_THRESHOLD && p.b > WHITE_THRESHOLD
-                ).length;
+                const whiteCorners = cornerSamples.filter(isWhiteish).length;
 
                 // Se menos de 3 cantos são brancos, provavelmente não tem fundo branco
                 if (whiteCorners < 3) {
@@ -1080,12 +1111,13 @@ async function removeWhiteBackground(file) {
 
                     // Calcular "brancura" do pixel
                     const brightness = (r + g + b) / 3;
-                    const isGrayish = Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20;
+                    const maxDiff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+                    const isNeutral = maxDiff < COLOR_TOLERANCE; // Pixel é neutro (branco, cinza, off-white)
 
-                    if (isGrayish && brightness > WHITE_THRESHOLD) {
+                    if (isNeutral && brightness > WHITE_THRESHOLD) {
                         // Pixel é branco/cinza claro - tornar totalmente transparente
                         data[i + 3] = 0;
-                    } else if (isGrayish && brightness > (WHITE_THRESHOLD - EDGE_TOLERANCE)) {
+                    } else if (isNeutral && brightness > (WHITE_THRESHOLD - EDGE_TOLERANCE)) {
                         // Pixel está na zona de transição - aplicar transparência gradual
                         // Isso suaviza as bordas e evita serrilhado
                         const alpha = Math.round(((WHITE_THRESHOLD - brightness) / EDGE_TOLERANCE) * 255);
@@ -1477,7 +1509,12 @@ async function saveFilament(event) {
 
         // Upload image if selected
         if (selectedImage) {
-            const storageRef = storage.ref(`filaments/${Date.now()}_${selectedImage.name}`);
+            // Forcar refresh do token para garantir custom claims atualizados
+            await refreshAuthToken();
+
+            // SEGURANCA: Sanitizar nome do arquivo antes do upload
+            const safeName = sanitizeFileName(selectedImage.name);
+            const storageRef = storage.ref(`filaments/${Date.now()}_${safeName}`);
             const snapshot = await storageRef.put(selectedImage);
             imageUrl = await snapshot.ref.getDownloadURL();
         } else if (editingFilamentId) {
@@ -2073,7 +2110,7 @@ function createEquipmentCard(item) {
     const safeId = escapeHtml(item.id);
 
     const imageHtml = item.imageUrl
-        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${safeName}">`
+        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${safeName}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'fas fa-tools equipment-image-placeholder\\'></i>';">`
         : `<i class="fas fa-tools equipment-image-placeholder"></i>`;
 
     const notesHtml = safeNotes
@@ -2322,8 +2359,13 @@ async function saveEquipment(event) {
 
         // Se tem nova imagem selecionada, fazer upload
         if (selectedEquipmentImage) {
+            // Forcar refresh do token para garantir custom claims atualizados
+            await refreshAuthToken();
+
             const timestamp = Date.now();
-            const fileName = `equipment_${timestamp}_${selectedEquipmentImage.name}`;
+            // SEGURANCA: Sanitizar nome do arquivo antes do upload
+            const safeName = sanitizeFileName(selectedEquipmentImage.name);
+            const fileName = `equipment_${timestamp}_${safeName}`;
             const storageRef = storage.ref().child(`equipment/${fileName}`);
             await storageRef.put(selectedEquipmentImage);
             imageUrl = await storageRef.getDownloadURL();
@@ -2395,7 +2437,7 @@ function openEquipmentActionsModal(id) {
     const summaryEl = document.querySelector('#equipmentActionsModal .card-info-summary');
     if (summaryEl) {
         const imageHtml = item.imageUrl
-            ? `<img src="${item.imageUrl}" class="summary-image" alt="${safeName}">`
+            ? `<img src="${item.imageUrl}" class="summary-image" alt="${safeName}" onerror="this.onerror=null; this.outerHTML='<div class=\\'summary-image\\' style=\\'display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-tools\\' style=\\'font-size: 1.5rem; color: var(--text-secondary);\\'></i></div>';">`
             : `<div class="summary-image" style="display: flex; align-items: center; justify-content: center;"><i class="fas fa-tools" style="font-size: 1.5rem; color: var(--text-secondary);"></i></div>`;
 
         summaryEl.innerHTML = `
