@@ -8,11 +8,11 @@
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-eval' 'sha256-BphLCwsL2YGbH7fpRGMsqZUeq/To4YyljkP/5YhJZSU=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
+        script-src 'self' 'unsafe-eval' 'sha256-BphLCwsL2YGbH7fpRGMsqZUeq/To4YyljkP/5YhJZSU=' 'sha256-RkL+UUc3UIGnM4vavTDd0If8OKefhu1dLOwiEpQt0f4=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
         font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
         img-src 'self' data: blob:;
-        connect-src 'self' https://us-central1-imaginatech-servicos.cloudfunctions.net https://*.cloudfunctions.net https://cloudflareinsights.com;
+        connect-src 'self' blob: https://us-central1-imaginatech-servicos.cloudfunctions.net https://*.cloudfunctions.net https://cloudflareinsights.com;
         worker-src 'self' blob:;
         object-src 'none';
         base-uri 'self';
