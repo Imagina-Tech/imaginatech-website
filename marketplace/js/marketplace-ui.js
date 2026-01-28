@@ -1630,7 +1630,7 @@ async function importFromMl(mlbId) {
         };
 
         // Buscar proximo productId disponivel
-        const nextId = await getNextProductId();
+        const nextId = getNextProductId();
         newProductData.productId = nextId;
 
         // Salvar no Firebase

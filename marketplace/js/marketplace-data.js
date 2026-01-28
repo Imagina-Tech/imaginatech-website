@@ -48,29 +48,27 @@ async function loadProducts() {
 // ========== OBTER PROXIMO ID (RANGE 1-200) ==========
 const MAX_PRODUCT_ID = 200;
 
-async function getNextProductId() {
-    try {
-        const snapshot = await window.db.collection('products')
-            .where('userId', '==', window.COMPANY_USER_ID)
-            .get();
+function getNextProductId() {
+    // Usar window.products (atualizado em tempo real pelo listener)
+    // para evitar delay de propagacao do Firestore
+    const products = window.products || [];
 
-        const usedIds = new Set();
-        snapshot.forEach(doc => {
-            const productId = doc.data().productId;
-            if (productId) usedIds.add(productId);
-        });
-
-        for (let id = 1; id <= MAX_PRODUCT_ID; id++) {
-            if (!usedIds.has(id)) {
-                return id;
-            }
+    const usedIds = new Set();
+    products.forEach(product => {
+        if (product.productId) {
+            usedIds.add(product.productId);
         }
+    });
 
-        throw new Error('Limite de 200 produtos atingido');
-    } catch (error) {
-        window.logger?.error('Erro ao obter proximo ID:', error);
-        throw error;
+    // Encontrar o primeiro ID vago (reutiliza IDs de produtos excluidos)
+    for (let id = 1; id <= MAX_PRODUCT_ID; id++) {
+        if (!usedIds.has(id)) {
+            window.logger?.log('[ID] Proximo ID disponivel:', id, '| IDs em uso:', usedIds.size);
+            return id;
+        }
     }
+
+    throw new Error('Limite de 200 produtos atingido');
 }
 
 // ========== SALVAR PRODUTO ==========
@@ -94,7 +92,7 @@ async function saveProduct(productData) {
             window.showToast('Produto atualizado com sucesso!', 'success');
             productIdForSync = window.editingProductId;
         } else {
-            data.productId = await getNextProductId();
+            data.productId = getNextProductId();
             data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             data.createdBy = window.auth.currentUser.email;
             const docRef = await window.db.collection('products').add(data);
