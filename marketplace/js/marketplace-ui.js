@@ -1629,8 +1629,8 @@ async function importFromMl(mlbId) {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Buscar proximo productId disponivel
-        const nextId = getNextProductId();
+        // Buscar proximo productId disponivel (usa funcao de marketplace-data.js)
+        const nextId = window.getNextProductId();
         newProductData.productId = nextId;
 
         // Salvar no Firebase
@@ -1651,25 +1651,9 @@ async function importFromMl(mlbId) {
     }
 }
 
-// Funcao auxiliar para buscar proximo productId
-async function getNextProductId() {
-    try {
-        const snapshot = await window.db.collection('products')
-            .orderBy('productId', 'desc')
-            .limit(1)
-            .get();
-
-        if (snapshot.empty) {
-            return 1;
-        }
-
-        const lastProduct = snapshot.docs[0].data();
-        return (lastProduct.productId || 0) + 1;
-    } catch (error) {
-        window.logger?.error('Erro ao buscar proximo ID:', error);
-        return Math.floor(Math.random() * 1000) + 1;  // Fallback
-    }
-}
+// NOTA: getNextProductId() esta definida em marketplace-data.js
+// e exportada para window.getNextProductId
+// Usa window.products (tempo real) para encontrar primeiro ID vago
 
 // ========== MODAL DE PRODUTO ==========
 async function openProductModal(productId = null) {
