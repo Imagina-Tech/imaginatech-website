@@ -51,6 +51,7 @@
     <link rel="stylesheet" href="/shared/z-index.css">
     <link rel="stylesheet" href="/shared/cosmic-bg.css">
     <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
     <link rel="stylesheet" href="/shared/buttons.css">
     <link rel="stylesheet" href="/shared/custom-select.css">
     <link rel="stylesheet" href="/shared/loading.css">
@@ -83,21 +84,40 @@
                 <span class="page-name">Auto-Orcamento</span>
             </div>
             <div class="navbar-right">
-                <a href="/" class="btn-nav">
+                <a href="/" class="btn-nav" title="Pagina Inicial">
                     <i class="fas fa-home"></i>
                     <span>Inicio</span>
                 </a>
-                <a href="/acompanhar-pedido/" class="btn-nav">
+                <a href="/acompanhar-pedido/" class="btn-nav" title="Acompanhar Pedido">
                     <i class="fas fa-search"></i>
                     <span>Acompanhar</span>
                 </a>
-                <a href="/projetos/" class="btn-nav">
+                <a href="/projetos/" class="btn-nav" title="Projetos">
                     <i class="fas fa-images"></i>
                     <span>Projetos</span>
                 </a>
+                <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" title="Menu" data-action="toggle-mobile-menu">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Navigation Dropdown -->
+    <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+        <a href="/" class="mobile-nav-item">
+            <i class="fas fa-home"></i>
+            Pagina Inicial
+        </a>
+        <a href="/acompanhar-pedido/" class="mobile-nav-item">
+            <i class="fas fa-search"></i>
+            Acompanhar Pedido
+        </a>
+        <a href="/projetos/" class="mobile-nav-item">
+            <i class="fas fa-images"></i>
+            Projetos
+        </a>
+    </div>
 
     <!-- Main Content -->
     <main class="main-container">

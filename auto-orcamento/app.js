@@ -203,23 +203,25 @@ function calculateFilamentWeight(volumeMm3, material, infillOption = '20') {
     const volumeCm3 = volumeMm3 / 1000;
     const density = CONFIG.MATERIAL_DENSITIES[material] || 1.24;
 
-    // Obter valor do infill
     const infillConfig = CONFIG.INFILL_OPTIONS[infillOption] || CONFIG.INFILL_OPTIONS['20'];
     const infillPercentage = infillConfig.value;
 
-    // Peso base = volume * densidade
-    const baseDensityWeight = volumeCm3 * density;
+    // Peso base do volume total (se fosse 100% solido)
+    const solidWeight = volumeCm3 * density;
 
-    // Fator de preenchimento efetivo (infill + paredes + topo/fundo)
-    const effectiveFillFactor =
-        infillPercentage +
-        CONFIG.PRINT_PARAMS.wallThickness +
-        CONFIG.PRINT_PARAMS.topBottomLayers;
+    // Para uma peca tipica:
+    // - ~15% do volume sao paredes/topo/fundo (sempre solidos)
+    // - ~85% do volume e interno (preenchido pelo infill)
+    const shellFactor = 0.15;  // Paredes + topo/fundo
+    const internalFactor = 0.85;  // Volume interno
 
-    // Peso estimado com desperdicio
-    const estimatedWeight = baseDensityWeight * effectiveFillFactor * CONFIG.PRINT_PARAMS.wasteFactor;
+    // Peso = (shell solido) + (interno * infill%)
+    const effectiveWeight = solidWeight * (shellFactor + (internalFactor * infillPercentage));
 
-    return Math.ceil(estimatedWeight); // Arredonda para cima (gramas)
+    // Adicionar desperdicio (purga, suportes, etc)
+    const wasteMultiplier = CONFIG.PRINT_PARAMS.wasteFactor || 1.10;
+
+    return Math.ceil(effectiveWeight * wasteMultiplier);
 }
 
 function updateWeightDisplay(weight) {
@@ -464,8 +466,12 @@ async function calculateQuote() {
 
     const options = getSelectedOptions();
 
+    // SEMPRE calcular local primeiro (para ter um valor imediatamente)
+    const localPrice = calculateLocalEstimate(state.volume, options);
+    updatePrice(localPrice, true);
+
     try {
-        // Tentar backend primeiro
+        // Tentar backend
         const formData = new FormData();
         formData.append('file', state.currentFile, sanitizeFileName(state.currentFile.name));
         formData.append('material', options.material);
@@ -474,7 +480,7 @@ async function calculateQuote() {
         formData.append('priority', options.priority);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const response = await fetch(`${CONFIG.API_URL}/calculateQuote`, {
             method: 'POST',
@@ -492,14 +498,11 @@ async function calculateQuote() {
             }
         }
 
-        throw new Error('Backend nao disponivel');
-
+        console.warn('Backend retornou erro, usando calculo local');
     } catch (error) {
-        // Fallback: calculo local
-        console.warn('Usando calculo local (fallback):', error.message);
-        const price = calculateLocalEstimate(state.volume, options);
-        updatePrice(price, true);
+        console.warn('Usando calculo local:', error.message);
     }
+    // Ja atualizamos com preco local no inicio, nao precisa fazer nada
 }
 
 function calculateLocalEstimate(volumeMm3, options) {
@@ -507,10 +510,15 @@ function calculateLocalEstimate(volumeMm3, options) {
     const finishMultiplier = CONFIG.FINISH_MULTIPLIERS[options.finish] || 1.0;
     const priorityMultiplier = CONFIG.PRIORITY_MULTIPLIERS[options.priority] || 1.0;
 
+    // Obter infill
+    const infillConfig = CONFIG.INFILL_OPTIONS[options.infill] || CONFIG.INFILL_OPTIONS['20'];
+    const infillMultiplier = 0.5 + (infillConfig.value * 0.5);  // 10% infill = 0.55x, 100% = 1.0x
+
     const volumeCm3 = volumeMm3 / 1000;
     let price = volumeCm3 * material.perCm3;
-    price *= finishMultiplier;
-    price *= priorityMultiplier;
+    price *= infillMultiplier;     // Aplicar infill
+    price *= finishMultiplier;     // Aplicar acabamento
+    price *= priorityMultiplier;   // Aplicar prioridade
 
     return Math.max(price, material.minPrice);
 }
@@ -551,6 +559,22 @@ function setupEventHandlers() {
                 const grid = state.viewer?.toggleGrid();
                 el.classList.toggle('active', grid);
                 break;
+
+            case 'toggle-mobile-menu':
+                toggleMobileMenu();
+                break;
+        }
+    });
+
+    // Fechar menu mobile ao clicar fora
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('mobileNavDropdown');
+        const btn = document.getElementById('btnMobileMenu');
+        if (!dropdown || !btn) return;
+
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            dropdown.classList.remove('open');
+            btn.classList.remove('open');
         }
     });
 
@@ -664,6 +688,16 @@ function submitQuoteWhatsApp() {
 // ============================================================================
 // UTILITARIOS
 // ============================================================================
+
+function toggleMobileMenu() {
+    const dropdown = document.getElementById('mobileNavDropdown');
+    const btn = document.getElementById('btnMobileMenu');
+
+    if (!dropdown || !btn) return;
+
+    const isOpen = dropdown.classList.toggle('open');
+    btn.classList.toggle('open', isOpen);
+}
 
 function escapeHtml(str) {
     if (!str) return '';
