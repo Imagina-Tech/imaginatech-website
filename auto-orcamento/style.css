@@ -27,27 +27,6 @@ body {
 }
 
 /* ============================================================================
- * NAVBAR OVERRIDES (estilos especificos deste painel)
- * ============================================================================ */
-
-/* Link do logo com imagem */
-.logo-link {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    text-decoration: none;
-}
-
-.logo-link .logo-img {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-lg);
-    border: 2px solid var(--neon-blue);
-    box-shadow: var(--shadow-glow);
-    flex-shrink: 0;
-}
-
-/* ============================================================================
  * MAIN CONTAINER
  * ============================================================================ */
 
@@ -566,12 +545,6 @@ body {
     .price-value {
         font-size: var(--font-size-xl);
     }
-
-    /* Navbar override para mobile */
-    .logo-link .logo-img {
-        width: 30px;
-        height: 30px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -590,12 +563,6 @@ body {
 
     .tips-section ul {
         grid-template-columns: 1fr;
-    }
-
-    /* Navbar override para mobile pequeno */
-    .logo-link .logo-img {
-        width: 28px;
-        height: 28px;
     }
 }
 
