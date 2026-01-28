@@ -1,14 +1,17 @@
 /* ============================================================================
  * AUTO-ORCAMENTO - Painel de Orcamento Automatico
  * ============================================================================
- * Importa variaveis e componentes de /shared:
+ * Usa CSS compartilhado de /shared:
  * - /shared/variables.css (cores, espacamento, z-index, tipografia)
- * - /shared/buttons.css (btn-primary, btn-secondary, btn-success, etc)
+ * - /shared/z-index.css (utilities e z-index padronizado)
+ * - /shared/navbar.css (navbar flutuante pill)
+ * - /shared/buttons.css (btn-primary, btn-secondary, etc)
  * - /shared/loading.css (loading-overlay, loading-spinner)
+ * - /shared/custom-select.css + .js (dropdowns glassmorphism)
  * - /shared/cosmic-bg.css (background animado)
  * ============================================================================ */
 
-/* Reset minimo - body ja definido em variables.css */
+/* Reset minimo */
 * {
     margin: 0;
     padding: 0;
@@ -24,88 +27,24 @@ body {
 }
 
 /* ============================================================================
- * NAVBAR - Floating Pill (similar ao /shared/navbar.css)
+ * NAVBAR OVERRIDES (estilos especificos deste painel)
  * ============================================================================ */
 
-.navbar {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 1200px;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(10, 14, 26, 0.6);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-pill);
-    z-index: var(--z-navbar);
-    box-shadow: var(--shadow-glass);
-    transition: all 0.3s ease;
-}
-
-.navbar-left {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.logo {
+/* Link do logo com imagem */
+.logo-link {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
     text-decoration: none;
 }
 
-.logo-img {
+.logo-link .logo-img {
     width: 36px;
     height: 36px;
     border-radius: var(--radius-lg);
     border: 2px solid var(--neon-blue);
     box-shadow: var(--shadow-glow);
-}
-
-.logo-text {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    font-weight: 700;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 1px;
-}
-
-.navbar-right {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.back-link {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    padding: 10px 20px;
-    border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    transition: var(--transition-normal);
-}
-
-.back-link:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--neon-blue);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    flex-shrink: 0;
 }
 
 /* ============================================================================
@@ -250,10 +189,6 @@ body {
     padding: var(--spacing-xl);
 }
 
-.preview-section.hidden {
-    display: none;
-}
-
 .preview-layout {
     display: grid;
     grid-template-columns: 1fr 380px;
@@ -377,26 +312,9 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
-.option-group select {
+/* Custom select wrapper ajuste */
+.option-group .custom-select {
     width: 100%;
-    padding: var(--spacing-md);
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    transition: var(--transition-fast);
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right var(--spacing-md) center;
-}
-
-.option-group select:hover,
-.option-group select:focus {
-    border-color: var(--neon-blue);
-    outline: none;
 }
 
 /* ============================================================================
@@ -557,7 +475,7 @@ body {
 }
 
 /* ============================================================================
- * TOAST (usa variaveis do shared)
+ * TOAST
  * ============================================================================ */
 
 .toast {
@@ -578,10 +496,6 @@ body {
     animation: toast-in 0.3s ease;
 }
 
-.toast.hidden {
-    display: none;
-}
-
 @keyframes toast-in {
     from {
         opacity: 0;
@@ -591,14 +505,6 @@ body {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
     }
-}
-
-/* ============================================================================
- * UTILITY
- * ============================================================================ */
-
-.hidden {
-    display: none !important;
 }
 
 /* ============================================================================
@@ -620,31 +526,6 @@ body {
 }
 
 @media (max-width: 768px) {
-    .navbar {
-        top: 10px;
-        width: calc(100% - 20px);
-        padding: 10px 15px;
-        border-radius: 25px;
-    }
-
-    .logo-img {
-        width: 30px;
-        height: 30px;
-    }
-
-    .logo-text {
-        font-size: 1rem;
-    }
-
-    .back-link {
-        padding: 8px 14px;
-        font-size: var(--font-size-xs);
-    }
-
-    .back-link span {
-        display: none;
-    }
-
     .main-container {
         padding: 100px var(--spacing-md) var(--spacing-xl);
     }
@@ -685,28 +566,15 @@ body {
     .price-value {
         font-size: var(--font-size-xl);
     }
+
+    /* Navbar override para mobile */
+    .logo-link .logo-img {
+        width: 30px;
+        height: 30px;
+    }
 }
 
 @media (max-width: 480px) {
-    .navbar {
-        top: 5px;
-        width: calc(100% - 16px);
-        padding: 8px 12px;
-    }
-
-    .logo-text {
-        display: none;
-    }
-
-    .logo-img {
-        width: 28px;
-        height: 28px;
-    }
-
-    .back-link {
-        padding: 6px 12px;
-    }
-
     .page-title {
         font-size: var(--font-size-xl);
     }
@@ -723,6 +591,12 @@ body {
     .tips-section ul {
         grid-template-columns: 1fr;
     }
+
+    /* Navbar override para mobile pequeno */
+    .logo-link .logo-img {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 /* ============================================================================
@@ -737,11 +611,4 @@ body {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-}
-
-button:focus-visible,
-select:focus-visible,
-a:focus-visible {
-    outline: 2px solid var(--neon-blue);
-    outline-offset: 2px;
 }

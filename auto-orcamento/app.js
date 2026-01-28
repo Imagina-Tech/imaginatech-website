@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     setupUploadZone();
     setupEventHandlers();
-    setupCustomSelects();
+    // CustomSelects sao inicializados automaticamente pelo /shared/custom-select.js
+    // atraves da classe .form-select nos elementos select
 }
 
 // ============================================================================
@@ -427,19 +428,6 @@ function submitQuoteWhatsApp() {
 
     const url = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${message}`;
     window.open(url, '_blank', 'noopener,noreferrer');
-}
-
-// ============================================================================
-// CUSTOM SELECTS (inicializacao do /shared/custom-select.css)
-// ============================================================================
-
-function setupCustomSelects() {
-    // Se houver CustomSelect global, inicializar
-    if (typeof CustomSelect !== 'undefined') {
-        document.querySelectorAll('select').forEach(select => {
-            new CustomSelect(select);
-        });
-    }
 }
 
 // ============================================================================

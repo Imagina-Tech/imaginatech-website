@@ -41,6 +41,7 @@ A pasta `/shared` contem CSS reutilizado entre os paineis administrativos. Antes
 - `/custo`
 - `/acompanhar-pedido`
 - `/marketplace`
+- `/auto-orcamento`
 
 ---
 

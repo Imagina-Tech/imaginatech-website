@@ -43,15 +43,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- CSS Local (primeiro para permitir overrides) -->
+    <link rel="stylesheet" href="style.css">
+
     <!-- CSS Compartilhado -->
     <link rel="stylesheet" href="/shared/variables.css">
+    <link rel="stylesheet" href="/shared/z-index.css">
     <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="/shared/navbar.css">
     <link rel="stylesheet" href="/shared/buttons.css">
     <link rel="stylesheet" href="/shared/custom-select.css">
     <link rel="stylesheet" href="/shared/loading.css">
-
-    <!-- CSS Local -->
-    <link rel="stylesheet" href="style.css">
 
     <!-- Three.js Import Map -->
     <script type="importmap">
@@ -72,17 +74,21 @@
 
     <!-- Navbar Floating Pill -->
     <nav class="navbar">
-        <div class="navbar-left">
-            <a href="/" class="logo">
-                <img src="/imaginatech_logo.jpeg" alt="ImaginaTech" class="logo-img">
-                <span class="logo-text">ImaginaTech</span>
-            </a>
-        </div>
-        <div class="navbar-right">
-            <a href="/" class="back-link">
-                <i class="fas fa-arrow-left"></i>
-                <span>Voltar ao site</span>
-            </a>
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <a href="/" class="logo-link">
+                    <img src="/imaginatech_logo.jpeg" alt="ImaginaTech" class="logo-img">
+                    <div class="logo-section">
+                        <span class="logo">ImaginaTech</span>
+                        <span class="logo-subtitle">AUTO-ORCAMENTO</span>
+                    </div>
+                </a>
+            </div>
+            <div class="navbar-right">
+                <a href="/" class="btn-nav" title="Voltar ao site">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -156,7 +162,7 @@
 
                         <div class="option-group">
                             <label for="materialSelect">Material</label>
-                            <select id="materialSelect">
+                            <select id="materialSelect" class="form-select">
                                 <option value="PLA">PLA (Padrao)</option>
                                 <option value="ABS">ABS (Resistente)</option>
                                 <option value="PETG">PETG (Flexivel)</option>
@@ -167,7 +173,7 @@
 
                         <div class="option-group">
                             <label for="colorSelect">Cor</label>
-                            <select id="colorSelect">
+                            <select id="colorSelect" class="form-select">
                                 <option value="branco">Branco</option>
                                 <option value="preto">Preto</option>
                                 <option value="cinza">Cinza</option>
@@ -181,7 +187,7 @@
 
                         <div class="option-group">
                             <label for="finishSelect">Acabamento</label>
-                            <select id="finishSelect">
+                            <select id="finishSelect" class="form-select">
                                 <option value="padrao">Padrao</option>
                                 <option value="lixado">Lixado (+20%)</option>
                                 <option value="pintado">Pintado (+40%)</option>
@@ -190,7 +196,7 @@
 
                         <div class="option-group">
                             <label for="prioritySelect">Prioridade</label>
-                            <select id="prioritySelect">
+                            <select id="prioritySelect" class="form-select">
                                 <option value="normal">Normal (5-7 dias)</option>
                                 <option value="urgente">Urgente (+50%)</option>
                             </select>
@@ -252,6 +258,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="/shared/custom-select.js"></script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
