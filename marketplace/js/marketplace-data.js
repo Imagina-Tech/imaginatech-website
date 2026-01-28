@@ -234,6 +234,70 @@ async function deleteProduct(productId) {
     }
 }
 
+// ========== UPLOAD FOTO PARA STORAGE ==========
+async function uploadPhotoToStorage(photo, productId) {
+    if (!photo || !photo.file) return null;
+
+    try {
+        const storage = firebase.storage();
+        // Nome seguro: sanitizar nome do arquivo
+        const safeName = (photo.name || 'foto.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const fileName = `${productId}_${timestamp}_${randomId}_${safeName}`;
+        const storageRef = storage.ref(`products/photos/${fileName}`);
+
+        // Upload do arquivo
+        const snapshot = await storageRef.put(photo.file);
+        const downloadUrl = await snapshot.ref.getDownloadURL();
+
+        window.logger?.log('[PHOTO] Foto enviada:', fileName);
+        return {
+            url: downloadUrl,
+            storagePath: `products/photos/${fileName}`,
+            name: photo.name || safeName
+        };
+    } catch (error) {
+        window.logger?.error('[PHOTO] Erro ao fazer upload:', error);
+        throw error;
+    }
+}
+
+// Upload multiplas fotos locais para Storage
+async function uploadLocalPhotosToStorage(localPhotos, productId) {
+    const results = [];
+
+    for (const photo of localPhotos) {
+        try {
+            // Apenas fotos que tem file (locais com arquivo)
+            if (photo.file) {
+                const uploadResult = await uploadPhotoToStorage(photo, productId);
+                if (uploadResult) {
+                    results.push({
+                        url: uploadResult.url,
+                        storagePath: uploadResult.storagePath,
+                        name: uploadResult.name,
+                        type: 'storage' // Marcar como foto do Storage
+                    });
+                }
+            } else if (photo.url && !photo.url.startsWith('data:')) {
+                // Foto ja tem URL (nao e base64) - manter como esta
+                results.push({
+                    url: photo.url,
+                    name: photo.name || 'foto',
+                    type: 'storage'
+                });
+            }
+            // Fotos base64 sem file sao ignoradas (nao podem ser enviadas)
+        } catch (error) {
+            window.logger?.error(`[PHOTO] Erro ao enviar ${photo.name}:`, error);
+            // Continua com as demais fotos
+        }
+    }
+
+    return results;
+}
+
 // ========== UPLOAD ARQUIVO GCODE PARA STORAGE ==========
 async function uploadGcodeFile(file, gcodeId, productId) {
     if (!file) return null;
@@ -307,9 +371,17 @@ async function handleProductSubmit(event) {
         .filter(p => p.type === 'ml')
         .map(p => p.url);
 
-    const localPhotos = editingPhotos
-        .filter(p => p.type === 'local')
+    // Fotos locais que precisam de upload (tem file associado)
+    const localPhotosToUpload = editingPhotos
+        .filter(p => p.type === 'local' && p.file);
+
+    // Fotos locais ja com URL do Storage (sem base64)
+    const localPhotosWithUrl = editingPhotos
+        .filter(p => p.type === 'local' && !p.file && p.url && !p.url.startsWith('data:'))
         .map(p => ({ url: p.url, name: p.name || 'foto' }));
+
+    // Fotos locais serao preenchidas apos upload
+    let localPhotos = [...localPhotosWithUrl];
 
     // Ordem das fotos para referencia
     const photosOrder = editingPhotos.map((p, i) => ({
@@ -366,6 +438,33 @@ async function handleProductSubmit(event) {
     if (window.validateGcodes && !window.validateGcodes()) {
         return;
     }
+
+    // Upload de fotos locais para Firebase Storage (evita limite de 1MB do Firestore)
+    if (localPhotosToUpload.length > 0) {
+        try {
+            window.showLoading();
+            const productIdForUpload = window.editingProductId || 'new_' + Date.now();
+            window.logger?.log('[PHOTO] Iniciando upload de', localPhotosToUpload.length, 'foto(s)...');
+
+            const uploadedPhotos = await uploadLocalPhotosToStorage(localPhotosToUpload, productIdForUpload);
+
+            // Adicionar fotos uploaded ao array de localPhotos
+            localPhotos.push(...uploadedPhotos);
+
+            window.logger?.log('[PHOTO] Upload concluido:', uploadedPhotos.length, 'foto(s) enviada(s)');
+            if (uploadedPhotos.length > 0) {
+                window.showToast(`${uploadedPhotos.length} foto(s) enviada(s)!`, 'success');
+            }
+        } catch (error) {
+            window.hideLoading();
+            window.logger?.error('[PHOTO] Erro no upload de fotos:', error);
+            window.showToast('Erro ao enviar fotos. Tente novamente.', 'error');
+            return;
+        }
+    }
+
+    // Atualizar productData com fotos processadas (URLs do Storage, nao base64)
+    productData.localPhotos = localPhotos;
 
     // Coletar dados dos GCODEs
     const gcodesData = window.getGcodesData ? window.getGcodesData() : [];
@@ -464,3 +563,5 @@ window.updateStats = updateStats;
 window.getNextProductId = getNextProductId;
 window.uploadGcodeFile = uploadGcodeFile;
 window.uploadPendingGcodes = uploadPendingGcodes;
+window.uploadPhotoToStorage = uploadPhotoToStorage;
+window.uploadLocalPhotosToStorage = uploadLocalPhotosToStorage;
