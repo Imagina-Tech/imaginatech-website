@@ -4560,3 +4560,250 @@ exports.linkMyWhatsApp = functions.https.onRequest(async (req, res) => {
         return res.status(500).json({ error: 'Erro ao vincular numero', details: error.message });
     }
 });
+
+// ============================================================================
+// AUTO-ORCAMENTO - CALCULO DE PRECO PARA IMPRESSAO 3D
+// ============================================================================
+
+/**
+ * Tabela de precos PROTEGIDA - nunca expor no frontend
+ * Valores em R$ por cm3
+ */
+const MATERIAL_COSTS = {
+    'PLA': { perCm3: 0.08, minPrice: 15, name: 'PLA' },
+    'ABS': { perCm3: 0.10, minPrice: 18, name: 'ABS' },
+    'PETG': { perCm3: 0.12, minPrice: 20, name: 'PETG' },
+    'TPU': { perCm3: 0.18, minPrice: 25, name: 'TPU' },
+    'Resina': { perCm3: 0.25, minPrice: 30, name: 'Resina' }
+};
+
+const FINISH_MULTIPLIERS = {
+    'padrao': 1.0,
+    'lixado': 1.2,
+    'pintado': 1.4
+};
+
+const PRIORITY_MULTIPLIERS = {
+    'normal': 1.0,
+    'urgente': 1.5
+};
+
+/**
+ * Parse STL binario e calcula volume
+ * @param {Buffer} buffer - Buffer do arquivo STL
+ * @returns {number} Volume em mm3
+ */
+function parseSTLBinaryVolume(buffer) {
+    // STL Binario: 80 bytes header + 4 bytes num triangles + triangles
+    const numTriangles = buffer.readUInt32LE(80);
+    let volume = 0;
+
+    for (let i = 0; i < numTriangles; i++) {
+        const offset = 84 + i * 50;
+
+        // Normal (12 bytes) + 3 vertices (36 bytes) + attribute (2 bytes)
+        const v1 = {
+            x: buffer.readFloatLE(offset + 12),
+            y: buffer.readFloatLE(offset + 16),
+            z: buffer.readFloatLE(offset + 20)
+        };
+        const v2 = {
+            x: buffer.readFloatLE(offset + 24),
+            y: buffer.readFloatLE(offset + 28),
+            z: buffer.readFloatLE(offset + 32)
+        };
+        const v3 = {
+            x: buffer.readFloatLE(offset + 36),
+            y: buffer.readFloatLE(offset + 40),
+            z: buffer.readFloatLE(offset + 44)
+        };
+
+        // Produto vetorial v2 x v3
+        const cross = {
+            x: v2.y * v3.z - v2.z * v3.y,
+            y: v2.z * v3.x - v2.x * v3.z,
+            z: v2.x * v3.y - v2.y * v3.x
+        };
+
+        // Volume do tetraedro com origem
+        volume += (v1.x * cross.x + v1.y * cross.y + v1.z * cross.z) / 6;
+    }
+
+    return Math.abs(volume);
+}
+
+/**
+ * Parse STL ASCII e calcula volume
+ * @param {Buffer} buffer - Buffer do arquivo STL
+ * @returns {number} Volume em mm3
+ */
+function parseSTLAsciiVolume(buffer) {
+    const text = buffer.toString('utf8');
+    const vertexRegex = /vertex\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s+([-\d.eE+]+)/gi;
+    const vertices = [];
+    let match;
+
+    while ((match = vertexRegex.exec(text)) !== null) {
+        vertices.push({
+            x: parseFloat(match[1]),
+            y: parseFloat(match[2]),
+            z: parseFloat(match[3])
+        });
+    }
+
+    let volume = 0;
+    for (let i = 0; i < vertices.length; i += 3) {
+        const v1 = vertices[i];
+        const v2 = vertices[i + 1];
+        const v3 = vertices[i + 2];
+
+        if (!v1 || !v2 || !v3) continue;
+
+        const cross = {
+            x: v2.y * v3.z - v2.z * v3.y,
+            y: v2.z * v3.x - v2.x * v3.z,
+            z: v2.x * v3.y - v2.y * v3.x
+        };
+
+        volume += (v1.x * cross.x + v1.y * cross.y + v1.z * cross.z) / 6;
+    }
+
+    return Math.abs(volume);
+}
+
+/**
+ * Detecta se STL e binario ou ASCII e calcula volume
+ * @param {Buffer} buffer - Buffer do arquivo STL
+ * @returns {number} Volume em mm3
+ */
+function parseSTLVolume(buffer) {
+    // STL ASCII comeca com "solid" (mas binario pode ter "solid" no header)
+    // Melhor heuristica: verificar se os primeiros 80 bytes parecem texto
+    const header = buffer.slice(0, 80).toString('utf8').toLowerCase();
+    const hasSolidKeyword = header.startsWith('solid');
+
+    // Se comeca com solid E contem "facet" ou "vertex" no texto, e ASCII
+    if (hasSolidKeyword) {
+        const sample = buffer.slice(0, Math.min(1000, buffer.length)).toString('utf8');
+        if (sample.includes('facet') || sample.includes('vertex')) {
+            return parseSTLAsciiVolume(buffer);
+        }
+    }
+
+    return parseSTLBinaryVolume(buffer);
+}
+
+/**
+ * Cloud Function: calculateQuote
+ * Recebe arquivo 3D e opcoes, retorna preco calculado
+ */
+exports.calculateQuote = functions.https.onRequest(async (req, res) => {
+    // CORS manual
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Metodo nao permitido' });
+    }
+
+    try {
+        // Parse multipart form usando busboy
+        const Busboy = require('busboy');
+
+        const parseMultipart = () => new Promise((resolve, reject) => {
+            const busboy = Busboy({ headers: req.headers });
+            const fields = {};
+            let file = null;
+
+            busboy.on('field', (name, value) => {
+                fields[name] = value;
+            });
+
+            busboy.on('file', (name, stream, info) => {
+                const chunks = [];
+                stream.on('data', chunk => chunks.push(chunk));
+                stream.on('end', () => {
+                    file = {
+                        name: info.filename,
+                        buffer: Buffer.concat(chunks)
+                    };
+                });
+            });
+
+            busboy.on('finish', () => resolve({ file, fields }));
+            busboy.on('error', reject);
+
+            busboy.end(req.rawBody);
+        });
+
+        const { file, fields } = await parseMultipart();
+
+        if (!file) {
+            return res.status(400).json({ error: 'Arquivo nao enviado' });
+        }
+
+        // Validar tamanho (50MB max)
+        if (file.buffer.length > 50 * 1024 * 1024) {
+            return res.status(400).json({ error: 'Arquivo muito grande (max 50MB)' });
+        }
+
+        // Extrair extensao
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+        // Calcular volume
+        let volume = 0;
+
+        if (ext === 'stl') {
+            volume = parseSTLVolume(file.buffer);
+        } else {
+            // Para outros formatos, retornar erro (frontend fara fallback)
+            return res.status(400).json({
+                error: 'Formato nao suportado no backend',
+                supportedFormats: ['stl'],
+                hint: 'Use o calculo local do frontend para este formato'
+            });
+        }
+
+        if (volume <= 0) {
+            return res.status(400).json({ error: 'Nao foi possivel calcular o volume' });
+        }
+
+        // Obter opcoes
+        const material = MATERIAL_COSTS[fields.material] || MATERIAL_COSTS['PLA'];
+        const finishMultiplier = FINISH_MULTIPLIERS[fields.finish] || 1.0;
+        const priorityMultiplier = PRIORITY_MULTIPLIERS[fields.priority] || 1.0;
+
+        // Calcular preco
+        const volumeCm3 = volume / 1000; // mm3 para cm3
+        let price = volumeCm3 * material.perCm3;
+        price *= finishMultiplier;
+        price *= priorityMultiplier;
+        price = Math.max(price, material.minPrice);
+
+        // Arredondar para 2 casas
+        price = Math.round(price * 100) / 100;
+
+        console.log('[calculateQuote] Arquivo:', file.name, '| Volume:', volumeCm3.toFixed(2), 'cm3 | Preco: R$', price);
+
+        return res.json({
+            success: true,
+            price: price,
+            volume: volumeCm3.toFixed(2),
+            volumeUnit: 'cm3',
+            material: material.name,
+            finish: fields.finish || 'padrao',
+            priority: fields.priority || 'normal',
+            isEstimate: false
+        });
+
+    } catch (error) {
+        console.error('[calculateQuote] Erro:', error);
+        return res.status(500).json({ error: 'Erro interno ao calcular orcamento' });
+    }
+});

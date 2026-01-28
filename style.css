@@ -614,6 +614,289 @@ footer {
     }
 }
 
+/* ============================================================================
+ * AUTO-ORCAMENTO CTA SECTION
+ * ============================================================================ */
+
+.auto-orcamento-cta {
+    padding: 100px 20px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 212, 255, 0.03) 0%,
+        rgba(255, 0, 85, 0.03) 100%
+    );
+}
+
+.auto-orcamento-cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+}
+
+.auto-orcamento-cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-red), transparent);
+}
+
+.auto-orcamento-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+}
+
+.auto-orcamento-content {
+    flex: 1;
+    max-width: 600px;
+}
+
+.auto-orcamento-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+}
+
+.auto-orcamento-icon .icon-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    border: 2px solid var(--neon-blue);
+    animation: icon-pulse 2s infinite;
+}
+
+@keyframes icon-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+.auto-orcamento-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.8));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auto-orcamento-description {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+.auto-orcamento-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 36px;
+    background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 30px rgba(0, 212, 255, 0.4);
+}
+
+.auto-orcamento-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.auto-orcamento-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 40px rgba(0, 212, 255, 0.6);
+}
+
+.auto-orcamento-button:hover::before {
+    left: 100%;
+}
+
+.auto-orcamento-button i {
+    transition: transform 0.3s ease;
+}
+
+.auto-orcamento-button:hover i {
+    transform: translateX(5px);
+}
+
+/* Visual 3D Cube Animation */
+.auto-orcamento-visual {
+    flex-shrink: 0;
+}
+
+.floating-cube {
+    width: 200px;
+    height: 200px;
+    perspective: 800px;
+}
+
+.cube-3d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: cube-float 6s ease-in-out infinite, cube-rotate 12s linear infinite;
+}
+
+@keyframes cube-float {
+    0%, 100% {
+        transform: translateY(0) rotateX(-20deg) rotateY(45deg);
+    }
+    50% {
+        transform: translateY(-20px) rotateX(-20deg) rotateY(45deg);
+    }
+}
+
+@keyframes cube-rotate {
+    0% {
+        transform: translateY(0) rotateX(-20deg) rotateY(0deg);
+    }
+    100% {
+        transform: translateY(0) rotateX(-20deg) rotateY(360deg);
+    }
+}
+
+.cube-3d .cube-face {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    left: 50%;
+    top: 50%;
+    margin-left: -60px;
+    margin-top: -60px;
+    border: 2px solid var(--neon-blue);
+    background: rgba(0, 212, 255, 0.05);
+    backdrop-filter: blur(5px);
+    box-shadow:
+        inset 0 0 30px rgba(0, 212, 255, 0.1),
+        0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.cube-3d .cube-face.front  { transform: translateZ(60px); }
+.cube-3d .cube-face.back   { transform: rotateY(180deg) translateZ(60px); }
+.cube-3d .cube-face.right  { transform: rotateY(90deg) translateZ(60px); }
+.cube-3d .cube-face.left   { transform: rotateY(-90deg) translateZ(60px); }
+.cube-3d .cube-face.top    { transform: rotateX(90deg) translateZ(60px); }
+.cube-3d .cube-face.bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+/* Responsivo */
+@media (max-width: 900px) {
+    .auto-orcamento-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .auto-orcamento-icon {
+        margin: 0 auto 30px;
+    }
+
+    .auto-orcamento-title {
+        font-size: 2rem;
+    }
+
+    .auto-orcamento-visual {
+        order: -1;
+        margin-bottom: 20px;
+    }
+
+    .floating-cube {
+        width: 150px;
+        height: 150px;
+    }
+
+    .cube-3d .cube-face {
+        width: 90px;
+        height: 90px;
+        margin-left: -45px;
+        margin-top: -45px;
+    }
+
+    .cube-3d .cube-face.front  { transform: translateZ(45px); }
+    .cube-3d .cube-face.back   { transform: rotateY(180deg) translateZ(45px); }
+    .cube-3d .cube-face.right  { transform: rotateY(90deg) translateZ(45px); }
+    .cube-3d .cube-face.left   { transform: rotateY(-90deg) translateZ(45px); }
+    .cube-3d .cube-face.top    { transform: rotateX(90deg) translateZ(45px); }
+    .cube-3d .cube-face.bottom { transform: rotateX(-90deg) translateZ(45px); }
+}
+
+@media (max-width: 480px) {
+    .auto-orcamento-cta {
+        padding: 60px 16px;
+    }
+
+    .auto-orcamento-title {
+        font-size: 1.6rem;
+    }
+
+    .auto-orcamento-description {
+        font-size: 1rem;
+    }
+
+    .auto-orcamento-button {
+        padding: 14px 28px;
+        font-size: 0.95rem;
+    }
+
+    .auto-orcamento-button span {
+        display: none;
+    }
+
+    .auto-orcamento-button::after {
+        content: 'Auto-Orcamento';
+    }
+}
+
 /* Scroll Animations */
 .fade-in {
     opacity: 0;

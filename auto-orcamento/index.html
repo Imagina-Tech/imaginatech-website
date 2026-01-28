@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        img-src 'self' data: blob:;
+        connect-src 'self' https://us-central1-imaginatech-servicos.cloudfunctions.net https://*.cloudfunctions.net;
+        worker-src 'self' blob:;
+        object-src 'none';
+        base-uri 'self';
+    ">
+
+    <!-- SEO Meta Tags -->
+    <title>Auto-Orcamento | ImaginaTech - Impressao 3D</title>
+    <meta name="description" content="Faca upload do seu modelo 3D e receba uma estimativa de preco instantanea. Suportamos STL, OBJ, GLB e 3MF.">
+    <meta name="robots" content="index, follow">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0a0e1a">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Auto-Orcamento | ImaginaTech">
+    <meta property="og:description" content="Faca upload do seu modelo 3D e receba uma estimativa de preco instantanea.">
+    <meta property="og:image" content="https://imaginatech.com.br/iconwpp.jpg">
+    <meta property="og:url" content="https://imaginatech.com.br/auto-orcamento/">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- CSS Compartilhado -->
+    <link rel="stylesheet" href="/shared/variables.css">
+    <link rel="stylesheet" href="/shared/cosmic-bg.css">
+    <link rel="stylesheet" href="/shared/buttons.css">
+    <link rel="stylesheet" href="/shared/custom-select.css">
+    <link rel="stylesheet" href="/shared/loading.css">
+
+    <!-- CSS Local -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Cosmic Background -->
+    <div class="cosmic-bg">
+        <div class="stars"></div>
+        <div class="grid-lines"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <a href="/" class="logo">
+            <img src="/imaginatech_logo.jpeg" alt="ImaginaTech" class="logo-img">
+            <span class="logo-text">ImaginaTech</span>
+        </a>
+        <a href="/" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Voltar ao site</span>
+        </a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="page-header">
+            <h1 class="page-title">Auto-Orcamento</h1>
+            <p class="page-subtitle">Faca upload do seu modelo 3D e receba uma estimativa instantanea</p>
+        </div>
+
+        <div class="quote-panel">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p class="upload-text">Arraste seu arquivo aqui ou</p>
+                    <button class="upload-button" id="uploadButton" type="button">
+                        Selecionar Arquivo
+                    </button>
+                    <input type="file" id="fileInput" accept=".stl,.obj,.glb,.gltf,.3mf" hidden>
+                    <p class="upload-formats">
+                        <i class="fas fa-info-circle"></i>
+                        Formatos: STL, OBJ, GLB, 3MF (max 50MB)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Preview Section (hidden initially) -->
+            <div class="preview-section hidden" id="previewSection">
+                <div class="preview-layout">
+                    <!-- 3D Viewer -->
+                    <div class="viewer-wrapper">
+                        <div class="viewer-container" id="viewerContainer">
+                            <canvas id="viewer3D"></canvas>
+                            <div class="viewer-controls">
+                                <button type="button" data-action="reset-camera" title="Resetar camera">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button type="button" data-action="toggle-wireframe" title="Wireframe">
+                                    <i class="fas fa-border-all"></i>
+                                </button>
+                                <button type="button" data-action="toggle-grid" title="Grade">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="model-info" id="modelInfo">
+                            <div class="info-item">
+                                <i class="fas fa-ruler-combined"></i>
+                                <span id="dimensions">-- x -- x -- mm</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-cube"></i>
+                                <span>Volume: <strong id="volume">--</strong> cm3</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-file"></i>
+                                <span id="fileName">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options Panel -->
+                    <div class="options-panel">
+                        <h3 class="options-title">
+                            <i class="fas fa-sliders-h"></i>
+                            Configuracoes
+                        </h3>
+
+                        <div class="option-group">
+                            <label for="materialSelect">Material</label>
+                            <select id="materialSelect">
+                                <option value="PLA">PLA (Padrao)</option>
+                                <option value="ABS">ABS (Resistente)</option>
+                                <option value="PETG">PETG (Flexivel)</option>
+                                <option value="TPU">TPU (Elastico)</option>
+                                <option value="Resina">Resina (Alta definicao)</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="colorSelect">Cor</label>
+                            <select id="colorSelect">
+                                <option value="branco">Branco</option>
+                                <option value="preto">Preto</option>
+                                <option value="cinza">Cinza</option>
+                                <option value="vermelho">Vermelho</option>
+                                <option value="azul">Azul</option>
+                                <option value="verde">Verde</option>
+                                <option value="amarelo">Amarelo</option>
+                                <option value="laranja">Laranja</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="finishSelect">Acabamento</label>
+                            <select id="finishSelect">
+                                <option value="padrao">Padrao</option>
+                                <option value="lixado">Lixado (+20%)</option>
+                                <option value="pintado">Pintado (+40%)</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="prioritySelect">Prioridade</label>
+                            <select id="prioritySelect">
+                                <option value="normal">Normal (5-7 dias)</option>
+                                <option value="urgente">Urgente (+50%)</option>
+                            </select>
+                        </div>
+
+                        <!-- Result Section -->
+                        <div class="result-section">
+                            <div class="price-display">
+                                <span class="price-label">Estimativa:</span>
+                                <span class="price-value" id="priceValue">R$ --</span>
+                            </div>
+                            <p class="price-disclaimer" id="priceDisclaimer">
+                                <i class="fas fa-info-circle"></i>
+                                Estimativa aproximada. O preco final pode variar conforme complexidade.
+                            </p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="actions-section">
+                            <button class="submit-button" id="submitQuote" type="button" disabled>
+                                <i class="fab fa-whatsapp"></i>
+                                Solicitar Orcamento via WhatsApp
+                            </button>
+                            <button class="change-file-button" id="changeFile" type="button">
+                                <i class="fas fa-redo"></i>
+                                Trocar arquivo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="tips-section">
+            <h3><i class="fas fa-lightbulb"></i> Dicas</h3>
+            <ul>
+                <li>Verifique se o modelo esta em escala correta (milimetros)</li>
+                <li>Modelos fechados (watertight) geram calculos mais precisos</li>
+                <li>Arquivos STL binarios sao processados mais rapidamente</li>
+                <li>O preco final depende de fatores como suportes e infill</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay"
+         role="dialog" aria-modal="true" aria-labelledby="loadingText" aria-hidden="true">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" id="loadingText">Processando modelo...</p>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast hidden" id="errorToast" role="alert" aria-live="assertive">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
