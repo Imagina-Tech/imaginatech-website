@@ -11,7 +11,7 @@ service firebase.storage {
       return request.auth != null && request.auth.token.admin == true;
     }
 
-    // Super Admin tem acesso total
+    // Super Admin tem acesso total (fallback por email caso custom claim falhe)
     function isSuperAdmin() {
       return request.auth != null &&
         request.auth.token.email == "3d3printers@gmail.com";
@@ -22,13 +22,28 @@ service firebase.storage {
       return request.auth != null && request.auth.token.email_verified == true;
     }
 
+    // Admin OU Super Admin (atalho usado em todas as regras)
+    function isAdminOrSuper() {
+      return isAdmin() || isSuperAdmin();
+    }
+
+    // Validacao de arquivo: tamanho maximo 10MB e tipos permitidos
+    function isValidFile() {
+      return request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('application/pdf')
+            || request.resource.contentType.matches('model/.*')
+            || request.resource.contentType.matches('application/octet-stream'));
+    }
+
     // ===========================
     // ARQUIVOS DE SERVICOS
     // Admins podem ler/escrever, usuarios autenticados podem ler
     // ===========================
     match /services/{serviceId}/{fileName} {
       allow read: if isAuthenticatedAndVerified();
-      allow write, delete: if isAdmin() || isSuperAdmin();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     // ===========================
@@ -37,7 +52,8 @@ service firebase.storage {
     // ===========================
     match /portfolio/{fileName} {
       allow read: if true;
-      allow write, delete: if isAdmin() || isSuperAdmin();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     // ===========================
@@ -45,20 +61,25 @@ service firebase.storage {
     // Apenas admins
     // ===========================
     match /tasks/{taskId}/{fileName} {
-      allow read: if isAdmin() || isSuperAdmin();
-      allow write, delete: if isAdmin() || isSuperAdmin();
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     // ===========================
-    // ARQUIVOS DE ESTOQUE
+    // ARQUIVOS DE ESTOQUE (Filamentos e Equipamentos)
     // Apenas admins
     // ===========================
     match /filaments/{fileName} {
-      allow read, write, delete: if isAdmin() || isSuperAdmin();
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     match /equipment/{fileName} {
-      allow read, write, delete: if isAdmin() || isSuperAdmin();
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     // ===========================
@@ -66,30 +87,18 @@ service firebase.storage {
     // Apenas admins
     // ===========================
     match /products/{fileName} {
-      allow read: if isAdmin() || isSuperAdmin();
-      allow write, delete: if isAdmin() || isSuperAdmin();
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
     }
 
     // ===========================
     // REGRA PADRAO - BLOQUEAR TUDO NAO ESPECIFICADO
+    // Apenas paths especificos acima tem acesso
     // ===========================
     match /{allPaths=**} {
-      // Bloquear por padrao - apenas paths especificos acima tem acesso
       allow read: if false;
       allow write: if false;
-    }
-
-    // ===========================
-    // VALIDACOES DE SEGURANCA
-    // ===========================
-    // Limite de tamanho de arquivo: 10MB
-    // Tipos permitidos: imagens, PDFs, arquivos 3D
-    match /{allPaths=**} {
-      allow write: if request.resource.size < 10 * 1024 * 1024
-        && (request.resource.contentType.matches('image/.*')
-            || request.resource.contentType.matches('application/pdf')
-            || request.resource.contentType.matches('model/.*')
-            || request.resource.contentType.matches('application/octet-stream'));
     }
   }
 }
