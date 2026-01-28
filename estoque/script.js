@@ -986,7 +986,21 @@ async function handleImageFile(file) {
         return;
     }
 
-    selectedImage = file;
+    // Processar remoção de fundo branco automaticamente
+    let processedFile = file;
+    try {
+        showToast('Processando imagem...', 'info');
+        processedFile = await removeWhiteBackground(file);
+        if (processedFile !== file) {
+            showToast('Fundo branco removido automaticamente!', 'success');
+        }
+    } catch (error) {
+        logger.error('Erro ao remover fundo:', error);
+        // Continuar com arquivo original se falhar
+        processedFile = file;
+    }
+
+    selectedImage = processedFile;
     const reader = new FileReader();
     reader.onload = e => {
         const preview = document.getElementById('imagePreview');
@@ -997,9 +1011,138 @@ async function handleImageFile(file) {
         }
         if (placeholder) placeholder.style.display = 'none';
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(processedFile);
 
-    showToast('Imagem carregada com sucesso!', 'success');
+    if (processedFile === file) {
+        showToast('Imagem carregada com sucesso!', 'success');
+    }
+}
+
+// ===========================
+// REMOÇÃO DE FUNDO BRANCO
+// ===========================
+
+/**
+ * Remove fundo branco de uma imagem automaticamente
+ * Usa Canvas API para processar pixels e tornar brancos transparentes
+ * @param {File} file - Arquivo de imagem original
+ * @returns {Promise<File>} - Arquivo processado com fundo transparente (PNG)
+ */
+async function removeWhiteBackground(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            try {
+                // Criar canvas com dimensões da imagem
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                // Desenhar imagem no canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Obter dados dos pixels
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                // Configurações de detecção de branco
+                const WHITE_THRESHOLD = 240;  // Pixels com R,G,B > 240 são considerados brancos
+                const EDGE_TOLERANCE = 30;    // Tolerância para suavização de bordas
+
+                // Analisar cantos para detectar cor de fundo
+                const cornerSamples = [
+                    getPixelAt(data, canvas.width, 0, 0),                           // Top-left
+                    getPixelAt(data, canvas.width, canvas.width - 1, 0),            // Top-right
+                    getPixelAt(data, canvas.width, 0, canvas.height - 1),           // Bottom-left
+                    getPixelAt(data, canvas.width, canvas.width - 1, canvas.height - 1) // Bottom-right
+                ];
+
+                // Verificar se a maioria dos cantos é branca
+                const whiteCorners = cornerSamples.filter(p =>
+                    p.r > WHITE_THRESHOLD && p.g > WHITE_THRESHOLD && p.b > WHITE_THRESHOLD
+                ).length;
+
+                // Se menos de 3 cantos são brancos, provavelmente não tem fundo branco
+                if (whiteCorners < 3) {
+                    logger.log('Imagem não parece ter fundo branco, mantendo original');
+                    resolve(file);
+                    return;
+                }
+
+                logger.log('Fundo branco detectado, processando remoção...');
+
+                // Processar cada pixel
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    // Calcular "brancura" do pixel
+                    const brightness = (r + g + b) / 3;
+                    const isGrayish = Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20;
+
+                    if (isGrayish && brightness > WHITE_THRESHOLD) {
+                        // Pixel é branco/cinza claro - tornar totalmente transparente
+                        data[i + 3] = 0;
+                    } else if (isGrayish && brightness > (WHITE_THRESHOLD - EDGE_TOLERANCE)) {
+                        // Pixel está na zona de transição - aplicar transparência gradual
+                        // Isso suaviza as bordas e evita serrilhado
+                        const alpha = Math.round(((WHITE_THRESHOLD - brightness) / EDGE_TOLERANCE) * 255);
+                        data[i + 3] = Math.min(data[i + 3], alpha);
+                    }
+                }
+
+                // Aplicar os dados processados
+                ctx.putImageData(imageData, 0, 0);
+
+                // Converter canvas para blob PNG (suporta transparência)
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const processedFile = new File(
+                            [blob],
+                            file.name.replace(/\.[^.]+$/, '.png'),
+                            { type: 'image/png' }
+                        );
+                        logger.log(`Fundo removido: ${file.size} bytes -> ${processedFile.size} bytes`);
+                        resolve(processedFile);
+                    } else {
+                        reject(new Error('Falha ao converter imagem'));
+                    }
+                }, 'image/png', 1.0);
+
+            } catch (error) {
+                logger.error('Erro ao processar imagem:', error);
+                reject(error);
+            }
+        };
+
+        img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+
+        // Carregar imagem do file
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
+ * Obtém valores RGB de um pixel específico
+ * @param {Uint8ClampedArray} data - Array de pixels
+ * @param {number} width - Largura da imagem
+ * @param {number} x - Coordenada X
+ * @param {number} y - Coordenada Y
+ * @returns {Object} - {r, g, b, a}
+ */
+function getPixelAt(data, width, x, y) {
+    const idx = (y * width + x) * 4;
+    return {
+        r: data[idx],
+        g: data[idx + 1],
+        b: data[idx + 2],
+        a: data[idx + 3]
+    };
 }
 
 /**
@@ -1231,7 +1374,7 @@ function handleEquipmentDrop(e) {
 }
 
 // Processar arquivo de imagem de equipamento (drag & drop)
-function handleEquipmentImageFile(file) {
+async function handleEquipmentImageFile(file) {
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
         showToast('Formato inválido! Use PNG, JPEG ou WebP.', 'error');
@@ -1243,7 +1386,20 @@ function handleEquipmentImageFile(file) {
         return;
     }
 
-    selectedEquipmentImage = file;
+    // Processar remoção de fundo branco automaticamente
+    let processedFile = file;
+    try {
+        showToast('Processando imagem...', 'info');
+        processedFile = await removeWhiteBackground(file);
+        if (processedFile !== file) {
+            showToast('Fundo branco removido automaticamente!', 'success');
+        }
+    } catch (error) {
+        logger.error('Erro ao remover fundo:', error);
+        processedFile = file;
+    }
+
+    selectedEquipmentImage = processedFile;
     const reader = new FileReader();
     reader.onload = function(e) {
         const placeholder = document.getElementById('equipmentUploadPlaceholder');
@@ -1255,8 +1411,11 @@ function handleEquipmentImageFile(file) {
             preview.style.display = 'block';
         }
     };
-    reader.readAsDataURL(file);
-    showToast('Imagem carregada com sucesso!', 'success');
+    reader.readAsDataURL(processedFile);
+
+    if (processedFile === file) {
+        showToast('Imagem carregada com sucesso!', 'success');
+    }
 }
 
 async function saveFilament(event) {
