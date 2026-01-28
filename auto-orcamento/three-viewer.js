@@ -366,6 +366,23 @@ export class ThreeViewer {
         };
     }
 
+    rotateModel() {
+        if (!this.currentMesh) return;
+
+        // Rotaciona 90 graus no eixo X (levanta modelo deitado)
+        this.currentMesh.rotation.x -= Math.PI / 2;
+
+        // Recalcular bounding box e reposicionar no grid
+        this.boundingBox = new THREE.Box3().setFromObject(this.currentMesh);
+        const minY = this.boundingBox.min.y;
+        this.currentMesh.position.y -= minY;
+
+        // Atualizar bounding box final
+        this.boundingBox = new THREE.Box3().setFromObject(this.currentMesh);
+        this.updateGridSize();
+        this.fitCameraToObject();
+    }
+
     resetCamera() {
         this.fitCameraToObject();
     }

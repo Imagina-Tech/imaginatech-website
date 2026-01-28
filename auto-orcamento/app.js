@@ -12,7 +12,7 @@ import { calculateVolumeFromGeometry, isMeshWatertight } from './volume-calculat
 
 const CONFIG = {
     API_URL: 'https://us-central1-imaginatech-servicos.cloudfunctions.net',
-    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
+    MAX_FILE_SIZE: 200 * 1024 * 1024, // 200MB
     ALLOWED_EXTENSIONS: ['stl', 'obj', 'glb', 'gltf', '3mf'],
     WHATSAPP_NUMBER: '5521968972539',
     // Custos locais (fallback se backend falhar)
@@ -289,7 +289,7 @@ function setupUploadZone() {
 async function validateFile(file) {
     // Verificar tamanho
     if (file.size > CONFIG.MAX_FILE_SIZE) {
-        return { valid: false, error: 'Arquivo muito grande (maximo 50MB)' };
+        return { valid: false, error: 'Arquivo muito grande (maximo 200MB)' };
     }
 
     // Verificar extensao
@@ -546,6 +546,10 @@ function setupEventHandlers() {
         const action = el.dataset.action;
 
         switch (action) {
+            case 'rotate-model':
+                state.viewer?.rotateModel();
+                break;
+
             case 'reset-camera':
                 state.viewer?.resetCamera();
                 break;

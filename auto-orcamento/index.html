@@ -135,7 +135,7 @@
                     <input type="file" id="fileInput" accept=".stl,.obj,.glb,.gltf,.3mf" hidden>
                     <p class="upload-formats">
                         <i class="fas fa-info-circle"></i>
-                        Formatos: STL, OBJ, GLB, 3MF (max 50MB)
+                        Formatos: STL, OBJ, GLB, 3MF (max 200MB)
                     </p>
                 </div>
             </div>
@@ -148,6 +148,9 @@
                         <div class="viewer-container" id="viewerContainer">
                             <canvas id="viewer3D"></canvas>
                             <div class="viewer-controls">
+                                <button type="button" data-action="rotate-model" title="Rotacionar modelo 90 graus">
+                                    <i class="fas fa-undo"></i>
+                                </button>
                                 <button type="button" data-action="reset-camera" title="Resetar camera">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
