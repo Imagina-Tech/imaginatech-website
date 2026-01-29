@@ -5015,9 +5015,14 @@ exports.getAvailableFilaments = functions.https.onRequest(async (req, res) => {
 
             // Somar peso (mesmo tipo+cor pode ter multiplas marcas/bobinas)
             if (!materials[type].colorStock[color]) {
-                materials[type].colorStock[color] = { totalGrams: 0, sufficient: false };
+                materials[type].colorStock[color] = { totalGrams: 0, sufficient: false, imageUrl: null };
             }
             materials[type].colorStock[color].totalGrams += weightGrams;
+
+            // Guardar imageUrl da primeira bobina que tiver foto
+            if (!materials[type].colorStock[color].imageUrl && data.imageUrl) {
+                materials[type].colorStock[color].imageUrl = data.imageUrl;
+            }
         });
 
         // Determinar cores disponiveis (estoque >= minWeight)

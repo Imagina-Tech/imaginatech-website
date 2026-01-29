@@ -25,6 +25,14 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Fix: Auto-Orcamento - Fotos de filamento, navbar, resina, responsividade
+
+**Arquivos Modificados:**
+- `/functions/index.js` - getAvailableFilaments agora retorna `imageUrl` por cor (primeira bobina com foto).
+- `/auto-orcamento/index.html` - CSP img-src inclui `https://firebasestorage.googleapis.com` para fotos do Firebase Storage.
+- `/auto-orcamento/app.js` - Color modal exibe foto real do filamento (img tag) quando imageUrl disponivel, fallback para circulo colorido CSS. updateMaterialDropdown garante DEFAULT_MATERIALS (incl. Resina) sempre visiveis. state.selectedColorImage adicionado.
+- `/auto-orcamento/style.css` - .color-card-photo (44px, object-fit cover). Navbar spacing: padding-top 120px base, 100px desktop. Responsividade: breakpoints 768px, 480px, 360px completos.
+
 ### 2026-01-29 - Feature: Auto-Orcamento - UX: Modal de cores, botao rotacao, acabamentos
 
 **Arquivos Modificados:**

@@ -98,8 +98,9 @@ let state = {
     isEstimate: true,
     estimatedWeight: 0,
     availableStock: null,  // Cache do estoque
-    selectedColor: '',     // Cor selecionada
-    colorOptions: []       // Lista de cores disponiveis
+    selectedColor: '',      // Cor selecionada (value)
+    selectedColorImage: null, // URL da foto do filamento selecionado
+    colorOptions: []        // Lista de cores disponiveis
 };
 
 // ============================================================================
@@ -156,9 +157,12 @@ function updateMaterialDropdown() {
     let html = '';
 
     if (state.availableStock && Object.keys(state.availableStock).length > 0) {
-        // Materiais do estoque
-        const materials = Object.keys(state.availableStock).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-        materials.forEach(material => {
+        // Materiais do estoque + garantir que os DEFAULT_MATERIALS aparecem
+        const stockMaterials = Object.keys(state.availableStock);
+        const allMaterials = new Set([...stockMaterials, ...CONFIG.DEFAULT_MATERIALS]);
+        const sorted = [...allMaterials].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        sorted.forEach(material => {
             html += `<option value="${escapeHtml(material)}">${escapeHtml(material)}</option>`;
         });
     } else {
@@ -190,13 +194,17 @@ function updateColorOptions(material, estimatedWeight = 0) {
             const sufficient = totalGrams >= estimatedWeight;
 
             if (sufficient) {
-                colorList.push({ name: color, value: color.toLowerCase() });
+                colorList.push({
+                    name: color,
+                    value: color.toLowerCase(),
+                    imageUrl: stock?.imageUrl || null
+                });
             }
         });
     } else {
-        // Fallback: cores padrao
+        // Fallback: cores padrao (sem foto)
         CONFIG.DEFAULT_COLORS.forEach(color => {
-            colorList.push({ name: color, value: color.toLowerCase() });
+            colorList.push({ name: color, value: color.toLowerCase(), imageUrl: null });
         });
     }
 
@@ -220,9 +228,9 @@ function updateColorOptions(material, estimatedWeight = 0) {
     const currentColor = state.selectedColor;
     const stillAvailable = colorList.some(c => c.value === currentColor);
     if (!stillAvailable && colorList.length > 0) {
-        selectColor(colorList[0].value, colorList[0].name);
+        selectColor(colorList[0].value, colorList[0].name, colorList[0].imageUrl);
     } else if (colorList.length === 0) {
-        selectColor('', 'Indisponivel');
+        selectColor('', 'Indisponivel', null);
     }
 }
 
@@ -255,7 +263,7 @@ function renderColorModal() {
     const colors = state.colorOptions || [];
 
     if (colors.length === 0) {
-        body.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Nenhuma cor disponivel para este material.</p>';
+        body.innerHTML = '<p class="color-modal-empty">Nenhuma cor disponivel para este material.</p>';
         return;
     }
 
@@ -265,14 +273,25 @@ function renderColorModal() {
         const isSelected = state.selectedColor === color.value;
         const isTransparent = hex === 'transparent';
         const badges = getFinishBadges(color.name);
+        const hasImage = !!color.imageUrl;
 
         let badgesHtml = '';
         badges.forEach(badge => {
             badgesHtml += `<span class="finish-badge">${escapeHtml(badge.label)} <i class="fas fa-info-circle"></i><span class="finish-tooltip">${escapeHtml(badge.desc)}</span></span>`;
         });
 
-        html += `<div class="color-card${isSelected ? ' selected' : ''}" data-action="select-color" data-color-value="${escapeHtml(color.value)}" data-color-name="${escapeHtml(color.name)}">`;
-        html += `<div class="color-card-swatch${isTransparent ? ' transparent-swatch' : ''}" style="background-color: ${isTransparent ? '' : hex};"></div>`;
+        // Guardar imageUrl no dataset para o selectColor
+        const imgAttr = hasImage ? ` data-color-image="${escapeHtml(color.imageUrl)}"` : '';
+
+        html += `<div class="color-card${isSelected ? ' selected' : ''}" data-action="select-color" data-color-value="${escapeHtml(color.value)}" data-color-name="${escapeHtml(color.name)}"${imgAttr}>`;
+
+        // Swatch: foto do filamento se disponivel, senao circulo colorido
+        if (hasImage) {
+            html += `<img class="color-card-photo" src="${escapeHtml(color.imageUrl)}" alt="${escapeHtml(color.name)}" loading="lazy">`;
+        } else {
+            html += `<div class="color-card-swatch${isTransparent ? ' transparent-swatch' : ''}" style="background-color: ${isTransparent ? '' : hex};"></div>`;
+        }
+
         html += `<div class="color-card-info">`;
         html += `<span class="color-card-name">${escapeHtml(color.name)}</span>`;
         if (badgesHtml) {
@@ -286,19 +305,25 @@ function renderColorModal() {
     body.innerHTML = html;
 }
 
-function selectColor(value, name) {
+function selectColor(value, name, imageUrl) {
     state.selectedColor = value;
+    state.selectedColorImage = imageUrl || null;
 
     // Atualizar trigger button
     const swatchEl = document.getElementById('selectedColorSwatch');
     const nameEl = document.getElementById('selectedColorName');
 
     if (swatchEl) {
-        const hex = getColorHex(name || value);
-        if (hex === 'transparent') {
-            swatchEl.style.background = 'repeating-conic-gradient(#808080 0% 25%, #c0c0c0 0% 50%) 50% / 12px 12px';
+        if (imageUrl) {
+            // Foto do filamento como background
+            swatchEl.style.background = `url('${imageUrl}') center/cover no-repeat`;
         } else {
-            swatchEl.style.background = hex;
+            const hex = getColorHex(name || value);
+            if (hex === 'transparent') {
+                swatchEl.style.background = 'repeating-conic-gradient(#808080 0% 25%, #c0c0c0 0% 50%) 50% / 12px 12px';
+            } else {
+                swatchEl.style.background = hex;
+            }
         }
     }
     if (nameEl) {
@@ -735,7 +760,8 @@ function setupEventHandlers() {
             case 'select-color': {
                 const colorValue = el.dataset.colorValue;
                 const colorName = el.dataset.colorName;
-                selectColor(colorValue, colorName);
+                const colorImage = el.dataset.colorImage || null;
+                selectColor(colorValue, colorName, colorImage);
                 closeColorModal();
                 // Recalcular preco
                 if (state.currentFile && state.volume) {
