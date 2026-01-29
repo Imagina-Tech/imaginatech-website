@@ -466,6 +466,122 @@ body {
 }
 
 /* ============================================================================
+ * DESKTOP: LAYOUT SEM SCROLL (baseado no /financas)
+ * ============================================================================ */
+
+@media (min-width: 1025px) {
+    html, body {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .main-container {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 90px 1rem 0.5rem 1rem;
+    }
+
+    .quote-panel {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Upload section: centralizar verticalmente */
+    .quote-panel .upload-section {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Preview: preencher todo o espaco */
+    .preview-section {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0.75rem;
+    }
+
+    .preview-layout {
+        height: 100%;
+        grid-template-columns: 1fr 340px;
+        gap: 0.75rem;
+    }
+
+    .viewer-wrapper {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .viewer-container {
+        aspect-ratio: unset;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .model-info {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    /* Options panel: compactar para caber */
+    .options-panel {
+        overflow-y: auto;
+        max-height: 100%;
+        padding: 0.75rem;
+    }
+
+    .options-title {
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .option-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .option-group label {
+        margin-bottom: 0.2rem;
+        font-size: 0.75rem;
+    }
+
+    .result-section {
+        margin-top: 0.5rem;
+        padding: 0.6rem;
+    }
+
+    .price-display {
+        margin-bottom: 0.3rem;
+    }
+
+    .actions-section {
+        margin-top: 0.5rem;
+        gap: 0.4rem;
+    }
+
+    .submit-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .change-file-button {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* Esconder dicas no desktop */
+    .tips-section {
+        display: none;
+    }
+}
+
+/* ============================================================================
  * RESPONSIVE
  * ============================================================================ */
 

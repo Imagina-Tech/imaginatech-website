@@ -4645,12 +4645,38 @@ exports.linkMyWhatsApp = functions.https.onRequest(async (req, res) => {
  * Tabela de precos PROTEGIDA - nunca expor no frontend
  * Valores em R$ por cm3
  */
-const MATERIAL_COSTS = {
-    'PLA': { perCm3: 0.08, minPrice: 15, name: 'PLA' },
-    'ABS': { perCm3: 0.10, minPrice: 18, name: 'ABS' },
-    'PETG': { perCm3: 0.12, minPrice: 20, name: 'PETG' },
-    'TPU': { perCm3: 0.18, minPrice: 25, name: 'TPU' },
-    'Resina': { perCm3: 0.25, minPrice: 30, name: 'Resina' }
+// Perfis de impressora (baseado no painel /custo)
+const PRINTER_PROFILES = {
+    fdm: {  // K1 (Creality K1)
+        power: 400,              // Watts
+        machineValue: 2600,      // R$
+        depreciationHours: 6000, // Vida util em horas
+        printRateCm3PerHour: 15, // Estimativa media de impressao
+        consumables: 0           // R$ por impressao
+    },
+    resin: { // M7 (Elegoo Mars 7)
+        power: 400,
+        machineValue: 3800,
+        depreciationHours: 2000,
+        printRateCm3PerHour: 35,
+        consumables: 2           // Alcool + luva
+    }
+};
+
+// Configuracao de materiais (precos e densidades)
+const MATERIAL_CONFIG = {
+    'PLA':    { pricePerKg: 120, density: 1.24, printer: 'fdm' },
+    'ABS':    { pricePerKg: 75,  density: 1.04, printer: 'fdm' },
+    'PETG':   { pricePerKg: 100, density: 1.27, printer: 'fdm' },
+    'TPU':    { pricePerKg: 150, density: 1.21, printer: 'fdm' },
+    'Resina': { pricePerLiter: 150, density: 1.10, printer: 'resin' }
+};
+
+// Parametros de precificacao
+const PRICING_PARAMS = {
+    kwhPrice: 1.20,       // R$/kWh
+    failureRate: 0.20,    // 20% taxa de falha
+    profitMargin: 2.80    // 280% margem de lucro
 };
 
 const FINISH_MULTIPLIERS = {
@@ -4856,33 +4882,60 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
         }
 
         // Obter opcoes
-        const material = MATERIAL_COSTS[fields.material] || MATERIAL_COSTS['PLA'];
+        const mat = MATERIAL_CONFIG[fields.material] || MATERIAL_CONFIG['PLA'];
+        const printer = PRINTER_PROFILES[mat.printer];
         const finishMultiplier = FINISH_MULTIPLIERS[fields.finish] || 1.0;
         const priorityMultiplier = PRIORITY_MULTIPLIERS[fields.priority] || 1.0;
-
-        // Infill: 0.5 + (percentual * 0.5) -> 10% = 0.55x, 100% = 1.0x
         const infillPercent = INFILL_OPTIONS[fields.infill] || INFILL_OPTIONS['20'];
-        const infillMultiplier = 0.5 + (infillPercent * 0.5);
+        // Infill multiplier: shell (15%) sempre solido + interno (85%) * infill%
+        const infillMultiplier = 0.15 + (0.85 * infillPercent);
 
-        // Calcular preco
+        // === FORMULA BASEADA NO PAINEL /custo ===
         const volumeCm3 = volume / 1000; // mm3 para cm3
-        let price = volumeCm3 * material.perCm3;
-        price *= infillMultiplier;        // Aplicar preenchimento
-        price *= finishMultiplier;        // Aplicar acabamento
-        price *= priorityMultiplier;      // Aplicar prioridade
-        price = Math.max(price, material.minPrice);
 
-        // Arredondar para 2 casas
+        // 1. Custo de material
+        let materialCost;
+        if (mat.printer === 'resin') {
+            // Resina: volume em ml (1 cm3 = 1 ml), preco por litro
+            materialCost = (volumeCm3 / 1000) * mat.pricePerLiter;
+        } else {
+            // FDM: peso em gramas, preco por kg
+            const weightG = volumeCm3 * mat.density * infillMultiplier;
+            materialCost = (weightG / 1000) * mat.pricePerKg;
+        }
+
+        // 2. Tempo estimado de impressao (volume efetivo / taxa)
+        const effectiveVolumeCm3 = volumeCm3 * infillMultiplier;
+        const estimatedTimeH = effectiveVolumeCm3 / printer.printRateCm3PerHour;
+
+        // 3. Custo de energia
+        const energyCost = (printer.power / 1000) * estimatedTimeH * PRICING_PARAMS.kwhPrice;
+
+        // 4. Custo de depreciacao
+        const depreciationCost = (printer.machineValue / printer.depreciationHours) * estimatedTimeH;
+
+        // 5. Subtotal + consumiveis + taxa de falha
+        const subtotal = materialCost + energyCost + depreciationCost + printer.consumables;
+        const withFailure = subtotal * (1 + PRICING_PARAMS.failureRate);
+
+        // 6. Acabamento e prioridade
+        let price = withFailure * finishMultiplier * priorityMultiplier;
+
+        // 7. Margem de lucro (280%)
+        price = price * (1 + PRICING_PARAMS.profitMargin);
+
+        // 8. Preco minimo e arredondamento
+        price = Math.max(price, 15);
         price = Math.round(price * 100) / 100;
 
-        console.log('[calculateQuote] Volume:', volumeCm3.toFixed(2), 'cm3 | Material:', fields.material, '| Infill:', fields.infill || '20', '| Preco: R$', price);
+        console.log('[calculateQuote] Volume:', volumeCm3.toFixed(2), 'cm3 | Material:', fields.material, '| Infill:', fields.infill || '20', '| MatCost:', materialCost.toFixed(2), '| Energy:', energyCost.toFixed(2), '| Deprec:', depreciationCost.toFixed(2), '| Preco: R$', price);
 
         return res.json({
             success: true,
             price: price,
             volume: volumeCm3.toFixed(2),
             volumeUnit: 'cm3',
-            material: material.name,
+            material: fields.material || 'PLA',
             infill: fields.infill || '20',
             finish: fields.finish || 'padrao',
             priority: fields.priority || 'normal',

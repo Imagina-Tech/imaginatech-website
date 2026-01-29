@@ -25,6 +25,19 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Feature: Auto-Orcamento - Formula do /custo + Resina + Layout sem scroll
+
+**Arquivos Modificados:**
+- `/functions/index.js` - Nova formula de precificacao baseada no painel /custo: energia (kWh), depreciacao de maquina, taxa de falha (20%), margem de lucro (280%). Materiais com preco/kg (FDM) e preco/litro (Resina). PRINTER_PROFILES, MATERIAL_CONFIG, PRICING_PARAMS.
+- `/auto-orcamento/style.css` - Layout desktop sem scroll: height 100vh, overflow hidden, flex column. Tips escondido no desktop. Espacamentos compactados.
+
+**Formula de preco:**
+1. materialCost = peso_g / 1000 * precoKg (FDM) ou volumeCm3 / 1000 * precoLitro (Resina)
+2. energyCost = (potencia_W / 1000) * tempo_h * kwhPrice
+3. depreciationCost = (valorMaquina / vidaUtil) * tempo_h
+4. subtotal = (material + energia + depreciacao + consumiveis) * 1.20 (falha)
+5. preco = subtotal * acabamento * prioridade * 3.80 (margem 280%)
+
 ### 2026-01-29 - Fix: Auto-Orcamento - Corrige 413 e chamadas duplicadas
 
 **Arquivos Modificados:**
