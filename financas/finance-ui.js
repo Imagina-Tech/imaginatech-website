@@ -3096,10 +3096,7 @@ logger.log('âœ… Finance UI v3.0 - Loaded');
  * Alterna a visibilidade do valor de investimentos
  * Útil para abrir o painel em público sem expor valores sensíveis
  */
-function toggleInvestmentVisibility(event) {
-    // Prevenir que o clique abra o modal
-    event.stopPropagation();
-
+function toggleInvestmentVisibility() {
     const valueElement = document.getElementById('totalInvestments');
     const buttonElement = document.getElementById('btnToggleInvestments');
     const iconElement = buttonElement.querySelector('i');
