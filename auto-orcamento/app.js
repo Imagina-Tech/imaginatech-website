@@ -494,6 +494,12 @@ async function calculateQuote() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+        console.log('[calculateQuote] Enviando para backend...', {
+            material: options.material, infill: options.infill,
+            finish: options.finish, priority: options.priority,
+            volume: state.volume
+        });
+
         const response = await fetch(`${CONFIG.API_URL}/calculateQuote`, {
             method: 'POST',
             body: formData,
@@ -501,23 +507,38 @@ async function calculateQuote() {
         });
 
         clearTimeout(timeoutId);
+        console.log('[calculateQuote] Response status:', response.status);
 
-        // Consumir body uma unica vez
-        const result = await response.json();
+        // Tentar ler como texto primeiro para diagnostico
+        const responseText = await response.text();
+        console.log('[calculateQuote] Response body:', responseText.substring(0, 500));
+
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('[calculateQuote] Resposta nao e JSON:', responseText.substring(0, 200));
+            showError('Servidor retornou resposta invalida. Tente novamente.');
+            updatePriceLoading(false);
+            return;
+        }
 
         if (response.ok && result.success && result.price) {
+            console.log('[calculateQuote] Preco recebido: R$', result.price);
             updatePrice(result.price, result.isEstimate || false);
             return;
         }
 
         // Backend retornou erro
+        console.warn('[calculateQuote] Backend erro:', result);
         showError(result.error || 'Erro ao calcular orcamento. Tente novamente.');
         updatePriceLoading(false);
     } catch (error) {
+        console.error('[calculateQuote] Excecao:', error.name, error.message);
         if (error.name === 'AbortError') {
             showError('Servidor demorou para responder. Tente novamente.');
         } else {
-            showError('Erro de conexao com o servidor. Verifique sua internet.');
+            showError('Erro de conexao com o servidor. Verifique sua internet e desative bloqueadores.');
         }
         updatePriceLoading(false);
     }
