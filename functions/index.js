@@ -4798,71 +4798,61 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
     }
 
     try {
-        // Parse multipart form usando busboy
-        const Busboy = require('busboy');
+        // Extrair campos: aceita JSON body ou multipart form
+        let fields = {};
+        let file = null;
+        const contentType = req.headers['content-type'] || '';
 
-        const parseMultipart = () => new Promise((resolve, reject) => {
-            const busboy = Busboy({ headers: req.headers });
-            const fields = {};
-            let file = null;
+        if (contentType.includes('application/json')) {
+            // JSON body (frontend envia apenas volume + opcoes)
+            fields = req.body || {};
+        } else if (contentType.includes('multipart/form-data')) {
+            // Multipart form (compatibilidade legada com envio de arquivo)
+            const Busboy = require('busboy');
 
-            busboy.on('field', (name, value) => {
-                fields[name] = value;
-            });
+            const parseMultipart = () => new Promise((resolve, reject) => {
+                const busboy = Busboy({ headers: req.headers });
+                const f = {};
+                let uploadedFile = null;
 
-            busboy.on('file', (name, stream, info) => {
-                const chunks = [];
-                stream.on('data', chunk => chunks.push(chunk));
-                stream.on('end', () => {
-                    file = {
-                        name: info.filename,
-                        buffer: Buffer.concat(chunks)
-                    };
+                busboy.on('field', (name, value) => { f[name] = value; });
+                busboy.on('file', (name, stream, info) => {
+                    const chunks = [];
+                    stream.on('data', chunk => chunks.push(chunk));
+                    stream.on('end', () => {
+                        uploadedFile = { name: info.filename, buffer: Buffer.concat(chunks) };
+                    });
                 });
+                busboy.on('finish', () => resolve({ file: uploadedFile, fields: f }));
+                busboy.on('error', reject);
+                busboy.end(req.rawBody);
             });
 
-            busboy.on('finish', () => resolve({ file, fields }));
-            busboy.on('error', reject);
-
-            busboy.end(req.rawBody);
-        });
-
-        const { file, fields } = await parseMultipart();
-
-        if (!file) {
-            return res.status(400).json({ error: 'Arquivo nao enviado' });
-        }
-
-        // Validar tamanho (50MB max)
-        if (file.buffer.length > 50 * 1024 * 1024) {
-            return res.status(400).json({ error: 'Arquivo muito grande (max 50MB)' });
-        }
-
-        // Extrair extensao
-        const ext = file.name.split('.').pop()?.toLowerCase() || '';
-
-        // Calcular volume
-        let volume = 0;
-        let volumeSource = 'backend';
-
-        if (ext === 'stl') {
-            volume = parseSTLVolume(file.buffer);
+            const parsed = await parseMultipart();
+            fields = parsed.fields;
+            file = parsed.file;
         } else {
-            // Para formatos que o backend nao parseia (OBJ, GLB, 3MF),
-            // usar volume calculado pelo Three.js no frontend
-            const frontendVolume = parseFloat(fields.volume);
-            if (frontendVolume > 0) {
-                volume = frontendVolume;
-                volumeSource = 'frontend';
-            } else {
-                return res.status(400).json({
-                    error: 'Volume nao informado para formato ' + ext
-                });
+            return res.status(400).json({ error: 'Content-Type nao suportado' });
+        }
+
+        // Calcular volume: prefere volume do frontend, fallback para parse de STL
+        let volume = 0;
+        const frontendVolume = parseFloat(fields.volume);
+
+        if (frontendVolume > 0) {
+            volume = frontendVolume;
+        } else if (file) {
+            const ext = file.name.split('.').pop()?.toLowerCase() || '';
+            if (ext === 'stl') {
+                if (file.buffer.length > 50 * 1024 * 1024) {
+                    return res.status(400).json({ error: 'Arquivo muito grande (max 50MB)' });
+                }
+                volume = parseSTLVolume(file.buffer);
             }
         }
 
         if (volume <= 0) {
-            return res.status(400).json({ error: 'Nao foi possivel calcular o volume' });
+            return res.status(400).json({ error: 'Volume nao informado ou invalido' });
         }
 
         // Obter opcoes
@@ -4885,7 +4875,7 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
         // Arredondar para 2 casas
         price = Math.round(price * 100) / 100;
 
-        console.log('[calculateQuote] Arquivo:', file.name, '| Volume:', volumeCm3.toFixed(2), 'cm3 | Infill:', fields.infill || '20', '| Preco: R$', price, '| Fonte volume:', volumeSource);
+        console.log('[calculateQuote] Volume:', volumeCm3.toFixed(2), 'cm3 | Material:', fields.material, '| Infill:', fields.infill || '20', '| Preco: R$', price);
 
         return res.json({
             success: true,
@@ -4896,8 +4886,7 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
             infill: fields.infill || '20',
             finish: fields.finish || 'padrao',
             priority: fields.priority || 'normal',
-            volumeSource: volumeSource,
-            isEstimate: volumeSource === 'frontend'
+            isEstimate: false
         });
 
     } catch (error) {

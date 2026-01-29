@@ -472,8 +472,18 @@ function showUploadSection() {
 // CALCULO DE ORCAMENTO
 // ============================================================================
 
+// Debounce: cancela chamada anterior quando uma nova e feita
+let quoteAbortController = null;
+
 async function calculateQuote() {
     if (!state.currentFile || !state.volume) return;
+
+    // Cancelar chamada anterior (debounce)
+    if (quoteAbortController) {
+        quoteAbortController.abort();
+    }
+    quoteAbortController = new AbortController();
+    const signal = quoteAbortController.signal;
 
     const options = getSelectedOptions();
 
@@ -481,65 +491,40 @@ async function calculateQuote() {
     updatePriceLoading(true);
 
     try {
-        const formData = new FormData();
-        formData.append('file', state.currentFile, sanitizeFileName(state.currentFile.name));
-        formData.append('material', options.material);
-        formData.append('color', options.color);
-        formData.append('infill', options.infill);
-        formData.append('finish', options.finish);
-        formData.append('priority', options.priority);
-        // Enviar volume calculado no frontend (para formatos que o backend nao parseia)
-        formData.append('volume', String(state.volume));
+        const timeoutId = setTimeout(() => quoteAbortController.abort(), 30000);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-        console.log('[calculateQuote] Enviando para backend...', {
-            material: options.material, infill: options.infill,
-            finish: options.finish, priority: options.priority,
-            volume: state.volume
-        });
-
+        // Enviar apenas volume e opcoes (sem arquivo - evita 413)
         const response = await fetch(`${CONFIG.API_URL}/calculateQuote`, {
             method: 'POST',
-            body: formData,
-            signal: controller.signal
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                volume: state.volume,
+                material: options.material,
+                color: options.color,
+                infill: options.infill,
+                finish: options.finish,
+                priority: options.priority
+            }),
+            signal: signal
         });
 
         clearTimeout(timeoutId);
-        console.log('[calculateQuote] Response status:', response.status);
 
-        // Tentar ler como texto primeiro para diagnostico
-        const responseText = await response.text();
-        console.log('[calculateQuote] Response body:', responseText.substring(0, 500));
-
-        let result;
-        try {
-            result = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('[calculateQuote] Resposta nao e JSON:', responseText.substring(0, 200));
-            showError('Servidor retornou resposta invalida. Tente novamente.');
-            updatePriceLoading(false);
-            return;
-        }
+        const result = await response.json();
 
         if (response.ok && result.success && result.price) {
-            console.log('[calculateQuote] Preco recebido: R$', result.price);
             updatePrice(result.price, result.isEstimate || false);
             return;
         }
 
         // Backend retornou erro
-        console.warn('[calculateQuote] Backend erro:', result);
         showError(result.error || 'Erro ao calcular orcamento. Tente novamente.');
         updatePriceLoading(false);
     } catch (error) {
-        console.error('[calculateQuote] Excecao:', error.name, error.message);
-        if (error.name === 'AbortError') {
-            showError('Servidor demorou para responder. Tente novamente.');
-        } else {
-            showError('Erro de conexao com o servidor. Verifique sua internet e desative bloqueadores.');
-        }
+        // Ignorar AbortError de debounce (chamada substituida por outra)
+        if (error.name === 'AbortError') return;
+
+        showError('Erro de conexao com o servidor. Verifique sua internet.');
         updatePriceLoading(false);
     }
 }
