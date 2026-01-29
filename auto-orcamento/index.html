@@ -147,9 +147,6 @@
                         <div class="viewer-container" id="viewerContainer">
                             <canvas id="viewer3D"></canvas>
                             <div class="viewer-controls">
-                                <button type="button" data-action="rotate-model" title="Rotacionar modelo 90 graus">
-                                    <i class="fas fa-undo"></i>
-                                </button>
                                 <button type="button" data-action="reset-camera" title="Resetar camera">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
@@ -160,6 +157,10 @@
                                     <i class="fas fa-th"></i>
                                 </button>
                             </div>
+                            <!-- Botao de rotacao separado, maior -->
+                            <button type="button" class="rotate-button" data-action="rotate-model" title="Girar modelo 90 graus">
+                                <i class="fas fa-rotate-right"></i>
+                            </button>
                         </div>
                         <div class="model-info" id="modelInfo">
                             <div class="info-item">
@@ -170,7 +171,7 @@
                                 <i class="fas fa-cube"></i>
                                 <span>Volume: <strong id="volume">--</strong> cm3</span>
                             </div>
-                            <div class="info-item">
+                            <div class="info-item info-weight-hidden">
                                 <i class="fas fa-weight-hanging"></i>
                                 <span>Peso est.: <strong id="estimatedWeight">--</strong> g</span>
                             </div>
@@ -196,8 +197,14 @@
                         </div>
 
                         <div class="option-group">
-                            <label for="colorSelect">Cor</label>
-                            <select id="colorSelect" class="form-select">
+                            <label>Cor</label>
+                            <button type="button" class="color-trigger" id="colorTrigger" data-action="open-color-modal">
+                                <span class="color-swatch" id="selectedColorSwatch"></span>
+                                <span class="color-name" id="selectedColorName">Selecione...</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <!-- Select hidden para manter compatibilidade -->
+                            <select id="colorSelect" class="form-select" hidden>
                                 <option value="">Selecione material</option>
                             </select>
                         </div>
@@ -219,7 +226,6 @@
                             <select id="finishSelect" class="form-select">
                                 <option value="padrao">Padrao</option>
                                 <option value="lixado">Lixado (+20%)</option>
-                                <option value="pintado">Pintado (+40%)</option>
                             </select>
                         </div>
 
@@ -284,6 +290,21 @@
     <div class="toast hidden" id="errorToast" role="alert" aria-live="assertive">
         <i class="fas fa-exclamation-circle"></i>
         <span id="errorMessage"></span>
+    </div>
+
+    <!-- Color Modal (inserido em body para z-index acima da navbar) -->
+    <div class="color-modal-overlay hidden" id="colorModalOverlay" aria-hidden="true">
+        <div class="color-modal" role="dialog" aria-modal="true" aria-labelledby="colorModalTitle">
+            <div class="color-modal-header">
+                <h3 id="colorModalTitle"><i class="fas fa-palette"></i> Escolha a Cor</h3>
+                <button type="button" data-action="close-color-modal" title="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="color-modal-body" id="colorModalBody">
+                <!-- Cards de cor gerados dinamicamente -->
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

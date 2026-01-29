@@ -44,6 +44,46 @@ const CONFIG = {
     DEFAULT_COLORS: ['Branco', 'Preto', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Laranja']
 };
 
+// Mapa de cores CSS para nomes de filamento
+const COLOR_MAP = {
+    'branco': '#FFFFFF',
+    'preto': '#1A1A1A',
+    'cinza': '#808080',
+    'vermelho': '#E53935',
+    'azul': '#1E88E5',
+    'verde': '#43A047',
+    'amarelo': '#FDD835',
+    'laranja': '#FB8C00',
+    'rosa': '#EC407A',
+    'roxo': '#8E24AA',
+    'marrom': '#6D4C41',
+    'bege': '#D7CCC8',
+    'prata': '#B0BEC5',
+    'dourado': '#FFD54F',
+    'transparente': 'transparent',
+    'natural': '#F5F5DC',
+    'magenta': '#D81B60',
+    'ciano': '#00BCD4',
+    'oliva': '#827717',
+    'coral': '#FF7043',
+    'turquesa': '#26A69A',
+    'vinho': '#880E4F',
+    'grafite': '#455A64'
+};
+
+// Glossario interativo de acabamentos especiais
+const FINISH_GLOSSARY = {
+    'silk': { label: 'Silk', desc: 'Acabamento sedoso e brilhante com reflexos metalicos. Ideal para pecas decorativas.' },
+    'matte': { label: 'Matte', desc: 'Acabamento fosco e suave, sem brilho. Visual mais discreto e profissional.' },
+    'marble': { label: 'Marble', desc: 'Efeito marmorizado com mistura de cores. Cada peca e unica.' },
+    'glow': { label: 'Glow', desc: 'Brilha no escuro apos exposicao a luz. Efeito fosforescente.' },
+    'wood': { label: 'Wood', desc: 'Contem particulas de madeira real. Aspecto e textura de madeira.' },
+    'transparent': { label: 'Transparente', desc: 'Material translucido que permite passagem de luz.' },
+    'fosforescente': { label: 'Fosforescente', desc: 'Brilha no escuro apos exposicao a luz.' },
+    'metalizado': { label: 'Metalizado', desc: 'Contem particulas metalicas. Acabamento com brilho metalico.' },
+    'glitter': { label: 'Glitter', desc: 'Contem particulas de glitter. Efeito brilhante e cintilante.' }
+};
+
 // ============================================================================
 // ESTADO
 // ============================================================================
@@ -57,7 +97,9 @@ let state = {
     price: 0,
     isEstimate: true,
     estimatedWeight: 0,
-    availableStock: null  // Cache do estoque
+    availableStock: null,  // Cache do estoque
+    selectedColor: '',     // Cor selecionada
+    colorOptions: []       // Lista de cores disponiveis
 };
 
 // ============================================================================
@@ -134,50 +176,158 @@ function updateMaterialDropdown() {
     }, 0);
 }
 
-function updateColorDropdown(material, estimatedWeight = 0) {
-    const colorSelect = document.getElementById('colorSelect');
-    if (!colorSelect) return;
-
-    let html = '';
+function updateColorOptions(material, estimatedWeight = 0) {
+    // Construir lista de cores disponiveis
+    let colorList = [];
 
     if (state.availableStock && state.availableStock[material]) {
         const materialStock = state.availableStock[material];
         const colors = materialStock.availableColors || [];
 
-        if (colors.length === 0) {
-            html = '<option value="" disabled>Nenhuma cor disponivel</option>';
-        } else {
-            colors.forEach(color => {
-                const stock = materialStock.colorStock[color];
-                const totalGrams = stock?.totalGrams || 0;
-                const sufficient = totalGrams >= estimatedWeight;
+        colors.forEach(color => {
+            const stock = materialStock.colorStock[color];
+            const totalGrams = stock?.totalGrams || 0;
+            const sufficient = totalGrams >= estimatedWeight;
 
-                if (sufficient) {
-                    // Mostrar estoque disponivel
-                    const stockLabel = totalGrams >= 1000
-                        ? `${(totalGrams / 1000).toFixed(1)}kg`
-                        : `${totalGrams}g`;
-                    html += `<option value="${escapeHtml(color.toLowerCase())}">${escapeHtml(color)} (${stockLabel})</option>`;
-                }
-            });
-        }
-
-        if (!html) {
-            html = '<option value="" disabled>Estoque insuficiente</option>';
-        }
+            if (sufficient) {
+                colorList.push({ name: color, value: color.toLowerCase() });
+            }
+        });
     } else {
         // Fallback: cores padrao
         CONFIG.DEFAULT_COLORS.forEach(color => {
-            html += `<option value="${escapeHtml(color.toLowerCase())}">${escapeHtml(color)}</option>`;
+            colorList.push({ name: color, value: color.toLowerCase() });
         });
     }
 
-    colorSelect.innerHTML = html;
+    // Salvar lista no state para o modal
+    state.colorOptions = colorList;
 
-    // Atualizar CustomSelect
-    setTimeout(() => {
+    // Atualizar select hidden (para compatibilidade com getSelectedOptions)
+    const colorSelect = document.getElementById('colorSelect');
+    if (colorSelect) {
+        let html = '';
+        colorList.forEach(c => {
+            html += `<option value="${escapeHtml(c.value)}">${escapeHtml(c.name)}</option>`;
+        });
+        if (!html) {
+            html = '<option value="" disabled>Nenhuma cor disponivel</option>';
+        }
+        colorSelect.innerHTML = html;
+    }
+
+    // Se a cor atual nao esta mais disponivel, selecionar a primeira
+    const currentColor = state.selectedColor;
+    const stillAvailable = colorList.some(c => c.value === currentColor);
+    if (!stillAvailable && colorList.length > 0) {
+        selectColor(colorList[0].value, colorList[0].name);
+    } else if (colorList.length === 0) {
+        selectColor('', 'Indisponivel');
+    }
+}
+
+function getColorHex(colorName) {
+    const lower = colorName.toLowerCase().trim();
+    // Busca direta
+    if (COLOR_MAP[lower]) return COLOR_MAP[lower];
+    // Busca parcial (ex: "Vermelho Silk" -> vermelho)
+    for (const [key, hex] of Object.entries(COLOR_MAP)) {
+        if (lower.includes(key) || key.includes(lower)) return hex;
+    }
+    return '#808080'; // cinza padrao
+}
+
+function getFinishBadges(colorName) {
+    const lower = colorName.toLowerCase();
+    const badges = [];
+    for (const [key, info] of Object.entries(FINISH_GLOSSARY)) {
+        if (lower.includes(key)) {
+            badges.push(info);
+        }
+    }
+    return badges;
+}
+
+function renderColorModal() {
+    const body = document.getElementById('colorModalBody');
+    if (!body) return;
+
+    const colors = state.colorOptions || [];
+
+    if (colors.length === 0) {
+        body.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Nenhuma cor disponivel para este material.</p>';
+        return;
+    }
+
+    let html = '';
+    colors.forEach(color => {
+        const hex = getColorHex(color.name);
+        const isSelected = state.selectedColor === color.value;
+        const isTransparent = hex === 'transparent';
+        const badges = getFinishBadges(color.name);
+
+        let badgesHtml = '';
+        badges.forEach(badge => {
+            badgesHtml += `<span class="finish-badge">${escapeHtml(badge.label)} <i class="fas fa-info-circle"></i><span class="finish-tooltip">${escapeHtml(badge.desc)}</span></span>`;
+        });
+
+        html += `<div class="color-card${isSelected ? ' selected' : ''}" data-action="select-color" data-color-value="${escapeHtml(color.value)}" data-color-name="${escapeHtml(color.name)}">`;
+        html += `<div class="color-card-swatch${isTransparent ? ' transparent-swatch' : ''}" style="background-color: ${isTransparent ? '' : hex};"></div>`;
+        html += `<div class="color-card-info">`;
+        html += `<span class="color-card-name">${escapeHtml(color.name)}</span>`;
+        if (badgesHtml) {
+            html += `<div class="color-card-badges">${badgesHtml}</div>`;
+        }
+        html += `</div>`;
+        html += `<i class="fas fa-check color-card-check"></i>`;
+        html += `</div>`;
+    });
+
+    body.innerHTML = html;
+}
+
+function selectColor(value, name) {
+    state.selectedColor = value;
+
+    // Atualizar trigger button
+    const swatchEl = document.getElementById('selectedColorSwatch');
+    const nameEl = document.getElementById('selectedColorName');
+
+    if (swatchEl) {
+        const hex = getColorHex(name || value);
+        if (hex === 'transparent') {
+            swatchEl.style.background = 'repeating-conic-gradient(#808080 0% 25%, #c0c0c0 0% 50%) 50% / 12px 12px';
+        } else {
+            swatchEl.style.background = hex;
+        }
+    }
+    if (nameEl) {
+        nameEl.textContent = name || value || 'Selecione...';
+    }
+
+    // Atualizar hidden select
+    const colorSelect = document.getElementById('colorSelect');
+    if (colorSelect) {
+        colorSelect.value = value;
         colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
+    }
+}
+
+function openColorModal() {
+    renderColorModal();
+    const overlay = document.getElementById('colorModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closeColorModal() {
+    const overlay = document.getElementById('colorModalOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
 }
 
 // ============================================================================
@@ -364,7 +514,7 @@ async function handleFileSelect(file) {
         // Atualizar estoque com peso minimo e recarregar cores
         await fetchAvailableFilaments(estimatedWeight);
         updateMaterialDropdown();
-        updateColorDropdown(material, estimatedWeight);
+        updateColorOptions(material, estimatedWeight);
 
         // Calcular preco
         await calculateQuote();
@@ -532,7 +682,7 @@ async function calculateQuote() {
 function getSelectedOptions() {
     return {
         material: document.getElementById('materialSelect')?.value || 'PLA',
-        color: document.getElementById('colorSelect')?.value || 'branco',
+        color: state.selectedColor || document.getElementById('colorSelect')?.value || 'branco',
         infill: document.getElementById('infillSelect')?.value || '20',
         finish: document.getElementById('finishSelect')?.value || 'padrao',
         priority: document.getElementById('prioritySelect')?.value || 'normal'
@@ -573,6 +723,46 @@ function setupEventHandlers() {
             case 'toggle-mobile-menu':
                 toggleMobileMenu();
                 break;
+
+            case 'open-color-modal':
+                openColorModal();
+                break;
+
+            case 'close-color-modal':
+                closeColorModal();
+                break;
+
+            case 'select-color': {
+                const colorValue = el.dataset.colorValue;
+                const colorName = el.dataset.colorName;
+                selectColor(colorValue, colorName);
+                closeColorModal();
+                // Recalcular preco
+                if (state.currentFile && state.volume) {
+                    calculateQuote();
+                }
+                break;
+            }
+        }
+    });
+
+    // Fechar modal de cores ao clicar no overlay (fora do modal)
+    const colorOverlay = document.getElementById('colorModalOverlay');
+    if (colorOverlay) {
+        colorOverlay.addEventListener('click', (e) => {
+            if (e.target === colorOverlay) {
+                closeColorModal();
+            }
+        });
+    }
+
+    // Fechar modal de cores com Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const overlay = document.getElementById('colorModalOverlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                closeColorModal();
+            }
         }
     });
 
@@ -599,9 +789,9 @@ function setupEventHandlers() {
             if (state.volume > 0) {
                 const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
                 updateWeightDisplay(estimatedWeight);
-                updateColorDropdown(material, estimatedWeight);
+                updateColorOptions(material, estimatedWeight);
             } else {
-                updateColorDropdown(material, 0);
+                updateColorOptions(material, 0);
             }
 
             // Recalcular preco
@@ -621,7 +811,7 @@ function setupEventHandlers() {
             if (state.volume > 0) {
                 const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
                 updateWeightDisplay(estimatedWeight);
-                updateColorDropdown(material, estimatedWeight);
+                updateColorOptions(material, estimatedWeight);
             }
 
             // Recalcular preco
@@ -632,7 +822,7 @@ function setupEventHandlers() {
     }
 
     // Mudanca de outras opcoes recalcula preco
-    const otherSelectIds = ['colorSelect', 'finishSelect', 'prioritySelect'];
+    const otherSelectIds = ['finishSelect', 'prioritySelect'];
     otherSelectIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -654,6 +844,8 @@ function setupEventHandlers() {
             state.volume = 0;
             state.dimensions = null;
             state.price = 0;
+            state.selectedColor = '';
+            state.colorOptions = [];
         });
     }
 

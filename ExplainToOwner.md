@@ -25,6 +25,13 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Feature: Auto-Orcamento - UX: Modal de cores, botao rotacao, acabamentos
+
+**Arquivos Modificados:**
+- `/auto-orcamento/index.html` - Botao de rotacao separado (inferior direito, icone fa-rotate-right). Cor: select substituido por botao trigger + modal lateral. Removido "Pintado (+40%)" do acabamento. Peso estimado oculto (classe info-weight-hidden). Modal de cores inserido em body com z-index 10000.
+- `/auto-orcamento/style.css` - CSS: .rotate-button (56px, circular, gradient, inferior direito). .info-weight-hidden (display:none). .color-trigger, .color-modal-overlay, .color-modal (slide-in-right lateral). .color-card com swatch colorido. .finish-badge com tooltip hover para glossario (silk, matte, marble, etc). Responsivo mobile para modal e rotacao.
+- `/auto-orcamento/app.js` - COLOR_MAP (23 cores hex). FINISH_GLOSSARY (9 acabamentos com descricao). updateColorOptions() substitui updateColorDropdown(). Novo: renderColorModal(), selectColor(), openColorModal(), closeColorModal(), getColorHex(), getFinishBadges(). Handlers: open-color-modal, close-color-modal, select-color. State: selectedColor, colorOptions. Escape fecha modal.
+
 ### 2026-01-29 - Fix: Financas - Corrige TypeError em toggleInvestmentVisibility
 
 **Arquivos Modificados:**
