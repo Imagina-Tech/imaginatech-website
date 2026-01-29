@@ -2230,7 +2230,7 @@ const MAX_PHOTOS = 10;  // Limite de fotos por produto
 
 async function handlePhotoFiles(files) {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 15 * 1024 * 1024; // 15MB
     let addedCount = 0;
 
     // Verificar limite total de fotos
@@ -2259,7 +2259,7 @@ async function handlePhotoFiles(files) {
         }
 
         if (file.size > maxSize) {
-            window.showToast(`${file.name}: Arquivo muito grande (max 5MB)`, 'error');
+            window.showToast(`${file.name}: Arquivo muito grande (max 15MB)`, 'error');
             continue;
         }
 
