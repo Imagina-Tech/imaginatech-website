@@ -25,6 +25,13 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Fix: Financas - Corrige TypeError em toggleInvestmentVisibility
+
+**Arquivos Modificados:**
+- `/financas/finance-ui.js` - Removido parametro `event` e chamada `event.stopPropagation()` da funcao `toggleInvestmentVisibility()` (linha ~3099). O handler de delegacao de eventos (linha 1690) chamava a funcao sem passar o evento, causando `TypeError: Cannot read properties of undefined (reading 'stopPropagation')`. O `stopPropagation` nao era necessario porque o botao toggle e o div do modal sao elementos irmaos no HTML, e `closest('[data-action]')` ja identifica corretamente qual acao executar.
+
+**Revisao da logica de investimentos:** CRUD (adicionar, editar, excluir) revisado e funcionando corretamente. Validacoes, escapeHtml, calculo de total e persistencia no Firestore estao corretos.
+
 ### 2026-01-29 - Feature: Auto-Orcamento - Formula do /custo + Resina + Layout sem scroll
 
 **Arquivos Modificados:**
