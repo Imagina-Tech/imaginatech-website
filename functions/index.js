@@ -4664,6 +4664,15 @@ const PRIORITY_MULTIPLIERS = {
     'urgente': 1.5
 };
 
+const INFILL_OPTIONS = {
+    'auto': 0.20,
+    '10': 0.10,
+    '20': 0.20,
+    '30': 0.30,
+    '80': 0.80,
+    '100': 1.00
+};
+
 /**
  * Parse STL binario e calcula volume
  * @param {Buffer} buffer - Buffer do arquivo STL
@@ -4834,16 +4843,22 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
 
         // Calcular volume
         let volume = 0;
+        let volumeSource = 'backend';
 
         if (ext === 'stl') {
             volume = parseSTLVolume(file.buffer);
         } else {
-            // Para outros formatos, retornar erro (frontend fara fallback)
-            return res.status(400).json({
-                error: 'Formato nao suportado no backend',
-                supportedFormats: ['stl'],
-                hint: 'Use o calculo local do frontend para este formato'
-            });
+            // Para formatos que o backend nao parseia (OBJ, GLB, 3MF),
+            // usar volume calculado pelo Three.js no frontend
+            const frontendVolume = parseFloat(fields.volume);
+            if (frontendVolume > 0) {
+                volume = frontendVolume;
+                volumeSource = 'frontend';
+            } else {
+                return res.status(400).json({
+                    error: 'Volume nao informado para formato ' + ext
+                });
+            }
         }
 
         if (volume <= 0) {
@@ -4855,17 +4870,22 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
         const finishMultiplier = FINISH_MULTIPLIERS[fields.finish] || 1.0;
         const priorityMultiplier = PRIORITY_MULTIPLIERS[fields.priority] || 1.0;
 
+        // Infill: 0.5 + (percentual * 0.5) -> 10% = 0.55x, 100% = 1.0x
+        const infillPercent = INFILL_OPTIONS[fields.infill] || INFILL_OPTIONS['20'];
+        const infillMultiplier = 0.5 + (infillPercent * 0.5);
+
         // Calcular preco
         const volumeCm3 = volume / 1000; // mm3 para cm3
         let price = volumeCm3 * material.perCm3;
-        price *= finishMultiplier;
-        price *= priorityMultiplier;
+        price *= infillMultiplier;        // Aplicar preenchimento
+        price *= finishMultiplier;        // Aplicar acabamento
+        price *= priorityMultiplier;      // Aplicar prioridade
         price = Math.max(price, material.minPrice);
 
         // Arredondar para 2 casas
         price = Math.round(price * 100) / 100;
 
-        console.log('[calculateQuote] Arquivo:', file.name, '| Volume:', volumeCm3.toFixed(2), 'cm3 | Preco: R$', price);
+        console.log('[calculateQuote] Arquivo:', file.name, '| Volume:', volumeCm3.toFixed(2), 'cm3 | Infill:', fields.infill || '20', '| Preco: R$', price, '| Fonte volume:', volumeSource);
 
         return res.json({
             success: true,
@@ -4873,9 +4893,11 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
             volume: volumeCm3.toFixed(2),
             volumeUnit: 'cm3',
             material: material.name,
+            infill: fields.infill || '20',
             finish: fields.finish || 'padrao',
             priority: fields.priority || 'normal',
-            isEstimate: false
+            volumeSource: volumeSource,
+            isEstimate: volumeSource === 'frontend'
         });
 
     } catch (error) {

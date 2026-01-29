@@ -15,23 +15,6 @@ const CONFIG = {
     MAX_FILE_SIZE: 200 * 1024 * 1024, // 200MB
     ALLOWED_EXTENSIONS: ['stl', 'obj', 'glb', 'gltf', '3mf'],
     WHATSAPP_NUMBER: '5521968972539',
-    // Custos locais (fallback se backend falhar)
-    MATERIAL_COSTS: {
-        'PLA': { perCm3: 0.08, minPrice: 15 },
-        'ABS': { perCm3: 0.10, minPrice: 18 },
-        'PETG': { perCm3: 0.12, minPrice: 20 },
-        'TPU': { perCm3: 0.18, minPrice: 25 },
-        'Resina': { perCm3: 0.25, minPrice: 30 }
-    },
-    FINISH_MULTIPLIERS: {
-        'padrao': 1.0,
-        'lixado': 1.2,
-        'pintado': 1.4
-    },
-    PRIORITY_MULTIPLIERS: {
-        'normal': 1.0,
-        'urgente': 1.5
-    },
     // Densidades dos materiais (g/cm3) para calculo de peso
     MATERIAL_DENSITIES: {
         'PLA': 1.24,
@@ -411,6 +394,32 @@ function updateModelInfo() {
     }
 }
 
+function updatePriceLoading(loading) {
+    const priceEl = document.getElementById('priceValue');
+    const disclaimerEl = document.getElementById('priceDisclaimer');
+    const submitBtn = document.getElementById('submitQuote');
+
+    if (loading) {
+        if (priceEl) {
+            priceEl.textContent = 'Calculando...';
+            priceEl.classList.add('estimate');
+        }
+        if (disclaimerEl) {
+            disclaimerEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando orcamento no servidor...';
+        }
+        if (submitBtn) submitBtn.disabled = true;
+    } else {
+        if (priceEl) {
+            priceEl.textContent = 'R$ --';
+            priceEl.classList.remove('estimate');
+        }
+        if (disclaimerEl) {
+            disclaimerEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Nao foi possivel calcular. Tente novamente.';
+        }
+        if (submitBtn) submitBtn.disabled = true;
+    }
+}
+
 function updatePrice(price, isEstimate = true) {
     state.price = price;
     state.isEstimate = isEstimate;
@@ -466,21 +475,22 @@ async function calculateQuote() {
 
     const options = getSelectedOptions();
 
-    // SEMPRE calcular local primeiro (para ter um valor imediatamente)
-    const localPrice = calculateLocalEstimate(state.volume, options);
-    updatePrice(localPrice, true);
+    // Mostrar loading enquanto calcula no backend
+    updatePriceLoading(true);
 
     try {
-        // Tentar backend
         const formData = new FormData();
         formData.append('file', state.currentFile, sanitizeFileName(state.currentFile.name));
         formData.append('material', options.material);
         formData.append('color', options.color);
+        formData.append('infill', options.infill);
         formData.append('finish', options.finish);
         formData.append('priority', options.priority);
+        // Enviar volume calculado no frontend (para formatos que o backend nao parseia)
+        formData.append('volume', String(state.volume));
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         const response = await fetch(`${CONFIG.API_URL}/calculateQuote`, {
             method: 'POST',
@@ -498,29 +508,18 @@ async function calculateQuote() {
             }
         }
 
-        console.warn('Backend retornou erro, usando calculo local');
+        // Backend retornou erro HTTP
+        const errorData = await response.json().catch(() => ({}));
+        showError(errorData.error || 'Erro ao calcular orcamento. Tente novamente.');
+        updatePriceLoading(false);
     } catch (error) {
-        console.warn('Usando calculo local:', error.message);
+        if (error.name === 'AbortError') {
+            showError('Servidor demorou para responder. Tente novamente.');
+        } else {
+            showError('Erro de conexao com o servidor. Verifique sua internet.');
+        }
+        updatePriceLoading(false);
     }
-    // Ja atualizamos com preco local no inicio, nao precisa fazer nada
-}
-
-function calculateLocalEstimate(volumeMm3, options) {
-    const material = CONFIG.MATERIAL_COSTS[options.material] || CONFIG.MATERIAL_COSTS['PLA'];
-    const finishMultiplier = CONFIG.FINISH_MULTIPLIERS[options.finish] || 1.0;
-    const priorityMultiplier = CONFIG.PRIORITY_MULTIPLIERS[options.priority] || 1.0;
-
-    // Obter infill
-    const infillConfig = CONFIG.INFILL_OPTIONS[options.infill] || CONFIG.INFILL_OPTIONS['20'];
-    const infillMultiplier = 0.5 + (infillConfig.value * 0.5);  // 10% infill = 0.55x, 100% = 1.0x
-
-    const volumeCm3 = volumeMm3 / 1000;
-    let price = volumeCm3 * material.perCm3;
-    price *= infillMultiplier;     // Aplicar infill
-    price *= finishMultiplier;     // Aplicar acabamento
-    price *= priorityMultiplier;   // Aplicar prioridade
-
-    return Math.max(price, material.minPrice);
 }
 
 function getSelectedOptions() {
