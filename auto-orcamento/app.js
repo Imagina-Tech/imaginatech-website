@@ -38,6 +38,8 @@ const CONFIG = {
         '80': { value: 0.80, label: '80%' },
         '100': { value: 1.00, label: '100% (Solido)' }
     },
+    // Materiais disponiveis (fallback se estoque offline)
+    DEFAULT_MATERIALS: ['PLA', 'ABS', 'PETG', 'TPU', 'Resina'],
     // Cores padrao (fallback)
     DEFAULT_COLORS: ['Branco', 'Preto', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Laranja']
 };
@@ -118,8 +120,8 @@ function updateMaterialDropdown() {
             html += `<option value="${escapeHtml(material)}">${escapeHtml(material)}</option>`;
         });
     } else {
-        // Fallback: materiais padrao
-        Object.keys(CONFIG.MATERIAL_COSTS).forEach(material => {
+        // Fallback: materiais padrao (sem precos expostos)
+        CONFIG.DEFAULT_MATERIALS.forEach(material => {
             html += `<option value="${escapeHtml(material)}">${escapeHtml(material)}</option>`;
         });
     }
@@ -500,17 +502,16 @@ async function calculateQuote() {
 
         clearTimeout(timeoutId);
 
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success && result.price) {
-                updatePrice(result.price, false);
-                return;
-            }
+        // Consumir body uma unica vez
+        const result = await response.json();
+
+        if (response.ok && result.success && result.price) {
+            updatePrice(result.price, result.isEstimate || false);
+            return;
         }
 
-        // Backend retornou erro HTTP
-        const errorData = await response.json().catch(() => ({}));
-        showError(errorData.error || 'Erro ao calcular orcamento. Tente novamente.');
+        // Backend retornou erro
+        showError(result.error || 'Erro ao calcular orcamento. Tente novamente.');
         updatePriceLoading(false);
     } catch (error) {
         if (error.name === 'AbortError') {
