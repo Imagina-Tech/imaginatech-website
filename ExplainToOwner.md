@@ -25,6 +25,29 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Fix: Auditoria Bot WhatsApp - 10 bugs corrigidos na integracao com painel de Financas
+
+**Arquivo Modificado:** `/functions/index.js`
+
+**Bugs Criticos Corrigidos:**
+1. **get_balance/get_summary incluiam credito no saldo** - Transacoes com paymentMethod 'credit' agora sao excluidas do calculo de saldo, igualando ao painel (linhas ~3344-3389)
+2. **get_bills usava mes calendario** - Agora usa closingDay de cada cartao para definir periodo da fatura, igual ao painel getBillPeriod() (linhas ~3436-3498)
+3. **Transacoes do bot sem cardName** - add_transaction agora salva cardName junto com cardId para agrupamento correto no buildFinancialOverview() (linha ~3118)
+4. **delete_transaction ignorava descricao** - Agora busca por searchDescription/description antes de fallback para mais recente (linhas ~3529-3603)
+5. **edit_transaction nao fazia parseFloat** - newValue agora passa por parseFloat com validacao NaN (linhas ~3650-3657)
+6. **COMPANY_USER_ID com fallback hardcoded** - Removido fallback inseguro, adicionada verificacao fail-secure no webhook (linha 1784 e ~4157)
+
+**Bugs de Alta Prioridade:**
+7. **cutoffDate em get_balance/get_summary** - Agora carrega userSettings.cutoffDate e aplica filtro
+8. **Categorias sem acento no prompt Gemini** - Corrigidas todas as categorias com acentos corretos (Alimentacao -> Alimentacao, Agua -> Agua, etc.)
+9. **parseFloat silencioso para NaN** - Validacao explicita com mensagem de erro em add_transaction, add_installment, add_projection, add_investment
+10. **edit_transaction fuzzy match ambiguo** - Busca agora prioriza: match exato > substring > categoria > fallback
+
+**Melhorias Medias:**
+- updatedAt adicionado em add_card, add_investment, add_projection
+- closingDay/dueDay com validacao de range (1-31)
+- cardName adicionado em add_installment
+
 ### 2026-01-29 - Fix: Auto-Orcamento - Dropdown de cor duplicado e visibilidade por material
 - `/auto-orcamento/index.html` - Removida classe `form-select` do select#colorSelect para impedir CustomSelect de gerar dropdown duplicado. Adicionado id="colorOptionGroup" no container da cor para controle de visibilidade.
 - `/auto-orcamento/app.js` - updateColorOptions() agora esconde a secao de cor (#colorOptionGroup) quando material e Resina. Cor so aparece para materiais de filamento (PLA, ABS, PETG, TPU). Cores exibidas correspondem ao filamento selecionado.

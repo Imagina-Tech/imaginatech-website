@@ -1781,7 +1781,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 // ID do usuario da EMPRESA (para comandos com prefixo "empresa:")
 // IMPORTANTE: Deve ser o MESMO ID usado no painel de financas (js/env-config.js)
 // Email: 3d3printers@gmail.com | Nome: ImaginaTech
-const COMPANY_USER_ID = process.env.COMPANY_USER_ID || 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
+const COMPANY_USER_ID = process.env.COMPANY_USER_ID || null;
 
 // Numeros autorizados para comandos de financas (formato: 5511999999999)
 // Se vazio, qualquer numero cadastrado em whatsappUsers pode usar
@@ -2937,9 +2937,9 @@ Se o usuario quer REGISTRAR algo (gasto, entrada, parcelamento, etc), retorne JS
 
 === CATEGORIAS VALIDAS ===
 
-ENTRADA: Salario, Freelance, Vendas, Investimentos, Bonificacao, Outros
+ENTRADA: Salário, Freelance, Vendas, Investimentos, Bonificação, Outros
 
-SAIDA: Alimentacao, Supermercado, Restaurantes, iFood/Delivery, Mercado, Transporte, Combustivel, Uber/Taxi, Estacionamento, Moradia, Aluguel, Luz, Agua, Internet, Gas, Saude, Farmacia, Consultas, Educacao, Cursos, Livros, Lazer, Streaming, Cinema, Jogos, Viagens, Compras, Roupas, Eletronicos, Academia, Beleza, Pet, Assinaturas, Servicos, Seguros, Poupanca, Investimentos, Reserva de Emergencia, Previdencia, Presentes, Impostos, Outros
+SAIDA: Alimentação, Supermercado, Restaurantes, iFood/Delivery, Mercado, Transporte, Combustível, Uber/Taxi, Estacionamento, Moradia, Aluguel, Luz, Água, Internet, Gás, Saúde, Farmácia, Consultas, Educação, Cursos, Livros, Lazer, Streaming, Cinema, Jogos, Viagens, Compras, Roupas, Eletrônicos, Academia, Beleza, Pet, Assinaturas, Serviços, Seguros, Poupança, Investimentos, Reserva de Emergência, Previdência, Presentes, Impostos, Outros
 
 === REGRAS PARA ACOES ===
 1. Se mencionar cartao (nubank, inter, c6, itau, roxinho, laranjinha): paymentMethod: "credit" + cardName
@@ -3096,11 +3096,16 @@ async function executeFinanceAction(interpretation, userId) {
         switch (action) {
             // ========== TRANSACOES ==========
             case 'add_transaction': {
+                const parsedValue = parseFloat(data.value);
+                if (isNaN(parsedValue) || parsedValue <= 0) {
+                    return { success: false, message: 'Nao consegui identificar o valor. Tente algo como "gastei 50 no mercado".' };
+                }
+
                 const transaction = {
                     userId: userId,
                     type: data.type || 'expense',
                     description: data.description || 'Sem descricao',
-                    value: parseFloat(data.value) || 0,
+                    value: parsedValue,
                     category: data.category || 'Outros',
                     paymentMethod: data.paymentMethod || 'debit',
                     date: data.date || new Date().toISOString().split('T')[0],
@@ -3115,6 +3120,7 @@ async function executeFinanceAction(interpretation, userId) {
                     const card = await findCardByName(userId, data.cardName);
                     if (card) {
                         transaction.cardId = card.id;
+                        transaction.cardName = card.name;
                     } else {
                         // Cartao nao encontrado - dar feedback ao usuario
                         const userCards = await getUserCards(userId);
@@ -3175,11 +3181,17 @@ async function executeFinanceAction(interpretation, userId) {
                     startYear--;
                 }
 
+                const parsedTotalValue = parseFloat(data.totalValue);
+                if (isNaN(parsedTotalValue) || parsedTotalValue <= 0) {
+                    return { success: false, message: 'Nao consegui identificar o valor total do parcelamento.' };
+                }
+
                 const installment = {
                     userId: userId,
                     cardId: card.id,
+                    cardName: card.name,
                     description: data.description || 'Parcelamento',
-                    totalValue: parseFloat(data.totalValue) || 0,
+                    totalValue: parsedTotalValue,
                     totalInstallments: parseInt(data.totalInstallments) || 12,
                     currentInstallment: currentInstallment,
                     startMonth: startMonth,
@@ -3242,14 +3254,20 @@ async function executeFinanceAction(interpretation, userId) {
 
             // ========== PROJECOES ==========
             case 'add_projection': {
+                const parsedProjValue = parseFloat(data.value);
+                if (isNaN(parsedProjValue) || parsedProjValue <= 0) {
+                    return { success: false, message: 'Nao consegui identificar o valor da projecao.' };
+                }
+
                 const projection = {
                     userId: userId,
                     type: data.type || 'income',
                     description: data.description || 'Projecao',
-                    value: parseFloat(data.value) || 0,
+                    value: parsedProjValue,
                     date: data.date || new Date().toISOString().split('T')[0],
                     status: data.status || 'pending',
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'whatsapp_bot'
                 };
 
@@ -3265,12 +3283,18 @@ async function executeFinanceAction(interpretation, userId) {
 
             // ========== INVESTIMENTOS ==========
             case 'add_investment': {
+                const parsedInvValue = parseFloat(data.value);
+                if (isNaN(parsedInvValue) || parsedInvValue <= 0) {
+                    return { success: false, message: 'Nao consegui identificar o valor do investimento.' };
+                }
+
                 const investment = {
                     userId: userId,
                     name: data.name || 'Investimento',
-                    value: parseFloat(data.value) || 0,
+                    value: parsedInvValue,
                     date: data.date || new Date().toISOString().split('T')[0],
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'whatsapp_bot'
                 };
 
@@ -3290,9 +3314,10 @@ async function executeFinanceAction(interpretation, userId) {
                     name: data.name || 'Cartao',
                     institution: data.institution || data.name || 'Banco',
                     limit: parseFloat(data.limit) || 1000,
-                    closingDay: parseInt(data.closingDay) || 1,
-                    dueDay: parseInt(data.dueDay) || 10,
+                    closingDay: Math.min(31, Math.max(1, parseInt(data.closingDay) || 1)),
+                    dueDay: Math.min(31, Math.max(1, parseInt(data.dueDay) || 10)),
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'whatsapp_bot'
                 };
 
@@ -3309,6 +3334,10 @@ async function executeFinanceAction(interpretation, userId) {
             case 'get_balance': {
                 const { startOfMonth, endOfMonth, monthName } = getMonthBounds();
 
+                // Carregar cutoffDate do userSettings (SINCRONIZADO COM: finance-data.js)
+                const settingsDoc = await db.collection('userSettings').doc(userId).get();
+                const cutoffDate = settingsDoc.exists ? (settingsDoc.data().cutoffDate || null) : null;
+
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
                     .get();
@@ -3316,13 +3345,16 @@ async function executeFinanceAction(interpretation, userId) {
                 let income = 0;
                 let expense = 0;
 
+                // SINCRONIZADO COM: finance-data.js -> updateKPIs()
+                // Transacoes de credito NAO afetam o saldo (sao pagas pela fatura)
                 transactionsSnapshot.docs.forEach(doc => {
                     const t = doc.data();
                     const tDate = t.date || '';
-                    if (tDate >= startOfMonth && tDate <= endOfMonth) {
+                    if (cutoffDate && tDate < cutoffDate) return;
+                    if (tDate >= startOfMonth && tDate <= endOfMonth && t.paymentMethod !== 'credit') {
                         if (t.type === 'income') {
                             income += t.value || 0;
-                        } else {
+                        } else if (t.type === 'expense') {
                             expense += t.value || 0;
                         }
                     }
@@ -3340,6 +3372,10 @@ async function executeFinanceAction(interpretation, userId) {
             case 'get_summary': {
                 const { startOfMonth, endOfMonth, monthName } = getMonthBounds();
 
+                // Carregar cutoffDate do userSettings (SINCRONIZADO COM: finance-data.js)
+                const summarySettingsDoc = await db.collection('userSettings').doc(userId).get();
+                const summaryCutoffDate = summarySettingsDoc.exists ? (summarySettingsDoc.data().cutoffDate || null) : null;
+
                 // Buscar transacoes do mes
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
@@ -3349,13 +3385,16 @@ async function executeFinanceAction(interpretation, userId) {
                 let expense = 0;
                 const categoryTotals = {};
 
+                // SINCRONIZADO COM: finance-data.js -> updateKPIs()
+                // Transacoes de credito NAO afetam o saldo (sao pagas pela fatura)
                 transactionsSnapshot.docs.forEach(doc => {
                     const t = doc.data();
                     const tDate = t.date || '';
-                    if (tDate >= startOfMonth && tDate <= endOfMonth) {
+                    if (summaryCutoffDate && tDate < summaryCutoffDate) return;
+                    if (tDate >= startOfMonth && tDate <= endOfMonth && t.paymentMethod !== 'credit') {
                         if (t.type === 'income') {
                             income += t.value || 0;
-                        } else {
+                        } else if (t.type === 'expense') {
                             expense += t.value || 0;
                             const cat = t.category || 'Outros';
                             categoryTotals[cat] = (categoryTotals[cat] || 0) + (t.value || 0);
@@ -3441,25 +3480,54 @@ async function executeFinanceAction(interpretation, userId) {
                     };
                 }
 
-                const { startOfMonth, endOfMonth, monthName } = getMonthBounds();
+                const { monthName } = getMonthBounds();
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
 
-                // Buscar transacoes de credito do mes
+                // Buscar transacoes de credito
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
                     .where('paymentMethod', '==', 'credit')
                     .get();
 
-                // Agrupar por cartao
+                // SINCRONIZADO COM: finance-data.js -> getBillPeriod()
+                // Agrupar por cartao usando closingDay para definir periodo da fatura
                 const billsByCard = {};
                 cardsSnapshot.docs.forEach(doc => {
-                    billsByCard[doc.id] = { name: doc.data().name, total: 0 };
+                    const cardData = doc.data();
+                    const closingDay = cardData.closingDay || 1;
+
+                    // Calcular periodo da fatura baseado no closingDay (igual ao painel)
+                    let periodStart, periodEnd;
+                    if (today.getDate() < closingDay) {
+                        // Ainda no periodo atual: closingDay+1 do mes anterior ate closingDay do mes atual
+                        let prevMonth = currentMonth - 1;
+                        let prevYear = currentYear;
+                        if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+                        periodStart = new Date(prevYear, prevMonth, closingDay + 1).toISOString().split('T')[0];
+                        periodEnd = new Date(currentYear, currentMonth, closingDay).toISOString().split('T')[0];
+                    } else {
+                        // Ja passou do fechamento: closingDay+1 do mes atual ate closingDay do proximo mes
+                        let nextMonth = currentMonth + 1;
+                        let nextYear = currentYear;
+                        if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+                        periodStart = new Date(currentYear, currentMonth, closingDay + 1).toISOString().split('T')[0];
+                        periodEnd = new Date(nextYear, nextMonth, closingDay).toISOString().split('T')[0];
+                    }
+
+                    billsByCard[doc.id] = { name: cardData.name, total: 0, periodStart, periodEnd };
                 });
 
+                // Filtrar transacoes pelo periodo especifico de cada cartao
                 transactionsSnapshot.docs.forEach(doc => {
                     const t = doc.data();
                     const tDate = t.date || '';
-                    if (tDate >= startOfMonth && tDate <= endOfMonth && t.cardId && billsByCard[t.cardId]) {
-                        billsByCard[t.cardId].total += t.value || 0;
+                    if (t.cardId && billsByCard[t.cardId]) {
+                        const card = billsByCard[t.cardId];
+                        if (tDate >= card.periodStart && tDate <= card.periodEnd) {
+                            card.total += t.value || 0;
+                        }
                     }
                 });
 
@@ -3493,28 +3561,44 @@ async function executeFinanceAction(interpretation, userId) {
 
             // ========== DELECAO ==========
             case 'delete_transaction': {
-                // Buscar transacoes recentes do usuario criadas pelo bot (indice: userId + source + createdAt)
-                const transactionsSnapshot = await db.collection('transactions')
+                // Buscar transacoes recentes do usuario criadas pelo bot
+                const recentForDelete = await db.collection('transactions')
                     .where('userId', '==', userId)
                     .where('source', '==', 'whatsapp_bot')
                     .orderBy('createdAt', 'desc')
-                    .limit(1)
+                    .limit(50)
                     .get();
 
-                if (transactionsSnapshot.empty) {
+                if (recentForDelete.empty) {
                     return {
                         success: false,
                         message: 'Nenhuma transacao do bot encontrada para remover.'
                     };
                 }
 
-                const targetDoc = transactionsSnapshot.docs[0];
+                // Buscar por descricao se disponivel, senao usar a mais recente
+                const searchTerm = (data.searchDescription || data.description || '').toLowerCase();
+                let targetDoc = null;
+
+                if (searchTerm) {
+                    targetDoc = recentForDelete.docs.find(doc => {
+                        const desc = (doc.data().description || '').toLowerCase();
+                        const cat = (doc.data().category || '').toLowerCase();
+                        return desc.includes(searchTerm) || cat.includes(searchTerm);
+                    });
+                }
+
+                // Fallback para mais recente se nao encontrou por descricao
+                if (!targetDoc) {
+                    targetDoc = recentForDelete.docs[0];
+                }
+
                 const t = targetDoc.data();
                 await db.collection('transactions').doc(targetDoc.id).delete();
 
                 return {
                     success: true,
-                    message: `Transacao removida:\n- ${t.description}: R$${t.value}`
+                    message: `Transacao removida:\n- ${t.description}: R$${(t.value || 0).toFixed(2)}`
                 };
             }
 
@@ -3539,19 +3623,35 @@ async function executeFinanceAction(interpretation, userId) {
                 }
 
                 // Encontrar transacao pelo termo de busca
+                // Prioridade: 1) match exato na descricao, 2) substring, 3) categoria, 4) mais recente
                 let targetDoc = null;
                 const searchTerm = (data.searchDescription || '').toLowerCase();
 
                 if (searchTerm) {
+                    // 1. Match exato na descricao (mais confiavel)
                     targetDoc = botTransactions.find(doc => {
-                        const t = doc.data();
-                        const desc = (t.description || '').toLowerCase();
-                        const cat = (t.category || '').toLowerCase();
-                        return desc.includes(searchTerm) || cat.includes(searchTerm);
+                        const desc = (doc.data().description || '').toLowerCase();
+                        return desc === searchTerm;
                     });
+
+                    // 2. Substring na descricao
+                    if (!targetDoc) {
+                        targetDoc = botTransactions.find(doc => {
+                            const desc = (doc.data().description || '').toLowerCase();
+                            return desc.includes(searchTerm) || searchTerm.includes(desc);
+                        });
+                    }
+
+                    // 3. Match na categoria
+                    if (!targetDoc) {
+                        targetDoc = botTransactions.find(doc => {
+                            const cat = (doc.data().category || '').toLowerCase();
+                            return cat.includes(searchTerm);
+                        });
+                    }
                 }
 
-                // Se nao encontrar por busca, usa a mais recente do bot
+                // 4. Fallback para mais recente do bot
                 if (!targetDoc) {
                     targetDoc = botTransactions[0];
                 }
@@ -3564,8 +3664,12 @@ async function executeFinanceAction(interpretation, userId) {
 
                 // Aplicar alteracoes solicitadas
                 if (data.newValue !== undefined && data.newValue !== null) {
-                    updates.value = data.newValue;
-                    changes.push(`valor: R$${originalTransaction.value} -> R$${data.newValue}`);
+                    const parsedNewValue = parseFloat(data.newValue);
+                    if (isNaN(parsedNewValue) || parsedNewValue <= 0) {
+                        return { success: false, message: 'Valor invalido para atualizacao. Informe um numero positivo.' };
+                    }
+                    updates.value = parsedNewValue;
+                    changes.push(`valor: R$${(originalTransaction.value || 0).toFixed(2)} -> R$${parsedNewValue.toFixed(2)}`);
                 }
 
                 if (data.newDescription) {
@@ -4095,6 +4199,13 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
             }
 
             const targetUserId = isCompany ? COMPANY_USER_ID : (whatsappUser?.userId || COMPANY_USER_ID);
+
+            // Fail-secure: se nao ha userId valido, recusar
+            if (!targetUserId) {
+                console.error('[whatsappWebhook] Nenhum userId disponivel - COMPANY_USER_ID nao configurado e usuario nao cadastrado');
+                await sendWhatsAppReply(from, 'Conta nao configurada. Peca para um administrador configurar o sistema.');
+                return res.status(200).send('OK');
+            }
 
             console.log('[whatsappWebhook] Contexto:', isCompany ? 'EMPRESA' : 'PESSOAL', '| Mencao:', mentionType || 'nenhuma', '| UserId:', targetUserId);
 
