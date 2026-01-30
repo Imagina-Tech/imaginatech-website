@@ -181,7 +181,24 @@ function updateMaterialDropdown() {
 }
 
 function updateColorOptions(material, estimatedWeight = 0) {
-    // Construir lista de cores disponiveis
+    const colorGroup = document.getElementById('colorOptionGroup');
+    const isResina = material?.toLowerCase() === 'resina';
+
+    // Resina nao tem opcao de cor - esconder secao inteira
+    if (isResina) {
+        if (colorGroup) colorGroup.style.display = 'none';
+        state.colorOptions = [];
+        state.selectedColor = '';
+        state.selectedColorImage = null;
+        const colorSelect = document.getElementById('colorSelect');
+        if (colorSelect) colorSelect.innerHTML = '<option value="">N/A</option>';
+        return;
+    }
+
+    // Filamento: mostrar secao de cor
+    if (colorGroup) colorGroup.style.display = '';
+
+    // Construir lista de cores disponiveis para o material selecionado
     let colorList = [];
 
     if (state.availableStock && state.availableStock[material]) {

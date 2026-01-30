@@ -25,6 +25,10 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Fix: Auto-Orcamento - Dropdown de cor duplicado e visibilidade por material
+- `/auto-orcamento/index.html` - Removida classe `form-select` do select#colorSelect para impedir CustomSelect de gerar dropdown duplicado. Adicionado id="colorOptionGroup" no container da cor para controle de visibilidade.
+- `/auto-orcamento/app.js` - updateColorOptions() agora esconde a secao de cor (#colorOptionGroup) quando material e Resina. Cor so aparece para materiais de filamento (PLA, ABS, PETG, TPU). Cores exibidas correspondem ao filamento selecionado.
+
 ### 2026-01-29 - Fix: Auto-Orcamento - Fotos de filamento, navbar, resina, responsividade
 
 **Arquivos Modificados:**

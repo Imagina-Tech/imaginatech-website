@@ -196,15 +196,15 @@
                             </select>
                         </div>
 
-                        <div class="option-group">
+                        <div class="option-group" id="colorOptionGroup">
                             <label>Cor</label>
                             <button type="button" class="color-trigger" id="colorTrigger" data-action="open-color-modal">
                                 <span class="color-swatch" id="selectedColorSwatch"></span>
                                 <span class="color-name" id="selectedColorName">Selecione...</span>
                                 <i class="fas fa-chevron-right"></i>
                             </button>
-                            <!-- Select hidden para manter compatibilidade -->
-                            <select id="colorSelect" class="form-select" hidden>
+                            <!-- Select interno (sem form-select para nao gerar CustomSelect duplicado) -->
+                            <select id="colorSelect" hidden>
                                 <option value="">Selecione material</option>
                             </select>
                         </div>
