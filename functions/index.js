@@ -3197,6 +3197,7 @@ async function executeFinanceAction(interpretation, userId) {
                     startMonth: startMonth,
                     startYear: startYear,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'whatsapp_bot'
                 };
 
@@ -3213,14 +3214,16 @@ async function executeFinanceAction(interpretation, userId) {
             // ========== ASSINATURAS ==========
             case 'add_subscription': {
                 let cardId = null;
-                let cardName = '';
+                let cardNameClean = '';
+                let cardNameDisplay = '';
 
                 let cardWarning = '';
                 if (data.cardName) {
                     const card = await findCardByName(userId, data.cardName);
                     if (card) {
                         cardId = card.id;
-                        cardName = ` no ${card.name}`;
+                        cardNameClean = card.name;
+                        cardNameDisplay = ` no ${card.name}`;
                     } else {
                         // Cartao nao encontrado mas assinatura pode ser criada sem
                         const userCards = await getUserCards(userId);
@@ -3231,15 +3234,22 @@ async function executeFinanceAction(interpretation, userId) {
                     }
                 }
 
+                const parsedSubValue = parseFloat(data.value);
+                if (isNaN(parsedSubValue) || parsedSubValue <= 0) {
+                    return { success: false, message: 'Valor da assinatura invalido. Informe um valor positivo.' };
+                }
+
                 const subscription = {
                     userId: userId,
                     name: data.name || 'Assinatura',
-                    value: parseFloat(data.value) || 0,
-                    dueDay: parseInt(data.dueDay) || 1,
+                    value: parsedSubValue,
+                    dueDay: Math.min(31, Math.max(1, parseInt(data.dueDay) || 1)),
                     category: data.category || 'Assinaturas',
                     status: 'active',
                     cardId: cardId,
+                    cardName: cardNameClean,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'whatsapp_bot'
                 };
 
@@ -3247,7 +3257,7 @@ async function executeFinanceAction(interpretation, userId) {
 
                 return {
                     success: true,
-                    message: `Assinatura cadastrada:\n- ${data.name}: R$${data.value}/mes\n- Vencimento: dia ${data.dueDay}${cardName}${cardWarning}`,
+                    message: `Assinatura cadastrada:\n- ${data.name}: R$${parsedSubValue.toFixed(2)}/mes\n- Vencimento: dia ${subscription.dueDay}${cardNameDisplay}${cardWarning}`,
                     subscriptionId: docRef.id
                 };
             }
@@ -3342,30 +3352,36 @@ async function executeFinanceAction(interpretation, userId) {
                     .where('userId', '==', userId)
                     .get();
 
-                let income = 0;
-                let expense = 0;
+                let incomeAllTime = 0;
+                let expenseAllTime = 0;
+                let incomeMonth = 0;
+                let expenseMonth = 0;
 
-                // SINCRONIZADO COM: finance-data.js -> updateKPIs()
+                // SINCRONIZADO COM: finance-data.js -> updateKPIs() linhas 2453-2487
+                // Saldo = ALL-TIME (totalIncomeAllTime - totalDebitAllTime)
                 // Transacoes de credito NAO afetam o saldo (sao pagas pela fatura)
                 transactionsSnapshot.docs.forEach(doc => {
                     const t = doc.data();
                     const tDate = t.date || '';
                     if (cutoffDate && tDate < cutoffDate) return;
-                    if (tDate >= startOfMonth && tDate <= endOfMonth && t.paymentMethod !== 'credit') {
-                        if (t.type === 'income') {
-                            income += t.value || 0;
-                        } else if (t.type === 'expense') {
-                            expense += t.value || 0;
-                        }
+                    if (t.paymentMethod === 'credit') return;
+
+                    if (t.type === 'income') {
+                        incomeAllTime += t.value || 0;
+                        if (tDate >= startOfMonth && tDate <= endOfMonth) incomeMonth += t.value || 0;
+                    } else if (t.type === 'expense') {
+                        expenseAllTime += t.value || 0;
+                        if (tDate >= startOfMonth && tDate <= endOfMonth) expenseMonth += t.value || 0;
                     }
                 });
 
-                const balance = income - expense;
+                const balanceAllTime = incomeAllTime - expenseAllTime;
+                const balanceMonth = incomeMonth - expenseMonth;
 
                 return {
                     success: true,
-                    message: `Saldo de ${monthName}:\n\nEntradas: R$${income.toFixed(2)}\nSaidas: R$${expense.toFixed(2)}\n\nSaldo: R$${balance.toFixed(2)}`,
-                    data: { income, expense, balance }
+                    message: `Saldo geral: R$${balanceAllTime.toFixed(2)}\n\n${monthName}:\n  Entradas: R$${incomeMonth.toFixed(2)}\n  Saidas: R$${expenseMonth.toFixed(2)}\n  Balanco: R$${balanceMonth.toFixed(2)}`,
+                    data: { incomeAllTime, expenseAllTime, balanceAllTime, incomeMonth, expenseMonth, balanceMonth }
                 };
             }
 
@@ -3767,6 +3783,7 @@ async function executeFinanceAction(interpretation, userId) {
                         cardId: null,
                         projectionId: targetDoc.id,
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                         source: 'whatsapp_bot'
                     };
                     await db.collection('transactions').add(transaction);

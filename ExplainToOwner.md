@@ -25,6 +25,15 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-29 - Fix: Revisao Bot WhatsApp - 4 bugs adicionais corrigidos
+
+**Arquivo Modificado:** `/functions/index.js`
+
+- **get_balance agora mostra saldo ALL-TIME** (igual ao KPI do painel): antes mostrava saldo apenas do mes, agora calcula `incomeAllTime - expenseAllTime` com cutoffDate. Mensagem exibe saldo geral + detalhes do mes.
+- **add_subscription** corrigido: adicionada validacao NaN no valor, campo `updatedAt`, campo `cardName`, validacao `dueDay` (1-31).
+- **add_installment**: adicionado campo `updatedAt` faltante.
+- **update_projection_status**: transacao automatica criada ao marcar projecao como recebida agora inclui `updatedAt`.
+
 ### 2026-01-29 - Fix: Auditoria Bot WhatsApp - 10 bugs corrigidos na integracao com painel de Financas
 
 **Arquivo Modificado:** `/functions/index.js`
