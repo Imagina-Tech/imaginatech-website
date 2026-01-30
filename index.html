@@ -833,6 +833,30 @@
                 display: none;
             }
 
+            /* Menu mobile: esconder botoes desktop, mostrar hamburger */
+            .nav-buttons-desktop {
+                display: none;
+            }
+
+            .btn-mobile-menu {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                color: #fff;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            /* Dropdown posicionado logo abaixo da navbar compacta */
+            .mobile-nav-dropdown {
+                top: 65px;
+            }
+
             .hero {
                 padding-top: 100px; /* Navbar compacta = menos padding */
             }
@@ -4193,18 +4217,18 @@
 
     <!-- Floating Action Buttons -->
     <div class="fab-container">
-        <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" 
-           target="_blank" 
-           rel="noopener noreferrer" 
-           class="fab fab-whatsapp"
+        <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="fab-btn fab-whatsapp"
            id="fab-whatsapp">
             <i class="fab fa-whatsapp"></i>
             <span class="fab-tooltip">WhatsApp</span>
         </a>
-        <a href="https://www.instagram.com/imaginatech3d/" 
-           target="_blank" 
-           rel="noopener noreferrer" 
-           class="fab fab-instagram">
+        <a href="https://www.instagram.com/imaginatech3d/"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="fab-btn fab-instagram">
             <i class="fab fa-instagram"></i>
             <span class="fab-tooltip">Instagram</span>
         </a>
