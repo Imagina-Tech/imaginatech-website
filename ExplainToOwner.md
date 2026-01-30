@@ -25,6 +25,27 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-30 - Feature: Memoria de Conversa do Bot WhatsApp
+
+**Arquivo Modificado:** `/functions/index.js`
+
+**Problema:** O bot processava cada mensagem em total isolamento. Quando Claytinho perguntava "qual cartao?" e o usuario respondia "nubank", o Gemini nao tinha contexto da pergunta anterior.
+
+**Solucao implementada:**
+
+1. **`getConversationHistory(phoneNumber, limit)`** - Nova funcao que busca as ultimas N mensagens processadas do numero nos ultimos 30 minutos, retornando historico no formato `[{role, text}]`.
+
+2. **Salvamento de `text` e `botResponse` em `whatsappMessages`** - O documento agora salva o texto da mensagem do usuario (`text: cleanText`) e a resposta do bot (`botResponse`) para todos os caminhos de resposta (conversa, acao JSON, baixa confianca).
+
+3. **Parametro `conversationHistory` em `interpretFinanceCommand()`** - 5o parametro adicionado, buscado em paralelo com cards e overview via `Promise.all`.
+
+4. **Secao de historico no prompt Gemini** - Adicionadas secoes `HISTORICO DA CONVERSA` e `INSTRUCOES DE CONTINUIDADE` com exemplos de follow-up para que o Gemini interprete respostas curtas no contexto da conversa.
+
+**Locais modificados:**
+- Nova funcao `getConversationHistory()` (apos `registerWhatsAppUser`)
+- `interpretFinanceCommand()` - novo parametro + secoes no prompt
+- Webhook handler - `Promise.all` expandido, salvamento de `text` e `botResponse` em 3 caminhos de resposta
+
 ### 2026-01-29 - Fix: Revisao Bot WhatsApp - 4 bugs adicionais corrigidos
 
 **Arquivo Modificado:** `/functions/index.js`

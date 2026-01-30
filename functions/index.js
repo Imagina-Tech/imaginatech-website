@@ -1834,6 +1834,44 @@ async function registerWhatsAppUser(whatsappNumber, userId, userName) {
 }
 
 /**
+ * Buscar historico recente de conversa do WhatsApp para contexto do Gemini
+ * @param {string} phoneNumber - Numero do remetente
+ * @param {number} limit - Quantidade maxima de mensagens
+ * @returns {Array<{role: string, text: string}>} Historico ordenado do mais antigo ao mais recente
+ */
+async function getConversationHistory(phoneNumber, limit = 5) {
+    try {
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+        const snapshot = await db.collection('whatsappMessages')
+            .where('from', '==', phoneNumber)
+            .where('processed', '==', true)
+            .where('receivedAt', '>=', thirtyMinutesAgo)
+            .orderBy('receivedAt', 'desc')
+            .limit(limit)
+            .get();
+
+        if (snapshot.empty) return [];
+
+        const history = [];
+        snapshot.docs.reverse().forEach(doc => {
+            const data = doc.data();
+            if (data.text) {
+                history.push({ role: 'user', text: data.text });
+            }
+            if (data.botResponse) {
+                history.push({ role: 'assistant', text: data.botResponse });
+            }
+        });
+
+        return history;
+    } catch (error) {
+        console.error('[getConversationHistory] Erro:', error.message);
+        return [];
+    }
+}
+
+/**
  * Parsear contexto da mensagem (grupo vs individual, mencoes, empresa vs pessoal)
  *
  * REGRAS:
@@ -2819,8 +2857,9 @@ FIM DA OVERVIEW
  * @param {Array} userCards - Lista de cartoes do usuario para contexto
  * @param {string} financialOverview - Overview financeira em texto
  * @param {string} userName - Nome do usuario
+ * @param {Array} conversationHistory - Historico recente da conversa [{role, text}]
  */
-async function interpretFinanceCommand(text, userCards = [], financialOverview = '', userName = '') {
+async function interpretFinanceCommand(text, userCards = [], financialOverview = '', userName = '', conversationHistory = []) {
     if (!GEMINI_API_KEY) {
         throw new Error('GEMINI_API_KEY nao configurada');
     }
@@ -2876,6 +2915,20 @@ Resposta: "Olha ${userName || 'Usuario'}, [analise baseada na overview financeir
 
 Usuario: "vou conseguir fechar o mes?"
 Resposta: "Deixa eu ver... [analise baseada nas projecoes da overview acima]"
+
+=== EXEMPLOS DE CONTINUIDADE (FOLLOW-UP) ===
+
+[Historico: Claytinho perguntou "Em qual cartao voce quer registrar?"]
+Usuario: "nubank"
+Resposta: JSON com cardName "nubank" retomando a acao do contexto anterior
+
+[Historico: Claytinho perguntou "Confirma o gasto de R$50 no mercado?"]
+Usuario: "sim"
+Resposta: JSON confirmando a acao pendente do historico
+
+[Historico: Claytinho perguntou "Foi no debito ou credito?"]
+Usuario: "credito"
+Resposta: JSON com paymentMethod "credit" completando a acao anterior
 
 === QUANDO RETORNAR JSON ===
 
@@ -2956,6 +3009,22 @@ SAIDA: Alimentação, Supermercado, Restaurantes, iFood/Delivery, Mercado, Trans
 
 DATA ATUAL: ${todayStr}
 MES ATUAL: ${monthName}/${currentYear}
+
+=== HISTORICO DA CONVERSA (ULTIMAS MENSAGENS) ===
+${conversationHistory.length > 0 ? conversationHistory.map(m =>
+    m.role === 'user' ? `Usuario: "${m.text}"` : `Claytinho: "${m.text}"`
+).join('\n') : 'Sem historico recente - primeira mensagem da conversa.'}
+
+=== INSTRUCOES DE CONTINUIDADE ===
+Se o historico mostra que VOCE (Claytinho) fez uma pergunta ao usuario,
+a mensagem atual provavelmente e a RESPOSTA a essa pergunta.
+Exemplos de follow-up:
+- Se voce perguntou "qual cartao?" e o usuario responde "nubank" -> entenda como resposta e use o cartao
+- Se voce perguntou "debito ou credito?" e o usuario responde "credito" -> use como contexto da acao anterior
+- Se voce perguntou "confirma?" e o usuario responde "sim" -> confirme a acao pendente
+- Se voce pediu informacao faltante e o usuario responde com apenas um dado -> complete a acao anterior
+Interprete respostas curtas ("sim", "nao", "nubank", "credito", nome de cartao) NO CONTEXTO da conversa anterior.
+Se NAO houver historico, trate a mensagem como uma nova conversa independente.
 
 === MENSAGEM DO USUARIO ===
 "${text}"
@@ -4228,6 +4297,7 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
 
             // Atualizar documento da mensagem com dados completos
             await msgDocRef.update({
+                text: cleanText,
                 textLength: rawText.length,
                 isCompany: isCompany,
                 isGroup: isGroup,
@@ -4255,27 +4325,42 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
                 return res.status(200).send('OK');
             }
 
-            // Buscar cartoes e overview financeira em paralelo
-            [userCards, financialOverview] = await Promise.all([
+            // Buscar cartoes, overview financeira e historico de conversa em paralelo
+            let conversationHistory = [];
+            [userCards, financialOverview, conversationHistory] = await Promise.all([
                 getUserCards(targetUserId),
-                buildFinancialOverview(targetUserId, userName)
+                buildFinancialOverview(targetUserId, userName),
+                getConversationHistory(from, 5)
             ]);
 
-            console.log('[whatsappWebhook] Usuario:', userName, '| Overview length:', financialOverview.length, '| Cartoes:', userCards.map(c => c.name));
+            console.log('[whatsappWebhook] Usuario:', userName, '| Overview length:', financialOverview.length, '| Cartoes:', userCards.map(c => c.name), '| Historico:', conversationHistory.length, 'msgs');
 
-            // Interpretar com contexto completo (overview + cartoes + nome)
-            const interpretation = await interpretFinanceCommand(cleanText, userCards, financialOverview, userName);
+            // Interpretar com contexto completo (overview + cartoes + nome + historico)
+            const interpretation = await interpretFinanceCommand(cleanText, userCards, financialOverview, userName, conversationHistory);
 
             // Se for texto puro (conversa), enviar direto
             if (typeof interpretation === 'string') {
                 const contextLabel = isCompany ? '[EMPRESA] ' : '';
-                await sendWhatsAppReply(from, contextLabel + interpretation);
+                const botReply = contextLabel + interpretation;
+                await sendWhatsAppReply(from, botReply);
+                await msgDocRef.update({
+                    processed: true,
+                    processing: false,
+                    botResponse: botReply.substring(0, 1000),
+                    processedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
                 return res.status(200).send('OK');
             }
 
             // Verificar confianca (para acoes JSON)
             if (interpretation.confidence < 0.5) {
                 await sendWhatsAppReply(from, interpretation.message);
+                await msgDocRef.update({
+                    processed: true,
+                    processing: false,
+                    botResponse: (interpretation.message || '').substring(0, 1000),
+                    processedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
                 return res.status(200).send('OK');
             }
 
@@ -4286,7 +4371,8 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
             const contextLabel = isCompany ? '[EMPRESA] ' : '';
 
             // Resposta humanizada (gerada pelo Gemini no campo message)
-            await sendWhatsAppReply(from, contextLabel + (result.success ? interpretation.message : result.message));
+            const botReply = contextLabel + (result.success ? interpretation.message : result.message);
+            await sendWhatsAppReply(from, botReply);
 
             // Atualizar registro como processado
             await msgDocRef.update({
@@ -4294,6 +4380,7 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
                 processing: false,
                 interpretation: interpretation,
                 result: result,
+                botResponse: botReply.substring(0, 1000),
                 processedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
