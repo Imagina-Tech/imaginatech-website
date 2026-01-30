@@ -25,6 +25,32 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-30 - Fix: Responsividade Mobile do Painel Principal (Homepage)
+
+**Arquivos Modificados:** `/index.html`, `/script.js`
+
+**Problemas corrigidos:**
+
+1. **Navbar sem menu hamburger no mobile** - Adicionados imports de `/shared/navbar-mobile.css` e `/shared/navbar-mobile.js`. Reestruturado HTML da navbar: botoes envolvidos em `.nav-buttons-desktop`, adicionado botao `.btn-mobile-menu` e dropdown `.mobile-nav-dropdown` com todos os links de navegacao. Adicionado case `toggle-mobile-menu` no handler de data-action do `script.js`.
+
+2. **Hero nao empilhava verticalmente** - `flex-direction: column` estava no `@media 600px`, movido para `@media 768px`. Agora texto e cubo 3D empilham corretamente em tablets/mobile com centralizacao de texto.
+
+3. **CSS inline conflitava com /shared/navbar.css** - Corrigido `flex-wrap: wrap` para `nowrap` em `.navbar-container`. Removidos `!important` desnecessarios das propriedades base da `.navbar` (background, backdrop-filter, border, border-radius). Removidos overrides de `.btn-nav` nos breakpoints 768px/480px que conflitavam com o sistema shared.
+
+4. **Media queries duplicadas consolidadas** - `.cube-video-container` tinha 3 declaracoes no breakpoint 768px e 3 no 480px. Consolidado para 1 de cada (blocos "25" do CSS). Removido bloco "12" duplicado.
+
+5. **Touch targets corrigidos** - `.social-link` no footer estava com 36px (768px) e 32px (480px), abaixo do minimo Apple HIG de 44px. Corrigido para 44px em ambos breakpoints.
+
+6. **Reducao de !important** - Removidos ~15 usos desnecessarios de `!important` em blocos de tipografia, navbar e performance mobile. Prioridade por source order (inline `<style>` carrega apos shared).
+
+**Locais modificados:**
+- `index.html` (head): Import de `/shared/navbar-mobile.css` (apos navbar.css)
+- `index.html` (head, bloco `<style>`): CSS inline da navbar, hero, media queries
+- `index.html` (body, navbar): HTML reestruturado com `.nav-buttons-desktop` e `.btn-mobile-menu`
+- `index.html` (body, apos header): Novo bloco `.mobile-nav-dropdown`
+- `index.html` (antes de script.js): Import de `/shared/navbar-mobile.js`
+- `script.js` (linha ~65): Novo case `toggle-mobile-menu` no switch/case
+
 ### 2026-01-30 - Feature: get_bills com filtro por cartao e lancamentos detalhados
 
 **Arquivo Modificado:** `/functions/index.js`

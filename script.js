@@ -63,6 +63,9 @@ document.addEventListener('click', (e) => {
                 window.location.href = '/projetos/?projeto=' + encodeURIComponent(projectId);
             }
             break;
+        case 'toggle-mobile-menu':
+            if (typeof toggleMobileMenu === 'function') toggleMobileMenu();
+            break;
     }
 });
 

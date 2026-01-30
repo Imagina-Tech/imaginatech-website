@@ -270,7 +270,8 @@
     <!-- CSS Compartilhado - /shared -->
     <link rel="stylesheet" href="/shared/loading.css">
     <link rel="stylesheet" href="/shared/navbar.css">
-    
+    <link rel="stylesheet" href="/shared/navbar-mobile.css">
+
     <!-- SISTEMA DEFINITIVO COM GLASSMORPHISM REFINADO -->
     <style>
         /* ╔══════════════════════════════════════════════════════════════════════════╗ */
@@ -529,21 +530,7 @@
             }
         }
 
-        /* Responsivo - Tablet e Mobile */
-        @media (max-width: 768px) {
-            .cube-video-container {
-                width: 310px;
-                height: 310px;
-            }
-        }
-
-        /* Responsivo - Mobile pequeno */
-        @media (max-width: 480px) {
-            .cube-video-container {
-                width: 250px;
-                height: 250px;
-            }
-        }
+        /* Responsivo do cube-video-container - consolidado no bloco 25 (final do CSS) */
         
         /* ========== NAVBAR FLOATING PILL ========== */
         .navbar {
@@ -554,12 +541,12 @@
             width: 90%;
             max-width: 1200px;
             padding: 20px 40px;
-            background: rgba(10, 14, 26, 0.6) !important;
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
-            border: 1px solid var(--glass-stroke) !important;
-            border-radius: 50px !important;
-            border-bottom: none !important;
+            background: rgba(10, 14, 26, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-stroke);
+            border-radius: 50px;
+            border-bottom: none;
             z-index: 1000;
             box-sizing: border-box;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
@@ -573,7 +560,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .navbar-left {
@@ -829,28 +816,12 @@
 
         /* ========== RESPONSIVIDADE MOBILE - NAVBAR COMPACTA ========== */
         @media (max-width: 768px) {
-            /* Navbar compacta em uma linha */
+            /* Navbar compacta - somente overrides especificos da homepage */
             .navbar {
                 top: 10px;
                 padding: 10px 15px;
-                width: 95%;
-                border-radius: 30px !important;
-            }
-
-            .navbar-container {
-                flex-direction: row;
-                flex-wrap: nowrap;
-                gap: 10px;
-            }
-
-            .navbar-left {
-                flex-shrink: 0;
-            }
-
-            .navbar-right {
-                flex: 1;
-                justify-content: flex-end;
-                gap: 6px;
+                width: calc(100% - 20px);
+                border-radius: 25px;
             }
 
             .logo {
@@ -859,33 +830,43 @@
             }
 
             .logo-subtitle {
-                display: none; /* Esconde subtitulo em mobile */
-            }
-
-            /* Botoes iconizados - esconde texto */
-            .btn-nav {
-                padding: 8px 10px;
-                border-radius: 10px;
-                min-width: 40px;
-                justify-content: center;
-            }
-
-            .btn-nav span {
-                display: none; /* Esconde texto, mostra so icone */
-            }
-
-            .btn-nav i {
-                font-size: 1rem;
-                margin: 0;
-            }
-
-            /* Botao orcamento - esconde texto em mobile (herda resto de btn-nav) */
-            .btn-orcamento span {
                 display: none;
             }
 
             .hero {
                 padding-top: 100px; /* Navbar compacta = menos padding */
+            }
+
+            /* Hero responsivo - empilha verticalmente e centraliza */
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+                padding: 0 15px;
+            }
+
+            .hero-text {
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .hero-visual {
+                max-width: 100%;
+            }
+
+            .glitch-text {
+                text-align: center;
+            }
+
+            .hero-subtitle {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .badge {
+                margin-left: auto;
+                margin-right: auto;
             }
 
             .cube-container {
@@ -958,15 +939,6 @@
 
             .logo {
                 font-size: 1rem;
-            }
-
-            .btn-nav {
-                padding: 7px 9px;
-                min-width: 36px;
-            }
-
-            .btn-nav i {
-                font-size: 0.9rem;
             }
 
             .hero {
@@ -1774,38 +1746,6 @@
             .clients-track {
                 gap: 40px;
             }
-
-            /* Hero responsivo - alinhamento central perfeito */
-            .hero-content {
-                flex-direction: column;
-                text-align: center;
-                align-items: center !important;
-                padding: 0 15px;
-            }
-
-            .hero-text {
-                max-width: 100%;
-                text-align: center;
-            }
-
-            .hero-visual {
-                max-width: 100%;
-            }
-
-            .glitch-text {
-                text-align: center !important;
-            }
-
-            .hero-subtitle {
-                text-align: center;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .badge {
-                margin-left: auto;
-                margin-right: auto;
-            }
         }
 
         /* ========== BOTÃO WHATSAPP COM VIDRO ========== */
@@ -2354,8 +2294,8 @@
 
             /* Reduzir blur do backdrop-filter - GRANDE ganho de performance */
             .navbar {
-                backdrop-filter: blur(10px) !important;
-                -webkit-backdrop-filter: blur(10px) !important;
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
             }
 
             .service-card,
@@ -2633,8 +2573,8 @@
             }
 
             .hero-subtitle {
-                font-size: 1.05rem !important;
-                line-height: 1.6 !important;
+                font-size: 1.05rem;
+                line-height: 1.6;
             }
 
             .service-description,
@@ -2645,7 +2585,7 @@
             }
 
             .section-title {
-                font-size: 1.8rem !important;
+                font-size: 1.8rem;
                 line-height: 1.3;
             }
 
@@ -2729,38 +2669,7 @@
             }
         }
 
-        /* ========== 12. OTIMIZACAO DO VIDEO HERO ========== */
-        @media (max-width: 768px) {
-            .cube-video-container {
-                width: 280px !important;
-                height: 280px !important;
-                margin: 15px auto !important;
-            }
-
-            .cube-reflection {
-                width: 200px;
-                height: 25px;
-                margin-top: -20px;
-            }
-
-            .hero-visual {
-                margin-top: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .cube-video-container {
-                width: 240px !important;
-                height: 240px !important;
-                margin: 10px auto !important;
-            }
-
-            .cube-reflection {
-                width: 160px;
-                height: 20px;
-                margin-top: -15px;
-            }
-        }
+        /* Bloco 12 removido - consolidado nos blocos 23 e 25 */
 
         /* ========== 13. STATS RESPONSIVOS ========== */
         @media (max-width: 768px) {
@@ -2969,22 +2878,21 @@
         /* ========== 16. HERO CONTENT MOBILE COMPACTO ========== */
         @media (max-width: 768px) {
             .hero {
-                min-height: auto !important;
+                min-height: auto;
                 padding-bottom: 40px;
             }
 
             .hero-content {
-                gap: 20px !important;
-                padding: 0 15px;
+                gap: 20px;
             }
 
             .glitch-text {
-                font-size: 2.2rem !important;
+                font-size: 2.2rem;
                 margin-bottom: 10px;
             }
 
             .hero-subtitle {
-                margin-bottom: 20px !important;
+                margin-bottom: 20px;
             }
         }
 
@@ -2994,7 +2902,7 @@
             }
 
             .hero-content {
-                gap: 15px !important;
+                gap: 15px;
             }
 
             .glitch-text {
@@ -3329,9 +3237,9 @@
             }
 
             .social-link {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 0.9rem !important;
+                width: 44px;
+                height: 44px;
+                font-size: 0.9rem;
             }
         }
 
@@ -3345,9 +3253,9 @@
             }
 
             .social-link {
-                width: 32px !important;
-                height: 32px !important;
-                font-size: 0.8rem !important;
+                width: 44px;
+                height: 44px;
+                font-size: 0.85rem;
             }
         }
 
@@ -3627,25 +3535,51 @@
                 </div>
             </div>
             <div class="navbar-right">
-                <a href="#services" class="btn-nav" title="Serviços">
-                    <i class="fas fa-cube"></i>
-                    <span>Servicos</span>
-                </a>
-                <a href="#portfolio" class="btn-nav" title="Projetos">
-                    <i class="fas fa-images"></i>
-                    <span>Projetos Anteriores</span>
-                </a>
-                <a href="/acompanhar-pedido" class="btn-nav" title="Acompanhar Pedido">
-                    <i class="fas fa-search"></i>
-                    <span>Acompanhar Pedido</span>
-                </a>
-                <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-nav btn-orcamento" title="Solicitar Orçamento">
-                    <i class="fab fa-whatsapp"></i>
-                    <span>Orcamento</span>
-                </a>
+                <div class="nav-buttons-desktop">
+                    <a href="#services" class="btn-nav" title="Serviços">
+                        <i class="fas fa-cube"></i>
+                        <span>Servicos</span>
+                    </a>
+                    <a href="#portfolio" class="btn-nav" title="Projetos">
+                        <i class="fas fa-images"></i>
+                        <span>Projetos Anteriores</span>
+                    </a>
+                    <a href="/acompanhar-pedido" class="btn-nav" title="Acompanhar Pedido">
+                        <i class="fas fa-search"></i>
+                        <span>Acompanhar Pedido</span>
+                    </a>
+                    <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-nav btn-orcamento" title="Solicitar Orçamento">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Orcamento</span>
+                    </a>
+                </div>
+                <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu" aria-label="Menu de navegacao">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
             </div>
         </div>
     </header>
+
+    <!-- Menu dropdown mobile -->
+    <div class="mobile-nav-dropdown" id="mobileNavDropdown">
+        <a href="#services" class="mobile-nav-item">
+            <i class="fas fa-cube"></i>
+            <span>Servicos</span>
+        </a>
+        <a href="#portfolio" class="mobile-nav-item">
+            <i class="fas fa-images"></i>
+            <span>Projetos Anteriores</span>
+        </a>
+        <a href="/acompanhar-pedido" class="mobile-nav-item">
+            <i class="fas fa-search"></i>
+            <span>Acompanhar Pedido</span>
+        </a>
+        <div class="mobile-nav-divider"></div>
+        <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="mobile-nav-item">
+            <i class="fab fa-whatsapp"></i>
+            <span>Solicitar Orcamento</span>
+        </a>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -4368,6 +4302,7 @@
     <script src="/js/env-config.js"></script>
 
     <!-- External JavaScript -->
+    <script src="/shared/navbar-mobile.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
