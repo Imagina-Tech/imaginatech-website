@@ -3033,11 +3033,15 @@ a mensagem atual e a RESPOSTA a essa pergunta. Voce DEVE:
 3. Retornar JSON com a acao completa OU responder com os dados solicitados
 
 REGRA CRITICA: Quando o usuario responde a uma pergunta sua, NUNCA responda apenas
-"Entendi que voce quer X" sem executar. SEMPRE execute a acao ou forneca os dados pedidos.
+"Entendi que voce quer X" sem executar. SEMPRE retorne JSON com a acao apropriada.
+
+REGRA SOBRE CONSULTAS: Para pedidos de fatura, saldo, resumo, cartoes - SEMPRE retorne JSON
+com a acao correspondente (get_bills, get_balance, get_summary, get_cards).
+NUNCA tente gerar os dados da fatura voce mesmo no texto - o sistema tem os dados reais e vai busca-los.
 
 Exemplos de follow-up:
 - Voce perguntou "qual cartao?" para registrar gasto -> usuario responde "nubank" -> retorne JSON add_transaction com cardName "nubank"
-- Voce perguntou "qual cartao?" para ver fatura -> usuario responde "roxo" -> responda com os DETALHES DA FATURA do cartao Roxo usando os dados da overview financeira
+- Voce perguntou "qual cartao?" para ver fatura -> usuario responde "roxo" -> retorne JSON get_bills com cardName "roxo" (NAO gere os dados voce mesmo!)
 - Voce perguntou "debito ou credito?" -> usuario responde "credito" -> retorne JSON completando a acao com paymentMethod "credit"
 - Voce perguntou "confirma?" -> usuario responde "sim" -> retorne JSON confirmando a acao pendente
 
@@ -4074,9 +4078,9 @@ async function sendWhatsAppReply(to, message) {
     // Converter formatacao Markdown para WhatsApp
     const formattedMessage = convertMarkdownToWhatsApp(message);
 
-    // WhatsApp limita mensagens a 4096 caracteres
+    // WhatsApp limita mensagens a 4096 caracteres (limite absoluto da API Meta)
     // Se exceder, dividir em partes quebrando por linha
-    const MAX_LENGTH = 4000; // margem de seguranca
+    const MAX_LENGTH = 4090; // proximo do maximo (4096)
     const parts = [];
     if (formattedMessage.length <= MAX_LENGTH) {
         parts.push(formattedMessage);
