@@ -33,7 +33,7 @@ body {
 .main-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 120px var(--spacing-lg) var(--spacing-2xl);
+    padding: 140px var(--spacing-lg) var(--spacing-2xl);
     position: relative;
     z-index: var(--z-base);
 }
