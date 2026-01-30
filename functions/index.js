@@ -2970,8 +2970,12 @@ Se o usuario quer REGISTRAR algo (gasto, entrada, parcelamento, etc), retorne JS
 7. get_summary / get_balance - Resumo financeiro
    data: {}
 
-8. get_cards / get_bills - Listar cartoes/faturas
+8. get_cards - Listar cartoes
    data: {}
+
+8b. get_bills - Ver faturas dos cartoes
+   data: { cardName: "nome do cartao" (opcional - se o usuario pediu um cartao especifico, ex: "roxo", "b1") }
+   Se o usuario pediu detalhes de um cartao especifico, SEMPRE inclua cardName. Se pediu faturas em geral, deixe sem cardName.
 
 9. delete_transaction - Deletar transacao
    data: { description }
@@ -3568,6 +3572,8 @@ async function executeFinanceAction(interpretation, userId) {
             }
 
             case 'get_bills': {
+                const requestedCardName = (data.cardName || '').trim().toLowerCase();
+
                 const cardsSnapshot = await db.collection('creditCards')
                     .where('userId', '==', userId)
                     .get();
@@ -3600,14 +3606,12 @@ async function executeFinanceAction(interpretation, userId) {
                     // Calcular periodo da fatura baseado no closingDay (igual ao painel)
                     let periodStart, periodEnd;
                     if (today.getDate() < closingDay) {
-                        // Ainda no periodo atual: closingDay+1 do mes anterior ate closingDay do mes atual
                         let prevMonth = currentMonth - 1;
                         let prevYear = currentYear;
                         if (prevMonth < 0) { prevMonth = 11; prevYear--; }
                         periodStart = new Date(prevYear, prevMonth, closingDay + 1).toISOString().split('T')[0];
                         periodEnd = new Date(currentYear, currentMonth, closingDay).toISOString().split('T')[0];
                     } else {
-                        // Ja passou do fechamento: closingDay+1 do mes atual ate closingDay do proximo mes
                         let nextMonth = currentMonth + 1;
                         let nextYear = currentYear;
                         if (nextMonth > 11) { nextMonth = 0; nextYear++; }
@@ -3615,7 +3619,17 @@ async function executeFinanceAction(interpretation, userId) {
                         periodEnd = new Date(nextYear, nextMonth, closingDay).toISOString().split('T')[0];
                     }
 
-                    billsByCard[doc.id] = { name: cardData.name, total: 0, periodStart, periodEnd };
+                    billsByCard[doc.id] = {
+                        name: cardData.name,
+                        limit: cardData.limit || 0,
+                        closingDay,
+                        dueDay: cardData.dueDay || 0,
+                        total: 0,
+                        periodStart,
+                        periodEnd,
+                        transactions: [],
+                        installments: []
+                    };
                 });
 
                 // Filtrar transacoes pelo periodo especifico de cada cartao
@@ -3626,6 +3640,12 @@ async function executeFinanceAction(interpretation, userId) {
                         const card = billsByCard[t.cardId];
                         if (tDate >= card.periodStart && tDate <= card.periodEnd) {
                             card.total += t.value || 0;
+                            card.transactions.push({
+                                description: t.description || 'Sem descricao',
+                                value: t.value || 0,
+                                date: tDate,
+                                category: t.category || ''
+                            });
                         }
                     }
                 });
@@ -3637,12 +3657,99 @@ async function executeFinanceAction(interpretation, userId) {
 
                 installmentsSnapshot.docs.forEach(doc => {
                     const inst = doc.data();
-                    const { isActive } = calculateCurrentInstallment(inst.startYear, inst.startMonth, inst.totalInstallments);
+                    const { isActive, currentInstallment } = calculateCurrentInstallment(inst.startYear, inst.startMonth, inst.totalInstallments);
                     if (isActive && inst.cardId && billsByCard[inst.cardId]) {
-                        billsByCard[inst.cardId].total += (inst.totalValue / inst.totalInstallments);
+                        const parcelValue = inst.totalValue / inst.totalInstallments;
+                        billsByCard[inst.cardId].total += parcelValue;
+                        billsByCard[inst.cardId].installments.push({
+                            description: inst.description || 'Sem descricao',
+                            value: parcelValue,
+                            current: currentInstallment,
+                            totalInstallments: inst.totalInstallments
+                        });
                     }
                 });
 
+                // Buscar assinaturas vinculadas a cartoes
+                const subscriptionsSnapshot = await db.collection('subscriptions')
+                    .where('userId', '==', userId)
+                    .get();
+
+                const subsByCard = {};
+                subscriptionsSnapshot.docs.forEach(doc => {
+                    const sub = doc.data();
+                    if (sub.cardId && billsByCard[sub.cardId]) {
+                        if (!subsByCard[sub.cardId]) subsByCard[sub.cardId] = [];
+                        subsByCard[sub.cardId].push({
+                            name: sub.name || 'Sem nome',
+                            value: sub.value || 0
+                        });
+                        billsByCard[sub.cardId].total += sub.value || 0;
+                    }
+                });
+
+                // Se pediu cartao especifico, filtrar
+                if (requestedCardName) {
+                    const matchedId = Object.keys(billsByCard).find(id =>
+                        billsByCard[id].name.toLowerCase() === requestedCardName ||
+                        billsByCard[id].name.toLowerCase().includes(requestedCardName)
+                    );
+
+                    if (!matchedId) {
+                        return {
+                            success: true,
+                            message: `Cartao "${data.cardName}" nao encontrado. Cartoes disponiveis: ${Object.values(billsByCard).map(b => b.name).join(', ')}`
+                        };
+                    }
+
+                    const card = billsByCard[matchedId];
+                    const subs = subsByCard[matchedId] || [];
+
+                    // Formatar detalhes do cartao especifico
+                    let msg = `*Fatura ${card.name}* - ${monthName}\n`;
+                    msg += `Periodo: ${card.periodStart.split('-').reverse().join('/')} a ${card.periodEnd.split('-').reverse().join('/')}\n\n`;
+
+                    // Transacoes
+                    if (card.transactions.length > 0) {
+                        msg += `*Lancamentos:*\n`;
+                        card.transactions
+                            .sort((a, b) => a.date.localeCompare(b.date))
+                            .forEach(t => {
+                                const dateFormatted = t.date.split('-').reverse().join('/');
+                                msg += `  ${dateFormatted} - ${t.description}: R$${t.value.toFixed(2)}${t.category ? ' (' + t.category + ')' : ''}\n`;
+                            });
+                    }
+
+                    // Parcelas
+                    if (card.installments.length > 0) {
+                        msg += `\n*Parcelas:*\n`;
+                        card.installments.forEach(i => {
+                            msg += `  ${i.description}: R$${i.value.toFixed(2)} (${i.current}/${i.totalInstallments})\n`;
+                        });
+                    }
+
+                    // Assinaturas
+                    if (subs.length > 0) {
+                        msg += `\n*Assinaturas:*\n`;
+                        subs.forEach(s => {
+                            msg += `  ${s.name}: R$${s.value.toFixed(2)}\n`;
+                        });
+                    }
+
+                    if (card.transactions.length === 0 && card.installments.length === 0 && subs.length === 0) {
+                        msg += `Nenhum lancamento neste periodo.\n`;
+                    }
+
+                    msg += `\n*Total: R$${card.total.toFixed(2)}*`;
+                    if (card.limit > 0) {
+                        const available = card.limit - card.total;
+                        msg += `\nLimite: R$${card.limit.toFixed(2)} | Disponivel: R$${available.toFixed(2)}`;
+                    }
+
+                    return { success: true, message: msg };
+                }
+
+                // Sem filtro: resumo geral de todos os cartoes
                 const billsList = Object.values(billsByCard)
                     .filter(b => b.total > 0)
                     .map(b => `- ${b.name}: R$${b.total.toFixed(2)}`)
