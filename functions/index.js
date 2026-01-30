@@ -4074,25 +4074,48 @@ async function sendWhatsAppReply(to, message) {
     // Converter formatacao Markdown para WhatsApp
     const formattedMessage = convertMarkdownToWhatsApp(message);
 
-    try {
-        const response = await axios.post(
-            `${WA_CONFIG.apiUrl}/${WA_CONFIG.apiVersion}/${WA_CONFIG.phoneNumberId}/messages`,
-            {
-                messaging_product: 'whatsapp',
-                recipient_type: 'individual',
-                to: to,
-                type: 'text',
-                text: { body: formattedMessage }
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${WA_CONFIG.accessToken}`,
-                    'Content-Type': 'application/json'
-                }
+    // WhatsApp limita mensagens a 4096 caracteres
+    // Se exceder, dividir em partes quebrando por linha
+    const MAX_LENGTH = 4000; // margem de seguranca
+    const parts = [];
+    if (formattedMessage.length <= MAX_LENGTH) {
+        parts.push(formattedMessage);
+    } else {
+        let remaining = formattedMessage;
+        while (remaining.length > 0) {
+            if (remaining.length <= MAX_LENGTH) {
+                parts.push(remaining);
+                break;
             }
-        );
+            // Encontrar ultima quebra de linha antes do limite
+            let cutIndex = remaining.lastIndexOf('\n', MAX_LENGTH);
+            if (cutIndex <= 0) cutIndex = MAX_LENGTH; // fallback: cortar no limite
+            parts.push(remaining.substring(0, cutIndex));
+            remaining = remaining.substring(cutIndex).replace(/^\n/, ''); // remover \n inicial da proxima parte
+        }
+    }
 
-        console.log('[sendWhatsAppReply] Mensagem enviada para', to);
+    try {
+        for (const part of parts) {
+            await axios.post(
+                `${WA_CONFIG.apiUrl}/${WA_CONFIG.apiVersion}/${WA_CONFIG.phoneNumberId}/messages`,
+                {
+                    messaging_product: 'whatsapp',
+                    recipient_type: 'individual',
+                    to: to,
+                    type: 'text',
+                    text: { body: part }
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${WA_CONFIG.accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+        }
+
+        console.log('[sendWhatsAppReply] Mensagem enviada para', to, parts.length > 1 ? `(${parts.length} partes)` : '');
         return true;
 
     } catch (error) {
