@@ -4384,8 +4384,12 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
             // Adicionar indicador de contexto na resposta
             const contextLabel = isCompany ? '[EMPRESA] ' : '';
 
-            // Resposta humanizada (gerada pelo Gemini no campo message)
-            const botReply = contextLabel + (result.success ? interpretation.message : result.message);
+            // Para acoes de consulta (get_*), usar result.message que contem os dados reais
+            // Para acoes de escrita (add_*, edit_*, delete_*, update_*), usar interpretation.message (confirmacao humanizada do Gemini)
+            const isQueryAction = ['get_summary', 'get_balance', 'get_cards', 'get_bills', 'help'].includes(interpretation.action);
+            const botReply = contextLabel + (result.success
+                ? (isQueryAction ? result.message : interpretation.message)
+                : result.message);
             await sendWhatsAppReply(from, botReply);
 
             // Atualizar registro como processado
