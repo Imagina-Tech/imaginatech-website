@@ -25,6 +25,16 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-01-30 - Feature: get_bills com filtro por cartao e lancamentos detalhados
+
+**Arquivo Modificado:** `/functions/index.js`
+
+- **`get_bills` agora aceita `cardName`** no campo `data` do JSON. Quando especificado, filtra por cartao e mostra lancamentos detalhados: transacoes individuais (data, descricao, valor, categoria), parcelas ativas (X/Y), assinaturas vinculadas, total e limite disponivel.
+- Sem `cardName`, mantem comportamento anterior (resumo geral).
+- Prompt Gemini atualizado (acao 8b) para enviar `cardName` quando o usuario pedir cartao especifico.
+- **Fix**: Acoes de consulta (`get_bills`, `get_summary`, `get_balance`, `get_cards`) agora usam `result.message` (dados reais) em vez de `interpretation.message` (frase generica do Gemini).
+- **Fix**: Instrucoes de continuidade no prompt reescritas para exigir EXECUCAO da acao, nao apenas reconhecimento do contexto.
+
 ### 2026-01-30 - Feature: Memoria de Conversa do Bot WhatsApp
 
 **Arquivo Modificado:** `/functions/index.js`
