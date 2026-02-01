@@ -558,3 +558,23 @@ if (el) el.value = 'texto';
 - [ ] `getElementById` com null safety?
 - [ ] Z-index usando variaveis CSS?
 - [ ] `ExplainToOwner.md` atualizado?
+
+---
+
+## REGRA CRITICA: Ao remover globals (window.X), verificar TODOS os consumidores
+
+**Erro cometido em 2026-02-01:** Ao remover `window.IT.*` e `window.*` globals de `auth-ui.js` (limpeza de codigo legado), NAO foram verificados outros arquivos que chamavam essas funcoes via `window.X()`. O `services.js` tinha 15 chamadas como `window.closeModal()`, `window.closeStatusModal()`, `window.showBypassPasswordModal()` que quebraram silenciosamente em runtime.
+
+**REGRA OBRIGATORIA - Antes de remover QUALQUER variavel/funcao global:**
+
+1. **Buscar em TODOS os arquivos JS do painel** por referencias ao nome sendo removido
+2. **Usar grep/search** para `window.nomeFuncao` em todo o diretorio, nao apenas no arquivo sendo editado
+3. **Se encontrar consumidores:** Adicionar imports diretos ANTES de remover o global
+4. **Testar mentalmente o fluxo completo:** Se removo `window.X`, quem chama `window.X()`? Onde?
+
+**Comando de verificacao obrigatorio:**
+```
+grep -r "window\.nomeFuncao" servicos/js/ --include="*.js"
+```
+
+**Aplica-se a:** Remocao de `window.*`, `window.IT.*`, `registerGlobals()`, ou qualquer export global. A regra vale para QUALQUER refatoracao que mude a forma como funcoes sao acessadas entre modulos.
