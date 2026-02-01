@@ -25,6 +25,18 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-01 - Fix: Formulario de servico nao enviava (validacao nativa + aria-hidden)
+
+**Arquivos Modificados:** `servicos/index.html`, `servicos/js/event-handlers.js`
+
+**Problemas:**
+1. O `<select id="deliveryMethod" required>` e escondido pelo CustomSelect (`display: none`). A validacao nativa do browser tentava focar o campo hidden e bloqueava o submit com "An invalid form control is not focusable".
+2. Modais tinham `aria-hidden="true"` permanente no HTML. Quando o modal abria (classe `.active`), o `aria-hidden` nao era atualizado. O browser alertava "Blocked aria-hidden on element because descendant retained focus".
+
+**Correcoes:**
+1. `servicos/index.html`: Adicionado `novalidate` ao `<form id="serviceForm">` - a validacao ja e feita manualmente no `saveService()`.
+2. `servicos/js/event-handlers.js` (initEventDelegation): MutationObserver que sincroniza `aria-hidden` com a classe `.active` em todos os modais (estaticos e dinamicos).
+
 ### 2026-02-01 - Auditoria: Coerencia do sistema de delegacao de eventos no painel de Servicos
 
 **Arquivos Modificados:** `servicos/js/event-handlers.js`, `servicos/index.html`, `servicos/styles.css`, `servicos/js/auth-ui.js`, `servicos/js/main.js`, `servicos/js/tasks.js`

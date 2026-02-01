@@ -565,6 +565,36 @@ export function initEventDelegation() {
         serviceForm.addEventListener('submit', saveService);
     }
 
+    // Sincronizar aria-hidden com classe .active em todos os modais
+    // Resolve: "Blocked aria-hidden on element because descendant retained focus"
+    const modalObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const modal = mutation.target;
+                if (modal.classList.contains('modal')) {
+                    const isActive = modal.classList.contains('active');
+                    modal.setAttribute('aria-hidden', String(!isActive));
+                }
+            }
+        }
+    });
+
+    document.querySelectorAll('.modal[role="dialog"]').forEach(modal => {
+        modalObserver.observe(modal, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // Observar modais criados dinamicamente (tasks, etc.)
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1 && node.matches?.('.modal[role="dialog"]')) {
+                    modalObserver.observe(node, { attributes: true, attributeFilter: ['class'] });
+                }
+            }
+        }
+    });
+    bodyObserver.observe(document.body, { childList: true });
+
     logger.log('Sistema de delegacao de eventos inicializado');
 }
 
