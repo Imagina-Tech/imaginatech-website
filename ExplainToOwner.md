@@ -25,6 +25,22 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-01 - Auditoria: Coerencia do sistema de delegacao de eventos no painel de Servicos
+
+**Arquivos Modificados:** `servicos/js/event-handlers.js`, `servicos/index.html`, `servicos/styles.css`, `servicos/js/auth-ui.js`, `servicos/js/main.js`, `servicos/js/tasks.js`
+
+**5 problemas corrigidos:**
+
+1. **getElementById('orderCode') com ID errado** - `event-handlers.js:103` buscava `orderCode` mas o HTML define `orderCodeInput`. Botao de regenerar codigo de pedido falhava silenciosamente.
+
+2. **onsubmit inline no formulario** - `index.html:297` usava `onsubmit="saveService(event)"` (violacao de seguranca XSS). Substituido por `addEventListener('submit')` no `initEventDelegation()` de event-handlers.js. Import de `saveService` adicionado de services.js.
+
+3. **z-index numerico em todo styles.css** - 16 ocorrencias de z-index numerico (1, 2, 5, 10, -1) substituidas por variaveis CSS (`--z-raised`, `--z-behind`, `--z-dropdown`) conforme padrao definido em `/shared/z-index.css`.
+
+4. **Namespace legado window.IT e aliases globais** - Removidas ~130 linhas de `window.IT.*` e `window.*` em auth-ui.js (linhas 2500-2640). Todas essas funcoes ja sao tratadas via event delegation em event-handlers.js. Removido `registerGlobals({saveService})` e imports relacionados em main.js.
+
+5. **tasks.js usava window.* para funcoes locais** - 11 funcoes (`filterByAdmin`, `toggleTaskComplete`, `closeTaskDetailsModal`, `addComment`, `openTransferModal`, `closeTransferModal`, `confirmTransfer`, `markAsNotFeasible`, `openAttachmentsModal`, `closeAttachModal`, `uploadAttachment`) convertidas de `window.X = function` para function declarations locais. Removidos `typeof X === 'function'` desnecessarios no sistema de delegacao interno.
+
 ### 2026-02-01 - Fix: Autocomplete de clientes no painel de Servicos
 
 **Arquivos Modificados:** `servicos/index.html`, `servicos/js/event-handlers.js`

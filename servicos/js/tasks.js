@@ -324,20 +324,20 @@ function setupEventListeners() {
         const handlers = {
             'toggle-task-complete': () => {
                 const completed = el.dataset.completed === 'true';
-                if (typeof toggleTaskComplete === 'function') toggleTaskComplete(id, completed);
+                toggleTaskComplete(id, completed);
             },
-            'close-task-details': () => typeof closeTaskDetailsModal === 'function' && closeTaskDetailsModal(),
-            'add-comment': () => typeof addComment === 'function' && addComment(id),
-            'open-transfer-modal': () => typeof openTransferModal === 'function' && openTransferModal(id),
-            'open-attachments-modal': () => typeof openAttachmentsModal === 'function' && openAttachmentsModal(id),
-            'mark-not-feasible': () => typeof markAsNotFeasible === 'function' && markAsNotFeasible(id),
-            'close-transfer-modal': () => typeof closeTransferModal === 'function' && closeTransferModal(),
-            'confirm-transfer': () => typeof confirmTransfer === 'function' && confirmTransfer(id),
-            'close-attach-modal': () => typeof closeAttachModal === 'function' && closeAttachModal(),
-            'upload-attachment': () => typeof uploadAttachment === 'function' && uploadAttachment(id),
+            'close-task-details': () => closeTaskDetailsModal(),
+            'add-comment': () => addComment(id),
+            'open-transfer-modal': () => openTransferModal(id),
+            'open-attachments-modal': () => openAttachmentsModal(id),
+            'mark-not-feasible': () => markAsNotFeasible(id),
+            'close-transfer-modal': () => closeTransferModal(),
+            'confirm-transfer': () => confirmTransfer(id),
+            'close-attach-modal': () => closeAttachModal(),
+            'upload-attachment': () => uploadAttachment(id),
             'filter-by-admin': () => {
                 const email = el.dataset.email;
-                if (typeof filterByAdmin === 'function') filterByAdmin(email, e);
+                filterByAdmin(email, e);
             }
         };
         if (handlers[action]) handlers[action]();
@@ -504,8 +504,7 @@ function getAdminPhotoURL(email) {
     return photoURL;
 }
 
-// Função global para filtrar por admin (chamada pelo onclick)
-window.filterByAdmin = function(viewMode, event) {
+function filterByAdmin(viewMode, event) {
     // Prevenir que o click feche o dropdown
     if (event) {
         event.stopPropagation();
@@ -632,7 +631,7 @@ function attachTaskEventListeners() {
 // AÇÕES DE TAREFA
 // ===========================
 
-window.toggleTaskComplete = async function(taskId, completed) {
+async function toggleTaskComplete(taskId, completed) {
     try {
         await state.db.collection('tasks').doc(taskId).update({
             status: completed ? 'concluida' : 'pendente',
@@ -851,7 +850,7 @@ function setupDetailsModalListeners(task) {
     document.addEventListener('keydown', escHandler);
 }
 
-window.closeTaskDetailsModal = function() {
+function closeTaskDetailsModal() {
     const modal = document.getElementById('taskDetailsModal');
     if (modal) {
         // Parar listener de comentários
@@ -924,7 +923,7 @@ function renderComments(comments) {
     container.scrollTop = container.scrollHeight;
 }
 
-window.addComment = async function(taskId) {
+async function addComment(taskId) {
     const input = document.getElementById('commentInput');
     if (!input) return;
 
@@ -968,7 +967,7 @@ window.addComment = async function(taskId) {
 // TRANSFERIR TAREFA
 // ===========================
 
-window.openTransferModal = function(taskId) {
+function openTransferModal(taskId) {
     const task = tasksState.tasks.find(t => t.id === taskId);
     if (!task) return;
 
@@ -1020,11 +1019,11 @@ window.openTransferModal = function(taskId) {
     document.body.appendChild(transferModal);
 };
 
-window.closeTransferModal = function() {
+function closeTransferModal() {
     document.getElementById('transferModal')?.remove();
 };
 
-window.confirmTransfer = async function(taskId) {
+async function confirmTransfer(taskId) {
     const checkboxes = document.querySelectorAll('#transferAssigneesList .assignee-checkbox:checked');
     const newAssignedTo = Array.from(checkboxes).map(cb => cb.value);
 
@@ -1065,7 +1064,7 @@ window.confirmTransfer = async function(taskId) {
 // NÃO FACTÍVEL
 // ===========================
 
-window.markAsNotFeasible = async function(taskId) {
+async function markAsNotFeasible(taskId) {
     if (!confirm('Tem certeza que deseja marcar esta tarefa como Não Factível?')) {
         return;
     }
@@ -1090,7 +1089,7 @@ window.markAsNotFeasible = async function(taskId) {
 // ANEXOS
 // ===========================
 
-window.openAttachmentsModal = function(taskId) {
+function openAttachmentsModal(taskId) {
     const attachModal = document.createElement('div');
     attachModal.className = 'task-modal-overlay active';
     attachModal.id = 'attachModal';
@@ -1163,11 +1162,11 @@ window.openAttachmentsModal = function(taskId) {
     });
 };
 
-window.closeAttachModal = function() {
+function closeAttachModal() {
     document.getElementById('attachModal')?.remove();
 };
 
-window.uploadAttachment = async function(taskId) {
+async function uploadAttachment(taskId) {
     const input = document.getElementById('attachmentInput');
     const file = input?.files[0];
 

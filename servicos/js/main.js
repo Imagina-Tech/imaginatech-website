@@ -8,7 +8,6 @@ VERSAO: 3.4 - Event Delegation
 */
 
 import { initializeFirebase, onDOMReady, setupErrorHandlers, state, loadAuthorizedAdmins, logger } from './config.js';
-import { saveService } from './services.js';
 import {
     signInWithGoogle,
     checkAuthorization,
@@ -23,7 +22,6 @@ import {
     setupUpModalDragDrop
 } from './auth-ui.js';
 import { initTasksSystem } from './tasks.js';
-import { registerGlobals } from './helpers.js';
 import { initEventDelegation } from './event-handlers.js';
 
 // ===========================
@@ -107,12 +105,6 @@ onDOMReady(() => {
 
 // ===========================
 // EXPÕE FUNÇÕES GLOBAIS
-// ===========================
-// Usar namespace organizado
-registerGlobals({
-    saveService
-});
-
 // Namespace principal disponivel globalmente
 window.ImaginaTech = window.ImaginaTech || {};
 window.ImaginaTech.state = state;

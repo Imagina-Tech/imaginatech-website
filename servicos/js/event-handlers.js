@@ -95,12 +95,14 @@ import {
     handleExtraPhotoSelect,
     // Multi-color handlers
     handleColorEntryChange,
-    handleWeightEntryChange
+    handleWeightEntryChange,
+    // Form submit
+    saveService
 } from './services.js';
 
 // regenerateOrderCode usa generateOrderCode internamente
 const regenerateOrderCode = () => {
-    const orderCodeInput = document.getElementById('orderCode');
+    const orderCodeInput = document.getElementById('orderCodeInput');
     if (orderCodeInput) {
         orderCodeInput.value = generateOrderCode();
     }
@@ -556,6 +558,12 @@ export function initEventDelegation() {
 
     // Tecla Escape
     document.addEventListener('keydown', handleEscapeKey);
+
+    // Submit do formulario de servico (substitui onsubmit inline)
+    const serviceForm = document.getElementById('serviceForm');
+    if (serviceForm) {
+        serviceForm.addEventListener('submit', saveService);
+    }
 
     logger.log('Sistema de delegacao de eventos inicializado');
 }
