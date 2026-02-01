@@ -52,6 +52,7 @@ import {
     removeInstagramPhoto,
     removePackagedPhoto,
     // Client actions (SEGURANCA: migrado de onclick inline)
+    handleClientNameInput,
     selectClient,
     copyToClipboard,
     toggleClientDetails,
@@ -336,6 +337,8 @@ const actionHandlers = {
 const inputHandlers = {
     'formatCPFCNPJ': formatCPFCNPJ,
     'formatEmailInput': formatEmailInput,
+    // Client autocomplete
+    'handleClientNameInput': handleClientNameInput,
     // Multi-color weight input
     'handleWeightEntryChange': (event, element) => {
         const index = parseInt(element.dataset.index, 10);

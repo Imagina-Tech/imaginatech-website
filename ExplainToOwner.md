@@ -25,6 +25,23 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-01 - Fix: Autocomplete de clientes no painel de Servicos
+
+**Arquivos Modificados:** `servicos/index.html`, `servicos/js/event-handlers.js`
+
+**Problema:** Ao digitar o nome de um cliente que ja fez pedido, o dropdown de sugestoes (autocomplete) nao aparecia. A funcao `handleClientNameInput` nunca era chamada.
+
+**Causa raiz:** Incompatibilidade entre o atributo HTML e o sistema de delegacao de eventos:
+- O input usava `data-action="handleClientNameInput"` + `data-event="input"`
+- Porem, o handler de eventos `input` procura pelo atributo `data-input` (nao `data-action`)
+- `data-action` so e processado pelo handler de `click`
+- Alem disso, `handleClientNameInput` nao estava importada nem registrada em `inputHandlers`
+
+**Correcoes:**
+1. `servicos/index.html` (L322): Atributo alterado de `data-action="handleClientNameInput" data-event="input"` para `data-input="handleClientNameInput"`
+2. `servicos/js/event-handlers.js` (L55): Adicionado import de `handleClientNameInput` de `auth-ui.js`
+3. `servicos/js/event-handlers.js` (L340): Registrado `handleClientNameInput` no objeto `inputHandlers`
+
 ### 2026-01-30 - Fix: Responsividade Mobile do Painel Principal (Homepage)
 
 **Arquivos Modificados:** `/index.html`, `/script.js`
