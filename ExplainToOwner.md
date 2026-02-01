@@ -25,6 +25,14 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-01 - Fix: services.js chamava window.X() removidos na auditoria anterior
+
+**Arquivos Modificados:** `servicos/js/services.js`
+
+**Problema:** A auditoria anterior removeu globals como `window.closeModal`, `window.closeStatusModal`, `window.showBypassPasswordModal` de auth-ui.js, mas services.js ainda os chamava via `window.X()`. Resultado: erro "Erro ao salvar" ao editar servicos.
+
+**Correcao:** Adicionados 8 imports diretos de auth-ui.js e substituidas 15 chamadas `window.X()` por chamadas diretas. Removidos 5 `window.*` globals redundantes de funcoes multi-cor.
+
 ### 2026-02-01 - Fix: Formulario de servico nao enviava (validacao nativa + aria-hidden)
 
 **Arquivos Modificados:** `servicos/index.html`, `servicos/js/event-handlers.js`

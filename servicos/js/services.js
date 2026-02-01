@@ -27,7 +27,15 @@ import {
     calculateDaysRemaining,
     sendWhatsAppMessage,
     sendEmailNotification,
-    saveClientToFirestore
+    saveClientToFirestore,
+    closeModal,
+    closeStatusModal,
+    closeImageModal,
+    toggleDeliveryFields,
+    showTrackingCodeModal,
+    showStatusModalWithPhoto,
+    showStatusModalWithPackagedPhoto,
+    showBypassPasswordModal
 } from './auth-ui.js';
 import { STATUS_ORDER, STATUS_ORDER_MODELAGEM, getStatusOrderForService, getCarrierInfo } from './utils.js';
 
@@ -970,11 +978,7 @@ export async function processMultiColorEdit(oldService, newMaterials, material) 
 }
 
 // Exportar funcoes para uso global (onclick handlers)
-window.toggleMultiColorMode = toggleMultiColorMode;
-window.addColorEntry = addColorEntry;
-window.removeColorEntry = removeColorEntry;
-window.handleColorEntryChange = handleColorEntryChange;
-window.handleWeightEntryChange = handleWeightEntryChange;
+// Funcoes multi-cor agora tratadas via event delegation em event-handlers.js
 
 /**
  * Deduz ou devolve material do estoque
@@ -1333,7 +1337,7 @@ export async function saveService(event) {
                 const deliverySelect = document.getElementById('deliveryMethod');
                 deliverySelect.value = 'sedex';
                 deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
-                window.toggleDeliveryFields();
+                toggleDeliveryFields();
                 return;
             }
         }
@@ -1872,7 +1876,7 @@ export async function saveService(event) {
             }
         }
         
-        window.closeModal();
+        closeModal();
     } catch (error) {
         logger.error('Erro ao salvar:', error);
         showToast('Erro ao salvar serviço', 'error');
@@ -2209,7 +2213,7 @@ export async function removeImageFromService(serviceId, imageIndex, imageSource,
         
         const imageModal = document.getElementById('imageViewerModal');
         if (imageModal && imageModal.classList.contains('active')) {
-            window.closeImageModal();
+            closeImageModal();
         }
         
     } catch (error) {
@@ -2255,7 +2259,7 @@ export async function updateStatus(serviceId, newStatus) {
     // Instagram photo requirement for modelagem_concluida and concluido
     if ((newStatus === 'concluido' || newStatus === 'modelagem_concluida') && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
-        window.showStatusModalWithPhoto(service, newStatus);
+        showStatusModalWithPhoto(service, newStatus);
         return;
     }
 
@@ -2265,13 +2269,13 @@ export async function updateStatus(serviceId, newStatus) {
             // Se não tem foto instagramável, abre modal para bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
                 state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
-                window.showBypassPasswordModal();
+                showBypassPasswordModal();
                 return;
             }
 
             if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
                 state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
-                window.showStatusModalWithPackagedPhoto(service, newStatus);
+                showStatusModalWithPackagedPhoto(service, newStatus);
                 return;
             }
         }
@@ -2280,14 +2284,14 @@ export async function updateStatus(serviceId, newStatus) {
             // Se não tem foto instagramável, abre modal para bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
                 state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
-                window.showBypassPasswordModal();
+                showBypassPasswordModal();
                 return;
             }
 
             // Se não tem foto embalada, abre modal para bypass
             if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
                 state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true, skipToBypass: true };
-                window.showBypassPasswordModal();
+                showBypassPasswordModal();
                 return;
             }
         }
@@ -2303,7 +2307,7 @@ export async function updateStatus(serviceId, newStatus) {
 
         if (service.deliveryMethod === 'sedex' && newStatus === 'retirada' && !service.trackingCode) {
             state.pendingStatusUpdate = { serviceId, newStatus, service };
-            return window.showTrackingCodeModal();
+            return showTrackingCodeModal();
         }
     }
 
@@ -2370,7 +2374,7 @@ export async function confirmStatusChange() {
     
     if (requiresPackagedPhoto) {
         if (state.pendingPackagedPhotos.length === 0) {
-            window.showBypassPasswordModal();
+            showBypassPasswordModal();
             return;
         }
         
@@ -2441,7 +2445,7 @@ export async function confirmStatusChange() {
                 await sendEmailNotification(service);
             }
 
-            window.closeStatusModal();
+            closeStatusModal();
             return;
         } catch (error) {
             logger.error('Erro ao confirmar fotos embaladas:', error);
@@ -2452,7 +2456,7 @@ export async function confirmStatusChange() {
     
     if (requiresInstagramPhoto) {
         if (state.pendingInstagramPhotos.length === 0) {
-            window.showBypassPasswordModal();
+            showBypassPasswordModal();
             return;
         }
 
@@ -2498,7 +2502,7 @@ export async function confirmStatusChange() {
                 sendWhatsAppMessage(service.clientPhone, message);
             }
 
-            window.closeStatusModal();
+            closeStatusModal();
             return;
         } catch (error) {
             logger.error('Erro ao confirmar fotos instagramáveis:', error);
@@ -2603,7 +2607,7 @@ export async function confirmStatusChange() {
         logger.error('Erro:', error);
         showToast('Erro ao atualizar status', 'error');
     }
-    window.closeStatusModal();
+    closeStatusModal();
 }
 
 // ===========================
@@ -2668,7 +2672,7 @@ export async function proceedWithStatusChangeWithoutPhoto() {
             sendEmailNotification(service);
         }
 
-        window.closeStatusModal();
+        closeStatusModal();
 
     } catch (error) {
         logger.error('Erro ao alterar status com bypass:', error);
