@@ -25,6 +25,22 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-02 - Fix: Marketplace - Drag-and-drop de colunas acumulava event listeners
+
+**Arquivos Modificados:** `marketplace/js/marketplace-ui.js`
+
+**Problemas:**
+1. `_setupDragListeners()` era chamado repetidamente (em `_onDrop`, `reinit`) sem remover listeners antigos. Cada reordenacao adicionava listeners duplicados, causando comportamento erratico e memory leak.
+2. `_onDragLeave` disparava ao passar sobre elementos filhos dentro do `<th>` (spans, resize handles), removendo a classe `drag-over` incorretamente e causando flicker visual.
+
+**Correcoes:**
+1. Adicionado metodo `_removeDragListeners()` que remove todos os listeners antes de recriar. `_setupDragListeners()` agora chama `_removeDragListeners()` no inicio.
+2. `_onDragLeave` agora verifica `e.relatedTarget` com `th.contains()` para ignorar transicoes entre elementos filhos do mesmo `<th>`.
+
+**Localizacao:** Classe `TableColumnReorder` em `marketplace/js/marketplace-ui.js` (linhas ~620-640)
+
+---
+
 ### 2026-02-01 - Fix: services.js chamava window.X() removidos na auditoria anterior
 
 **Arquivos Modificados:** `servicos/js/services.js`

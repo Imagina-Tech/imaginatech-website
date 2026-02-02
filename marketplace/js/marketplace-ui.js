@@ -617,7 +617,23 @@ class TableColumnReorder {
         }
     }
 
+    _removeDragListeners() {
+        const headers = this.thead?.querySelectorAll('th');
+        if (!headers) return;
+
+        headers.forEach((th) => {
+            th.removeEventListener('dragstart', this._onDragStart);
+            th.removeEventListener('dragover', this._onDragOver);
+            th.removeEventListener('dragleave', this._onDragLeave);
+            th.removeEventListener('drop', this._onDrop);
+            th.removeEventListener('dragend', this._onDragEnd);
+        });
+    }
+
     _setupDragListeners() {
+        // Remove listeners antigos para evitar duplicacao
+        this._removeDragListeners();
+
         const headers = this.thead.querySelectorAll('th');
 
         headers.forEach((th) => {
@@ -669,9 +685,13 @@ class TableColumnReorder {
 
     _onDragLeave(e) {
         const th = e.target.closest('th');
-        if (th) {
-            th.classList.remove('drag-over');
-        }
+        if (!th) return;
+
+        // Verifica se o cursor realmente saiu do th (nao apenas entrou num filho)
+        const relatedTarget = e.relatedTarget;
+        if (relatedTarget && th.contains(relatedTarget)) return;
+
+        th.classList.remove('drag-over');
     }
 
     _onDrop(e) {
