@@ -36,6 +36,14 @@ service firebase.storage {
             || request.resource.contentType.matches('application/octet-stream'));
     }
 
+    // Validacao para arquivos 3MF/modelos 3D: ate 100MB
+    function isValid3DFile() {
+      return request.resource.size < 100 * 1024 * 1024
+        && (request.resource.contentType.matches('model/.*')
+            || request.resource.contentType.matches('application/octet-stream')
+            || request.resource.contentType.matches('application/vnd.ms-package.*'));
+    }
+
     // ===========================
     // ARQUIVOS DE SERVICOS
     // Admins podem ler/escrever, usuarios autenticados podem ler
@@ -83,12 +91,23 @@ service firebase.storage {
     }
 
     // ===========================
-    // ARQUIVOS DE PRODUTOS (Marketplace)
+    // ARQUIVOS DE PRODUTOS (Marketplace) - Fotos
     // Apenas admins
     // ===========================
     match /products/{fileName} {
       allow read: if isAdminOrSuper();
       allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
+    }
+
+    // ===========================
+    // ARQUIVOS 3MF DE PRODUTOS (Marketplace)
+    // Ate 100MB por arquivo
+    // Apenas admins
+    // ===========================
+    match /products/3mf/{fileName} {
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValid3DFile();
       allow delete: if isAdminOrSuper();
     }
 
