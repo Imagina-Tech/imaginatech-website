@@ -782,7 +782,6 @@ VERSAO: 2.0 - Simplificado (apenas monitoramento)
                                 </div>
                                 <span class="form-hint">Envie um arquivo .3mf para cada impressora</span>
                                 <input type="hidden" id="gcodeFilesData" name="gcodeFilesData">
-                                <input type="file" id="threemfFileInput" accept=".3mf" hidden>
                             </div>
                         </div>
                     </div>
@@ -800,6 +799,9 @@ VERSAO: 2.0 - Simplificado (apenas monitoramento)
             </form>
         </div>
     </div>
+
+    <!-- File input 3MF fora do form para evitar submit implicito -->
+    <input type="file" id="threemfFileInput" accept=".3mf" hidden>
 
     <!-- Modal Escolha Novo Produto -->
     <div class="modal-overlay" id="newProductChoiceModal" role="dialog" aria-modal="true" aria-labelledby="newProductChoiceModalTitle" aria-hidden="true">

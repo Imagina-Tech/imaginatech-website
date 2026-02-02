@@ -351,9 +351,19 @@ async function uploadPendingGcodes(pendingFiles, productId) {
 }
 
 // ========== HANDLER DO FORMULARIO ==========
+let _isSubmitting = false;  // Guard contra duplo-submit
+
 async function handleProductSubmit(event) {
     event.preventDefault();
 
+    // Impedir duplo-submit (previne criacao de clone)
+    if (_isSubmitting) {
+        window.logger?.warn('[SAVE] Submit bloqueado - ja em andamento');
+        return;
+    }
+    _isSubmitting = true;
+
+    try {
     // Coletar impressoras selecionadas
     let printerMachines = [];
     const selectedPrintersInput = document.getElementById('selectedPrinters');
@@ -511,6 +521,10 @@ async function handleProductSubmit(event) {
 
     // Limpar gerenciador de 3MF apos salvar
     if (window.resetGcodeManager) window.resetGcodeManager();
+
+    } finally {
+        _isSubmitting = false;
+    }
 }
 
 // ========== ATUALIZAR STATUS CONEXAO ==========
