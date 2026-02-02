@@ -906,8 +906,8 @@ function renderProducts() {
             <td data-col-id="dimensions">${formatDimensions(product.dimensions)}</td>
             <td data-col-id="packaging">${formatDimensions(product.packagingDimensions)}</td>
             <td data-col-id="weight">${product.weight ? product.weight + 'g' : '-'}</td>
-            <td data-col-id="gcode" class="col-gcode">
-                ${getGcodeColumnDisplay(product)}
+            <td data-col-id="threemf" class="col-threemf">
+                ${getThreeMfColumnDisplay(product)}
             </td>
             <td data-col-id="spacer" class="col-spacer"></td>
             <td data-col-id="actions" class="col-actions">
@@ -1764,7 +1764,7 @@ async function openProductModal(productId = null) {
         renderPhotosGrid([]);
         updateYoutubePreview('');
 
-        // Limpar gerenciador de GCODE
+        // Limpar e renderizar gerenciador de 3MF
         resetGcodeManager();
     }
 }
@@ -2433,118 +2433,20 @@ function copyPendingToDescription() {
     window.showToast('Descricao copiada! Salve para sincronizar com ML', 'success');
 }
 
-// ========== GERENCIADOR DE GCODE ==========
+// ========== GERENCIADOR DE ARQUIVOS 3MF ==========
 
-// Estado global dos GCODEs em edicao
-let pendingGcodeFiles = [];  // Arquivos GCODE pendentes para upload
-let editingGcodes = [];      // GCODEs existentes (do banco) + pendentes
-let currentGcodeEditIndex = null;  // Indice do GCODE sendo editado (para selecionar impressoras)
-let selectedGcodePrinters = [];    // Impressoras selecionadas no modal
+// Estado global dos 3MF em edicao
+let pendingThreeMfFiles = [];  // Arquivos 3MF pendentes para upload
+let editingThreeMfFiles = [];  // 3MFs existentes (do banco) + pendentes
+let currentUploadPrinter = null; // Impressora do file input ativo
 
 // Exibicao na coluna da tabela
-function getGcodeColumnDisplay(product) {
-    const gcodes = product.gcodeFiles || [];
-    if (gcodes.length === 0) {
+function getThreeMfColumnDisplay(product) {
+    const files = product.gcodeFiles || [];
+    if (files.length === 0) {
         return '<span class="text-muted">-</span>';
     }
-    return `<span class="gcode-count-badge" title="${gcodes.length} arquivo(s) GCode">${gcodes.length}</span>`;
-}
-
-// Inicializar gerenciador de GCODE
-function setupGcodeManager() {
-    const dropzone = document.getElementById('gcodeDropzone');
-    const input = document.getElementById('gcodeFileInput');
-
-    if (!dropzone || !input) return;
-
-    // Click para selecionar
-    dropzone.addEventListener('click', (e) => {
-        if (e.target.closest('button')) return;
-        input.click();
-    });
-
-    // Drag events
-    ['dragenter', 'dragover'].forEach(event => {
-        dropzone.addEventListener(event, (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach(event => {
-        dropzone.addEventListener(event, (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-        });
-    });
-
-    // Drop - multiplos arquivos
-    dropzone.addEventListener('drop', (e) => {
-        const files = Array.from(e.dataTransfer.files);
-        handleGcodeFiles(files);
-    });
-
-    // Input change - multiplos arquivos
-    input.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files);
-        handleGcodeFiles(files);
-        input.value = ''; // Reset para permitir mesmos arquivos
-    });
-}
-
-// Processar arquivos GCODE selecionados
-function handleGcodeFiles(files) {
-    const validExtensions = ['.gcode', '.gc', '.g'];
-    const maxSize = 100 * 1024 * 1024; // 100MB
-
-    let addedCount = 0;
-
-    files.forEach(file => {
-        const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
-
-        // Validar extensao
-        if (!validExtensions.includes(ext)) {
-            window.showToast(`${file.name}: Extensao invalida`, 'warning');
-            return;
-        }
-
-        // Validar tamanho
-        if (file.size > maxSize) {
-            window.showToast(`${file.name}: Muito grande (max 100MB)`, 'warning');
-            return;
-        }
-
-        // Verificar duplicata
-        const isDuplicate = editingGcodes.some(g => g.name === file.name && g.isPending);
-        if (isDuplicate) {
-            window.showToast(`${file.name}: Ja adicionado`, 'info');
-            return;
-        }
-
-        // Gerar ID temporario seguro
-        const tempId = generateSecureId();
-
-        // Adicionar a lista
-        const gcodeEntry = {
-            id: tempId,
-            name: file.name,
-            file: file,
-            printers: [],
-            uploadedAt: new Date().toISOString(),
-            isPending: true
-        };
-
-        editingGcodes.push(gcodeEntry);
-        pendingGcodeFiles.push({ id: tempId, file: file });
-        addedCount++;
-
-        // Abrir modal de impressoras para o novo arquivo
-        openGcodePrinterModal(editingGcodes.length - 1);
-    });
-
-    if (addedCount > 0) {
-        renderGcodeList();
-    }
+    return `<span class="threemf-count-badge" title="${files.length} arquivo(s) 3MF">${files.length}</span>`;
 }
 
 // Gerar ID seguro
@@ -2552,278 +2454,229 @@ function generateSecureId(length = 12) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const array = new Uint32Array(length);
     crypto.getRandomValues(array);
-    return 'gcode_' + Array.from(array, n => chars[n % chars.length]).join('');
+    return '3mf_' + Array.from(array, n => chars[n % chars.length]).join('');
 }
 
-// Renderizar lista de GCODEs
-function renderGcodeList() {
-    const list = document.getElementById('gcodeList');
-    const emptyState = document.getElementById('gcodeEmptyState');
+// Inicializar gerenciador de 3MF
+function setupGcodeManager() {
+    const input = document.getElementById('threemfFileInput');
+    if (!input) return;
 
-    if (!list) return;
-
-    if (editingGcodes.length === 0) {
-        list.innerHTML = '';
-        if (emptyState) {
-            list.appendChild(emptyState);
-            emptyState.style.display = 'flex';
+    input.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file && currentUploadPrinter) {
+            handleThreeMfFile(file, currentUploadPrinter);
         }
-        updateGcodeHiddenInput();
+        input.value = '';
+        currentUploadPrinter = null;
+    });
+}
+
+// Renderizar lista de impressoras com slots de 3MF
+function renderThreeMfPrinterList() {
+    const container = document.getElementById('threemfPrinterList');
+    const emptyState = document.getElementById('threemfEmptyState');
+    if (!container) return;
+
+    const printers = window.getPrinters ? window.getPrinters() : [];
+
+    if (printers.length === 0) {
+        if (emptyState) emptyState.style.display = 'flex';
         return;
     }
 
     if (emptyState) emptyState.style.display = 'none';
 
-    list.innerHTML = editingGcodes.map((gcode, index) => {
-        const hasPrinters = gcode.printers && gcode.printers.length > 0;
-        const dateFormatted = formatGcodeDate(gcode.uploadedAt);
-
-        // Renderizar tags de impressoras
-        const printerTags = hasPrinters
-            ? gcode.printers.map(p => `
-                <span class="gcode-printer-tag">
-                    <i class="fas fa-print"></i>
-                    ${escapeHtml(extractPrinterShortName(p))}
-                </span>
-            `).join('')
-            : `<span class="gcode-no-printers"><i class="fas fa-exclamation-triangle"></i> Sem impressora</span>`;
-
-        return `
-            <div class="gcode-item" data-index="${index}">
-                <div class="gcode-item-icon">
-                    <i class="fas fa-file-code"></i>
-                </div>
-                <div class="gcode-item-info">
-                    <div class="gcode-item-name" title="${escapeHtml(gcode.name)}">${escapeHtml(gcode.name)}</div>
-                    <div class="gcode-item-meta">
-                        <span class="gcode-item-date"><i class="fas fa-calendar-alt"></i> ${dateFormatted}</span>
-                        <div class="gcode-item-printers">${printerTags}</div>
-                    </div>
-                </div>
-                <div class="gcode-item-actions">
-                    <button type="button" class="gcode-action-btn btn-edit-printers"
-                            data-action="edit-gcode-printers" data-index="${index}"
-                            title="Editar impressoras">
-                        <i class="fas fa-print"></i>
-                    </button>
-                    ${!gcode.isPending && gcode.url ? `
-                        <button type="button" class="gcode-action-btn btn-download-gcode"
-                                data-action="download-gcode" data-index="${index}"
-                                title="Baixar GCode">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    ` : ''}
-                    <button type="button" class="gcode-action-btn btn-remove-gcode"
-                            data-action="remove-gcode" data-index="${index}"
-                            title="Remover">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    updateGcodeHiddenInput();
-}
-
-// Formatar data do GCODE
-function formatGcodeDate(dateStr) {
-    if (!dateStr) return '-';
-    try {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch {
-        return '-';
-    }
-}
-
-// Extrair nome curto da impressora (ex: "Bambu Lab K2 Plus" -> "K2 Plus")
-function extractPrinterShortName(fullName) {
-    if (!fullName) return '?';
-    // Remove prefixos comuns
-    const name = fullName.replace(/^(Bambu Lab|Creality|Anycubic|Prusa)\s*/i, '');
-    // Limita tamanho
-    return name.length > 12 ? name.slice(0, 10) + '..' : name;
-}
-
-// Abrir modal de selecao de impressoras para um GCODE
-function openGcodePrinterModal(index) {
-    const modal = document.getElementById('gcodePrinterModal');
-    const fileNameDisplay = document.getElementById('gcodeFileNameDisplay');
-    const grid = document.getElementById('gcodePrintersGrid');
-
-    if (!modal) return;
-
-    currentGcodeEditIndex = index;
-    const gcode = editingGcodes[index];
-
-    if (!gcode) return;
-
-    // Exibir nome do arquivo
-    if (fileNameDisplay) {
-        fileNameDisplay.textContent = gcode.name;
-    }
-
-    // Copiar impressoras atuais
-    selectedGcodePrinters = [...(gcode.printers || [])];
-
-    // Renderizar grid de impressoras
-    renderGcodePrinterGrid();
-
-    // Mostrar modal
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
-}
-
-// Fechar modal de impressoras
-function closeGcodePrinterModal() {
-    const modal = document.getElementById('gcodePrinterModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.setAttribute('aria-hidden', 'true');
-    }
-    currentGcodeEditIndex = null;
-    selectedGcodePrinters = [];
-}
-
-// Renderizar grid de impressoras no modal de GCODE
-function renderGcodePrinterGrid() {
-    const grid = document.getElementById('gcodePrintersGrid');
-    if (!grid) return;
-
-    const printers = window.getPrinters ? window.getPrinters() : [];
-
-    if (printers.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Carregando impressoras...</div>';
-        return;
-    }
-
-    grid.innerHTML = printers.map(printer => {
-        const isSelected = selectedGcodePrinters.includes(printer.name);
+    container.innerHTML = printers.map(printer => {
+        const safeName = escapeHtml(printer.name);
         const hasImage = printer.imageUrl;
         const safeImageUrl = hasImage ? escapeHtml(printer.imageUrl) : '';
 
+        // Buscar arquivo vinculado a esta impressora
+        const linked = editingThreeMfFiles.find(f => f.printerName === printer.name);
+
         const imageHtml = hasImage
-            ? `<img src="${safeImageUrl}" class="gcode-printer-card-image" alt="${escapeHtml(printer.name)}" data-fallback-action="show-placeholder">
-               <div class="gcode-printer-card-placeholder" style="display:none;"><i class="fas fa-print"></i></div>`
-            : `<div class="gcode-printer-card-placeholder"><i class="fas fa-print"></i></div>`;
+            ? `<img src="${safeImageUrl}" class="threemf-printer-image" alt="${safeName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="threemf-printer-placeholder" style="display:none;"><i class="fas fa-print"></i></div>`
+            : `<div class="threemf-printer-placeholder"><i class="fas fa-print"></i></div>`;
+
+        let fileHtml;
+        if (linked) {
+            const dateFormatted = formatThreeMfDate(linked.uploadedAt);
+            fileHtml = `
+                <div class="threemf-file-info">
+                    <div class="threemf-file-name" title="${escapeHtml(linked.fileName)}">
+                        <i class="fas fa-cube"></i> ${escapeHtml(linked.fileName)}
+                    </div>
+                    <span class="threemf-file-date">${dateFormatted}</span>
+                </div>
+                <div class="threemf-file-actions">
+                    ${!linked.isPending && linked.url ? `
+                        <button type="button" class="threemf-action-btn btn-download-3mf"
+                                data-action="download-3mf" data-printer="${safeName}"
+                                title="Baixar 3MF">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    ` : ''}
+                    <button type="button" class="threemf-action-btn btn-remove-3mf"
+                            data-action="remove-3mf" data-printer="${safeName}"
+                            title="Remover arquivo">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            fileHtml = `
+                <button type="button" class="threemf-upload-btn"
+                        data-action="upload-3mf" data-printer="${safeName}">
+                    <i class="fas fa-cloud-upload-alt"></i> Enviar .3mf
+                </button>
+            `;
+        }
 
         return `
-            <div class="gcode-printer-card ${isSelected ? 'selected' : ''}"
-                 data-printer="${escapeHtml(printer.name)}"
-                 data-action="toggle-gcode-printer">
-                <div class="gcode-printer-card-check"><i class="fas fa-check"></i></div>
-                ${imageHtml}
-                <span class="gcode-printer-card-name">${escapeHtml(printer.name)}</span>
+            <div class="threemf-printer-row ${linked ? 'has-file' : ''}">
+                <div class="threemf-printer-info">
+                    ${imageHtml}
+                    <span class="threemf-printer-name">${safeName}</span>
+                </div>
+                <div class="threemf-printer-file">
+                    ${fileHtml}
+                </div>
             </div>
         `;
     }).join('');
+
+    updateThreeMfHiddenInput();
 }
 
-// Alternar selecao de impressora no modal de GCODE
-function toggleGcodePrinter(printerName) {
-    const index = selectedGcodePrinters.indexOf(printerName);
-    if (index === -1) {
-        selectedGcodePrinters.push(printerName);
-    } else {
-        selectedGcodePrinters.splice(index, 1);
-    }
+// Abrir file picker para uma impressora
+function triggerThreeMfUpload(printerName) {
+    const input = document.getElementById('threemfFileInput');
+    if (!input) return;
 
-    // Atualizar visual
-    const card = document.querySelector(`.gcode-printer-card[data-printer="${printerName}"]`);
-    if (card) {
-        card.classList.toggle('selected', selectedGcodePrinters.includes(printerName));
-    }
+    currentUploadPrinter = printerName;
+    input.click();
 }
 
-// Confirmar selecao de impressoras
-function confirmGcodePrinters() {
-    if (currentGcodeEditIndex === null) {
-        closeGcodePrinterModal();
+// Processar arquivo 3MF selecionado
+function handleThreeMfFile(file, printerName) {
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    const maxSize = 100 * 1024 * 1024; // 100MB
+
+    if (ext !== '.3mf') {
+        window.showToast?.('Apenas arquivos .3mf sao aceitos', 'warning');
         return;
     }
 
-    if (selectedGcodePrinters.length === 0) {
-        window.showToast('Selecione pelo menos uma impressora', 'warning');
+    if (file.size > maxSize) {
+        window.showToast?.(`${escapeHtml(file.name)}: Muito grande (max 100MB)`, 'warning');
         return;
     }
 
-    // Atualizar GCODE
-    editingGcodes[currentGcodeEditIndex].printers = [...selectedGcodePrinters];
-
-    closeGcodePrinterModal();
-    renderGcodeList();
-
-    window.showToast('Impressoras atualizadas!', 'success');
-}
-
-// Remover GCODE
-function removeGcode(index) {
-    const gcode = editingGcodes[index];
-    if (!gcode) return;
-
-    // Remover de pendentes se for novo
-    if (gcode.isPending) {
-        pendingGcodeFiles = pendingGcodeFiles.filter(p => p.id !== gcode.id);
+    // Remover arquivo anterior desta impressora (se existir)
+    const existingIndex = editingThreeMfFiles.findIndex(f => f.printerName === printerName);
+    if (existingIndex !== -1) {
+        const existing = editingThreeMfFiles[existingIndex];
+        if (existing.isPending) {
+            pendingThreeMfFiles = pendingThreeMfFiles.filter(p => p.id !== existing.id);
+        }
+        editingThreeMfFiles.splice(existingIndex, 1);
     }
 
-    editingGcodes.splice(index, 1);
-    renderGcodeList();
+    const tempId = generateSecureId();
 
-    window.showToast('GCode removido', 'info');
+    editingThreeMfFiles.push({
+        id: tempId,
+        printerName: printerName,
+        fileName: file.name,
+        file: file,
+        uploadedAt: new Date().toISOString(),
+        isPending: true
+    });
+
+    pendingThreeMfFiles.push({ id: tempId, file: file });
+
+    renderThreeMfPrinterList();
+    window.showToast?.(`3MF vinculado a ${escapeHtml(printerName)}`, 'success');
 }
 
-// Download de GCODE existente
-function downloadGcode(index) {
-    const gcode = editingGcodes[index];
-    if (!gcode || !gcode.url) {
-        window.showToast('Arquivo nao encontrado', 'error');
+// Remover 3MF de uma impressora
+function removeThreeMf(printerName) {
+    const index = editingThreeMfFiles.findIndex(f => f.printerName === printerName);
+    if (index === -1) return;
+
+    const entry = editingThreeMfFiles[index];
+    if (entry.isPending) {
+        pendingThreeMfFiles = pendingThreeMfFiles.filter(p => p.id !== entry.id);
+    }
+
+    editingThreeMfFiles.splice(index, 1);
+    renderThreeMfPrinterList();
+    window.showToast?.('Arquivo removido', 'info');
+}
+
+// Download de 3MF existente
+function downloadThreeMf(printerName) {
+    const entry = editingThreeMfFiles.find(f => f.printerName === printerName);
+    if (!entry || !entry.url) {
+        window.showToast?.('Arquivo nao encontrado', 'error');
         return;
     }
 
     try {
         const link = document.createElement('a');
-        link.href = gcode.url;
-        link.download = gcode.name;
+        link.href = entry.url;
+        link.download = entry.fileName;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.showToast('Download iniciado!', 'success');
+        window.showToast?.('Download iniciado!', 'success');
     } catch (error) {
-        window.logger?.error('Erro ao baixar GCode:', error);
-        window.showToast('Erro ao baixar arquivo', 'error');
+        window.logger?.error('Erro ao baixar 3MF:', error);
+        window.showToast?.('Erro ao baixar arquivo', 'error');
     }
 }
 
-// Atualizar input hidden com dados dos GCODEs
-function updateGcodeHiddenInput() {
+// Formatar data
+function formatThreeMfDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+        return '';
+    }
+}
+
+// Atualizar input hidden
+function updateThreeMfHiddenInput() {
     const input = document.getElementById('gcodeFilesData');
     if (input) {
-        // Serializar apenas dados necessarios (sem o objeto File)
-        const data = editingGcodes.map(g => ({
-            id: g.id,
-            name: g.name,
-            printers: g.printers,
-            uploadedAt: g.uploadedAt,
-            isPending: g.isPending,
-            url: g.url || null,
-            storagePath: g.storagePath || null
+        const data = editingThreeMfFiles.map(f => ({
+            id: f.id,
+            printerName: f.printerName,
+            fileName: f.fileName,
+            uploadedAt: f.uploadedAt,
+            isPending: f.isPending,
+            url: f.url || null,
+            storagePath: f.storagePath || null
         }));
         input.value = JSON.stringify(data);
     }
 }
 
-// Carregar GCODEs existentes ao editar produto
+// Carregar 3MFs existentes ao editar produto
 function loadGcodesForEdit(product) {
-    editingGcodes = [];
-    pendingGcodeFiles = [];
+    editingThreeMfFiles = [];
+    pendingThreeMfFiles = [];
 
     if (product.gcodeFiles && Array.isArray(product.gcodeFiles)) {
-        editingGcodes = product.gcodeFiles.map(g => ({
+        editingThreeMfFiles = product.gcodeFiles.map(g => ({
             id: g.id,
-            name: g.name,
-            printers: g.printers || [],
+            printerName: g.printerName || (g.printers?.[0] || ''),
+            fileName: g.fileName || g.name || '',
             uploadedAt: g.uploadedAt,
             url: g.url,
             storagePath: g.storagePath,
@@ -2831,54 +2684,38 @@ function loadGcodesForEdit(product) {
         }));
     }
 
-    renderGcodeList();
+    renderThreeMfPrinterList();
 }
 
-// Resetar gerenciador de GCODE
+// Resetar gerenciador
 function resetGcodeManager() {
-    editingGcodes = [];
-    pendingGcodeFiles = [];
-    currentGcodeEditIndex = null;
-    selectedGcodePrinters = [];
+    editingThreeMfFiles = [];
+    pendingThreeMfFiles = [];
+    currentUploadPrinter = null;
 
-    const list = document.getElementById('gcodeList');
-    const emptyState = document.getElementById('gcodeEmptyState');
-
-    if (list) list.innerHTML = '';
-    if (emptyState) {
-        if (list) list.appendChild(emptyState);
-        emptyState.style.display = 'flex';
-    }
-
-    updateGcodeHiddenInput();
+    renderThreeMfPrinterList();
 }
 
-// Validar se todos os GCODEs tem impressoras
+// Validar (sempre valido no novo modelo - upload e por impressora)
 function validateGcodes() {
-    for (const gcode of editingGcodes) {
-        if (!gcode.printers || gcode.printers.length === 0) {
-            window.showToast(`O arquivo "${gcode.name}" precisa ter pelo menos uma impressora`, 'warning');
-            return false;
-        }
-    }
     return true;
 }
 
 // Obter arquivos pendentes para upload
 function getPendingGcodeFiles() {
-    return pendingGcodeFiles;
+    return pendingThreeMfFiles;
 }
 
-// Obter dados dos GCODEs para salvar
+// Obter dados para salvar
 function getGcodesData() {
-    return editingGcodes.map(g => ({
-        id: g.id,
-        name: g.name,
-        printers: g.printers,
-        uploadedAt: g.uploadedAt,
-        url: g.url || null,
-        storagePath: g.storagePath || null,
-        isPending: g.isPending
+    return editingThreeMfFiles.map(f => ({
+        id: f.id,
+        printerName: f.printerName,
+        fileName: f.fileName,
+        uploadedAt: f.uploadedAt,
+        url: f.url || null,
+        storagePath: f.storagePath || null,
+        isPending: f.isPending
     }));
 }
 
@@ -2898,22 +2735,19 @@ Object.defineProperty(window, 'tableReorder', {
 window.setupColumnResize = setupColumnResize;
 window.reinitColumnResize = reinitColumnResize;
 
-// GCODE Manager - Exportar funcoes
+// 3MF Manager - Exportar funcoes
 window.setupGcodeManager = setupGcodeManager;
-window.handleGcodeFiles = handleGcodeFiles;
-window.renderGcodeList = renderGcodeList;
-window.openGcodePrinterModal = openGcodePrinterModal;
-window.closeGcodePrinterModal = closeGcodePrinterModal;
-window.toggleGcodePrinter = toggleGcodePrinter;
-window.confirmGcodePrinters = confirmGcodePrinters;
-window.removeGcode = removeGcode;
-window.downloadGcode = downloadGcode;
+window.renderThreeMfPrinterList = renderThreeMfPrinterList;
+window.triggerThreeMfUpload = triggerThreeMfUpload;
+window.handleThreeMfFile = handleThreeMfFile;
+window.removeThreeMf = removeThreeMf;
+window.downloadThreeMf = downloadThreeMf;
 window.loadGcodesForEdit = loadGcodesForEdit;
 window.resetGcodeManager = resetGcodeManager;
 window.validateGcodes = validateGcodes;
 window.getPendingGcodeFiles = getPendingGcodeFiles;
 window.getGcodesData = getGcodesData;
-window.getGcodeColumnDisplay = getGcodeColumnDisplay;
+window.getThreeMfColumnDisplay = getThreeMfColumnDisplay;
 window.clearFilters = clearFilters;
 window.renderProducts = renderProducts;
 window.openProductModal = openProductModal;

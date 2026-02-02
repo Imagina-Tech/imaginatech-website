@@ -25,6 +25,27 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-02 - Feature: Marketplace - Trocar GCode por 3MF (um arquivo por impressora)
+
+**Arquivos Modificados:** `marketplace/index.html`, `marketplace/js/marketplace-ui.js`, `marketplace/js/marketplace-data.js`, `marketplace/js/marketplace-core.js`, `marketplace/style.css`
+
+**Mudanca:**
+O sistema de GCode foi substituido por 3MF. Modelo anterior: "arquivo -> impressoras" (upload .gcode, selecionar impressoras). Novo modelo: "impressora -> arquivo" (lista de impressoras, cada uma com slot de upload .3mf).
+
+**Detalhes:**
+1. Coluna da tabela renomeada de "GCode" para "3MF" (data-col-id: `threemf`)
+2. HTML: Removido dropzone generico e modal de selecao de impressoras. Adicionado container `threemfPrinterList`
+3. JS (marketplace-ui.js): Estado simplificado. Nova funcao `renderThreeMfPrinterList()`. Removidas funcoes de modal de impressoras
+4. JS (marketplace-data.js): Storage path alterado de `products/gcode/` para `products/3mf/`. Dados usam `printerName` e `fileName`
+5. JS (marketplace-core.js): Actions atualizadas: `upload-3mf`, `remove-3mf`, `download-3mf`
+6. CSS: Estilos `.gcode-*` substituidos por `.threemf-*`
+
+**Modelo Firestore (campo `gcodeFiles` mantido):**
+- Antes: `{ id, name, printers: ["K1","K2"], url, storagePath, uploadedAt }`
+- Depois: `{ id, printerName: "K1", fileName: "peca.3mf", url, storagePath, uploadedAt }`
+
+---
+
 ### 2026-02-02 - Fix: Marketplace - Drag-and-drop de colunas acumulava event listeners
 
 **Arquivos Modificados:** `marketplace/js/marketplace-ui.js`

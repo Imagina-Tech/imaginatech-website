@@ -318,7 +318,7 @@ VERSAO: 2.0 - Simplificado (apenas monitoramento)
                             <col data-col-id="dimensions" style="width: 90px;">
                             <col data-col-id="packaging" style="width: 90px;">
                             <col data-col-id="weight" style="width: 70px;">
-                            <col data-col-id="gcode" style="width: 70px;">
+                            <col data-col-id="threemf" style="width: 70px;">
                             <col data-col-id="spacer" class="col-spacer">
                             <col data-col-id="actions" style="width: 130px;">
                         </colgroup>
@@ -334,7 +334,7 @@ VERSAO: 2.0 - Simplificado (apenas monitoramento)
                                 <th data-col-id="dimensions">Dimensoes</th>
                                 <th data-col-id="packaging">Embalagem</th>
                                 <th data-col-id="weight">Peso</th>
-                                <th data-col-id="gcode">GCode</th>
+                                <th data-col-id="threemf">3MF</th>
                                 <th data-col-id="spacer" class="col-spacer"></th>
                                 <th data-col-id="actions" class="col-actions">Acoes</th>
                             </tr>
@@ -767,56 +767,22 @@ VERSAO: 2.0 - Simplificado (apenas monitoramento)
                             </div>
                         </div>
 
-                        <!-- Gerenciador de GCODEs -->
+                        <!-- Gerenciador de Arquivos 3MF -->
                         <div class="form-row">
                             <div class="form-group span-4">
-                                <label><i class="fas fa-file-code"></i> Arquivos GCode</label>
-                                <div class="gcode-manager" id="gcodeManager">
-                                    <!-- Lista de GCODEs existentes -->
-                                    <div class="gcode-list" id="gcodeList">
-                                        <div class="gcode-empty-state" id="gcodeEmptyState">
-                                            <i class="fas fa-file-code"></i>
-                                            <span>Nenhum GCode adicionado</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Formulario para adicionar novo GCODE -->
-                                    <div class="gcode-add-form" id="gcodeAddForm">
-                                        <div class="gcode-dropzone" id="gcodeDropzone">
-                                            <input type="file" id="gcodeFileInput" accept=".gcode,.gc,.g" multiple hidden>
-                                            <div class="gcode-dropzone-content" id="gcodeDropzoneContent">
-                                                <i class="fas fa-cloud-upload-alt"></i>
-                                                <span>Clique ou arraste arquivos .gcode</span>
-                                            </div>
+                                <label><i class="fas fa-cube"></i> Arquivos 3MF</label>
+                                <div class="threemf-manager" id="threemfManager">
+                                    <!-- Lista de impressoras com slots de upload -->
+                                    <div class="threemf-printer-list" id="threemfPrinterList">
+                                        <div class="threemf-empty-state" id="threemfEmptyState">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <span>Carregando impressoras...</span>
                                         </div>
                                     </div>
                                 </div>
-                                <span class="form-hint">Adicione arquivos GCode e vincule cada um a pelo menos uma impressora</span>
+                                <span class="form-hint">Envie um arquivo .3mf para cada impressora</span>
                                 <input type="hidden" id="gcodeFilesData" name="gcodeFilesData">
-                            </div>
-                        </div>
-
-                        <!-- Modal de selecao de impressoras para GCODE -->
-                        <div class="gcode-printer-modal hidden" id="gcodePrinterModal" role="dialog" aria-modal="true" aria-labelledby="gcodePrinterModalTitle" aria-hidden="true">
-                            <div class="gcode-printer-modal-content">
-                                <div class="gcode-printer-modal-header">
-                                    <h4 id="gcodePrinterModalTitle"><i class="fas fa-print"></i> Selecionar Impressoras</h4>
-                                    <button type="button" class="gcode-printer-modal-close" data-action="close-gcode-printer-modal">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="gcode-printer-modal-body">
-                                    <p class="gcode-file-name-display" id="gcodeFileNameDisplay">arquivo.gcode</p>
-                                    <div class="gcode-printers-grid" id="gcodePrintersGrid">
-                                        <!-- Grid de impressoras preenchida via JS -->
-                                    </div>
-                                </div>
-                                <div class="gcode-printer-modal-footer">
-                                    <button type="button" class="btn-secondary" data-action="close-gcode-printer-modal">Cancelar</button>
-                                    <button type="button" class="btn-primary" data-action="confirm-gcode-printers">
-                                        <i class="fas fa-check"></i> Confirmar
-                                    </button>
-                                </div>
+                                <input type="file" id="threemfFileInput" accept=".3mf" hidden>
                             </div>
                         </div>
                     </div>

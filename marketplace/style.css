@@ -4053,39 +4053,14 @@ textarea.form-input {
     color: #fff;
 }
 
-/* Coluna GCode na tabela */
-.col-gcode {
+/* Coluna 3MF na tabela */
+.col-threemf {
     text-align: center;
     width: 80px;
 }
 
-.btn-gcode-download {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 8px;
-    color: var(--neon-purple);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-gcode-download:hover {
-    background: var(--neon-purple);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-}
-
-.btn-gcode-download i {
-    font-size: 1rem;
-}
-
-/* Badge de quantidade de GCODEs */
-.gcode-count-badge {
+/* Badge de quantidade de 3MFs */
+.threemf-count-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -4100,21 +4075,21 @@ textarea.form-input {
     color: var(--neon-purple);
 }
 
-/* ========== GCODE MANAGER ========== */
-.gcode-manager {
+/* ========== 3MF MANAGER ========== */
+.threemf-manager {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     overflow: hidden;
 }
 
-/* Lista de GCODEs */
-.gcode-list {
-    max-height: 300px;
+/* Lista de impressoras com slots */
+.threemf-printer-list {
+    max-height: 400px;
     overflow-y: auto;
 }
 
-.gcode-empty-state {
+.threemf-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -4125,51 +4100,68 @@ textarea.form-input {
     font-size: 0.85rem;
 }
 
-.gcode-empty-state i {
-    font-size: 2rem;
-    opacity: 0.4;
+.threemf-empty-state i {
+    font-size: 1.5rem;
+    opacity: 0.5;
 }
 
-/* Item de GCODE individual */
-.gcode-item {
+/* Linha de impressora */
+.threemf-printer-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    padding: 0.875rem 1rem;
+    padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     transition: background 0.2s ease;
 }
 
-.gcode-item:last-child {
+.threemf-printer-row:last-child {
     border-bottom: none;
 }
 
-.gcode-item:hover {
-    background: rgba(139, 92, 246, 0.05);
+.threemf-printer-row:hover {
+    background: rgba(139, 92, 246, 0.04);
 }
 
-.gcode-item-icon {
+.threemf-printer-row.has-file {
+    background: rgba(139, 92, 246, 0.06);
+}
+
+/* Info da impressora (esquerda) */
+.threemf-printer-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 10px;
-    color: var(--neon-purple);
-    font-size: 1.1rem;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    min-width: 140px;
+}
+
+.threemf-printer-image {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 }
 
-.gcode-item-info {
-    flex: 1;
-    min-width: 0;
+.threemf-printer-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
-.gcode-item-name {
-    font-size: 0.9rem;
+.threemf-printer-name {
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
@@ -4177,378 +4169,142 @@ textarea.form-input {
     text-overflow: ellipsis;
 }
 
-.gcode-item-meta {
+/* Area do arquivo (direita) */
+.threemf-printer-file {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-top: 0.25rem;
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+}
+
+/* Info do arquivo vinculado */
+.threemf-file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.threemf-file-name {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--neon-purple);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.threemf-file-name i {
     font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.gcode-item-date {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.gcode-item-date i {
-    font-size: 0.65rem;
-}
-
-/* Tags de impressoras no item */
-.gcode-item-printers {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-}
-
-.gcode-printer-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.5rem;
-    background: rgba(0, 212, 255, 0.1);
-    border: 1px solid rgba(0, 212, 255, 0.25);
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 500;
-    color: var(--neon-blue);
-}
-
-.gcode-printer-tag i {
-    font-size: 0.55rem;
-}
-
-.gcode-no-printers {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.5rem;
-    background: rgba(255, 51, 102, 0.1);
-    border: 1px solid rgba(255, 51, 102, 0.3);
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 500;
-    color: var(--neon-red);
-}
-
-/* Botoes de acao do item */
-.gcode-item-actions {
-    display: flex;
-    gap: 0.5rem;
     flex-shrink: 0;
 }
 
-.gcode-action-btn {
+.threemf-file-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Botoes de acao */
+.threemf-file-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.threemf-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.8rem;
 }
 
-.gcode-action-btn:hover {
+.threemf-action-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
 }
 
-.gcode-action-btn.btn-edit-printers:hover {
-    background: rgba(0, 212, 255, 0.15);
-    border-color: rgba(0, 212, 255, 0.4);
-    color: var(--neon-blue);
-}
-
-.gcode-action-btn.btn-download-gcode:hover {
+.threemf-action-btn.btn-download-3mf:hover {
     background: rgba(139, 92, 246, 0.15);
     border-color: rgba(139, 92, 246, 0.4);
     color: var(--neon-purple);
 }
 
-.gcode-action-btn.btn-remove-gcode:hover {
+.threemf-action-btn.btn-remove-3mf:hover {
     background: rgba(255, 51, 102, 0.15);
     border-color: rgba(255, 51, 102, 0.4);
     color: var(--neon-red);
 }
 
-/* Formulario de adicao */
-.gcode-add-form {
-    padding: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(139, 92, 246, 0.03);
-}
-
-.gcode-dropzone {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 60px;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 2px dashed rgba(139, 92, 246, 0.3);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.gcode-dropzone:hover,
-.gcode-dropzone.dragover {
-    background: rgba(139, 92, 246, 0.08);
-    border-color: var(--neon-purple);
-}
-
-.gcode-dropzone-content {
-    display: flex;
-    flex-direction: column;
+/* Botao de upload */
+.threemf-upload-btn {
+    display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-.gcode-dropzone-content i {
-    font-size: 1.5rem;
-    color: var(--neon-purple);
-    opacity: 0.7;
-}
-
-/* ========== MODAL DE SELECAO DE IMPRESSORAS PARA GCODE ========== */
-.gcode-printer-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(8, 12, 22, 0.9);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-modal, 1000);
-    padding: 1rem;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.gcode-printer-modal:not(.hidden) {
-    opacity: 1;
-    visibility: visible;
-}
-
-.gcode-printer-modal-content {
-    background: var(--bg-secondary);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    transform: translateY(20px) scale(0.95);
-    transition: transform 0.3s ease;
-}
-
-.gcode-printer-modal:not(.hidden) .gcode-printer-modal-content {
-    transform: translateY(0) scale(1);
-}
-
-.gcode-printer-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.gcode-printer-modal-header h4 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.gcode-printer-modal-header h4 i {
-    color: var(--neon-blue);
-}
-
-.gcode-printer-modal-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.gcode-printer-modal-close:hover {
-    background: rgba(255, 51, 102, 0.15);
-    color: var(--neon-red);
-}
-
-.gcode-printer-modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.25rem;
-}
-
-.gcode-file-name-display {
-    margin: 0 0 1rem;
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 0.75rem;
     background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.25);
+    border: 1px dashed rgba(139, 92, 246, 0.4);
     border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
     color: var(--neon-purple);
-    text-align: center;
-    word-break: break-all;
-}
-
-.gcode-printers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 0.75rem;
-}
-
-/* Cards de impressora no modal de GCODE */
-.gcode-printer-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 2px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.gcode-printer-card:hover {
-    background: rgba(0, 212, 255, 0.05);
-    border-color: rgba(0, 212, 255, 0.3);
+.threemf-upload-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: var(--neon-purple);
+    border-style: solid;
 }
 
-.gcode-printer-card.selected {
-    background: rgba(0, 212, 255, 0.1);
-    border-color: var(--neon-blue);
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
-}
-
-.gcode-printer-card-image {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.gcode-printer-card-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    color: var(--text-muted);
-    font-size: 1.2rem;
-}
-
-.gcode-printer-card.selected .gcode-printer-card-placeholder {
-    background: rgba(0, 212, 255, 0.15);
-    color: var(--neon-blue);
-}
-
-.gcode-printer-card-name {
+.threemf-upload-btn i {
     font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-align: center;
-    word-break: break-word;
 }
 
-.gcode-printer-card.selected .gcode-printer-card-name {
-    color: var(--neon-blue);
-}
-
-.gcode-printer-card-check {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 18px;
-    height: 18px;
-    background: var(--neon-blue);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s ease;
-}
-
-.gcode-printer-card.selected .gcode-printer-card-check {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.gcode-printer-card-check i {
-    font-size: 0.6rem;
-    color: #fff;
-}
-
-.gcode-printer-card {
-    position: relative;
-}
-
-.gcode-printer-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.gcode-printer-modal-footer .btn-secondary {
-    padding: 0.6rem 1rem;
-}
-
-.gcode-printer-modal-footer .btn-primary {
-    padding: 0.6rem 1.25rem;
-}
-
-/* ========== RESPONSIVE GCODE ========== */
+/* ========== RESPONSIVE 3MF ========== */
 @media (max-width: 768px) {
-    .gcode-item {
+    .threemf-printer-row {
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
-    .gcode-item-info {
-        flex: 1 1 calc(100% - 56px);
+    .threemf-printer-info {
+        min-width: 120px;
     }
 
-    .gcode-item-actions {
-        width: 100%;
-        justify-content: flex-end;
+    .threemf-file-name {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .threemf-printer-info {
+        min-width: 100px;
     }
 
-    .gcode-printers-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    .threemf-printer-name {
+        font-size: 0.78rem;
+    }
+
+    .threemf-file-date {
+        display: none;
     }
 }
 

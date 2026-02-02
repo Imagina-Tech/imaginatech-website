@@ -304,33 +304,31 @@ async function uploadLocalPhotosToStorage(localPhotos, productId) {
     return results;
 }
 
-// ========== UPLOAD ARQUIVO GCODE PARA STORAGE ==========
+// ========== UPLOAD ARQUIVO 3MF PARA STORAGE ==========
 async function uploadGcodeFile(file, gcodeId, productId) {
     if (!file) return null;
 
     try {
         const storage = firebase.storage();
-        // Nome seguro: sanitizar nome do arquivo
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const fileName = `${productId}_${gcodeId}_${Date.now()}_${safeName}`;
-        const storageRef = storage.ref(`products/gcode/${fileName}`);
+        const storageRef = storage.ref(`products/3mf/${fileName}`);
 
-        // Upload do arquivo
         const snapshot = await storageRef.put(file);
         const downloadUrl = await snapshot.ref.getDownloadURL();
 
-        window.logger?.log('[GCODE] Arquivo enviado:', fileName);
+        window.logger?.log('[3MF] Arquivo enviado:', fileName);
         return {
             url: downloadUrl,
-            storagePath: `products/gcode/${fileName}`
+            storagePath: `products/3mf/${fileName}`
         };
     } catch (error) {
-        window.logger?.error('[GCODE] Erro ao fazer upload:', error);
+        window.logger?.error('[3MF] Erro ao fazer upload:', error);
         throw error;
     }
 }
 
-// Upload multiplos GCODEs
+// Upload multiplos 3MFs
 async function uploadPendingGcodes(pendingFiles, productId) {
     const results = [];
 
@@ -345,8 +343,7 @@ async function uploadPendingGcodes(pendingFiles, productId) {
                 });
             }
         } catch (error) {
-            window.logger?.error(`[GCODE] Erro ao enviar ${pending.file.name}:`, error);
-            // Continua com os demais arquivos
+            window.logger?.error(`[3MF] Erro ao enviar ${pending.file.name}:`, error);
         }
     }
 
@@ -440,7 +437,7 @@ async function handleProductSubmit(event) {
         return;
     }
 
-    // Validar GCODEs (todos devem ter impressoras)
+    // Validar 3MFs
     if (window.validateGcodes && !window.validateGcodes()) {
         return;
     }
@@ -472,48 +469,47 @@ async function handleProductSubmit(event) {
     // Atualizar productData com fotos processadas (URLs do Storage, nao base64)
     productData.localPhotos = localPhotos;
 
-    // Coletar dados dos GCODEs
-    const gcodesData = window.getGcodesData ? window.getGcodesData() : [];
-    const pendingGcodes = window.getPendingGcodeFiles ? window.getPendingGcodeFiles() : [];
+    // Coletar dados dos 3MFs
+    const threeMfData = window.getGcodesData ? window.getGcodesData() : [];
+    const pendingThreeMf = window.getPendingGcodeFiles ? window.getPendingGcodeFiles() : [];
 
-    // Upload de GCODEs pendentes
-    if (pendingGcodes.length > 0) {
+    // Upload de 3MFs pendentes
+    if (pendingThreeMf.length > 0) {
         try {
             window.showLoading();
             const productIdForUpload = window.editingProductId || 'new_' + Date.now();
-            const uploadResults = await uploadPendingGcodes(pendingGcodes, productIdForUpload);
+            const uploadResults = await uploadPendingGcodes(pendingThreeMf, productIdForUpload);
 
-            // Atualizar gcodesData com URLs dos uploads
             uploadResults.forEach(result => {
-                const gcodeIndex = gcodesData.findIndex(g => g.id === result.id);
-                if (gcodeIndex !== -1) {
-                    gcodesData[gcodeIndex].url = result.url;
-                    gcodesData[gcodeIndex].storagePath = result.storagePath;
-                    gcodesData[gcodeIndex].isPending = false;
+                const idx = threeMfData.findIndex(f => f.id === result.id);
+                if (idx !== -1) {
+                    threeMfData[idx].url = result.url;
+                    threeMfData[idx].storagePath = result.storagePath;
+                    threeMfData[idx].isPending = false;
                 }
             });
 
-            window.showToast(`${uploadResults.length} arquivo(s) GCode enviado(s)!`, 'success');
+            window.showToast?.(`${uploadResults.length} arquivo(s) 3MF enviado(s)!`, 'success');
         } catch (error) {
             window.hideLoading();
-            window.showToast('Erro ao enviar arquivos GCode', 'error');
+            window.showToast?.('Erro ao enviar arquivos 3MF', 'error');
             return;
         }
     }
 
-    // Adicionar GCODEs ao productData (remover isPending dos dados salvos)
-    productData.gcodeFiles = gcodesData.map(g => ({
-        id: g.id,
-        name: g.name,
-        printers: g.printers,
-        uploadedAt: g.uploadedAt,
-        url: g.url,
-        storagePath: g.storagePath
+    // Adicionar 3MFs ao productData (remover isPending dos dados salvos)
+    productData.gcodeFiles = threeMfData.map(f => ({
+        id: f.id,
+        printerName: f.printerName,
+        fileName: f.fileName,
+        uploadedAt: f.uploadedAt,
+        url: f.url,
+        storagePath: f.storagePath
     }));
 
     await saveProduct(productData);
 
-    // Limpar gerenciador de GCODE apos salvar
+    // Limpar gerenciador de 3MF apos salvar
     if (window.resetGcodeManager) window.resetGcodeManager();
 }
 

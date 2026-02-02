@@ -285,24 +285,18 @@ function setupEventDelegation() {
             'clear-filters': () => window.clearFilters?.(),
             'copy-pending-to-description': () => window.copyPendingToDescription?.(),
 
-            // GCODE Manager
-            'edit-gcode-printers': () => {
-                const index = parseInt(actionEl.dataset.index);
-                if (!isNaN(index) && window.openGcodePrinterModal) window.openGcodePrinterModal(index);
-            },
-            'remove-gcode': () => {
-                const index = parseInt(actionEl.dataset.index);
-                if (!isNaN(index) && window.removeGcode) window.removeGcode(index);
-            },
-            'download-gcode': () => {
-                const index = parseInt(actionEl.dataset.index);
-                if (!isNaN(index) && window.downloadGcode) window.downloadGcode(index);
-            },
-            'close-gcode-printer-modal': () => window.closeGcodePrinterModal?.(),
-            'confirm-gcode-printers': () => window.confirmGcodePrinters?.(),
-            'toggle-gcode-printer': () => {
+            // 3MF Manager
+            'upload-3mf': () => {
                 const printerName = actionEl.dataset.printer;
-                if (printerName && window.toggleGcodePrinter) window.toggleGcodePrinter(printerName);
+                if (printerName && window.triggerThreeMfUpload) window.triggerThreeMfUpload(printerName);
+            },
+            'remove-3mf': () => {
+                const printerName = actionEl.dataset.printer;
+                if (printerName && window.removeThreeMf) window.removeThreeMf(printerName);
+            },
+            'download-3mf': () => {
+                const printerName = actionEl.dataset.printer;
+                if (printerName && window.downloadThreeMf) window.downloadThreeMf(printerName);
             },
 
             // Modal Novo Produto
