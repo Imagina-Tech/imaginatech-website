@@ -5255,11 +5255,16 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
         const finishMultiplier = FINISH_MULTIPLIERS[fields.finish] || 1.0;
         const priorityMultiplier = PRIORITY_MULTIPLIERS[fields.priority] || 1.0;
         const infillPercent = INFILL_OPTIONS[fields.infill] || INFILL_OPTIONS['20'];
-        // Infill multiplier: shell (15%) sempre solido + interno (85%) * infill%
-        const infillMultiplier = 0.15 + (0.85 * infillPercent);
 
         // === FORMULA BASEADA NO PAINEL /custo ===
         const volumeCm3 = volume / 1000; // mm3 para cm3
+
+        // Infill multiplier INTELIGENTE baseado no tamanho da peca
+        // Pecas pequenas: paredes dominam (shell ate 50% do volume)
+        // Pecas grandes: infill domina (shell minimo 25%)
+        // Transicao gradual entre 0 e 500 cm3
+        const shellFactor = Math.max(0.25, Math.min(0.50, 0.50 - (volumeCm3 / 2000)));
+        const infillMultiplier = shellFactor + ((1 - shellFactor) * infillPercent);
         const supportMultiplier = 1 + PRICING_PARAMS.supportEstimate; // 1.35 (35% extra para suportes)
 
         // 1. Custo de material (inclui estimativa de suportes)
