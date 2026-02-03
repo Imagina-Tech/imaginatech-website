@@ -33,7 +33,7 @@ body {
 .main-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 140px var(--spacing-lg) var(--spacing-2xl);
+    padding: 160px var(--spacing-lg) var(--spacing-2xl);
     position: relative;
     z-index: var(--z-base);
 }
@@ -481,7 +481,7 @@ body {
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        padding: 100px 1rem 0.5rem 1rem;
+        padding: 120px 1rem 0.5rem 1rem;
     }
 
     .quote-panel {
@@ -490,6 +490,7 @@ body {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        margin-top: 0.75rem;
     }
 
     /* Upload section: centralizar verticalmente */
@@ -601,7 +602,7 @@ body {
 
 @media (max-width: 768px) {
     .main-container {
-        padding: 100px var(--spacing-md) var(--spacing-xl);
+        padding: 120px var(--spacing-md) var(--spacing-xl);
     }
 
     .page-title {
@@ -663,7 +664,7 @@ body {
 
 @media (max-width: 480px) {
     .main-container {
-        padding: 90px var(--spacing-sm) var(--spacing-lg);
+        padding: 110px var(--spacing-sm) var(--spacing-lg);
     }
 
     .page-title {
@@ -771,7 +772,7 @@ body {
 
 @media (max-width: 360px) {
     .main-container {
-        padding: 80px 0.4rem var(--spacing-md);
+        padding: 100px 0.4rem var(--spacing-md);
     }
 
     .quote-panel {
