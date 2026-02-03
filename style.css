@@ -617,25 +617,20 @@ footer {
 }
 
 /* ============================================================================
- * AUTO-ORCAMENTO CTA BUTTON
+ * AUTO-ORCAMENTO CTA BUTTON (dentro da hero)
  * ============================================================================ */
 
-.auto-orcamento-cta-simple {
-    display: flex;
-    justify-content: center;
-    padding: 50px 20px;
-}
-
-.auto-orcamento-cta-simple .auto-orcamento-button {
+.hero-text .auto-orcamento-button {
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    padding: 18px 36px;
+    margin-top: 20px;
+    padding: 16px 32px;
     background: linear-gradient(135deg, var(--neon-blue), var(--secondary-blue));
     color: white;
     border: none;
     border-radius: 50px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     text-transform: uppercase;
@@ -647,7 +642,7 @@ footer {
     box-shadow: 0 4px 30px rgba(0, 212, 255, 0.4);
 }
 
-.auto-orcamento-cta-simple .auto-orcamento-button::before {
+.hero-text .auto-orcamento-button::before {
     content: '';
     position: absolute;
     top: 0;
@@ -663,31 +658,27 @@ footer {
     transition: left 0.5s ease;
 }
 
-.auto-orcamento-cta-simple .auto-orcamento-button:hover {
+.hero-text .auto-orcamento-button:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 40px rgba(0, 212, 255, 0.6);
 }
 
-.auto-orcamento-cta-simple .auto-orcamento-button:hover::before {
+.hero-text .auto-orcamento-button:hover::before {
     left: 100%;
 }
 
-.auto-orcamento-cta-simple .auto-orcamento-button i:last-child {
+.hero-text .auto-orcamento-button i:last-child {
     transition: transform 0.3s ease;
 }
 
-.auto-orcamento-cta-simple .auto-orcamento-button:hover i:last-child {
+.hero-text .auto-orcamento-button:hover i:last-child {
     transform: translateX(5px);
 }
 
 @media (max-width: 480px) {
-    .auto-orcamento-cta-simple {
-        padding: 30px 16px;
-    }
-
-    .auto-orcamento-cta-simple .auto-orcamento-button {
-        padding: 14px 28px;
-        font-size: 0.95rem;
+    .hero-text .auto-orcamento-button {
+        padding: 12px 24px;
+        font-size: 0.9rem;
     }
 }
 
