@@ -1924,23 +1924,22 @@ async function syncFromMl(product) {
 
                 window.logger?.log('[ML] Fotos originais salvas para comparacao:', window.originalMlPhotos.length);
             } else {
-                console.log('[DEBUG FOTOS] syncFromMl - ML nao tem fotos, limpando tudo');
-                // ML nao tem fotos - limpar TODAS as fotos (locais ja foram sincronizadas anteriormente)
+                console.log('[DEBUG FOTOS] syncFromMl - ML nao tem fotos');
+                // ML nao tem fotos - mas MANTER fotos locais (podem ser rascunhos)
                 window.originalMlPhotos = [];
-                window.editingPhotos = [];  // Limpar tudo - se ML nao tem, nao devemos mostrar
+                // NAO limpar editingPhotos - manter fotos locais que ja foram carregadas
 
-                // Atualizar Firestore - limpar mlPhotos e localPhotos
+                // Atualizar Firestore - limpar apenas mlPhotos, MANTER localPhotos
                 const updates = {};
                 if (product.mlPhotos && product.mlPhotos.length > 0) {
                     updates.mlPhotos = [];
                     updates.mlPhotosWithIds = [];
                 }
-                if (product.localPhotos && product.localPhotos.length > 0) {
-                    updates.localPhotos = [];  // Fotos locais ja foram pro ML e foram deletadas la
-                }
+                // REMOVIDO: Nao apagar localPhotos - usuario pode usar como rascunho
+                // As fotos locais so devem ser removidas quando o usuario explicitamente as remove
                 if (Object.keys(updates).length > 0) {
                     await window.db.collection('products').doc(product.id).update(updates);
-                    window.logger?.log('[ML] Fotos removidas - Firestore limpo (mlPhotos e localPhotos)');
+                    window.logger?.log('[ML] Fotos ML removidas - localPhotos preservadas');
                 }
             }
 

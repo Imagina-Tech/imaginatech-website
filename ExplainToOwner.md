@@ -25,32 +25,33 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
-### 2026-02-03 - Fix: Marketplace - Fotos nao apareciam no modal de edicao
+### 2026-02-03 - Fix: Marketplace - Fotos locais eram apagadas ao abrir modal
 
 **Arquivos Modificados:** `marketplace/js/marketplace-core.js`, `marketplace/js/marketplace-ui.js`, `marketplace/js/marketplace-data.js`
 
 **Problema:**
-As fotos dos produtos nao estavam aparecendo no modal de edicao do marketplace.
+Fotos locais (rascunho) que o usuario adicionava aos produtos sumiam quando o modal de edicao era aberto novamente.
 
-**Causa Raiz:**
-A funcao `escapeHtml()` estava sendo usada para sanitizar URLs de imagens. O problema e que `escapeHtml()` converte caracteres especiais em entidades HTML (ex: `&` vira `&amp;`). URLs de imagens do Mercado Livre frequentemente contem parametros com `&`, e quando a URL era escapada, a imagem nao carregava.
+**Causa Raiz Principal:**
+Na funcao `syncFromMl()` em `marketplace-ui.js`, quando um produto vinculado ao ML era aberto e o ML nao tinha fotos, o codigo:
+1. Limpava `window.editingPhotos = []` - apagando fotos locais da memoria
+2. Atualizava Firestore com `localPhotos: []` - **apagando permanentemente** do banco
+
+O comentario dizia "Fotos locais ja foram pro ML", mas isso era uma suposicao incorreta. Usuario pode usar fotos locais como rascunho sem sincronizar com ML.
+
+**Problema Secundario:**
+A funcao `escapeHtml()` estava convertendo `&` para `&amp;` nas URLs de imagem, quebrando URLs do ML que contem query parameters.
 
 **Solucao:**
-1. Criada nova funcao `sanitizeImageUrl()` em `marketplace-core.js` que:
-   - Valida se a URL e segura (https, data:, blob:)
-   - Forca HTTPS para seguranca
-   - NAO escapa caracteres especiais que sao validos em URLs
+1. **syncFromMl()**: Removida a logica que apagava `localPhotos` do Firestore quando ML nao tem fotos. Fotos locais agora sao preservadas independentemente do estado do ML.
 
-2. Substituido `escapeHtml(url)` por `sanitizeImageUrl(url)` em todos os atributos `src` de imagens:
-   - `renderPhotosGrid()` - grid de fotos no modal
-   - `renderMlPhotos()` - fotos do ML
-   - `renderPrintersGrid()` - imagens de impressoras
-   - `renderThreeMfManager()` - imagens de impressoras no gerenciador 3MF
-   - Lista de importacao de itens ML
+2. **sanitizeImageUrl()**: Nova funcao em `marketplace-core.js` para sanitizar URLs de imagem sem quebrar caracteres validos como `&`.
 
-3. Adicionados logs de debug extensivos para diagnostico futuro (console)
+3. Substituido `escapeHtml(url)` por `sanitizeImageUrl(url)` em todos os `src` de imagens.
 
-**Nota:** `escapeHtml()` CONTINUA sendo usado em atributos de texto (data-*, title, alt) onde e correto e necessario. Apenas URLs de imagem agora usam `sanitizeImageUrl()`.
+**Regra:** Fotos locais so devem ser removidas quando:
+- Usuario remove explicitamente (clica no botao remover)
+- Usuario sincroniza com ML e as fotos sao enviadas para la
 
 ---
 
