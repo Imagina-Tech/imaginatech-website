@@ -936,6 +936,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// NOTA: sanitizeImageUrl esta definido em marketplace-core.js (carregado antes)
+// Usar window.sanitizeImageUrl ou apenas sanitizeImageUrl
+
 // ========== HELPERS MERCADO LIVRE ==========
 function getMlStatusBadge(product) {
     if (product.mlbId) {
@@ -1388,9 +1391,10 @@ function renderMlPhotos(photos) {
     if (empty) empty.style.display = 'none';
 
     // SEGURANCA: Usar data-action ao inves de onclick inline
+    // NOTA: src usa sanitizeImageUrl (escapeHtml quebra URLs com &), data-url usa escapeHtml (seguro para atributos)
     grid.innerHTML = photos.map((url, index) => `
         <div class="ml-photo-item ${index === 0 ? 'main-photo' : ''}" data-action="open-photo" data-url="${escapeHtml(url)}">
-            <img src="${escapeHtml(url)}" alt="Foto ${index + 1}" data-fallback="true">
+            <img src="${sanitizeImageUrl(url)}" alt="Foto ${index + 1}" data-fallback="true">
             <span class="photo-badge">${index === 0 ? 'Principal' : index + 1}</span>
         </div>
     `).join('');
@@ -1565,7 +1569,7 @@ async function showMlImportList() {
                 listEl.innerHTML = unlinkedItems.map(item => `
                     <div class="ml-import-item" data-action="import-from-ml" data-mlb-id="${escapeHtml(item.id)}">
                         <div class="ml-import-thumb">
-                            ${item.thumbnail ? `<img src="${escapeHtml(item.thumbnail.replace(/^http:\/\//i, 'https://'))}" alt="">` : '<i class="fas fa-box"></i>'}
+                            ${item.thumbnail ? `<img src="${sanitizeImageUrl(item.thumbnail)}" alt="">` : '<i class="fas fa-box"></i>'}
                         </div>
                         <div class="ml-import-info">
                             <div class="ml-import-title">${escapeHtml(item.title || 'Sem titulo')}</div>
@@ -1713,27 +1717,49 @@ async function openProductModal(productId = null) {
         // Definir flag de vinculo ML
         window.currentProductHasMlb = !!product.mlbId;
 
+        // DEBUG: Log extensivo do produto sendo editado
+        console.log('[DEBUG FOTOS] Abrindo modal para produto:', product.name);
+        console.log('[DEBUG FOTOS] product.localPhotos:', product.localPhotos);
+        console.log('[DEBUG FOTOS] product.localPhotos tipo:', typeof product.localPhotos);
+        console.log('[DEBUG FOTOS] product.localPhotos[0]:', product.localPhotos?.[0]);
+        console.log('[DEBUG FOTOS] product.mlPhotos:', product.mlPhotos);
+        console.log('[DEBUG FOTOS] product.mlPhotosWithIds:', product.mlPhotosWithIds);
+        console.log('[DEBUG FOTOS] product.mlbId:', product.mlbId);
+
         if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit"></i> Editar Produto';
         form.reset();
 
         // Inicializar array de fotos com fotos locais existentes
         if (product.localPhotos && product.localPhotos.length > 0) {
-            product.localPhotos.forEach(photo => {
-                window.editingPhotos.push({ type: 'local', url: photo.url, name: photo.name || 'foto' });
+            console.log('[DEBUG FOTOS] Processando localPhotos...');
+            product.localPhotos.forEach((photo, i) => {
+                console.log(`[DEBUG FOTOS] localPhoto ${i}:`, photo);
+                console.log(`[DEBUG FOTOS] localPhoto ${i} tipo:`, typeof photo);
+                console.log(`[DEBUG FOTOS] localPhoto ${i} url:`, photo?.url);
+                // Se photo for string (URL direto) ao inves de objeto
+                const url = typeof photo === 'string' ? photo : photo.url;
+                const name = typeof photo === 'string' ? 'foto' : (photo.name || 'foto');
+                window.editingPhotos.push({ type: 'local', url: url, name: name });
             });
+            console.log('[DEBUG FOTOS] editingPhotos apos localPhotos:', window.editingPhotos);
         }
 
         // Adicionar fotos do ML se existirem (no inicio) - com IDs se disponiveis
         if (product.mlPhotos && product.mlPhotos.length > 0) {
+            console.log('[DEBUG FOTOS] Processando mlPhotos...');
+            console.log('[DEBUG FOTOS] product.mlPhotos[0] tipo:', typeof product.mlPhotos[0]);
             // Tentar usar mlPhotosWithIds se existir
             const mlPhotosWithIds = product.mlPhotosWithIds || product.mlPhotos.map(url => ({ id: null, url }));
+            console.log('[DEBUG FOTOS] mlPhotosWithIds:', mlPhotosWithIds);
 
             const mlPhotoObjects = mlPhotosWithIds.map(p => ({
                 type: 'ml',
                 id: p.id || null,
                 url: typeof p === 'string' ? p : p.url
             }));
+            console.log('[DEBUG FOTOS] mlPhotoObjects:', mlPhotoObjects);
             window.editingPhotos = [...mlPhotoObjects, ...window.editingPhotos];
+            console.log('[DEBUG FOTOS] editingPhotos apos mlPhotos:', window.editingPhotos);
 
             // Guardar fotos originais para comparacao
             window.originalMlPhotos = mlPhotosWithIds.map(p => ({
@@ -1742,10 +1768,15 @@ async function openProductModal(productId = null) {
             }));
         }
 
+        console.log('[DEBUG FOTOS] Antes de renderizar - editingPhotos:', window.editingPhotos);
+        console.log('[DEBUG FOTOS] isMlConnected:', window.isMlConnected?.());
+
         // Se produto vinculado ao ML e conectado, buscar dados atualizados
         if (product.mlbId && window.isMlConnected && window.isMlConnected()) {
+            console.log('[DEBUG FOTOS] Sincronizando com ML...');
             await syncFromMl(product);
         } else {
+            console.log('[DEBUG FOTOS] Preenchendo formulario e renderizando fotos...');
             populateFormWithProduct(product);
             renderPhotosGrid(window.editingPhotos);
         }
@@ -1771,6 +1802,8 @@ async function openProductModal(productId = null) {
 
 // ========== SINCRONIZAR DADOS DO ML PARA O FORMULARIO ==========
 async function syncFromMl(product) {
+    console.log('[DEBUG FOTOS] syncFromMl iniciado para produto:', product.name);
+
     const syncOverlay = document.getElementById('syncOverlay');
     const syncProgressBar = document.getElementById('syncProgressBar');
 
@@ -1786,10 +1819,16 @@ async function syncFromMl(product) {
 
     // Inicializar array de fotos com fotos locais existentes
     window.editingPhotos = [];
+    console.log('[DEBUG FOTOS] syncFromMl - localPhotos:', product.localPhotos);
     if (product.localPhotos && product.localPhotos.length > 0) {
-        product.localPhotos.forEach(photo => {
-            window.editingPhotos.push({ type: 'local', url: photo.url, name: photo.name || 'foto' });
+        product.localPhotos.forEach((photo, i) => {
+            console.log(`[DEBUG FOTOS] syncFromMl - localPhoto ${i}:`, photo, typeof photo);
+            // Tratar caso seja string ou objeto
+            const url = typeof photo === 'string' ? photo : photo.url;
+            const name = typeof photo === 'string' ? 'foto' : (photo.name || 'foto');
+            window.editingPhotos.push({ type: 'local', url: url, name: name });
         });
+        console.log('[DEBUG FOTOS] syncFromMl - editingPhotos apos localPhotos:', window.editingPhotos);
     }
 
     try {
@@ -1852,12 +1891,15 @@ async function syncFromMl(product) {
             }
 
             // Atualizar fotos do ML (sincronizacao de volta)
+            console.log('[DEBUG FOTOS] syncFromMl - mlItem.pictures:', mlItem.pictures);
             if (mlItem.pictures && mlItem.pictures.length > 0) {
+                console.log('[DEBUG FOTOS] syncFromMl - Processando fotos do ML...');
                 // Guardar fotos originais do ML com IDs para comparacao ao salvar
                 window.originalMlPhotos = mlItem.pictures.map(pic => ({
                     id: pic.id,
                     url: (pic.url || pic.secure_url || '').replace(/^http:\/\//i, 'https://')
                 }));
+                console.log('[DEBUG FOTOS] syncFromMl - originalMlPhotos:', window.originalMlPhotos);
 
                 const mlPhotos = window.originalMlPhotos.map(p => p.url);
 
@@ -1867,7 +1909,9 @@ async function syncFromMl(product) {
                     id: p.id,
                     url: p.url
                 }));
+                console.log('[DEBUG FOTOS] syncFromMl - mlPhotoObjects:', mlPhotoObjects);
                 window.editingPhotos = [...mlPhotoObjects, ...window.editingPhotos.filter(p => p.type === 'local')];
+                console.log('[DEBUG FOTOS] syncFromMl - editingPhotos final:', window.editingPhotos);
 
                 // Atualizar no Firestore se as fotos mudaram
                 if (JSON.stringify(mlPhotos) !== JSON.stringify(product.mlPhotos || [])) {
@@ -1880,6 +1924,7 @@ async function syncFromMl(product) {
 
                 window.logger?.log('[ML] Fotos originais salvas para comparacao:', window.originalMlPhotos.length);
             } else {
+                console.log('[DEBUG FOTOS] syncFromMl - ML nao tem fotos, limpando tudo');
                 // ML nao tem fotos - limpar TODAS as fotos (locais ja foram sincronizadas anteriormente)
                 window.originalMlPhotos = [];
                 window.editingPhotos = [];  // Limpar tudo - se ML nao tem, nao devemos mostrar
@@ -1924,8 +1969,10 @@ async function syncFromMl(product) {
 
             window.showToast('Dados sincronizados do ML', 'success');
         } else {
+            console.log('[DEBUG FOTOS] syncFromMl - Fallback: usando fotos locais do Firestore');
             // Fallback para fotos salvas localmente
             if (product.mlPhotos && product.mlPhotos.length > 0) {
+                console.log('[DEBUG FOTOS] syncFromMl fallback - mlPhotos:', product.mlPhotos);
                 // Usar mlPhotosWithIds se existir, senao criar sem IDs
                 const mlPhotosWithIds = product.mlPhotosWithIds || product.mlPhotos.map(url => ({ id: null, url }));
                 window.originalMlPhotos = mlPhotosWithIds;
@@ -1936,6 +1983,7 @@ async function syncFromMl(product) {
                     url: typeof p === 'string' ? p : p.url
                 }));
                 window.editingPhotos = [...mlPhotoObjects, ...window.editingPhotos.filter(p => p.type === 'local')];
+                console.log('[DEBUG FOTOS] syncFromMl fallback - editingPhotos:', window.editingPhotos);
             }
 
             if (syncProgressBar) syncProgressBar.style.width = '100%';
@@ -1944,10 +1992,12 @@ async function syncFromMl(product) {
             }, 300);
         }
     } catch (error) {
+        console.error('[DEBUG FOTOS] syncFromMl - ERRO:', error);
         window.logger?.error('[ML] Erro ao sincronizar do ML:', error);
 
         // Fallback para fotos salvas localmente
         if (product.mlPhotos && product.mlPhotos.length > 0) {
+            console.log('[DEBUG FOTOS] syncFromMl error fallback - mlPhotos:', product.mlPhotos);
             const mlPhotosWithIds = product.mlPhotosWithIds || product.mlPhotos.map(url => ({ id: null, url }));
             window.originalMlPhotos = mlPhotosWithIds;
 
@@ -1957,12 +2007,14 @@ async function syncFromMl(product) {
                 url: typeof p === 'string' ? p : p.url
             }));
             window.editingPhotos = [...mlPhotoObjects, ...window.editingPhotos.filter(p => p.type === 'local')];
+            console.log('[DEBUG FOTOS] syncFromMl error fallback - editingPhotos:', window.editingPhotos);
         }
 
         if (syncOverlay) syncOverlay.classList.add('hidden');
     }
 
     // Renderizar grid de fotos
+    console.log('[DEBUG FOTOS] syncFromMl - Chamando renderPhotosGrid com:', window.editingPhotos);
     renderPhotosGrid(window.editingPhotos);
 }
 
@@ -2153,7 +2205,17 @@ function renderPhotosGrid(photos) {
     const grid = document.getElementById('photosGrid');
     const empty = document.getElementById('photosEmpty');
 
-    if (!grid) return;
+    // DEBUG: Logs extensivos para diagnostico
+    console.log('[DEBUG FOTOS] renderPhotosGrid chamado');
+    console.log('[DEBUG FOTOS] photos recebido:', photos);
+    console.log('[DEBUG FOTOS] photos length:', photos?.length);
+    console.log('[DEBUG FOTOS] grid element:', grid);
+    console.log('[DEBUG FOTOS] empty element:', empty);
+
+    if (!grid) {
+        console.error('[DEBUG FOTOS] ERRO: grid element nao encontrado!');
+        return;
+    }
 
     // Adicionar/remover classe de borda amarela se produto vinculado ao ML
     if (window.currentProductHasMlb) {
@@ -2163,6 +2225,7 @@ function renderPhotosGrid(photos) {
     }
 
     if (!photos || photos.length === 0) {
+        console.log('[DEBUG FOTOS] Sem fotos - mostrando estado vazio');
         grid.innerHTML = '';
         if (empty) {
             empty.style.display = 'flex';
@@ -2173,13 +2236,25 @@ function renderPhotosGrid(photos) {
 
     if (empty) empty.style.display = 'none';
 
+    // DEBUG: Log detalhado de cada foto
+    photos.forEach((photo, i) => {
+        console.log(`[DEBUG FOTOS] Foto ${i}:`, {
+            type: photo.type,
+            url: photo.url?.substring(0, 100) + '...',
+            urlLength: photo.url?.length,
+            hasUrl: !!photo.url,
+            keys: Object.keys(photo)
+        });
+    });
+
     // SEGURANCA: Usar data-action ao inves de onclick inline
+    // NOTA: Usar sanitizeImageUrl (nao escapeHtml) para URLs de imagens - escapeHtml quebra URLs com &
     grid.innerHTML = photos.map((photo, index) => `
         <div class="photo-item ${index === 0 ? 'is-main' : ''}"
              data-index="${index}"
              data-type="${escapeHtml(photo.type)}"
              draggable="true">
-            <img src="${escapeHtml(photo.url)}" alt="Foto ${index + 1}" data-fallback="true">
+            <img src="${sanitizeImageUrl(photo.url)}" alt="Foto ${index + 1}" data-fallback="true">
             <span class="photo-source ${escapeHtml(photo.type)}">${photo.type === 'ml' ? 'ML' : 'Local'}</span>
             <span class="photo-badge">${index === 0 ? 'Principal' : index + 1}</span>
             <div class="photo-actions">
@@ -2197,10 +2272,18 @@ function renderPhotosGrid(photos) {
         </div>
     `).join('');
 
+    console.log('[DEBUG FOTOS] HTML gerado, grid.innerHTML length:', grid.innerHTML.length);
+    console.log('[DEBUG FOTOS] Quantidade de .photo-item:', grid.querySelectorAll('.photo-item').length);
+
     // SEGURANCA: Event handlers para imagens com erro
-    grid.querySelectorAll('img[data-fallback]').forEach(img => {
+    grid.querySelectorAll('img[data-fallback]').forEach((img, i) => {
+        console.log(`[DEBUG FOTOS] Imagem ${i} src:`, img.src?.substring(0, 100));
         img.onerror = function() {
+            console.error(`[DEBUG FOTOS] ERRO ao carregar imagem ${i}:`, this.src?.substring(0, 100));
             this.src = '/assets/photo-error.png';
+        };
+        img.onload = function() {
+            console.log(`[DEBUG FOTOS] Imagem ${i} carregada com sucesso`);
         };
     });
 
@@ -2490,13 +2573,15 @@ function renderThreeMfPrinterList() {
     container.innerHTML = printers.map(printer => {
         const safeName = escapeHtml(printer.name);
         const hasImage = printer.imageUrl;
-        const safeImageUrl = hasImage ? escapeHtml(printer.imageUrl) : '';
+        // SEGURANCA: Usar sanitizeImageUrl (escapeHtml quebra URLs com &)
+        const safeImageUrl = hasImage ? sanitizeImageUrl(printer.imageUrl) : '';
 
         // Buscar arquivo vinculado a esta impressora
         const linked = editingThreeMfFiles.find(f => f.printerName === printer.name);
 
-        const imageHtml = hasImage
-            ? `<img src="${safeImageUrl}" class="threemf-printer-image" alt="${safeName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        // SEGURANCA: Sem onerror inline - tratado via event delegation
+        const imageHtml = hasImage && safeImageUrl
+            ? `<img src="${safeImageUrl}" class="threemf-printer-image" alt="${safeName}" data-fallback="true">
                <div class="threemf-printer-placeholder" style="display:none;"><i class="fas fa-print"></i></div>`
             : `<div class="threemf-printer-placeholder"><i class="fas fa-print"></i></div>`;
 
@@ -2546,6 +2631,14 @@ function renderThreeMfPrinterList() {
             </div>
         `;
     }).join('');
+
+    // SEGURANCA: Event handler para fallback de imagens (nao usar onerror inline)
+    container.querySelectorAll('img[data-fallback]').forEach(img => {
+        img.onerror = function() {
+            this.style.display = 'none';
+            if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
+        };
+    });
 
     updateThreeMfHiddenInput();
 }

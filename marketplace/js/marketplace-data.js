@@ -29,6 +29,20 @@ async function loadProducts() {
                         ...doc.data()
                     }));
 
+                    // DEBUG: Log extensivo dos dados carregados
+                    console.log('[DEBUG FOTOS] Produtos carregados:', window.products.length);
+                    window.products.forEach((p, i) => {
+                        console.log(`[DEBUG FOTOS] Produto ${i} (${p.name}):`, {
+                            id: p.id,
+                            mlPhotos: p.mlPhotos,
+                            mlPhotosLength: p.mlPhotos?.length,
+                            localPhotos: p.localPhotos,
+                            localPhotosLength: p.localPhotos?.length,
+                            mlPhotosWithIds: p.mlPhotosWithIds?.length,
+                            mlbId: p.mlbId
+                        });
+                    });
+
                     renderProducts();
                     updateStats();
                     updateConnectionStatus(true);

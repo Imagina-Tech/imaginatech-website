@@ -25,6 +25,35 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-03 - Fix: Marketplace - Fotos nao apareciam no modal de edicao
+
+**Arquivos Modificados:** `marketplace/js/marketplace-core.js`, `marketplace/js/marketplace-ui.js`, `marketplace/js/marketplace-data.js`
+
+**Problema:**
+As fotos dos produtos nao estavam aparecendo no modal de edicao do marketplace.
+
+**Causa Raiz:**
+A funcao `escapeHtml()` estava sendo usada para sanitizar URLs de imagens. O problema e que `escapeHtml()` converte caracteres especiais em entidades HTML (ex: `&` vira `&amp;`). URLs de imagens do Mercado Livre frequentemente contem parametros com `&`, e quando a URL era escapada, a imagem nao carregava.
+
+**Solucao:**
+1. Criada nova funcao `sanitizeImageUrl()` em `marketplace-core.js` que:
+   - Valida se a URL e segura (https, data:, blob:)
+   - Forca HTTPS para seguranca
+   - NAO escapa caracteres especiais que sao validos em URLs
+
+2. Substituido `escapeHtml(url)` por `sanitizeImageUrl(url)` em todos os atributos `src` de imagens:
+   - `renderPhotosGrid()` - grid de fotos no modal
+   - `renderMlPhotos()` - fotos do ML
+   - `renderPrintersGrid()` - imagens de impressoras
+   - `renderThreeMfManager()` - imagens de impressoras no gerenciador 3MF
+   - Lista de importacao de itens ML
+
+3. Adicionados logs de debug extensivos para diagnostico futuro (console)
+
+**Nota:** `escapeHtml()` CONTINUA sendo usado em atributos de texto (data-*, title, alt) onde e correto e necessario. Apenas URLs de imagem agora usam `sanitizeImageUrl()`.
+
+---
+
 ### 2026-02-03 - Refactor: Homepage - Botoes hero e video loading placeholder
 
 **Arquivos Modificados:** `index.html`, `style.css`, `script.js`

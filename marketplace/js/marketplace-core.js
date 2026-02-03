@@ -33,6 +33,31 @@ function maskEmail(email) {
 }
 window.maskEmail = maskEmail;
 
+// ========== SEGURANCA: SANITIZAR URL DE IMAGEM ==========
+// NAO usar escapeHtml em URLs - converte & para &amp; e quebra a URL
+function sanitizeImageUrl(url) {
+    if (!url) return '';
+    // Permitir data: e blob: URLs
+    if (url.startsWith('data:') || url.startsWith('blob:')) {
+        return url;
+    }
+    try {
+        const parsed = new URL(url);
+        // Apenas permitir http e https
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+            // Forcar HTTPS para seguranca
+            parsed.protocol = 'https:';
+            return parsed.href;
+        }
+        console.warn('[FOTO] Protocolo nao permitido:', parsed.protocol);
+        return '';
+    } catch (e) {
+        console.error('[FOTO] URL invalida:', url?.substring(0, 50));
+        return '';
+    }
+}
+window.sanitizeImageUrl = sanitizeImageUrl;
+
 // ========== CONFIGURACAO FIREBASE (SEGURANCA: Fail-secure) ==========
 if (!window.ENV_CONFIG) {
     console.error('[FATAL] ENV_CONFIG nao carregado. Verifique env-config.js');
@@ -769,11 +794,11 @@ function renderPrintersGrid() {
         const isSelected = selectedPrinters.includes(printer.name);
         const hasImage = printer.imageUrl;
 
-        // SEGURANCA: Sanitizar URL da imagem
-        const safeImageUrl = hasImage ? escapeHtml(printer.imageUrl) : '';
+        // SEGURANCA: Sanitizar URL da imagem (NAO usar escapeHtml - quebra URLs com &)
+        const safeImageUrl = hasImage ? sanitizeImageUrl(printer.imageUrl) : '';
 
         // Imagem ou placeholder (SEGURANCA: sem onerror inline, tratado via CSS)
-        const imageHtml = hasImage
+        const imageHtml = hasImage && safeImageUrl
             ? `<img src="${safeImageUrl}" class="ml-printer-image" alt="${escapeHtml(printer.name)}" data-fallback="true">
                <div class="ml-printer-placeholder" style="display:none;"><i class="fas fa-print"></i></div>`
             : `<div class="ml-printer-placeholder"><i class="fas fa-print"></i></div>`;
