@@ -252,34 +252,69 @@ body {
     left: 100%;
 }
 
+.cta-button {
+    opacity: 0;
+    transform: translateY(15px);
+    animation: cta-fade-in 0.6s ease forwards;
+}
+
+.cta-container .cta-button:nth-child(1) { animation-delay: 0.3s; }
+.cta-container .cta-button:nth-child(2) { animation-delay: 0.5s; }
+.cta-container .cta-button:nth-child(3) { animation-delay: 0.7s; }
+
+@keyframes cta-fade-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .cta-primary {
     background: linear-gradient(135deg, #00d4ff, #0099cc);
-    box-shadow: 0 4px 25px rgba(0, 212, 255, 0.5);
+    animation: cta-fade-in 0.6s ease forwards, glow-blue 3s ease-in-out infinite 1.5s;
 }
 
 .cta-primary:hover {
     transform: translateY(-3px);
+    animation: none;
     box-shadow: 0 8px 35px rgba(0, 212, 255, 0.7);
 }
 
 .cta-secondary {
     background: linear-gradient(135deg, #ff0055, #cc0044);
-    box-shadow: 0 4px 25px rgba(255, 0, 85, 0.5);
+    animation: cta-fade-in 0.6s ease forwards, glow-red 3s ease-in-out infinite 1.7s;
 }
 
 .cta-secondary:hover {
     transform: translateY(-3px);
+    animation: none;
     box-shadow: 0 8px 35px rgba(255, 0, 85, 0.7);
 }
 
 .cta-orcamento {
     background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    box-shadow: 0 4px 25px rgba(139, 92, 246, 0.5);
+    animation: cta-fade-in 0.6s ease forwards, glow-purple 3s ease-in-out infinite 1.9s;
 }
 
 .cta-orcamento:hover {
     transform: translateY(-3px);
+    animation: none;
     box-shadow: 0 8px 35px rgba(139, 92, 246, 0.7);
+}
+
+@keyframes glow-blue {
+    0%, 100% { box-shadow: 0 4px 25px rgba(0, 212, 255, 0.4); }
+    50%      { box-shadow: 0 4px 35px rgba(0, 212, 255, 0.7); }
+}
+
+@keyframes glow-red {
+    0%, 100% { box-shadow: 0 4px 25px rgba(255, 0, 85, 0.4); }
+    50%      { box-shadow: 0 4px 35px rgba(255, 0, 85, 0.7); }
+}
+
+@keyframes glow-purple {
+    0%, 100% { box-shadow: 0 4px 25px rgba(139, 92, 246, 0.4); }
+    50%      { box-shadow: 0 4px 35px rgba(139, 92, 246, 0.7); }
 }
 
 /* Services Section */
