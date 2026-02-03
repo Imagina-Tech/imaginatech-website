@@ -131,11 +131,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!videoWebM || !canvas) return;
 
-    // Esconde video WebM
+    // Esconde video WebM e placeholder (Safari usa canvas WebGL)
     videoWebM.style.display = 'none';
     videoWebM.pause();
     videoWebM.removeAttribute('src');
     videoWebM.load();
+
+    const placeholder = document.getElementById('cube-loading-placeholder');
+    if (placeholder) placeholder.classList.add('hidden');
 
     // Tenta inicializar WebGL
     const gl = canvas.getContext('webgl', { premultipliedAlpha: false, alpha: true });
@@ -143,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gl || !videoSafari) {
         // Fallback para imagem estatica se WebGL nao disponivel
         if (staticImg) staticImg.style.display = 'block';
+        if (placeholder) placeholder.classList.add('hidden');
         return;
     }
 

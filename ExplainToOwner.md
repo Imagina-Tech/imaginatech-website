@@ -25,20 +25,31 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
-### 2026-02-02 - Refactor: Homepage - Botoes hero centralizados com glassmorphism
+### 2026-02-03 - Refactor: Homepage - Botoes hero e video loading placeholder
 
-**Arquivos Modificados:** `index.html`, `style.css`
+**Arquivos Modificados:** `index.html`, `style.css`, `script.js`
 
 **Mudanca:**
-Os 3 botoes da hero (Iniciar Projeto, Explorar Servicos, Auto-Orcamento) foram reorganizados em coluna centralizada com glassmorphism. Auto-Orcamento agora e um `.cta-button.cta-orcamento` dentro do `.cta-container`.
+Secao auto-orcamento do final da pagina removida. Tres botoes hero (Iniciar Projeto, Projetos Anteriores, Auto-Orcamento) centralizados em coluna com gradiente solido. Video do cubo agora mostra spinner de loading enquanto carrega.
 
-**Detalhes:**
+**Detalhes - Botoes Hero:**
 1. HTML: Botao Auto-Orcamento movido para dentro do `.cta-container` como terceiro `.cta-button`
-2. CSS: `.cta-container` mudou de `flex-row` para `flex-direction: column; align-items: center`
-3. CSS: Todos os `.cta-button` agora tem `backdrop-filter: blur(12px)`, `width: 320px` e bordas semi-transparentes (glassmorphism)
-4. CSS: `.cta-primary` azul, `.cta-secondary` vermelho, `.cta-orcamento` roxo - todos com fundo rgba e borda colorida
-5. CSS: Removidos estilos antigos `.hero-text .auto-orcamento-button`
-6. Responsivo 480px: botoes reduzem para `width: 280px`
+2. HTML: "Explorar Servicos" renomeado para "Projetos Anteriores" (link #portfolio)
+3. CSS: `.cta-container` com `flex-direction: column; align-items: center; gap: 14px`
+4. CSS: Botoes pill (`border-radius: 999px`) com gradiente solido:
+   - `.cta-primary` verde WhatsApp (`#25d366` -> `#128C47`)
+   - `.cta-secondary` ciano (`#00D4FF` -> `#0077FF`)
+   - `.cta-orcamento` roxo (`#8b5cf6` -> `#5B21B6`)
+5. CSS: Animacao fade-in escalonada (0.3s, 0.5s, 0.7s delay) + scale(1.05) no hover
+6. CSS: Icones 1.2em com scale(1.2) no hover
+7. Icones: fa-whatsapp, fa-layer-group, fa-cube
+
+**Detalhes - Video Loading Placeholder:**
+1. HTML: Removido poster do video e imagem estatica visivel inicialmente
+2. HTML: Adicionado `.cube-loading-placeholder` com spinner circular neon (100px)
+3. CSS: Video inicia com `opacity: 0`, ganha `.loaded` quando pronto (fade-in 0.5s)
+4. JS: Escuta `canplay` + `playing`, detecta cache hit via `readyState >= 2`
+5. JS: Fallback para imagem estatica apos 8s se video falhar
 
 ---
 
