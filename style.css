@@ -212,11 +212,11 @@ body {
 }
 
 .cta-button {
-    padding: 16px 40px;
+    padding: 16px 44px;
     font-size: 1.1rem;
     font-weight: 700;
     border: none;
-    border-radius: 50px;
+    border-radius: 16px;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
@@ -224,35 +224,10 @@ body {
     justify-content: center;
     gap: 10px;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
     text-transform: uppercase;
     letter-spacing: 1px;
-    width: 320px;
-    color: white;
-}
-
-.cta-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.2),
-        transparent
-    );
-    transition: left 0.5s ease;
-}
-
-.cta-button:hover::before {
-    left: 100%;
-}
-
-.cta-button {
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.9);
     opacity: 0;
     transform: translateY(15px);
     animation: cta-fade-in 0.6s ease forwards;
@@ -270,51 +245,66 @@ body {
 }
 
 .cta-primary {
-    background: linear-gradient(135deg, #00d4ff, #0099cc);
-    animation: cta-fade-in 0.6s ease forwards, glow-blue 3s ease-in-out infinite 1.5s;
+    background: linear-gradient(145deg, #0e1428, #0b1022);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    box-shadow:
+        6px 6px 16px rgba(0, 0, 0, 0.6),
+        -4px -4px 12px rgba(0, 212, 255, 0.08),
+        inset 0 1px 0 rgba(0, 212, 255, 0.1);
 }
 
 .cta-primary:hover {
-    box-shadow: 0 8px 35px rgba(0, 212, 255, 0.7);
+    box-shadow:
+        2px 2px 8px rgba(0, 0, 0, 0.6),
+        -2px -2px 8px rgba(0, 212, 255, 0.12),
+        inset 0 1px 0 rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
 }
 
+.cta-primary i { color: #00d4ff; }
+
 .cta-secondary {
-    background: linear-gradient(135deg, #ff0055, #cc0044);
-    animation: cta-fade-in 0.6s ease forwards, glow-red 3s ease-in-out infinite 1.7s;
+    background: linear-gradient(145deg, #0e1428, #0b1022);
+    border: 1px solid rgba(255, 0, 85, 0.15);
+    box-shadow:
+        6px 6px 16px rgba(0, 0, 0, 0.6),
+        -4px -4px 12px rgba(255, 0, 85, 0.08),
+        inset 0 1px 0 rgba(255, 0, 85, 0.1);
 }
 
 .cta-secondary:hover {
-    box-shadow: 0 8px 35px rgba(255, 0, 85, 0.7);
+    box-shadow:
+        2px 2px 8px rgba(0, 0, 0, 0.6),
+        -2px -2px 8px rgba(255, 0, 85, 0.12),
+        inset 0 1px 0 rgba(255, 0, 85, 0.15);
+    color: #ff0055;
 }
 
+.cta-secondary i { color: #ff0055; }
+
 .cta-orcamento {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    animation: cta-fade-in 0.6s ease forwards, glow-purple 3s ease-in-out infinite 1.9s;
+    background: linear-gradient(145deg, #0e1428, #0b1022);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    box-shadow:
+        6px 6px 16px rgba(0, 0, 0, 0.6),
+        -4px -4px 12px rgba(139, 92, 246, 0.08),
+        inset 0 1px 0 rgba(139, 92, 246, 0.1);
 }
 
 .cta-orcamento:hover {
-    box-shadow: 0 8px 35px rgba(139, 92, 246, 0.7);
+    box-shadow:
+        2px 2px 8px rgba(0, 0, 0, 0.6),
+        -2px -2px 8px rgba(139, 92, 246, 0.12),
+        inset 0 1px 0 rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
 }
+
+.cta-orcamento i { color: #8b5cf6; }
 
 .cta-button:hover {
     opacity: 1;
-    transform: scale(1.06);
+    transform: scale(1.04);
     animation-play-state: paused;
-}
-
-@keyframes glow-blue {
-    0%, 100% { box-shadow: 0 4px 25px rgba(0, 212, 255, 0.4); }
-    50%      { box-shadow: 0 4px 35px rgba(0, 212, 255, 0.7); }
-}
-
-@keyframes glow-red {
-    0%, 100% { box-shadow: 0 4px 25px rgba(255, 0, 85, 0.4); }
-    50%      { box-shadow: 0 4px 35px rgba(255, 0, 85, 0.7); }
-}
-
-@keyframes glow-purple {
-    0%, 100% { box-shadow: 0 4px 25px rgba(139, 92, 246, 0.4); }
-    50%      { box-shadow: 0 4px 35px rgba(139, 92, 246, 0.7); }
 }
 
 /* Services Section */
@@ -656,9 +646,8 @@ footer {
     }
 
     .cta-button {
-        padding: 12px 30px;
-        font-size: 1rem;
-        width: 280px;
+        padding: 14px 28px;
+        font-size: 0.9rem;
     }
 
     .services {
