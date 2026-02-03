@@ -207,27 +207,27 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     margin-top: 40px;
 }
 
 .cta-button {
-    padding: 16px 44px;
-    font-size: 1.1rem;
-    font-weight: 700;
+    padding: 15px 48px;
+    font-size: 1rem;
+    font-weight: 600;
     border: none;
-    border-radius: 16px;
+    border-radius: 999px;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: all 0.3s ease;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     white-space: nowrap;
-    color: rgba(255, 255, 255, 0.9);
+    position: relative;
     opacity: 0;
     transform: translateY(15px);
     animation: cta-fade-in 0.6s ease forwards;
@@ -244,66 +244,64 @@ body {
     }
 }
 
+/* WhatsApp - destaque principal, fundo solido verde escuro */
 .cta-primary {
-    background: linear-gradient(145deg, #0e1428, #0b1022);
-    border: 1px solid rgba(0, 212, 255, 0.15);
-    box-shadow:
-        6px 6px 16px rgba(0, 0, 0, 0.6),
-        -4px -4px 12px rgba(0, 212, 255, 0.08),
-        inset 0 1px 0 rgba(0, 212, 255, 0.1);
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.25);
+    color: #25d366;
+    box-shadow: 0 2px 20px rgba(37, 211, 102, 0.08);
 }
 
 .cta-primary:hover {
-    box-shadow:
-        2px 2px 8px rgba(0, 0, 0, 0.6),
-        -2px -2px 8px rgba(0, 212, 255, 0.12),
-        inset 0 1px 0 rgba(0, 212, 255, 0.15);
-    color: #00d4ff;
+    background: rgba(37, 211, 102, 0.22);
+    border-color: rgba(37, 211, 102, 0.45);
+    color: #fff;
+    box-shadow: 0 4px 30px rgba(37, 211, 102, 0.2);
 }
 
-.cta-primary i { color: #00d4ff; }
+.cta-primary i { color: #25d366; transition: color 0.35s ease; }
+.cta-primary:hover i { color: #fff; }
 
+/* Projetos Anteriores - tom azul ciano */
 .cta-secondary {
-    background: linear-gradient(145deg, #0e1428, #0b1022);
-    border: 1px solid rgba(255, 0, 85, 0.15);
-    box-shadow:
-        6px 6px 16px rgba(0, 0, 0, 0.6),
-        -4px -4px 12px rgba(255, 0, 85, 0.08),
-        inset 0 1px 0 rgba(255, 0, 85, 0.1);
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    color: rgba(0, 212, 255, 0.85);
+    box-shadow: 0 2px 20px rgba(0, 212, 255, 0.06);
 }
 
 .cta-secondary:hover {
-    box-shadow:
-        2px 2px 8px rgba(0, 0, 0, 0.6),
-        -2px -2px 8px rgba(255, 0, 85, 0.12),
-        inset 0 1px 0 rgba(255, 0, 85, 0.15);
-    color: #ff0055;
+    background: rgba(0, 212, 255, 0.18);
+    border-color: rgba(0, 212, 255, 0.4);
+    color: #fff;
+    box-shadow: 0 4px 30px rgba(0, 212, 255, 0.15);
 }
 
-.cta-secondary i { color: #ff0055; }
+.cta-secondary i { color: var(--neon-blue); transition: color 0.35s ease; }
+.cta-secondary:hover i { color: #fff; }
 
+/* Auto-Orcamento - tom roxo vibrante */
 .cta-orcamento {
-    background: linear-gradient(145deg, #0e1428, #0b1022);
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    box-shadow:
-        6px 6px 16px rgba(0, 0, 0, 0.6),
-        -4px -4px 12px rgba(139, 92, 246, 0.08),
-        inset 0 1px 0 rgba(139, 92, 246, 0.1);
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    color: rgba(167, 139, 250, 0.9);
+    box-shadow: 0 2px 20px rgba(139, 92, 246, 0.06);
 }
 
 .cta-orcamento:hover {
-    box-shadow:
-        2px 2px 8px rgba(0, 0, 0, 0.6),
-        -2px -2px 8px rgba(139, 92, 246, 0.12),
-        inset 0 1px 0 rgba(139, 92, 246, 0.15);
-    color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.42);
+    color: #fff;
+    box-shadow: 0 4px 30px rgba(139, 92, 246, 0.18);
 }
 
-.cta-orcamento i { color: #8b5cf6; }
+.cta-orcamento i { color: #a78bfa; transition: color 0.35s ease; }
+.cta-orcamento:hover i { color: #fff; }
 
+/* Hover global */
 .cta-button:hover {
     opacity: 1;
-    transform: scale(1.04);
+    transform: scale(1.05);
     animation-play-state: paused;
 }
 
