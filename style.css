@@ -277,8 +277,15 @@ body {
     box-shadow: 0 6px 30px rgba(139, 92, 246, 0.5);
 }
 
-.cta-orcamento i { color: #a78bfa; transition: color 0.35s ease; }
-.cta-orcamento:hover i { color: #fff; }
+/* Icones dos botoes */
+.cta-button i {
+    font-size: 1.2em;
+    transition: transform 0.35s ease;
+}
+
+.cta-button:hover i {
+    transform: scale(1.2);
+}
 
 /* Hover global */
 .cta-button:hover {
