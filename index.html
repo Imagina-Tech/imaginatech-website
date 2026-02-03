@@ -501,6 +501,38 @@
             height: 100%;
             object-fit: contain;
             background: transparent !important;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .cube-video.loaded {
+            opacity: 1;
+        }
+
+        /* Placeholder de loading do cubo */
+        .cube-loading-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .cube-loading-placeholder.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cube-loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 212, 255, 0.15);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: loader-spin 1s infinite ease-in-out;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
         }
 
         /* Imagem estatica para Safari/iOS */
@@ -3633,10 +3665,13 @@
 
             <div class="hero-visual">
                 <div class="cube-video-container">
+                    <!-- Placeholder de loading enquanto video carrega -->
+                    <div class="cube-loading-placeholder" id="cube-loading-placeholder">
+                        <div class="cube-loader-spinner"></div>
+                    </div>
                     <!-- Video WebM: Chrome, Firefox, Edge (com alpha nativo) -->
                     <video class="cube-video" id="cube-video"
                            autoplay loop muted playsinline
-                           poster="assets/images/cube-face-1.png"
                            aria-label="Animacao de cubo 3D rotacionando">
                         <source src="assets/videos/cubo.webm" type="video/webm">
                     </video>
@@ -3648,8 +3683,8 @@
                     </video>
                     <!-- Canvas WebGL para chroma key em Safari/iOS -->
                     <canvas id="cube-canvas-webgl" class="cube-canvas-webgl"></canvas>
-                    <!-- Fallback imagem estatica -->
-                    <img id="cube-static" src="assets/videos/cubo_safari.png" alt="Cubo 3D ImaginaTech" class="cube-static-fallback">
+                    <!-- Fallback imagem estatica (hidden until needed) -->
+                    <img id="cube-static" src="assets/videos/cubo_safari.png" alt="Cubo 3D ImaginaTech" class="cube-static-fallback" style="display:none;">
                 </div>
                 <div class="cube-reflection"></div>
             </div>
