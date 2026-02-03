@@ -275,7 +275,6 @@ body {
 }
 
 .cta-primary:hover {
-    transform: translateY(-3px);
     box-shadow: 0 8px 35px rgba(0, 212, 255, 0.7);
 }
 
@@ -285,7 +284,6 @@ body {
 }
 
 .cta-secondary:hover {
-    transform: translateY(-3px);
     box-shadow: 0 8px 35px rgba(255, 0, 85, 0.7);
 }
 
@@ -295,12 +293,12 @@ body {
 }
 
 .cta-orcamento:hover {
-    transform: translateY(-3px);
     box-shadow: 0 8px 35px rgba(139, 92, 246, 0.7);
 }
 
 .cta-button:hover {
     opacity: 1;
+    transform: scale(1.06);
     animation-play-state: paused;
 }
 
