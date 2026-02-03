@@ -25,18 +25,20 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
-### 2026-02-02 - Refactor: Homepage - Mover botao Auto-Orcamento para inicio do site
+### 2026-02-02 - Refactor: Homepage - Botoes hero centralizados com glassmorphism
 
 **Arquivos Modificados:** `index.html`, `style.css`
 
 **Mudanca:**
-Botao de Auto-Orcamento movido do final da pagina (section completa com titulo, descricao, cubo 3D animado) para logo abaixo da secao de Servicos. Secao antiga removida completamente. Agora e apenas um botao centralizado simples.
+Os 3 botoes da hero (Iniciar Projeto, Explorar Servicos, Auto-Orcamento) foram reorganizados em coluna centralizada com glassmorphism. Auto-Orcamento agora e um `.cta-button.cta-orcamento` dentro do `.cta-container`.
 
 **Detalhes:**
-1. HTML: Removida section `.auto-orcamento-cta` (linhas ~4138-4169) com todo conteudo (icone, titulo, descricao, cubo 3D)
-2. HTML: Adicionado div `.auto-orcamento-cta-simple` com botao unico logo apos secao `#services`
-3. CSS: Removidos ~280 linhas de estilos antigos (container, icon, title, description, visual, floating-cube, cube-3d, cube-face, keyframes, responsivo)
-4. CSS: Adicionados ~70 linhas de estilos simples (centralizacao, botao com gradiente, hover, responsivo 480px)
+1. HTML: Botao Auto-Orcamento movido para dentro do `.cta-container` como terceiro `.cta-button`
+2. CSS: `.cta-container` mudou de `flex-row` para `flex-direction: column; align-items: center`
+3. CSS: Todos os `.cta-button` agora tem `backdrop-filter: blur(12px)`, `width: 320px` e bordas semi-transparentes (glassmorphism)
+4. CSS: `.cta-primary` azul, `.cta-secondary` vermelho, `.cta-orcamento` roxo - todos com fundo rgba e borda colorida
+5. CSS: Removidos estilos antigos `.hero-text .auto-orcamento-button`
+6. Responsivo 480px: botoes reduzem para `width: 280px`
 
 ---
 
