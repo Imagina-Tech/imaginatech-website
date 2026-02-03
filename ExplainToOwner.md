@@ -25,6 +25,21 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-02 - Refactor: Homepage - Mover botao Auto-Orcamento para inicio do site
+
+**Arquivos Modificados:** `index.html`, `style.css`
+
+**Mudanca:**
+Botao de Auto-Orcamento movido do final da pagina (section completa com titulo, descricao, cubo 3D animado) para logo abaixo da secao de Servicos. Secao antiga removida completamente. Agora e apenas um botao centralizado simples.
+
+**Detalhes:**
+1. HTML: Removida section `.auto-orcamento-cta` (linhas ~4138-4169) com todo conteudo (icone, titulo, descricao, cubo 3D)
+2. HTML: Adicionado div `.auto-orcamento-cta-simple` com botao unico logo apos secao `#services`
+3. CSS: Removidos ~280 linhas de estilos antigos (container, icon, title, description, visual, floating-cube, cube-3d, cube-face, keyframes, responsivo)
+4. CSS: Adicionados ~70 linhas de estilos simples (centralizacao, botao com gradiente, hover, responsivo 480px)
+
+---
+
 ### 2026-02-02 - Feature: Marketplace - Trocar GCode por 3MF (um arquivo por impressora)
 
 **Arquivos Modificados:** `marketplace/index.html`, `marketplace/js/marketplace-ui.js`, `marketplace/js/marketplace-data.js`, `marketplace/js/marketplace-core.js`, `marketplace/style.css`
