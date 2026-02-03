@@ -5012,12 +5012,12 @@ exports.linkMyWhatsApp = functions.https.onRequest(async (req, res) => {
  * Tabela de precos PROTEGIDA - nunca expor no frontend
  * Valores em R$ por cm3
  */
-// Perfis de impressora (baseado no painel /custo)
+// Perfis de impressora - USA A MAIS CARA/MAIOR CONSUMO para garantir margem
 const PRINTER_PROFILES = {
-    fdm: {  // K1 (Creality K1)
-        power: 400,              // Watts
-        machineValue: 2600,      // R$
-        depreciationHours: 6000, // Vida util em horas
+    fdm: {  // K2 Plus (Creality K2 Plus) - Maquina mais cara
+        power: 1200,             // Watts (maior consumo)
+        machineValue: 12000,     // R$ (mais cara)
+        depreciationHours: 10000,// Vida util em horas
         printRateCm3PerHour: 15, // Estimativa media de impressao
         consumables: 0           // R$ por impressao
     },
@@ -5043,7 +5043,8 @@ const MATERIAL_CONFIG = {
 const PRICING_PARAMS = {
     kwhPrice: 1.20,       // R$/kWh
     failureRate: 0.20,    // 20% taxa de falha
-    profitMargin: 2.80    // 280% margem de lucro
+    profitMargin: 2.80,   // 280% margem de lucro
+    supportEstimate: 0.35 // 35% extra de material para suportes
 };
 
 const FINISH_MULTIPLIERS = {
@@ -5259,20 +5260,21 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
 
         // === FORMULA BASEADA NO PAINEL /custo ===
         const volumeCm3 = volume / 1000; // mm3 para cm3
+        const supportMultiplier = 1 + PRICING_PARAMS.supportEstimate; // 1.35 (35% extra para suportes)
 
-        // 1. Custo de material
+        // 1. Custo de material (inclui estimativa de suportes)
         let materialCost;
         if (mat.printer === 'resin') {
-            // Resina: volume em ml (1 cm3 = 1 ml), preco por litro
-            materialCost = (volumeCm3 / 1000) * mat.pricePerLiter;
+            // Resina: volume em ml (1 cm3 = 1 ml), preco por litro + suportes
+            materialCost = (volumeCm3 / 1000) * mat.pricePerLiter * supportMultiplier;
         } else {
-            // FDM: peso em gramas, preco por kg
-            const weightG = volumeCm3 * mat.density * infillMultiplier;
+            // FDM: peso em gramas, preco por kg + suportes
+            const weightG = volumeCm3 * mat.density * infillMultiplier * supportMultiplier;
             materialCost = (weightG / 1000) * mat.pricePerKg;
         }
 
-        // 2. Tempo estimado de impressao (volume efetivo / taxa)
-        const effectiveVolumeCm3 = volumeCm3 * infillMultiplier;
+        // 2. Tempo estimado de impressao (volume efetivo / taxa) + tempo de suportes
+        const effectiveVolumeCm3 = volumeCm3 * infillMultiplier * supportMultiplier;
         const estimatedTimeH = effectiveVolumeCm3 / printer.printRateCm3PerHour;
 
         // 3. Custo de energia
