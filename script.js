@@ -79,34 +79,40 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
-// Cube video: show spinner placeholder until video is playing
-(function initCubeVideoPlaceholder() {
+// Cube video: show spinner placeholder until video is ready
+document.addEventListener('DOMContentLoaded', () => {
     const video = document.getElementById('cube-video');
     const placeholder = document.getElementById('cube-loading-placeholder');
     const staticImg = document.getElementById('cube-static');
     if (!video || !placeholder) return;
 
+    let shown = false;
+
     function showVideo() {
+        if (shown) return;
+        shown = true;
         video.classList.add('loaded');
         placeholder.classList.add('hidden');
     }
 
-    // If video already has enough data (cached)
-    if (video.readyState >= 3) {
+    // If video already has enough data (cached/fast load)
+    if (video.readyState >= 2) {
         showVideo();
         return;
     }
 
+    // Listen to multiple events - whichever fires first
+    video.addEventListener('canplay', showVideo, { once: true });
     video.addEventListener('playing', showVideo, { once: true });
 
-    // Fallback: if video fails to load, show static image after timeout
+    // Fallback: if video fails, show static image
     setTimeout(() => {
-        if (!video.classList.contains('loaded') && staticImg) {
+        if (!shown && staticImg) {
             staticImg.style.display = '';
             placeholder.classList.add('hidden');
         }
     }, 8000);
-})();
+});
 
 // Safari/iOS Detection - WebGL Chroma Key para video com transparencia
 // WebM com alpha nao funciona no Safari, usamos WebGL shader para remover fundo verde
