@@ -1729,6 +1729,9 @@ async function openProductModal(productId = null) {
         if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit"></i> Editar Produto';
         form.reset();
 
+        // IMPORTANTE: Resetar editingPhotos antes de popular com fotos do produto
+        window.editingPhotos = [];
+
         // Inicializar array de fotos com fotos locais existentes
         if (product.localPhotos && product.localPhotos.length > 0) {
             console.log('[DEBUG FOTOS] Processando localPhotos...');

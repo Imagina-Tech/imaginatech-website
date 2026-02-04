@@ -25,6 +25,35 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-04 - Fix: Marketplace - Upload de fotos falhando silenciosamente (403 Storage)
+
+**Arquivos Modificados:** `marketplace/js/marketplace-data.js`, `marketplace/js/marketplace-ui.js`
+
+**Problema:**
+Ao adicionar uma foto a um produto e salvar, a foto desaparecia ao reabrir o modal. O console mostrava erro 403 Forbidden no upload para Firebase Storage, mas o sistema mostrava "sucesso" e nao salvava as fotos.
+
+**Causa Raiz:**
+1. Upload para Firebase Storage falhava com 403 (provavel problema de regras)
+2. O erro era capturado em `uploadLocalPhotosToStorage()` mas apenas logado
+3. A foto era ignorada (nao havia fallback)
+4. `localPhotos` era salvo como `[]` no Firestore
+5. Ao reabrir, produto nao tinha fotos
+
+**Solucao:**
+1. **Fallback base64**: Em `marketplace-data.js`, funcao `uploadLocalPhotosToStorage()` agora salva a foto como base64 no Firestore quando o upload para Storage falha. Isso garante persistencia mesmo com Storage indisponivel.
+
+2. **Preservar base64 existentes**: Fotos que ja estavam salvas como base64 (sem `file`) agora sao preservadas ao salvar (nova variavel `localPhotosBase64Existing`).
+
+3. **Reset editingPhotos**: Em `marketplace-ui.js`, ao abrir modal para edicao, `window.editingPhotos = []` e chamado ANTES de popular com fotos do produto (evita acumulo de fotos de sessoes anteriores).
+
+**Tipo de foto salva:**
+- `type: 'storage'` - Foto com URL do Firebase Storage
+- `type: 'base64'` - Foto salva como base64 (fallback quando Storage falha)
+
+**Nota:** O erro 403 do Storage pode indicar regras de seguranca incorretas no Firebase. Verificar regras em: Firebase Console > Storage > Rules.
+
+---
+
 ### 2026-02-03 - Fix: Marketplace - Fotos locais eram apagadas ao abrir modal
 
 **Arquivos Modificados:** `marketplace/js/marketplace-core.js`, `marketplace/js/marketplace-ui.js`, `marketplace/js/marketplace-data.js`

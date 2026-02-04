@@ -284,6 +284,7 @@ async function uploadPhotoToStorage(photo, productId) {
 }
 
 // Upload multiplas fotos locais para Storage
+// Se upload falhar (ex: 403), faz fallback salvando base64 no Firestore
 async function uploadLocalPhotosToStorage(localPhotos, productId) {
     const results = [];
 
@@ -308,10 +309,20 @@ async function uploadLocalPhotosToStorage(localPhotos, productId) {
                     type: 'storage'
                 });
             }
-            // Fotos base64 sem file sao ignoradas (nao podem ser enviadas)
         } catch (error) {
             window.logger?.error(`[PHOTO] Erro ao enviar ${photo.name}:`, error);
-            // Continua com as demais fotos
+
+            // FALLBACK: Se upload falhou e temos base64, salvar como base64
+            // Isso garante que a foto persista mesmo sem Storage funcionando
+            if (photo.url && photo.url.startsWith('data:')) {
+                window.logger?.warn(`[PHOTO] Fallback: salvando ${photo.name} como base64`);
+                results.push({
+                    url: photo.url, // base64
+                    name: photo.name || 'foto',
+                    type: 'base64' // Marcar como base64 para futura migracao
+                });
+                window.showToast?.('Foto salva localmente (Storage indisponivel)', 'warning');
+            }
         }
     }
 
@@ -405,10 +416,15 @@ async function handleProductSubmit(event) {
     // Fotos locais ja com URL do Storage (sem base64)
     const localPhotosWithUrl = editingPhotos
         .filter(p => p.type === 'local' && !p.file && p.url && !p.url.startsWith('data:'))
-        .map(p => ({ url: p.url, name: p.name || 'foto' }));
+        .map(p => ({ url: p.url, name: p.name || 'foto', type: 'storage' }));
 
-    // Fotos locais serao preenchidas apos upload
-    let localPhotos = [...localPhotosWithUrl];
+    // Fotos locais ja salvas como base64 (sem file) - manter para nao perder
+    const localPhotosBase64Existing = editingPhotos
+        .filter(p => p.type === 'local' && !p.file && p.url && p.url.startsWith('data:'))
+        .map(p => ({ url: p.url, name: p.name || 'foto', type: 'base64' }));
+
+    // Fotos locais serao preenchidas apos upload (inclui base64 existentes)
+    let localPhotos = [...localPhotosWithUrl, ...localPhotosBase64Existing];
 
     // Ordem das fotos para referencia
     const photosOrder = editingPhotos.map((p, i) => ({
