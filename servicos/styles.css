@@ -798,8 +798,13 @@ body {
     background: var(--neon-blue);
 }
 
+/* Modal pequeno - Confirmacoes, bypass, tracking */
+.modal-content.modal-small {
+    max-width: 450px;
+}
+
 /* Modal de imagem - Desktop */
-.modal-content.modal-image { 
+.modal-content.modal-image {
     max-width: 90vw;
     max-height: 90vh;
 }
