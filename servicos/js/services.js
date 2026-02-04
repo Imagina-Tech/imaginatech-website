@@ -2256,23 +2256,30 @@ export async function updateStatus(serviceId, newStatus) {
         }
     }
 
+    // ===========================
+    // VERIFICACOES DE FOTO OBRIGATORIA (APENAS AO AVANCAR STATUS)
+    // ===========================
+    // So exige fotos quando AVANCA status, nao quando regride
+    const isAdvancing = newIndex > currentIndex;
+
     // Instagram photo requirement for modelagem_concluida and concluido
-    if ((newStatus === 'concluido' || newStatus === 'modelagem_concluida') && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
+    if (isAdvancing && (newStatus === 'concluido' || newStatus === 'modelagem_concluida') && !service.instagramPhoto && (!service.images || service.images.length === 0)) {
         state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
         showStatusModalWithPhoto(service, newStatus);
         return;
     }
 
     // Only for impressão services - delivery-related validations
-    if (!isModelagem) {
+    if (!isModelagem && isAdvancing) {
         if (newStatus === 'retirada') {
-            // Se não tem foto instagramável, abre modal para bypass
+            // Se não tem foto instagramável, abre modal de foto com botao bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
-                showBypassPasswordModal();
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
+                showStatusModalWithPhoto(service, newStatus);
                 return;
             }
 
+            // Se não tem foto embalada, abre modal de foto embalada com botao bypass
             if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
                 state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
                 showStatusModalWithPackagedPhoto(service, newStatus);
@@ -2281,17 +2288,17 @@ export async function updateStatus(serviceId, newStatus) {
         }
 
         if (newStatus === 'entregue') {
-            // Se não tem foto instagramável, abre modal para bypass
+            // Se não tem foto instagramável, abre modal de foto com botao bypass
             if (!service.instagramPhoto && (!service.images || service.images.length === 0)) {
-                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true, skipToBypass: true };
-                showBypassPasswordModal();
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresInstagramPhoto: true };
+                showStatusModalWithPhoto(service, newStatus);
                 return;
             }
 
-            // Se não tem foto embalada, abre modal para bypass
+            // Se não tem foto embalada, abre modal de foto embalada com botao bypass
             if (!service.packagedPhotos || service.packagedPhotos.length === 0) {
-                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true, skipToBypass: true };
-                showBypassPasswordModal();
+                state.pendingStatusUpdate = { serviceId, newStatus, service, requiresPackagedPhoto: true };
+                showStatusModalWithPackagedPhoto(service, newStatus);
                 return;
             }
         }
