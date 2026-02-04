@@ -23,6 +23,7 @@ import {
     closeFilesModal,
     confirmTrackingCode,
     confirmBypassPassword,
+    openBypassFromStatus,
     copyClientDataToPickup,
     copyClientDataToDelivery,
     prevImage,
@@ -134,6 +135,7 @@ const actionHandlers = {
     'confirmStatusChange': confirmStatusChange,
     'confirmTrackingCode': confirmTrackingCode,
     'confirmBypassPassword': confirmBypassPassword,
+    'openBypassFromStatus': openBypassFromStatus,
 
     // Servicos
     'selectServiceTypeImpressao': () => selectServiceType('impressao'),

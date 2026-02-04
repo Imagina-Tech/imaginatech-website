@@ -1839,7 +1839,8 @@ input[type="file"]::file-selector-button {
 
 .btn-save, .btn-confirm { background: var(--gradient-primary); color: white; flex: 1; }
 .btn-warning { background: linear-gradient(135deg, var(--neon-orange), var(--neon-red)); color: white; }
-.btn-cancel:hover, .btn-save:hover, .btn-confirm:hover, .btn-warning:hover { transform: translateY(-2px); }
+.btn-bypass { background: linear-gradient(135deg, var(--neon-orange), #ff6b00); color: white; }
+.btn-cancel:hover, .btn-save:hover, .btn-confirm:hover, .btn-warning:hover, .btn-bypass:hover { transform: translateY(-2px); }
 
 .whatsapp-option, .email-option { 
     margin-top: 1rem; 

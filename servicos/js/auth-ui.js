@@ -1044,7 +1044,11 @@ export function closeModal() {
 export function closeStatusModal() {
     document.getElementById('statusModal')?.classList.remove('active');
     state.pendingStatusUpdate = null;
-    
+
+    // Esconder botao de bypass
+    const bypassBtn = document.getElementById('statusBypassBtn');
+    if (bypassBtn) bypassBtn.style.display = 'none';
+
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) photoField.style.display = 'none';
     const photoInput = document.getElementById('instagramPhotoInput');
@@ -1149,7 +1153,11 @@ export function showStatusModalWithPhoto(service, newStatus) {
     
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) whatsappOption.style.display = 'none';
-    
+
+    // Mostrar botao de bypass para pular foto instagramavel
+    const bypassBtn = document.getElementById('statusBypassBtn');
+    if (bypassBtn) bypassBtn.style.display = 'inline-flex';
+
     document.getElementById('statusModal')?.classList.add('active');
 }
 
@@ -1204,7 +1212,11 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
             whatsappOption.style.display = 'none';
         }
     }
-    
+
+    // Mostrar botao de bypass para pular foto embalada
+    const bypassBtn = document.getElementById('statusBypassBtn');
+    if (bypassBtn) bypassBtn.style.display = 'inline-flex';
+
     document.getElementById('statusModal')?.classList.add('active');
 }
 
@@ -2534,6 +2546,23 @@ export function closeBypassModal() {
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
     }
+}
+
+// Abre o modal de bypass a partir do modal de status (quando pede foto obrigatoria)
+export function openBypassFromStatus() {
+    // Fechar o modal de status
+    const statusModal = document.getElementById('statusModal');
+    if (statusModal) {
+        statusModal.classList.remove('active');
+    }
+
+    // Marcar que o bypass e para foto (skipToBypass)
+    if (state.pendingStatusUpdate) {
+        state.pendingStatusUpdate.skipToBypass = true;
+    }
+
+    // Abrir o modal de bypass
+    showBypassPasswordModal();
 }
 
 export async function confirmBypassPassword() {
