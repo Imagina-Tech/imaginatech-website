@@ -2525,18 +2525,13 @@ export function showBypassPasswordModal() {
     const modal = document.getElementById('bypassPasswordModal');
     const input = document.getElementById('bypassPasswordInput');
 
-    logger.log('[Bypass] showBypassPasswordModal chamado, modal encontrado:', !!modal);
-
     if (modal) {
         modal.setAttribute('aria-hidden', 'false');
         modal.classList.add('active');
-        logger.log('[Bypass] Classe active adicionada, classList:', modal.classList.toString());
         if (input) {
             input.value = '';
             setTimeout(() => input.focus(), 100);
         }
-    } else {
-        logger.error('[Bypass] Modal bypassPasswordModal NAO encontrado no DOM!');
     }
 }
 
