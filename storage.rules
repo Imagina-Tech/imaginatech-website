@@ -91,10 +91,21 @@ service firebase.storage {
     }
 
     // ===========================
-    // ARQUIVOS DE PRODUTOS (Marketplace) - Fotos
+    // ARQUIVOS DE PRODUTOS (Marketplace) - Raiz
     // Apenas admins
     // ===========================
     match /products/{fileName} {
+      allow read: if isAdminOrSuper();
+      allow write: if isAdminOrSuper() && isValidFile();
+      allow delete: if isAdminOrSuper();
+    }
+
+    // ===========================
+    // FOTOS DE PRODUTOS (Marketplace)
+    // Path: products/photos/{fileName}
+    // Apenas admins
+    // ===========================
+    match /products/photos/{fileName} {
       allow read: if isAdminOrSuper();
       allow write: if isAdminOrSuper() && isValidFile();
       allow delete: if isAdminOrSuper();
