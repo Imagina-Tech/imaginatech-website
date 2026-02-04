@@ -10,6 +10,42 @@ VERSAO: 2.1 - Security Hardened (2026-01-25)
 // Usar logger do marketplace-core.js (ja carregado)
 // window.logger deve estar disponivel
 
+// ========== OVERLAY DE UPLOAD ==========
+function showUploadOverlay(text = 'Enviando fotos...') {
+    const overlay = document.getElementById('uploadOverlay');
+    const textEl = document.getElementById('uploadText');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const detailEl = document.getElementById('uploadDetail');
+
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        if (textEl) textEl.textContent = text;
+        if (progressBar) progressBar.style.width = '0%';
+        if (detailEl) detailEl.textContent = '';
+    }
+}
+
+function updateUploadProgress(current, total, fileName) {
+    const progressBar = document.getElementById('uploadProgressBar');
+    const detailEl = document.getElementById('uploadDetail');
+
+    const percent = Math.round((current / total) * 100);
+
+    if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+    }
+    if (detailEl) {
+        detailEl.textContent = `${current} de ${total} - ${fileName || ''}`;
+    }
+}
+
+function hideUploadOverlay() {
+    const overlay = document.getElementById('uploadOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+}
+
 // ========== CARREGAR PRODUTOS ==========
 async function loadProducts() {
     try {
@@ -285,13 +321,20 @@ async function uploadPhotoToStorage(photo, productId) {
 
 // Upload multiplas fotos locais para Storage
 // Se upload falhar (ex: 403), faz fallback salvando base64 no Firestore
-async function uploadLocalPhotosToStorage(localPhotos, productId) {
+// onProgress: callback(current, total, fileName) para atualizar UI
+async function uploadLocalPhotosToStorage(localPhotos, productId, onProgress) {
     const results = [];
+    const total = localPhotos.filter(p => p.file).length;
+    let current = 0;
 
     for (const photo of localPhotos) {
         try {
             // Apenas fotos que tem file (locais com arquivo)
             if (photo.file) {
+                current++;
+                // Atualizar progresso antes do upload
+                if (onProgress) onProgress(current, total, photo.name || 'foto');
+
                 const uploadResult = await uploadPhotoToStorage(photo, productId);
                 if (uploadResult) {
                     results.push({
@@ -485,21 +528,28 @@ async function handleProductSubmit(event) {
     // Upload de fotos locais para Firebase Storage (evita limite de 1MB do Firestore)
     if (localPhotosToUpload.length > 0) {
         try {
-            window.showLoading();
+            // Mostrar overlay de upload com progresso
+            showUploadOverlay(`Enviando ${localPhotosToUpload.length} foto(s)...`);
+
             const productIdForUpload = window.editingProductId || 'new_' + Date.now();
             window.logger?.log('[PHOTO] Iniciando upload de', localPhotosToUpload.length, 'foto(s)...');
 
-            const uploadedPhotos = await uploadLocalPhotosToStorage(localPhotosToUpload, productIdForUpload);
+            const uploadedPhotos = await uploadLocalPhotosToStorage(
+                localPhotosToUpload,
+                productIdForUpload,
+                updateUploadProgress // Callback de progresso
+            );
 
             // Adicionar fotos uploaded ao array de localPhotos
             localPhotos.push(...uploadedPhotos);
 
+            hideUploadOverlay();
             window.logger?.log('[PHOTO] Upload concluido:', uploadedPhotos.length, 'foto(s) enviada(s)');
             if (uploadedPhotos.length > 0) {
                 window.showToast(`${uploadedPhotos.length} foto(s) enviada(s)!`, 'success');
             }
         } catch (error) {
-            window.hideLoading();
+            hideUploadOverlay();
             window.logger?.error('[PHOTO] Erro no upload de fotos:', error);
             window.showToast('Erro ao enviar fotos. Tente novamente.', 'error');
             return;
@@ -516,7 +566,7 @@ async function handleProductSubmit(event) {
     // Upload de 3MFs pendentes
     if (pendingThreeMf.length > 0) {
         try {
-            window.showLoading();
+            showUploadOverlay(`Enviando ${pendingThreeMf.length} arquivo(s) 3MF...`);
             const productIdForUpload = window.editingProductId || 'new_' + Date.now();
             const uploadResults = await uploadPendingGcodes(pendingThreeMf, productIdForUpload);
 
@@ -529,9 +579,10 @@ async function handleProductSubmit(event) {
                 }
             });
 
+            hideUploadOverlay();
             window.showToast?.(`${uploadResults.length} arquivo(s) 3MF enviado(s)!`, 'success');
         } catch (error) {
-            window.hideLoading();
+            hideUploadOverlay();
             window.showToast?.('Erro ao enviar arquivos 3MF', 'error');
             return;
         }
