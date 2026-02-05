@@ -8,6 +8,10 @@
 .env.production
 .env.*.local
 
+# Service Account Key (NUNCA COMMITAR!)
+serviceAccountKey.json
+**/serviceAccountKey.json
+
 # NOTA: js/env-config.js NÃO é ignorado pois contém configurações
 # públicas do Firebase (segurança via Firestore Rules)
 
