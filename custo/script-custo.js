@@ -14,17 +14,15 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const logger = {
-    log: (...args) => isDev && console.log('[custo]', ...args),
-    warn: (...args) => isDev && console.warn('[custo]', ...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error('[custo]', msg, err);
-        } else {
-            console.error('[custo]', typeof msg === 'string' ? msg.split('\n')[0] : msg);
-        }
-    }
+/**
+ * Logger - usa o logger centralizado do Firestore
+ * Carregado via /shared/firestore-logger.js
+ */
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
 };
 
 // Firebase Configuration (carregado EXCLUSIVAMENTE de ENV_CONFIG - sem fallbacks)

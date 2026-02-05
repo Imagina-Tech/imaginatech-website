@@ -12,21 +12,15 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 // SECURITY UTILITIES
 // ===========================
 
-// Detectar ambiente de desenvolvimento
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-// Logger condicional - so exibe em desenvolvimento
-const logger = {
-    log: (...args) => isDev && console.log(...args),
-    warn: (...args) => isDev && console.warn(...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error(msg, err);
-        } else {
-            // Em producao, so mostra mensagem generica
-            console.error(typeof msg === 'string' ? msg.split('\n')[0] : 'Erro interno');
-        }
-    }
+/**
+ * Logger - usa o logger centralizado do Firestore
+ * Carregado via /shared/firestore-logger.js
+ */
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
 };
 
 // Escape HTML para prevenir XSS
@@ -49,7 +43,7 @@ function generateSecureId(length = 12) {
 // Exportar funcoes de seguranca globalmente
 window.escapeHtml = escapeHtml;
 window.generateSecureId = generateSecureId;
-window.logger = logger;
+// Logger centralizado ja esta em window.logger via /shared/firestore-logger.js
 
 // ===========================
 // FIREBASE CONFIGURATION (carregado de ENV_CONFIG)

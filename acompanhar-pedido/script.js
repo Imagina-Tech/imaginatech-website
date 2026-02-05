@@ -41,21 +41,15 @@ function maskEmail(email) {
 }
 
 /**
- * Logger condicional - oculta detalhes em producao
+ * Logger - usa o logger centralizado do Firestore
+ * Carregado via /shared/firestore-logger.js
  */
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const logger = {
-    log: (...args) => isDev && console.log(...args),
-    warn: (...args) => isDev && console.warn(...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error(msg, err);
-        } else {
-            // Em producao, logar apenas mensagem generica
-            console.error(typeof msg === 'string' ? msg.split('\n')[0] : 'Erro na aplicacao');
-        }
-    },
-    info: (...args) => isDev && console.info(...args)
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    info: () => {},
+    debug: () => {}
 };
 
 // ===========================
@@ -64,7 +58,7 @@ const logger = {
 
 // Firebase Configuration (OBRIGATORIO de ENV_CONFIG - sem fallback)
 if (!window.ENV_CONFIG) {
-    console.error('[FATAL] ENV_CONFIG nao carregado. Verifique env-config.js');
+    logger.error('[FATAL] ENV_CONFIG nao carregado. Verifique env-config.js');
     document.body.innerHTML = '<div style="color:red;padding:2rem;text-align:center;">Erro de configuracao. Contate o suporte.</div>';
     throw new Error('ENV_CONFIG required');
 }
@@ -82,7 +76,7 @@ const firebaseConfig = {
 const requiredKeys = ['apiKey', 'authDomain', 'projectId'];
 for (const key of requiredKeys) {
     if (!firebaseConfig[key]) {
-        console.error(`[FATAL] Firebase config missing: ${key}`);
+        logger.error(`[FATAL] Firebase config missing: ${key}`);
         throw new Error(`Firebase config incomplete: ${key}`);
     }
 }

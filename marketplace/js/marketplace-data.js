@@ -66,9 +66,9 @@ async function loadProducts() {
                     }));
 
                     // DEBUG: Log extensivo dos dados carregados
-                    console.log('[DEBUG FOTOS] Produtos carregados:', window.products.length);
+                    logger.debug('[DEBUG FOTOS] Produtos carregados:', window.products.length);
                     window.products.forEach((p, i) => {
-                        console.log(`[DEBUG FOTOS] Produto ${i} (${p.name}):`, {
+                        logger.debug(`[DEBUG FOTOS] Produto ${i} (${p.name}):`, {
                             id: p.id,
                             mlPhotos: p.mlPhotos,
                             mlPhotosLength: p.mlPhotos?.length,

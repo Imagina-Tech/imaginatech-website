@@ -7,20 +7,14 @@ VERSAO: 2.0 - Security Hardened (2026-01-25)
 ==================================================
 */
 
-// ========== SEGURANCA: LOGGER CONDICIONAL ==========
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const logger = {
-    log: (...args) => isDev && console.log(...args),
-    warn: (...args) => isDev && console.warn(...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error(msg, err);
-        } else {
-            console.error(typeof msg === 'string' ? msg.split('\n')[0] : 'Erro na aplicacao');
-        }
-    }
+// ========== LOGGER CENTRALIZADO (FIRESTORE) ==========
+// Carregado via /shared/firestore-logger.js
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
 };
-window.logger = logger;
 
 // ========== SEGURANCA: MASCARA LGPD ==========
 function maskEmail(email) {
@@ -49,10 +43,10 @@ function sanitizeImageUrl(url) {
             parsed.protocol = 'https:';
             return parsed.href;
         }
-        console.warn('[FOTO] Protocolo nao permitido:', parsed.protocol);
+        logger.warn('[FOTO] Protocolo nao permitido:', parsed.protocol);
         return '';
     } catch (e) {
-        console.error('[FOTO] URL invalida:', url?.substring(0, 50));
+        logger.error('[FOTO] URL invalida:', url?.substring(0, 50));
         return '';
     }
 }
@@ -60,7 +54,7 @@ window.sanitizeImageUrl = sanitizeImageUrl;
 
 // ========== CONFIGURACAO FIREBASE (SEGURANCA: Fail-secure) ==========
 if (!window.ENV_CONFIG) {
-    console.error('[FATAL] ENV_CONFIG nao carregado. Verifique env-config.js');
+    logger.error('[FATAL] ENV_CONFIG nao carregado. Verifique env-config.js');
     document.body.innerHTML = '<div style="color:red;padding:2rem;text-align:center;font-family:sans-serif;"><h1>Erro de Configuracao</h1><p>Configuracoes do sistema nao carregadas. Contate o suporte.</p></div>';
     throw new Error('ENV_CONFIG required - no hardcoded credentials allowed');
 }
@@ -69,7 +63,7 @@ if (!window.ENV_CONFIG) {
 const requiredKeys = ['FIREBASE_API_KEY', 'FIREBASE_AUTH_DOMAIN', 'FIREBASE_PROJECT_ID'];
 const missingKeys = requiredKeys.filter(key => !window.ENV_CONFIG[key]);
 if (missingKeys.length > 0) {
-    console.error('[FATAL] Chaves Firebase ausentes:', missingKeys.join(', '));
+    logger.error('[FATAL] Chaves Firebase ausentes:', missingKeys.join(', '));
     throw new Error('Firebase config incomplete');
 }
 

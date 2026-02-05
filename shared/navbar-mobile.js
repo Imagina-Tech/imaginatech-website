@@ -23,7 +23,7 @@ function toggleMobileMenu() {
     const btn = document.getElementById('btnMobileMenu');
 
     if (!dropdown || !btn) {
-        console.warn('Navbar Mobile: Elementos nao encontrados (mobileNavDropdown ou btnMobileMenu)');
+        (window.logger || console).warn('Navbar Mobile: Elementos nao encontrados (mobileNavDropdown ou btnMobileMenu)');
         return;
     }
 

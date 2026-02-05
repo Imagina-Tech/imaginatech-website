@@ -24,20 +24,14 @@ function escapeHtml(str) {
 }
 
 /**
- * Logger condicional - so exibe em desenvolvimento
- * Substitui console.log em producao
+ * Logger - usa o logger centralizado do Firestore
+ * Carregado via /shared/firestore-logger.js
  */
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const logger = {
-    log: (...args) => isDev && console.log('[estoque]', ...args),
-    warn: (...args) => isDev && console.warn('[estoque]', ...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error('[estoque]', msg, err);
-        } else {
-            console.error('[estoque]', typeof msg === 'string' ? msg.split('\n')[0] : msg);
-        }
-    }
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
 };
 
 /**

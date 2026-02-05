@@ -15,20 +15,14 @@ function escapeHtml(str) {
 }
 
 // ============================================
-// SEGURANCA: Logger condicional (oculta logs em producao)
+// Logger - usa o logger centralizado do Firestore
+// Carregado via /shared/firestore-logger.js
 // ============================================
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const logger = {
-    log: (...args) => isDev && console.log(...args),
-    warn: (...args) => isDev && console.warn(...args),
-    error: (msg, err) => {
-        if (isDev) {
-            console.error(msg, err);
-        } else {
-            console.error(typeof msg === 'string' ? msg.split('\n')[0] : msg);
-        }
-    },
-    brand: (...args) => console.log(...args)
+const logger = window.logger || {
+    log: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
 };
 
 // ============================================
