@@ -47,6 +47,7 @@
     // Estado do logger
     let isEnabled = DEBUG_MODE; // Comeca ativado se ?debug=true
     let isAdminChecked = false;
+    let isAdminCheckInProgress = false; // Flag para verificacao em andamento
     let pendingLogs = []; // Buffer enquanto verifica se e admin
 
     // ========================================
@@ -203,11 +204,16 @@
                     firebase.auth().onAuthStateChanged(async (user) => {
                         currentUser = user ? user.email : null;
 
-                        if (user && !isAdminChecked) {
-                            isAdminChecked = true;
+                        if (user && !isAdminChecked && !isAdminCheckInProgress) {
+                            // Marcar que verificacao esta em andamento (logs vao para pendingLogs)
+                            isAdminCheckInProgress = true;
 
                             // Verificar se usuario e admin
                             const userIsAdmin = await checkIfAdmin(user.uid);
+
+                            // Agora sim marcar como verificado
+                            isAdminChecked = true;
+                            isAdminCheckInProgress = false;
 
                             if (userIsAdmin) {
                                 // Admin confirmado - ativar logger
@@ -314,13 +320,14 @@
 
     /**
      * Controla o fluxo de logs baseado no estado de admin
-     * - Se ainda nao verificou admin: guarda em pendingLogs
+     * - Se ainda nao verificou admin OU verificacao em andamento: guarda em pendingLogs
      * - Se verificou e nao e admin/debug: descarta
      * - Se e admin ou debug mode: envia para buffer
      */
     function handleLog(entry) {
-        // Se ainda nao verificamos se e admin, guardar no pendingLogs
-        if (!isAdminChecked) {
+        // Se ainda nao verificamos se e admin OU verificacao em andamento, guardar no pendingLogs
+        // IMPORTANTE: Guardar logs durante a verificacao async para nao perder nenhum
+        if (!isAdminChecked || isAdminCheckInProgress) {
             pendingLogs.push(entry);
             return;
         }

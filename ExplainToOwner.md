@@ -25,6 +25,29 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-05 - Fix: Logger - Logs perdidos durante verificacao async de admin
+
+**Arquivos Modificados:** `/shared/firestore-logger.js`
+
+**Problema:**
+Logs de admins eram perdidos em paineis acessados sem `?debug=true`. No marketplace com debug, funcionava. No custo sem debug, nao registrava nenhum log.
+
+**Causa Raiz (Race Condition):**
+Na funcao `onAuthStateChanged`, a flag `isAdminChecked = true` era setada ANTES de completar a verificacao async `checkIfAdmin(user.uid)`. Durante os milissegundos da verificacao, qualquer `logger.log()` chamado era descartado porque:
+1. `isAdminChecked` ja era `true` (nao ia para pendingLogs)
+2. `isEnabled` ainda era `false` (descartava o log)
+
+**Solucao:**
+Adicionada flag `isAdminCheckInProgress` para manter logs em `pendingLogs` durante toda a verificacao async. Sequencia corrigida:
+1. `isAdminCheckInProgress = true` (logs vao para pendingLogs)
+2. `await checkIfAdmin(user.uid)` (verificacao async)
+3. `isAdminChecked = true` + `isAdminCheckInProgress = false`
+4. Se admin: `isEnabled = true` + flush pendingLogs
+
+**Localizacao:** `/shared/firestore-logger.js` linhas 206-230 e 321-340
+
+---
+
 ### 2026-02-04 - Feature: Sistema de Logs Centralizado no Firestore
 
 **Arquivos Criados:** `/shared/firestore-logger.js`
