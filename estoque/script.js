@@ -99,21 +99,36 @@ let adminsLoadFailed = false;
 // Carrega admins do Firestore (OBRIGATORIO antes de verificar autorizacao)
 async function loadAuthorizedEmails() {
     try {
+        // Tentar carregar via ENV_CONFIG primeiro
         if (window.ENV_CONFIG?.loadAdmins && db) {
             const admins = await window.ENV_CONFIG.loadAdmins(db);
             if (admins && admins.length > 0) {
                 AUTHORIZED_EMAILS = admins.map(a => a.email);
-                logger.log('Admins carregados:', AUTHORIZED_EMAILS.length);
-            } else {
-                logger.error('ERRO: Nenhum admin retornado do Firestore');
-                adminsLoadFailed = true;
+                logger.log('[estoque] Admins carregados via ENV_CONFIG:', AUTHORIZED_EMAILS.length);
+                return;
             }
-        } else {
-            logger.error('ERRO: ENV_CONFIG.loadAdmins nao disponivel');
-            adminsLoadFailed = true;
         }
+
+        // Fallback: carregar diretamente do Firestore
+        logger.log('[estoque] Tentando fallback direto do Firestore...');
+        if (db) {
+            const snapshot = await db.collection('admins')
+                .where('active', '==', true)
+                .get();
+
+            if (!snapshot.empty) {
+                AUTHORIZED_EMAILS = snapshot.docs.map(doc => doc.data().email);
+                logger.log('[estoque] Admins carregados via fallback Firestore:', AUTHORIZED_EMAILS.length);
+                return;
+            }
+        }
+
+        // Nenhum admin encontrado
+        logger.error('[estoque] ERRO: Nenhum admin encontrado no Firestore');
+        adminsLoadFailed = true;
+
     } catch (error) {
-        logger.error('Erro ao carregar admins:', error);
+        logger.error('[estoque] Erro ao carregar admins:', error);
         adminsLoadFailed = true;
     }
 }

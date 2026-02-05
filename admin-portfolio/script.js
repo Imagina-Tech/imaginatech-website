@@ -102,23 +102,38 @@ async function loadAuthorizedEmails() {
     if (adminsLoaded) return AUTHORIZED_EMAILS;
 
     try {
+        // Tentar carregar via ENV_CONFIG primeiro
         if (window.ENV_CONFIG?.loadAdmins && db) {
             const admins = await window.ENV_CONFIG.loadAdmins(db);
             if (admins && admins.length > 0) {
                 AUTHORIZED_EMAILS = admins.map(a => a.email);
                 adminsLoaded = true;
-                logger.log('Admins carregados:', AUTHORIZED_EMAILS.length);
+                logger.log('[admin-portfolio] Admins carregados via ENV_CONFIG:', AUTHORIZED_EMAILS.length);
                 return AUTHORIZED_EMAILS;
-            } else {
-                logger.error('ERRO: Nenhum admin encontrado no Firestore');
-                adminsLoadFailed = true;
             }
-        } else {
-            logger.error('ERRO: ENV_CONFIG.loadAdmins nao disponivel ou db nao inicializado');
-            adminsLoadFailed = true;
         }
+
+        // Fallback: carregar diretamente do Firestore
+        logger.log('[admin-portfolio] Tentando fallback direto do Firestore...');
+        if (db) {
+            const snapshot = await db.collection('admins')
+                .where('active', '==', true)
+                .get();
+
+            if (!snapshot.empty) {
+                AUTHORIZED_EMAILS = snapshot.docs.map(doc => doc.data().email);
+                adminsLoaded = true;
+                logger.log('[admin-portfolio] Admins carregados via fallback Firestore:', AUTHORIZED_EMAILS.length);
+                return AUTHORIZED_EMAILS;
+            }
+        }
+
+        // Nenhum admin encontrado
+        logger.error('[admin-portfolio] ERRO: Nenhum admin encontrado no Firestore');
+        adminsLoadFailed = true;
+
     } catch (error) {
-        logger.error('Erro ao carregar admins:', error);
+        logger.error('[admin-portfolio] Erro ao carregar admins:', error);
         adminsLoadFailed = true;
     }
     return [];
@@ -134,6 +149,10 @@ function getAuthorizedEmails() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // IMPORTANTE: Configurar event delegation ANTES de qualquer outra coisa
+    // para que o botao de login funcione mesmo antes do usuario estar autenticado
+    setupGlobalEventDelegation();
+
     initializeFirebase();
 
     // SEGURANCA: Handler para fallback de imagens (substitui onerror inline)
@@ -373,15 +392,21 @@ function setupEventListeners() {
     // Setup drag and drop for upload areas
     setupDragAndDrop();
 
-    // SEGURANCA: Event delegation global para data-action
-    setupGlobalEventDelegation();
+    // Nota: setupGlobalEventDelegation() ja e chamado no DOMContentLoaded
+    // para que o botao de login funcione antes do usuario estar autenticado
 }
 
 // ==========================================
 // GLOBAL EVENT DELEGATION - SEGURANCA
 // ==========================================
 
+let eventDelegationSetup = false;
+
 function setupGlobalEventDelegation() {
+    // Evitar adicionar listeners multiplas vezes
+    if (eventDelegationSetup) return;
+    eventDelegationSetup = true;
+
     // Handler de click global para data-action
     document.addEventListener('click', handleGlobalClick);
 
@@ -390,6 +415,8 @@ function setupGlobalEventDelegation() {
 
     // Handler de input global para campos de busca
     document.addEventListener('input', handleGlobalInput);
+
+    logger.log('Event delegation configurado');
 }
 
 function handleGlobalClick(e) {

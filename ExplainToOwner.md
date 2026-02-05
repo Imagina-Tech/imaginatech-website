@@ -51,6 +51,54 @@ Outros paineis (estoque, financas, custo, marketplace) possuem uma funcao `loadA
 
 ---
 
+### 2026-02-05 - Fix: Auditoria completa de autenticacao em todos os paineis
+
+**Arquivos Modificados:**
+- `admin-portfolio/script.js` - Corrigido botao de login + fallback duplo
+- `admin/script.js` - Removido email hardcoded, agora carrega do Firestore
+- `estoque/script.js` - Adicionado fallback duplo para carregar admins
+- `custo/script-custo.js` - Adicionado fallback duplo para carregar admins
+
+**Problemas Encontrados:**
+
+1. **admin-portfolio:** O `setupGlobalEventDelegation()` so era chamado em `showDashboard()`, entao o botao de login nao funcionava antes do usuario estar autenticado.
+
+2. **admin:** Email do super admin estava hardcoded (`SUPER_ADMIN_EMAIL = '3d3printers@gmail.com'`). Deveria carregar do Firestore.
+
+3. **estoque e custo:** Nao tinham fallback para carregar admins direto do Firestore se `ENV_CONFIG.loadAdmins` falhasse.
+
+**Correcoes:**
+
+1. **admin-portfolio/script.js:**
+   - Movido `setupGlobalEventDelegation()` para `DOMContentLoaded` (antes de inicializar Firebase)
+   - Adicionada flag `eventDelegationSetup` para evitar duplicacao de event listeners
+   - Adicionado fallback duplo: tenta `ENV_CONFIG.loadAdmins()`, depois Firestore direto
+   - Adicionado prefixo `[admin-portfolio]` nos logs
+
+2. **admin/script.js:**
+   - Renomeado `SUPER_ADMIN_EMAIL` para `LEGACY_SUPER_ADMIN_EMAIL` (fallback temporario)
+   - Adicionada funcao `loadSuperAdmins()` que busca admins com `isSuperAdmin: true` no Firestore
+   - Adicionada funcao `isSuperAdmin(email)` para verificar status
+   - Fallback mantido para garantir acesso durante migracao
+   - Atualizado `renderAdmins()` e `requestRemoveAdmin()` para usar nova logica
+
+3. **estoque/script.js e custo/script-custo.js:**
+   - Adicionado fallback direto para Firestore se `ENV_CONFIG.loadAdmins` nao estiver disponivel
+   - Adicionado prefixo `[estoque]` e `[custo]` nos logs para facilitar debug
+
+**Padrao de Autenticacao Estabelecido:**
+
+Todos os paineis agora seguem o padrao:
+1. Tentar `ENV_CONFIG.loadAdmins(db)` primeiro
+2. Se falhar, carregar direto do Firestore: `db.collection('admins').where('active', '==', true)`
+3. Se nenhum admin encontrado, `adminsLoadFailed = true` e negar acesso (fail-secure)
+4. Logs com prefixo do painel para facilitar debug
+
+**Nota para Super Admin:**
+Para definir um novo super admin, adicione o campo `isSuperAdmin: true` no documento do admin na collection `admins` do Firestore.
+
+---
+
 ### 2026-02-05 - UI: Footer profissional + Subtitulo com localizacao
 
 **Arquivos Modificados:** `index.html`, `style.css`

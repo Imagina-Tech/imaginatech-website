@@ -47,23 +47,36 @@ let adminsLoadFailed = false;
 // Carrega admins do Firestore (OBRIGATORIO antes de verificar autorizacao)
 async function loadAuthorizedEmails() {
     try {
+        const tempDb = firebase.firestore();
+
+        // Tentar carregar via ENV_CONFIG primeiro
         if (window.ENV_CONFIG?.loadAdmins) {
-            // Criar instancia temporaria do Firestore para carregar admins
-            const tempDb = firebase.firestore();
             const admins = await window.ENV_CONFIG.loadAdmins(tempDb);
             if (admins && admins.length > 0) {
                 AUTHORIZED_EMAILS = admins.map(a => a.email);
-                logger.log('Admins carregados:', AUTHORIZED_EMAILS.length);
-            } else {
-                logger.error('ERRO: Nenhum admin retornado do Firestore');
-                adminsLoadFailed = true;
+                logger.log('[custo] Admins carregados via ENV_CONFIG:', AUTHORIZED_EMAILS.length);
+                return;
             }
-        } else {
-            logger.error('ERRO: ENV_CONFIG.loadAdmins nao disponivel');
-            adminsLoadFailed = true;
         }
+
+        // Fallback: carregar diretamente do Firestore
+        logger.log('[custo] Tentando fallback direto do Firestore...');
+        const snapshot = await tempDb.collection('admins')
+            .where('active', '==', true)
+            .get();
+
+        if (!snapshot.empty) {
+            AUTHORIZED_EMAILS = snapshot.docs.map(doc => doc.data().email);
+            logger.log('[custo] Admins carregados via fallback Firestore:', AUTHORIZED_EMAILS.length);
+            return;
+        }
+
+        // Nenhum admin encontrado
+        logger.error('[custo] ERRO: Nenhum admin encontrado no Firestore');
+        adminsLoadFailed = true;
+
     } catch (error) {
-        logger.error('Erro ao carregar admins:', error);
+        logger.error('[custo] Erro ao carregar admins:', error);
         adminsLoadFailed = true;
     }
 }
