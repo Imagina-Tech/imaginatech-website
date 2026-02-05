@@ -191,6 +191,25 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // ===========================
+    // COLECAO: LOGS (Sistema de logging centralizado)
+    // Estrutura: logs/{painel}/entries/{docId}
+    // ===========================
+    match /logs/{painel} {
+      // Qualquer usuario autenticado pode criar/atualizar o doc do painel
+      allow read, write: if request.auth != null;
+
+      // Subcollection entries
+      match /entries/{logId} {
+        // Qualquer usuario autenticado pode criar logs
+        allow create: if request.auth != null;
+        // Apenas admins podem ler e deletar logs
+        allow read, delete: if isAdmin();
+        // Ninguem pode atualizar um log existente (imutavel)
+        allow update: if false;
+      }
+    }
+
     // Clients - admin tem acesso total
     match /clients/{document} {
       allow read, write: if isAdmin();
