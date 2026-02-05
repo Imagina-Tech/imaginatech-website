@@ -25,6 +25,21 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-05 - UI: Footer profissional + Subtitulo com localizacao
+
+**Arquivos Modificados:** `index.html`, `style.css`
+
+**Alteracoes:**
+1. **Subtitulo hero:** "Impressao 3D profissional no Rio de Janeiro - Da pessoa fisica a industria"
+   - "Rio de Janeiro" agora visivel no subtitulo (melhor para SEO)
+2. **Footer redesenhado** com 3 colunas:
+   - **Brand:** Logo ImaginaTech + tagline + redes sociais
+   - **Contato:** Email (contato@imaginatech.com.br), WhatsApp, Endereco (Rio de Janeiro, RJ)
+   - **Links:** Orcamento Online, Portfolio, Acompanhar Pedido, Politica de Privacidade
+3. **CSS responsivo:** Footer colapsa para 1 coluna em mobile
+
+---
+
 ### 2026-02-05 - SEO: Otimizacao para busca local "impressao 3d rio de janeiro"
 
 **Arquivos Modificados:** `index.html`, `projetos/index.html`, `auto-orcamento/index.html`, `sitemap.xml`
