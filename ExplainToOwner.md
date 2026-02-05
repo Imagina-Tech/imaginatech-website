@@ -25,6 +25,32 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-05 - Fix: Admin Portfolio - Login nao autorizava admins
+
+**Arquivos Modificados:** `admin-portfolio/script.js`
+
+**Problema:**
+O botao de login com Google funcionava, mas apos autenticar, todos os usuarios (incluindo admins) eram redirecionados para a tela de "Acesso Negado".
+
+**Causa Raiz:**
+O `admin-portfolio/script.js` nao chamava `ENV_CONFIG.loadAdmins(db)` antes de verificar se o usuario era admin. A lista `AUTHORIZED_ADMINS` ficava vazia (array `[]`), entao nenhum email passava na verificacao.
+
+Outros paineis (estoque, financas, custo, marketplace) possuem uma funcao `loadAuthorizedEmails()` que carrega os admins do Firestore antes da verificacao. O admin-portfolio nao tinha essa funcao.
+
+**Solucao:**
+1. Adicionada funcao `loadAuthorizedEmails()` (linhas 100-125) que:
+   - Chama `ENV_CONFIG.loadAdmins(db)` para buscar admins do Firestore
+   - Popula a variavel `AUTHORIZED_EMAILS` com os emails
+   - Controla flags `adminsLoaded` e `adminsLoadFailed`
+
+2. Modificada funcao `handleAuthStateChange()` (linhas 176-200) para:
+   - Chamar `await loadAuthorizedEmails()` ANTES de verificar autorizacao
+   - Negar acesso se `adminsLoadFailed` for true (fail-secure)
+
+**Localizacao:** `admin-portfolio/script.js` linhas 95-130 e 176-200
+
+---
+
 ### 2026-02-05 - UI: Footer profissional + Subtitulo com localizacao
 
 **Arquivos Modificados:** `index.html`, `style.css`

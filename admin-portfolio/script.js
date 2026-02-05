@@ -92,12 +92,41 @@ let allServices = []; // Lista de servicos para o dropdown
 let isAddMode = false; // Modo de adicao vs edicao
 let selectedServicePhoto = null; // Foto do servico selecionado para herdar
 
-// Emails autorizados (carregados do ENV_CONFIG)
-function getAuthorizedEmails() {
-    if (window.ENV_CONFIG && window.ENV_CONFIG.AUTHORIZED_ADMINS) {
-        return window.ENV_CONFIG.AUTHORIZED_ADMINS.map(admin => admin.email);
+// Emails autorizados (carregados do Firestore via ENV_CONFIG)
+let AUTHORIZED_EMAILS = [];
+let adminsLoaded = false;
+let adminsLoadFailed = false;
+
+// Carrega admins do Firestore (OBRIGATORIO antes de verificar autorizacao)
+async function loadAuthorizedEmails() {
+    if (adminsLoaded) return AUTHORIZED_EMAILS;
+
+    try {
+        if (window.ENV_CONFIG?.loadAdmins && db) {
+            const admins = await window.ENV_CONFIG.loadAdmins(db);
+            if (admins && admins.length > 0) {
+                AUTHORIZED_EMAILS = admins.map(a => a.email);
+                adminsLoaded = true;
+                logger.log('Admins carregados:', AUTHORIZED_EMAILS.length);
+                return AUTHORIZED_EMAILS;
+            } else {
+                logger.error('ERRO: Nenhum admin encontrado no Firestore');
+                adminsLoadFailed = true;
+            }
+        } else {
+            logger.error('ERRO: ENV_CONFIG.loadAdmins nao disponivel ou db nao inicializado');
+            adminsLoadFailed = true;
+        }
+    } catch (error) {
+        logger.error('Erro ao carregar admins:', error);
+        adminsLoadFailed = true;
     }
     return [];
+}
+
+function getAuthorizedEmails() {
+    // Retornar lista carregada do Firestore
+    return AUTHORIZED_EMAILS;
 }
 
 // ==========================================
@@ -145,8 +174,18 @@ function initializeFirebase() {
     }
 }
 
-function handleAuthStateChange(user) {
+async function handleAuthStateChange(user) {
     if (user) {
+        // SEGURANCA: Carregar admins do Firestore ANTES de verificar autorizacao
+        await loadAuthorizedEmails();
+
+        // Verificar se falhou ao carregar admins
+        if (adminsLoadFailed) {
+            logger.error('Falha ao carregar admins - negando acesso por seguranca');
+            showAccessDenied(user.email);
+            return;
+        }
+
         // Check if authorized
         const authorizedEmails = getAuthorizedEmails();
         if (authorizedEmails.includes(user.email)) {
