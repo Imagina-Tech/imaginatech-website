@@ -5424,3 +5424,89 @@ exports.getAvailableFilaments = functions.https.onRequest(async (req, res) => {
         return res.status(500).json({ error: 'Erro ao consultar estoque' });
     }
 });
+
+// ========== MIGRACAO: SUPER ADMIN ==========
+/**
+ * Funcao de migracao para adicionar isSuperAdmin: true ao admin principal
+ * Executar UMA VEZ via: curl -X POST https://us-central1-imaginatech-servicos.cloudfunctions.net/migrateSuperAdmin
+ * Depois de executar, esta funcao pode ser removida
+ */
+exports.migrateSuperAdmin = functions.https.onRequest(async (req, res) => {
+    setCorsHeaders(res, req);
+
+    if (req.method === 'OPTIONS') {
+        return res.status(204).send('');
+    }
+
+    // Apenas POST permitido
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Metodo nao permitido. Use POST.' });
+    }
+
+    const SUPER_ADMIN_EMAIL_TARGET = '3d3printers@gmail.com';
+
+    try {
+        console.log('[migrateSuperAdmin] Iniciando migracao...');
+
+        // Buscar admin pelo email
+        const snapshot = await db.collection('admins')
+            .where('email', '==', SUPER_ADMIN_EMAIL_TARGET)
+            .get();
+
+        if (snapshot.empty) {
+            console.log('[migrateSuperAdmin] Admin nao encontrado. Criando...');
+
+            // Criar documento de admin
+            const newAdminRef = await db.collection('admins').add({
+                email: SUPER_ADMIN_EMAIL_TARGET,
+                name: 'Super Admin',
+                active: true,
+                isSuperAdmin: true,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return res.json({
+                success: true,
+                message: 'Admin criado com isSuperAdmin: true',
+                adminId: newAdminRef.id,
+                created: true
+            });
+        }
+
+        // Atualizar documento existente
+        const adminDoc = snapshot.docs[0];
+        const adminData = adminDoc.data();
+
+        console.log(`[migrateSuperAdmin] Admin encontrado: ${adminData.email}, isSuperAdmin atual: ${adminData.isSuperAdmin}`);
+
+        if (adminData.isSuperAdmin === true) {
+            return res.json({
+                success: true,
+                message: 'Admin ja possui isSuperAdmin: true',
+                adminId: adminDoc.id,
+                alreadyMigrated: true
+            });
+        }
+
+        // Adicionar campo isSuperAdmin
+        await adminDoc.ref.update({
+            isSuperAdmin: true
+        });
+
+        console.log('[migrateSuperAdmin] Campo isSuperAdmin: true adicionado!');
+
+        return res.json({
+            success: true,
+            message: 'Campo isSuperAdmin: true adicionado com sucesso',
+            adminId: adminDoc.id,
+            migrated: true
+        });
+
+    } catch (error) {
+        console.error('[migrateSuperAdmin] Erro:', error);
+        return res.status(500).json({
+            error: 'Erro durante migracao',
+            details: error.message
+        });
+    }
+});
