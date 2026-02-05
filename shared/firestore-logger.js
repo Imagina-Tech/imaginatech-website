@@ -3,7 +3,7 @@
  * ARQUIVO: /shared/firestore-logger.js
  * MODULO: Sistema de Logs Centralizado no Firestore
  * SISTEMA: ImaginaTech - Gestao de Impressao 3D
- * VERSAO: 1.0
+ * VERSAO: 2.0 - Auto-ativa para admins
  * ==================================================
  *
  * ESTRUTURA NO FIRESTORE:
@@ -17,39 +17,15 @@
  *   - url: string (URL atual)
  *   - userAgent: string
  *
+ * ATIVACAO:
+ * - Automatica para usuarios admin (collection /admins)
+ * - Manual com ?debug=true na URL (qualquer usuario)
+ *
  * LIMPEZA AUTOMATICA: Logs > 7 dias sao removidos ao inicializar
  */
 
 (function() {
     'use strict';
-
-    // ========================================
-    // VERIFICACAO DE DEBUG MODE
-    // Logs so sao enviados ao Firestore se URL tiver ?debug=true
-    // ========================================
-
-    const DEBUG_MODE = window.location.search.includes('debug=true');
-
-    // Se nao estiver em debug mode, criar logger vazio (no-op)
-    if (!DEBUG_MODE) {
-        const noop = () => {};
-        window.logger = {
-            log: noop,
-            info: noop,
-            warn: noop,
-            error: noop,
-            debug: noop,
-            group: noop,
-            groupEnd: noop,
-            table: noop,
-            time: noop,
-            timeEnd: noop,
-            flush: noop,
-            getPanelName: () => 'disabled'
-        };
-        window.FirestoreLogger = window.logger;
-        return; // Sai da IIFE sem inicializar Firestore
-    }
 
     // ========================================
     // CONFIGURACAO
@@ -62,8 +38,16 @@
         FLUSH_INTERVAL_MS: 5000,
         MAX_MESSAGE_LENGTH: 5000,
         MAX_DATA_LENGTH: 10000,
-        ENABLE_CONSOLE_IN_DEV: false // Manter false para nao mostrar no F12
+        ENABLE_CONSOLE_IN_DEV: false
     };
+
+    // Debug mode forcado via URL
+    const DEBUG_MODE = window.location.search.includes('debug=true');
+
+    // Estado do logger
+    let isEnabled = DEBUG_MODE; // Comeca ativado se ?debug=true
+    let isAdminChecked = false;
+    let pendingLogs = []; // Buffer enquanto verifica se e admin
 
     // ========================================
     // DETECCAO DO PAINEL
@@ -187,6 +171,21 @@
     }
 
     // ========================================
+    // VERIFICACAO DE ADMIN
+    // ========================================
+
+    async function checkIfAdmin(userUid) {
+        if (!firestoreDb || !userUid) return false;
+
+        try {
+            const adminDoc = await firestoreDb.collection('admins').doc(userUid).get();
+            return adminDoc.exists && adminDoc.data()?.active !== false;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ========================================
     // INICIALIZACAO DO FIRESTORE
     // ========================================
 
@@ -199,15 +198,38 @@
                 firestoreDb = firebase.firestore();
                 isInitialized = true;
 
-                // Observar mudancas de autenticacao
+                // Observar mudancas de autenticacao e verificar se e admin
                 if (firebase.auth) {
-                    firebase.auth().onAuthStateChanged(user => {
+                    firebase.auth().onAuthStateChanged(async (user) => {
                         currentUser = user ? user.email : null;
+
+                        if (user && !isAdminChecked) {
+                            isAdminChecked = true;
+
+                            // Verificar se usuario e admin
+                            const userIsAdmin = await checkIfAdmin(user.uid);
+
+                            if (userIsAdmin) {
+                                // Admin confirmado - ativar logger
+                                isEnabled = true;
+                                // Flush logs pendentes que estavam em buffer
+                                if (pendingLogs.length > 0) {
+                                    pendingLogs.forEach(entry => addToBuffer(entry));
+                                    pendingLogs = [];
+                                }
+                            } else if (!DEBUG_MODE) {
+                                // Nao e admin e nao tem ?debug=true - descartar logs
+                                pendingLogs = [];
+                                isEnabled = false;
+                            }
+                        }
                     });
                 }
 
-                // Executar limpeza de logs antigos
-                cleanOldLogs();
+                // Executar limpeza de logs antigos (apenas se habilitado)
+                if (isEnabled) {
+                    cleanOldLogs();
+                }
 
                 // Flush buffer pendente
                 flushBuffer();
@@ -288,6 +310,28 @@
         if (!flushTimeout) {
             flushTimeout = setTimeout(flushBuffer, CONFIG.FLUSH_INTERVAL_MS);
         }
+    }
+
+    /**
+     * Controla o fluxo de logs baseado no estado de admin
+     * - Se ainda nao verificou admin: guarda em pendingLogs
+     * - Se verificou e nao e admin/debug: descarta
+     * - Se e admin ou debug mode: envia para buffer
+     */
+    function handleLog(entry) {
+        // Se ainda nao verificamos se e admin, guardar no pendingLogs
+        if (!isAdminChecked) {
+            pendingLogs.push(entry);
+            return;
+        }
+
+        // Se verificamos e nao e admin nem debug, ignorar
+        if (!isEnabled) {
+            return;
+        }
+
+        // Admin confirmado ou debug mode - enviar para buffer
+        addToBuffer(entry);
     }
 
     async function flushBuffer() {
@@ -374,7 +418,7 @@
         log: function(...args) {
             if (args.length === 0) return;
             const entry = createLogEntry('log', args);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -383,7 +427,7 @@
         info: function(...args) {
             if (args.length === 0) return;
             const entry = createLogEntry('info', args);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -392,7 +436,7 @@
         warn: function(...args) {
             if (args.length === 0) return;
             const entry = createLogEntry('warn', args);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -401,9 +445,9 @@
         error: function(...args) {
             if (args.length === 0) return;
             const entry = createLogEntry('error', args);
-            addToBuffer(entry);
-            // Flush imediato para erros
-            flushBuffer();
+            handleLog(entry);
+            // Flush imediato para erros (se habilitado)
+            if (isEnabled) flushBuffer();
         },
 
         /**
@@ -412,7 +456,7 @@
         debug: function(...args) {
             if (args.length === 0) return;
             const entry = createLogEntry('debug', args);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -420,7 +464,7 @@
          */
         group: function(label) {
             const entry = createLogEntry('log', [`[GROUP START] ${label}`]);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -428,7 +472,7 @@
          */
         groupEnd: function(label) {
             const entry = createLogEntry('log', [`[GROUP END] ${label || ''}`]);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -436,7 +480,7 @@
          */
         table: function(data, label) {
             const entry = createLogEntry('log', [label || '[TABLE]', data]);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -446,7 +490,7 @@
             logger._timers = logger._timers || {};
             logger._timers[label] = performance.now();
             const entry = createLogEntry('log', [`[TIMER START] ${label}`]);
-            addToBuffer(entry);
+            handleLog(entry);
         },
 
         /**
@@ -459,7 +503,7 @@
                 const duration = (performance.now() - start).toFixed(2);
                 delete logger._timers[label];
                 const entry = createLogEntry('log', [`[TIMER END] ${label}: ${duration}ms`]);
-                addToBuffer(entry);
+                handleLog(entry);
             }
         },
 
