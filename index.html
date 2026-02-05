@@ -3360,16 +3360,26 @@
         /* ========== 21. FOOTER MOBILE ========== */
         @media (max-width: 768px) {
             footer {
-                padding: 30px 15px !important;
+                padding: 40px 20px 25px !important;
             }
 
-            .footer-content p {
-                font-size: 0.85rem !important;
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 30px !important;
+                text-align: center !important;
+            }
+
+            .footer-brand {
+                align-items: center !important;
             }
 
             .social-links {
+                justify-content: center !important;
                 gap: 12px !important;
-                margin-bottom: 15px !important;
+            }
+
+            .footer-list {
+                align-items: center !important;
             }
 
             .social-link {
@@ -3377,15 +3387,28 @@
                 height: 44px;
                 font-size: 0.9rem;
             }
+
+            .footer-bottom {
+                padding-top: 20px !important;
+            }
+
+            .footer-bottom p {
+                font-size: 0.8rem !important;
+            }
         }
 
         @media (max-width: 480px) {
             footer {
-                padding: 25px 10px !important;
+                padding: 30px 15px 20px !important;
             }
 
-            .footer-content p {
-                font-size: 0.75rem !important;
+            .footer-logo {
+                font-size: 1.2rem !important;
+            }
+
+            .footer-tagline,
+            .footer-list li {
+                font-size: 0.85rem !important;
             }
 
             .social-link {
@@ -3393,15 +3416,15 @@
                 height: 44px;
                 font-size: 0.85rem;
             }
+
+            .footer-bottom p {
+                font-size: 0.75rem !important;
+            }
         }
 
-        /* Privacy Link */
+        /* Privacy Link - Removido, agora faz parte do footer-list */
         .privacy-link {
-            display: inline-block;
-            margin-top: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75rem;
-            text-decoration: none;
+            display: none; /* Legacy - nao usado mais */
             transition: color 0.3s ease;
         }
 
@@ -3722,7 +3745,7 @@
         <div class="hero-content" data-aos="fade-up">
             <div class="hero-text">
                 <h1 class="glitch-text">ImaginaTech<span class="seo-hidden"> - Impressao 3D Rio de Janeiro RJ</span></h1>
-                <p class="hero-subtitle">Da pessoa fisica a industria - Impressao 3D para todas as escalas</p>
+                <p class="hero-subtitle">Impressao 3D profissional no Rio de Janeiro - Da pessoa fisica a industria</p>
 
                 <div class="cta-container">
                     <a href="https://wa.me/5521968972539?text=Olá,%20gostaria%20de%20conhecer%20o%20futuro%20da%20impressão%203D!"
@@ -4286,19 +4309,58 @@
     <!-- Footer -->
     <footer>
         <div class="footer-content">
-            <div class="social-links">
-                <a href="https://www.instagram.com/imaginatech3d/" target="_blank" rel="noopener noreferrer" class="social-link">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="https://wa.me/5521968972539" target="_blank" rel="noopener noreferrer" class="social-link">
-                    <i class="fab fa-whatsapp"></i>
-                </a>
-                <a href="mailto:contato@imaginatech.com.br" class="social-link">
-                    <i class="fas fa-envelope"></i>
-                </a>
+            <div class="footer-grid">
+                <!-- Coluna 1: Logo e descricao -->
+                <div class="footer-brand">
+                    <h3 class="footer-logo">ImaginaTech</h3>
+                    <p class="footer-tagline">Impressao 3D Profissional no Rio de Janeiro</p>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/imaginatech3d/" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://wa.me/5521968972539" target="_blank" rel="noopener noreferrer" class="social-link" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="mailto:contato@imaginatech.com.br" class="social-link" title="E-mail">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Coluna 2: Contato -->
+                <div class="footer-contact">
+                    <h4 class="footer-title">Contato</h4>
+                    <ul class="footer-list">
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <a href="mailto:contato@imaginatech.com.br">contato@imaginatech.com.br</a>
+                        </li>
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <a href="https://wa.me/5521968972539" target="_blank" rel="noopener noreferrer">(21) 96897-2539</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Rio de Janeiro, RJ - Brasil</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Coluna 3: Links rapidos -->
+                <div class="footer-links">
+                    <h4 class="footer-title">Links</h4>
+                    <ul class="footer-list">
+                        <li><a href="/auto-orcamento/">Orcamento Online</a></li>
+                        <li><a href="/projetos/">Portfolio</a></li>
+                        <li><a href="/acompanhar-pedido/">Acompanhar Pedido</a></li>
+                        <li><a href="/politica-privacidade.html">Politica de Privacidade</a></li>
+                    </ul>
+                </div>
             </div>
-            <p>&copy; <script>document.write(new Date().getFullYear())</script> ImaginaTech - Construindo o Futuro, Hoje</p>
-            <a href="/politica-privacidade.html" class="privacy-link">Politica de Privacidade</a>
+
+            <div class="footer-bottom">
+                <p>&copy; <script>document.write(new Date().getFullYear())</script> ImaginaTech - Todos os direitos reservados</p>
+            </div>
         </div>
     </footer>
 
