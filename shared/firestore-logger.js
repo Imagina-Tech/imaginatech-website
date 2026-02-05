@@ -193,10 +193,17 @@
     function initializeFirestore() {
         if (isInitialized) return;
 
-        // Aguardar Firebase estar disponivel
+        // Aguardar Firebase estar disponivel E inicializado
         const checkFirebase = () => {
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-                firestoreDb = firebase.firestore();
+            // Verificar se Firebase existe, tem firestore E foi inicializado (tem apps)
+            if (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length > 0) {
+                try {
+                    firestoreDb = firebase.firestore();
+                } catch (e) {
+                    // Se falhar, tentar novamente depois
+                    setTimeout(checkFirebase, 100);
+                    return;
+                }
                 isInitialized = true;
 
                 // Observar mudancas de autenticacao e verificar se e admin
@@ -526,6 +533,14 @@
          */
         getPanelName: function() {
             return panelName;
+        },
+
+        /**
+         * Brand/Easter egg - exibe mensagem estilizada no console
+         * Sempre exibe no console independente do estado do logger
+         */
+        brand: function(...args) {
+            console.log(...args);
         }
     };
 
