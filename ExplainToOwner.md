@@ -43,10 +43,11 @@ Site nao aparecia nas buscas por "impressao 3d rj" ou "impressao 3d rio de janei
 1. **Title:** "ImaginaTech - Impressao 3D do Futuro" -> "Impressao 3D Rio de Janeiro | ImaginaTech"
 2. **Description:** Adicionado "Rio de Janeiro", "RJ", "orcamento gratis", "entrega para todo RJ"
 3. **Keywords:** "impressao 3d rj", "impressao 3d rio de janeiro", "zona norte", "zona sul"
-4. **H1:** "ImaginaTech" -> "Impressao 3D Rio de Janeiro" (keyword no H1 principal)
+4. **H1:** Visual: "ImaginaTech" + SEO oculto: "- Impressao 3D Rio de Janeiro RJ" (classe .seo-hidden)
 5. **LocalBusiness Schema:** Adicionado areaServed, serviceArea, hasOfferCatalog
 6. **Sitemap:** Atualizado lastmod para 2026-02-05, adicionado /auto-orcamento/
 7. **Estrutura H1:** Navbar logo mudado de h1 para span (apenas um H1 por pagina)
+8. **CSS:** Adicionada classe .seo-hidden em style.css (visually-hidden mas acessivel para crawlers)
 
 **Proximos passos (manual):**
 - Submeter sitemap no Google Search Console
