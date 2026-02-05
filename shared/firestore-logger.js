@@ -24,6 +24,34 @@
     'use strict';
 
     // ========================================
+    // VERIFICACAO DE DEBUG MODE
+    // Logs so sao enviados ao Firestore se URL tiver ?debug=true
+    // ========================================
+
+    const DEBUG_MODE = window.location.search.includes('debug=true');
+
+    // Se nao estiver em debug mode, criar logger vazio (no-op)
+    if (!DEBUG_MODE) {
+        const noop = () => {};
+        window.logger = {
+            log: noop,
+            info: noop,
+            warn: noop,
+            error: noop,
+            debug: noop,
+            group: noop,
+            groupEnd: noop,
+            table: noop,
+            time: noop,
+            timeEnd: noop,
+            flush: noop,
+            getPanelName: () => 'disabled'
+        };
+        window.FirestoreLogger = window.logger;
+        return; // Sai da IIFE sem inicializar Firestore
+    }
+
+    // ========================================
     // CONFIGURACAO
     // ========================================
 
