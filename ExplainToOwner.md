@@ -97,6 +97,12 @@ Todos os paineis agora seguem o padrao:
 **Nota para Super Admin:**
 Para definir um novo super admin, adicione o campo `isSuperAdmin: true` no documento do admin na collection `admins` do Firestore.
 
+**Script de Migracao:**
+```bash
+cd functions && node migrate-super-admin.js
+```
+Este script adiciona `isSuperAdmin: true` ao admin 3d3printers@gmail.com automaticamente.
+
 ---
 
 ### 2026-02-05 - UI: Footer profissional + Subtitulo com localizacao

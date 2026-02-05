@@ -13,11 +13,19 @@ service cloud.firestore {
         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
+    // Super Admin: verifica campo isSuperAdmin no documento OU email legado (fallback)
     function isSuperAdmin() {
-      return request.auth != null &&
-        request.auth.token.email == "3d3printers@gmail.com";
+      return request.auth != null && (
+        // Verificar campo isSuperAdmin no documento do admin
+        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true &&
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isSuperAdmin == true) ||
+        // Fallback legado durante migracao
+        request.auth.token.email == "3d3printers@gmail.com"
+      );
     }
 
+    // Conta da empresa (para dados financeiros)
     function isCompanyAccount() {
       return request.auth != null &&
         request.auth.token.email == "3d3printers@gmail.com";
