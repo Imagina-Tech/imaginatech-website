@@ -25,6 +25,47 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-04 - Feature: Sistema de Logs Centralizado no Firestore
+
+**Arquivos Criados:** `/shared/firestore-logger.js`
+
+**Arquivos Modificados:** 10 paineis (HTML + JS) - servicos, financas, estoque, marketplace, admin, admin-portfolio, acompanhar-pedido, custo, projetos, index.html (raiz)
+
+**Funcionalidade:**
+Sistema de logging centralizado que salva todos os logs no Firestore ao inves de exibir no console do navegador (F12).
+
+**Estrutura Firestore:**
+```
+logs/{painel}/entries/{docId}
+  - timestamp: Date
+  - level: "log" | "warn" | "error" | "debug" | "info"
+  - message: string
+  - data: any (dados serializados)
+  - stack: string (stack trace para erros)
+  - user: string (email do usuario logado)
+  - url: string (URL atual)
+  - userAgent: string
+```
+
+**Caracteristicas:**
+- Cada painel tem sua propria collection de logs
+- Logs sao enviados em batch a cada 5 segundos ou 10 entradas
+- Erros sao enviados imediatamente
+- Limpeza automatica de logs com mais de 7 dias
+- Captura automatica de erros globais (window.onerror, unhandledrejection)
+- Nenhum output no console F12 em producao
+
+**Como usar:**
+```javascript
+logger.log('Mensagem informativa');
+logger.debug('Debug detalhado', { dados: objeto });
+logger.warn('Aviso');
+logger.error('Erro', error);
+logger.flush(); // Forca envio imediato
+```
+
+---
+
 ### 2026-02-04 - Fix: Marketplace - Upload de fotos falhando (403 Storage Rules)
 
 **Arquivos Modificados:** `storage.rules`, `marketplace/js/marketplace-data.js`, `marketplace/js/marketplace-ui.js`
