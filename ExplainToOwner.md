@@ -25,6 +25,36 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-05 - SEO: Otimizacao para busca local "impressao 3d rio de janeiro"
+
+**Arquivos Modificados:** `index.html`, `projetos/index.html`, `auto-orcamento/index.html`, `sitemap.xml`
+
+**Problema:**
+Site nao aparecia nas buscas por "impressao 3d rj" ou "impressao 3d rio de janeiro" apesar de ter boas avaliacoes no Google.
+
+**Causa:**
+- Title e description nao mencionavam "Rio de Janeiro" ou "RJ"
+- Keywords focadas em termos genericos ("futuristico", "inovacao")
+- LocalBusiness Schema incompleto (sem areaServed)
+- Sitemap desatualizado e faltando /auto-orcamento/
+- Dois H1 na pagina (problema de estrutura)
+
+**Correcoes:**
+1. **Title:** "ImaginaTech - Impressao 3D do Futuro" -> "Impressao 3D Rio de Janeiro | ImaginaTech"
+2. **Description:** Adicionado "Rio de Janeiro", "RJ", "orcamento gratis", "entrega para todo RJ"
+3. **Keywords:** "impressao 3d rj", "impressao 3d rio de janeiro", "zona norte", "zona sul"
+4. **H1:** "ImaginaTech" -> "Impressao 3D Rio de Janeiro" (keyword no H1 principal)
+5. **LocalBusiness Schema:** Adicionado areaServed, serviceArea, hasOfferCatalog
+6. **Sitemap:** Atualizado lastmod para 2026-02-05, adicionado /auto-orcamento/
+7. **Estrutura H1:** Navbar logo mudado de h1 para span (apenas um H1 por pagina)
+
+**Proximos passos (manual):**
+- Submeter sitemap no Google Search Console
+- Verificar indexacao
+- Postar no Google Meu Negocio semanalmente
+
+---
+
 ### 2026-02-05 - Fix: Logger - Logs perdidos durante verificacao async de admin
 
 **Arquivos Modificados:** `/shared/firestore-logger.js`

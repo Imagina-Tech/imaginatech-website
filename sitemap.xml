@@ -4,72 +4,64 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-    <!-- Página Principal -->
+    <!-- Pagina Principal - Impressao 3D Rio de Janeiro -->
     <url>
         <loc>https://imaginatech.com.br/</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
 
-    <!-- Acompanhar Pedido -->
+    <!-- Auto-Orcamento - Calculadora Online -->
     <url>
-        <loc>https://imaginatech.com.br/acompanhar-pedido/</loc>
-        <lastmod>2025-01-11</lastmod>
+        <loc>https://imaginatech.com.br/auto-orcamento/</loc>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <priority>0.9</priority>
     </url>
 
     <!-- Projetos / Portfolio -->
     <url>
         <loc>https://imaginatech.com.br/projetos/</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
     </url>
 
-    <!-- Servicos (Painel Administrativo) -->
+    <!-- Acompanhar Pedido -->
     <url>
-        <loc>https://imaginatech.com.br/servicos/</loc>
-        <lastmod>2025-01-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
-
-    <!-- Calculadora de Custo -->
-    <url>
-        <loc>https://imaginatech.com.br/custo/</loc>
-        <lastmod>2025-01-11</lastmod>
+        <loc>https://imaginatech.com.br/acompanhar-pedido/</loc>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
 
-    <!-- Página de Obrigado -->
+    <!-- Pagina de Obrigado -->
     <url>
         <loc>https://imaginatech.com.br/obrigado/</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
     </url>
 
-    <!-- Âncoras da página principal -->
+    <!-- Ancoras da pagina principal -->
     <url>
         <loc>https://imaginatech.com.br/#services</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
         <loc>https://imaginatech.com.br/#portfolio</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
         <loc>https://imaginatech.com.br/#clients</loc>
-        <lastmod>2025-01-11</lastmod>
+        <lastmod>2026-02-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
