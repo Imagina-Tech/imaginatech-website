@@ -90,6 +90,12 @@ const FINISH_GLOSSARY = {
 
 const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
+const logger = window.logger || {
+    log: (...args) => { if (isDev) console.log(...args); },
+    error: (...args) => { if (isDev) console.error(...args); },
+    warn: (...args) => { if (isDev) console.warn(...args); }
+};
+
 // ============================================================================
 // ESTADO
 // ============================================================================
@@ -150,7 +156,7 @@ async function fetchAvailableFilaments(minWeight = 0) {
         throw new Error('Resposta invalida');
 
     } catch (error) {
-        if (isDev) console.warn('Estoque indisponivel, usando valores padrao:', error.message);
+        logger.warn('Estoque indisponivel, usando valores padrao:', error.message);
         state.availableStock = null;
         return null;
     }
@@ -588,7 +594,7 @@ async function handleFileSelect(file) {
         await calculateQuote();
 
     } catch (error) {
-        if (isDev) console.error('Erro ao carregar modelo:', error);
+        logger.error('Erro ao carregar modelo:', error);
         showError('Erro ao processar o arquivo. Verifique se esta corrompido.');
     } finally {
         hideLoading();

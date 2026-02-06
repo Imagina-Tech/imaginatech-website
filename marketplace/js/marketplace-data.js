@@ -483,27 +483,27 @@ async function handleProductSubmit(event) {
     }));
 
     const productData = {
-        name: document.getElementById('productName').value.trim(),
-        description: document.getElementById('productDescription').value.trim(),
+        name: (document.getElementById('productName')?.value || '').trim(),
+        description: (document.getElementById('productDescription')?.value || '').trim(),
         sku: document.getElementById('productSku')?.value.trim() || '',
         gtin: document.getElementById('productGtin')?.value.trim() || '',
-        saleType: document.getElementById('saleType').value,
-        materialType: document.getElementById('materialType').value,
-        printColor: document.getElementById('printColor').value,
+        saleType: document.getElementById('saleType')?.value || '',
+        materialType: document.getElementById('materialType')?.value || '',
+        printColor: document.getElementById('printColor')?.value || '',
         printerMachines: printerMachines,
         dimensions: {
-            length: parseFloat(document.getElementById('dimLength').value) || 0,
-            width: parseFloat(document.getElementById('dimWidth').value) || 0,
-            height: parseFloat(document.getElementById('dimHeight').value) || 0
+            length: parseFloat(document.getElementById('dimLength')?.value) || 0,
+            width: parseFloat(document.getElementById('dimWidth')?.value) || 0,
+            height: parseFloat(document.getElementById('dimHeight')?.value) || 0
         },
         packagingDimensions: {
-            length: parseFloat(document.getElementById('packLength').value) || 0,
-            width: parseFloat(document.getElementById('packWidth').value) || 0,
-            height: parseFloat(document.getElementById('packHeight').value) || 0,
-            weight: parseFloat(document.getElementById('packWeight').value) || 0
+            length: parseFloat(document.getElementById('packLength')?.value) || 0,
+            width: parseFloat(document.getElementById('packWidth')?.value) || 0,
+            height: parseFloat(document.getElementById('packHeight')?.value) || 0,
+            weight: parseFloat(document.getElementById('packWeight')?.value) || 0
         },
-        weight: parseFloat(document.getElementById('productWeight').value) || 0,
-        price: parseFloat(document.getElementById('productPrice').value) || 0,
+        weight: parseFloat(document.getElementById('productWeight')?.value) || 0,
+        price: parseFloat(document.getElementById('productPrice')?.value) || 0,
         quantity: parseInt(document.getElementById('productQuantity')?.value) || 1,
         youtubeVideoUrl: youtubeVideoUrl,
         mlPhotos: mlPhotos,

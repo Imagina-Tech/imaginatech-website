@@ -266,26 +266,26 @@ function signOut() {
 // ==========================================
 
 function showLoading(text = 'Carregando...') {
-    document.getElementById('loadingText').textContent = text;
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    { const el = document.getElementById('loadingText'); if (el) el.textContent = text; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'flex'; }
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
 }
 
 function showLoginScreen() {
     hideLoading();
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('accessDeniedScreen').classList.remove('active');
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
+    document.getElementById('dashboard')?.classList.add('hidden');
 }
 
 function showAccessDenied(email) {
     hideLoading();
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('accessDeniedScreen').classList.add('active');
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('accessDeniedScreen')?.classList.add('active');
+    document.getElementById('dashboard')?.classList.add('hidden');
     // Usar textContent e seguro contra XSS
     const emailEl = document.getElementById('deniedUserEmail');
     if (emailEl) emailEl.textContent = email || '';
@@ -293,13 +293,13 @@ function showAccessDenied(email) {
 
 function showDashboard() {
     hideLoading();
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('accessDeniedScreen').classList.remove('active');
-    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
+    document.getElementById('dashboard')?.classList.remove('hidden');
 
     // Update user info
-    document.getElementById('userPhoto').src = currentUser.photoURL || '/iconwpp.jpg';
-    document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
+    { const el = document.getElementById('userPhoto'); if (el) el.src = currentUser.photoURL || '/iconwpp.jpg'; }
+    { const el = document.getElementById('userName'); if (el) el.textContent = currentUser.displayName || currentUser.email; }
 
     // Setup event listeners
     setupEventListeners();
@@ -384,7 +384,7 @@ function setupEventListeners() {
     });
 
     // Search input
-    document.getElementById('searchInput').addEventListener('input', function() {
+    document.getElementById('searchInput')?.addEventListener('input', function() {
         currentSearch = this.value.toLowerCase().trim();
         renderPortfolioItems();
     });
@@ -577,7 +577,7 @@ function setupDropZone(dropZone, inputId, handler) {
     dropZone.addEventListener('click', (e) => {
         // Nao abrir se clicou no botao de remover
         if (e.target.closest('.btn-remove-img')) return;
-        document.getElementById(inputId).click();
+        document.getElementById(inputId)?.click();
     });
 }
 
@@ -679,11 +679,11 @@ function updateStats() {
     // Featured = publicados que aparecem no carrossel hero
     const featured = portfolioItems.filter(i => i.published && i.featured).length;
 
-    document.getElementById('totalItems').textContent = total;
-    document.getElementById('qapItems').textContent = qap;
-    document.getElementById('publishedItems').textContent = published;
-    document.getElementById('gridItems').textContent = grid;
-    document.getElementById('featuredItems').textContent = featured;
+    { const el = document.getElementById('totalItems'); if (el) el.textContent = total; }
+    { const el = document.getElementById('qapItems'); if (el) el.textContent = qap; }
+    { const el = document.getElementById('publishedItems'); if (el) el.textContent = published; }
+    { const el = document.getElementById('gridItems'); if (el) el.textContent = grid; }
+    { const el = document.getElementById('featuredItems'); if (el) el.textContent = featured; }
 }
 
 // ==========================================
@@ -693,6 +693,7 @@ function updateStats() {
 function renderPortfolioItems() {
     const grid = document.getElementById('portfolioGrid');
     const emptyState = document.getElementById('emptyState');
+    if (!grid || !emptyState) return;
 
     // Filter items - SISTEMA DE 3 NIVEIS INDEPENDENTES
     let filtered = portfolioItems;
@@ -852,49 +853,48 @@ function openAddModal() {
     selectedServicePhoto = null;
 
     // Atualizar titulo do modal
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Novo Item';
+    { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-plus"></i> Novo Item'; }
 
     // Limpar formulario
-    document.getElementById('editItemId').value = '';
-    document.getElementById('editTitle').value = '';
-    document.getElementById('editDescription').value = '';
-    document.getElementById('editCategory').value = '';
-    document.getElementById('editMaterial').value = '';
-    document.getElementById('editColor').value = '';
-    document.getElementById('editIsNew').checked = true; // Novo por padrao
+    { const el = document.getElementById('editItemId'); if (el) el.value = ''; }
+    { const el = document.getElementById('editTitle'); if (el) el.value = ''; }
+    { const el = document.getElementById('editDescription'); if (el) el.value = ''; }
+    { const el = document.getElementById('editCategory'); if (el) el.value = ''; }
+    { const el = document.getElementById('editMaterial'); if (el) el.value = ''; }
+    { const el = document.getElementById('editColor'); if (el) el.value = ''; }
+    { const el = document.getElementById('editIsNew'); if (el) el.checked = true; } // Novo por padrao
 
     // SISTEMA DE 3 NIVEIS INDEPENDENTES
-    document.getElementById('editPublished').checked = false;
-    document.getElementById('editShowInGrid').checked = false;
-    document.getElementById('editFeatured').checked = false;
+    { const el = document.getElementById('editPublished'); if (el) el.checked = false; }
+    { const el = document.getElementById('editShowInGrid'); if (el) el.checked = false; }
+    { const el = document.getElementById('editFeatured'); if (el) el.checked = false; }
 
     // Reset photo
-    document.getElementById('editPhotoPreview').style.display = 'none';
-    document.getElementById('editPhotoPlaceholder').style.display = 'flex';
-    document.getElementById('editPhotoImg').src = '';
-    document.getElementById('editPhotoPreview').dataset.galleryUrl = '';
+    { const el = document.getElementById('editPhotoPreview'); if (el) { el.style.display = 'none'; el.dataset.galleryUrl = ''; } }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editPhotoImg'); if (el) el.src = ''; }
     newPhotoFile = null;
 
     // Reset logo
-    document.getElementById('editLogoPreview').style.display = 'none';
-    document.getElementById('editLogoPlaceholder').style.display = 'flex';
-    document.getElementById('editLogoImg').src = '';
+    { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editLogoImg'); if (el) el.src = ''; }
     newLogoFile = null;
 
     // Reset extra photos
     newExtraPhotosFiles = [];
     extraPhotosToDelete = [];
     extraPhotoSlotCounterAdmin = 0;
-    document.getElementById('editExtraPhotosGrid').innerHTML = '';
+    { const el = document.getElementById('editExtraPhotosGrid'); if (el) el.innerHTML = ''; }
 
     // Atualizar status de publicacao
     onPublicationLevelChange();
 
     // Populate and reset service dropdown
     populateServicesDropdown('');
-    document.getElementById('inheritServicePhoto').checked = false;
-    document.getElementById('inheritPhotoSection').style.display = 'none';
-    document.getElementById('inheritPhotoPreview').style.display = 'none';
+    { const el = document.getElementById('inheritServicePhoto'); if (el) el.checked = false; }
+    { const el = document.getElementById('inheritPhotoSection'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.style.display = 'none'; }
 
     // Show modal e atualizar ARIA
     const modal = document.getElementById('editModal');
@@ -905,7 +905,7 @@ function openAddModal() {
 
     // Sync custom selects
     setTimeout(() => {
-        document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('editCategory')?.dispatchEvent(new Event('change', { bubbles: true }));
     }, 50);
 }
 
@@ -914,16 +914,16 @@ function openAddModal() {
 // ==========================================
 
 function onServiceLinkChange() {
-    const serviceId = document.getElementById('editServiceLink').value;
+    const serviceId = document.getElementById('editServiceLink')?.value;
     const inheritSection = document.getElementById('inheritPhotoSection');
     const inheritCheckbox = document.getElementById('inheritServicePhoto');
     const inheritPreview = document.getElementById('inheritPhotoPreview');
 
     if (!serviceId) {
         // Nenhum servico selecionado
-        inheritSection.style.display = 'none';
-        inheritCheckbox.checked = false;
-        inheritPreview.style.display = 'none';
+        if (inheritSection) inheritSection.style.display = 'none';
+        if (inheritCheckbox) inheritCheckbox.checked = false;
+        if (inheritPreview) inheritPreview.style.display = 'none';
         selectedServicePhoto = null;
         return;
     }
@@ -937,12 +937,12 @@ function onServiceLinkChange() {
 
     if (servicePhotoUrl) {
         selectedServicePhoto = servicePhotoUrl;
-        document.getElementById('inheritPhotoImg').src = servicePhotoUrl;
-        inheritSection.style.display = 'block';
+        { const el = document.getElementById('inheritPhotoImg'); if (el) el.src = servicePhotoUrl; }
+        if (inheritSection) inheritSection.style.display = 'block';
     } else {
         selectedServicePhoto = null;
-        inheritSection.style.display = 'none';
-        inheritCheckbox.checked = false;
+        if (inheritSection) inheritSection.style.display = 'none';
+        if (inheritCheckbox) inheritCheckbox.checked = false;
     }
 }
 
@@ -951,16 +951,14 @@ function toggleInheritPhoto() {
     const inheritPreview = document.getElementById('inheritPhotoPreview');
     const photoArea = document.getElementById('editPhotoArea');
 
-    if (inheritCheckbox.checked && selectedServicePhoto) {
+    if (inheritCheckbox?.checked && selectedServicePhoto) {
         // Mostrar preview da foto herdada
-        inheritPreview.style.display = 'flex';
+        if (inheritPreview) inheritPreview.style.display = 'flex';
         // Esconder area de upload manual
-        photoArea.style.opacity = '0.5';
-        photoArea.style.pointerEvents = 'none';
+        if (photoArea) { photoArea.style.opacity = '0.5'; photoArea.style.pointerEvents = 'none'; }
     } else {
-        inheritPreview.style.display = 'none';
-        photoArea.style.opacity = '1';
-        photoArea.style.pointerEvents = 'auto';
+        if (inheritPreview) inheritPreview.style.display = 'none';
+        if (photoArea) { photoArea.style.opacity = '1'; photoArea.style.pointerEvents = 'auto'; }
     }
 }
 
@@ -973,16 +971,16 @@ function openEditModal(itemId) {
     }
 
     // Atualizar titulo do modal
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Item';
+    { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-edit"></i> Editar Item'; }
 
     // Fill form
-    document.getElementById('editItemId').value = itemId;
-    document.getElementById('editTitle').value = editingItem.title || '';
-    document.getElementById('editDescription').value = editingItem.description || '';
-    document.getElementById('editCategory').value = editingItem.category || '';
-    document.getElementById('editMaterial').value = editingItem.material || '';
-    document.getElementById('editColor').value = editingItem.color || '';
-    document.getElementById('editIsNew').checked = editingItem.isNew || false;
+    { const el = document.getElementById('editItemId'); if (el) el.value = itemId; }
+    { const el = document.getElementById('editTitle'); if (el) el.value = editingItem.title || ''; }
+    { const el = document.getElementById('editDescription'); if (el) el.value = editingItem.description || ''; }
+    { const el = document.getElementById('editCategory'); if (el) el.value = editingItem.category || ''; }
+    { const el = document.getElementById('editMaterial'); if (el) el.value = editingItem.material || ''; }
+    { const el = document.getElementById('editColor'); if (el) el.value = editingItem.color || ''; }
+    { const el = document.getElementById('editIsNew'); if (el) el.checked = editingItem.isNew || false; }
 
     // SISTEMA DE 3 NIVEIS INDEPENDENTES
     // Compatibilidade retroativa com campos antigos
@@ -990,9 +988,9 @@ function openEditModal(itemId) {
     const isInGrid = editingItem.showInGrid !== undefined ? editingItem.showInGrid : editingItem.showOnLanding;
     const isFeatured = editingItem.featured !== undefined ? editingItem.featured : false;
 
-    document.getElementById('editPublished').checked = isPublished;
-    document.getElementById('editShowInGrid').checked = isInGrid;
-    document.getElementById('editFeatured').checked = isFeatured;
+    { const el = document.getElementById('editPublished'); if (el) el.checked = isPublished; }
+    { const el = document.getElementById('editShowInGrid'); if (el) el.checked = isInGrid; }
+    { const el = document.getElementById('editFeatured'); if (el) el.checked = isFeatured; }
 
     // Atualizar status de publicacao
     onPublicationLevelChange();
@@ -1002,11 +1000,13 @@ function openEditModal(itemId) {
 
     // Reset inherit photo section
     selectedServicePhoto = null;
-    document.getElementById('inheritServicePhoto').checked = false;
-    document.getElementById('inheritPhotoSection').style.display = 'none';
-    document.getElementById('inheritPhotoPreview').style.display = 'none';
-    document.getElementById('editPhotoArea').style.opacity = '1';
-    document.getElementById('editPhotoArea').style.pointerEvents = 'auto';
+    { const el = document.getElementById('inheritServicePhoto'); if (el) el.checked = false; }
+    { const el = document.getElementById('inheritPhotoSection'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.style.display = 'none'; }
+    {
+        const el = document.getElementById('editPhotoArea');
+        if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
+    }
 
     // Trigger service link change to show inherit option if applicable
     setTimeout(() => {
@@ -1022,12 +1022,12 @@ function openEditModal(itemId) {
     photoPreview.dataset.galleryUrl = '';
 
     if (photoUrl) {
-        document.getElementById('editPhotoImg').src = photoUrl;
-        photoPreview.style.display = 'block';
-        photoPlaceholder.style.display = 'none';
+        { const el = document.getElementById('editPhotoImg'); if (el) el.src = photoUrl; }
+        if (photoPreview) photoPreview.style.display = 'block';
+        if (photoPlaceholder) photoPlaceholder.style.display = 'none';
     } else {
-        photoPreview.style.display = 'none';
-        photoPlaceholder.style.display = 'flex';
+        if (photoPreview) photoPreview.style.display = 'none';
+        if (photoPlaceholder) photoPlaceholder.style.display = 'flex';
     }
 
     // Logo preview
@@ -1035,12 +1035,12 @@ function openEditModal(itemId) {
     const logoPlaceholder = document.getElementById('editLogoPlaceholder');
 
     if (editingItem.logo?.url) {
-        document.getElementById('editLogoImg').src = editingItem.logo.url;
-        logoPreview.style.display = 'block';
-        logoPlaceholder.style.display = 'none';
+        { const el = document.getElementById('editLogoImg'); if (el) el.src = editingItem.logo.url; }
+        if (logoPreview) logoPreview.style.display = 'block';
+        if (logoPlaceholder) logoPlaceholder.style.display = 'none';
     } else {
-        logoPreview.style.display = 'none';
-        logoPlaceholder.style.display = 'flex';
+        if (logoPreview) logoPreview.style.display = 'none';
+        if (logoPlaceholder) logoPlaceholder.style.display = 'flex';
     }
 
     // Reset file inputs
@@ -1049,8 +1049,8 @@ function openEditModal(itemId) {
     newExtraPhotosFiles = [];
     extraPhotosToDelete = [];
     extraPhotoSlotCounterAdmin = 0;
-    document.getElementById('editPhoto').value = '';
-    document.getElementById('editLogo').value = '';
+    { const el = document.getElementById('editPhoto'); if (el) el.value = ''; }
+    { const el = document.getElementById('editLogo'); if (el) el.value = ''; }
 
     // Load extra photos
     loadExtraPhotosInEditModal();
@@ -1064,7 +1064,7 @@ function openEditModal(itemId) {
 
     // Sync custom selects after a small delay
     setTimeout(() => {
-        document.getElementById('editCategory').dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('editCategory')?.dispatchEvent(new Event('change', { bubbles: true }));
     }, 50);
 }
 
@@ -1084,9 +1084,12 @@ function closeEditModal() {
 
 // SISTEMA DE 3 NIVEIS INDEPENDENTES: Handler de niveis de publicacao
 function onPublicationLevelChange() {
-    const isPublished = document.getElementById('editPublished').checked;
-    const isInGrid = document.getElementById('editShowInGrid').checked;
-    const isFeatured = document.getElementById('editFeatured').checked;
+    const publishedEl = document.getElementById('editPublished');
+    const gridEl = document.getElementById('editShowInGrid');
+    const featuredEl = document.getElementById('editFeatured');
+    const isPublished = publishedEl?.checked;
+    const isInGrid = gridEl?.checked;
+    const isFeatured = featuredEl?.checked;
 
     const statusEl = document.getElementById('publicationStatus');
     const descReqBadge = document.getElementById('descRequiredBadge');
@@ -1096,26 +1099,28 @@ function onPublicationLevelChange() {
 
     // Grid e Featured requerem que esteja publicado
     if ((isInGrid || isFeatured) && !isPublished) {
-        document.getElementById('editPublished').checked = true;
+        if (publishedEl) publishedEl.checked = true;
     }
 
     // Se desmarcar publicado, desmarca os outros
     if (!isPublished) {
-        document.getElementById('editShowInGrid').checked = false;
-        document.getElementById('editFeatured').checked = false;
+        if (gridEl) gridEl.checked = false;
+        if (featuredEl) featuredEl.checked = false;
     }
 
     // Reler valores apos ajustes
-    const finalPublished = document.getElementById('editPublished').checked;
-    const finalInGrid = document.getElementById('editShowInGrid').checked;
-    const finalFeatured = document.getElementById('editFeatured').checked;
+    const finalPublished = publishedEl?.checked;
+    const finalInGrid = gridEl?.checked;
+    const finalFeatured = featuredEl?.checked;
 
     // Atualizar status visual - mostrar onde vai aparecer
-    statusEl.classList.remove('qap', 'published', 'featured');
+    statusEl?.classList.remove('qap', 'published', 'featured');
 
     if (!finalPublished) {
-        statusEl.className = 'form-hint publication-status qap';
-        statusEl.innerHTML = '<i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado';
+        if (statusEl) {
+            statusEl.className = 'form-hint publication-status qap';
+            statusEl.innerHTML = '<i class="fas fa-clock"></i> Status: <strong>QAP (Rascunho)</strong> - Salvo mas nao publicado';
+        }
     } else {
         // Construir lista de onde aparece
         let locations = ['/projetos/'];
@@ -1126,8 +1131,10 @@ function onPublicationLevelChange() {
         const iconClass = finalFeatured ? 'fa-star' : (finalInGrid ? 'fa-th-large' : 'fa-globe');
         const statusClass = finalFeatured ? 'featured' : (finalInGrid ? 'grid' : 'published');
 
-        statusEl.className = `form-hint publication-status ${statusClass}`;
-        statusEl.innerHTML = `<i class="fas ${iconClass}"></i> Visivel em: <strong>${locationText}</strong>`;
+        if (statusEl) {
+            statusEl.className = `form-hint publication-status ${statusClass}`;
+            statusEl.innerHTML = `<i class="fas ${iconClass}"></i> Visivel em: <strong>${locationText}</strong>`;
+        }
     }
 
     // Descricao obrigatoria para destaque hero
@@ -1174,9 +1181,9 @@ async function handlePhotoSelect(event) {
     // Preview
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('editPhotoImg').src = e.target.result;
-        document.getElementById('editPhotoPreview').style.display = 'block';
-        document.getElementById('editPhotoPlaceholder').style.display = 'none';
+        { const el = document.getElementById('editPhotoImg'); if (el) el.src = e.target.result; }
+        { const el = document.getElementById('editPhotoPreview'); if (el) el.style.display = 'block'; }
+        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
     };
     reader.readAsDataURL(file);
 }
@@ -1215,9 +1222,9 @@ async function handleMultiplePhotosSelect(event) {
     // Preview da foto principal
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('editPhotoImg').src = e.target.result;
-        document.getElementById('editPhotoPreview').style.display = 'block';
-        document.getElementById('editPhotoPlaceholder').style.display = 'none';
+        { const el = document.getElementById('editPhotoImg'); if (el) el.src = e.target.result; }
+        { const el = document.getElementById('editPhotoPreview'); if (el) el.style.display = 'block'; }
+        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
     };
     reader.readAsDataURL(validFiles[0]);
 
@@ -1240,11 +1247,10 @@ async function handleMultiplePhotosSelect(event) {
 
 function removePhoto() {
     newPhotoFile = null;
-    document.getElementById('editPhoto').value = '';
-    document.getElementById('editPhotoPreview').style.display = 'none';
-    document.getElementById('editPhotoPlaceholder').style.display = 'flex';
-    document.getElementById('editPhotoImg').src = '';
-    document.getElementById('editPhotoPreview').dataset.galleryUrl = '';
+    { const el = document.getElementById('editPhoto'); if (el) el.value = ''; }
+    { const el = document.getElementById('editPhotoPreview'); if (el) { el.style.display = 'none'; el.dataset.galleryUrl = ''; } }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editPhotoImg'); if (el) el.src = ''; }
 }
 
 // Logo handling - SEM SVG (risco de XSS) e com validacao de magic bytes
@@ -1275,19 +1281,19 @@ async function handleLogoSelect(event) {
     // Preview
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('editLogoImg').src = e.target.result;
-        document.getElementById('editLogoPreview').style.display = 'block';
-        document.getElementById('editLogoPlaceholder').style.display = 'none';
+        { const el = document.getElementById('editLogoImg'); if (el) el.src = e.target.result; }
+        { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'block'; }
+        { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'none'; }
     };
     reader.readAsDataURL(file);
 }
 
 function removeLogo() {
     newLogoFile = 'remove'; // Special flag to remove
-    document.getElementById('editLogo').value = '';
-    document.getElementById('editLogoPreview').style.display = 'none';
-    document.getElementById('editLogoPlaceholder').style.display = 'flex';
-    document.getElementById('editLogoImg').src = '';
+    { const el = document.getElementById('editLogo'); if (el) el.value = ''; }
+    { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editLogoImg'); if (el) el.src = ''; }
 }
 
 // ==========================================
@@ -1430,21 +1436,21 @@ function getNewExtraPhotosFiles() {
 // ==========================================
 
 async function saveItem() {
-    const itemId = document.getElementById('editItemId').value;
-    const title = document.getElementById('editTitle').value.trim();
+    const itemId = document.getElementById('editItemId')?.value;
+    const title = document.getElementById('editTitle')?.value.trim();
     const description = document.getElementById('editDescription')?.value.trim() || '';
-    const category = document.getElementById('editCategory').value;
+    const category = document.getElementById('editCategory')?.value;
     const material = document.getElementById('editMaterial')?.value.trim() || '';
     const color = document.getElementById('editColor')?.value.trim() || '';
-    const isNew = document.getElementById('editIsNew').checked;
+    const isNew = document.getElementById('editIsNew')?.checked;
 
     // SISTEMA DE 3 NIVEIS INDEPENDENTES
-    const isPublished = document.getElementById('editPublished').checked;
-    const isInGrid = document.getElementById('editShowInGrid').checked;
-    const isFeatured = document.getElementById('editFeatured').checked;
+    const isPublished = document.getElementById('editPublished')?.checked;
+    const isInGrid = document.getElementById('editShowInGrid')?.checked;
+    const isFeatured = document.getElementById('editFeatured')?.checked;
 
-    const serviceId = document.getElementById('editServiceLink').value;
-    const inheritPhoto = document.getElementById('inheritServicePhoto').checked;
+    const serviceId = document.getElementById('editServiceLink')?.value;
+    const inheritPhoto = document.getElementById('inheritServicePhoto')?.checked;
 
     // Validation
     if (!title) {
@@ -1807,8 +1813,8 @@ async function openGalleryModal(mode = 'main') {
     gallerySearchTerm = '';
 
     // Reset UI basico
-    document.getElementById('gallerySearch').value = '';
-    document.getElementById('btnAddSelectedPhotos').disabled = true;
+    { const el = document.getElementById('gallerySearch'); if (el) el.value = ''; }
+    { const el = document.getElementById('btnAddSelectedPhotos'); if (el) el.disabled = true; }
 
     // Atualizar titulo e info do modal baseado no modo
     const modalTitle = document.querySelector('#galleryModal .modal-header h2');
@@ -2088,7 +2094,7 @@ function setupLazyLoading() {
 
 // Filtrar fotos por busca
 function filterGalleryPhotos() {
-    gallerySearchTerm = document.getElementById('gallerySearch').value.trim();
+    gallerySearchTerm = document.getElementById('gallerySearch')?.value.trim() || '';
     renderGalleryPhotos();
 }
 
@@ -2136,7 +2142,7 @@ function updateGallerySelectionUI() {
     }
 
     // Atualizar botao
-    document.getElementById('btnAddSelectedPhotos').disabled = selectedGalleryPhotos.length === 0;
+    { const el = document.getElementById('btnAddSelectedPhotos'); if (el) el.disabled = selectedGalleryPhotos.length === 0; }
 
     // Atualizar visual dos itens
     document.querySelectorAll('.gallery-photo-item').forEach(item => {
@@ -2178,12 +2184,12 @@ function addPhotoFromGalleryAsMain(url) {
     newPhotoFile = null; // Limpar arquivo selecionado
 
     // Mostrar preview
-    document.getElementById('editPhotoImg').src = url;
-    document.getElementById('editPhotoPreview').style.display = 'block';
-    document.getElementById('editPhotoPlaceholder').style.display = 'none';
-
-    // Guardar a URL para salvar depois
-    document.getElementById('editPhotoPreview').dataset.galleryUrl = url;
+    { const el = document.getElementById('editPhotoImg'); if (el) el.src = url; }
+    {
+        const el = document.getElementById('editPhotoPreview');
+        if (el) { el.style.display = 'block'; el.dataset.galleryUrl = url; }
+    }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
 }
 
 // Adicionar foto da galeria como extra

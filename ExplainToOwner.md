@@ -25,6 +25,199 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Null Safety e Logger: Paineis Financas e Auto-Orcamento
+
+**Arquivos Modificados:**
+- `financas/finance-data.js` - ~62 correcoes de null safety em getElementById
+- `financas/finance-ui.js` - ~45 correcoes de null safety em getElementById
+- `financas/finance-core.js` - ~10 correcoes de null safety em getElementById
+- `auto-orcamento/app.js` - Adicionado logger condicional, 2 console.log substituidos
+
+**Null Safety aplicada (Padrao 1 - Leitura com `?.`):**
+- Chamadas .classList.add/remove em modais (transactionModal, subscriptionModal, installmentModal, projectionModal, creditCardModal, settingsModal, investmentsModal, cardBillDetailsModal, accountSelectionModal, loginScreen, dashboard, accessDeniedScreen)
+- Chamadas .reset() em formularios
+- Leituras de .value em optional chaining
+
+**Null Safety aplicada (Padrao 2 - Escrita com `const el; if (el)`):**
+- Atribuicoes .value = em campos de formularios (description, value, date, category, etc.)
+- Atribuicoes .style.display = em grupos condicionais (paymentMethodGroup, creditCardGroup)
+- Atribuicoes .textContent = em elementos de exibicao (growthValue, trendValue, cardBillDetailsTitle, personalAccountEmail)
+- Atribuicoes .innerHTML = em conteudo dinamico (cardBillDetailsContent)
+- Atribuicoes .required = em campos condicionais (installment value type toggle)
+
+**Funcoes corrigidas em finance-data.js:**
+handleTransactionSubmit, handleSubscriptionSubmit, handleInstallmentSubmit, handleProjectionSubmit, handleCreditCardSubmit, handleCardExpenseSubmit, handleInvestmentSubmit, handleSettingsSubmit, openInvestmentsModal, closeInvestmentsModal, editInvestment, openSettingsModal, closeSettingsModal, openCreditCardModal, closeCreditCardModal, showCardBillDetails, markBillAsPaid, unmarkBillAsPaid
+
+**Funcoes corrigidas em finance-ui.js:**
+openTransactionModal, closeTransactionModal, editTransaction, editCreditTransaction, deleteCreditTransaction, openSubscriptionModal, closeSubscriptionModal, editSubscription, openInstallmentModal, closeInstallmentModal, editInstallment, selectInstallmentValueType, calculateInstallmentValues, openProjectionModal, editProjection, closeProjectionModal, selectTransactionType, selectPaymentMethod, populateTransactionCardOptions, updateDefaultDateForCard, initializeGrowthSparkline, initializeExpenseTrendSparkline
+
+**Funcoes corrigidas em finance-core.js:**
+showLoginScreen, showAccountSelectionModal, selectAccount, switchAccount, showAccessDeniedModal, closeAccessDeniedModal
+
+**Logger em auto-orcamento/app.js:**
+- Adicionado `const logger = window.logger || { log, error, warn }` (logger condicional que so exibe em localhost)
+- `console.warn` na linha 153 (fetchAvailableFilaments) -> `logger.warn`
+- `console.error` na linha 591 (handleFileSelect) -> `logger.error`
+
+**Race condition:** handleTransactionSubmit ja possui protecao `isFormSubmitting` - nenhuma alteracao necessaria.
+
+---
+
+### 2026-02-06 - Null Safety: getElementById em Admin-Portfolio, Acompanhar-Pedido e Marketplace
+
+**Arquivos Modificados:**
+- `admin-portfolio/script.js` - ~110 correcoes de null safety em getElementById
+- `acompanhar-pedido/script.js` - ~41 correcoes de null safety em getElementById
+- `marketplace/js/marketplace-data.js` - ~14 correcoes de null safety em getElementById
+
+**O que foi feito:**
+Adicionado null safety em todas as chamadas `document.getElementById()` que acessavam propriedades diretamente sem verificacao de nulidade nos tres paineis. Duas tecnicas foram aplicadas:
+
+1. **Leitura/method calls** - Adicionado `?.` (optional chaining): `.value` (read), `.classList.*`, `.focus()`, `.click()`, `.dispatchEvent()`, `.textContent` (read)
+2. **Escrita (atribuicao)** - Convertido para padrao `{ const el = getElementById(); if (el) el.prop = value; }` para `.value =`, `.src =`, `.style.*`, `.textContent =`, `.innerHTML =`, `.checked =`, `.disabled =`, `.dataset.*`
+
+**Funcoes corrigidas em admin-portfolio/script.js:**
+- `showLoading/hideLoading` - loadingText/loadingOverlay writes
+- `showLoginScreen/showAccessDenied/showDashboard` - telas e user info writes
+- `setupEventListeners` - searchInput addEventListener
+- `setupDropZone` - inputId click
+- `updateStats` - totalItems/qapItems/publishedItems/gridItems/featuredItems writes
+- `renderPortfolioItems` - portfolioGrid/emptyState null guard
+- `openAddModal` - todos os campos do formulario (titulo, inputs, checkboxes, previews, resets)
+- `onServiceLinkChange` - serviceLink/inheritSection/inheritCheckbox/inheritPreview
+- `toggleInheritPhoto` - inheritCheckbox/inheritPreview/photoArea
+- `openEditModal` - todos os campos do formulario (fill form, photo/logo preview, file inputs)
+- `onPublicationLevelChange` - checkboxes leitura/escrita, statusEl, badges
+- `handlePhotoSelect/handleMultiplePhotosSelect` - editPhotoImg/Preview/Placeholder writes
+- `removePhoto/removeLogo` - form resets writes
+- `handleLogoSelect` - editLogoImg/Preview/Placeholder writes
+- `saveItem` - todos os reads de formulario
+- `openGalleryModal` - gallerySearch/btnAddSelectedPhotos writes
+- `updateGallerySelectionUI` - btnAddSelectedPhotos write
+- `addPhotoFromGalleryAsMain` - editPhotoImg/Preview/Placeholder writes
+- `filterGalleryPhotos` - gallerySearch read
+
+**Funcoes corrigidas em acompanhar-pedido/script.js:**
+- `DOMContentLoaded` - loadingOverlay, myOrdersSection
+- `showLoginSection` - loginScreen/mainNavbar/mainContainer/orderView classList
+- `showCodeSection` - loginScreen/mainNavbar/mainContainer/loginSection/codeSection/orderView/userName/userPhoto/orderCode/attemptsWarning
+- `showOrderView` - welcomeScreen/orderView classList
+- `backToCode` - orderView/welcomeScreen/orderCode/attemptsWarning
+- `verifyCode` - orderCode read
+- `handleInvalidCode` - orderCode/attemptsWarning/attemptsText
+- `showOrderDetails` - displayCode/orderCard
+- `updateTimeline` - timeline null guard
+- `loadUserOrders` - myOrdersSection writes
+- `displayUserOrders` - myOrdersSection/ordersList null guards
+- `quickLoadOrder` - orderCode write
+- `showModal` - confirmModal/modalTitle/modalMessage/modalConfirm
+- `closeModal` - confirmModal
+- `openPhotoModal` - photoModalImage/photoCounter writes
+- `navigatePhoto` - orderCard/photoModalImage/photoCounter
+
+**Funcoes corrigidas em marketplace/js/marketplace-data.js:**
+- `handleProductSubmit` - 14 campos de formulario (productName, productDescription, saleType, materialType, printColor, dimLength/Width/Height, packLength/Width/Height/Weight, productWeight, productPrice)
+
+**Nenhuma logica de negocio foi alterada.** Todas as mudancas sao puramente defensivas para prevenir TypeError em runtime caso um elemento DOM nao exista.
+
+---
+
+### 2026-02-06 - Null Safety: getElementById no Painel Servicos
+
+**Arquivos Modificados:**
+- `servicos/js/auth-ui.js` - 14 correcoes de null safety
+- `servicos/js/services.js` - 42 correcoes de null safety
+
+**O que foi feito:**
+Adicionado null safety em todas as chamadas `document.getElementById()` que acessavam propriedades diretamente sem verificacao de nulidade. Duas tecnicas foram aplicadas:
+
+1. **Leitura/method calls** - Ja usavam `?.` (optional chaining) na maioria dos casos
+2. **Escrita (atribuicao)** - Convertido para padrao `const el = getElementById(); if (el) el.prop = value;`
+
+**Funcoes corrigidas em auth-ui.js:**
+- `handleClientNameInput` - suggestionsDiv null guard
+- `selectClient` - clientName/CPF/Email/Phone value writes
+- `selectServiceType` - clientSuggestions display
+- `openEditModal` - clientSuggestions display
+- `closeModal` - clientSuggestions display
+- `showStatusModalWithPhoto` - statusModalMessage textContent
+- `copyClientDataToDelivery` - fullName/cpfCnpj/email/telefone value writes
+- `copyClientDataToPickup` - pickupName/pickupWhatsapp value writes
+- `viewClientHistory` - historyClientName textContent
+- `toggleDeliveryFields` - deliverySelect value/dispatchEvent
+
+**Funcoes corrigidas em services.js:**
+- `saveService` - deliverySelect value/dispatchEvent
+- `updateStatus` - statusModalMessage textContent
+- `openUpModal` - upServiceId/upEditingId/upServiceName/upServiceMaterial/upServiceColor writes
+- `showExistingUpsList` - formSection/footer/list/section display/innerHTML
+- `showUpForm` - 30+ element writes (editingId, title, destination, category, photo/logo previews)
+- `toggleCategoryField` - categoryGroup/categorySelect display/required/value
+- `handleUpPhotoSelect` - upPhotoImg/upPhotoPreview/upPhotoPlaceholder
+- `removeUpPhoto` - upPhoto/upPhotoPreview/upPhotoPlaceholder
+- `handleUpLogoSelect` - upLogoImg/upLogoPreview/upLogoPlaceholder
+- `removeUpLogo` - upLogo/upLogoPreview/upLogoPlaceholder
+- `processUpPhotoFile` - upPhotoImg/upPhotoPreview/upPhotoPlaceholder (drag drop)
+- `processUpLogoFile` - upLogoImg/upLogoPreview/upLogoPlaceholder (drag drop)
+
+**Chamadas que JA eram seguras (nao modificadas):**
+- Padrao `X && (X.prop = value)` (short-circuit) - 9 ocorrencias em auth-ui.js
+- Padrao `const el = getElementById(); if (el) ...` (ja existente) - dezenas de ocorrencias
+- Padrao `?.` optional chaining (leitura) - dezenas de ocorrencias
+
+### 2026-02-06 - Null Safety: getElementById nos Paineis Estoque e Custo
+
+**Arquivos Modificados:**
+- `estoque/script.js` - ~66 chamadas getElementById tornadas null-safe
+- `custo/script-custo.js` - ~25 chamadas getElementById tornadas null-safe
+
+**Transformacoes aplicadas:**
+
+1. **Leitura/Method calls (opcional chaining `?.`):**
+   - `.classList.add()` / `.classList.remove()` -> `?.classList.add()` / `?.classList.remove()`
+   - `.value` (leitura) -> `?.value`
+   - `.textContent` (leitura) -> `?.textContent`
+   - `.reset()` -> `?.reset()`
+   - `.click()` -> `?.click()`
+
+2. **Escrita (const el + if guard):**
+   - `.textContent = x` -> `const el = ...; if (el) el.textContent = x;`
+   - `.innerHTML = x` -> `const el = ...; if (el) el.innerHTML = x;`
+   - `.value = x` -> `const el = ...; if (el) el.value = x;`
+   - `.style.display = x` -> `const el = ...; if (el) el.style.display = x;`
+   - `.src = x` -> `const el = ...; if (el) el.src = x;`
+   - Usados blocos `{ }` para isolar escopo quando multiplas transformacoes na mesma funcao
+
+**Funcoes modificadas em estoque/script.js:**
+- `showDashboard`, `showLoginScreen`, `showAccessDeniedScreen`
+- `updateStats` (4 stats elements)
+- `openAddFilamentModal` (form reset, preview, modal title, modal open)
+- `editFilament` (preview, form fields, image loading, modal open)
+- `saveFilament` (6 input reads)
+- `closeFilamentModal` (modal close, form reset, preview reset)
+- `showLoading` / `hideLoading` (overlay display)
+- `openCardActionsModal` (summary innerHTML, modal open)
+- `closeCardActionsModal` (modal close)
+- `switchSection` (section classList)
+- `openEditEquipmentModal` (6 form field writes, modal open)
+- `closeEquipmentModal` (modal close)
+- `saveEquipment` (7 input reads)
+- `openEquipmentActionsModal` / `closeEquipmentActionsModal` (modal open/close)
+
+**Funcoes modificadas em custo/script-custo.js:**
+- `showMainApp` (5 DOM writes)
+- `hideMainApp` (4 DOM writes)
+- `showAccessDeniedScreen` (6 DOM writes)
+- DOMContentLoaded (loadingOverlay display)
+- `generateColorPrintFromBudget` (btn guard, 3 textContent writes, preview innerHTML, modal open)
+- `closeColorPrintModal` (modal close)
+- `downloadColorPrint` (3 textContent reads)
+- `generatePrint` callback (btn guard with if block)
+
+**Nenhuma logica de negocio alterada. Apenas protecao contra elementos DOM nulos.**
+
+---
+
 ### 2026-02-06 - Auditoria escapeHtml: Paineis Servicos, Custo e Acompanhar-Pedido
 
 **Arquivos Modificados:**

@@ -405,34 +405,33 @@ function signOut() {
 }
 
 function showDashboard(user) {
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('dashboard').classList.remove('hidden');
-    document.getElementById('accessDeniedScreen').classList.remove('active');
-    document.getElementById('userName').textContent = user.displayName || user.email;
-    document.getElementById('userPhoto').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`;
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('dashboard')?.classList.remove('hidden');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
+    { const el = document.getElementById('userName'); if (el) el.textContent = user.displayName || user.email; }
+    { const el = document.getElementById('userPhoto'); if (el) el.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=00D4FF&color=fff`; }
     updateConnectionStatus(true);
     loadPendingServices(); // Carregar servicos aguardando material
     loadEquipment(); // Carregar equipamentos do inventario
 }
 
 function showLoginScreen() {
-    document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('accessDeniedScreen').classList.remove('active');
+    document.getElementById('dashboard')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('dashboard')?.classList.add('hidden');
 
     // Atualizar informacoes do usuario na tela
     const displayName = user.displayName || 'Usuario';
-    document.getElementById('deniedMessage').textContent =
-        `Ola ${displayName}, esta area e exclusiva para administradores.`;
-    document.getElementById('deniedUserEmail').textContent = user.email;
+    { const el = document.getElementById('deniedMessage'); if (el) el.textContent = `Ola ${displayName}, esta area e exclusiva para administradores.`; }
+    { const el = document.getElementById('deniedUserEmail'); if (el) el.textContent = user.email; }
 
     // Mostrar tela de acesso negado
-    document.getElementById('accessDeniedScreen').classList.add('active');
+    document.getElementById('accessDeniedScreen')?.classList.add('active');
 }
 
 // ===========================
@@ -803,10 +802,10 @@ function updateStats() {
     }).length;
     const totalWeight = filaments.reduce((sum, f) => sum + (parseFloat(f.weight) || 0), 0);
 
-    document.getElementById('totalFilaments').textContent = total;
-    document.getElementById('stockOk').textContent = stockOk;
-    document.getElementById('stockLow').textContent = stockLow;
-    document.getElementById('totalWeight').textContent = totalWeight.toFixed(2) + ' kg';
+    { const el = document.getElementById('totalFilaments'); if (el) el.textContent = total; }
+    { const el = document.getElementById('stockOk'); if (el) el.textContent = stockOk; }
+    { const el = document.getElementById('stockLow'); if (el) el.textContent = stockLow; }
+    { const el = document.getElementById('totalWeight'); if (el) el.textContent = totalWeight.toFixed(2) + ' kg'; }
 }
 
 // ===========================
@@ -941,25 +940,24 @@ function openAddFilamentModal() {
     editingFilamentUpdatedAt = null;
 
     // Limpar formulário
-    document.getElementById('filamentForm').reset();
-    document.getElementById('filamentId').value = '';
+    document.getElementById('filamentForm')?.reset();
+    { const el = document.getElementById('filamentId'); if (el) el.value = ''; }
 
     // Sincronizar CustomSelects após reset (para mostrar "Selecione..." novamente)
     const typeSelect = document.getElementById('filamentType');
     const brandSelect = document.getElementById('filamentBrand');
-    typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (typeSelect) typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (brandSelect) brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Resetar preview de imagem
-    document.getElementById('imagePreview').style.display = 'none';
-    document.getElementById('imagePreview').src = '';
-    document.getElementById('uploadPlaceholder').style.display = 'flex';
+    { const el = document.getElementById('imagePreview'); if (el) { el.style.display = 'none'; el.src = ''; } }
+    { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
 
     // Atualizar título
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Adicionar Filamento';
+    { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-plus"></i> Adicionar Filamento'; }
 
     // Abrir modal
-    document.getElementById('filamentModal').classList.add('active');
+    document.getElementById('filamentModal')?.classList.add('active');
 }
 
 function editFilament(id) {
@@ -975,12 +973,12 @@ function editFilament(id) {
 
     // Resetar imagem primeiro
     selectedImage = null;
-    document.getElementById('imagePreview').style.display = 'none';
-    document.getElementById('uploadPlaceholder').style.display = 'flex';
+    { const el = document.getElementById('imagePreview'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
 
     // Preencher campos do formulário
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Filamento';
-    document.getElementById('filamentId').value = filament.id;
+    { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-edit"></i> Editar Filamento'; }
+    { const el = document.getElementById('filamentId'); if (el) el.value = filament.id; }
 
     // Preencher selects nativos e sincronizar CustomSelects
     const typeSelect = document.getElementById('filamentType');
@@ -995,22 +993,23 @@ function editFilament(id) {
     brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Preencher campos de texto
-    document.getElementById('filamentColor').value = filament.color || '';
-    document.getElementById('filamentWeight').value = filament.weight || 0;
-    document.getElementById('filamentNotes').value = filament.notes || '';
+    { const el = document.getElementById('filamentColor'); if (el) el.value = filament.color || ''; }
+    { const el = document.getElementById('filamentWeight'); if (el) el.value = filament.weight || 0; }
+    { const el = document.getElementById('filamentNotes'); if (el) el.value = filament.notes || ''; }
 
     // Carregar imagem se existir
     if (filament.imageUrl) {
-        document.getElementById('imagePreview').src = filament.imageUrl;
-        document.getElementById('imagePreview').style.display = 'block';
-        document.getElementById('uploadPlaceholder').style.display = 'none';
+        const imgPreview = document.getElementById('imagePreview');
+        if (imgPreview) { imgPreview.src = filament.imageUrl; imgPreview.style.display = 'block'; }
+        const uploadPh = document.getElementById('uploadPlaceholder');
+        if (uploadPh) uploadPh.style.display = 'none';
     }
 
     editingFilamentId = id;
     editingFilamentUpdatedAt = filament.updatedAt || null; // Guardar timestamp para bloqueio otimista
 
     // Abrir modal
-    document.getElementById('filamentModal').classList.add('active');
+    document.getElementById('filamentModal')?.classList.add('active');
 }
 
 function previewImage(event) {
@@ -1499,12 +1498,12 @@ async function handleEquipmentImageFile(file) {
 async function saveFilament(event) {
     event.preventDefault();
 
-    const type = document.getElementById('filamentType').value;
-    const brand = document.getElementById('filamentBrand').value;
-    const color = document.getElementById('filamentColor').value.trim();
-    const weight = parseFloat(document.getElementById('filamentWeight').value);
-    const notes = document.getElementById('filamentNotes').value.trim();
-    const id = document.getElementById('filamentId').value;
+    const type = document.getElementById('filamentType')?.value;
+    const brand = document.getElementById('filamentBrand')?.value;
+    const color = (document.getElementById('filamentColor')?.value || '').trim();
+    const weight = parseFloat(document.getElementById('filamentWeight')?.value) || 0;
+    const notes = (document.getElementById('filamentNotes')?.value || '').trim();
+    const id = document.getElementById('filamentId')?.value;
 
     if (!type || !brand || !color || weight < 0) {
         showToast('Preencha todos os campos obrigatórios', 'error');
@@ -1634,16 +1633,16 @@ async function saveFilament(event) {
 }
 
 function closeFilamentModal() {
-    document.getElementById('filamentModal').classList.remove('active');
+    document.getElementById('filamentModal')?.classList.remove('active');
     selectedImage = null;
     editingFilamentId = null;
     editingFilamentUpdatedAt = null;
 
     // Resetar formulário após animação de fechamento
     setTimeout(() => {
-        document.getElementById('filamentForm').reset();
-        document.getElementById('imagePreview').style.display = 'none';
-        document.getElementById('uploadPlaceholder').style.display = 'flex';
+        document.getElementById('filamentForm')?.reset();
+        { const el = document.getElementById('imagePreview'); if (el) el.style.display = 'none'; }
+        { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
 
         // Sincronizar CustomSelects após reset
         const typeSelect = document.getElementById('filamentType');
@@ -1722,13 +1721,15 @@ async function deleteFilament(id) {
 // ===========================
 function showLoading(text = 'Carregando...') {
     const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
     const loadingText = overlay.querySelector('.loading-text');
-    loadingText.textContent = text;
+    if (loadingText) loadingText.textContent = text;
     overlay.style.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    const el = document.getElementById('loadingOverlay');
+    if (el) el.style.display = 'none';
 }
 
 function updateConnectionStatus(connected) {
@@ -1795,11 +1796,11 @@ function openCardActionsModal(filamentId) {
     const weightInGrams = (filament.weight * 1000).toFixed(0);
     const brand = escapeHtml(filament.brand || 'Nao especificada');
 
-    document.getElementById('cardInfoSummary').innerHTML = `
+    { const el = document.getElementById('cardInfoSummary'); if (el) el.innerHTML = `
         <h3>${displayName}</h3>
         <p><strong>Marca:</strong> ${brand}</p>
         <p><strong>Estoque atual:</strong> ${weightInGrams}g</p>
-    `;
+    `; }
 
     // Limpar campo de deducao rapida
     const deductionInput = document.getElementById('quickDeductionAmount');
@@ -1807,11 +1808,11 @@ function openCardActionsModal(filamentId) {
         deductionInput.value = '';
     }
 
-    document.getElementById('cardActionsModal').classList.add('active');
+    document.getElementById('cardActionsModal')?.classList.add('active');
 }
 
 function closeCardActionsModal() {
-    document.getElementById('cardActionsModal').classList.remove('active');
+    document.getElementById('cardActionsModal')?.classList.remove('active');
     selectedFilamentId = null;
 }
 
@@ -2014,7 +2015,7 @@ function switchSection(section) {
     document.querySelectorAll('.inventory-section').forEach(sec => {
         sec.classList.remove('active');
     });
-    document.getElementById(`${section}-section`).classList.add('active');
+    document.getElementById(`${section}-section`)?.classList.add('active');
 }
 
 // Carregar equipamentos do Firebase
@@ -2323,12 +2324,12 @@ function openEditEquipmentModal(id) {
     editingEquipmentId = id;
     selectedEquipmentImage = null;
 
-    document.getElementById('equipmentModalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Equipamento';
-    document.getElementById('equipmentId').value = id;
-    document.getElementById('equipmentName').value = item.name || '';
-    document.getElementById('equipmentBrand').value = item.brand || '';
-    document.getElementById('equipmentPrice').value = item.price || '';
-    document.getElementById('equipmentNotes').value = item.notes || '';
+    { const el = document.getElementById('equipmentModalTitle'); if (el) el.innerHTML = '<i class="fas fa-edit"></i> Editar Equipamento'; }
+    { const el = document.getElementById('equipmentId'); if (el) el.value = id; }
+    { const el = document.getElementById('equipmentName'); if (el) el.value = item.name || ''; }
+    { const el = document.getElementById('equipmentBrand'); if (el) el.value = item.brand || ''; }
+    { const el = document.getElementById('equipmentPrice'); if (el) el.value = item.price || ''; }
+    { const el = document.getElementById('equipmentNotes'); if (el) el.value = item.notes || ''; }
 
     // Preencher anos e definir valores de data de aquisição
     populateAcquisitionYears();
@@ -2374,12 +2375,12 @@ function openEditEquipmentModal(id) {
     // Carregar status do equipamento (operacional ou reparo)
     selectEquipmentStatus(item.status || 'operational');
 
-    document.getElementById('equipmentModal').classList.add('active');
+    document.getElementById('equipmentModal')?.classList.add('active');
 }
 
 // Fechar modal de equipamento
 function closeEquipmentModal() {
-    document.getElementById('equipmentModal').classList.remove('active');
+    document.getElementById('equipmentModal')?.classList.remove('active');
     editingEquipmentId = null;
     selectedEquipmentImage = null;
 }
@@ -2388,13 +2389,13 @@ function closeEquipmentModal() {
 async function saveEquipment(event) {
     event.preventDefault();
 
-    const name = document.getElementById('equipmentName').value.trim();
-    const brand = document.getElementById('equipmentBrand').value.trim();
-    const price = parseFloat(document.getElementById('equipmentPrice').value) || 0;
-    const notes = document.getElementById('equipmentNotes').value.trim();
-    const acquisitionMonth = document.getElementById('equipmentAcquisitionMonth').value;
-    const acquisitionYear = document.getElementById('equipmentAcquisitionYear').value;
-    const status = document.getElementById('equipmentStatus').value || 'operational';
+    const name = (document.getElementById('equipmentName')?.value || '').trim();
+    const brand = (document.getElementById('equipmentBrand')?.value || '').trim();
+    const price = parseFloat(document.getElementById('equipmentPrice')?.value) || 0;
+    const notes = (document.getElementById('equipmentNotes')?.value || '').trim();
+    const acquisitionMonth = document.getElementById('equipmentAcquisitionMonth')?.value;
+    const acquisitionYear = document.getElementById('equipmentAcquisitionYear')?.value;
+    const status = document.getElementById('equipmentStatus')?.value || 'operational';
 
     if (!name || !brand) {
         showToast('Preencha nome e marca do equipamento', 'error');
@@ -2519,12 +2520,12 @@ function openEquipmentActionsModal(id) {
         }
     }
 
-    document.getElementById('equipmentActionsModal').classList.add('active');
+    document.getElementById('equipmentActionsModal')?.classList.add('active');
 }
 
 // Fechar modal de ações do equipamento
 function closeEquipmentActionsModal() {
-    document.getElementById('equipmentActionsModal').classList.remove('active');
+    document.getElementById('equipmentActionsModal')?.classList.remove('active');
     selectedEquipmentId = null;
 }
 

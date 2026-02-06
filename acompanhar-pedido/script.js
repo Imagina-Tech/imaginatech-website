@@ -209,7 +209,7 @@ function getCarrierInfo(trackingCode) {
 document.addEventListener('DOMContentLoaded', () => {
     // Hide loading after DOM ready
     setTimeout(() => {
-        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('loadingOverlay')?.classList.add('hidden');
     }, 1000);
 
     // Verificar se há código na URL (ex: /acompanhar-pedido/?codigo=KJ4FE)
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await loadUserOrders();
             } catch (error) {
                 logger.warn('Erro ao carregar historico:', error);
-                document.getElementById('myOrdersSection').style.display = 'none';
+                { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
             }
         } else {
             currentUser = null;
@@ -391,29 +391,29 @@ async function logout() {
 
 function showLoginSection() {
     // Mostrar tela de login fullscreen
-    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('loginScreen')?.classList.add('active');
     // Esconder conteudo principal
-    document.getElementById('mainNavbar').classList.add('hidden');
-    document.getElementById('mainContainer').classList.add('hidden');
-    document.getElementById('orderView').classList.add('hidden');
+    document.getElementById('mainNavbar')?.classList.add('hidden');
+    document.getElementById('mainContainer')?.classList.add('hidden');
+    document.getElementById('orderView')?.classList.add('hidden');
 }
 
 function showCodeSection() {
     // Esconder tela de login
-    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('loginScreen')?.classList.remove('active');
     // Mostrar conteudo principal
-    document.getElementById('mainNavbar').classList.remove('hidden');
-    document.getElementById('mainContainer').classList.remove('hidden');
+    document.getElementById('mainNavbar')?.classList.remove('hidden');
+    document.getElementById('mainContainer')?.classList.remove('hidden');
     // Configurar secoes internas
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('codeSection').classList.remove('hidden');
-    document.getElementById('orderView').classList.add('hidden');
+    document.getElementById('loginSection')?.classList.add('hidden');
+    document.getElementById('codeSection')?.classList.remove('hidden');
+    document.getElementById('orderView')?.classList.add('hidden');
 
     // Update user info - verificar se currentUser existe
     const user = currentUser || auth.currentUser;
     if (user) {
-        document.getElementById('userName').textContent = user.displayName || 'Usuario';
-        document.getElementById('userPhoto').src = user.photoURL || '/assets/default-avatar.png';
+        { const el = document.getElementById('userName'); if (el) el.textContent = user.displayName || 'Usuario'; }
+        { const el = document.getElementById('userPhoto'); if (el) el.src = user.photoURL || '/assets/default-avatar.png'; }
 
         // Garantir que currentUser esta definido
         currentUser = user;
@@ -423,14 +423,14 @@ function showCodeSection() {
     clientAttempts = 0;
     // So limpar o input se nao houver codigo pendente da URL
     if (!pendingUrlOrderCode) {
-        document.getElementById('orderCode').value = '';
+        { const el = document.getElementById('orderCode'); if (el) el.value = ''; }
     }
-    document.getElementById('attemptsWarning').classList.remove('show');
+    document.getElementById('attemptsWarning')?.classList.remove('show');
 }
 
 function showOrderView() {
-    document.getElementById('welcomeScreen').classList.add('hidden');
-    document.getElementById('orderView').classList.remove('hidden');
+    document.getElementById('welcomeScreen')?.classList.add('hidden');
+    document.getElementById('orderView')?.classList.remove('hidden');
 
     // Atualizar link do WhatsApp com codigo do pedido (SEGURO: sem onclick inline)
     const whatsappLink = document.getElementById('whatsappLink');
@@ -443,23 +443,23 @@ function showOrderView() {
 }
 
 function backToCode() {
-    document.getElementById('orderView').classList.add('hidden');
-    document.getElementById('welcomeScreen').classList.remove('hidden');
-    
+    document.getElementById('orderView')?.classList.add('hidden');
+    document.getElementById('welcomeScreen')?.classList.remove('hidden');
+
     // Stop listening to order updates
     if (orderListener) {
         orderListener();
         orderListener = null;
     }
-    
+
     // Recarregar histórico para garantir que os listeners estejam ativos
     if (currentUser) {
         loadUserOrders();
     }
-    
+
     // Clear code input
-    document.getElementById('orderCode').value = '';
-    document.getElementById('attemptsWarning').classList.remove('show');
+    { const el = document.getElementById('orderCode'); if (el) el.value = ''; }
+    document.getElementById('attemptsWarning')?.classList.remove('show');
 }
 
 // ===========================
@@ -467,7 +467,7 @@ function backToCode() {
 // ===========================
 
 async function verifyCode() {
-    const code = document.getElementById('orderCode').value.trim().toUpperCase();
+    const code = (document.getElementById('orderCode')?.value || '').trim().toUpperCase();
     
     if (!code || code.length !== 5) {
         showToast('Digite um código válido de 5 caracteres', 'error');
@@ -571,24 +571,23 @@ async function verifyCode() {
 
 function handleInvalidCode() {
     const remainingAttempts = MAX_ATTEMPTS - clientAttempts;
-    
+
     if (remainingAttempts > 0) {
-        document.getElementById('orderCode').classList.add('error');
-        document.getElementById('attemptsWarning').classList.add('show');
-        document.getElementById('attemptsText').textContent = 
-            `Código inválido. ${remainingAttempts} tentativa(s) restante(s).`;
-        
-        showToast('Código não encontrado', 'error');
-        
+        document.getElementById('orderCode')?.classList.add('error');
+        document.getElementById('attemptsWarning')?.classList.add('show');
+        { const el = document.getElementById('attemptsText'); if (el) el.textContent = `Codigo invalido. ${remainingAttempts} tentativa(s) restante(s).`; }
+
+        showToast('Codigo nao encontrado', 'error');
+
         setTimeout(() => {
-            document.getElementById('orderCode').classList.remove('error');
+            document.getElementById('orderCode')?.classList.remove('error');
         }, 500);
     } else {
         showToast('Limite de tentativas excedido', 'error');
         setTimeout(() => {
             clientAttempts = 0;
-            document.getElementById('orderCode').value = '';
-            document.getElementById('attemptsWarning').classList.remove('show');
+            { const el = document.getElementById('orderCode'); if (el) el.value = ''; }
+            document.getElementById('attemptsWarning')?.classList.remove('show');
         }, 5000);
     }
 }
@@ -599,12 +598,13 @@ function handleInvalidCode() {
 
 function showOrderDetails(orderId, orderData) {
     showOrderView();
-    
+
     // Update order code display
-    document.getElementById('displayCode').textContent = orderData.orderCode || 'N/A';
-    
+    { const el = document.getElementById('displayCode'); if (el) el.textContent = orderData.orderCode || 'N/A'; }
+
     // Create order card content
     const orderCard = document.getElementById('orderCard');
+    if (!orderCard) return;
     
     // Lógica especial para SEDEX com status retirada (que na verdade é transporte)
     let actualStatus = orderData.status;
@@ -855,6 +855,7 @@ function showOrderDetails(orderId, orderData) {
 
 function updateTimeline(orderData) {
     const timeline = document.getElementById('timeline');
+    if (!timeline) return;
     const events = [];
     
     // Add creation event
@@ -1150,7 +1151,7 @@ async function loadUserOrders() {
                 await displayUserOrders(orderCodes);
             } else {
                 // Esconder seção se não houver pedidos
-                document.getElementById('myOrdersSection').style.display = 'none';
+                { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
             }
         } else {
             // Criar documento do usuário se não existir
@@ -1163,11 +1164,11 @@ async function loadUserOrders() {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             });
-            document.getElementById('myOrdersSection').style.display = 'none';
+            { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
         }
     } catch (error) {
         logger.error('Erro ao carregar pedidos:', error);
-        document.getElementById('myOrdersSection').style.display = 'none';
+        { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
     }
 }
 
@@ -1188,11 +1189,11 @@ async function displayUserOrders(orderCodes) {
     }
     
     if (!orderCodes || orderCodes.length === 0) {
-        myOrdersSection.style.display = 'none';
+        if (myOrdersSection) myOrdersSection.style.display = 'none';
         return;
     }
-    
-    myOrdersSection.style.display = 'block';
+
+    if (myOrdersSection) myOrdersSection.style.display = 'block';
     
     // Buscar detalhes de cada pedido (máximo 5 mais recentes)
     const orders = [];
@@ -1269,11 +1270,12 @@ async function displayUserOrders(orderCodes) {
     }
     
     if (orders.length === 0) {
-        myOrdersSection.style.display = 'none';
+        if (myOrdersSection) myOrdersSection.style.display = 'none';
         return;
     }
 
     // Renderizar lista de pedidos com data-action SEGURO (sem onclick inline)
+    if (!ordersList) return;
     ordersList.innerHTML = orders.map(order => `
         <div class="order-item" data-action="quick-load-order" data-code="${escapeHtml(order.code)}" data-order-code="${escapeHtml(order.code)}">
             <div>
@@ -1288,7 +1290,7 @@ async function displayUserOrders(orderCodes) {
 }
 
 async function quickLoadOrder(code) {
-    document.getElementById('orderCode').value = code;
+    { const el = document.getElementById('orderCode'); if (el) el.value = code; }
     await verifyCode();
 }
 
@@ -1521,20 +1523,22 @@ function printOrder() {
 
 function showModal(title, message, onConfirm) {
     const modal = document.getElementById('confirmModal');
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalMessage').textContent = message;
-    
+    { const el = document.getElementById('modalTitle'); if (el) el.textContent = title; }
+    { const el = document.getElementById('modalMessage'); if (el) el.textContent = message; }
+
     const confirmBtn = document.getElementById('modalConfirm');
-    confirmBtn.onclick = () => {
-        onConfirm();
-        closeModal();
-    };
-    
-    modal.classList.add('active');
+    if (confirmBtn) {
+        confirmBtn.onclick = () => {
+            onConfirm();
+            closeModal();
+        };
+    }
+
+    modal?.classList.add('active');
 }
 
 function closeModal() {
-    document.getElementById('confirmModal').classList.remove('active');
+    document.getElementById('confirmModal')?.classList.remove('active');
 }
 
 // ===========================
@@ -1576,9 +1580,9 @@ function openPhotoModal(photoUrl, index, total) {
         `;
         document.body.appendChild(photoModal);
     } else {
-        document.getElementById('photoModalImage').src = escapeHtml(photoUrl);
+        { const el = document.getElementById('photoModalImage'); if (el) el.src = escapeHtml(photoUrl); }
         if (total > 1) {
-            document.getElementById('photoCounter').textContent = `${index + 1} / ${total}`;
+            { const el = document.getElementById('photoCounter'); if (el) el.textContent = `${index + 1} / ${total}`; }
         }
     }
 
@@ -1597,7 +1601,9 @@ function closePhotoModal() {
 function navigatePhoto(direction) {
     // Pegar todas as imagens do pedido atual
     const orderCard = document.getElementById('orderCard');
+    if (!orderCard) return;
     const images = Array.from(orderCard.querySelectorAll('.photo-item img'));
+    if (images.length === 0) return;
 
     currentPhotoIndex += direction;
 
@@ -1606,8 +1612,8 @@ function navigatePhoto(direction) {
     if (currentPhotoIndex >= images.length) currentPhotoIndex = 0;
 
     const newPhotoUrl = images[currentPhotoIndex].src;
-    document.getElementById('photoModalImage').src = newPhotoUrl;
-    document.getElementById('photoCounter').textContent = `${currentPhotoIndex + 1} / ${images.length}`;
+    { const el = document.getElementById('photoModalImage'); if (el) el.src = newPhotoUrl; }
+    { const el = document.getElementById('photoCounter'); if (el) el.textContent = `${currentPhotoIndex + 1} / ${images.length}`; }
 }
 
 // Keyboard navigation

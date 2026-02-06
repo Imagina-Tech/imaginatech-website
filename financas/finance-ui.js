@@ -911,10 +911,11 @@ function getComparisonData() {
 // 🎨 Abre modal para adicionar nova transação
 function openTransactionModal() {
     editingTransactionId = null;
-    document.getElementById('transactionModal').classList.add('active');
-    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionModal')?.classList.add('active');
+    document.getElementById('transactionForm')?.reset();
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+    const dateEl = document.getElementById('date');
+    if (dateEl) dateEl.value = today;
 
     // Reset payment method state
     currentTransactionType = 'income';
@@ -922,7 +923,7 @@ function openTransactionModal() {
 
     // Reset credit card dropdown explicitly and populate with cards
     const transactionCardSelect = document.getElementById('transactionCard');
-    transactionCardSelect.value = '';
+    if (transactionCardSelect) transactionCardSelect.value = '';
     populateTransactionCardOptions();
 
     // Sincronizar dropdowns customizados após reset
@@ -946,11 +947,13 @@ function closeModal(modalId) {
 function closeTransactionModal() {
     editingTransactionId = null;
     currentPaymentMethod = 'debit';
-    document.getElementById('transactionModal').classList.remove('active');
-    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionModal')?.classList.remove('active');
+    document.getElementById('transactionForm')?.reset();
     // Ocultar campos condicionais
-    document.getElementById('paymentMethodGroup').style.display = 'none';
-    document.getElementById('creditCardGroup').style.display = 'none';
+    const payMethodGroup = document.getElementById('paymentMethodGroup');
+    const creditGroup = document.getElementById('creditCardGroup');
+    if (payMethodGroup) payMethodGroup.style.display = 'none';
+    if (creditGroup) creditGroup.style.display = 'none';
 }
 
 // 🎨 Abre modal para editar transação existente
@@ -961,7 +964,7 @@ function editTransaction(id) {
     editingTransactionId = id;
 
     // Abre o modal
-    document.getElementById('transactionModal').classList.add('active');
+    document.getElementById('transactionModal')?.classList.add('active');
 
     // Atualiza título do modal
     document.querySelector('#transactionModal .modal-header h2').textContent = 'Editar Transação';
@@ -977,25 +980,32 @@ function editTransaction(id) {
     // Define o cartão se for crédito
     if (transaction.paymentMethod === 'credit' && transaction.cardId) {
         const cardSelect = document.getElementById('transactionCard');
-        cardSelect.value = transaction.cardId;
-        cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        if (cardSelect) {
+            cardSelect.value = transaction.cardId;
+            cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
     // Preenche os campos DEPOIS de popular as categorias
-    document.getElementById('description').value = transaction.description;
-    document.getElementById('value').value = formatCurrencyValue(transaction.value);
+    const editDescEl = document.getElementById('description');
+    const editValueEl = document.getElementById('value');
+    if (editDescEl) editDescEl.value = transaction.description;
+    if (editValueEl) editValueEl.value = formatCurrencyValue(transaction.value);
 
     const categorySelect = document.getElementById('category');
-    categorySelect.value = transaction.category;
-    categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (categorySelect) {
+        categorySelect.value = transaction.category;
+        categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
-    document.getElementById('date').value = transaction.date;
+    const editDateEl = document.getElementById('date');
+    if (editDateEl) editDateEl.value = transaction.date;
 }
 
 // 🎨 Edita transação de crédito (a partir do modal de detalhes da fatura)
 function editCreditTransaction(id) {
     // Fecha o modal de detalhes da fatura
-    document.getElementById('cardBillDetailsModal').classList.remove('active');
+    document.getElementById('cardBillDetailsModal')?.classList.remove('active');
 
     // Abre o modal de edição usando a função existente
     editTransaction(id);
@@ -1020,7 +1030,7 @@ async function deleteCreditTransaction(id) {
 
         // Se o modal de detalhes da fatura ainda estiver aberto, atualiza ele
         const billModal = document.getElementById('cardBillDetailsModal');
-        if (billModal.classList.contains('active') && transaction.cardId) {
+        if (billModal?.classList.contains('active') && transaction.cardId) {
             // Reexibe os detalhes da fatura com dados atualizados
             showCardBillDetails(transaction.cardId);
         }
@@ -1035,8 +1045,8 @@ async function deleteCreditTransaction(id) {
 // 🎨 Abre modal para adicionar nova assinatura
 function openSubscriptionModal() {
     editingSubscriptionId = null;
-    document.getElementById('subscriptionModal').classList.add('active');
-    document.getElementById('subscriptionForm').reset();
+    document.getElementById('subscriptionModal')?.classList.add('active');
+    document.getElementById('subscriptionForm')?.reset();
     document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Nova Assinatura';
 
     // Preenche dropdown de cartões
@@ -1057,8 +1067,8 @@ function openSubscriptionModal() {
 // 🎨 Fecha modal de assinatura
 function closeSubscriptionModal() {
     editingSubscriptionId = null;
-    document.getElementById('subscriptionModal').classList.remove('active');
-    document.getElementById('subscriptionForm').reset();
+    document.getElementById('subscriptionModal')?.classList.remove('active');
+    document.getElementById('subscriptionForm')?.reset();
 }
 
 // 🎨 Abre modal para editar assinatura existente
@@ -1069,39 +1079,49 @@ function editSubscription(id) {
     editingSubscriptionId = id;
 
     // Abre o modal
-    document.getElementById('subscriptionModal').classList.add('active');
+    document.getElementById('subscriptionModal')?.classList.add('active');
 
     // Atualiza título do modal
     document.querySelector('#subscriptionModal .modal-header h2').textContent = 'Editar Assinatura';
 
     // Preenche dropdown de cartões
     const cardSelect = document.getElementById('subCard');
-    cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
-        creditCards.map(card =>
-            `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
-        ).join('');
-    cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (cardSelect) {
+        cardSelect.innerHTML = '<option value="">Sem cartão</option>' +
+            creditCards.map(card =>
+                `<option value="${card.id}" ${card.id === subscription.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+            ).join('');
+        cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     // Preenche os campos
-    document.getElementById('subName').value = subscription.name;
-    document.getElementById('subValue').value = formatCurrencyValue(subscription.value);
-    document.getElementById('subDueDay').value = subscription.dueDay;
+    const editSubName = document.getElementById('subName');
+    const editSubValue = document.getElementById('subValue');
+    const editSubDueDay = document.getElementById('subDueDay');
+    if (editSubName) editSubName.value = subscription.name;
+    if (editSubValue) editSubValue.value = formatCurrencyValue(subscription.value);
+    if (editSubDueDay) editSubDueDay.value = subscription.dueDay;
 
     const subCategorySelect = document.getElementById('subCategory');
-    subCategorySelect.value = subscription.category;
-    subCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (subCategorySelect) {
+        subCategorySelect.value = subscription.category;
+        subCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     const subStatusSelect = document.getElementById('subStatus');
-    subStatusSelect.value = subscription.status;
-    subStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (subStatusSelect) {
+        subStatusSelect.value = subscription.status;
+        subStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 }
 
 // 🎨 Abre modal para adicionar novo parcelamento
 function openInstallmentModal() {
     editingInstallmentId = null;
-    document.getElementById('installmentModal').classList.add('active');
-    document.getElementById('installmentForm').reset();
-    document.getElementById('instCurrentInstallment').value = 1;
+    document.getElementById('installmentModal')?.classList.add('active');
+    document.getElementById('installmentForm')?.reset();
+    const instCurrEl = document.getElementById('instCurrentInstallment');
+    if (instCurrEl) instCurrEl.value = 1;
     // Define valor total como padrão
     selectInstallmentValueType('total');
     // Atualiza título do modal
@@ -1121,8 +1141,8 @@ function openInstallmentModal() {
 // 🎨 Fecha modal de parcelamento
 function closeInstallmentModal() {
     editingInstallmentId = null;
-    document.getElementById('installmentModal').classList.remove('active');
-    document.getElementById('installmentForm').reset();
+    document.getElementById('installmentModal')?.classList.remove('active');
+    document.getElementById('installmentForm')?.reset();
     // Reset para valor total como padrão
     selectInstallmentValueType('total');
 }
@@ -1184,32 +1204,38 @@ function editInstallment(id) {
     editingInstallmentId = id;
 
     // Abre o modal
-    document.getElementById('installmentModal').classList.add('active');
+    document.getElementById('installmentModal')?.classList.add('active');
 
     // Atualiza título do modal
     document.querySelector('#installmentModal .modal-header h2').textContent = 'Editar Parcelamento';
 
     // Preenche dropdown de cartões
     const cardSelect = document.getElementById('instCard');
-    cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
-        creditCards.map(card =>
-            `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
-        ).join('');
+    if (cardSelect) {
+        cardSelect.innerHTML = '<option value="">Selecione um cartão</option>' +
+            creditCards.map(card =>
+                `<option value="${card.id}" ${card.id === installment.cardId ? 'selected' : ''}>${card.name} - ${card.institution}</option>`
+            ).join('');
 
-    // Sincronizar CustomSelect após popular opções
-    // Usar setTimeout para aguardar MutationObserver processar
-    setTimeout(() => {
-        cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 0);
+        // Sincronizar CustomSelect após popular opções
+        // Usar setTimeout para aguardar MutationObserver processar
+        setTimeout(() => {
+            cardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 0);
+    }
 
     // Preenche os campos
-    document.getElementById('instDescription').value = installment.description;
-    document.getElementById('instTotalInstallments').value = installment.totalInstallments;
-    document.getElementById('instCurrentInstallment').value = installment.currentInstallment || 1;
+    const editInstDesc = document.getElementById('instDescription');
+    const editInstTotal = document.getElementById('instTotalInstallments');
+    const editInstCurrent = document.getElementById('instCurrentInstallment');
+    if (editInstDesc) editInstDesc.value = installment.description;
+    if (editInstTotal) editInstTotal.value = installment.totalInstallments;
+    if (editInstCurrent) editInstCurrent.value = installment.currentInstallment || 1;
 
     // Define como valor total e preenche
     selectInstallmentValueType('total');
-    document.getElementById('instTotalValue').value = formatCurrencyValue(installment.totalValue);
+    const editInstTotalValue = document.getElementById('instTotalValue');
+    if (editInstTotalValue) editInstTotalValue.value = formatCurrencyValue(installment.totalValue);
 
     // Calcula e mostra o valor da parcela
     calculateInstallmentValues();
@@ -1242,47 +1268,48 @@ function selectInstallmentValueType(type) {
     const installmentValueInput = document.getElementById('instInstallmentValue');
 
     if (type === 'total') {
-        totalValueGroup.classList.remove('hidden');
-        installmentValueGroup.classList.add('hidden');
-        totalValueInput.required = true;
-        installmentValueInput.required = false;
-        installmentValueInput.value = '';
+        if (totalValueGroup) totalValueGroup.classList.remove('hidden');
+        if (installmentValueGroup) installmentValueGroup.classList.add('hidden');
+        if (totalValueInput) totalValueInput.required = true;
+        if (installmentValueInput) { installmentValueInput.required = false; installmentValueInput.value = ''; }
     } else {
-        totalValueGroup.classList.add('hidden');
-        installmentValueGroup.classList.remove('hidden');
-        totalValueInput.required = false;
-        installmentValueInput.required = true;
-        totalValueInput.value = '';
+        if (totalValueGroup) totalValueGroup.classList.add('hidden');
+        if (installmentValueGroup) installmentValueGroup.classList.remove('hidden');
+        if (totalValueInput) { totalValueInput.required = false; totalValueInput.value = ''; }
+        if (installmentValueInput) installmentValueInput.required = true;
     }
 }
 
 // 🔄 Calcula e exibe valor por parcela baseado no valor total
 function calculateInstallmentValues() {
-    const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value) || 0;
+    const instTotalInstEl = document.getElementById('instTotalInstallments');
+    const totalInstallments = parseInt(instTotalInstEl ? instTotalInstEl.value : '0') || 0;
 
     if (totalInstallments < 2) return;
 
     if (installmentValueType === 'total') {
         // Usuário digitou valor total, calcular valor da parcela
-        const totalValueStr = document.getElementById('instTotalValue').value;
+        const calcTotalValueEl = document.getElementById('instTotalValue');
+        const totalValueStr = calcTotalValueEl ? calcTotalValueEl.value : '';
         if (!totalValueStr) return;
 
         const totalValue = parseCurrencyInput(totalValueStr);
         if (totalValue > 0) {
             const installmentValue = totalValue / totalInstallments;
             const installmentValueInput = document.getElementById('instInstallmentValue');
-            installmentValueInput.value = formatCurrencyValue(installmentValue);
+            if (installmentValueInput) installmentValueInput.value = formatCurrencyValue(installmentValue);
         }
     } else {
         // Usuário digitou valor da parcela, calcular valor total
-        const installmentValueStr = document.getElementById('instInstallmentValue').value;
+        const calcInstValueEl = document.getElementById('instInstallmentValue');
+        const installmentValueStr = calcInstValueEl ? calcInstValueEl.value : '';
         if (!installmentValueStr) return;
 
         const installmentValue = parseCurrencyInput(installmentValueStr);
         if (installmentValue > 0) {
             const totalValue = installmentValue * totalInstallments;
             const totalValueInput = document.getElementById('instTotalValue');
-            totalValueInput.value = formatCurrencyValue(totalValue);
+            if (totalValueInput) totalValueInput.value = formatCurrencyValue(totalValue);
         }
     }
 }
@@ -1291,11 +1318,12 @@ function calculateInstallmentValues() {
 function openProjectionModal() {
     editingProjectionId = null;
     currentProjectionType = 'income';
-    document.getElementById('projectionModal').classList.add('active');
-    document.getElementById('projectionForm').reset();
+    document.getElementById('projectionModal')?.classList.add('active');
+    document.getElementById('projectionForm')?.reset();
     document.querySelector('#projectionModal .modal-header h2').textContent = 'Nova Projeção';
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('projDate').value = today;
+    const projDateEl = document.getElementById('projDate');
+    if (projDateEl) projDateEl.value = today;
     const projStatusSelect = document.getElementById('projStatus');
     projStatusSelect.value = 'pending';
     projStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1311,15 +1339,18 @@ function editProjection(id) {
     editingProjectionId = id;
 
     // Abre o modal
-    document.getElementById('projectionModal').classList.add('active');
+    document.getElementById('projectionModal')?.classList.add('active');
 
     // Atualiza título do modal
     document.querySelector('#projectionModal .modal-header h2').textContent = 'Editar Projeção';
 
     // Preenche os campos
-    document.getElementById('projDescription').value = projection.description;
-    document.getElementById('projValue').value = formatCurrencyValue(projection.value);
-    document.getElementById('projDate').value = projection.date;
+    const editProjDesc = document.getElementById('projDescription');
+    const editProjValue = document.getElementById('projValue');
+    const editProjDate = document.getElementById('projDate');
+    if (editProjDesc) editProjDesc.value = projection.description;
+    if (editProjValue) editProjValue.value = formatCurrencyValue(projection.value);
+    if (editProjDate) editProjDate.value = projection.date;
 
     const projStatusSelect = document.getElementById('projStatus');
     projStatusSelect.value = projection.status || 'pending';
@@ -1334,8 +1365,8 @@ function editProjection(id) {
 function closeProjectionModal() {
     editingProjectionId = null;
     currentProjectionType = 'income';
-    document.getElementById('projectionModal').classList.remove('active');
-    document.getElementById('projectionForm').reset();
+    document.getElementById('projectionModal')?.classList.remove('active');
+    document.getElementById('projectionForm')?.reset();
 }
 
 // 📝 Alterna tipo de projeção (entrada/saída) e atualiza labels
@@ -1378,7 +1409,7 @@ function selectTransactionType(type) {
 
     // Sempre mostrar método de pagamento (para reembolsos em cartão também)
     const paymentMethodGroup = document.getElementById('paymentMethodGroup');
-    paymentMethodGroup.style.display = 'block';
+    if (paymentMethodGroup) paymentMethodGroup.style.display = 'block';
     // Reset to debit quando trocar de tipo
     selectPaymentMethod('debit');
 
@@ -1403,30 +1434,35 @@ function selectPaymentMethod(method) {
     const transactionCardSelect = document.getElementById('transactionCard');
 
     if (method === 'credit') {
-        creditCardGroup.style.display = 'block';
-        transactionCardSelect.required = true;
+        if (creditCardGroup) creditCardGroup.style.display = 'block';
+        if (transactionCardSelect) transactionCardSelect.required = true;
         // Always repopulate with fresh data
         populateTransactionCardOptions();
         // Reset selection to empty (force user to choose)
-        transactionCardSelect.value = '';
-        // Sincronizar CustomSelect após popular opções
-        setTimeout(() => {
-            transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }, 0);
+        if (transactionCardSelect) {
+            transactionCardSelect.value = '';
+            // Sincronizar CustomSelect após popular opções
+            setTimeout(() => {
+                transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }, 0);
+        }
     } else {
-        creditCardGroup.style.display = 'none';
-        transactionCardSelect.required = false;
-        // Clear dropdown when switching away from credit
-        transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
-        transactionCardSelect.value = '';
-        // Sincronizar CustomSelect
-        transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        if (creditCardGroup) creditCardGroup.style.display = 'none';
+        if (transactionCardSelect) {
+            transactionCardSelect.required = false;
+            // Clear dropdown when switching away from credit
+            transactionCardSelect.innerHTML = '<option value="">Selecione um cartão</option>';
+            transactionCardSelect.value = '';
+            // Sincronizar CustomSelect
+            transactionCardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 }
 
 // 📝 Popula dropdown de cartões no formulário de transação
 function populateTransactionCardOptions() {
     const select = document.getElementById('transactionCard');
+    if (!select) return;
     select.innerHTML = '<option value="">Selecione um cartão</option>';
 
     // Debug: Log card data before populating
@@ -1456,7 +1492,8 @@ function updateDefaultDateForCard(cardId) {
     // Sempre manter a data atual quando o cartão for selecionado
     // A maioria das transações acontece no dia de hoje
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+    const dateFieldEl = document.getElementById('date');
+    if (dateFieldEl) dateFieldEl.value = today;
 
     logger.log(`📅 [updateDefaultDateForCard] Data mantida como hoje: ${today}`);
 }
@@ -2083,7 +2120,8 @@ function initializeGrowthSparkline() {
     };
 
     new ApexCharts(chartEl, options).render();
-    document.getElementById('growthValue').textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+    const growthValueEl = document.getElementById('growthValue');
+    if (growthValueEl) growthValueEl.textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
 }
 
 // ===========================
@@ -2136,7 +2174,8 @@ function initializeExpenseTrendSparkline() {
     };
 
     new ApexCharts(chartEl, options).render();
-    document.getElementById('trendValue').textContent = trend;
+    const trendValueEl = document.getElementById('trendValue');
+    if (trendValueEl) trendValueEl.textContent = trend;
 }
 
 // ===========================

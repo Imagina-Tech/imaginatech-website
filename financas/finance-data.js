@@ -669,10 +669,14 @@ async function handleTransactionSubmit(e) {
     if (isFormSubmitting) return;
     isFormSubmitting = true;
 
-    const description = document.getElementById('description').value.trim();
-    const valueStr = document.getElementById('value').value;
-    const category = document.getElementById('category').value;
-    const date = document.getElementById('date').value;
+    const descriptionEl = document.getElementById('description');
+    const valueEl = document.getElementById('value');
+    const categoryEl = document.getElementById('category');
+    const dateEl = document.getElementById('date');
+    const description = descriptionEl ? descriptionEl.value.trim() : '';
+    const valueStr = valueEl ? valueEl.value : '';
+    const category = categoryEl ? categoryEl.value : '';
+    const date = dateEl ? dateEl.value : '';
 
     if (!description || !valueStr || !category || !date) {
         showToast('Preencha todos os campos', 'error');
@@ -684,7 +688,8 @@ async function handleTransactionSubmit(e) {
     let selectedCardId = null;
     let selectedCard = null;
     if (currentPaymentMethod === 'credit') {
-        selectedCardId = document.getElementById('transactionCard').value;
+        const transactionCardEl = document.getElementById('transactionCard');
+        selectedCardId = transactionCardEl ? transactionCardEl.value : '';
         if (!selectedCardId) {
             showToast('Selecione um cartão de crédito', 'error');
             isFormSubmitting = false;
@@ -827,12 +832,18 @@ async function loadSubscriptions() {
 async function handleSubscriptionSubmit(e) {
     e.preventDefault();
 
-    const name = document.getElementById('subName').value.trim();
-    const valueStr = document.getElementById('subValue').value;
-    const dueDay = parseInt(document.getElementById('subDueDay').value);
-    const category = document.getElementById('subCategory').value;
-    const status = document.getElementById('subStatus').value;
-    const cardId = document.getElementById('subCard').value;
+    const subNameEl = document.getElementById('subName');
+    const subValueEl = document.getElementById('subValue');
+    const subDueDayEl = document.getElementById('subDueDay');
+    const subCategoryEl = document.getElementById('subCategory');
+    const subStatusEl = document.getElementById('subStatus');
+    const subCardEl = document.getElementById('subCard');
+    const name = subNameEl ? subNameEl.value.trim() : '';
+    const valueStr = subValueEl ? subValueEl.value : '';
+    const dueDay = parseInt(subDueDayEl ? subDueDayEl.value : '0');
+    const category = subCategoryEl ? subCategoryEl.value : '';
+    const status = subStatusEl ? subStatusEl.value : '';
+    const cardId = subCardEl ? subCardEl.value : '';
 
     if (!name || !valueStr || !dueDay || !category) {
         showToast('Preencha todos os campos', 'error');
@@ -1050,24 +1061,30 @@ function calculateCurrentInstallment(installment, targetMonth = null, targetYear
 async function handleInstallmentSubmit(e) {
     e.preventDefault();
 
-    const description = document.getElementById('instDescription').value.trim();
-    const cardId = document.getElementById('instCard').value;
-    const totalInstallments = parseInt(document.getElementById('instTotalInstallments').value);
-    const currentInstallment = parseInt(document.getElementById('instCurrentInstallment').value);
+    const instDescEl = document.getElementById('instDescription');
+    const instCardEl = document.getElementById('instCard');
+    const instTotalEl = document.getElementById('instTotalInstallments');
+    const instCurrentEl = document.getElementById('instCurrentInstallment');
+    const description = instDescEl ? instDescEl.value.trim() : '';
+    const cardId = instCardEl ? instCardEl.value : '';
+    const totalInstallments = parseInt(instTotalEl ? instTotalEl.value : '0');
+    const currentInstallment = parseInt(instCurrentEl ? instCurrentEl.value : '0');
 
     // Pega o valor correto dependendo do tipo selecionado
     // Usa window.installmentValueType que é definido em finance-ui.js
     let totalValue = 0;
     const valueType = window.installmentValueType || 'total';
     if (valueType === 'total') {
-        const totalValueStr = document.getElementById('instTotalValue').value;
+        const instTotalValueEl = document.getElementById('instTotalValue');
+        const totalValueStr = instTotalValueEl ? instTotalValueEl.value : '';
         if (!totalValueStr) {
             showToast('Preencha o valor total', 'error');
             return;
         }
         totalValue = parseCurrencyInput(totalValueStr);
     } else {
-        const installmentValueStr = document.getElementById('instInstallmentValue').value;
+        const instInstValueEl = document.getElementById('instInstallmentValue');
+        const installmentValueStr = instInstValueEl ? instInstValueEl.value : '';
         if (!installmentValueStr) {
             showToast('Preencha o valor da parcela', 'error');
             return;
@@ -1305,7 +1322,7 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
         showToast('Fatura marcada como paga! Transação de débito criada.', 'success');
 
         // Fechar e reabrir modal para atualizar
-        document.getElementById('cardBillDetailsModal').classList.remove('active');
+        document.getElementById('cardBillDetailsModal')?.classList.remove('active');
         setTimeout(() => showCardBillDetails(cardId), 300);
 
     } catch (error) {
@@ -1348,7 +1365,7 @@ async function unmarkBillAsPaid(paymentId) {
 
         // Fechar e reabrir modal para atualizar
         const cardId = payment.cardId;
-        document.getElementById('cardBillDetailsModal').classList.remove('active');
+        document.getElementById('cardBillDetailsModal')?.classList.remove('active');
         setTimeout(() => showCardBillDetails(cardId), 300);
 
     } catch (error) {
@@ -1466,17 +1483,20 @@ async function saveUserSettings(newSettings) {
 // ===========================
 function openInvestmentsModal() {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('investmentDate').value = today;
-    document.getElementById('investmentName').value = '';
-    document.getElementById('investmentValue').value = '';
+    const invDateEl = document.getElementById('investmentDate');
+    const invNameEl = document.getElementById('investmentName');
+    const invValueEl = document.getElementById('investmentValue');
+    if (invDateEl) invDateEl.value = today;
+    if (invNameEl) invNameEl.value = '';
+    if (invValueEl) invValueEl.value = '';
     editingInvestmentId = null;
 
     renderInvestmentsList();
-    document.getElementById('investmentsModal').classList.add('active');
+    document.getElementById('investmentsModal')?.classList.add('active');
 }
 
 function closeInvestmentsModal() {
-    document.getElementById('investmentsModal').classList.remove('active');
+    document.getElementById('investmentsModal')?.classList.remove('active');
     editingInvestmentId = null;
 }
 
@@ -1519,9 +1539,12 @@ function renderInvestmentsList() {
 async function handleInvestmentSubmit(e) {
     e.preventDefault();
 
-    const name = document.getElementById('investmentName').value.trim();
-    const valueStr = document.getElementById('investmentValue').value;
-    const date = document.getElementById('investmentDate').value;
+    const invNameEl2 = document.getElementById('investmentName');
+    const invValueEl2 = document.getElementById('investmentValue');
+    const invDateEl2 = document.getElementById('investmentDate');
+    const name = invNameEl2 ? invNameEl2.value.trim() : '';
+    const valueStr = invValueEl2 ? invValueEl2.value : '';
+    const date = invDateEl2 ? invDateEl2.value : '';
 
     if (!name || !valueStr || !date) {
         showToast('Preencha todos os campos', 'error');
@@ -1557,9 +1580,12 @@ async function handleInvestmentSubmit(e) {
         }
 
         // Limpar formulário
-        document.getElementById('investmentName').value = '';
-        document.getElementById('investmentValue').value = '';
-        document.getElementById('investmentDate').value = new Date().toISOString().split('T')[0];
+        const clearInvName = document.getElementById('investmentName');
+        const clearInvValue = document.getElementById('investmentValue');
+        const clearInvDate = document.getElementById('investmentDate');
+        if (clearInvName) clearInvName.value = '';
+        if (clearInvValue) clearInvValue.value = '';
+        if (clearInvDate) clearInvDate.value = new Date().toISOString().split('T')[0];
         editingInvestmentId = null;
 
         await loadInvestments();
@@ -1578,9 +1604,12 @@ function editInvestment(id) {
     const inv = investments.find(i => i.id === id);
     if (!inv) return;
 
-    document.getElementById('investmentName').value = inv.name;
-    document.getElementById('investmentValue').value = inv.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    document.getElementById('investmentDate').value = inv.date;
+    const editInvName = document.getElementById('investmentName');
+    const editInvValue = document.getElementById('investmentValue');
+    const editInvDate = document.getElementById('investmentDate');
+    if (editInvName) editInvName.value = inv.name;
+    if (editInvValue) editInvValue.value = inv.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    if (editInvDate) editInvDate.value = inv.date;
     editingInvestmentId = id;
 }
 
@@ -1608,26 +1637,32 @@ async function deleteInvestment(id) {
 // ===========================
 function openSettingsModal() {
     // Preencher com valores atuais
-    document.getElementById('savingsGoalInput').value = userSettings.savingsGoal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    document.getElementById('expenseLimitInput').value = userSettings.expenseLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    document.getElementById('cutoffDateInput').value = userSettings.cutoffDate || '';
+    const savingsGoalEl = document.getElementById('savingsGoalInput');
+    const expenseLimitEl = document.getElementById('expenseLimitInput');
+    const cutoffDateEl = document.getElementById('cutoffDateInput');
+    if (savingsGoalEl) savingsGoalEl.value = userSettings.savingsGoal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    if (expenseLimitEl) expenseLimitEl.value = userSettings.expenseLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    if (cutoffDateEl) cutoffDateEl.value = userSettings.cutoffDate || '';
 
-    document.getElementById('settingsModal').classList.add('active');
+    document.getElementById('settingsModal')?.classList.add('active');
 
     // Carregar status do WhatsApp
     loadWhatsAppStatus();
 }
 
 function closeSettingsModal() {
-    document.getElementById('settingsModal').classList.remove('active');
+    document.getElementById('settingsModal')?.classList.remove('active');
 }
 
 async function handleSettingsSubmit(e) {
     e.preventDefault();
 
-    const savingsGoalStr = document.getElementById('savingsGoalInput').value;
-    const expenseLimitStr = document.getElementById('expenseLimitInput').value;
-    const cutoffDate = document.getElementById('cutoffDateInput').value;
+    const savingsGoalInputEl = document.getElementById('savingsGoalInput');
+    const expenseLimitInputEl = document.getElementById('expenseLimitInput');
+    const cutoffDateInputEl = document.getElementById('cutoffDateInput');
+    const savingsGoalStr = savingsGoalInputEl ? savingsGoalInputEl.value : '';
+    const expenseLimitStr = expenseLimitInputEl ? expenseLimitInputEl.value : '';
+    const cutoffDate = cutoffDateInputEl ? cutoffDateInputEl.value : '';
 
     const savingsGoal = parseCurrencyInput(savingsGoalStr);
     const expenseLimit = parseCurrencyInput(expenseLimitStr);
@@ -1657,10 +1692,14 @@ async function handleSettingsSubmit(e) {
 async function handleProjectionSubmit(e) {
     e.preventDefault();
 
-    const description = document.getElementById('projDescription').value.trim();
-    const valueStr = document.getElementById('projValue').value;
-    const date = document.getElementById('projDate').value;
-    const status = document.getElementById('projStatus').value;
+    const projDescEl = document.getElementById('projDescription');
+    const projValueEl = document.getElementById('projValue');
+    const projDateEl = document.getElementById('projDate');
+    const projStatusEl = document.getElementById('projStatus');
+    const description = projDescEl ? projDescEl.value.trim() : '';
+    const valueStr = projValueEl ? projValueEl.value : '';
+    const date = projDateEl ? projDateEl.value : '';
+    const status = projStatusEl ? projStatusEl.value : '';
     const type = currentProjectionType; // 'income' ou 'expense'
 
     if (!description || !valueStr || !date) {
@@ -2023,16 +2062,16 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
 // 🎨 Abre modal para adicionar/editar cartão de crédito
 function openCreditCardModal() {
     editingCardId = null;
-    document.getElementById('creditCardModal').classList.add('active');
-    document.getElementById('creditCardForm').reset();
+    document.getElementById('creditCardModal')?.classList.add('active');
+    document.getElementById('creditCardForm')?.reset();
     document.querySelector('#creditCardModal .modal-header h2').textContent = 'Novo Cartão de Crédito';
 }
 
 // 🎨 Fecha modal de cartão de crédito
 function closeCreditCardModal() {
     editingCardId = null;
-    document.getElementById('creditCardModal').classList.remove('active');
-    document.getElementById('creditCardForm').reset();
+    document.getElementById('creditCardModal')?.classList.remove('active');
+    document.getElementById('creditCardForm')?.reset();
 }
 
 // 🎨 Exibe detalhes completos da fatura do cartão em modal
@@ -2106,7 +2145,8 @@ function showCardBillDetails(cardId) {
 
     // Montar o HTML do modal em 3 colunas
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
+    const billTitleEl = document.getElementById('cardBillDetailsTitle');
+    if (billTitleEl) billTitleEl.textContent = `Fatura ${card.name} - ${monthName}`;
 
     // Usar endDate para referencia consistente da fatura (BUG 5 fix)
     const billRefMonth = billEndDate.getMonth();
@@ -2254,8 +2294,9 @@ function showCardBillDetails(cardId) {
         </div>
     `;
 
-    document.getElementById('cardBillDetailsContent').innerHTML = html;
-    document.getElementById('cardBillDetailsModal').classList.add('active');
+    const billContentEl = document.getElementById('cardBillDetailsContent');
+    if (billContentEl) billContentEl.innerHTML = html;
+    document.getElementById('cardBillDetailsModal')?.classList.add('active');
 }
 
 let selectedCardId = null;
@@ -2267,11 +2308,16 @@ let selectedCardId = null;
 async function handleCreditCardSubmit(e) {
     e.preventDefault();
 
-    const name = document.getElementById('cardName').value.trim();
-    const institution = document.getElementById('cardInstitution').value.trim();
-    const limitStr = document.getElementById('cardLimit').value;
-    const closingDay = parseInt(document.getElementById('cardClosingDay').value);
-    const dueDay = parseInt(document.getElementById('cardDueDay').value);
+    const cardNameEl = document.getElementById('cardName');
+    const cardInstEl = document.getElementById('cardInstitution');
+    const cardLimitEl = document.getElementById('cardLimit');
+    const cardClosingEl = document.getElementById('cardClosingDay');
+    const cardDueEl = document.getElementById('cardDueDay');
+    const name = cardNameEl ? cardNameEl.value.trim() : '';
+    const institution = cardInstEl ? cardInstEl.value.trim() : '';
+    const limitStr = cardLimitEl ? cardLimitEl.value : '';
+    const closingDay = parseInt(cardClosingEl ? cardClosingEl.value : '0');
+    const dueDay = parseInt(cardDueEl ? cardDueEl.value : '0');
 
     if (!name || !institution || !limitStr) {
         showToast('Preencha todos os campos', 'error');
@@ -2330,11 +2376,16 @@ async function handleCreditCardSubmit(e) {
 async function handleCardExpenseSubmit(e) {
     e.preventDefault();
 
-    const cardId = document.getElementById('expenseCard').value;
-    const description = document.getElementById('expenseDescription').value.trim();
-    const valueStr = document.getElementById('expenseValue').value;
-    const date = document.getElementById('expenseDate').value;
-    const category = document.getElementById('expenseCategory').value;
+    const expCardEl = document.getElementById('expenseCard');
+    const expDescEl = document.getElementById('expenseDescription');
+    const expValueEl = document.getElementById('expenseValue');
+    const expDateEl = document.getElementById('expenseDate');
+    const expCatEl = document.getElementById('expenseCategory');
+    const cardId = expCardEl ? expCardEl.value : '';
+    const description = expDescEl ? expDescEl.value.trim() : '';
+    const valueStr = expValueEl ? expValueEl.value : '';
+    const date = expDateEl ? expDateEl.value : '';
+    const category = expCatEl ? expCatEl.value : '';
 
     if (!cardId || !description || !valueStr || !date || !category) {
         showToast('Preencha todos os campos', 'error');

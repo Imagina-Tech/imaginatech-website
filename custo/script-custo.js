@@ -182,16 +182,15 @@ async function logout() {
 }
 
 function showMainApp() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('accessDeniedScreen').classList.remove('active');
-    document.getElementById('mainApp').style.display = 'block';
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
+    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'block'; }
 
     // Update user info
     if (currentUser) {
-        document.getElementById('userPhoto').src = currentUser.photoURL ||
-            'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User');
-        document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
+        { const el = document.getElementById('userPhoto'); if (el) el.src = currentUser.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.displayName || 'User'); }
+        { const el = document.getElementById('userName'); if (el) el.textContent = currentUser.displayName || currentUser.email; }
     }
 
     // Initialize app
@@ -200,25 +199,24 @@ function showMainApp() {
 }
 
 function hideMainApp() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('accessDeniedScreen').classList.remove('active');
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    document.getElementById('loginScreen')?.classList.add('active');
+    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'none'; }
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
-    document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('mainApp').style.display = 'none';
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    document.getElementById('loginScreen')?.classList.remove('active');
+    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'none'; }
 
     // Atualizar informacoes do usuario na tela
     const displayName = user.displayName || 'Usuario';
-    document.getElementById('deniedMessage').textContent =
-        `Ola ${displayName}, esta area e exclusiva para administradores.`;
-    document.getElementById('deniedUserEmail').textContent = user.email;
+    { const el = document.getElementById('deniedMessage'); if (el) el.textContent = `Ola ${displayName}, esta area e exclusiva para administradores.`; }
+    { const el = document.getElementById('deniedUserEmail'); if (el) el.textContent = user.email; }
 
     // Mostrar tela de acesso negado
-    document.getElementById('accessDeniedScreen').classList.add('active');
+    document.getElementById('accessDeniedScreen')?.classList.add('active');
 }
 
 // ===========================
@@ -939,14 +937,16 @@ function initializeCalculator() {
                 
                 // Visual feedback
                 const btn = document.getElementById('generate-print-btn');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Print Gerado!';
-                btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.background = '';
-                }, 2000);
+                if (btn) {
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Print Gerado!';
+                    btn.style.background = 'linear-gradient(135deg, #00FF88, #44FF44)';
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = '';
+                    }, 2000);
+                }
             });
             
         } catch (error) {
@@ -1087,7 +1087,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventDelegation();
 
     // Check authentication state
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'flex'; }
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -1170,6 +1170,7 @@ window.generateColorPrintFromBudget = async function() {
 
     // Mostrar loading no botão
     const btn = document.getElementById('generate-colors-btn');
+    if (!btn) return;
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
     btn.disabled = true;
@@ -1218,23 +1219,25 @@ window.generateColorPrintFromBudget = async function() {
         const available = Array.from(colorMap.values());
 
         // Atualizar informações no modal
-        document.getElementById('colorPrintRequiredAmount').textContent = materialAmount + 'g';
-        document.getElementById('colorPrintMaterialType').textContent = materialType;
-        document.getElementById('colorPrintAvailableCount').textContent = available.length;
+        { const el = document.getElementById('colorPrintRequiredAmount'); if (el) el.textContent = materialAmount + 'g'; }
+        { const el = document.getElementById('colorPrintMaterialType'); if (el) el.textContent = materialType; }
+        { const el = document.getElementById('colorPrintAvailableCount'); if (el) el.textContent = available.length; }
 
         // Renderizar cores disponíveis (sem borda nas imagens)
         const printPreview = document.getElementById('colorPrintPreview');
-        printPreview.innerHTML = available.map(f => `
-            <div class="print-item" style="text-align: center; padding: 0.5rem;">
-                <img src="${escapeHtml(f.imageUrl || '/iconwpp.jpg')}" alt="${escapeHtml(f.color)}"
-                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
-                     data-fallback="/iconwpp.jpg">
-                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${escapeHtml(f.color || f.name)}</div>
-            </div>
-        `).join('');
+        if (printPreview) {
+            printPreview.innerHTML = available.map(f => `
+                <div class="print-item" style="text-align: center; padding: 0.5rem;">
+                    <img src="${escapeHtml(f.imageUrl || '/iconwpp.jpg')}" alt="${escapeHtml(f.color)}"
+                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+                         data-fallback="/iconwpp.jpg">
+                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${escapeHtml(f.color || f.name)}</div>
+                </div>
+            `).join('');
+        }
 
         // Abrir modal de resultado
-        document.getElementById('colorPrintResultModal').classList.add('active');
+        document.getElementById('colorPrintResultModal')?.classList.add('active');
 
     } catch (error) {
         logger.error('Erro ao gerar print de cores:', error);
@@ -1248,15 +1251,15 @@ window.generateColorPrintFromBudget = async function() {
 
 // Fechar modal de print de cores
 window.closeColorPrintModal = function() {
-    document.getElementById('colorPrintResultModal').classList.remove('active');
+    document.getElementById('colorPrintResultModal')?.classList.remove('active');
 };
 
 // Baixar imagem do print de cores (layout estruturado igual ao print de custo)
 window.downloadColorPrint = async function() {
     const printPreview = document.getElementById('colorPrintPreview');
-    const materialType = document.getElementById('colorPrintMaterialType').textContent;
-    const requiredAmount = document.getElementById('colorPrintRequiredAmount').textContent;
-    const availableCount = document.getElementById('colorPrintAvailableCount').textContent;
+    const materialType = document.getElementById('colorPrintMaterialType')?.textContent || '';
+    const requiredAmount = document.getElementById('colorPrintRequiredAmount')?.textContent || '';
+    const availableCount = document.getElementById('colorPrintAvailableCount')?.textContent || '';
 
     try {
         // Feedback visual

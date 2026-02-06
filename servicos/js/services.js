@@ -1335,8 +1335,10 @@ export async function saveService(event) {
             if (deliveryMethod !== 'sedex') {
                 showToast('ERRO: Pedido já foi postado nos Correios! Não é possível alterar o método de entrega.', 'error');
                 const deliverySelect = document.getElementById('deliveryMethod');
-                deliverySelect.value = 'sedex';
-                deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                if (deliverySelect) {
+                    deliverySelect.value = 'sedex';
+                    deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
                 toggleDeliveryFields();
                 return;
             }
@@ -2335,8 +2337,8 @@ export async function updateStatus(serviceId, newStatus) {
         'entregue': 'Confirmar Entrega'
     };
 
-    document.getElementById('statusModalMessage') &&
-        (document.getElementById('statusModalMessage').textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`);
+    const statusMsgEl = document.getElementById('statusModalMessage');
+    if (statusMsgEl) statusMsgEl.textContent = `Deseja ${statusMessages[newStatus]} para o serviço "${service.name}"?`;
 
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
@@ -2957,11 +2959,16 @@ export async function openUpModal(serviceId) {
     }
 
     // Preencher informacoes do servico
-    document.getElementById('upServiceId').value = serviceId;
-    document.getElementById('upEditingId').value = '';
-    document.getElementById('upServiceName').textContent = service.name || 'Sem nome';
-    document.getElementById('upServiceMaterial').textContent = service.material || 'N/A';
-    document.getElementById('upServiceColor').textContent = formatColorName(service.color) || 'N/A';
+    const upServiceIdEl = document.getElementById('upServiceId');
+    if (upServiceIdEl) upServiceIdEl.value = serviceId;
+    const upEditingIdClearEl = document.getElementById('upEditingId');
+    if (upEditingIdClearEl) upEditingIdClearEl.value = '';
+    const upServiceNameEl = document.getElementById('upServiceName');
+    if (upServiceNameEl) upServiceNameEl.textContent = service.name || 'Sem nome';
+    const upServiceMaterialEl = document.getElementById('upServiceMaterial');
+    if (upServiceMaterialEl) upServiceMaterialEl.textContent = service.material || 'N/A';
+    const upServiceColorEl = document.getElementById('upServiceColor');
+    if (upServiceColorEl) upServiceColorEl.textContent = formatColorName(service.color) || 'N/A';
 
     // Abrir modal primeiro (para feedback visual)
     document.getElementById('upModal')?.classList.add('active');
@@ -3002,8 +3009,8 @@ function showExistingUpsList() {
     const footer = document.getElementById('upModalFooter');
 
     // Esconder formulario e footer
-    formSection.style.display = 'none';
-    footer.style.display = 'none';
+    if (formSection) formSection.style.display = 'none';
+    if (footer) footer.style.display = 'none';
 
     // Gerar HTML da lista (simplificado - sem botoes de edicao/exclusao)
     let html = existingPortfolioItems.map(item => `
@@ -3032,10 +3039,10 @@ function showExistingUpsList() {
         </a>
     `;
 
-    list.innerHTML = html;
+    if (list) list.innerHTML = html;
 
     // Mostrar secao
-    section.style.display = 'block';
+    if (section) section.style.display = 'block';
 }
 
 /**
@@ -3063,70 +3070,90 @@ export function showUpForm(editItem = null) {
     const saveBtn = document.getElementById('upSaveBtn');
 
     // Esconder lista
-    section.style.display = 'none';
+    if (section) section.style.display = 'none';
 
     // Mostrar formulario e footer
-    formSection.style.display = 'block';
-    footer.style.display = 'flex';
+    if (formSection) formSection.style.display = 'block';
+    if (footer) footer.style.display = 'flex';
 
     // Resetar campos
     upPhotoFile = null;
     upLogoFile = null;
-    document.getElementById('upPhoto').value = '';
-    document.getElementById('upLogo').value = '';
+    const upPhotoResetEl = document.getElementById('upPhoto');
+    if (upPhotoResetEl) upPhotoResetEl.value = '';
+    const upLogoResetEl = document.getElementById('upLogo');
+    if (upLogoResetEl) upLogoResetEl.value = '';
 
     if (editItem) {
         // Modo edicao
-        document.getElementById('upEditingId').value = editItem.id;
-        document.getElementById('upTitle').value = editItem.title || '';
-        document.getElementById('upDestination').value = editItem.destination || '';
-        document.getElementById('upCategory').value = editItem.category || '';
+        const upEditIdEl = document.getElementById('upEditingId');
+        if (upEditIdEl) upEditIdEl.value = editItem.id;
+        const upTitleEl = document.getElementById('upTitle');
+        if (upTitleEl) upTitleEl.value = editItem.title || '';
+        const upDestEl = document.getElementById('upDestination');
+        if (upDestEl) upDestEl.value = editItem.destination || '';
+        const upCatEl = document.getElementById('upCategory');
+        if (upCatEl) upCatEl.value = editItem.category || '';
 
         // Mostrar categoria se for projetos
-        if (editItem.destination === 'projetos') {
-            document.getElementById('upCategoryGroup').style.display = 'block';
-        } else {
-            document.getElementById('upCategoryGroup').style.display = 'none';
+        const upCatGroupEl = document.getElementById('upCategoryGroup');
+        if (upCatGroupEl) {
+            upCatGroupEl.style.display = editItem.destination === 'projetos' ? 'block' : 'none';
         }
 
         // Mostrar imagem existente
+        const upPhotoImgEl = document.getElementById('upPhotoImg');
+        const upPhotoPreviewEl = document.getElementById('upPhotoPreview');
+        const upPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
         if (editItem.mainPhoto?.url) {
-            document.getElementById('upPhotoImg').src = editItem.mainPhoto.url;
-            document.getElementById('upPhotoPreview').style.display = 'block';
-            document.getElementById('upPhotoPlaceholder').style.display = 'none';
+            if (upPhotoImgEl) upPhotoImgEl.src = editItem.mainPhoto.url;
+            if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'block';
+            if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'none';
         } else {
-            document.getElementById('upPhotoPreview').style.display = 'none';
-            document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+            if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'none';
+            if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'flex';
         }
 
         // Mostrar logo existente
+        const upLogoImgEl = document.getElementById('upLogoImg');
+        const upLogoPreviewEl = document.getElementById('upLogoPreview');
+        const upLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
         if (editItem.logo?.url) {
-            document.getElementById('upLogoImg').src = editItem.logo.url;
-            document.getElementById('upLogoPreview').style.display = 'block';
-            document.getElementById('upLogoPlaceholder').style.display = 'none';
+            if (upLogoImgEl) upLogoImgEl.src = editItem.logo.url;
+            if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'block';
+            if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'none';
         } else {
-            document.getElementById('upLogoPreview').style.display = 'none';
-            document.getElementById('upLogoPlaceholder').style.display = 'flex';
+            if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'none';
+            if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'flex';
         }
 
         // Atualizar botao
-        saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alteracoes';
+        if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alteracoes';
     } else {
         // Modo novo
-        document.getElementById('upEditingId').value = '';
+        const upEditIdNewEl = document.getElementById('upEditingId');
+        if (upEditIdNewEl) upEditIdNewEl.value = '';
         const service = state.services.find(s => s.id === document.getElementById('upServiceId')?.value);
-        document.getElementById('upTitle').value = service?.name || '';
-        document.getElementById('upDestination').value = '';
-        document.getElementById('upCategory').value = '';
-        document.getElementById('upCategoryGroup').style.display = 'none';
+        const upTitleNewEl = document.getElementById('upTitle');
+        if (upTitleNewEl) upTitleNewEl.value = service?.name || '';
+        const upDestNewEl = document.getElementById('upDestination');
+        if (upDestNewEl) upDestNewEl.value = '';
+        const upCatNewEl = document.getElementById('upCategory');
+        if (upCatNewEl) upCatNewEl.value = '';
+        const upCatGroupNewEl = document.getElementById('upCategoryGroup');
+        if (upCatGroupNewEl) upCatGroupNewEl.style.display = 'none';
 
-        document.getElementById('upPhotoPreview').style.display = 'none';
-        document.getElementById('upPhotoPlaceholder').style.display = 'flex';
-        document.getElementById('upLogoPreview').style.display = 'none';
-        document.getElementById('upLogoPlaceholder').style.display = 'flex';
+        const upPhotoPreviewNewEl = document.getElementById('upPhotoPreview');
+        if (upPhotoPreviewNewEl) upPhotoPreviewNewEl.style.display = 'none';
+        const upPhotoPlaceholderNewEl = document.getElementById('upPhotoPlaceholder');
+        if (upPhotoPlaceholderNewEl) upPhotoPlaceholderNewEl.style.display = 'flex';
+        const upLogoPreviewNewEl = document.getElementById('upLogoPreview');
+        if (upLogoPreviewNewEl) upLogoPreviewNewEl.style.display = 'none';
+        const upLogoPlaceholderNewEl = document.getElementById('upLogoPlaceholder');
+        if (upLogoPlaceholderNewEl) upLogoPlaceholderNewEl.style.display = 'flex';
 
         // Atualizar botao
-        saveBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Promover';
+        if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Promover';
     }
 
     // Sincronizar CustomSelects
@@ -3153,8 +3180,8 @@ export function toggleCategoryField() {
     const descriptionGroup = document.getElementById('upDescriptionGroup');
 
     if (destination === 'projetos') {
-        categoryGroup.style.display = 'block';
-        categorySelect.required = true;
+        if (categoryGroup) categoryGroup.style.display = 'block';
+        if (categorySelect) categorySelect.required = true;
         // Mostrar opcao de fotos extras e descricao para projetos
         if (extraPhotosGroup) {
             extraPhotosGroup.style.display = 'block';
@@ -3163,9 +3190,11 @@ export function toggleCategoryField() {
             descriptionGroup.style.display = 'block';
         }
     } else {
-        categoryGroup.style.display = 'none';
-        categorySelect.required = false;
-        categorySelect.value = '';
+        if (categoryGroup) categoryGroup.style.display = 'none';
+        if (categorySelect) {
+            categorySelect.required = false;
+            categorySelect.value = '';
+        }
         // Esconder e limpar fotos extras e descricao para carrossel
         if (extraPhotosGroup) {
             extraPhotosGroup.style.display = 'none';
@@ -3173,7 +3202,8 @@ export function toggleCategoryField() {
         }
         if (descriptionGroup) {
             descriptionGroup.style.display = 'none';
-            document.getElementById('upDescription').value = '';
+            const upDescEl = document.getElementById('upDescription');
+            if (upDescEl) upDescEl.value = '';
         }
     }
 
@@ -3203,18 +3233,24 @@ export function handleUpPhotoSelect(event) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        document.getElementById('upPhotoImg').src = e.target.result;
-        document.getElementById('upPhotoPreview').style.display = 'block';
-        document.getElementById('upPhotoPlaceholder').style.display = 'none';
+        const photoImgEl = document.getElementById('upPhotoImg');
+        if (photoImgEl) photoImgEl.src = e.target.result;
+        const photoPreviewEl = document.getElementById('upPhotoPreview');
+        if (photoPreviewEl) photoPreviewEl.style.display = 'block';
+        const photoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
+        if (photoPlaceholderEl) photoPlaceholderEl.style.display = 'none';
     };
     reader.readAsDataURL(file);
 }
 
 export function removeUpPhoto() {
     upPhotoFile = null;
-    document.getElementById('upPhoto').value = '';
-    document.getElementById('upPhotoPreview').style.display = 'none';
-    document.getElementById('upPhotoPlaceholder').style.display = 'flex';
+    const upPhotoInputEl = document.getElementById('upPhoto');
+    if (upPhotoInputEl) upPhotoInputEl.value = '';
+    const upPhotoPreviewEl = document.getElementById('upPhotoPreview');
+    if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'none';
+    const upPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
+    if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'flex';
 }
 
 export function handleUpLogoSelect(event) {
@@ -3237,18 +3273,24 @@ export function handleUpLogoSelect(event) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        document.getElementById('upLogoImg').src = e.target.result;
-        document.getElementById('upLogoPreview').style.display = 'block';
-        document.getElementById('upLogoPlaceholder').style.display = 'none';
+        const logoImgEl = document.getElementById('upLogoImg');
+        if (logoImgEl) logoImgEl.src = e.target.result;
+        const logoPreviewEl = document.getElementById('upLogoPreview');
+        if (logoPreviewEl) logoPreviewEl.style.display = 'block';
+        const logoPlaceholderEl = document.getElementById('upLogoPlaceholder');
+        if (logoPlaceholderEl) logoPlaceholderEl.style.display = 'none';
     };
     reader.readAsDataURL(file);
 }
 
 export function removeUpLogo() {
     upLogoFile = null;
-    document.getElementById('upLogo').value = '';
-    document.getElementById('upLogoPreview').style.display = 'none';
-    document.getElementById('upLogoPlaceholder').style.display = 'flex';
+    const upLogoInputEl = document.getElementById('upLogo');
+    if (upLogoInputEl) upLogoInputEl.value = '';
+    const upLogoPreviewEl = document.getElementById('upLogoPreview');
+    if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'none';
+    const upLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
+    if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'flex';
 }
 
 // ===========================
@@ -3474,9 +3516,12 @@ function processUpPhotoFile(file) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        document.getElementById('upPhotoImg').src = e.target.result;
-        document.getElementById('upPhotoPreview').style.display = 'block';
-        document.getElementById('upPhotoPlaceholder').style.display = 'none';
+        const dropPhotoImgEl = document.getElementById('upPhotoImg');
+        if (dropPhotoImgEl) dropPhotoImgEl.src = e.target.result;
+        const dropPhotoPreviewEl = document.getElementById('upPhotoPreview');
+        if (dropPhotoPreviewEl) dropPhotoPreviewEl.style.display = 'block';
+        const dropPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
+        if (dropPhotoPlaceholderEl) dropPhotoPlaceholderEl.style.display = 'none';
     };
     reader.readAsDataURL(file);
     showToast('Foto carregada!', 'success');
@@ -3535,9 +3580,12 @@ function processUpLogoFile(file) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        document.getElementById('upLogoImg').src = e.target.result;
-        document.getElementById('upLogoPreview').style.display = 'block';
-        document.getElementById('upLogoPlaceholder').style.display = 'none';
+        const dropLogoImgEl = document.getElementById('upLogoImg');
+        if (dropLogoImgEl) dropLogoImgEl.src = e.target.result;
+        const dropLogoPreviewEl = document.getElementById('upLogoPreview');
+        if (dropLogoPreviewEl) dropLogoPreviewEl.style.display = 'block';
+        const dropLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
+        if (dropLogoPlaceholderEl) dropLogoPlaceholderEl.style.display = 'none';
     };
     reader.readAsDataURL(file);
     showToast('Logo carregado!', 'success');

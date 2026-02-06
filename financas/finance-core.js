@@ -596,8 +596,8 @@ function signOut() {
 
 // Exibe tela de login
 function showLoginScreen() {
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
+    document.getElementById('dashboard')?.classList.add('hidden');
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
     hideLoading(); // IMPORTANTE: Esconde loading na tela de login
 }
@@ -630,19 +630,20 @@ function showAccountSelectionModal(user) {
     }
 
     // Atualizar email pessoal no modal
-    document.getElementById('personalAccountEmail').textContent = user.email;
+    const personalEmailEl = document.getElementById('personalAccountEmail');
+    if (personalEmailEl) personalEmailEl.textContent = user.email;
 
     // Esconder login screen
-    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('loginScreen')?.classList.remove('active');
 
     // Mostrar modal de selecao
-    document.getElementById('accountSelectionModal').classList.add('active');
+    document.getElementById('accountSelectionModal')?.classList.add('active');
 }
 
 // 🔐 Seleciona e carrega dados da conta escolhida (pessoal ou empresa)
 async function selectAccount(accountType) {
     // Fechar modal de seleção se estiver aberto
-    document.getElementById('accountSelectionModal').classList.remove('active');
+    document.getElementById('accountSelectionModal')?.classList.remove('active');
 
     if (accountType === 'company') {
         // Verificar se é admin antes de permitir acesso à empresa
@@ -711,7 +712,7 @@ function switchAccount() {
     localStorage.removeItem('selectedAccountType');
 
     // Esconder dashboard
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('dashboard')?.classList.add('hidden');
 
     // Mostrar modal de seleção novamente
     showAccountSelectionModal(currentUser);
@@ -746,16 +747,16 @@ function showAccessDeniedModal() {
     }
 
     // Esconder dashboard se estiver visivel
-    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('dashboard')?.classList.add('hidden');
 
     // Mostrar tela de acesso negado
-    document.getElementById('accessDeniedScreen').classList.add('active');
+    document.getElementById('accessDeniedScreen')?.classList.add('active');
 }
 
 // Fecha tela de acesso negado e volta para conta pessoal
 function closeAccessDeniedModal() {
     // Fechar tela
-    document.getElementById('accessDeniedScreen').classList.remove('active');
+    document.getElementById('accessDeniedScreen')?.classList.remove('active');
 
     // Voltar para conta pessoal
     selectAccount('personal');

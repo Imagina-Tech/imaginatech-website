@@ -442,21 +442,22 @@ async function migrateExistingClientsOnce() {
 export function handleClientNameInput(event) {
     const value = event.target.value.trim().toLowerCase();
     const suggestionsDiv = document.getElementById('clientSuggestions');
-    
+    if (!suggestionsDiv) return;
+
     if (!value || value.length < 2) {
         suggestionsDiv.style.display = 'none';
         return;
     }
-    
-    const matches = clientsCache.filter(client => 
+
+    const matches = clientsCache.filter(client =>
         client.name.toLowerCase().includes(value)
     );
-    
+
     if (matches.length === 0) {
         suggestionsDiv.style.display = 'none';
         return;
     }
-    
+
     suggestionsDiv.innerHTML = matches.map(client => `
         <div class="client-suggestion-item" data-action="selectClient" data-client-id="${escapeHtml(client.id)}">
             <div class="client-suggestion-name">${escapeHtml(client.name)}</div>
@@ -466,7 +467,7 @@ export function handleClientNameInput(event) {
             </div>
         </div>
     `).join('');
-    
+
     suggestionsDiv.style.display = 'block';
 }
 
@@ -474,10 +475,14 @@ export function selectClient(clientId) {
     const client = clientsCache.find(c => c.id === clientId);
     if (!client) return;
 
-    document.getElementById('clientName').value = client.name || '';
-    document.getElementById('clientCPF').value = client.cpf || '';
-    document.getElementById('clientEmail').value = client.email || '';
-    document.getElementById('clientPhone').value = client.phone || '';
+    const clientNameEl = document.getElementById('clientName');
+    if (clientNameEl) clientNameEl.value = client.name || '';
+    const clientCPFEl = document.getElementById('clientCPF');
+    if (clientCPFEl) clientCPFEl.value = client.cpf || '';
+    const clientEmailEl = document.getElementById('clientEmail');
+    if (clientEmailEl) clientEmailEl.value = client.email || '';
+    const clientPhoneEl = document.getElementById('clientPhone');
+    if (clientPhoneEl) clientPhoneEl.value = client.phone || '';
 
     // Preencher último endereço salvo se existir
     const lastAddress = client.addresses?.length > 0
@@ -509,7 +514,8 @@ export function selectClient(clientId) {
         showToast('✅ Dados do cliente preenchidos!', 'success');
     }
 
-    document.getElementById('clientSuggestions').style.display = 'none';
+    const suggestionsEl = document.getElementById('clientSuggestions');
+    if (suggestionsEl) suggestionsEl.style.display = 'none';
 }
 
 export async function saveClientToFirestore(clientData) {
@@ -697,7 +703,8 @@ export async function selectServiceType(type) {
     const notificationSection = document.getElementById('notificationSection');
     if (notificationSection) notificationSection.style.display = 'none';
 
-    document.getElementById('clientSuggestions').style.display = 'none';
+    const clientSuggestionsEl = document.getElementById('clientSuggestions');
+    if (clientSuggestionsEl) clientSuggestionsEl.style.display = 'none';
 
     hideAllDeliveryFields();
 
@@ -1006,7 +1013,8 @@ export async function openEditModal(serviceId) {
         }
     }
     
-    document.getElementById('clientSuggestions').style.display = 'none';
+    const clientSuggestionsEditEl = document.getElementById('clientSuggestions');
+    if (clientSuggestionsEditEl) clientSuggestionsEditEl.style.display = 'none';
 
     // INTEGRAÇÃO COM ESTOQUE: Configurar listener para material
     // (Não chamar updateColorDropdown aqui - já é tratado na sincronização acima)
@@ -1035,7 +1043,8 @@ export function closeModal() {
     if (trackingField) trackingField.style.display = 'none';
     if (trackingInput) trackingInput.value = '';
 
-    document.getElementById('clientSuggestions').style.display = 'none';
+    const clientSuggestionsCloseEl = document.getElementById('clientSuggestions');
+    if (clientSuggestionsCloseEl) clientSuggestionsCloseEl.style.display = 'none';
 
     // MULTI-COR: Resetar estado ao fechar modal
     resetMultiColorState();
@@ -1123,8 +1132,8 @@ export async function confirmTrackingCode() {
 }
 
 export function showStatusModalWithPhoto(service, newStatus) {
-    document.getElementById('statusModalMessage') && 
-        (document.getElementById('statusModalMessage').textContent = `Para marcar como Concluído, é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`);
+    const statusMsgPhotoEl = document.getElementById('statusModalMessage');
+    if (statusMsgPhotoEl) statusMsgPhotoEl.textContent = `Para marcar como Concluído, é obrigatório anexar uma ou mais fotos do serviço "${service.name}"`;
     
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) {
@@ -2113,8 +2122,10 @@ export function toggleDeliveryFields() {
         if (service && service.trackingCode && service.deliveryMethod === 'sedex' && method !== 'sedex') {
             showToast('ATENÇÃO: Este pedido já foi postado! Não é possível mudar o método de entrega.', 'error');
             const deliverySelect = document.getElementById('deliveryMethod');
-            deliverySelect.value = 'sedex';
-            deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            if (deliverySelect) {
+                deliverySelect.value = 'sedex';
+                deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             hideAllDeliveryFields();
             document.getElementById('deliveryFields')?.classList.add('active');
             
@@ -2299,10 +2310,22 @@ export function copyClientDataToDelivery() {
         return showToast('Preencha os dados do cliente primeiro', 'warning');
     }
 
-    if (clientName) document.getElementById('fullName').value = clientName;
-    if (clientCPF) document.getElementById('cpfCnpj').value = clientCPF;
-    if (clientEmail) document.getElementById('email').value = clientEmail;
-    if (clientPhone) document.getElementById('telefone').value = clientPhone;
+    if (clientName) {
+        const fullNameEl = document.getElementById('fullName');
+        if (fullNameEl) fullNameEl.value = clientName;
+    }
+    if (clientCPF) {
+        const cpfCnpjEl = document.getElementById('cpfCnpj');
+        if (cpfCnpjEl) cpfCnpjEl.value = clientCPF;
+    }
+    if (clientEmail) {
+        const emailEl = document.getElementById('email');
+        if (emailEl) emailEl.value = clientEmail;
+    }
+    if (clientPhone) {
+        const telefoneEl = document.getElementById('telefone');
+        if (telefoneEl) telefoneEl.value = clientPhone;
+    }
 
     showToast('✅ Dados copiados para a entrega!', 'success');
 }
@@ -2319,8 +2342,14 @@ export function copyClientDataToPickup() {
         return showToast('Preencha o nome ou telefone do cliente primeiro', 'warning');
     }
 
-    if (clientName) document.getElementById('pickupName').value = clientName;
-    if (clientPhone) document.getElementById('pickupWhatsapp').value = clientPhone;
+    if (clientName) {
+        const pickupNameEl = document.getElementById('pickupName');
+        if (pickupNameEl) pickupNameEl.value = clientName;
+    }
+    if (clientPhone) {
+        const pickupWhatsappEl = document.getElementById('pickupWhatsapp');
+        if (pickupWhatsappEl) pickupWhatsappEl.value = clientPhone;
+    }
 
     showToast('✅ Dados do cliente copiados para retirada!', 'success');
 }
@@ -2911,7 +2940,8 @@ export async function viewClientHistory(email, clientName) {
             document.body.appendChild(historyModal);
         }
 
-        document.getElementById('historyClientName').textContent = `Histórico de ${clientName}`;
+        const historyClientNameEl = document.getElementById('historyClientName');
+        if (historyClientNameEl) historyClientNameEl.textContent = `Histórico de ${clientName}`;
 
         const contentDiv = document.getElementById('clientHistoryContent');
 
