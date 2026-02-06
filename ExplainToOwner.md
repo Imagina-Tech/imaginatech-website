@@ -25,6 +25,34 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Fix: Painel de Financas e Bot WhatsApp - Correcao de 10 bugs de calculo
+
+**Arquivos Modificados:** `financas/finance-data.js`, `financas/finance-ui.js`, `functions/index.js`
+
+**Bugs corrigidos:**
+
+1. **SAVINGS_CATEGORIES sem acentos no backend** (`functions/index.js:2002-2006`) - Backend usava strings sem acento ('Poupanca') enquanto Firestore salva com acento ('Poupanca'). Adicionado `normalizeStr()` e `isSavingsCategory()` para comparacao accent-safe.
+
+2. **totalInstallments nunca zerava** (`finance-data.js:2528-2540`) - Parcelamentos quitados continuavam somando 1 parcela restante. Adicionada verificacao `calculatedCurrent > totalInstallments` para pular parcelamentos finalizados.
+
+3. **Data de vencimento errada no modal da fatura** (`finance-data.js:2064-2072`) - Formula `billMonth + 2` substituida por calculo baseado em `billEndDate` e relacao entre `dueDay`/`closingDay`.
+
+4. **cardExpenses legado ignorado no backend** (`functions/index.js:2650-2660`) - Adicionada colecao `cardExpenses` ao `calculateCurrentBill` e `cardsBillDetails` do backend para paridade com frontend.
+
+5. **isBillPaid inconsistente ao navegar meses** (`finance-data.js:2060,2095,2430-2434` + `functions/index.js:2669`) - Mudado para usar `billEndDate.getMonth()` em vez de `billMonth` para identificacao consistente do pagamento da fatura.
+
+6. **Gauges ignoravam gastos no credito** (`finance-ui.js:1865,1974`) - `card.transactions` (inexistente) substituido por filtragem do array global `transactions` com `paymentMethod === 'credit'`.
+
+7. **Cash Flow contava despesa 2x** (`finance-ui.js:251`) - Adicionado filtro `paymentMethod !== 'credit'` para evitar contagem dupla de credito + pagamento de fatura.
+
+8. **faturaAtual dead code + bug Janeiro** (`functions/index.js`) - Removido codigo morto que calculava `faturaAtual`/`gastosCredito` (nunca usado no output) e que tinha bug de `currentMonth - 1 = -1` em janeiro.
+
+9. **t.value sem fallback** (`finance-data.js:2391-2525`) - Adicionado `|| 0` em todos os `reduce` de updateKPIs para evitar NaN se valor for null/undefined.
+
+10. **installmentValue nao persistido** (`finance-data.js:1067`) - Adicionado `installmentValue: totalValue / totalInstallments` ao salvar parcelamento para consistencia com calculateCurrentBill.
+
+**Commits:** 58d6706, 5e87e4a, 78528e7, f373ccd
+
 ### 2026-02-06 - Fix/Melhoria: Painel Auto-Orcamento - Correcoes de bugs e melhorias esteticas
 
 **Arquivos Modificados:** `auto-orcamento/index.html`, `auto-orcamento/style.css`, `auto-orcamento/app.js`, `auto-orcamento/three-viewer.js`
