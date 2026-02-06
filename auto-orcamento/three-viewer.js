@@ -158,6 +158,10 @@ export class ThreeViewer {
             loader.load(
                 url,
                 (geometry) => {
+                    if (!geometry || !geometry.getAttribute('position') || geometry.getAttribute('position').count === 0) {
+                        reject(new Error('Arquivo STL vazio ou corrompido'));
+                        return;
+                    }
                     resolve({ geometry, material: null });
                 },
                 undefined,

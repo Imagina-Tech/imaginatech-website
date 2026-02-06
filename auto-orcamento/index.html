@@ -44,10 +44,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <!-- CSS Local (primeiro para permitir overrides) -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- CSS Compartilhado -->
+    <!-- CSS Compartilhado (primeiro - define variaveis e base) -->
     <link rel="stylesheet" href="/shared/variables.css">
     <link rel="stylesheet" href="/shared/z-index.css">
     <link rel="stylesheet" href="/shared/cosmic-bg.css">
@@ -56,6 +53,9 @@
     <link rel="stylesheet" href="/shared/buttons.css">
     <link rel="stylesheet" href="/shared/custom-select.css">
     <link rel="stylesheet" href="/shared/loading.css">
+
+    <!-- CSS Local (depois - permite overrides sobre shared) -->
+    <link rel="stylesheet" href="style.css">
 
     <!-- Three.js Import Map -->
     <script type="importmap">

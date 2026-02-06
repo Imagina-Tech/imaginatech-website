@@ -85,6 +85,12 @@ const FINISH_GLOSSARY = {
 };
 
 // ============================================================================
+// LOGGER CONDICIONAL
+// ============================================================================
+
+const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+// ============================================================================
 // ESTADO
 // ============================================================================
 
@@ -144,7 +150,7 @@ async function fetchAvailableFilaments(minWeight = 0) {
         throw new Error('Resposta invalida');
 
     } catch (error) {
-        console.warn('Estoque indisponivel, usando valores padrao:', error.message);
+        if (isDev) console.warn('Estoque indisponivel, usando valores padrao:', error.message);
         state.availableStock = null;
         return null;
     }
@@ -327,13 +333,20 @@ function selectColor(value, name, imageUrl) {
     state.selectedColorImage = imageUrl || null;
 
     // Atualizar trigger button
+    const triggerEl = document.getElementById('colorTrigger');
     const swatchEl = document.getElementById('selectedColorSwatch');
     const nameEl = document.getElementById('selectedColorName');
 
+    // Marcar como indisponivel visualmente
+    if (triggerEl) {
+        triggerEl.classList.toggle('unavailable', !value);
+    }
+
     if (swatchEl) {
         if (imageUrl) {
-            // Foto do filamento como background
             swatchEl.style.background = `url('${imageUrl}') center/cover no-repeat`;
+        } else if (!value) {
+            swatchEl.style.background = 'rgba(255, 82, 82, 0.3)';
         } else {
             const hex = getColorHex(name || value);
             if (hex === 'transparent') {
@@ -352,6 +365,14 @@ function selectColor(value, name, imageUrl) {
     if (colorSelect) {
         colorSelect.value = value;
         colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Atualizar estado do botao de submit
+    const submitBtn = document.getElementById('submitQuote');
+    if (submitBtn && state.price > 0) {
+        const material = document.getElementById('materialSelect')?.value || '';
+        const isResina = material.toLowerCase() === 'resina';
+        submitBtn.disabled = !isResina && !value;
     }
 }
 
@@ -537,6 +558,11 @@ async function handleFileSelect(file) {
         state.volume = calculateVolumeFromGeometry(geometry);
         state.dimensions = state.viewer.getBoundingBox();
 
+        // Avisar se mesh nao e watertight (volume pode ser impreciso)
+        if (!isMeshWatertight(geometry)) {
+            showWarning('Modelo nao esta fechado (watertight). O volume pode ser impreciso.');
+        }
+
         // Atualizar UI
         updateModelInfo();
         showPreviewSection();
@@ -562,7 +588,7 @@ async function handleFileSelect(file) {
         await calculateQuote();
 
     } catch (error) {
-        console.error('Erro ao carregar modelo:', error);
+        if (isDev) console.error('Erro ao carregar modelo:', error);
         showError('Erro ao processar o arquivo. Verifique se esta corrompido.');
     } finally {
         hideLoading();
@@ -636,7 +662,11 @@ function updatePrice(price, isEstimate = true) {
     }
 
     if (submitBtn) {
-        submitBtn.disabled = price <= 0;
+        // Desabilitar se preco invalido ou cor indisponivel (exceto Resina que nao precisa de cor)
+        const material = document.getElementById('materialSelect')?.value || '';
+        const isResina = material.toLowerCase() === 'resina';
+        const colorUnavailable = !isResina && !state.selectedColor;
+        submitBtn.disabled = price <= 0 || colorUnavailable;
     }
 }
 
@@ -655,9 +685,16 @@ function showUploadSection() {
     if (uploadSection) uploadSection.classList.remove('hidden');
     if (previewSection) previewSection.classList.add('hidden');
 
-    // Limpar input
+    // Limpar input (clonar para permitir re-upload do mesmo arquivo)
     const fileInput = document.getElementById('fileInput');
-    if (fileInput) fileInput.value = '';
+    if (fileInput) {
+        const newInput = fileInput.cloneNode(true);
+        fileInput.parentNode.replaceChild(newInput, fileInput);
+        newInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+        });
+    }
 }
 
 // ============================================================================
@@ -714,7 +751,14 @@ async function calculateQuote() {
         updatePriceLoading(false);
     } catch (error) {
         // Ignorar AbortError de debounce (chamada substituida por outra)
-        if (error.name === 'AbortError') return;
+        if (error.name === 'AbortError') {
+            // Diferenciar timeout de debounce: se nao ha novo controller, foi timeout
+            if (!quoteAbortController || signal === quoteAbortController.signal) {
+                showError('Tempo esgotado ao calcular orcamento. Tente novamente.');
+                updatePriceLoading(false);
+            }
+            return;
+        }
 
         showError('Erro de conexao com o servidor. Verifique sua internet.');
         updatePriceLoading(false);
@@ -978,16 +1022,34 @@ function hideLoading() {
     }
 }
 
+let toastTimeout = null;
+
 function showError(message) {
+    showToast(message, 'error');
+}
+
+function showWarning(message) {
+    showToast(message, 'warning');
+}
+
+function showToast(message, type = 'error') {
     const toast = document.getElementById('errorToast');
     const messageEl = document.getElementById('errorMessage');
 
     if (toast && messageEl) {
-        messageEl.textContent = message;
-        toast.classList.remove('hidden');
+        // Limpar timeout anterior
+        if (toastTimeout) clearTimeout(toastTimeout);
 
-        setTimeout(() => {
-            toast.classList.add('hidden');
+        messageEl.textContent = message;
+        toast.classList.remove('hidden', 'toast-hiding', 'toast-warning');
+        if (type === 'warning') toast.classList.add('toast-warning');
+
+        toastTimeout = setTimeout(() => {
+            toast.classList.add('toast-hiding');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-hiding', 'toast-warning');
+            }, 300);
         }, 5000);
     }
 }

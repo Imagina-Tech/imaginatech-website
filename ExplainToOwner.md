@@ -25,6 +25,43 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Fix/Melhoria: Painel Auto-Orcamento - Correcoes de bugs e melhorias esteticas
+
+**Arquivos Modificados:** `auto-orcamento/index.html`, `auto-orcamento/style.css`, `auto-orcamento/app.js`, `auto-orcamento/three-viewer.js`
+
+**Bugs Corrigidos:**
+
+1. **Ordem CSS incorreta (index.html):** CSS local carregava ANTES do shared/variables.css, causando variaveis CSS indefinidas na parse inicial. Corrigido: shared CSS agora vem primeiro, local CSS depois para overrides.
+
+2. **Z-index hardcoded (style.css):** color-modal-overlay usava `z-index: 10000` e finish-tooltip usava `z-index: 10001`. Corrigido para usar variaveis CSS: `var(--z-modal-backdrop)` e `var(--z-tooltip)`.
+
+3. **Submit button habilitado com cor indisponivel (app.js):** Quando nenhuma cor estava disponivel para o material, o botao "Solicitar Orcamento" continuava habilitado. Corrigido: desabilita quando cor esta vazia (exceto Resina que nao precisa de cor).
+
+4. **Re-upload do mesmo arquivo (app.js):** Ao clicar "Trocar arquivo" e selecionar o mesmo arquivo, o browser nao disparava `change` event. Corrigido: clona o input ao inves de limpar value.
+
+5. **Timeout sem feedback (app.js):** Quando a API de calculo atingia 30s timeout, o usuario via apenas "Erro de conexao". Corrigido: diferencia timeout de debounce e mostra mensagem especifica.
+
+6. **STL loader sem validacao de geometria (three-viewer.js):** Diferente dos loaders OBJ/GLTF/3MF, o STL loader nao verificava se a geometria era valida/vazia. Corrigido: verifica position attribute e count.
+
+7. **isMeshWatertight importado mas nunca usado (app.js):** A funcao existia no volume-calculator.js mas nunca era chamada. Corrigido: agora exibe aviso (toast warning) quando o modelo nao e watertight.
+
+8. **console.warn/error em producao (app.js):** Usava console.* direto. Corrigido: adicionado logger condicional com `isDev` check.
+
+**Melhorias Esteticas:**
+
+1. Upload zone: borda mais visivel, hover com glow, icone com animacao de lift
+2. Preview section: animacao fade-in-up ao aparecer
+3. Color modal: backdrop blur, sombra lateral, animacao com easing suave
+4. Color cards: hover com translateX, selecionado com borda-left azul
+5. Color trigger: estado visual "unavailable" com opacity e borda vermelha
+6. Desktop options panel: scrollbar customizada, espacamento menos comprimido
+7. Toast: animacao de saida (slide-out), tipo "warning" com cor laranja, max-width para mobile
+8. Model info: melhor espcamento horizontal entre itens
+
+**Localizacao:** `auto-orcamento/index.html` (linhas 47-59), `auto-orcamento/style.css` (multiplas secoes), `auto-orcamento/app.js` (linhas 91-95, 147, 250, 325-356, 565, 638-643, 654-663, 716-722, 981-1013), `auto-orcamento/three-viewer.js` (linhas 155-167)
+
+---
+
 ### 2026-02-06 - Fix: Compras no dia do fechamento nao entravam na fatura seguinte
 
 **Arquivos Modificados:** `financas/finance-data.js`, `functions/index.js`
