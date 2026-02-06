@@ -1063,7 +1063,8 @@ async function handleInstallmentSubmit(e) {
             description,
             totalValue,
             totalInstallments,
-            currentInstallment
+            currentInstallment,
+            installmentValue: totalValue / totalInstallments
         };
 
         if (editingInstallmentId) {
@@ -2055,8 +2056,21 @@ function showCardBillDetails(cardId) {
     const monthName = new Date(billYear, billMonth).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     document.getElementById('cardBillDetailsTitle').textContent = `Fatura ${card.name} - ${monthName}`;
 
+    // Usar endDate para referencia consistente da fatura (BUG 5 fix)
+    const billRefMonth = billEndDate.getMonth();
+    const billRefYear = billEndDate.getFullYear();
+
+    // Calcular data de vencimento baseado no endDate (BUG 3 fix)
+    let dueMonth = billEndDate.getMonth();
+    let dueYear = billEndDate.getFullYear();
+    if (card.dueDay < card.closingDay) {
+        dueMonth = dueMonth + 1;
+        if (dueMonth > 11) { dueMonth = 0; dueYear++; }
+    }
+    const dueMonthStr = String(dueMonth + 1).padStart(2, '0');
+
     // Verificar se a fatura está paga
-    const billPayment = isBillPaid(cardId, billMonth, billYear);
+    const billPayment = isBillPaid(cardId, billRefMonth, billRefYear);
     const isPaid = !!billPayment;
 
     let html = `
@@ -2072,13 +2086,13 @@ function showCardBillDetails(cardId) {
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                     <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
                         <div>Período: ${billStartDate.toLocaleDateString('pt-BR')} a ${billEndDate.toLocaleDateString('pt-BR')}</div>
-                        <div>Vencimento: ${card.dueDay}/${billMonth === 11 ? '01' : String(billMonth + 2).padStart(2, '0')}</div>
+                        <div>Vencimento: ${card.dueDay}/${dueMonthStr}/${dueYear}</div>
                     </div>
                     ${grandTotal > 0 ? (isPaid
                         ? `<button data-action="unmark-bill-paid" data-id="${escapeHtml(billPayment.id)}" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
                             <i class="fas fa-undo"></i> Desfazer Pagamento
                            </button>`
-                        : `<button data-action="mark-bill-paid" data-card-id="${escapeHtml(cardId)}" data-month="${billMonth}" data-year="${billYear}" data-total="${grandTotal}" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                        : `<button data-action="mark-bill-paid" data-card-id="${escapeHtml(cardId)}" data-month="${billRefMonth}" data-year="${billRefYear}" data-total="${grandTotal}" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
                             <i class="fas fa-check"></i> Pagar Fatura
                            </button>`
                     ) : ''}
@@ -2388,13 +2402,13 @@ function updateKPIs() {
     // Total Income (current month) - exclui reembolsos no crédito
     const totalIncome = currentMonthTransactions
         .filter(t => t.type === 'income' && t.paymentMethod !== 'credit')
-        .reduce((sum, t) => sum + t.value, 0);
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     // Total Expense (current month) - apenas débito direto (crédito é contado na fatura do cartão)
     // NOTA: Isso já inclui pagamentos de fatura (que são transações de débito automáticas)
     const totalExpenseDebit = currentMonthTransactions
         .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
-        .reduce((sum, t) => sum + t.value, 0);
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     // Total Credit Cards (current bills) - calculado antes para usar no totalExpense
     logger.log(`\n💳💳💳 Calculando TOTAL de faturas de ${creditCards.length} cartões:`);
@@ -2415,7 +2429,8 @@ function updateKPIs() {
     // Calculamos para cada cartão se a fatura do mês está paga
     const totalUnpaidBills = creditCards.reduce((sum, card) => {
         const billValue = calculateCurrentBill(card, currentMonth, currentYear);
-        const isPaid = isBillPaid(card.id, currentMonth, currentYear);
+        const { endDate: billEnd } = getBillPeriod(card, currentMonth, currentYear);
+        const isPaid = isBillPaid(card.id, billEnd.getMonth(), billEnd.getFullYear());
         return sum + (isPaid ? 0 : billValue);
     }, 0);
 
@@ -2467,7 +2482,7 @@ function updateKPIs() {
             }
             return true;
         })
-        .reduce((sum, t) => sum + t.value, 0);
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     const totalDebitAllTime = transactions
         .filter(t => {
@@ -2479,12 +2494,12 @@ function updateKPIs() {
             }
             return true;
         })
-        .reduce((sum, t) => sum + t.value, 0);
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     logger.log('[KPIs] Saldo calculado - Entradas:', totalIncomeAllTime, 'Saídas:', totalDebitAllTime, 'Saldo:', totalIncomeAllTime - totalDebitAllTime);
 
     // Total de investimentos (separado, não afeta o saldo)
-    const totalInvestments = investments.reduce((sum, inv) => sum + inv.value, 0);
+    const totalInvestments = investments.reduce((sum, inv) => sum + (inv.value || 0), 0);
 
     // SALDO = Entradas - Saídas(débito)
     // NOTA: As saídas de débito já incluem pagamentos de fatura (via transação automática)
@@ -2522,13 +2537,21 @@ function updateKPIs() {
     // Total Active Subscriptions
     const totalSubscriptions = subscriptions
         .filter(s => s.status === 'active')
-        .reduce((sum, s) => sum + s.value, 0);
+        .reduce((sum, s) => sum + (s.value || 0), 0);
 
     // Total Pending Installments (all remaining)
     const totalInstallments = installments.reduce((sum, inst) => {
+        // Verificar se o parcelamento ja terminou
+        if (inst.startMonth !== undefined && inst.startYear !== undefined) {
+            const refMonth = typeof currentDisplayMonth !== 'undefined' ? currentDisplayMonth : new Date().getMonth();
+            const refYear = typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : new Date().getFullYear();
+            const monthsDiff = (refYear - inst.startYear) * 12 + (refMonth - inst.startMonth);
+            const calculatedCurrent = 1 + monthsDiff;
+            if (calculatedCurrent > inst.totalInstallments) return sum; // Ja terminou
+        }
         const current = calculateCurrentInstallment(inst);
         const remaining = inst.totalInstallments - current + 1;
-        const installmentValue = inst.totalValue / inst.totalInstallments;
+        const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
         return sum + (installmentValue * remaining);
     }, 0);
 
@@ -2539,7 +2562,7 @@ function updateKPIs() {
         logger.log(`Parcelamento "${inst.description}": ativo=${isActive}, currentInstallment=${inst.currentInstallment}, total=${inst.totalInstallments}, startMonth=${inst.startMonth}, startYear=${inst.startYear}`);
 
         if (isActive) {
-            const installmentValue = inst.totalValue / inst.totalInstallments;
+            const installmentValue = inst.installmentValue || (inst.totalValue / inst.totalInstallments);
             return sum + installmentValue;
         }
         return sum;
