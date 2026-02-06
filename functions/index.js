@@ -1997,6 +1997,14 @@ const CARD_ALIASES = {
 // Categorias consideradas como economia/investimento (nao contam como gasto)
 const SAVINGS_CATEGORIES = ['Investimentos', 'Poupanca', 'Reserva de Emergencia', 'Previdencia'];
 
+// Normalizar string removendo acentos (para comparacao segura de categorias)
+const normalizeStr = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const isSavingsCategory = (category) => {
+    if (!category) return false;
+    const normalized = normalizeStr(category);
+    return SAVINGS_CATEGORIES.some(sc => normalizeStr(sc) === normalized);
+};
+
 /**
  * Buscar todos os cartoes de um usuario
  * @param {string} userId - ID do usuario no Firestore
@@ -2043,7 +2051,8 @@ async function buildFinancialOverview(userId, userName) {
             db.collection('goals').where('userId', '==', userId).get(),
             db.collection('accounts').where('userId', '==', userId).get(),
             db.collection('userSettings').doc(userId).get(), // Para cutoffDate
-            db.collection('creditCardPayments').where('userId', '==', userId).get() // Para verificar faturas pagas
+            db.collection('creditCardPayments').where('userId', '==', userId).get(), // Para verificar faturas pagas
+            db.collection('cardExpenses').where('userId', '==', userId).get() // Gastos avulsos de cartao
         ]);
 
         // Extrair resultados (usar array vazio se falhou)
@@ -2057,6 +2066,7 @@ async function buildFinancialOverview(userId, userName) {
         const accountsSnap = results[7].status === 'fulfilled' ? results[7].value : { docs: [] };
         const userSettingsDoc = results[8].status === 'fulfilled' ? results[8].value : null;
         const paymentsSnap = results[9].status === 'fulfilled' ? results[9].value : { docs: [] };
+        const cardExpensesSnap = results[10].status === 'fulfilled' ? results[10].value : { docs: [] };
 
         // Obter cutoffDate das configuracoes do usuario (igual ao dashboard)
         // SINCRONIZADO COM: finance-data.js linha ~2212
@@ -2065,7 +2075,7 @@ async function buildFinancialOverview(userId, userName) {
         console.log('[buildFinancialOverview] cutoffDate:', cutoffDate);
 
         // Log de erros parciais (sem interromper)
-        const collections = ['transactions', 'projections', 'subscriptions', 'installments', 'creditCards', 'investments', 'goals', 'accounts', 'userSettings', 'creditCardPayments'];
+        const collections = ['transactions', 'projections', 'subscriptions', 'installments', 'creditCards', 'investments', 'goals', 'accounts', 'userSettings', 'creditCardPayments', 'cardExpenses'];
         results.forEach((r, i) => {
             if (r.status === 'rejected') {
                 console.warn(`[buildFinancialOverview] Erro ao buscar ${collections[i]}:`, r.reason?.message);
@@ -2077,10 +2087,7 @@ async function buildFinancialOverview(userId, userName) {
         // ============================================
         const cardsData = cardsSnap.docs.map(d => ({
             id: d.id,
-            ...d.data(),
-            faturaAtual: 0,
-            faturaProximoMes: 0,
-            gastosCredito: []
+            ...d.data()
         }));
         const cardsByName = {};
         const cardsById = {};
@@ -2119,6 +2126,15 @@ async function buildFinancialOverview(userId, userName) {
         // PROCESSAR ASSINATURAS (com cardId)
         // ============================================
         const subscriptionsData = subsSnap.docs.map(d => ({
+            id: d.id,
+            ...d.data()
+        }));
+
+        // ============================================
+        // PROCESSAR GASTOS AVULSOS DE CARTAO (cardExpenses)
+        // SINCRONIZADO COM: finance-data.js linha 1851-1866 (loadCardExpenses)
+        // ============================================
+        const cardExpensesData = cardExpensesSnap.docs.map(d => ({
             id: d.id,
             ...d.data()
         }));
@@ -2220,7 +2236,7 @@ async function buildFinancialOverview(userId, userName) {
                 categoryTotalsAllTime[cat] = (categoryTotalsAllTime[cat] || 0) + value;
                 allTimeExpenseTotal += value;
 
-                if (SAVINGS_CATEGORIES.includes(cat)) {
+                if (isSavingsCategory(cat)) {
                     allTimeSavings += value;
                     monthlyHistory[monthKey].savings += value;
                 } else {
@@ -2245,24 +2261,6 @@ async function buildFinancialOverview(userId, userName) {
                     expensesByCard[cardKey].total += value;
                     if (isCredit) expensesByCard[cardKey].credit += value;
                     else expensesByCard[cardKey].debit += value;
-
-                    // Fatura do cartao (gastos no credito)
-                    if (isCredit) {
-                        const card = cardsByName[cardKey];
-                        if (card) {
-                            // Verificar se esta no ciclo atual da fatura
-                            const closingDay = card.closingDay || 1;
-                            const transDate = new Date(date);
-                            const transMonth = transDate.getMonth();
-                            const transDay = transDate.getDate();
-
-                            // Logica simplificada: gastos do mes atual antes do fechamento
-                            if (transMonth === currentMonth || (transMonth === currentMonth - 1 && transDay > closingDay)) {
-                                card.faturaAtual += value;
-                                card.gastosCredito.push({ date, value, description: t.description });
-                            }
-                        }
-                    }
                 }
             }
 
@@ -2271,7 +2269,7 @@ async function buildFinancialOverview(userId, userName) {
                 if (t.type === 'income') totalIncome += value;
                 else if (t.type === 'expense') {
                     const cat = t.category || 'Outros';
-                    if (SAVINGS_CATEGORIES.includes(cat)) totalSavings += value;
+                    if (isSavingsCategory(cat)) totalSavings += value;
                     else totalExpense += value;
                     categoryTotals[cat] = (categoryTotals[cat] || 0) + value;
 
@@ -2305,11 +2303,11 @@ async function buildFinancialOverview(userId, userName) {
 
         // Top categorias (mes e historico)
         const topCatsMonth = Object.entries(categoryTotals)
-            .filter(([cat]) => !SAVINGS_CATEGORIES.includes(cat))
+            .filter(([cat]) => !isSavingsCategory(cat))
             .sort((a, b) => b[1] - a[1]).slice(0, 10);
 
         const topCatsAllTime = Object.entries(categoryTotalsAllTime)
-            .filter(([cat]) => !SAVINGS_CATEGORIES.includes(cat))
+            .filter(([cat]) => !isSavingsCategory(cat))
             .sort((a, b) => b[1] - a[1]).slice(0, 10);
 
         // ============================================
@@ -2649,7 +2647,17 @@ async function buildFinancialOverview(userId, userName) {
                 .filter(sub => sub.cardId === card.id && sub.status === 'active')
                 .reduce((sum, sub) => sum + (sub.value || 0), 0);
 
-            return creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
+            // Somar gastos avulsos do cartao no periodo da fatura
+            // SINCRONIZADO COM: finance-data.js linha 1881-1887
+            const cardExpensesTotal = cardExpensesData
+                .filter(expense => {
+                    if (expense.cardId !== card.id) return false;
+                    const expenseDate = new Date(expense.date + 'T12:00:00');
+                    return expenseDate >= billStartDate && expenseDate <= billEndDate;
+                })
+                .reduce((sum, expense) => sum + (expense.value || 0), 0);
+
+            return creditTransactionsTotal + installmentsTotal + subscriptionsTotal + cardExpensesTotal;
         };
 
         // ============================================
@@ -2657,7 +2665,8 @@ async function buildFinancialOverview(userId, userName) {
         // ============================================
         const totalUnpaidBills = cardsData.reduce((sum, card) => {
             const billValue = calculateCurrentBill(card);
-            const isPaid = isBillPaid(card.id, currentMonth, currentYear);
+            const { endDate: billEnd } = getBillPeriod(card);
+            const isPaid = isBillPaid(card.id, billEnd.getMonth(), billEnd.getFullYear());
             return sum + (isPaid ? 0 : billValue);
         }, 0);
 
