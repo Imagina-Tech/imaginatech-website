@@ -25,6 +25,65 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Seguranca Backend: Input validation, dedup atomico e queries bounded no webhook WhatsApp
+
+**Arquivo Modificado:** `functions/index.js`
+
+**3 vulnerabilidades corrigidas:**
+
+1. **Input Validation no Webhook WhatsApp** (linhas 4506-4546)
+   - Adicionada validacao de payload: verifica `body.entry` como array antes de processar
+   - Validacao de campos obrigatorios: `from` e `messageId` devem existir e ser strings
+   - Limite de tamanho no numero de telefone (max 30 chars)
+   - Sanitizacao do texto: trim, remove caracteres de controle (0x00-0x1F exceto tab/newline), limita a 5000 chars
+   - Retorna 400 para payloads invalidos, mantendo 200 para payloads validos do WhatsApp
+
+2. **Deduplicacao Atomica** (linhas 4548-4571)
+   - Substituido padrao check-then-set (race condition) por `db.runTransaction()`
+   - A transaction faz get+set atomicamente, eliminando janela de duplicacao
+   - Se mensagem ja existe, lanca `ALREADY_PROCESSED` e retorna 200 (evita retries do Meta)
+   - Erros reais de Firestore sao re-thrown para tratamento normal
+
+3. **Queries Bounded com .limit()** (linhas 2045, 2054-2055, 3628-3631, 3674-3677, 3786-3790)
+   - `transactions` (4 queries): adicionado `.limit(5000)` - colecao que mais cresce
+   - `creditCardPayments`: adicionado `.limit(500)` no buildFinancialOverview
+   - `cardExpenses`: adicionado `.limit(2000)` no buildFinancialOverview
+   - Queries que ja tinham limit (delete_transaction, edit_transaction com `.limit(50)`) nao foram alteradas
+   - Colecoes pequenas (admins, creditCards, categories) nao precisam de limit
+
+---
+
+### 2026-02-06 - Seguranca: Correcao de onerror inline e auditoria escapeHtml no Painel Estoque
+
+**Arquivos Modificados:**
+- `estoque/script.js` - Removidos 3 atributos onerror inline (XSS), adicionado whitelist para status CSS
+
+**Correcoes de Seguranca:**
+
+1. **3 onerror inline removidos (XSS):**
+   - Linha ~781: `<img ... onerror="this.src='/iconwpp.jpg'">` em filament cards -> Substituido por `data-fallback="/iconwpp.jpg"` + handler via event delegation no grid (linha ~710)
+   - Linha ~2165: `<img ... onerror="this.parentElement.innerHTML='<i ...>'">` em equipment cards -> Substituido por `data-fallback-type="icon"` + handler via event delegation no grid (linha ~2100)
+   - Linha ~2494: `<img ... onerror="this.outerHTML='<div ...>'">` em equipment actions modal -> Substituido por `data-fallback-type="summary-icon"` + handler programatico apos innerHTML (linha ~2506)
+
+2. **Status CSS whitelist (prevencao de injection via classe CSS):**
+   - Linha ~2184: `item.status` agora passa por whitelist (`operational` ou `repair`) antes de ser usado como classe CSS
+
+3. **Auditoria escapeHtml completa:** Todos os dados de usuario (name, brand, type, color, notes, orderCode) ja estavam escapados. Nenhuma correcao adicional necessaria.
+
+---
+
+### 2026-02-06 - Seguranca: Auditoria XSS e Math.random no Marketplace e Admin-Portfolio
+
+**Arquivos Modificados:**
+- `marketplace/js/marketplace-data.js` (linha 302) - Substituido Math.random() por crypto.getRandomValues
+- `marketplace/js/marketplace-core.js` (linha 575) - Adicionado escapeHtml() no showToast()
+- `admin-portfolio/script.js` (linhas 738, 1312, 2005, 2205) - Removido escapeHtml() de URLs de imagem (quebrava URLs com &)
+
+**Correcoes:**
+1. **Math.random() -> crypto.getRandomValues**: O ID aleatorio gerado para nomes de arquivo em uploadPhotoToStorage() agora usa crypto.getRandomValues (6 caracteres alfanumericos seguros)
+2. **showToast() XSS**: Mensagens de toast no marketplace-core.js nao escapavam o parametro `message` antes de inserir no innerHTML. Adicionado escapeHtml()
+3. **URLs de imagem com escapeHtml incorreto**: Em admin-portfolio/script.js, URLs de imagem do Firebase Storage estavam sendo passadas por escapeHtml(), o que converte `&` para `&amp;` e quebra a URL. Removido escapeHtml() de atributos src/data-src de imagens (URLs vem de fonte confiavel - Firebase Storage)
+
 ### 2026-02-06 - Fix: Assinaturas na fatura - filtrar por dueDay e status active
 
 **Arquivos Modificados:** `financas/finance-data.js`, `functions/index.js`

@@ -2042,7 +2042,7 @@ async function buildFinancialOverview(userId, userName, compact = false) {
         // NOTA: Inclui userSettings para pegar cutoffDate (igual ao dashboard)
         // NOTA: Inclui creditCardPayments para verificar faturas pagas (igual ao dashboard)
         const results = await Promise.allSettled([
-            db.collection('transactions').where('userId', '==', userId).get(),
+            db.collection('transactions').where('userId', '==', userId).limit(5000).get(),
             db.collection('projections').where('userId', '==', userId).get(),
             db.collection('subscriptions').where('userId', '==', userId).get(),
             db.collection('installments').where('userId', '==', userId).get(),
@@ -2051,8 +2051,8 @@ async function buildFinancialOverview(userId, userName, compact = false) {
             db.collection('goals').where('userId', '==', userId).get(),
             db.collection('accounts').where('userId', '==', userId).get(),
             db.collection('userSettings').doc(userId).get(), // Para cutoffDate
-            db.collection('creditCardPayments').where('userId', '==', userId).get(), // Para verificar faturas pagas
-            db.collection('cardExpenses').where('userId', '==', userId).get() // Gastos avulsos de cartao
+            db.collection('creditCardPayments').where('userId', '==', userId).limit(500).get(), // Para verificar faturas pagas
+            db.collection('cardExpenses').where('userId', '==', userId).limit(2000).get() // Gastos avulsos de cartao
         ]);
 
         // Extrair resultados (usar array vazio se falhou)
@@ -3627,6 +3627,7 @@ async function executeFinanceAction(interpretation, userId) {
 
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
+                    .limit(5000)
                     .get();
 
                 let incomeAllTime = 0;
@@ -3672,6 +3673,7 @@ async function executeFinanceAction(interpretation, userId) {
                 // Buscar transacoes do mes
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
+                    .limit(5000)
                     .get();
 
                 let income = 0;
@@ -3784,6 +3786,7 @@ async function executeFinanceAction(interpretation, userId) {
                 const transactionsSnapshot = await db.collection('transactions')
                     .where('userId', '==', userId)
                     .where('paymentMethod', '==', 'credit')
+                    .limit(5000)
                     .get();
 
                 // SINCRONIZADO COM: finance-data.js -> getBillPeriod()
@@ -4500,6 +4503,11 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
     if (req.method === 'POST') {
         const body = req.body;
 
+        // VALIDACAO DE INPUT: Verificar payload basico do WhatsApp
+        if (!body || !body.entry || !Array.isArray(body.entry)) {
+            return res.status(400).json({ error: 'Invalid payload: missing entry' });
+        }
+
         // Log sem dados sensiveis (apenas metadados)
         console.log('[whatsappWebhook] Notificacao:', body.object, body.entry?.[0]?.changes?.[0]?.field);
 
@@ -4525,25 +4533,42 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
             const messageType = message.type;
             const messageId = message.id;
 
-            // DEDUPLICACAO: Usar messageId como ID do documento para atomicidade
-            // Meta/WhatsApp envia o mesmo webhook multiplas vezes
-            const msgDocRef = db.collection('whatsappMessages').doc(messageId);
-            const existingMsg = await msgDocRef.get();
-
-            if (existingMsg.exists) {
-                // Mensagem ja processada ou em processamento, ignorar
-                console.log('[whatsappWebhook] Mensagem duplicada ignorada:', messageId);
-                return res.status(200).send('OK');
+            // VALIDACAO DE INPUT: Campos obrigatorios da mensagem
+            if (!from || typeof from !== 'string' || !messageId || typeof messageId !== 'string') {
+                console.error('[whatsappWebhook] Payload invalido: from ou messageId ausente');
+                return res.status(400).json({ error: 'Invalid message: missing from or id' });
             }
 
-            // Salvar imediatamente para bloquear outras requisicoes duplicadas
-            await msgDocRef.set({
-                from: from,
-                messageId: messageId,
-                receivedAt: admin.firestore.FieldValue.serverTimestamp(),
-                processed: false,
-                processing: true
-            });
+            // VALIDACAO DE INPUT: Sanitizar e limitar tamanho do from (numero de telefone)
+            if (from.length > 30) {
+                console.error('[whatsappWebhook] Numero de telefone muito longo:', from.length);
+                return res.status(400).json({ error: 'Invalid phone number' });
+            }
+
+            // DEDUPLICACAO ATOMICA: Usar transaction para evitar race condition
+            // Meta/WhatsApp envia o mesmo webhook multiplas vezes
+            const msgDocRef = db.collection('whatsappMessages').doc(messageId);
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const existingMsg = await transaction.get(msgDocRef);
+                    if (existingMsg.exists) {
+                        throw new Error('ALREADY_PROCESSED');
+                    }
+                    transaction.set(msgDocRef, {
+                        from: from,
+                        messageId: messageId,
+                        receivedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        processed: false,
+                        processing: true
+                    });
+                });
+            } catch (dedupError) {
+                if (dedupError.message === 'ALREADY_PROCESSED') {
+                    console.log('[whatsappWebhook] Mensagem duplicada ignorada (dedup atomico):', messageId);
+                    return res.status(200).send('OK');
+                }
+                throw dedupError; // Re-throw erros reais de Firestore
+            }
 
             // RATE LIMITING - max 15 mensagens por minuto por numero
             if (!checkRateLimit(from)) {
@@ -4610,6 +4635,9 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
                 await sendWhatsAppReply(from, 'Por enquanto, so consigo processar texto e audio. Envie comandos como "gastei 50 no mercado" ou grave um audio.');
                 return res.status(200).send('OK');
             }
+
+            // SANITIZACAO: Limitar tamanho e remover caracteres de controle
+            rawText = (rawText || '').trim().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '').slice(0, 5000);
 
             if (!rawText) {
                 return res.status(200).send('OK');
