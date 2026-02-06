@@ -2032,7 +2032,7 @@ async function getUserCards(userId) {
  * @param {string} userName - Nome do usuario
  * @returns {string} - Overview em texto
  */
-async function buildFinancialOverview(userId, userName) {
+async function buildFinancialOverview(userId, userName, compact = false) {
     const { startOfMonth, endOfMonth, year: currentYear, month: currentMonth, monthName, daysRemaining } = getMonthBounds();
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -2736,8 +2736,44 @@ async function buildFinancialOverview(userId, userName) {
         console.log('[buildFinancialOverview] Projecao - Saldo:', totalBalance, 'Entradas pend:', pendingIncome, 'Faturas nao pagas:', totalUnpaidBills, 'Saidas pend:', pendingExpense, '=> Projetado:', projectedBalance);
 
         // ============================================
-        // GERAR OVERVIEW COMPLETA EM TEXTO
+        // GERAR OVERVIEW EM TEXTO (COMPACTA OU COMPLETA)
         // ============================================
+
+        // MODO COMPACTO: ~3K chars para acoes de escrita (add_transaction, etc)
+        // Exclui: ultimas 30 transacoes, historico mensal, detalhamento faturas, categorias historico
+        if (compact) {
+            return `
+OVERVIEW FINANCEIRA RESUMIDA - ${userName}
+Data: ${todayStr} | Mes: ${monthName}/${currentYear}
+
+SALDO DISPONIVEL: R$${totalBalance.toFixed(2)}
+SALDO PROJETADO: R$${projectedBalance.toFixed(2)} ${projectedBalance >= 0 ? '(POSITIVO)' : '(NEGATIVO)'}
+
+MES ATUAL:
+Entradas: R$${totalIncome.toFixed(2)} | Gastos: R$${totalExpense.toFixed(2)} | Saldo mes: R$${monthBalance.toFixed(2)}
+
+CARTOES DE CREDITO:
+${cardsDetailed.length > 0 ? cardsDetailed.join('\n') : 'Nenhum cartao cadastrado'}
+
+GASTOS POR CARTAO:
+${Object.keys(expensesByCard).length > 0 ? Object.entries(expensesByCard).map(([card, data]) =>
+    `- ${card}: Este mes R$${data.thisMonth.toFixed(2)}`
+).join('\n') : 'Nenhum gasto em cartao'}
+
+ASSINATURAS ATIVAS (${subsActive.length}) - Total: R$${totalSubsActive.toFixed(2)}/mes
+${subsActive.length > 0 ? subsActive.join('\n') : 'Nenhuma'}
+
+PARCELAMENTOS ATIVOS (${installmentsActive.length}) - Total: R$${totalInstActive.toFixed(2)}/mes
+${installmentsActive.length > 0 ? installmentsActive.join('\n') : 'Nenhum'}
+
+PROJECOES PENDENTES:
+${projPending.length > 0 ? projPending.join('\n') : 'Nenhuma'}
+
+GASTOS FIXOS MENSAIS: R$${(totalSubsActive + totalInstActive).toFixed(2)}
+`.trim();
+        }
+
+        // MODO COMPLETO: ~10K chars para consultas (get_summary, como estou, etc)
         return `
 ================================================================================
 OVERVIEW FINANCEIRA COMPLETA - ${userName}
@@ -3124,15 +3160,37 @@ IMPORTANTE:
     try {
         // Chamada ao Gemini com retry automatico (3 tentativas, backoff exponencial)
         // Usando novo SDK @google/genai (jan/2026)
-        const result = await withRetry(
-            () => ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-            }),
-            3,  // max retries
-            1000 // initial delay ms
-        );
-        const response = result.text.trim();
+        // Modelo principal: gemini-3-pro-preview (mais avancado, melhor raciocinio)
+        // Fallback: gemini-2.5-flash (estavel, free tier disponivel)
+        // gemini-2.0-flash DEPRECIADO - desliga 31/03/2026
+        let response;
+        try {
+            const result = await withRetry(
+                () => ai.models.generateContent({
+                    model: 'gemini-3-pro-preview',
+                    contents: prompt,
+                }),
+                2,  // max retries (reduzido para nao amplificar rate limit)
+                1000
+            );
+            response = result.text.trim();
+        } catch (primaryError) {
+            const is429 = primaryError.message && (primaryError.message.includes('429') || primaryError.message.includes('Resource exhausted'));
+            if (is429) {
+                console.log('[interpretFinanceCommand] gemini-3-pro-preview 429, tentando gemini-2.5-flash...');
+                const fallbackResult = await withRetry(
+                    () => ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: prompt,
+                    }),
+                    2,
+                    1000
+                );
+                response = fallbackResult.text.trim();
+            } else {
+                throw primaryError;
+            }
+        }
 
         // Tentar extrair JSON da resposta (pode estar no meio do texto)
         const jsonMatch = response.match(/\{[\s\S]*"action"[\s\S]*"data"[\s\S]*\}/);
@@ -3163,31 +3221,30 @@ IMPORTANTE:
 
     } catch (error) {
         console.error('[interpretFinanceCommand] Erro apos retries:', error.message);
-        const is429 = error.message && (error.message.includes('429') || error.message.includes('Too Many Requests'));
+        const is429 = error.message && (error.message.includes('429') || error.message.includes('Too Many Requests') || error.message.includes('Resource exhausted'));
 
-        // FALLBACK: Se for erro de rate limit, tentar extrair dados basicos do overview
-        if (is429 && financialOverview) {
-            // Extrair KPIs do overview usando regex
-            const saldoMatch = financialOverview.match(/Saldo atual:\s*(R\$[\s\d.,+-]+)/i);
-            const entradasMatch = financialOverview.match(/Entradas.*?:\s*(R\$[\s\d.,]+)/i);
-            const saidasMatch = financialOverview.match(/(?:Saidas|Gastos).*?:\s*(R\$[\s\d.,]+)/i);
-            const faturaMatch = financialOverview.match(/Fatura.*?:\s*(R\$[\s\d.,]+)/i);
+        if (is429) {
+            // FALLBACK INTELIGENTE: Tentar interpretar localmente via regex antes de desistir
+            const localResult = tryLocalInterpretation(text, userCards, userName, todayStr);
+            if (localResult) {
+                console.log('[interpretFinanceCommand] Fallback local: acao', localResult.action);
+                return localResult;
+            }
 
-            if (saldoMatch || entradasMatch || saidasMatch) {
-                const saldo = saldoMatch ? saldoMatch[1].trim() : 'nao disponivel';
-                const entradas = entradasMatch ? entradasMatch[1].trim() : '-';
-                const saidas = saidasMatch ? saidasMatch[1].trim() : '-';
-                const fatura = faturaMatch ? faturaMatch[1].trim() : null;
+            // Se nao conseguiu interpretar localmente, retornar dados basicos do overview
+            if (financialOverview) {
+                const saldoMatch = financialOverview.match(/SALDO DISPONIVEL:\s*(R\$[\s\d.,+-]+)/i);
+                const entradasMatch = financialOverview.match(/Entradas.*?:\s*(R\$[\s\d.,]+)/i);
+                const saidasMatch = financialOverview.match(/(?:Saidas|Gastos).*?:\s*(R\$[\s\d.,]+)/i);
 
-                let fallbackMsg = `Oi ${userName || 'Usuario'}! Estou com alta demanda, mas consegui seus dados:\n\n`;
-                fallbackMsg += `Saldo: ${saldo}\n`;
-                fallbackMsg += `Entradas: ${entradas}\n`;
-                fallbackMsg += `Saidas: ${saidas}`;
-                if (fatura) fallbackMsg += `\nFatura: ${fatura}`;
-                fallbackMsg += `\n\nTente novamente em alguns segundos para uma resposta mais detalhada.`;
+                if (saldoMatch || entradasMatch || saidasMatch) {
+                    const saldo = saldoMatch ? saldoMatch[1].trim() : 'nao disponivel';
+                    const entradas = entradasMatch ? entradasMatch[1].trim() : '-';
+                    const saidas = saidasMatch ? saidasMatch[1].trim() : '-';
 
-                console.log('[interpretFinanceCommand] Fallback ativado - retornando dados basicos');
-                return fallbackMsg; // Retorna como string (conversa)
+                    console.log('[interpretFinanceCommand] Fallback overview - retornando dados basicos');
+                    return `Oi ${userName || 'Usuario'}! Estou com alta demanda, mas consegui seus dados:\n\nSaldo: ${saldo}\nEntradas: ${entradas}\nGastos: ${saidas}\n\nTente novamente em alguns segundos para uma resposta mais detalhada.`;
+                }
             }
         }
 
@@ -3198,6 +3255,70 @@ IMPORTANTE:
             message: `Desculpe ${userName || 'Usuario'}, tive um problema tecnico. Tente novamente em alguns segundos.`
         };
     }
+}
+
+/**
+ * Fallback local: interpretar comandos simples via regex quando Gemini esta indisponivel
+ * Cobre os casos mais comuns: "gastei X em Y", "recebi X de Y", "ajuda", "saldo"
+ */
+function tryLocalInterpretation(text, userCards, userName, todayStr) {
+    const lower = text.toLowerCase().trim();
+
+    // Ajuda
+    if (lower === 'ajuda' || lower === 'help' || lower === 'comandos') {
+        return { action: 'help', data: {}, confidence: 0.9, message: `Aqui estao os comandos, ${userName}!` };
+    }
+
+    // Saldo / resumo
+    if (/^(quanto\s+tenho|meu\s+saldo|saldo)[\s?!]*$/i.test(lower)) {
+        return { action: 'get_balance', data: {}, confidence: 0.9, message: `Buscando seu saldo, ${userName}!` };
+    }
+    if (/^(como\s+estou|resumo|me\s+conta|situacao)[\s?!]*$/i.test(lower)) {
+        return { action: 'get_summary', data: {}, confidence: 0.9, message: `Preparando seu resumo, ${userName}!` };
+    }
+
+    // Faturas
+    if (/^(fatura|faturas|cartao|cartoes)[\s?!]*$/i.test(lower)) {
+        return { action: 'get_bills', data: {}, confidence: 0.9, message: `Buscando suas faturas, ${userName}!` };
+    }
+
+    // Gasto: "gastei X em Y", "paguei X no Y", "comprei X de Y"
+    const expenseMatch = text.match(/(?:gastei|paguei|comprei|saiu)\s+(?:R\$\s*)?(\d+(?:[.,]\d+)?)\s+(?:em|no|na|de|com|pro|pra)\s+(.+)/i);
+    if (expenseMatch) {
+        const value = parseFloat(expenseMatch[1].replace(',', '.'));
+        const description = expenseMatch[2].trim();
+        // Detectar cartao mencionado
+        let paymentMethod = 'debit';
+        let cardName = null;
+        const cardPatterns = /(?:no\s+)?(nubank|roxo|roxinho|inter|laranjinha|c6|itau|bradesco|b1)/i;
+        const cardMatch = description.match(cardPatterns);
+        if (cardMatch) {
+            paymentMethod = 'credit';
+            cardName = cardMatch[1];
+        }
+        return {
+            action: 'add_transaction',
+            data: { type: 'expense', value, description, category: 'Outros', date: todayStr, paymentMethod, cardName },
+            confidence: 0.8,
+            message: `Registrei o gasto de R$${value.toFixed(2)} em "${description}", ${userName}!`
+        };
+    }
+
+    // Entrada: "recebi X de Y", "ganhei X", "entrou X"
+    const incomeMatch = text.match(/(?:recebi|ganhei|entrou|me\s+pagaram)\s+(?:R\$\s*)?(\d+(?:[.,]\d+)?)\s*(?:de|do|da|por|reais)?\s*(.*)/i);
+    if (incomeMatch) {
+        const value = parseFloat(incomeMatch[1].replace(',', '.'));
+        const description = (incomeMatch[2] || '').trim() || 'Entrada';
+        return {
+            action: 'add_transaction',
+            data: { type: 'income', value, description, category: 'Outros', date: todayStr, paymentMethod: 'pix' },
+            confidence: 0.8,
+            message: `Registrei a entrada de R$${value.toFixed(2)} - "${description}", ${userName}!`
+        };
+    }
+
+    // Nao conseguiu interpretar
+    return null;
 }
 
 /**
@@ -4557,18 +4678,44 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
                 return res.status(200).send('OK');
             }
 
+            // OTIMIZACAO: Detectar se mensagem parece ser consulta ou acao de escrita
+            // Consultas precisam overview completo, acoes de escrita usam compacto (~3K vs ~10K chars)
+            const queryPatterns = /como\s+estou|quanto\s+tenho|resumo|fatura|saldo|balanco|overview|relatorio|me\s+conta|situacao|fechar\s+o\s+mes|gastos|categorias|historico|extrato/i;
+            const isLikelyQuery = queryPatterns.test(cleanText);
+
             // Buscar cartoes, overview financeira e historico de conversa em paralelo
             let conversationHistory = [];
             [userCards, financialOverview, conversationHistory] = await Promise.all([
                 getUserCards(targetUserId),
-                buildFinancialOverview(targetUserId, userName),
+                buildFinancialOverview(targetUserId, userName, !isLikelyQuery), // compact=true para acoes
                 getConversationHistory(from, 5)
             ]);
 
-            console.log('[whatsappWebhook] Usuario:', userName, '| Overview length:', financialOverview.length, '| Cartoes:', userCards.map(c => c.name), '| Historico:', conversationHistory.length, 'msgs');
+            console.log('[whatsappWebhook] Usuario:', userName, '| Overview length:', financialOverview.length, '| Compact:', !isLikelyQuery, '| Cartoes:', userCards.map(c => c.name), '| Historico:', conversationHistory.length, 'msgs');
 
-            // Interpretar com contexto completo (overview + cartoes + nome + historico)
-            const interpretation = await interpretFinanceCommand(cleanText, userCards, financialOverview, userName, conversationHistory);
+            // Interpretar com contexto (overview + cartoes + nome + historico)
+            let interpretation = await interpretFinanceCommand(cleanText, userCards, financialOverview, userName, conversationHistory);
+
+            // Se for texto puro (conversa) e usou overview compacto, recarregar com completo
+            if (typeof interpretation === 'string' && !isLikelyQuery) {
+                console.log('[whatsappWebhook] Resposta conversacional com overview compacto, recarregando completo...');
+                const fullOverview = await buildFinancialOverview(targetUserId, userName, false);
+                const fullInterpretation = await interpretFinanceCommand(cleanText, userCards, fullOverview, userName, conversationHistory);
+                if (typeof fullInterpretation === 'string') {
+                    const contextLabel = isCompany ? '[EMPRESA] ' : '';
+                    const botReply = contextLabel + fullInterpretation;
+                    await sendWhatsAppReply(from, botReply);
+                    await msgDocRef.update({
+                        processed: true,
+                        processing: false,
+                        botResponse: botReply.substring(0, 1000),
+                        processedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    return res.status(200).send('OK');
+                }
+                // Se retornou JSON na segunda tentativa, usar fullInterpretation no fluxo normal
+                interpretation = fullInterpretation;
+            }
 
             // Se for texto puro (conversa), enviar direto
             if (typeof interpretation === 'string') {
