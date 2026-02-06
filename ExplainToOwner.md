@@ -25,6 +25,27 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Fix: Fatura do cartao nao mostrava transacoes apos dia de fechamento
+
+**Arquivos Modificados:** `financas/finance-data.js`, `functions/index.js`
+
+**Problema:**
+Transacoes de credito feitas ate o dia de fechamento (ex: R$25 no dia 02/02 com fechamento dia 2) nao apareciam na fatura de fevereiro. A fatura ficava vazia apos o dia de fechamento.
+
+**Causa Raiz:**
+`getBillPeriod()` tinha 2 bugs:
+1. Apos o dia de fechamento, mostrava o periodo da PROXIMA fatura (ex: 3 Fev - 2 Mar) ao inves da fatura que acabou de fechar (3 Jan - 2 Fev). Transacoes do periodo fechado ficavam inacessiveis.
+2. Ao navegar entre meses, usava `transactionDate.getMonth() === billMonth` (month-match) ao inves de range de datas. Isso excluia transacoes do mes anterior que pertenciam ao periodo da fatura (ex: compra de 15/Dez na fatura de Janeiro com fechamento dia 2).
+
+**Solucao:**
+1. `getBillPeriod()` simplificado: fatura do mes X SEMPRE cobre `(mes anterior dia closingDay+1)` ate `(mes X dia closingDay)`, independente de estarmos antes ou depois do fechamento
+2. `calculateCurrentBill()`: removido branch `isNavigating` com month-match, agora SEMPRE usa range de datas
+3. Mesma correcao aplicada no `getBillPeriod()` do bot WhatsApp (`functions/index.js`)
+
+**Localizacao:** `financas/finance-data.js` linhas 85-110 (getBillPeriod) e 1855-1864 (filter), `functions/index.js` linhas 2436-2468 (getBillPeriod bot)
+
+---
+
 ### 2026-02-06 - Fix: Graficos nao apareciam por falha de CDN
 
 **Arquivos Modificados:** `financas/index.html`, `financas/finance-ui.js`, `financas/liquid-fill-gauge.js`
