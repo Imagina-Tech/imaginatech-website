@@ -238,7 +238,7 @@ function getCashFlowData() {
         const monthTransactions = transactions.filter(t => {
             // Filtrar por data de corte
             if (cutoffDate && t.date < cutoffDate) return false;
-            const transactionDate = new Date(t.date);
+            const transactionDate = new Date(t.date + 'T12:00:00');
             return transactionDate.getMonth() === date.getMonth() &&
                    transactionDate.getFullYear() === date.getFullYear();
         });
@@ -399,7 +399,7 @@ function getCategoryData() {
         if (cutoffDate && t.date < cutoffDate) return;
 
         if (t.type === 'expense') {
-            const transactionDate = new Date(t.date);
+            const transactionDate = new Date(t.date + 'T12:00:00');
             if (transactionDate.getMonth() === displayMonth &&
                 transactionDate.getFullYear() === displayYear) {
                 categoryMap[t.category] = (categoryMap[t.category] || 0) + t.value;
@@ -602,7 +602,7 @@ function getPaymentMethodData() {
     // 2. DEBITO e PIX/DINHEIRO: Transacoes do mes (exclui credito que ja foi contado)
     transactions.forEach(t => {
         if (t.type === 'expense') {
-            const transactionDate = new Date(t.date);
+            const transactionDate = new Date(t.date + 'T12:00:00');
             if (transactionDate.getMonth() === displayMonth &&
                 transactionDate.getFullYear() === displayYear) {
 
@@ -842,7 +842,7 @@ function getComparisonData() {
         // Entradas (income)
         const income = transactions
             .filter(t => {
-                const d = new Date(t.date);
+                const d = new Date(t.date + 'T12:00:00');
                 return t.type === 'income' &&
                        d.getMonth() === m &&
                        d.getFullYear() === y;
@@ -852,7 +852,7 @@ function getComparisonData() {
         // Saídas em débito (excluindo reservas)
         const expenseDebit = transactions
             .filter(t => {
-                const d = new Date(t.date);
+                const d = new Date(t.date + 'T12:00:00');
                 return t.type === 'expense' &&
                        t.paymentMethod !== 'credit' &&
                        !isSavingsCategory(t.category) &&
@@ -866,7 +866,7 @@ function getComparisonData() {
             if (!card.transactions) return sum;
             return sum + card.transactions
                 .filter(t => {
-                    const d = new Date(t.date);
+                    const d = new Date(t.date + 'T12:00:00');
                     return !isSavingsCategory(t.category) &&
                            d.getMonth() === m &&
                            d.getFullYear() === y;
@@ -1798,7 +1798,7 @@ function getDisplayedMonthTotal(type, options = {}) {
 
     return transactions
         .filter(t => {
-            const tDate = new Date(t.date);
+            const tDate = new Date(t.date + 'T12:00:00');
             const matchesType = t.type === type;
             const matchesMonth = tDate.getMonth() === month && tDate.getFullYear() === year;
 
@@ -1852,7 +1852,7 @@ function initializeSavingsGoalChart() {
     // 1. Transacoes de debito/pix em categorias de poupanca
     const savingsFromDebit = transactions
         .filter(t => {
-            const d = new Date(t.date);
+            const d = new Date(t.date + 'T12:00:00');
             return t.type === 'expense' &&
                    t.paymentMethod !== 'credit' &&
                    isSavingsCategory(t.category) &&
@@ -1867,7 +1867,7 @@ function initializeSavingsGoalChart() {
 
         const cardSavings = card.transactions
             .filter(t => {
-                const d = new Date(t.date);
+                const d = new Date(t.date + 'T12:00:00');
                 return isSavingsCategory(t.category) &&
                        d.getMonth() === currentMonth &&
                        d.getFullYear() === currentYear;
@@ -1961,7 +1961,7 @@ function initializeExpenseLimitChart() {
     // 1. Gastos em debito/PIX (excluindo reservas)
     const expensesDebit = transactions
         .filter(t => {
-            const d = new Date(t.date);
+            const d = new Date(t.date + 'T12:00:00');
             return t.type === 'expense' &&
                    t.paymentMethod !== 'credit' &&
                    !isSavingsCategory(t.category) &&
@@ -1976,7 +1976,7 @@ function initializeExpenseLimitChart() {
 
         const cardExpenses = card.transactions
             .filter(t => {
-                const d = new Date(t.date);
+                const d = new Date(t.date + 'T12:00:00');
                 return !isSavingsCategory(t.category) &&
                        d.getMonth() === month &&
                        d.getFullYear() === year;
@@ -2063,7 +2063,7 @@ function initializeGrowthSparkline() {
         const monthTransactions = transactions.filter(t => {
             // Filtrar por data de corte
             if (cutoffDate && t.date < cutoffDate) return false;
-            const tDate = new Date(t.date);
+            const tDate = new Date(t.date + 'T12:00:00');
             return tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear();
         });
         const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
@@ -2115,7 +2115,7 @@ function initializeExpenseTrendSparkline() {
         const dayExpenses = transactions.filter(t => {
             // Filtrar por data de corte
             if (cutoffDate && t.date < cutoffDate) return false;
-            const tDate = new Date(t.date);
+            const tDate = new Date(t.date + 'T12:00:00');
             return t.type === 'expense' &&
                    tDate.toDateString() === date.toDateString();
         }).reduce((sum, t) => sum + t.value, 0);
@@ -2399,7 +2399,7 @@ function getWeeklyTrendData() {
         // 1. Gastos em debito/PIX (excluindo reservas)
         const debitExpenses = transactions
             .filter(t => {
-                const d = new Date(t.date);
+                const d = new Date(t.date + 'T12:00:00');
                 const day = d.getDate();
                 return t.type === 'expense' &&
                        t.paymentMethod !== 'credit' &&
@@ -2417,7 +2417,7 @@ function getWeeklyTrendData() {
 
             const cardExpenses = card.transactions
                 .filter(t => {
-                    const d = new Date(t.date);
+                    const d = new Date(t.date + 'T12:00:00');
                     const day = d.getDate();
                     return !isSavingsCategory(t.category) &&
                            d.getMonth() === month &&

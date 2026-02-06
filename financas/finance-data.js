@@ -1881,7 +1881,7 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
     const expensesTotal = cardExpenses
         .filter(expense => {
             if (expense.cardId !== card.id) return false;
-            const expenseDate = new Date(expense.date);
+            const expenseDate = new Date(expense.date + 'T12:00:00');
             return expenseDate >= billStartDate && expenseDate <= billEndDate;
         })
         .reduce((sum, expense) => sum + expense.value, 0);
@@ -2102,7 +2102,7 @@ function showCardBillDetails(cardId) {
                                 <div style="padding: 0.75rem; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 0.75rem;">
                                     <div style="flex: 1; min-width: 0;">
                                         <div style="font-weight: 500; color: #fff; font-size: 0.875rem; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.description)}</div>
-                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')}</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date + 'T12:00:00').toLocaleDateString('pt-BR')}</div>
                                         <div style="font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${formatCurrencyDisplay(t.value)}</div>
                                     </div>
                                     <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
@@ -2122,7 +2122,7 @@ function showCardBillDetails(cardId) {
                                             <i class="fas fa-undo" style="color: #10b981; font-size: 0.7rem; margin-right: 0.25rem;"></i>
                                             ${escapeHtml(t.description)}
                                         </div>
-                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date).toLocaleDateString('pt-BR')} • Reembolso</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">${new Date(t.date + 'T12:00:00').toLocaleDateString('pt-BR')} • Reembolso</div>
                                         <div style="font-weight: 600; color: #10b981; font-size: 0.875rem;">- ${formatCurrencyDisplay(t.value)}</div>
                                     </div>
                                     <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
@@ -2380,7 +2380,7 @@ function updateKPIs() {
     const currentMonthTransactions = transactions.filter(t => {
         // Filtrar por data de corte
         if (cutoffDate && t.date < cutoffDate) return false;
-        const transactionDate = new Date(t.date);
+        const transactionDate = new Date(t.date + 'T12:00:00');
         return transactionDate.getMonth() === currentMonth &&
                transactionDate.getFullYear() === currentYear;
     });
