@@ -248,7 +248,7 @@ function getCashFlowData() {
             .reduce((sum, t) => sum + t.value, 0);
 
         const monthExpense = monthTransactions
-            .filter(t => t.type === 'expense')
+            .filter(t => t.type === 'expense' && t.paymentMethod !== 'credit')
             .reduce((sum, t) => sum + t.value, 0);
 
         incomes.push(monthIncome);
@@ -1861,21 +1861,17 @@ function initializeSavingsGoalChart() {
         })
         .reduce((sum, t) => sum + t.value, 0);
 
-    // 2. Transacoes de cartao em categorias de poupanca
-    const savingsFromCredit = creditCards.reduce((sum, card) => {
-        if (!card.transactions) return sum;
-
-        const cardSavings = card.transactions
-            .filter(t => {
-                const d = new Date(t.date + 'T12:00:00');
-                return isSavingsCategory(t.category) &&
-                       d.getMonth() === currentMonth &&
-                       d.getFullYear() === currentYear;
-            })
-            .reduce((s, t) => s + t.value, 0);
-
-        return sum + cardSavings;
-    }, 0);
+    // 2. Transacoes de cartao de credito em categorias de poupanca
+    const savingsFromCredit = transactions
+        .filter(t => {
+            const d = new Date(t.date + 'T12:00:00');
+            return t.type === 'expense' &&
+                   t.paymentMethod === 'credit' &&
+                   isSavingsCategory(t.category) &&
+                   d.getMonth() === currentMonth &&
+                   d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     // Total guardado = debito + credito em categorias de economia
     const saved = savingsFromDebit + savingsFromCredit;
@@ -1971,20 +1967,16 @@ function initializeExpenseLimitChart() {
         .reduce((sum, t) => sum + t.value, 0);
 
     // 2. Gastos em cartao de credito (excluindo reservas)
-    const expensesCredit = creditCards.reduce((sum, card) => {
-        if (!card.transactions) return sum;
-
-        const cardExpenses = card.transactions
-            .filter(t => {
-                const d = new Date(t.date + 'T12:00:00');
-                return !isSavingsCategory(t.category) &&
-                       d.getMonth() === month &&
-                       d.getFullYear() === year;
-            })
-            .reduce((s, t) => s + t.value, 0);
-
-        return sum + cardExpenses;
-    }, 0);
+    const expensesCredit = transactions
+        .filter(t => {
+            const d = new Date(t.date + 'T12:00:00');
+            return t.type === 'expense' &&
+                   t.paymentMethod === 'credit' &&
+                   !isSavingsCategory(t.category) &&
+                   d.getMonth() === month &&
+                   d.getFullYear() === year;
+        })
+        .reduce((sum, t) => sum + (t.value || 0), 0);
 
     // Total de gastos REAIS (consumo, nao reservas)
     const totalExpense = expensesDebit + expensesCredit;
