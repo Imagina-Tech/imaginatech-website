@@ -25,6 +25,28 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Fix: Assinaturas na fatura - filtrar por dueDay e status active
+
+**Arquivos Modificados:** `financas/finance-data.js`, `functions/index.js`
+
+**Problema:** Assinaturas ativas eram somadas na fatura do cartao imediatamente, sem verificar se o dia de debito (dueDay) ja havia chegado dentro do periodo da fatura. Resultado: faturas mostravam valores inflados com assinaturas que ainda nao tinham sido cobradas.
+
+**Correcoes aplicadas:**
+
+1. **Nova funcao `isSubscriptionDueInPeriod()`** - Verifica se o dueDay da assinatura cai dentro do periodo da fatura e se a data de cobranca ja passou (real-time) ou se esta no periodo (navegacao)
+2. **5 locais corrigidos:**
+   - `finance-data.js` -> `calculateCurrentBill()` - filtro de assinaturas com dueDay
+   - `finance-data.js` -> `showCardBillDetails()` - filtro de assinaturas com dueDay
+   - `functions/index.js` -> `buildFinancialOverview.calculateCurrentBill()` - filtro backend
+   - `functions/index.js` -> `buildFinancialOverview.cardsBillDetails` - filtro backend
+   - `functions/index.js` -> handler `fatura_cartao` do chatbot - filtro inline + closingDay fix
+3. **Filtro `status === 'active'` adicionado** em todos os locais que faltavam
+4. **Bug `closingDay + 1` corrigido** no handler `fatura_cartao` do chatbot (linhas 3681, 3687)
+
+**Localizacao:** `finance-data.js` funcao `isSubscriptionDueInPeriod` (linhas 155-188), `functions/index.js` funcao inline em `buildFinancialOverview` (linhas 2438-2468) e handler `fatura_cartao` (linhas 3747-3777)
+
+---
+
 ### 2026-02-06 - Fix: Painel de Financas e Bot WhatsApp - Correcao de 10 bugs de calculo
 
 **Arquivos Modificados:** `financas/finance-data.js`, `financas/finance-ui.js`, `functions/index.js`
