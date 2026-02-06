@@ -57,16 +57,28 @@ function initializeCharts() {
         // Destruir gráficos existentes antes de criar novos
         destroyAllCharts();
 
-        initializeCashFlowChart();
-        initializeCategoryChart();
-        initializePaymentMethodChart();
-        initializeComparisonChart();
-        initializeSavingsGoalChart();
-        initializeExpenseLimitChart();
-        initializeGrowthSparkline();
-        initializeExpenseTrendSparkline();
-        initializeTopCategoriesChart();
-        initializeWeeklyTrendChart();
+        // Verificar se ApexCharts esta disponivel (CDN pode falhar)
+        if (typeof ApexCharts === 'undefined') {
+            if (typeof logger !== 'undefined') logger.error('ApexCharts nao carregado - CDN indisponivel. Graficos ApexCharts desabilitados.');
+        } else {
+            initializeCashFlowChart();
+            initializeCategoryChart();
+            initializePaymentMethodChart();
+            initializeComparisonChart();
+            initializeGrowthSparkline();
+            initializeExpenseTrendSparkline();
+            initializeTopCategoriesChart();
+            initializeWeeklyTrendChart();
+        }
+
+        // Verificar se D3 esta disponivel para Liquid Fill Gauges
+        if (typeof d3 === 'undefined') {
+            if (typeof logger !== 'undefined') logger.error('D3.js nao carregado - CDN indisponivel. Liquid Fill Gauges desabilitados.');
+        } else {
+            initializeSavingsGoalChart();
+            initializeExpenseLimitChart();
+        }
+
         if (typeof logger !== 'undefined') logger.log('Graficos inicializados');
     } catch (error) {
         if (typeof logger !== 'undefined') logger.error('Erro ao inicializar graficos:', error);
@@ -76,6 +88,7 @@ function initializeCharts() {
 // 🔄 Atualiza dados de todos os gráficos existentes
 function updateCharts() {
     try {
+        if (typeof ApexCharts === 'undefined') return;
         if (typeof logger !== 'undefined') logger.log('[updateCharts] Atualizando todos os graficos...');
         updateCashFlowChart();
         updateCategoryChart();
@@ -83,9 +96,9 @@ function updateCharts() {
         updateComparisonChart();
         updateTopCategoriesChart();
         updateWeeklyTrendChart();
-        logger.log('[updateCharts] Gráficos atualizados!');
+        if (typeof logger !== 'undefined') logger.log('[updateCharts] Graficos atualizados!');
     } catch (error) {
-        logger.error('Erro ao atualizar gráficos:', error);
+        if (typeof logger !== 'undefined') logger.error('Erro ao atualizar graficos:', error);
     }
 }
 

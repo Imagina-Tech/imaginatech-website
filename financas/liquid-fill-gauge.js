@@ -45,6 +45,10 @@ function liquidFillGaugeDefaultSettings() {
  * @returns {object} - Objeto com metodo update()
  */
 function loadLiquidFillGauge(elementId, value, config) {
+    if (typeof d3 === 'undefined') {
+        if (typeof logger !== 'undefined') logger.error('D3.js nao disponivel - Liquid Fill Gauge nao pode ser criado');
+        return null;
+    }
     if (config == null) config = liquidFillGaugeDefaultSettings();
 
     const gauge = d3.select("#" + elementId);

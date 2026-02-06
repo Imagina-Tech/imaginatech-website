@@ -19,7 +19,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com 'unsafe-inline';
+        script-src 'self' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline';
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
         font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
         img-src 'self' https: data: blob:;
@@ -44,11 +44,21 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
 
-    <!-- ApexCharts - Biblioteca Profissional de Gráficos -->
+    <!-- ApexCharts - Biblioteca Profissional de Graficos (com fallback CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@5.3.6/dist/apexcharts.min.js"></script>
+    <script>
+        if (typeof ApexCharts === 'undefined') {
+            document.write('<scr' + 'ipt src="https://unpkg.com/apexcharts@5.3.6/dist/apexcharts.min.js"><\/scr' + 'ipt>');
+        }
+    </script>
 
-    <!-- D3.js - Para Liquid Fill Gauge -->
+    <!-- D3.js - Para Liquid Fill Gauge (com fallback CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+        if (typeof d3 === 'undefined') {
+            document.write('<scr' + 'ipt src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"><\/scr' + 'ipt>');
+        }
+    </script>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>

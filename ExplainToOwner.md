@@ -25,6 +25,26 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Fix: Graficos nao apareciam por falha de CDN
+
+**Arquivos Modificados:** `financas/index.html`, `financas/finance-ui.js`, `financas/liquid-fill-gauge.js`
+
+**Problema:**
+CDN `cdn.jsdelivr.net` retornava `ERR_CONNECTION_CLOSED` para ApexCharts e D3.js, impedindo todos os graficos de renderizar. Erro `d3 is not defined` em `liquid-fill-gauge.js:50`.
+
+**Causa Raiz:**
+Dependencia de um unico CDN sem fallback. Quando o jsdelivr ficava indisponivel, zero graficos renderizavam.
+
+**Solucao:**
+1. CSP atualizado para permitir `unpkg.com` e `cdnjs.cloudflare.com` como fontes de script
+2. Adicionados scripts de fallback inline: se ApexCharts ou D3 nao carregam do jsdelivr, carregam automaticamente de CDN alternativo (unpkg para ApexCharts, cdnjs para D3)
+3. Guards de disponibilidade em `initializeCharts()` e `updateCharts()` (finance-ui.js) para verificar `typeof ApexCharts` e `typeof d3` antes de usar
+4. Guard em `loadLiquidFillGauge()` (liquid-fill-gauge.js) para verificar `typeof d3` antes de criar gauge
+
+**Localizacao:** `financas/index.html` linhas 20-30 (CSP) e 47-57 (scripts), `financas/finance-ui.js` linhas 55-86 e 88-102, `financas/liquid-fill-gauge.js` linhas 47-50
+
+---
+
 ### 2026-02-05 - Fix: Admin Portfolio - Login nao autorizava admins
 
 **Arquivos Modificados:** `admin-portfolio/script.js`
