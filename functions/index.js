@@ -2522,11 +2522,25 @@ async function buildFinancialOverview(userId, userName) {
                     dueDay: sub.dueDay
                 }));
 
+            // Gastos avulsos legados (cardExpenses) no periodo
+            const billCardExpenses = cardExpensesData
+                .filter(expense => {
+                    if (expense.cardId !== c.id) return false;
+                    const expenseDate = new Date(expense.date + 'T12:00:00');
+                    return expenseDate >= billStartDate && expenseDate <= billEndDate;
+                })
+                .map(expense => ({
+                    date: expense.date,
+                    value: expense.value || 0,
+                    description: expense.description || 'Gasto avulso'
+                }));
+
             // Calcular totais
             const totalTransactions = billTransactions.reduce((sum, t) => sum + t.value, 0);
             const totalInstallments = billInstallments.reduce((sum, i) => sum + i.value, 0);
             const totalSubscriptions = billSubscriptions.reduce((sum, s) => sum + s.value, 0);
-            const totalBill = totalTransactions + totalInstallments + totalSubscriptions;
+            const totalCardExpenses = billCardExpenses.reduce((sum, e) => sum + e.value, 0);
+            const totalBill = totalTransactions + totalInstallments + totalSubscriptions + totalCardExpenses;
 
             const limiteDisponivel = c.limit ? c.limit - totalBill : null;
             const percentUsado = c.limit ? Math.round((totalBill / c.limit) * 100) : 0;

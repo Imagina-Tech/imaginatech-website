@@ -861,18 +861,17 @@ function getComparisonData() {
             })
             .reduce((sum, t) => sum + t.value, 0);
 
-        // Saídas em cartão de crédito (excluindo reservas)
-        const expenseCredit = creditCards.reduce((sum, card) => {
-            if (!card.transactions) return sum;
-            return sum + card.transactions
-                .filter(t => {
-                    const d = new Date(t.date + 'T12:00:00');
-                    return !isSavingsCategory(t.category) &&
-                           d.getMonth() === m &&
-                           d.getFullYear() === y;
-                })
-                .reduce((s, t) => s + t.value, 0);
-        }, 0);
+        // Saidas em cartao de credito (excluindo reservas)
+        const expenseCredit = transactions
+            .filter(t => {
+                const d = new Date(t.date + 'T12:00:00');
+                return t.type === 'expense' &&
+                       t.paymentMethod === 'credit' &&
+                       !isSavingsCategory(t.category) &&
+                       d.getMonth() === m &&
+                       d.getFullYear() === y;
+            })
+            .reduce((sum, t) => sum + (t.value || 0), 0);
 
         return {
             income,
@@ -2404,23 +2403,19 @@ function getWeeklyTrendData() {
             .reduce((sum, t) => sum + t.value, 0);
 
         // 2. Gastos em cartao de credito (excluindo reservas)
-        const creditExpenses = creditCards.reduce((sum, card) => {
-            if (!card.transactions) return sum;
-
-            const cardExpenses = card.transactions
-                .filter(t => {
-                    const d = new Date(t.date + 'T12:00:00');
-                    const day = d.getDate();
-                    return !isSavingsCategory(t.category) &&
-                           d.getMonth() === month &&
-                           d.getFullYear() === year &&
-                           day >= week.start &&
-                           day <= weekEnd;
-                })
-                .reduce((s, t) => s + t.value, 0);
-
-            return sum + cardExpenses;
-        }, 0);
+        const creditExpenses = transactions
+            .filter(t => {
+                const d = new Date(t.date + 'T12:00:00');
+                const day = d.getDate();
+                return t.type === 'expense' &&
+                       t.paymentMethod === 'credit' &&
+                       !isSavingsCategory(t.category) &&
+                       d.getMonth() === month &&
+                       d.getFullYear() === year &&
+                       day >= week.start &&
+                       day <= weekEnd;
+            })
+            .reduce((sum, t) => sum + (t.value || 0), 0);
 
         const totalWeek = debitExpenses + creditExpenses;
         values.push(totalWeek);
