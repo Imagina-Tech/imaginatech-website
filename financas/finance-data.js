@@ -89,22 +89,54 @@ function getBillPeriod(card, overrideMonth = null, overrideYear = null) {
     const currentYear = overrideYear !== null ? overrideYear :
                        (typeof currentDisplayYear !== 'undefined' ? currentDisplayYear : today.getFullYear());
 
+    let startDate, endDate, billMonth, billYear;
     const isNavigating = (currentMonth !== today.getMonth() || currentYear !== today.getFullYear());
 
-    // A fatura do mes X SEMPRE cobre: (mes anterior dia closingDay+1) ate (mes X dia closingDay)
-    // Exemplo: closingDay=2, fatura de Fevereiro = 3 Jan ate 2 Fev
-    // Isso vale independente de estarmos antes ou depois do fechamento
-    let prevMonth = currentMonth - 1;
-    let prevYear = currentYear;
-    if (prevMonth < 0) {
-        prevMonth = 11;
-        prevYear--;
-    }
+    // NOTA: startDate usa closingDay (nao closingDay+1) para que compras feitas
+    // NO dia do fechamento caiam na fatura seguinte. Isso funciona porque:
+    // - endDate = closingDay a meia-noite (00:00)
+    // - transactionDate usa T12:00:00
+    // - Compra no closingDay: 12:00 > 00:00 = NAO entra no periodo atual (endDate)
+    // - Compra no closingDay: 12:00 >= 00:00 = ENTRA no periodo seguinte (startDate)
 
-    const startDate = createSafeDate(prevYear, prevMonth, card.closingDay + 1);
-    const endDate = createSafeDate(currentYear, currentMonth, card.closingDay);
-    const billMonth = currentMonth;
-    const billYear = currentYear;
+    if (isNavigating) {
+        // Navegando entre meses: mostrar fatura do mês visualizado
+        let prevMonth = currentMonth - 1;
+        let prevYear = currentYear;
+        if (prevMonth < 0) {
+            prevMonth = 11;
+            prevYear--;
+        }
+        startDate = createSafeDate(prevYear, prevMonth, card.closingDay);
+        endDate = createSafeDate(currentYear, currentMonth, card.closingDay);
+        billMonth = currentMonth;
+        billYear = currentYear;
+    } else {
+        // Mês atual: usar lógica baseada no dia de fechamento
+        if (today.getDate() < card.closingDay) {
+            // Ainda no período atual
+            startDate = createSafeDate(currentYear, currentMonth - 1, card.closingDay);
+            endDate = createSafeDate(currentYear, currentMonth, card.closingDay);
+            billMonth = currentMonth;
+            billYear = currentYear;
+
+            if (currentMonth === 0) {
+                startDate = createSafeDate(currentYear - 1, 11, card.closingDay);
+            }
+        } else {
+            // Já passou do fechamento
+            startDate = createSafeDate(currentYear, currentMonth, card.closingDay);
+            let nextMonth = currentMonth + 1;
+            let nextYear = currentYear;
+            if (nextMonth > 11) {
+                nextMonth = 0;
+                nextYear++;
+            }
+            endDate = createSafeDate(nextYear, nextMonth, card.closingDay);
+            billMonth = currentMonth;
+            billYear = currentYear;
+        }
+    }
 
     return { startDate, endDate, billMonth, billYear, isNavigating };
 }
@@ -1855,12 +1887,17 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         .reduce((sum, expense) => sum + expense.value, 0);
 
     // Somar transações de crédito do período (saídas e reembolsos)
-    // SEMPRE usar range de datas (closingDay do mes anterior +1 ate closingDay do mes atual)
-    // Nao usar month-match pois ignora transacoes do mes anterior que pertencem a fatura
     const transactionsInPeriod = transactions.filter(t => {
         if (t.paymentMethod !== 'credit' || t.cardId !== card.id) return false;
         const transactionDate = new Date(t.date + 'T12:00:00');
-        return transactionDate >= billStartDate && transactionDate <= billEndDate;
+
+        if (isNavigating) {
+            // Ao navegar, mostrar apenas transações do mês visualizado
+            return transactionDate.getMonth() === billMonth && transactionDate.getFullYear() === billYear;
+        } else {
+            // Modo real-time: usar o período da fatura
+            return transactionDate >= billStartDate && transactionDate <= billEndDate;
+        }
     });
 
     const creditTransactionsTotal = transactionsInPeriod.reduce((sum, t) => {

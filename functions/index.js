@@ -2434,23 +2434,38 @@ async function buildFinancialOverview(userId, userName) {
 
         // ============================================
         // FUNCAO: getBillPeriod (identica ao dashboard)
-        // A fatura do mes X SEMPRE cobre: (mes anterior dia closingDay+1) ate (mes X dia closingDay)
-        // Nao importa se estamos antes ou depois do fechamento
+        // startDate usa closingDay (nao closingDay+1) para que compras NO dia
+        // do fechamento caiam na fatura seguinte (transactionDate usa T12:00,
+        // endDate e meia-noite, entao closingDay 12:00 > closingDay 00:00)
         // ============================================
         const getBillPeriod = (card) => {
+            let startDate, endDate, billMonth, billYear;
             const closingDay = card.closingDay || 1;
 
-            let prevMonth = currentMonth - 1;
-            let prevYear = currentYear;
-            if (prevMonth < 0) {
-                prevMonth = 11;
-                prevYear--;
-            }
+            // Logica baseada no dia de fechamento (modo real-time, nao navegando)
+            if (today.getDate() < closingDay) {
+                // Ainda no periodo atual
+                startDate = createSafeDate(currentYear, currentMonth - 1, closingDay);
+                endDate = createSafeDate(currentYear, currentMonth, closingDay);
+                billMonth = currentMonth;
+                billYear = currentYear;
 
-            const startDate = createSafeDate(prevYear, prevMonth, closingDay + 1);
-            const endDate = createSafeDate(currentYear, currentMonth, closingDay);
-            const billMonth = currentMonth;
-            const billYear = currentYear;
+                if (currentMonth === 0) {
+                    startDate = createSafeDate(currentYear - 1, 11, closingDay);
+                }
+            } else {
+                // Ja passou do fechamento
+                startDate = createSafeDate(currentYear, currentMonth, closingDay);
+                let nextMonth = currentMonth + 1;
+                let nextYear = currentYear;
+                if (nextMonth > 11) {
+                    nextMonth = 0;
+                    nextYear++;
+                }
+                endDate = createSafeDate(nextYear, nextMonth, closingDay);
+                billMonth = currentMonth;
+                billYear = currentYear;
+            }
 
             return { startDate, endDate, billMonth, billYear };
         };

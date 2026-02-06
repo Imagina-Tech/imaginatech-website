@@ -25,24 +25,24 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
-### 2026-02-06 - Fix: Fatura do cartao nao mostrava transacoes apos dia de fechamento
+### 2026-02-06 - Fix: Compras no dia do fechamento nao entravam na fatura seguinte
 
 **Arquivos Modificados:** `financas/finance-data.js`, `functions/index.js`
 
 **Problema:**
-Transacoes de credito feitas ate o dia de fechamento (ex: R$25 no dia 02/02 com fechamento dia 2) nao apareciam na fatura de fevereiro. A fatura ficava vazia apos o dia de fechamento.
+Compras feitas NO dia do fechamento (ex: R$25 no dia 02/02 com fechamento dia 2) nao apareciam em nenhuma fatura. Ficavam no limbo entre dois periodos.
 
 **Causa Raiz:**
-`getBillPeriod()` tinha 2 bugs:
-1. Apos o dia de fechamento, mostrava o periodo da PROXIMA fatura (ex: 3 Fev - 2 Mar) ao inves da fatura que acabou de fechar (3 Jan - 2 Fev). Transacoes do periodo fechado ficavam inacessiveis.
-2. Ao navegar entre meses, usava `transactionDate.getMonth() === billMonth` (month-match) ao inves de range de datas. Isso excluia transacoes do mes anterior que pertenciam ao periodo da fatura (ex: compra de 15/Dez na fatura de Janeiro com fechamento dia 2).
+`getBillPeriod()` usava `closingDay + 1` como startDate dos periodos. Como endDate = closingDay a meia-noite (00:00) e transactionDate usa T12:00:00, uma compra no closingDay (12:00 > 00:00) nao entrava no periodo atual. E tambem nao entrava no proximo periodo porque startDate = closingDay+1 (00:00 do dia seguinte).
 
 **Solucao:**
-1. `getBillPeriod()` simplificado: fatura do mes X SEMPRE cobre `(mes anterior dia closingDay+1)` ate `(mes X dia closingDay)`, independente de estarmos antes ou depois do fechamento
-2. `calculateCurrentBill()`: removido branch `isNavigating` com month-match, agora SEMPRE usa range de datas
-3. Mesma correcao aplicada no `getBillPeriod()` do bot WhatsApp (`functions/index.js`)
+Alterado `closingDay + 1` para `closingDay` em TODOS os calculos de startDate em `getBillPeriod()`. Agora:
+- Compra no closingDay 12:00 > endDate closingDay 00:00 = NAO entra no periodo atual (correto)
+- Compra no closingDay 12:00 >= startDate closingDay 00:00 = ENTRA no periodo seguinte (correto)
 
-**Localizacao:** `financas/finance-data.js` linhas 85-110 (getBillPeriod) e 1855-1864 (filter), `functions/index.js` linhas 2436-2468 (getBillPeriod bot)
+Mesma correcao aplicada no bot WhatsApp (`functions/index.js`).
+
+**Localizacao:** `financas/finance-data.js` linhas 85-141 (getBillPeriod), `functions/index.js` linhas 2435-2468 (getBillPeriod bot)
 
 ---
 
