@@ -2431,6 +2431,43 @@ async function buildFinancialOverview(userId, userName) {
         };
 
         // ============================================
+        // FUNCAO: isSubscriptionDueInPeriod (identica ao dashboard)
+        // Verifica se assinatura deve entrar na fatura: dueDay dentro do periodo
+        // E dia da cobranca ja chegou (para fatura aberta)
+        // ============================================
+        const isSubscriptionDueInPeriod = (sub, billStartDate, billEndDate) => {
+            const subDay = sub.dueDay || 1;
+
+            const startMonth = billStartDate.getMonth();
+            const startYear = billStartDate.getFullYear();
+            const endMonth = billEndDate.getMonth();
+            const endYear = billEndDate.getFullYear();
+
+            // Verificar cobranca no mes do startDate
+            const chargeInStartMonth = createSafeDate(startYear, startMonth, subDay);
+            chargeInStartMonth.setHours(12, 0, 0, 0);
+
+            if (chargeInStartMonth >= billStartDate && chargeInStartMonth <= billEndDate) {
+                // Backend e sempre real-time: so incluir se hoje >= dia da cobranca
+                if (today < chargeInStartMonth) return false;
+                return true;
+            }
+
+            // Verificar cobranca no mes do endDate (se diferente)
+            if (startMonth !== endMonth || startYear !== endYear) {
+                const chargeInEndMonth = createSafeDate(endYear, endMonth, subDay);
+                chargeInEndMonth.setHours(12, 0, 0, 0);
+
+                if (chargeInEndMonth >= billStartDate && chargeInEndMonth <= billEndDate) {
+                    if (today < chargeInEndMonth) return false;
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // ============================================
         // FUNCAO: getBillPeriod (identica ao dashboard)
         // startDate usa closingDay (nao closingDay+1) para que compras NO dia
         // do fechamento caiam na fatura seguinte (transactionDate usa T12:00,
@@ -2513,9 +2550,10 @@ async function buildFinancialOverview(userId, userName) {
                     };
                 });
 
-            // Assinaturas neste cartao
+            // Assinaturas neste cartao (somente as que ja foram cobradas no periodo)
             const billSubscriptions = subscriptionsData
-                .filter(sub => sub.cardId === c.id && sub.status === 'active')
+                .filter(sub => sub.cardId === c.id && sub.status === 'active' &&
+                    isSubscriptionDueInPeriod(sub, billStartDate, billEndDate))
                 .map(sub => ({
                     name: sub.name,
                     value: sub.value,
@@ -2656,9 +2694,10 @@ async function buildFinancialOverview(userId, userName) {
                     return sum + installmentValue;
                 }, 0);
 
-            // Somar assinaturas ativas deste cartao
+            // Somar assinaturas ativas deste cartao (somente as cobradas no periodo)
             const subscriptionsTotal = subscriptionsData
-                .filter(sub => sub.cardId === card.id && sub.status === 'active')
+                .filter(sub => sub.cardId === card.id && sub.status === 'active' &&
+                    isSubscriptionDueInPeriod(sub, billStartDate, billEndDate))
                 .reduce((sum, sub) => sum + (sub.value || 0), 0);
 
             // Somar gastos avulsos do cartao no periodo da fatura
@@ -3639,13 +3678,13 @@ async function executeFinanceAction(interpretation, userId) {
                         let prevMonth = currentMonth - 1;
                         let prevYear = currentYear;
                         if (prevMonth < 0) { prevMonth = 11; prevYear--; }
-                        periodStart = new Date(prevYear, prevMonth, closingDay + 1).toISOString().split('T')[0];
+                        periodStart = new Date(prevYear, prevMonth, closingDay).toISOString().split('T')[0];
                         periodEnd = new Date(currentYear, currentMonth, closingDay).toISOString().split('T')[0];
                     } else {
                         let nextMonth = currentMonth + 1;
                         let nextYear = currentYear;
                         if (nextMonth > 11) { nextMonth = 0; nextYear++; }
-                        periodStart = new Date(currentYear, currentMonth, closingDay + 1).toISOString().split('T')[0];
+                        periodStart = new Date(currentYear, currentMonth, closingDay).toISOString().split('T')[0];
                         periodEnd = new Date(nextYear, nextMonth, closingDay).toISOString().split('T')[0];
                     }
 
@@ -3708,13 +3747,32 @@ async function executeFinanceAction(interpretation, userId) {
                 const subsByCard = {};
                 subscriptionsSnapshot.docs.forEach(doc => {
                     const sub = doc.data();
-                    if (sub.cardId && billsByCard[sub.cardId]) {
-                        if (!subsByCard[sub.cardId]) subsByCard[sub.cardId] = [];
-                        subsByCard[sub.cardId].push({
-                            name: sub.name || 'Sem nome',
-                            value: sub.value || 0
-                        });
-                        billsByCard[sub.cardId].total += sub.value || 0;
+                    if (sub.cardId && sub.status === 'active' && billsByCard[sub.cardId]) {
+                        const card = billsByCard[sub.cardId];
+                        // Verificar se a assinatura debita dentro do periodo da fatura
+                        const subDay = sub.dueDay || 1;
+                        const pStart = new Date(card.periodStart + 'T00:00:00');
+                        const pEnd = new Date(card.periodEnd + 'T23:59:59');
+                        // Testar charge date no mes do inicio e no mes do fim do periodo
+                        let dueInPeriod = false;
+                        const chargeStart = new Date(pStart.getFullYear(), pStart.getMonth(), subDay, 12, 0, 0);
+                        if (chargeStart >= pStart && chargeStart <= pEnd && today >= chargeStart) {
+                            dueInPeriod = true;
+                        }
+                        if (!dueInPeriod && (pStart.getMonth() !== pEnd.getMonth() || pStart.getFullYear() !== pEnd.getFullYear())) {
+                            const chargeEnd = new Date(pEnd.getFullYear(), pEnd.getMonth(), subDay, 12, 0, 0);
+                            if (chargeEnd >= pStart && chargeEnd <= pEnd && today >= chargeEnd) {
+                                dueInPeriod = true;
+                            }
+                        }
+                        if (dueInPeriod) {
+                            if (!subsByCard[sub.cardId]) subsByCard[sub.cardId] = [];
+                            subsByCard[sub.cardId].push({
+                                name: sub.name || 'Sem nome',
+                                value: sub.value || 0
+                            });
+                            card.total += sub.value || 0;
+                        }
                     }
                 });
 

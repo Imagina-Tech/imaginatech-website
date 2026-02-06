@@ -141,6 +141,52 @@ function getBillPeriod(card, overrideMonth = null, overrideYear = null) {
     return { startDate, endDate, billMonth, billYear, isNavigating };
 }
 
+/**
+ * Verifica se uma assinatura deve ser incluida na fatura do periodo.
+ * A assinatura so entra na fatura quando seu dueDay cai dentro do periodo
+ * E (para fatura aberta/real-time) o dia da cobranca ja chegou.
+ * Para faturas passadas (navegando), inclui se dueDay esta no periodo.
+ * @param {Object} sub - Assinatura com dueDay, cardId, status
+ * @param {Date} billStartDate - Inicio do periodo da fatura
+ * @param {Date} billEndDate - Fim do periodo da fatura
+ * @param {boolean} isNavigating - Se o usuario esta navegando entre meses
+ * @returns {boolean}
+ */
+function isSubscriptionDueInPeriod(sub, billStartDate, billEndDate, isNavigating) {
+    const subDay = sub.dueDay || 1;
+    const today = new Date();
+
+    // O periodo da fatura pode abranger 2 meses (ex: 2/fev a 2/mar)
+    // Precisamos verificar se o dueDay cai em algum dos meses do periodo
+    const startMonth = billStartDate.getMonth();
+    const startYear = billStartDate.getFullYear();
+    const endMonth = billEndDate.getMonth();
+    const endYear = billEndDate.getFullYear();
+
+    // Verificar cobranca no mes do startDate
+    const chargeInStartMonth = createSafeDate(startYear, startMonth, subDay);
+    chargeInStartMonth.setHours(12, 0, 0, 0);
+
+    if (chargeInStartMonth >= billStartDate && chargeInStartMonth <= billEndDate) {
+        // Fatura aberta: so incluir se hoje >= dia da cobranca
+        if (!isNavigating && today < chargeInStartMonth) return false;
+        return true;
+    }
+
+    // Verificar cobranca no mes do endDate (se diferente)
+    if (startMonth !== endMonth || startYear !== endYear) {
+        const chargeInEndMonth = createSafeDate(endYear, endMonth, subDay);
+        chargeInEndMonth.setHours(12, 0, 0, 0);
+
+        if (chargeInEndMonth >= billStartDate && chargeInEndMonth <= billEndDate) {
+            if (!isNavigating && today < chargeInEndMonth) return false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // ===========================
 // INITIALIZATION
 // ===========================
@@ -1954,9 +2000,12 @@ function calculateCurrentBill(card, overrideMonth = null, overrideYear = null) {
         return sum + installmentValue;
     }, 0);
 
-    // Somar assinaturas ativas deste cartão
-    const subscriptionsFiltered = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
-    const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + sub.value, 0);
+    // Somar assinaturas ativas deste cartao que ja foram cobradas no periodo
+    const subscriptionsFiltered = subscriptions.filter(sub =>
+        sub.cardId === card.id && sub.status === 'active' &&
+        isSubscriptionDueInPeriod(sub, billStartDate, billEndDate, isNavigating)
+    );
+    const subscriptionsTotal = subscriptionsFiltered.reduce((sum, sub) => sum + (sub.value || 0), 0);
 
     const totalBill = expensesTotal + creditTransactionsTotal + installmentsTotal + subscriptionsTotal;
 
@@ -2039,8 +2088,11 @@ function showCardBillDetails(cardId) {
         return installmentForThisMonth >= 1 && installmentForThisMonth <= inst.totalInstallments;
     });
 
-    // Coletar assinaturas ativas
-    const activeSubscriptions = subscriptions.filter(sub => sub.cardId === card.id && sub.status === 'active');
+    // Coletar assinaturas ativas que ja foram cobradas no periodo
+    const activeSubscriptions = subscriptions.filter(sub =>
+        sub.cardId === card.id && sub.status === 'active' &&
+        isSubscriptionDueInPeriod(sub, billStartDate, billEndDate, isNavigating)
+    );
 
     // Calcular totais
     const creditExpensesTotal = creditExpenses.reduce((sum, t) => sum + t.value, 0);
