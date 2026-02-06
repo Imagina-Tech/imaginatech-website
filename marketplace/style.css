@@ -431,7 +431,7 @@ body.resizing-column * {
     background: #0f1219;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--z-raised, 10);
 }
 
 .products-table th {
@@ -564,7 +564,7 @@ body.resizing-column * {
 /* Sticky Columns - Cores solidas */
 .sticky-col {
     position: sticky;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
 }
 
 .sticky-col.col-id {
@@ -576,7 +576,7 @@ body.resizing-column * {
 /* Header sticky - Fundo solido */
 thead .sticky-col {
     background: #0f1219;
-    z-index: 15;
+    z-index: var(--z-raised, 15);
 }
 
 /* Body sticky - Herda cor da linha */
@@ -598,12 +598,12 @@ tbody tr:hover .sticky-col {
     right: 0;
     padding-right: 10px;
     border-left: 1px solid #374151 !important;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
 }
 
 thead .col-actions {
     background: #0f1219;
-    z-index: 15;
+    z-index: var(--z-raised, 15);
 }
 
 tbody tr:nth-child(odd) .col-actions {
@@ -1999,7 +1999,7 @@ tbody tr:hover .col-actions {
     background: #1a1a2e;
     border: 1px solid rgba(255, 230, 0, 0.3);
     border-radius: 10px;
-    z-index: 1000;
+    z-index: var(--z-modal, 1000);
     display: none;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
@@ -2578,7 +2578,7 @@ tbody tr:hover .col-actions {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    z-index: 10;
+    z-index: var(--z-raised, 10);
 }
 
 .ml-video-remove:hover {
@@ -3154,7 +3154,7 @@ tbody tr:hover .col-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    z-index: var(--z-popover, 2000);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3600,7 +3600,7 @@ textarea.form-input {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: var(--z-dropdown, 100);
     backdrop-filter: blur(12px);
     border-radius: 20px;
 }
@@ -3666,7 +3666,7 @@ textarea.form-input {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: var(--z-dropdown, 100);
     backdrop-filter: blur(12px);
     border-radius: 20px;
 }
@@ -3767,7 +3767,7 @@ textarea.form-input {
     align-items: center;
     gap: var(--space-md);
     position: relative;
-    z-index: 1;
+    z-index: var(--z-raised, 1);
 }
 
 .dropzone-content i {
@@ -3851,7 +3851,7 @@ textarea.form-input {
 .photo-item:hover {
     border-color: #FFE600;
     transform: scale(1.05);
-    z-index: 10;
+    z-index: var(--z-raised, 10);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -4471,7 +4471,7 @@ textarea.form-input {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    z-index: 10000;
+    z-index: var(--z-loading, 10000);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -4543,7 +4543,7 @@ textarea.form-input {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #0a0e1a 100%);
-    z-index: 99999;
+    z-index: var(--z-loading, 99999);
     align-items: center;
     justify-content: center;
     padding: 2rem;
@@ -5025,7 +5025,7 @@ textarea.form-input {
     background: rgba(139, 92, 246, 0.1);
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--z-raised, 10);
 }
 
 .history-table th {

@@ -9,7 +9,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 9998;
+    z-index: var(--z-loading, 9998);
     background: linear-gradient(135deg, #0a0a1a 0%, #0a1a2d 50%, #0a0a1a 100%);
     justify-content: center;
     align-items: center;

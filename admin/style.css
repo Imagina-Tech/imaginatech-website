@@ -631,7 +631,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
     inset: 0;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 1000;
+    z-index: var(--z-modal, 1000);
     align-items: center;
     justify-content: center;
     padding: 2rem;
@@ -648,7 +648,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
     position: fixed;
     top: 1rem;
     right: 1rem;
-    z-index: 2000;
+    z-index: var(--z-popover, 2000);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

@@ -59,7 +59,7 @@ body {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: var(--z-loading, 9999);
     backdrop-filter: blur(10px);
 }
 
@@ -573,7 +573,7 @@ body {
     background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
     border-radius: inherit;
     opacity: 0.3;
-    z-index: -1;
+    z-index: var(--z-behind, -1);
     filter: blur(8px);
     animation: glow-pulse 2s ease-in-out infinite;
 }
@@ -937,7 +937,7 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
-    z-index: 9999;
+    z-index: var(--z-loading, 9999);
     justify-content: center;
     align-items: center;
     padding: 1rem;

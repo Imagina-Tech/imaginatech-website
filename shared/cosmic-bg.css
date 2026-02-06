@@ -9,7 +9,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: var(--z-behind, -1);
     overflow: hidden;
     background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #0a0e1a 100%);
 }

@@ -305,7 +305,7 @@
     background: linear-gradient(135deg, #ff3366 0%, #ff6b35 100%);
     color: white;
     animation: pulseNew 2s ease-in-out infinite;
-    z-index: 6;
+    z-index: var(--z-raised, 6);
 }
 
 .portfolio-card .card-badge-new i {
@@ -464,7 +464,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-modal, 1000);
     padding: 1rem;
     overflow-y: auto;
 }
@@ -810,7 +810,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 10;
+    z-index: var(--z-raised, 10);
 }
 
 .btn-remove-img:hover {
@@ -998,7 +998,7 @@
     justify-content: center;
     opacity: 0;
     transition: all 0.2s ease;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
 }
 
 .extra-photo-item:hover .btn-remove-extra {
@@ -1046,7 +1046,7 @@
     align-items: center;
     gap: 4px;
     border: 1px solid rgba(0, 212, 255, 0.3);
-    z-index: 3;
+    z-index: var(--z-raised, 3);
 }
 
 .portfolio-card .gallery-badge i {
@@ -1066,7 +1066,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    z-index: var(--z-raised, 3);
     border: 1px solid rgba(0, 255, 136, 0.5);
     box-sizing: border-box;
 }
@@ -1243,7 +1243,7 @@
     position: fixed;
     top: 100px;
     right: 20px;
-    z-index: 2000;
+    z-index: var(--z-popover, 2000);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -1624,7 +1624,7 @@
     justify-content: center;
     color: #0a0a0f;
     font-size: 0.75rem;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
     animation: popIn 0.3s ease;
 }
 
@@ -2016,7 +2016,7 @@
     font-size: 0.8rem;
     box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
     animation: starPulse 2s ease-in-out infinite;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
 }
 
 @keyframes starPulse {
@@ -2039,7 +2039,7 @@
     color: #0a0a0f;
     font-size: 0.75rem;
     box-shadow: 0 2px 10px rgba(0, 255, 136, 0.4);
-    z-index: 4;
+    z-index: var(--z-raised, 4);
 }
 
 /* Responsive toggles */

@@ -1396,7 +1396,7 @@ function showImagesGallery(images, serviceName, serviceId) {
     
     const galleryHTML = `
         <div class="modal-header">
-            <h2><i class="fas fa-images"></i> ${escapeHtml(serviceName)} - ${images.length} Imagem(ns)</h2>
+            <h2 id="viewerTitle"><i class="fas fa-images"></i> ${escapeHtml(serviceName)} - ${images.length} Imagem(ns)</h2>
             <button class="modal-close" data-action="closeImageModal">
                 <i class="fas fa-times"></i>
             </button>
@@ -2468,10 +2468,13 @@ export const sendWhatsAppMessage = (phone, message) => {
             // Criar modal com link clicável como fallback
             const modal = document.createElement('div');
             modal.className = 'whatsapp-fallback-modal modal active';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-labelledby', 'whatsappFallbackTitle');
             modal.innerHTML = `
                 <div class="modal-content modal-small">
                     <div class="modal-header">
-                        <h2><i class="fab fa-whatsapp"></i> Abrir WhatsApp</h2>
+                        <h2 id="whatsappFallbackTitle"><i class="fab fa-whatsapp"></i> Abrir WhatsApp</h2>
                         <button class="modal-close" data-action="closeWhatsappModal">
                             <i class="fas fa-times"></i>
                         </button>
@@ -2925,10 +2928,13 @@ export async function viewClientHistory(email, clientName) {
             historyModal = document.createElement('div');
             historyModal.id = 'clientHistoryModal';
             historyModal.className = 'modal';
+            historyModal.setAttribute('role', 'dialog');
+            historyModal.setAttribute('aria-modal', 'true');
+            historyModal.setAttribute('aria-labelledby', 'clientHistoryTitle');
             historyModal.innerHTML = `
                 <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">
-                        <h2><i class="fas fa-history"></i> <span id="historyClientName"></span></h2>
+                        <h2 id="clientHistoryTitle"><i class="fas fa-history"></i> <span id="historyClientName"></span></h2>
                         <button class="modal-close" data-action="closeClientHistoryModal">
                             <i class="fas fa-times"></i>
                         </button>

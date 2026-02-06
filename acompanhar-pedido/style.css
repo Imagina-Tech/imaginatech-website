@@ -64,7 +64,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: var(--z-loading, 9999);
     backdrop-filter: blur(10px);
     transition: opacity 0.3s ease;
 }
@@ -975,7 +975,7 @@ body {
     position: fixed;
     top: 100px;
     right: 20px;
-    z-index: 1000;
+    z-index: var(--z-modal, 1000);
 }
 
 .toast {
@@ -1048,7 +1048,7 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 2000;
+    z-index: var(--z-popover, 2000);
     align-items: center;
     justify-content: center;
 }
@@ -1397,7 +1397,7 @@ body {
 .photo-modal {
     position: fixed;
     inset: 0;
-    z-index: 10000;
+    z-index: var(--z-loading, 10000);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1421,7 +1421,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1;
+    z-index: var(--z-raised, 1);
 }
 
 .photo-modal-content img {
@@ -1448,7 +1448,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 2;
+    z-index: var(--z-raised, 2);
 }
 
 .photo-modal-close:hover {
@@ -1473,7 +1473,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 2;
+    z-index: var(--z-raised, 2);
 }
 
 .photo-nav-btn:hover {
@@ -1503,7 +1503,7 @@ body {
     font-size: 1rem;
     font-weight: 600;
     border: 2px solid var(--neon-purple);
-    z-index: 2;
+    z-index: var(--z-raised, 2);
 }
 
 /* Mobile adjustments for photo gallery */

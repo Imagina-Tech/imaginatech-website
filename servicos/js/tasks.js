@@ -666,6 +666,9 @@ function createTaskDetailsModal(task) {
     const modal = document.createElement('div');
     modal.className = 'task-modal-overlay active';
     modal.id = 'taskDetailsModal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'taskDetailsTitle');
 
     const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.media;
     const creatorName = AUTHORIZED_ADMINS.find(a => a.email === task.createdBy)?.name || task.createdBy;
@@ -679,7 +682,7 @@ function createTaskDetailsModal(task) {
     modal.innerHTML = `
         <div class="task-modal" style="max-width: 700px;">
             <div class="task-modal-header">
-                <div class="task-modal-title">
+                <div class="task-modal-title" id="taskDetailsTitle">
                     <span style="font-size: 1.5rem;">${priority.icon}</span>
                     <span>Detalhes da Tarefa</span>
                 </div>

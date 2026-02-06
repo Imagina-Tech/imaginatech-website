@@ -297,7 +297,7 @@
     background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
     border-radius: 16px;
     opacity: 0;
-    z-index: -1;
+    z-index: var(--z-behind, -1);
     transition: opacity 0.3s ease;
 }
 
@@ -315,7 +315,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    z-index: 10;
+    z-index: var(--z-raised, 10);
     box-shadow: 0 0 10px currentColor;
 }
 
@@ -351,7 +351,7 @@
     background: linear-gradient(135deg, rgba(255, 107, 53, 0.95), rgba(255, 215, 0, 0.95));
     backdrop-filter: blur(10px);
     padding: 0.5rem;
-    z-index: 100;
+    z-index: var(--z-dropdown, 100);
     border-bottom: 2px solid var(--neon-orange);
     animation: badgePulse 2s ease-in-out infinite;
 }
@@ -620,7 +620,7 @@
 
 /* Botão de colar imagem */
 .btn-paste-image {
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
@@ -895,12 +895,12 @@
     /* Melhorar custom select em tablet */
     #filamentModal .custom-select {
         position: relative;
-        z-index: 10;
+        z-index: var(--z-raised, 10);
         width: 100%;
     }
 
     #filamentModal .custom-select.open {
-        z-index: 100;
+        z-index: var(--z-dropdown, 100);
     }
 
     #filamentModal .custom-select-trigger {
@@ -911,7 +911,7 @@
 
     #filamentModal .custom-select-dropdown {
         position: fixed !important;
-        z-index: 99999 !important;
+        z-index: var(--z-loading, 99999) !important;
         width: 85% !important;
         left: 7.5% !important;
         right: auto !important;
@@ -919,7 +919,7 @@
     }
 
     #filamentModal .custom-select.open .custom-select-dropdown {
-        z-index: 100001 !important;
+        z-index: var(--z-loading, 100001) !important;
     }
 
     #filamentModal .modal-body {
@@ -1059,11 +1059,11 @@
         width: calc(100% - 1.5rem) !important;
         left: 0.75rem !important;
         right: 0.75rem !important;
-        z-index: 99999 !important;
+        z-index: var(--z-loading, 99999) !important;
     }
 
     #filamentModal .custom-select.open .custom-select-dropdown {
-        z-index: 100001 !important;
+        z-index: var(--z-loading, 100001) !important;
     }
 
     #filamentModal .custom-select-option {
@@ -1369,7 +1369,7 @@
     }
 
     .custom-select.open {
-        z-index: 99999;
+        z-index: var(--z-loading, 99999);
     }
 
     .custom-select-trigger {
@@ -1382,7 +1382,7 @@
         position: absolute;
         max-height: 250px;
         -webkit-overflow-scrolling: touch;
-        z-index: 1;
+        z-index: var(--z-raised, 1);
         width: 100%;
         box-sizing: border-box;
         left: 0;
@@ -1391,7 +1391,7 @@
 
     .custom-select.open .custom-select-dropdown {
         max-height: 280px;
-        z-index: 99999;
+        z-index: var(--z-loading, 99999);
     }
 
     .custom-select-option {
@@ -1435,7 +1435,7 @@
     }
 
     .custom-select.open {
-        z-index: 99999;
+        z-index: var(--z-loading, 99999);
     }
 
     .custom-select-trigger {
@@ -1454,7 +1454,7 @@
 
     .custom-select-dropdown {
         position: absolute;
-        z-index: 1;
+        z-index: var(--z-raised, 1);
         width: 100%;
         box-sizing: border-box;
         left: 0;
@@ -1465,7 +1465,7 @@
 
     .custom-select.open .custom-select-dropdown {
         max-height: 260px;
-        z-index: 99999;
+        z-index: var(--z-loading, 99999);
     }
 
     .custom-select-option:hover {
@@ -1706,7 +1706,7 @@
     background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
     border-radius: 18px;
     opacity: 0;
-    z-index: -1;
+    z-index: var(--z-behind, -1);
     transition: opacity 0.3s ease;
 }
 
@@ -1844,7 +1844,7 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    z-index: 5;
+    z-index: var(--z-raised, 5);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
