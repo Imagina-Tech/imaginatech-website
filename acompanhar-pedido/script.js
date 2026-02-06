@@ -1494,7 +1494,7 @@ function showToast(message, type = 'info') {
     
     toast.innerHTML = `
         <i class="toast-icon ${icons[type]}"></i>
-        <span class="toast-message">${message}</span>
+        <span class="toast-message">${escapeHtml(message)}</span>
     `;
     
     container.appendChild(toast);

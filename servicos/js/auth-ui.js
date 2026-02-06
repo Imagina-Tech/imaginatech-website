@@ -238,14 +238,14 @@ export function showAccessDeniedScreen(user) {
                 </div>
                 <h1 class="access-denied-title">Acesso Restrito</h1>
                 <p class="access-denied-message">
-                    Ola ${user.displayName || 'Usuario'}, esta area e exclusiva para administradores.
+                    Ola ${escapeHtml(user.displayName || 'Usuario')}, esta area e exclusiva para administradores.
                 </p>
                 <p class="access-denied-submessage">
                     O painel de servicos requer permissao especial de acesso.
                 </p>
                 <div class="access-denied-user">
                     <i class="fas fa-user-slash"></i>
-                    <span>${user.email}</span>
+                    <span>${escapeHtml(user.email)}</span>
                 </div>
                 <div class="access-denied-actions">
                     <a href="/" class="access-denied-btn btn-primary">
@@ -921,7 +921,7 @@ export async function openEditModal(serviceId) {
             fileWrapper.innerHTML = `
                 <div class="file-item-info">
                     <i class="fas fa-file"></i>
-                    <span>${file.name || `Arquivo ${index + 1}`}</span>
+                    <span>${escapeHtml(file.name || `Arquivo ${index + 1}`)}</span>
                 </div>
                 <span class="existing-badge">Existente</span>
             `;
@@ -2782,7 +2782,7 @@ function renderClientItem(client) {
                 Pedidos (${orderCodes.length})
             </div>
             <div class="client-order-codes">
-                ${orderCodes.map(code => `<span class="client-order-code clickable" data-action="navigateToServiceByCode" data-order-code="${escapeHtml(code)}" title="Clique para ir ao pedido">#${code}</span>`).join('')}
+                ${orderCodes.map(code => `<span class="client-order-code clickable" data-action="navigateToServiceByCode" data-order-code="${escapeHtml(code)}" title="Clique para ir ao pedido">#${escapeHtml(code)}</span>`).join('')}
             </div>
            </div>`
         : '';
@@ -2798,11 +2798,11 @@ function renderClientItem(client) {
             <div class="client-addresses-list">
                 ${addresses.map((addr, idx) => `
                     <div class="client-address-item">
-                        <strong>${addr.fullName || client.name}</strong><br>
-                        ${addr.rua}, ${addr.numero}${addr.complemento ? ' - ' + addr.complemento : ''}<br>
-                        ${addr.bairro} - ${addr.cidade}/${addr.estado}<br>
-                        CEP: ${addr.cep}
-                        ${addr.usedInOrder ? `<br><small style="color: var(--neon-blue);">Usado no pedido #${addr.usedInOrder}</small>` : ''}
+                        <strong>${escapeHtml(addr.fullName || client.name)}</strong><br>
+                        ${escapeHtml(addr.rua)}, ${escapeHtml(addr.numero)}${addr.complemento ? ' - ' + escapeHtml(addr.complemento) : ''}<br>
+                        ${escapeHtml(addr.bairro)} - ${escapeHtml(addr.cidade)}/${escapeHtml(addr.estado)}<br>
+                        CEP: ${escapeHtml(addr.cep)}
+                        ${addr.usedInOrder ? `<br><small style="color: var(--neon-blue);">Usado no pedido #${escapeHtml(addr.usedInOrder)}</small>` : ''}
                     </div>
                 `).join('')}
             </div>
@@ -2832,18 +2832,18 @@ function renderClientItem(client) {
                 </div>
                 <div class="client-detail-row">
                     <span class="client-detail-label"><i class="fas fa-envelope"></i> Email</span>
-                    <span class="client-detail-value">${client.email || '-'}</span>
+                    <span class="client-detail-value">${escapeHtml(client.email || '-')}</span>
                 </div>
                 <div class="client-detail-row">
                     <span class="client-detail-label"><i class="fas fa-phone"></i> Telefone</span>
                     <span class="client-detail-value">
-                        ${client.phone ? `<a href="https://wa.me/55${client.phone.replace(/\D/g, '')}" target="_blank">${client.phone}</a>` : '-'}
+                        ${client.phone ? `<a href="https://wa.me/55${client.phone.replace(/\D/g, '')}" target="_blank">${escapeHtml(client.phone)}</a>` : '-'}
                     </span>
                 </div>
                 ${client.googleEmail ? `
                 <div class="client-detail-row">
                     <span class="client-detail-label"><i class="fab fa-google"></i> Google</span>
-                    <span class="client-detail-value">${client.googleEmail}</span>
+                    <span class="client-detail-value">${escapeHtml(client.googleEmail)}</span>
                 </div>
                 ` : ''}
                 ${client.lastOrderTrackingAccess ? `
@@ -2973,9 +2973,9 @@ export async function viewClientHistory(email, clientName) {
                                 font-weight: bold;
                                 cursor: pointer;
                                 transition: all 0.2s ease;
-                            " data-action="navigateToServiceByCode" data-order-code="${orderCodeEscaped}" title="Clique para ir ao pedido">#${access.orderCode || 'N/A'}</span>
+                            " data-action="navigateToServiceByCode" data-order-code="${orderCodeEscaped}" title="Clique para ir ao pedido">#${escapeHtml(access.orderCode || 'N/A')}</span>
                             <span style="margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                                ${access.device || 'Desktop'}
+                                ${escapeHtml(access.device || 'Desktop')}
                             </span>
                         </div>
                         <div style="text-align: right; font-size: 0.85rem;">

@@ -484,7 +484,7 @@ function initializeCalculator() {
             const button = document.createElement('button');
             button.className = 'material-btn';
             button.textContent = material.name;
-            button.onclick = () => selectMaterial(material);
+            button.addEventListener('click', () => selectMaterial(material));
             materialButtons.appendChild(button);
         });
 
@@ -705,7 +705,7 @@ function initializeCalculator() {
                 ${currentPrinter.type !== 'laser' ? `
                 <div class="cost-item">
                     <span class="cost-label">
-                        <i class="fas fa-cube"></i> Material${selectedMaterial ? ' (' + selectedMaterial.name + ')' : ''}
+                        <i class="fas fa-cube"></i> Material${selectedMaterial ? ' (' + escapeHtml(selectedMaterial.name) + ')' : ''}
                     </span>
                     <span class="cost-value">${formatCurrency(materialCost)}</span>
                 </div>
@@ -841,7 +841,7 @@ function initializeCalculator() {
                         <div style="width: 4px; height: 30px; background: #FFD700;"></div>
                         <h2 style="color: #FFFFFF; font-size: 24px; margin: 0;
                             font-family: 'Orbitron', monospace; font-weight: 700;">
-                            ${modelName}
+                            ${escapeHtml(modelName)}
                         </h2>
                     </div>
                 </div>
@@ -1229,7 +1229,7 @@ window.generateColorPrintFromBudget = async function() {
                 <img src="${escapeHtml(f.imageUrl || '/iconwpp.jpg')}" alt="${escapeHtml(f.color)}"
                      style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
                      data-fallback="/iconwpp.jpg">
-                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${f.color || f.name}</div>
+                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #333; font-weight: 500;">${escapeHtml(f.color || f.name)}</div>
             </div>
         `).join('');
 
@@ -1297,12 +1297,12 @@ window.downloadColorPrint = async function() {
                         <div style="text-align: center; width: 140px;">
                             <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 12px; overflow: hidden;
                                 border: 3px solid rgba(0, 212, 255, 0.3); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
-                                <img src="${c.imageUrl}" alt="${c.color}"
+                                <img src="${c.imageUrl}" alt="${escapeHtml(c.color)}"
                                      style="width: 100%; height: 100%; object-fit: cover;"
                                      crossorigin="anonymous">
                             </div>
                             <div style="margin-top: 10px; font-size: 14px; color: #fff; font-weight: 600;
-                                text-transform: uppercase; letter-spacing: 1px;">${c.color}</div>
+                                text-transform: uppercase; letter-spacing: 1px;">${escapeHtml(c.color)}</div>
                         </div>
                     `).join('')}
                 </div>

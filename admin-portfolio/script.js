@@ -735,8 +735,10 @@ function createPortfolioCard(item) {
     const safeId = escapeHtml(item.id);
     const safeTitle = escapeHtml(item.title) || 'Sem titulo';
     const safeCategory = escapeHtml(item.category);
-    const imageUrl = escapeHtml(item.mainPhoto?.url || item.imageUrl || '/iconwpp.jpg');
-    const logoUrl = item.logo?.url ? escapeHtml(item.logo.url) : '';
+    // SEGURANCA: NAO usar escapeHtml em URLs de imagem - converte & para &amp; e quebra a URL
+    // URLs de imagem vem do Firebase Storage (confiavel), nao de input do usuario
+    const imageUrl = item.mainPhoto?.url || item.imageUrl || '/iconwpp.jpg';
+    const logoUrl = item.logo?.url || '';
 
     // SISTEMA DE 3 NIVEIS INDEPENDENTES
     // Badge principal: QAP ou Publicado
@@ -1308,8 +1310,10 @@ function loadExtraPhotosInEditModal() {
                 item.dataset.url = photo.url;
                 item.dataset.path = photo.path || '';
                 // SEGURANCA: Usar data-action ao inves de onclick inline
+                // SEGURANCA: NAO usar escapeHtml em src de imagem - quebra URLs com &
+                // URL vem do Firebase Storage (confiavel), nao de input do usuario
                 item.innerHTML = `
-                    <img src="${escapeHtml(photo.url)}" alt="Foto ${index + 1}">
+                    <img src="${photo.url}" alt="Foto ${index + 1}">
                     <button type="button" class="btn-remove-extra" data-action="remove-existing-extra-photo" aria-label="Remover foto">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2002,7 +2006,7 @@ function renderGalleryPhotos() {
         <div class="gallery-photo-item lazy ${selectedGalleryPhotos.includes(photo.url) ? 'selected' : ''}"
              data-url="${encodeURIComponent(photo.url)}"
              data-index="${index}">
-            <img data-src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.serviceName)}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+            <img data-src="${photo.url}" alt="${escapeHtml(photo.serviceName)}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="photo-service-name">${escapeHtml(photo.serviceName)}</div>
         </div>
     `).join('');
@@ -2201,8 +2205,10 @@ function addPhotoFromGalleryAsExtra(url) {
     const item = document.createElement('div');
     item.className = 'extra-photo-item from-gallery';
     item.dataset.url = url;
+    // SEGURANCA: NAO usar escapeHtml em src de imagem - quebra URLs com &
+    // URL vem do Firebase Storage (confiavel), nao de input do usuario
     item.innerHTML = `
-        <img src="${escapeHtml(url)}" alt="Foto da galeria">
+        <img src="${url}" alt="Foto da galeria">
         <button type="button" class="btn-remove-extra" data-action="remove-gallery-extra-photo" aria-label="Remover foto">
             <i class="fas fa-times"></i>
         </button>

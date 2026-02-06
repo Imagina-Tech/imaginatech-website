@@ -2774,7 +2774,7 @@ function createServiceCard(service) {
                     <h3>${escapeHtml(service.name || 'Sem nome')}</h3>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         ${isModelagem ? '<span class="service-type-badge modelagem"><i class="fas fa-cube"></i> Modelagem</span>' : '<span class="service-type-badge impressao"><i class="fas fa-print"></i> Impressão</span>'}
-                        <span class="service-code">${service.orderCode || 'N/A'}</span>
+                        <span class="service-code">${escapeHtml(service.orderCode || 'N/A')}</span>
                     </div>
                 </div>
                 <div class="service-actions">
@@ -2798,8 +2798,8 @@ function createServiceCard(service) {
                 <span>COMPRAR MATERIAL PARA FAZER O SERVIÇO</span>
                 <div class="material-info-alert">
                     ${service.isMultiColor && service.materials && service.materials.length > 0 ?
-                        `${service.material} - ${service.materials.filter(m => m.needsPurchase).map(m => `${formatColorName(m.color)} (${m.weight}g)`).join(', ')}` :
-                        (service.material && service.color ? `${service.material} ${formatColorName(service.color)}${service.weight ? ` - ${service.weight}g` : ''}` : 'Material não especificado')
+                        `${escapeHtml(service.material)} - ${service.materials.filter(m => m.needsPurchase).map(m => `${escapeHtml(formatColorName(m.color))} (${m.weight}g)`).join(', ')}` :
+                        (service.material && service.color ? `${escapeHtml(service.material)} ${escapeHtml(formatColorName(service.color))}${service.weight ? ` - ${service.weight}g` : ''}` : 'Material não especificado')
                     }
                 </div>
             </div>` : ''}
@@ -2808,7 +2808,7 @@ function createServiceCard(service) {
             <div class="delivery-badge ${service.status !== 'entregue' && days !== null && days < 0 ? 'badge-late' : service.status !== 'entregue' && days !== null && days <= 2 ? 'badge-urgent' : ''}">
                 <div class="delivery-info">
                     <i class="fas ${getDeliveryIcon(service.deliveryMethod)}"></i>
-                    ${getDeliveryMethodName(service.deliveryMethod)}${service.trackingCode ? ` - ${service.trackingCode}` : ''}
+                    ${escapeHtml(getDeliveryMethodName(service.deliveryMethod))}${service.trackingCode ? ` - ${escapeHtml(service.trackingCode)}` : ''}
                 </div>
                 <div class="delivery-time ${service.status === 'entregue' ? 'time-delivered' : days !== null && days < 0 ? 'time-late' : days !== null && days <= 2 ? 'time-urgent' : days !== null && days <= 5 ? 'time-warning' : 'time-normal'}">
                     <i class="fas ${service.status === 'entregue' ? 'fa-check-circle' : 'fa-clock'}"></i>
@@ -2830,8 +2830,8 @@ function createServiceCard(service) {
             
             <div class="service-info">
                 <div class="info-item"><i class="fas fa-user"></i><span>${escapeHtml(service.client || 'Cliente não informado')}</span></div>
-                ${!isModelagem && service.material ? `<div class="info-item"><i class="fas fa-layer-group"></i><span>${service.material}</span></div>` : ''}
-                ${!isModelagem && service.color ? `<div class="info-item${service.isMultiColor ? ' multi-color-badge' : ''}"><i class="fas fa-palette"></i><span>${service.isMultiColor ? '🎨 ' : ''}${formatColorName(service.color)}</span></div>` : ''}
+                ${!isModelagem && service.material ? `<div class="info-item"><i class="fas fa-layer-group"></i><span>${escapeHtml(service.material)}</span></div>` : ''}
+                ${!isModelagem && service.color ? `<div class="info-item${service.isMultiColor ? ' multi-color-badge' : ''}"><i class="fas fa-palette"></i><span>${service.isMultiColor ? '🎨 ' : ''}${escapeHtml(formatColorName(service.color))}</span></div>` : ''}
                 <div class="info-item"><i class="fas fa-calendar"></i><span>${formatDate(service.startDate)}</span></div>
                 ${service.value ? `<div class="info-item"><i class="fas fa-dollar-sign"></i><span>R$ ${formatMoney(service.value)}</span></div>` : ''}
                 ${!isModelagem && service.weight ? `<div class="info-item"><i class="fas fa-weight"></i><span>${service.weight}g</span></div>` : ''}

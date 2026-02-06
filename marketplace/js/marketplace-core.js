@@ -574,7 +574,7 @@ function showToast(message, type = 'success') {
 
     toast.innerHTML = `
         <i class="fas ${icon}"></i>
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
     `;
 
     elements.toastContainer.appendChild(toast);

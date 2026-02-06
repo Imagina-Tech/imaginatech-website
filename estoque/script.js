@@ -707,6 +707,12 @@ function setupGridEventDelegation(grid) {
                 container.classList.remove('loading');
                 container.classList.add('loaded');
             }
+            // Fallback: trocar src para imagem padrao (substitui onerror inline)
+            const fallbackSrc = e.target.dataset.fallback;
+            if (fallbackSrc) {
+                e.target.removeAttribute('data-fallback');
+                e.target.src = fallbackSrc;
+            }
         }
     }, true);
 }
@@ -772,7 +778,7 @@ function createFilamentCard(filament) {
             </div>` : ''}
 
             <div class="filament-image-container loading" id="filament-img-${safeId}" data-filament-id="${safeId}">
-                <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image" onerror="this.onerror=null; this.src='/iconwpp.jpg';">
+                <img src="${filament.imageUrl || '/iconwpp.jpg'}" alt="${filamentType} ${filamentColor}" class="filament-image" data-fallback="/iconwpp.jpg">
             </div>
             <div class="filament-info">
                 <div class="filament-type">${filamentType || 'N/A'}</div>
@@ -2091,6 +2097,12 @@ function setupEquipmentGridEventDelegation(grid) {
                 container.classList.remove('loading');
                 container.classList.add('loaded');
             }
+            // Fallback: trocar imagem por icone placeholder (substitui onerror inline)
+            if (e.target.dataset.fallbackType === 'icon') {
+                const placeholder = document.createElement('i');
+                placeholder.className = 'fas fa-tools equipment-image-placeholder';
+                e.target.parentElement.replaceChild(placeholder, e.target);
+            }
         }
     }, true);
 
@@ -2150,7 +2162,7 @@ function createEquipmentCard(item) {
     const safeId = escapeHtml(item.id);
 
     const imageHtml = item.imageUrl
-        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${safeName}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'fas fa-tools equipment-image-placeholder\\'></i>';">`
+        ? `<img src="${item.imageUrl}" class="equipment-image" alt="${safeName}" data-fallback-type="icon">`
         : `<i class="fas fa-tools equipment-image-placeholder"></i>`;
 
     const notesHtml = safeNotes
@@ -2169,7 +2181,9 @@ function createEquipmentCard(item) {
     }
 
     // Selo de status (operacional ou reparo)
-    const status = item.status || 'operational';
+    // SEGURANCA: Validar status para usar como classe CSS (whitelist)
+    const rawStatus = item.status || 'operational';
+    const status = (rawStatus === 'operational' || rawStatus === 'repair') ? rawStatus : 'operational';
     const statusIcon = status === 'operational' ? 'fa-check-circle' : 'fa-tools';
     const statusText = status === 'operational' ? 'Operacional' : 'Reparo';
     const statusBadge = `<div class="equipment-status-badge ${status}"><i class="fas ${statusIcon}"></i> ${statusText}</div>`;
@@ -2477,7 +2491,7 @@ function openEquipmentActionsModal(id) {
     const summaryEl = document.querySelector('#equipmentActionsModal .card-info-summary');
     if (summaryEl) {
         const imageHtml = item.imageUrl
-            ? `<img src="${item.imageUrl}" class="summary-image" alt="${safeName}" onerror="this.onerror=null; this.outerHTML='<div class=\\'summary-image\\' style=\\'display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-tools\\' style=\\'font-size: 1.5rem; color: var(--text-secondary);\\'></i></div>';">`
+            ? `<img src="${item.imageUrl}" class="summary-image" alt="${safeName}" data-fallback-type="summary-icon">`
             : `<div class="summary-image" style="display: flex; align-items: center; justify-content: center;"><i class="fas fa-tools" style="font-size: 1.5rem; color: var(--text-secondary);"></i></div>`;
 
         summaryEl.innerHTML = `
@@ -2488,6 +2502,21 @@ function openEquipmentActionsModal(id) {
                 <p style="color: var(--neon-green); font-family: 'Orbitron', monospace; font-weight: bold;">R$ ${formatMoney(item.price)}</p>
             </div>
         `;
+
+        // Fallback para imagem do resumo (substitui onerror inline)
+        const summaryImg = summaryEl.querySelector('img[data-fallback-type="summary-icon"]');
+        if (summaryImg) {
+            summaryImg.addEventListener('error', function() {
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'summary-image';
+                fallbackDiv.style.cssText = 'display: flex; align-items: center; justify-content: center;';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-tools';
+                icon.style.cssText = 'font-size: 1.5rem; color: var(--text-secondary);';
+                fallbackDiv.appendChild(icon);
+                this.parentElement.replaceChild(fallbackDiv, this);
+            }, { once: true });
+        }
     }
 
     document.getElementById('equipmentActionsModal').classList.add('active');

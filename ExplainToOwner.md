@@ -25,6 +25,37 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - Auditoria escapeHtml: Paineis Servicos, Custo e Acompanhar-Pedido
+
+**Arquivos Modificados:**
+- `servicos/js/auth-ui.js` - 10 correcoes de escapeHtml
+- `servicos/js/services.js` - 5 correcoes de escapeHtml
+- `servicos/js/tasks.js` - 7 correcoes de escapeHtml + 1 onclick para addEventListener
+- `custo/script-custo.js` - 4 correcoes de escapeHtml + 1 onclick para addEventListener
+- `acompanhar-pedido/script.js` - 1 correcao de escapeHtml
+
+**Vulnerabilidades XSS corrigidas (dados de usuario sem escape em innerHTML):**
+
+1. **auth-ui.js:** user.displayName e user.email na tela de acesso negado; file.name em preview de arquivos existentes; enderecos de clientes (fullName, rua, numero, complemento, bairro, cidade, estado, cep, usedInOrder); client.email, client.phone, client.googleEmail na listagem de clientes; texto de orderCode e device no historico de acessos
+
+2. **services.js:** service.orderCode no card; service.material e formatColorName(color) no alerta de compra e info; service.trackingCode e getDeliveryMethodName no badge de entrega
+
+3. **tasks.js:** creatorName em card e detalhes de tarefa; assignedNames nos detalhes; task.linkedOrderCode; att.url e att.name em anexos; authorName nos comentarios
+
+4. **custo/script-custo.js:** modelName no print de orcamento; selectedMaterial.name na exibicao de resultados; f.color/f.name e c.color na exibicao de cores disponiveis
+
+5. **acompanhar-pedido/script.js:** message no toast (showToast) - permitia injecao via mensagem
+
+**Conversao onclick para addEventListener (2 triviais):**
+- tasks.js:165 - clientsButton.onclick -> addEventListener
+- custo/script-custo.js:487 - button.onclick -> addEventListener
+
+**Nao convertidos (substituicao intencional de handler):**
+- auth-ui.js:1670 - downloadBtn.onclick (reatribuido a cada imagem)
+- acompanhar-pedido/script.js:1528 - confirmBtn.onclick (reatribuido a cada showModal)
+
+---
+
 ### 2026-02-06 - Seguranca Backend: Input validation, dedup atomico e queries bounded no webhook WhatsApp
 
 **Arquivo Modificado:** `functions/index.js`

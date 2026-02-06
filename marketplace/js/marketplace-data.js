@@ -299,7 +299,13 @@ async function uploadPhotoToStorage(photo, productId) {
         // Nome seguro: sanitizar nome do arquivo
         const safeName = (photo.name || 'foto.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
         const timestamp = Date.now();
-        const randomId = Math.random().toString(36).substring(2, 8);
+        // SEGURANCA: Usar crypto.getRandomValues ao inves de Math.random()
+        const randomId = (() => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const array = new Uint32Array(6);
+            crypto.getRandomValues(array);
+            return Array.from(array, n => chars[n % chars.length]).join('');
+        })();
         const fileName = `${productId}_${timestamp}_${randomId}_${safeName}`;
         const storageRef = storage.ref(`products/photos/${fileName}`);
 

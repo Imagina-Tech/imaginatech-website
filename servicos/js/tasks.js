@@ -162,7 +162,7 @@ function createTasksUI() {
     clientsButton.className = 'btn-nav';
     clientsButton.id = 'btnClientes';
     clientsButton.title = 'Clientes';
-    clientsButton.onclick = () => window.openClientsModal && window.openClientsModal();
+    clientsButton.addEventListener('click', () => window.openClientsModal && window.openClientsModal());
     clientsButton.innerHTML = `<i class="fas fa-users"></i>`;
 
     if (userInfo) {
@@ -603,7 +603,7 @@ function renderTaskCard(task) {
                         ${task.createdBy !== tasksState.currentUser.email ?
                             `<span class="task-meta-item">
                                 <i class="fas fa-user"></i>
-                                ${creatorName}
+                                ${escapeHtml(creatorName)}
                             </span>` : ''}
                     </div>
                 </div>
@@ -712,7 +712,7 @@ function createTaskDetailsModal(task) {
                             <i class="fas fa-user"></i>
                             <div>
                                 <strong>Criado por</strong>
-                                <p>${creatorName}</p>
+                                <p>${escapeHtml(creatorName)}</p>
                             </div>
                         </div>
 
@@ -720,7 +720,7 @@ function createTaskDetailsModal(task) {
                             <i class="fas fa-users"></i>
                             <div>
                                 <strong>Responsável(is)</strong>
-                                <p>${assignedNames}</p>
+                                <p>${escapeHtml(assignedNames)}</p>
                             </div>
                         </div>
 
@@ -756,7 +756,7 @@ function createTaskDetailsModal(task) {
                     <h3><i class="fas fa-link"></i> Pedido Vinculado</h3>
                     <p>
                         <span class="task-category" style="font-family: 'Orbitron', monospace; font-size: 1rem;">
-                            #${task.linkedOrderCode}
+                            #${escapeHtml(task.linkedOrderCode)}
                         </span>
                     </p>
                 </div>
@@ -768,9 +768,9 @@ function createTaskDetailsModal(task) {
                     <h3><i class="fas fa-paperclip"></i> Anexos (${task.attachments.length})</h3>
                     <div class="attachments-list">
                         ${task.attachments.map(att => `
-                            <a href="${att.url}" target="_blank" class="attachment-item">
+                            <a href="${escapeHtml(att.url)}" target="_blank" class="attachment-item" rel="noopener noreferrer">
                                 <i class="fas fa-file"></i>
-                                <span>${att.name}</span>
+                                <span>${escapeHtml(att.name)}</span>
                             </a>
                         `).join('')}
                     </div>
@@ -911,7 +911,7 @@ function renderComments(comments) {
         return `
             <div class="comment-item ${isOwn ? 'own' : ''}">
                 <div class="comment-header">
-                    <strong>${authorName}</strong>
+                    <strong>${escapeHtml(authorName)}</strong>
                     <span class="comment-time">${formatCommentTime(comment.timestamp)}</span>
                 </div>
                 <div class="comment-text">${escapeHtml(comment.text)}</div>
