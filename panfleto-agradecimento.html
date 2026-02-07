@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaginaTech - Panfleto de Agradecimento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: 14cm 20cm;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            width: 14cm;
+            height: 20cm;
+            margin: 0 auto;
+            overflow: hidden;
+            background: #05070a;
+            color: #fff;
+            position: relative;
+        }
+
+        /* ===== FUNDO ===== */
+        .flyer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.8cm 1.2cm 1.2cm;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(255, 0, 85, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 70%),
+                #05070a;
+            overflow: hidden;
+        }
+
+        /* Borda neon sutil */
+        .flyer::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+        /* Detalhe canto superior */
+        .corner-detail {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(0, 212, 255, 0.2);
+        }
+        .corner-detail.top-left {
+            top: 14px;
+            left: 14px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 8px 0 0 0;
+        }
+        .corner-detail.top-right {
+            top: 14px;
+            right: 14px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 8px 0 0;
+        }
+        .corner-detail.bottom-left {
+            bottom: 14px;
+            left: 14px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 8px;
+        }
+        .corner-detail.bottom-right {
+            bottom: 14px;
+            right: 14px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 8px 0;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .logo-img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 2px solid #00D4FF;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00D4FF, #57D4CA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .divider-line {
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00D4FF, transparent);
+            margin: 4px 0;
+        }
+
+        .header-subtitle {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        /* ===== CONTEUDO PRINCIPAL ===== */
+        .main-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .thank-you-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #00D4FF, #FF0055, #00D4FF);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.3;
+        }
+
+        .message {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.7;
+            font-weight: 300;
+            max-width: 10cm;
+        }
+
+        .message strong {
+            color: #00D4FF;
+            font-weight: 600;
+        }
+
+        /* Separador decorativo */
+        .decorative-sep {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .sep-line {
+            width: 30px;
+            height: 1px;
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .sep-diamond {
+            width: 6px;
+            height: 6px;
+            border: 1px solid #00D4FF;
+            transform: rotate(45deg);
+            opacity: 0.5;
+        }
+
+        /* Frase destaque */
+        .highlight-box {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px 20px;
+            max-width: 10cm;
+        }
+
+        .highlight-box p {
+            font-size: 0.75rem;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        .highlight-box p strong {
+            color: #57D4CA;
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .contact-item .icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .icon-whatsapp {
+            background: linear-gradient(135deg, #25d366, #128C47);
+            color: white;
+        }
+
+        .icon-instagram {
+            background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            color: white;
+        }
+
+        .icon-website {
+            background: linear-gradient(135deg, #00D4FF, #0077FF);
+            color: white;
+        }
+
+        .footer-divider {
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+        }
+
+        .footer-tagline {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.5rem;
+            color: rgba(0, 212, 255, 0.3);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .flyer {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="flyer">
+        <!-- Detalhes dos cantos -->
+        <div class="corner-detail top-left"></div>
+        <div class="corner-detail top-right"></div>
+        <div class="corner-detail bottom-left"></div>
+        <div class="corner-detail bottom-right"></div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-container">
+                <img src="/imaginatech_logo.jpeg" alt="ImaginaTech" class="logo-img">
+                <span class="logo-text">IMAGINATECH</span>
+            </div>
+            <div class="divider-line"></div>
+            <span class="header-subtitle">Tecnologia em Impressao 3D</span>
+        </div>
+
+        <!-- Conteudo Principal -->
+        <div class="main-content">
+            <div class="thank-you-text">
+                Obrigado por<br>nos escolher
+            </div>
+
+            <div class="decorative-sep">
+                <div class="sep-line"></div>
+                <div class="sep-diamond"></div>
+                <div class="sep-line"></div>
+            </div>
+
+            <p class="message">
+                Sua confianca e o que nos move a ir alem.
+                Cada peca que criamos carrega o compromisso de transformar
+                <strong>suas ideias em realidade</strong> com a mais alta qualidade.
+            </p>
+
+            <div class="highlight-box">
+                <p>
+                    Ficou satisfeito? Conte para alguem!<br>
+                    Tem uma nova ideia? <strong>Estamos prontos para o proximo desafio.</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="contact-row">
+                <div class="contact-item">
+                    <span class="icon icon-whatsapp">W</span>
+                    <span>(21) 96897-2539</span>
+                </div>
+                <div class="contact-item">
+                    <span class="icon icon-instagram">I</span>
+                    <span>@imaginatech3d</span>
+                </div>
+            </div>
+            <div class="contact-item" style="justify-content: center;">
+                <span class="icon icon-website">G</span>
+                <span>imaginatech.com.br</span>
+            </div>
+            <div class="footer-divider"></div>
+            <span class="footer-tagline">Da imaginacao a realidade</span>
+        </div>
+    </div>
+</body>
+</html>
