@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ImaginaTech - Panfleto de Agradecimento</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @page {
@@ -26,263 +26,332 @@
             overflow: hidden;
             background: #05070a;
             color: #fff;
-            position: relative;
         }
 
-        /* ===== FUNDO ===== */
+        /* ===== LAYOUT ===== */
         .flyer {
             width: 100%;
             height: 100%;
             position: relative;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.8cm 1.2cm 1.2cm;
-            background:
-                radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(255, 0, 85, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 70%),
-                #05070a;
             overflow: hidden;
+            background: #070B14;
         }
 
-        /* Borda neon sutil */
-        .flyer::before {
-            content: '';
+        /* ===== BACKGROUND SHAPES ===== */
+        .bg-blob {
             position: absolute;
-            inset: 6px;
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-radius: 16px;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.5;
             pointer-events: none;
         }
 
-        /* Detalhe canto superior */
-        .corner-detail {
+        .bg-blob-1 {
+            width: 280px;
+            height: 280px;
+            background: rgba(0, 212, 255, 0.15);
+            top: -80px;
+            right: -60px;
+        }
+
+        .bg-blob-2 {
+            width: 200px;
+            height: 200px;
+            background: rgba(139, 92, 246, 0.12);
+            bottom: 60px;
+            left: -50px;
+        }
+
+        .bg-blob-3 {
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 0, 85, 0.08);
+            bottom: -40px;
+            right: -30px;
+        }
+
+        /* Grid de pontos decorativo */
+        .dot-grid {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            border: 2px solid rgba(0, 212, 255, 0.2);
+            top: 50px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(5, 8px);
+            gap: 8px;
+            opacity: 0.12;
         }
-        .corner-detail.top-left {
-            top: 14px;
-            left: 14px;
-            border-right: none;
-            border-bottom: none;
-            border-radius: 8px 0 0 0;
+
+        .dot-grid span {
+            width: 3px;
+            height: 3px;
+            background: #00D4FF;
+            border-radius: 50%;
         }
-        .corner-detail.top-right {
-            top: 14px;
-            right: 14px;
-            border-left: none;
-            border-bottom: none;
-            border-radius: 0 8px 0 0;
+
+        .dot-grid-right {
+            left: auto;
+            right: 20px;
+            top: auto;
+            bottom: 120px;
         }
-        .corner-detail.bottom-left {
-            bottom: 14px;
-            left: 14px;
-            border-right: none;
-            border-top: none;
-            border-radius: 0 0 0 8px;
+
+        /* Linha decorativa lateral */
+        .side-line {
+            position: absolute;
+            width: 1px;
+            height: 100px;
+            background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.2), transparent);
         }
-        .corner-detail.bottom-right {
-            bottom: 14px;
-            right: 14px;
-            border-left: none;
-            border-top: none;
-            border-radius: 0 0 8px 0;
+
+        .side-line-left {
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .side-line-right {
+            right: 18px;
+            top: 40%;
+            transform: translateY(-50%);
         }
 
         /* ===== HEADER ===== */
         .header {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logo-container {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 4px;
+            justify-content: center;
+            gap: 12px;
+            padding: 1.4cm 1cm 0;
         }
 
         .logo-img {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3));
         }
 
-        .logo-text {
+        .brand-name {
             font-family: 'Orbitron', monospace;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 700;
             background: linear-gradient(135deg, #00D4FF, #57D4CA);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
 
-        .divider-line {
-            width: 80px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00D4FF, transparent);
-            margin: 4px 0;
-        }
-
-        .header-subtitle {
-            font-size: 0.6rem;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            font-weight: 400;
-        }
-
-        /* ===== CONTEUDO PRINCIPAL ===== */
-        .main-content {
-            text-align: center;
+        /* ===== HERO CENTRAL ===== */
+        .hero {
+            position: relative;
+            z-index: 2;
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            flex: 1;
             justify-content: center;
+            padding: 0 1.2cm;
+            text-align: center;
+            gap: 22px;
         }
 
-        .thank-you-text {
+        .emoji-heart {
+            font-size: 2.2rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.4));
+        }
+
+        .title {
             font-family: 'Orbitron', monospace;
-            font-size: 1.5rem;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #00D4FF, #FF0055, #00D4FF);
-            background-size: 200% 100%;
+            font-size: 1.65rem;
+            line-height: 1.25;
+            letter-spacing: 1px;
+        }
+
+        .title .line-1 {
+            display: block;
+            color: #fff;
+        }
+
+        .title .line-2 {
+            display: block;
+            background: linear-gradient(135deg, #00D4FF, #8b5cf6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            line-height: 1.3;
         }
 
-        .message {
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.75);
-            line-height: 1.7;
+        .subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.75;
             font-weight: 300;
-            max-width: 10cm;
+            max-width: 10.5cm;
         }
 
-        .message strong {
-            color: #00D4FF;
+        .subtitle strong {
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
         }
 
-        /* Separador decorativo */
-        .decorative-sep {
+        /* Divider */
+        .divider {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin: 4px 0;
+            gap: 12px;
         }
 
-        .sep-line {
-            width: 30px;
+        .divider-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #00D4FF;
+            opacity: 0.4;
+        }
+
+        .divider-line {
+            width: 40px;
             height: 1px;
-            background: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.2);
         }
 
-        .sep-diamond {
-            width: 6px;
-            height: 6px;
-            border: 1px solid #00D4FF;
-            transform: rotate(45deg);
-            opacity: 0.5;
+        /* Card de destaque */
+        .cta-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px 22px;
+            max-width: 10.5cm;
+            backdrop-filter: blur(10px);
         }
 
-        /* Frase destaque */
-        .highlight-box {
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-radius: 10px;
-            padding: 12px 20px;
-            max-width: 10cm;
-        }
-
-        .highlight-box p {
-            font-size: 0.75rem;
-            font-style: italic;
+        .cta-card p {
+            font-size: 0.78rem;
             color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
-        .highlight-box p strong {
-            color: #57D4CA;
-            font-style: normal;
+        .cta-card strong {
+            color: #00D4FF;
             font-weight: 600;
         }
 
         /* ===== FOOTER ===== */
         .footer {
-            text-align: center;
+            position: relative;
+            z-index: 2;
+            padding: 0 1cm 1cm;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            width: 100%;
+            gap: 14px;
         }
 
-        .contact-row {
+        .footer-line {
+            width: 70%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+        }
+
+        /* Contact pills */
+        .contact-pills {
             display: flex;
-            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
         }
 
-        .contact-item {
+        .pill {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.68rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.65rem;
             color: rgba(255, 255, 255, 0.6);
+            transition: none;
         }
 
-        .contact-item .icon {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.55rem;
-            flex-shrink: 0;
+        .pill i {
+            font-size: 0.75rem;
         }
 
-        .icon-whatsapp {
-            background: linear-gradient(135deg, #25d366, #128C47);
-            color: white;
-        }
+        .pill-whatsapp i { color: #25d366; }
+        .pill-instagram i { color: #E1306C; }
+        .pill-web i { color: #00D4FF; }
 
-        .icon-instagram {
-            background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            color: white;
-        }
-
-        .icon-website {
-            background: linear-gradient(135deg, #00D4FF, #0077FF);
-            color: white;
-        }
-
-        .footer-divider {
-            width: 60%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
-        }
-
-        .footer-tagline {
+        .tagline {
             font-family: 'Orbitron', monospace;
-            font-size: 0.5rem;
-            color: rgba(0, 212, 255, 0.3);
-            letter-spacing: 3px;
+            font-size: 0.45rem;
+            color: rgba(255, 255, 255, 0.18);
+            letter-spacing: 4px;
             text-transform: uppercase;
+        }
+
+        /* ===== RING DECORATIVO ===== */
+        .deco-ring {
+            position: absolute;
+            border: 1px solid rgba(0, 212, 255, 0.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .deco-ring-1 {
+            width: 200px;
+            height: 200px;
+            top: -30px;
+            right: -50px;
+        }
+
+        .deco-ring-2 {
+            width: 120px;
+            height: 120px;
+            bottom: 100px;
+            left: -30px;
+        }
+
+        /* Crosshair decorativo */
+        .crosshair {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            opacity: 0.12;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00D4FF;
+        }
+
+        .crosshair::before {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair::after {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .crosshair-1 {
+            top: 90px;
+            right: 30px;
+        }
+
+        .crosshair-2 {
+            bottom: 140px;
+            left: 30px;
         }
 
         /* ===== PRINT ===== */
@@ -300,66 +369,92 @@
 </head>
 <body>
     <div class="flyer">
-        <!-- Detalhes dos cantos -->
-        <div class="corner-detail top-left"></div>
-        <div class="corner-detail top-right"></div>
-        <div class="corner-detail bottom-left"></div>
-        <div class="corner-detail bottom-right"></div>
+        <!-- Background Shapes -->
+        <div class="bg-blob bg-blob-1"></div>
+        <div class="bg-blob bg-blob-2"></div>
+        <div class="bg-blob bg-blob-3"></div>
+
+        <!-- Decorative Elements -->
+        <div class="deco-ring deco-ring-1"></div>
+        <div class="deco-ring deco-ring-2"></div>
+
+        <div class="side-line side-line-left"></div>
+        <div class="side-line side-line-right"></div>
+
+        <div class="crosshair crosshair-1"></div>
+        <div class="crosshair crosshair-2"></div>
+
+        <div class="dot-grid">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="dot-grid dot-grid-right">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
 
         <!-- Header -->
         <div class="header">
-            <div class="logo-container">
-                <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="logo-img">
-                <span class="logo-text">IMAGINATECH</span>
-            </div>
-            <div class="divider-line"></div>
-            <span class="header-subtitle">Tecnologia em Impressao 3D</span>
+            <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="logo-img">
+            <span class="brand-name">IMAGINATECH</span>
         </div>
 
-        <!-- Conteudo Principal -->
-        <div class="main-content">
-            <div class="thank-you-text">
-                Obrigado por<br>nos escolher
+        <!-- Hero -->
+        <div class="hero">
+            <div class="emoji-heart">
+                <i class="fas fa-heart" style="color: #00D4FF;"></i>
             </div>
 
-            <div class="decorative-sep">
-                <div class="sep-line"></div>
-                <div class="sep-diamond"></div>
-                <div class="sep-line"></div>
-            </div>
+            <h1 class="title">
+                <span class="line-1">Obrigado por</span>
+                <span class="line-2">nos escolher!</span>
+            </h1>
 
-            <p class="message">
-                Sua confianca e o que nos move a ir alem.
-                Cada peca que criamos carrega o compromisso de transformar
-                <strong>suas ideias em realidade</strong> com a mais alta qualidade.
+            <p class="subtitle">
+                Sua confianca e o que nos move a ir alem.<br>
+                Cada peca que criamos carrega o compromisso de<br>
+                transformar <strong>suas ideias em realidade.</strong>
             </p>
 
-            <div class="highlight-box">
+            <div class="divider">
+                <div class="divider-line"></div>
+                <div class="divider-dot"></div>
+                <div class="divider-dot"></div>
+                <div class="divider-dot"></div>
+                <div class="divider-line"></div>
+            </div>
+
+            <div class="cta-card">
                 <p>
-                    Ficou satisfeito? Conte para alguem!<br>
-                    Tem uma nova ideia? <strong>Estamos prontos para o proximo desafio.</strong>
+                    Ficou satisfeito com o resultado? <strong>Conte para alguem!</strong><br>
+                    Tem uma nova ideia? Estamos prontos para o <strong>proximo desafio.</strong>
                 </p>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <div class="contact-row">
-                <div class="contact-item">
-                    <span class="icon icon-whatsapp"><i class="fab fa-whatsapp"></i></span>
+            <div class="footer-line"></div>
+
+            <div class="contact-pills">
+                <div class="pill pill-whatsapp">
+                    <i class="fab fa-whatsapp"></i>
                     <span>(21) 96897-2539</span>
                 </div>
-                <div class="contact-item">
-                    <span class="icon icon-instagram"><i class="fab fa-instagram"></i></span>
+                <div class="pill pill-instagram">
+                    <i class="fab fa-instagram"></i>
                     <span>@imaginatech3d</span>
                 </div>
+                <div class="pill pill-web">
+                    <i class="fas fa-globe"></i>
+                    <span>imaginatech.com.br</span>
+                </div>
             </div>
-            <div class="contact-item" style="justify-content: center;">
-                <span class="icon icon-website"><i class="fas fa-globe"></i></span>
-                <span>imaginatech.com.br</span>
-            </div>
-            <div class="footer-divider"></div>
-            <span class="footer-tagline">Da imaginacao a realidade</span>
+
+            <span class="tagline">Da imaginacao a realidade</span>
         </div>
     </div>
 </body>
