@@ -64,6 +64,14 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Esconder loading apos carregamento
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    }, 800);
+});
+
 // Inicializar AOS
 document.addEventListener('DOMContentLoaded', () => {
     // AOS Animation

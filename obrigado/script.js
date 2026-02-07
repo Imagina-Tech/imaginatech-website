@@ -42,6 +42,14 @@ function setupEventDelegation() {
     logger.log('Event delegation configurado');
 }
 
+// Esconder loading apos carregamento
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    }, 800);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     setupEventDelegation();
     initPage();
