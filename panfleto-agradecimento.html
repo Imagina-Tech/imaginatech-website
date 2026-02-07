@@ -358,15 +358,34 @@
             left: 30px;
         }
 
-        /* ===== PRINT ===== */
+        /* ===== QUALIDADE DE RENDERIZACAO ===== */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            image-rendering: high-quality;
+        }
+
+        /* ===== PRINT - MAXIMA QUALIDADE ===== */
         @media print {
-            body {
+            html, body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                width: 14cm !important;
+                height: 20cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
             .flyer {
                 page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
     </style>
