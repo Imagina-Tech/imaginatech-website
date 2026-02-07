@@ -1009,23 +1009,25 @@ function sanitizeFileName(name) {
         .slice(0, 200);
 }
 
-function showLoading(text = 'Processando...') {
-    const overlay = document.getElementById('loadingOverlay');
-    const textEl = document.getElementById('loadingText');
+let _loadingStart = Date.now();
 
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');
         overlay.setAttribute('aria-hidden', 'false');
     }
-    if (textEl) textEl.textContent = text;
+    _loadingStart = Date.now();
 }
 
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
+    if (!overlay) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => {
         overlay.classList.add('hidden');
         overlay.setAttribute('aria-hidden', 'true');
-    }
+    }, remaining);
 }
 
 let toastTimeout = null;

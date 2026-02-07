@@ -265,13 +265,19 @@ function signOut() {
 // UI STATE
 // ==========================================
 
-function showLoading(text = 'Carregando...') {
-    { const el = document.getElementById('loadingText'); if (el) el.textContent = text; }
-    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.remove('hidden'); }
+let _loadingStart = Date.now();
+
+function showLoading() {
+    const el = document.getElementById('loadingOverlay');
+    if (el) el.classList.remove('hidden');
+    _loadingStart = Date.now();
 }
 
 function hideLoading() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
+    const el = document.getElementById('loadingOverlay');
+    if (!el) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => el.classList.add('hidden'), remaining);
 }
 
 function showLoginScreen() {

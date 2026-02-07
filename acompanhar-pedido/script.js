@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hide loading after DOM ready
     setTimeout(() => {
         document.getElementById('loadingOverlay')?.classList.add('hidden');
-    }, 1000);
+    }, 1500);
 
     // Verificar se há código na URL (ex: /acompanhar-pedido/?codigo=KJ4FE)
     const urlParams = new URLSearchParams(window.location.search);

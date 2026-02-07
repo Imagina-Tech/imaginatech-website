@@ -1726,14 +1726,19 @@ async function deleteFilament(id) {
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
+let _loadingStart = Date.now();
+
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.remove('hidden');
+    _loadingStart = Date.now();
 }
 
 function hideLoading() {
     const el = document.getElementById('loadingOverlay');
-    if (el) el.classList.add('hidden');
+    if (!el) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => el.classList.add('hidden'), remaining);
 }
 
 function updateConnectionStatus(connected) {

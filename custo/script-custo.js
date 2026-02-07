@@ -181,8 +181,17 @@ async function logout() {
     }
 }
 
+let _loadingStart = Date.now();
+
+function _hideLoadingWithDelay() {
+    const el = document.getElementById('loadingOverlay');
+    if (!el) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => el.classList.add('hidden'), remaining);
+}
+
 function showMainApp() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
+    _hideLoadingWithDelay();
     document.getElementById('loginScreen')?.classList.remove('active');
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
     { const el = document.getElementById('mainApp'); if (el) { el.style.display = ''; el.classList.remove('hidden'); } }
@@ -199,14 +208,14 @@ function showMainApp() {
 }
 
 function hideMainApp() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
+    _hideLoadingWithDelay();
     document.getElementById('loginScreen')?.classList.add('active');
     { const el = document.getElementById('mainApp'); if (el) el.classList.add('hidden'); }
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
+    _hideLoadingWithDelay();
     document.getElementById('loginScreen')?.classList.remove('active');
     { const el = document.getElementById('mainApp'); if (el) el.classList.add('hidden'); }
 

@@ -47,7 +47,7 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) overlay.classList.add('hidden');
-    }, 800);
+    }, 1500);
 });
 
 document.addEventListener('DOMContentLoaded', () => {

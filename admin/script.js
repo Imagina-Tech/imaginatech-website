@@ -236,14 +236,19 @@ function updateUserInfo(user) {
 // ===========================
 // LOADING & TOAST
 // ===========================
+let _loadingStart = Date.now();
+
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.remove('hidden');
+    _loadingStart = Date.now();
 }
 
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.classList.add('hidden');
+    if (!overlay) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => overlay.classList.add('hidden'), remaining);
 }
 
 function showToast(message, type = 'info') {

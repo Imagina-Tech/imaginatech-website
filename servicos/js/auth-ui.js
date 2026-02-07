@@ -278,7 +278,14 @@ export function showAccessDeniedScreen(user) {
 // UI MANAGEMENT
 // ===========================
 
-export const hideLoadingOverlay = () => document.getElementById('loadingOverlay')?.classList.add('hidden');
+const _loadingStart = Date.now();
+
+export const hideLoadingOverlay = () => {
+    const el = document.getElementById('loadingOverlay');
+    if (!el) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => el.classList.add('hidden'), remaining);
+};
 
 // ===========================
 // CLIENT AUTOCOMPLETE

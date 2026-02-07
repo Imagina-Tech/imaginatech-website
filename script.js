@@ -65,7 +65,7 @@ window.addEventListener('load', () => {
         if (loader) {
             loader.classList.add('hidden');
         }
-    }, 1000);
+    }, 1500);
 });
 
 // Cube video: show spinner placeholder until video is ready

@@ -551,16 +551,21 @@ function showDashboard(user) {
 }
 
 // ========== LOADING ==========
+let _loadingStart = Date.now();
+
 function showLoading() {
     if (elements.loadingOverlay) {
         elements.loadingOverlay.classList.remove('hidden');
     }
+    _loadingStart = Date.now();
 }
 
 function hideLoading() {
-    if (elements.loadingOverlay) {
-        elements.loadingOverlay.classList.add('hidden');
-    }
+    if (!elements.loadingOverlay) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => {
+        if (elements.loadingOverlay) elements.loadingOverlay.classList.add('hidden');
+    }, remaining);
 }
 
 // ========== TOAST ==========

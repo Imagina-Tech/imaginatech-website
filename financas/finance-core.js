@@ -786,15 +786,20 @@ function updateAllDisplays() {
 // UTILITY FUNCTIONS
 // ===========================
 // 🎨 Exibe overlay de carregamento
+let _loadingStart = Date.now();
+
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.remove('hidden');
+    _loadingStart = Date.now();
 }
 
 // 🎨 Esconde overlay de carregamento
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.classList.add('hidden');
+    if (!overlay) return;
+    const remaining = Math.max(0, 1500 - (Date.now() - _loadingStart));
+    setTimeout(() => overlay.classList.add('hidden'), remaining);
 }
 
 // 🎨 Exibe notificação toast temporária (sucesso/erro/info)
