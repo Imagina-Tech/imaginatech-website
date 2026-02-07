@@ -138,10 +138,6 @@ export async function signInWithGoogle() {
 }
 export async function signOut() {
     try {
-        // Destruir listeners antes do logout para evitar erros de permissão
-        if (window.destroyTasksSystem) {
-            window.destroyTasksSystem();
-        }
         state.auth && await state.auth.signOut();
         showToast('Logout realizado com sucesso!', 'info');
     } catch (error) {

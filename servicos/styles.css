@@ -2279,9 +2279,8 @@ input[type="file"]::file-selector-button {
 /* Mobile com menu dropdown (até 600px) */
 /* Navbar mobile base movida para /shared/navbar-mobile.css */
 @media (max-width: 600px) {
-    /* Esconder botoes Tarefas e Clientes injetados pelo JS no mobile */
-    /* (esses botoes existem no dropdown mobile como alternativa) */
-    .tasks-icon-wrapper,
+    /* Esconder botao Clientes injetado pelo JS no mobile */
+    /* (esse botao existe no dropdown mobile como alternativa) */
     #btnClientes {
         display: none !important;
     }

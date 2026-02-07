@@ -11,8 +11,6 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 - `servicos/js/config.js` - Configuracoes e Firebase
 - `servicos/js/services.js` - CRUD de servicos
 - `servicos/js/auth-ui.js` - Autenticacao e UI
-- `servicos/js/tasks.js` - Sistema de tarefas
-
 ### Arquivos de Suporte (Novos)
 - `servicos/js/logger.js` - Sistema de logging condicional
 - `servicos/js/helpers.js` - DOM helpers com null safety
@@ -27,6 +25,24 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - [REMOCAO] Sistema de Tarefas removido do painel Servicos
+
+**Resumo:** Remocao completa da funcionalidade de tarefas (atribuicao de tarefas para admins) do painel de servicos. Nenhum botao, referencia ou codigo morto foi mantido.
+
+**Arquivos DELETADOS:**
+- `servicos/css/tasks.css` - CSS dedicado do sistema de tarefas (2.519 linhas)
+- `servicos/js/tasks.js` - Modulo JS completo do sistema de tarefas (~1.500 linhas)
+
+**Arquivos EDITADOS:**
+- `servicos/index.html` - Removido import do tasks.css, botao mobile "Tarefas" (btnMobileTarefas), handler inline do botao, icones fa-tasks trocados por fa-cogs
+- `servicos/js/main.js` - Removido import e chamada de initTasksSystem()
+- `servicos/js/auth-ui.js` - Removido destroyTasksSystem() do signOut()
+- `servicos/styles.css` - Removido .tasks-icon-wrapper da media query mobile
+- `servicos/js/custom-select.js` - Removido seletor .task-form-select morto
+- `servicos/js/event-handlers.js` - Removido comentario referenciando tasks
+
+**Impacto:** Nenhum. Sistema de tarefas era isolado (proprio JS, CSS e UI dinamica). Revisao critica confirmou zero quebras em runtime.
+
 ### 2026-02-06 - [QUALIDADE] Fase 3: z-index CSS variables + ARIA em modais JS
 
 **Resumo:** Substituicao de TODOS os z-index hardcoded por CSS variables do sistema padronizado em `/shared/z-index.css`, e adicao de atributos ARIA em modais gerados dinamicamente via JavaScript.
@@ -38,7 +54,7 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 - `projetos/style.css` - 10 z-index convertidos
 - `financas/style.css` - 10 z-index convertidos
 - `acompanhar-pedido/style.css` - 8 z-index convertidos
-- `servicos/css/tasks.css` - 6 z-index convertidos
+- `servicos/css/tasks.css` - 6 z-index convertidos (ARQUIVO REMOVIDO em 2026-02-06)
 - `style.css (raiz)` - 5 z-index convertidos
 - `obrigado/style.css` - 5 z-index convertidos
 - `custo/styles-custo.css` - 3 z-index convertidos

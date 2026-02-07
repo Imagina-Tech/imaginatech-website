@@ -310,7 +310,7 @@ class CustomSelect {
 
 // Inicializar todos os selects customizados
 function initCustomSelects() {
-    const selects = document.querySelectorAll('.form-select, .task-form-select, select.form-input');
+    const selects = document.querySelectorAll('.form-select, select.form-input');
     selects.forEach(select => {
         if (!select.dataset.customized) {
             new CustomSelect(select);

@@ -21,7 +21,6 @@ import {
     updateLastAccess,
     setupUpModalDragDrop
 } from './auth-ui.js';
-import { initTasksSystem } from './tasks.js';
 import { initEventDelegation } from './event-handlers.js';
 
 // ===========================
@@ -62,8 +61,6 @@ onDOMReady(() => {
             // Chamar diretamente para garantir registro em cada carregamento
             updateLastAccess(user);
 
-            // Inicializar sistema de tarefas
-            initTasksSystem();
         } else {
             state.isAuthorized = false;
             showLoginScreen();

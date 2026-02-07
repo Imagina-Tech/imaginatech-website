@@ -50,7 +50,6 @@
     <link rel="stylesheet" href="/shared/navbar-mobile.css">
     <link rel="stylesheet" href="/shared/z-index.css">
     <link rel="stylesheet" href="/shared/confirm-modal.css">
-    <link rel="stylesheet" href="css/tasks.css">
 </head>
 <body>
     <!-- Skip Link para Acessibilidade -->
@@ -72,7 +71,7 @@
                 <p>Painel de Servicos</p>
             </div>
             <div class="auth-icon">
-                <i class="fas fa-tasks"></i>
+                <i class="fas fa-cogs"></i>
             </div>
             <h2 class="auth-title">Acesso Restrito</h2>
             <p class="auth-message">
@@ -161,10 +160,6 @@
                 <span>Marketplace</span>
             </a>
             <div class="mobile-nav-divider"></div>
-            <button class="mobile-nav-item" id="btnMobileTarefas">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Tarefas</span>
-            </button>
             <button class="mobile-nav-item" id="btnMobileClientes">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
@@ -175,7 +170,7 @@
             <div class="container">
                 <div class="action-bar">
                     <h2 class="page-title">
-                        <i class="fas fa-tasks"></i>
+                        <i class="fas fa-cogs"></i>
                         Gerenciamento de Serviços
                     </h2>
                     <div class="action-buttons">
@@ -1020,19 +1015,10 @@
     <!-- Navbar Mobile - Compartilhado -->
     <script src="/shared/navbar-mobile.js"></script>
 
-    <!-- Botoes especificos do painel Servicos (Tarefas e Clientes) -->
+    <!-- Botao especifico do painel Servicos (Clientes) -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const btnMobileTarefas = document.getElementById('btnMobileTarefas');
         const btnMobileClientes = document.getElementById('btnMobileClientes');
-
-        if (btnMobileTarefas) {
-            btnMobileTarefas.addEventListener('click', function() {
-                closeMobileMenu();
-                const btnTasks = document.getElementById('btnTasks');
-                if (btnTasks) btnTasks.click();
-            });
-        }
 
         if (btnMobileClientes) {
             btnMobileClientes.addEventListener('click', function() {

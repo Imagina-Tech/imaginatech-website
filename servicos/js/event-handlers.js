@@ -585,7 +585,7 @@ export function initEventDelegation() {
         modalObserver.observe(modal, { attributes: true, attributeFilter: ['class'] });
     });
 
-    // Observar modais criados dinamicamente (tasks, etc.)
+    // Observar modais criados dinamicamente
     const bodyObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
