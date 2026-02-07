@@ -66,10 +66,12 @@ document.addEventListener('click', (e) => {
 
 // Esconder loading apos carregamento
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.classList.add('hidden');
-    }, 1500);
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 1500);
+    }
 });
 
 // Inicializar AOS
