@@ -348,8 +348,6 @@
     <link rel="stylesheet" href="style.css">
     <!-- CSS Compartilhado - /shared -->
     <link rel="stylesheet" href="/shared/loading.css">
-    <link rel="stylesheet" href="/shared/navbar.css">
-    <link rel="stylesheet" href="/shared/navbar-mobile.css">
 
     <!-- SISTEMA DEFINITIVO COM GLASSMORPHISM REFINADO -->
     <style>
@@ -659,27 +657,24 @@
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--glass-stroke);
             border-radius: 50px;
-            border-bottom: none;
-            z-index: 1000;
+            z-index: var(--z-modal, 1000);
             box-sizing: border-box;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
             transition: all 0.3s ease;
         }
 
         .navbar-container {
-            max-width: 1400px;
-            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
         }
 
         .navbar-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .navbar-right {
@@ -691,6 +686,7 @@
         .logo-section {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 5px;
         }
 
@@ -702,6 +698,7 @@
             background-clip: text;
             letter-spacing: 2px;
             margin: 0;
+            text-align: center;
         }
 
         .logo-subtitle {
@@ -711,18 +708,61 @@
             color: rgba(0, 212, 255, 0.7);
             letter-spacing: 3px;
             text-transform: uppercase;
+            text-align: center;
         }
 
-        /* Botao orcamento - herda de btn-nav (shared/navbar.css), so muda cor de fundo */
+        .page-name {
+            font: 600 1.1rem 'Orbitron', monospace;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding-left: 15px;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-nav {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            height: 36px;
+            background: transparent;
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .btn-nav i {
+            font-size: 0.9rem;
+            width: 1rem;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            border-color: #00D4FF;
+        }
+
         .btn-orcamento {
             background: linear-gradient(135deg, #00D4FF, #0077FF);
             color: white !important;
-            border-color: rgba(0, 212, 255, 0.5);
+            border: 1px solid #00D4FF;
         }
 
         .btn-orcamento:hover {
+            transform: translateY(-2px);
             box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
-            border-color: #00D4FF;
         }
         
         /* Hero Section Adjustment */
@@ -929,49 +969,64 @@
 
         /* ========== RESPONSIVIDADE MOBILE - NAVBAR COMPACTA ========== */
         @media (max-width: 768px) {
-            /* Navbar compacta - somente overrides especificos da homepage */
+            /* Navbar compacta - apenas icones */
             .navbar {
-                top: 10px;
                 padding: 10px 15px;
-                width: calc(100% - 20px);
                 border-radius: 25px;
+                width: 95%;
+                overflow: hidden;
             }
 
-            .logo {
-                font-size: 1.1rem;
-                letter-spacing: 1px;
+            .navbar-container {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 8px;
+                overflow: hidden;
             }
 
-            .logo-subtitle {
-                display: none;
-            }
-
-            /* Menu mobile: esconder botoes desktop, mostrar hamburger */
-            .nav-buttons-desktop {
-                display: none;
-            }
-
-            .btn-mobile-menu {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 36px;
-                height: 36px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                color: #fff;
-                cursor: pointer;
+            .navbar-left {
                 flex-shrink: 0;
+                width: auto;
+                overflow: hidden;
             }
 
-            /* Dropdown posicionado logo abaixo da navbar compacta */
-            .mobile-nav-dropdown {
-                top: 65px;
+            .navbar-right {
+                flex: 1;
+                justify-content: flex-end;
+                gap: 6px;
+                width: auto;
+                flex-wrap: nowrap;
+                overflow: hidden;
+            }
+
+            .logo-subtitle,
+            .page-name {
+                display: none;
+            }
+
+            /* Botoes viram icones */
+            .btn-nav {
+                padding: 8px 10px;
+                border-radius: 10px;
+                min-width: 40px;
+                justify-content: center;
+            }
+
+            .btn-nav span {
+                display: none;
+            }
+
+            .btn-nav i {
+                font-size: 1rem;
+                margin: 0;
+            }
+
+            .btn-orcamento span {
+                display: none;
             }
 
             .hero {
-                padding-top: 100px; /* Navbar compacta = menos padding */
+                padding-top: 100px;
             }
 
             /* Hero responsivo - empilha verticalmente e centraliza */
@@ -1069,13 +1124,25 @@
         /* Mobile muito pequeno */
         @media (max-width: 480px) {
             .navbar {
-                top: 8px;
                 padding: 8px 12px;
-                border-radius: 25px !important;
+                border-radius: 20px;
+            }
+
+            .navbar-container {
+                gap: 6px;
             }
 
             .logo {
                 font-size: 1rem;
+            }
+
+            .btn-nav {
+                padding: 6px 8px;
+                min-width: 34px;
+            }
+
+            .btn-nav i {
+                font-size: 0.9rem;
             }
 
             .hero {
@@ -3686,60 +3753,35 @@
     </div>
 
     <!-- Navigation Header -->
-    <header class="navbar">
+    <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-left">
                 <div class="logo-section">
                     <span class="logo">ImaginaTech</span>
                     <span class="logo-subtitle">IMPRESSAO 3D RJ</span>
                 </div>
+                <span class="page-name">Inicio</span>
             </div>
             <div class="navbar-right">
-                <div class="nav-buttons-desktop">
-                    <a href="#services" class="btn-nav" title="Serviços">
-                        <i class="fas fa-cube"></i>
-                        <span>Servicos</span>
-                    </a>
-                    <a href="#portfolio" class="btn-nav" title="Projetos">
-                        <i class="fas fa-images"></i>
-                        <span>Projetos Anteriores</span>
-                    </a>
-                    <a href="/acompanhar-pedido" class="btn-nav" title="Acompanhar Pedido">
-                        <i class="fas fa-search"></i>
-                        <span>Acompanhar Pedido</span>
-                    </a>
-                    <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-nav btn-orcamento" title="Solicitar Orçamento">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>Orcamento</span>
-                    </a>
-                </div>
-                <button class="btn-nav btn-mobile-menu" id="btnMobileMenu" data-action="toggle-mobile-menu" aria-label="Menu de navegacao">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
+                <a href="#services" class="btn-nav">
+                    <i class="fas fa-cube"></i>
+                    <span>Servicos</span>
+                </a>
+                <a href="#portfolio" class="btn-nav">
+                    <i class="fas fa-images"></i>
+                    <span>Projetos</span>
+                </a>
+                <a href="/acompanhar-pedido" class="btn-nav">
+                    <i class="fas fa-search"></i>
+                    <span>Acompanhar</span>
+                </a>
+                <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="btn-nav btn-orcamento">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Orcamento</span>
+                </a>
             </div>
         </div>
-    </header>
-
-    <!-- Menu dropdown mobile -->
-    <div class="mobile-nav-dropdown" id="mobileNavDropdown">
-        <a href="#services" class="mobile-nav-item">
-            <i class="fas fa-cube"></i>
-            <span>Servicos</span>
-        </a>
-        <a href="#portfolio" class="mobile-nav-item">
-            <i class="fas fa-images"></i>
-            <span>Projetos Anteriores</span>
-        </a>
-        <a href="/acompanhar-pedido" class="mobile-nav-item">
-            <i class="fas fa-search"></i>
-            <span>Acompanhar Pedido</span>
-        </a>
-        <div class="mobile-nav-divider"></div>
-        <a href="https://wa.me/5521968972539?text=Olá,%20vim%20do%20site%20e%20gostaria%20de%20um%20orçamento!" target="_blank" rel="noopener noreferrer" class="mobile-nav-item">
-            <i class="fab fa-whatsapp"></i>
-            <span>Solicitar Orcamento</span>
-        </a>
-    </div>
+    </nav>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -4479,7 +4521,6 @@
     <script src="/shared/firestore-logger.js"></script>
 
     <!-- External JavaScript -->
-    <script src="/shared/navbar-mobile.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
