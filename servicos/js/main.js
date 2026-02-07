@@ -61,6 +61,9 @@ onDOMReady(() => {
             // Chamar diretamente para garantir registro em cada carregamento
             updateLastAccess(user);
 
+            // Injetar botao Clientes na navbar desktop
+            createClientsButton();
+
         } else {
             state.isAuthorized = false;
             showLoginScreen();
@@ -99,6 +102,28 @@ onDOMReady(() => {
     // Inicializar sistema de delegacao de eventos
     initEventDelegation();
 });
+
+// ===========================
+// BOTAO CLIENTES NA NAVBAR
+// ===========================
+function createClientsButton() {
+    const navbarRight = document.querySelector('.navbar-right');
+    if (!navbarRight || document.getElementById('btnClientes')) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-nav';
+    btn.id = 'btnClientes';
+    btn.title = 'Clientes';
+    btn.addEventListener('click', () => window.openClientsModal && window.openClientsModal());
+    btn.innerHTML = '<i class="fas fa-users"></i>';
+
+    const userInfo = navbarRight.querySelector('.user-info');
+    if (userInfo) {
+        navbarRight.insertBefore(btn, userInfo);
+    } else {
+        navbarRight.appendChild(btn);
+    }
+}
 
 // ===========================
 // EXPÕE FUNÇÕES GLOBAIS
