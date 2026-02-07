@@ -2686,6 +2686,15 @@ async function loadClientsForModal() {
             }
         });
 
+        // Indice secundario por googleEmail para cross-reference
+        // Permite casar tracking_access (googleEmail) com clients (email diferente)
+        const googleEmailIndex = new Map();
+        clientsMap.forEach((client, primaryKey) => {
+            if (client.googleEmail && client.googleEmail.toLowerCase() !== primaryKey) {
+                googleEmailIndex.set(client.googleEmail.toLowerCase(), primaryKey);
+            }
+        });
+
         // Carregar de tracking_access (acessos de clientes não-admin)
         const trackingSnapshot = await state.db.collection('tracking_access')
             .orderBy('accessedAt', 'desc')
@@ -2695,32 +2704,52 @@ async function loadClientsForModal() {
         // Agrupar tracking por email e pegar o mais recente
         trackingSnapshot.docs.forEach(doc => {
             const data = doc.data();
-            const email = (data.googleEmail || '').toLowerCase();
+            const trackingEmail = (data.googleEmail || '').toLowerCase();
+            const orderClientEmail = (data.orderClientEmail || '').toLowerCase();
 
-            if (email && !clientsMap.has(email)) {
+            // Resolver chave: email direto > googleEmail index > orderClientEmail
+            let mapKey = null;
+            if (trackingEmail && clientsMap.has(trackingEmail)) {
+                mapKey = trackingEmail;
+            } else if (trackingEmail && googleEmailIndex.has(trackingEmail)) {
+                mapKey = googleEmailIndex.get(trackingEmail);
+            } else if (orderClientEmail && clientsMap.has(orderClientEmail)) {
+                mapKey = orderClientEmail;
+                // Registrar googleEmail no indice para proximos registros do mesmo usuario
+                if (trackingEmail) {
+                    googleEmailIndex.set(trackingEmail, mapKey);
+                }
+            }
+
+            if (trackingEmail && !mapKey) {
                 // Cliente que só existe em tracking_access
-                clientsMap.set(email, {
+                clientsMap.set(trackingEmail, {
                     id: doc.id,
-                    name: data.googleName || email.split('@')[0],
-                    email: email,
-                    googleEmail: email,
+                    name: data.googleName || trackingEmail.split('@')[0],
+                    email: trackingEmail,
+                    googleEmail: trackingEmail,
                     googlePhotoURL: data.googlePhotoURL,
                     googleUid: data.googleUid,
                     phone: data.orderClientPhone || '',
                     lastOrderTrackingAccess: data.accessedAt,
-                    orderCodes: [data.orderCode],
+                    orderCodes: data.orderCode ? [data.orderCode] : [],
                     source: 'tracking_access'
                 });
-            } else if (email && clientsMap.has(email)) {
-                // Atualizar último acesso se mais recente
-                const existing = clientsMap.get(email);
+                // Indexar para proximos registros
+                googleEmailIndex.set(trackingEmail, trackingEmail);
+            } else if (mapKey) {
+                // Atualizar cliente existente com dados do tracking
+                const existing = clientsMap.get(mapKey);
                 if (!existing.lastOrderTrackingAccess ||
                     new Date(data.accessedAt) > new Date(existing.lastOrderTrackingAccess)) {
                     existing.lastOrderTrackingAccess = data.accessedAt;
                 }
-                // Atualizar foto se não tiver
+                // Atualizar foto e googleEmail se não tiver
                 if (!existing.googlePhotoURL && data.googlePhotoURL) {
                     existing.googlePhotoURL = data.googlePhotoURL;
+                }
+                if (!existing.googleEmail && trackingEmail) {
+                    existing.googleEmail = trackingEmail;
                 }
                 // Adicionar orderCode à lista se não existir
                 if (data.orderCode) {
