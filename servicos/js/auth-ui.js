@@ -2681,9 +2681,9 @@ async function loadClientsForModal() {
         clientsSnapshot.docs.forEach(doc => {
             const data = doc.data();
             const email = (data.email || data.googleEmail || '').toLowerCase();
-            if (email) {
-                clientsMap.set(email, { id: doc.id, ...data, source: 'clients' });
-            }
+            // Usar email como chave, ou doc.id como fallback para clientes sem email
+            const key = email || `_no_email_${doc.id}`;
+            clientsMap.set(key, { id: doc.id, ...data, source: 'clients' });
         });
 
         // Indice secundario por googleEmail para cross-reference
@@ -2698,7 +2698,7 @@ async function loadClientsForModal() {
         // Carregar de tracking_access (acessos de clientes não-admin)
         const trackingSnapshot = await state.db.collection('tracking_access')
             .orderBy('accessedAt', 'desc')
-            .limit(100)
+            .limit(500)
             .get();
 
         // Agrupar tracking por email e pegar o mais recente
@@ -2945,14 +2945,34 @@ export async function viewClientHistory(email, clientName) {
     try {
         showToast('Carregando histórico...', 'info');
 
-        // Buscar todos os acessos do cliente na collection tracking_access
-        const snapshot = await state.db.collection('tracking_access')
-            .where('googleEmail', '==', email.toLowerCase())
+        const emailLower = email.toLowerCase();
+
+        // Buscar por googleEmail (acesso com Google)
+        const byGoogleEmail = await state.db.collection('tracking_access')
+            .where('googleEmail', '==', emailLower)
             .orderBy('accessedAt', 'desc')
             .limit(50)
             .get();
 
-        const accesses = snapshot.docs.map(doc => doc.data());
+        // Buscar tambem por orderClientEmail (email do cadastro no servico)
+        // Sem orderBy para evitar necessidade de indice composto extra
+        const byOrderEmail = await state.db.collection('tracking_access')
+            .where('orderClientEmail', '==', emailLower)
+            .limit(50)
+            .get();
+
+        // Merge e deduplicar por doc ID
+        const seenIds = new Set();
+        const allDocs = [...byGoogleEmail.docs, ...byOrderEmail.docs];
+        const accesses = [];
+        allDocs.forEach(doc => {
+            if (!seenIds.has(doc.id)) {
+                seenIds.add(doc.id);
+                accesses.push(doc.data());
+            }
+        });
+        // Ordenar por data mais recente
+        accesses.sort((a, b) => new Date(b.accessedAt) - new Date(a.accessedAt));
 
         // Criar modal de histórico
         let historyModal = document.getElementById('clientHistoryModal');

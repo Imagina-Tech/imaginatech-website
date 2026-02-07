@@ -27,6 +27,22 @@
       ]
     },
     {
+      "collectionGroup": "tracking_access",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "googleEmail", "order": "ASCENDING" },
+        { "fieldPath": "accessedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tracking_access",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orderClientEmail", "order": "ASCENDING" },
+        { "fieldPath": "accessedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "whatsappMessages",
       "queryScope": "COLLECTION",
       "fields": [
