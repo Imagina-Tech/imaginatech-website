@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="/shared/navbar.css">
     <link rel="stylesheet" href="/shared/navbar-mobile.css">
     <link rel="stylesheet" href="/shared/z-index.css">
+    <link rel="stylesheet" href="/shared/confirm-modal.css">
     <link rel="stylesheet" href="css/tasks.css">
 </head>
 <body>
@@ -567,16 +568,16 @@
                     </div>
                 </div>
 
-                <div class="notification-section" id="notificationSection" style="grid-column: 1 / -1; display: none;">
+                <div class="notification-section hidden" id="notificationSection" style="grid-column: 1 / -1;">
                     <h4 class="section-title"><i class="fas fa-bell"></i> Notificações ao Cliente</h4>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <div class="whatsapp-option" id="createWhatsappOption" style="display: none; margin: 0; flex: 1;">
+                        <div class="whatsapp-option hidden" id="createWhatsappOption" style="margin: 0; flex: 1;">
                             <label class="checkbox-label">
                                 <input type="checkbox" id="sendWhatsappOnCreate" checked>
                                 <span><i class="fab fa-whatsapp"></i> Enviar WhatsApp</span>
                             </label>
                         </div>
-                        <div class="email-option" id="createEmailOption" style="display: none; margin: 0; flex: 1;">
+                        <div class="email-option hidden" id="createEmailOption" style="margin: 0; flex: 1;">
                             <label class="checkbox-label">
                                 <input type="checkbox" id="sendEmailOnCreate" checked>
                                 <span><i class="fas fa-envelope"></i> Enviar Email</span>
@@ -656,7 +657,7 @@
                 <p id="statusModalMessage">Deseja alterar o status deste serviço?</p>
                 
                 <!-- Fotos do Produto Finalizado (Instagramáveis) -->
-                <div id="instagramPhotoField" style="display: none; margin-top: 1.5rem;">
+                <div id="instagramPhotoField" class="hidden" style="margin-top: 1.5rem;">
                     <div class="instagram-alert">
                         <i class="fas fa-camera"></i>
                         <p><strong>Fotos Instagramaveis Obrigatorias</strong></p>
@@ -679,7 +680,7 @@
                 </div>
                 
                 <!-- Fotos do Produto Embalado -->
-                <div id="packagedPhotoField" style="display: none; margin-top: 1.5rem;">
+                <div id="packagedPhotoField" class="hidden" style="margin-top: 1.5rem;">
                     <div class="instagram-alert instagram-alert--packaged">
                         <i class="fas fa-box"></i>
                         <p><strong>Fotos do Produto Embalado Obrigatorias</strong></p>
@@ -700,7 +701,7 @@
                 </div>
 
                 <!-- NOVO: Código de Rastreio (Sedex) -->
-                <div id="statusTrackingCodeField" style="display: none; margin-top: 1.5rem;">
+                <div id="statusTrackingCodeField" class="hidden" style="margin-top: 1.5rem;">
                     <div class="instagram-alert instagram-alert--tracking">
                           <i class="fas fa-barcode"></i>
                         <p><strong>Codigo de Rastreio Obrigatorio</strong></p>
@@ -733,7 +734,7 @@
                 <button class="btn-cancel" data-action="closeStatusModal">
                     <i class="fas fa-times"></i> Cancelar
                 </button>
-                <button class="btn-bypass" id="statusBypassBtn" data-action="openBypassFromStatus" style="display: none;">
+                <button class="btn-bypass hidden" id="statusBypassBtn" data-action="openBypassFromStatus">
                     <i class="fas fa-key"></i> Bypass
                 </button>
                 <button class="btn-confirm" data-action="confirmStatusChange">

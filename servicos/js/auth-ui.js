@@ -445,7 +445,7 @@ export function handleClientNameInput(event) {
     if (!suggestionsDiv) return;
 
     if (!value || value.length < 2) {
-        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.classList.add('hidden');
         return;
     }
 
@@ -454,7 +454,7 @@ export function handleClientNameInput(event) {
     );
 
     if (matches.length === 0) {
-        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.classList.add('hidden');
         return;
     }
 
@@ -468,7 +468,7 @@ export function handleClientNameInput(event) {
         </div>
     `).join('');
 
-    suggestionsDiv.style.display = 'block';
+    suggestionsDiv.classList.remove('hidden');
 }
 
 export function selectClient(clientId) {
@@ -515,7 +515,7 @@ export function selectClient(clientId) {
     }
 
     const suggestionsEl = document.getElementById('clientSuggestions');
-    if (suggestionsEl) suggestionsEl.style.display = 'none';
+    if (suggestionsEl) suggestionsEl.classList.add('hidden');
 }
 
 export async function saveClientToFirestore(clientData) {
@@ -670,14 +670,14 @@ export async function selectServiceType(type) {
         orderCodeInput.value = generateOrderCode();
         orderCodeInput.removeAttribute('readonly');
     }
-    if (orderCodeNewInfo) orderCodeNewInfo.style.display = 'inline';
-    if (orderCodeEditInfo) orderCodeEditInfo.style.display = 'none';
-    if (btnRegenerate) btnRegenerate.style.display = 'flex';
+    if (orderCodeNewInfo) { orderCodeNewInfo.classList.remove('hidden'); orderCodeNewInfo.style.display = 'inline'; }
+    if (orderCodeEditInfo) orderCodeEditInfo.classList.add('hidden');
+    if (btnRegenerate) { btnRegenerate.classList.remove('hidden'); btnRegenerate.style.display = 'flex'; }
 
     setupDateFields();
     ['filesInfo', 'imagePreview'].forEach(id => {
         const el = document.getElementById(id);
-        el && (el.style.display = 'none');
+        el && el.classList.add('hidden');
     });
 
     const previewContainer = document.getElementById('imagePreviewContainer');
@@ -701,10 +701,10 @@ export async function selectServiceType(type) {
     document.getElementById('dateUndefined') && (document.getElementById('dateUndefined').checked = false);
 
     const notificationSection = document.getElementById('notificationSection');
-    if (notificationSection) notificationSection.style.display = 'none';
+    if (notificationSection) notificationSection.classList.add('hidden');
 
     const clientSuggestionsEl = document.getElementById('clientSuggestions');
-    if (clientSuggestionsEl) clientSuggestionsEl.style.display = 'none';
+    if (clientSuggestionsEl) clientSuggestionsEl.classList.add('hidden');
 
     hideAllDeliveryFields();
 
@@ -737,7 +737,7 @@ export async function selectServiceType(type) {
     if (phoneInput) {
         const phoneFormGroup = phoneInput.closest('.form-group');
         if (phoneFormGroup) {
-            phoneFormGroup.style.display = '';
+            phoneFormGroup.classList.remove('hidden');
         }
         phoneInput.disabled = false;
         phoneInput.style.cursor = '';
@@ -756,10 +756,10 @@ function adaptFormForServiceType(type) {
 
     if (type === 'modelagem') {
         // Ocultar campos específicos de impressão
-        if (materialGroup) materialGroup.style.display = 'none';
-        if (colorGroup) colorGroup.style.display = 'none';
-        if (weightGroup) weightGroup.style.display = 'none';
-        if (deliveryGroup) deliveryGroup.style.display = 'none';
+        if (materialGroup) materialGroup.classList.add('hidden');
+        if (colorGroup) colorGroup.classList.add('hidden');
+        if (weightGroup) weightGroup.classList.add('hidden');
+        if (deliveryGroup) deliveryGroup.classList.add('hidden');
 
         // Remover required dos campos ocultos
         const materialInput = document.getElementById('serviceMaterial');
@@ -768,10 +768,10 @@ function adaptFormForServiceType(type) {
         if (deliveryInput) deliveryInput.removeAttribute('required');
     } else {
         // Mostrar todos os campos para impressão
-        if (materialGroup) materialGroup.style.display = '';
-        if (colorGroup) colorGroup.style.display = '';
-        if (weightGroup) weightGroup.style.display = '';
-        if (deliveryGroup) deliveryGroup.style.display = '';
+        if (materialGroup) materialGroup.classList.remove('hidden');
+        if (colorGroup) colorGroup.classList.remove('hidden');
+        if (weightGroup) weightGroup.classList.remove('hidden');
+        if (deliveryGroup) deliveryGroup.classList.remove('hidden');
 
         // Adicionar required de volta
         const materialInput = document.getElementById('serviceMaterial');
@@ -812,9 +812,9 @@ export async function openEditModal(serviceId) {
     if (orderCodeInput) {
         orderCodeInput.value = service.orderCode || '';
     }
-    if (orderCodeNewInfo) orderCodeNewInfo.style.display = 'none';
-    if (orderCodeEditInfo) orderCodeEditInfo.style.display = 'inline';
-    if (btnRegenerate) btnRegenerate.style.display = 'flex';
+    if (orderCodeNewInfo) orderCodeNewInfo.classList.add('hidden');
+    if (orderCodeEditInfo) { orderCodeEditInfo.classList.remove('hidden'); orderCodeEditInfo.style.display = 'inline'; }
+    if (btnRegenerate) { btnRegenerate.classList.remove('hidden'); btnRegenerate.style.display = 'flex'; }
 
     // Preencher campos de texto/número (exceto dropdowns customizados)
     Object.entries({
@@ -840,7 +840,7 @@ export async function openEditModal(serviceId) {
     if (phoneInput) {
         const phoneFormGroup = phoneInput.closest('.form-group');
         if (phoneFormGroup) {
-            phoneFormGroup.style.display = 'none';
+            phoneFormGroup.classList.add('hidden');
         }
     }
 
@@ -896,8 +896,8 @@ export async function openEditModal(serviceId) {
     }
     
     const notificationSection = document.getElementById('notificationSection');
-    if (notificationSection) notificationSection.style.display = 'none';
-    
+    if (notificationSection) notificationSection.classList.add('hidden');
+
     const dateUndefined = document.getElementById('dateUndefined');
     const dueDateInput = document.getElementById('dueDate');
     if (dateUndefined) {
@@ -935,9 +935,9 @@ export async function openEditModal(serviceId) {
             filesPreviewContainer.appendChild(fileWrapper);
         });
         
-        if (filesPreview) filesPreview.style.display = 'block';
+        if (filesPreview) filesPreview.classList.remove('hidden');
     }
-    
+
     const preview = document.getElementById('imagePreview');
     const previewContainer = document.getElementById('imagePreviewContainer');
     
@@ -984,9 +984,9 @@ export async function openEditModal(serviceId) {
             previewContainer.appendChild(imgWrapper);
         });
         
-        if (preview) preview.style.display = 'block';
+        if (preview) preview.classList.remove('hidden');
     }
-    
+
     if (service.deliveryMethod) {
         toggleDeliveryFields();
         
@@ -1005,16 +1005,16 @@ export async function openEditModal(serviceId) {
             const trackingField = document.getElementById('trackingCodeField');
             const trackingInput = document.getElementById('editTrackingCode');
             if (trackingField) {
-                trackingField.style.display = 'block';
+                trackingField.classList.remove('hidden');
                 if (trackingInput) {
                     trackingInput.value = service.trackingCode || '';
                 }
             }
         }
     }
-    
+
     const clientSuggestionsEditEl = document.getElementById('clientSuggestions');
-    if (clientSuggestionsEditEl) clientSuggestionsEditEl.style.display = 'none';
+    if (clientSuggestionsEditEl) clientSuggestionsEditEl.classList.add('hidden');
 
     // INTEGRAÇÃO COM ESTOQUE: Configurar listener para material
     // (Não chamar updateColorDropdown aqui - já é tratado na sincronização acima)
@@ -1040,11 +1040,11 @@ export function closeModal() {
     state.selectedFiles = [];
     const trackingField = document.getElementById('trackingCodeField');
     const trackingInput = document.getElementById('editTrackingCode');
-    if (trackingField) trackingField.style.display = 'none';
+    if (trackingField) trackingField.classList.add('hidden');
     if (trackingInput) trackingInput.value = '';
 
     const clientSuggestionsCloseEl = document.getElementById('clientSuggestions');
-    if (clientSuggestionsCloseEl) clientSuggestionsCloseEl.style.display = 'none';
+    if (clientSuggestionsCloseEl) clientSuggestionsCloseEl.classList.add('hidden');
 
     // MULTI-COR: Resetar estado ao fechar modal
     resetMultiColorState();
@@ -1056,35 +1056,35 @@ export function closeStatusModal() {
 
     // Esconder botao de bypass
     const bypassBtn = document.getElementById('statusBypassBtn');
-    if (bypassBtn) bypassBtn.style.display = 'none';
+    if (bypassBtn) bypassBtn.classList.add('hidden');
 
     const photoField = document.getElementById('instagramPhotoField');
-    if (photoField) photoField.style.display = 'none';
+    if (photoField) photoField.classList.add('hidden');
     const photoInput = document.getElementById('instagramPhotoInput');
     if (photoInput) photoInput.value = '';
-    
+
     const packagedField = document.getElementById('packagedPhotoField');
-    if (packagedField) packagedField.style.display = 'none';
+    if (packagedField) packagedField.classList.add('hidden');
     const packagedInput = document.getElementById('packagedPhotoInput');
     if (packagedInput) packagedInput.value = '';
-    
+
     const trackingField = document.getElementById('statusTrackingCodeField');
-    if (trackingField) trackingField.style.display = 'none';
+    if (trackingField) trackingField.classList.add('hidden');
     const trackingInput = document.getElementById('statusTrackingCodeInput');
     if (trackingInput) {
     trackingInput.value = '';
     trackingInput.required = false;
     }
-    
+
     const photoPreview = document.getElementById('instagramPhotoPreview');
     const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
-    if (photoPreview) photoPreview.style.display = 'none';
+    if (photoPreview) photoPreview.classList.add('hidden');
     if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
     state.pendingInstagramPhotos = [];
-    
+
     const packagedPreview = document.getElementById('packagedPhotoPreview');
     const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
-    if (packagedPreview) packagedPreview.style.display = 'none';
+    if (packagedPreview) packagedPreview.classList.add('hidden');
     if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
     state.pendingPackagedPhotos = [];
 }
@@ -1137,35 +1137,35 @@ export function showStatusModalWithPhoto(service, newStatus) {
     
     const photoField = document.getElementById('instagramPhotoField');
     if (photoField) {
-        photoField.style.display = 'block';
+        photoField.classList.remove('hidden');
         const photoInput = document.getElementById('instagramPhotoInput');
         if (photoInput) photoInput.value = '';
-        
+
         const photoPreview = document.getElementById('instagramPhotoPreview');
         const photoPreviewGrid = document.getElementById('instagramPhotoPreviewGrid');
-        if (photoPreview) photoPreview.style.display = 'none';
+        if (photoPreview) photoPreview.classList.add('hidden');
         if (photoPreviewGrid) photoPreviewGrid.innerHTML = '';
         state.pendingInstagramPhotos = [];
     }
-    
+
     const emailOption = document.getElementById('emailOption');
     if (emailOption) {
         const hasEmail = service.clientEmail && service.clientEmail.trim().length > 0;
         if (hasEmail) {
-            emailOption.style.display = 'block';
+            emailOption.classList.remove('hidden');
             const emailCheckbox = document.getElementById('sendEmailNotification');
             if (emailCheckbox) emailCheckbox.checked = true;
         } else {
-            emailOption.style.display = 'none';
+            emailOption.classList.add('hidden');
         }
     }
-    
+
     const whatsappOption = document.getElementById('whatsappOption');
-    if (whatsappOption) whatsappOption.style.display = 'none';
+    if (whatsappOption) whatsappOption.classList.add('hidden');
 
     // Mostrar botao de bypass para pular foto instagramavel
     const bypassBtn = document.getElementById('statusBypassBtn');
-    if (bypassBtn) bypassBtn.style.display = 'inline-flex';
+    if (bypassBtn) { bypassBtn.style.display = ''; bypassBtn.classList.remove('hidden'); }
 
     document.getElementById('statusModal')?.classList.add('active');
 }
@@ -1182,49 +1182,49 @@ export function showStatusModalWithPackagedPhoto(service, newStatus) {
     
     const packagedField = document.getElementById('packagedPhotoField');
     if (packagedField) {
-        packagedField.style.display = 'block';
+        packagedField.classList.remove('hidden');
         const packagedInput = document.getElementById('packagedPhotoInput');
         if (packagedInput) packagedInput.value = '';
-        
+
         const packagedPreview = document.getElementById('packagedPhotoPreview');
         const packagedPreviewGrid = document.getElementById('packagedPhotoPreviewGrid');
-        if (packagedPreview) packagedPreview.style.display = 'none';
+        if (packagedPreview) packagedPreview.classList.add('hidden');
         if (packagedPreviewGrid) packagedPreviewGrid.innerHTML = '';
         state.pendingPackagedPhotos = [];
     }
-    
+
     const trackingField = document.getElementById('statusTrackingCodeField');
     if (trackingField) {
         if (service.deliveryMethod === 'sedex' && !service.trackingCode) {
-            trackingField.style.display = 'block';
+            trackingField.classList.remove('hidden');
             const trackingInput = document.getElementById('statusTrackingCodeInput');
             if (trackingInput) {
                 trackingInput.value = '';
                 trackingInput.required = true;
             }
         } else {
-            trackingField.style.display = 'none';
+            trackingField.classList.add('hidden');
         }
     }
-    
+
     const emailOption = document.getElementById('emailOption');
-    if (emailOption) emailOption.style.display = 'none';
-    
+    if (emailOption) emailOption.classList.add('hidden');
+
     const whatsappOption = document.getElementById('whatsappOption');
     if (whatsappOption) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
         if (hasPhone) {
-            whatsappOption.style.display = 'block';
+            whatsappOption.classList.remove('hidden');
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
         } else {
-            whatsappOption.style.display = 'none';
+            whatsappOption.classList.add('hidden');
         }
     }
 
     // Mostrar botao de bypass para pular foto embalada
     const bypassBtn = document.getElementById('statusBypassBtn');
-    if (bypassBtn) bypassBtn.style.display = 'inline-flex';
+    if (bypassBtn) { bypassBtn.style.display = ''; bypassBtn.classList.remove('hidden'); }
 
     document.getElementById('statusModal')?.classList.add('active');
 }
@@ -1662,16 +1662,16 @@ export function updateImageViewer() {
     
     if (counter) {
         counter.textContent = `${state.currentImageIndex + 1} / ${state.currentImageGallery.length}`;
-        counter.style.display = state.currentImageGallery.length > 1 ? 'block' : 'none';
+        counter.classList.toggle('hidden', state.currentImageGallery.length <= 1);
     }
-    
+
     if (prevBtn) {
-        prevBtn.style.display = state.currentImageGallery.length > 1 ? 'block' : 'none';
+        prevBtn.classList.toggle('hidden', state.currentImageGallery.length <= 1);
         prevBtn.disabled = state.currentImageIndex === 0;
     }
-    
+
     if (nextBtn) {
-        nextBtn.style.display = state.currentImageGallery.length > 1 ? 'block' : 'none';
+        nextBtn.classList.toggle('hidden', state.currentImageGallery.length <= 1);
         nextBtn.disabled = state.currentImageIndex === state.currentImageGallery.length - 1;
     }
     
@@ -1817,7 +1817,7 @@ export async function handleFileSelect(event) {
             previewContainer.appendChild(fileWrapper);
         });
 
-        preview.style.display = 'block';
+        preview.classList.remove('hidden');
     }
 }
 
@@ -1878,7 +1878,7 @@ export async function handleImageSelect(event) {
             reader.readAsDataURL(file);
         });
 
-        preview.style.display = 'block';
+        preview.classList.remove('hidden');
     }
 }
 
@@ -1889,7 +1889,7 @@ export function removePreviewImage(index) {
     
     if (state.selectedImages.length === 0) {
         const preview = document.getElementById('imagePreview');
-        if (preview) preview.style.display = 'none';
+        if (preview) preview.classList.add('hidden');
     } else {
         const previewContainer = document.getElementById('imagePreviewContainer');
         if (previewContainer) {
@@ -1920,7 +1920,7 @@ export function removeFilePreview(index) {
     
     if (state.selectedFiles.length === 0) {
         const preview = document.getElementById('filesPreview');
-        if (preview) preview.style.display = 'none';
+        if (preview) preview.classList.add('hidden');
     } else {
         const previewContainer = document.getElementById('filesPreviewContainer');
         if (previewContainer) {
@@ -1949,7 +1949,7 @@ export const removeFile = () => {
     if (fileInput) fileInput.value = '';
     
     const filesPreview = document.getElementById('filesPreview');
-    if (filesPreview) filesPreview.style.display = 'none';
+    if (filesPreview) filesPreview.classList.add('hidden');
 };
 
 export function downloadFile(url, fileName) {
@@ -1991,12 +1991,12 @@ function renderInstagramPhotoPreviews() {
     if (!preview || !previewGrid) return;
 
     if (state.pendingInstagramPhotos.length === 0) {
-        preview.style.display = 'none';
+        preview.classList.add('hidden');
         previewGrid.innerHTML = '';
         return;
     }
 
-    preview.style.display = 'block';
+    preview.classList.remove('hidden');
     previewGrid.innerHTML = '';
 
     state.pendingInstagramPhotos.forEach((file, index) => {
@@ -2055,12 +2055,12 @@ function renderPackagedPhotoPreviews() {
     if (!preview || !previewGrid) return;
 
     if (state.pendingPackagedPhotos.length === 0) {
-        preview.style.display = 'none';
+        preview.classList.add('hidden');
         previewGrid.innerHTML = '';
         return;
     }
 
-    preview.style.display = 'block';
+    preview.classList.remove('hidden');
     previewGrid.innerHTML = '';
 
     state.pendingPackagedPhotos.forEach((file, index) => {
@@ -2131,7 +2131,7 @@ export function toggleDeliveryFields() {
             
             const trackingField = document.getElementById('trackingCodeField');
             if (trackingField) {
-                trackingField.style.display = 'block';
+                trackingField.classList.remove('hidden');
                 const trackingInput = document.getElementById('editTrackingCode');
                 if (trackingInput && service.trackingCode) {
                     trackingInput.value = service.trackingCode;
@@ -2140,9 +2140,9 @@ export function toggleDeliveryFields() {
             return;
         }
     }
-    
+
     hideAllDeliveryFields();
-    
+
     if (method === 'retirada') {
         document.getElementById('pickupFields')?.classList.add('active');
     } else if (method === 'sedex') {
@@ -2150,15 +2150,15 @@ export function toggleDeliveryFields() {
         if (state.editingServiceId) {
             const trackingField = document.getElementById('trackingCodeField');
             if (trackingField) {
-                trackingField.style.display = 'block';
+                trackingField.classList.remove('hidden');
             }
         }
     }
-    
+
     if (method !== 'sedex') {
         const trackingField = document.getElementById('trackingCodeField');
         if (trackingField) {
-            trackingField.style.display = 'none';
+            trackingField.classList.add('hidden');
         }
     }
 
@@ -2183,17 +2183,17 @@ export function updateNotificationOptions() {
     const emailOption = document.getElementById('createEmailOption');
     
     if (!state.editingServiceId && (phone || email)) {
-        if (notificationSection) notificationSection.style.display = 'block';
-        
+        if (notificationSection) notificationSection.classList.remove('hidden');
+
         if (whatsappOption) {
-            whatsappOption.style.display = phone ? 'block' : 'none';
+            whatsappOption.classList.toggle('hidden', !phone);
         }
-        
+
         if (emailOption) {
-            emailOption.style.display = email ? 'block' : 'none';
+            emailOption.classList.toggle('hidden', !email);
         }
     } else if (notificationSection) {
-        notificationSection.style.display = 'none';
+        notificationSection.classList.add('hidden');
     }
 }
 

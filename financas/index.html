@@ -76,6 +76,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
     <link rel="stylesheet" href="/shared/buttons.css">
     <link rel="stylesheet" href="/shared/navbar.css">
     <link rel="stylesheet" href="/shared/navbar-mobile.css">
+    <link rel="stylesheet" href="/shared/confirm-modal.css">
 </head>
 <body>
     <!-- Mobile Block Screen -->
@@ -523,7 +524,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <div class="form-group" id="paymentMethodGroup" style="display: none;">
+                <div class="form-group hidden" id="paymentMethodGroup">
                     <label>Metodo de Pagamento</label>
                     <div class="transaction-type-selector">
                         <button type="button" class="type-btn active" data-method="debit" data-action="select-payment-method" data-value="debit">
@@ -537,7 +538,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                     </div>
                 </div>
 
-                <div class="form-group" id="creditCardGroup" style="display: none;">
+                <div class="form-group hidden" id="creditCardGroup">
                     <label for="transactionCard">Cartão de Crédito</label>
                     <select id="transactionCard" class="form-select">
                         <option value="">Selecione um cartão</option>
@@ -1122,7 +1123,7 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                             </div>
                         </div>
 
-                        <div id="whatsappLinkForm" class="whatsapp-link-form" style="display: none;">
+                        <div id="whatsappLinkForm" class="whatsapp-link-form hidden">
                             <div class="settings-field">
                                 <label for="whatsappNumberInput">
                                     <i class="fas fa-phone"></i>

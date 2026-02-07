@@ -267,11 +267,11 @@ function signOut() {
 
 function showLoading(text = 'Carregando...') {
     { const el = document.getElementById('loadingText'); if (el) el.textContent = text; }
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.remove('hidden'); }
 }
 
 function hideLoading() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
 }
 
 function showLoginScreen() {
@@ -870,14 +870,14 @@ function openAddModal() {
     { const el = document.getElementById('editFeatured'); if (el) el.checked = false; }
 
     // Reset photo
-    { const el = document.getElementById('editPhotoPreview'); if (el) { el.style.display = 'none'; el.dataset.galleryUrl = ''; } }
-    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editPhotoPreview'); if (el) { el.classList.add('hidden'); el.dataset.galleryUrl = ''; } }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.classList.remove('hidden'); }
     { const el = document.getElementById('editPhotoImg'); if (el) el.src = ''; }
     newPhotoFile = null;
 
     // Reset logo
-    { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'none'; }
-    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editLogoPreview'); if (el) el.classList.add('hidden'); }
+    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.classList.remove('hidden'); }
     { const el = document.getElementById('editLogoImg'); if (el) el.src = ''; }
     newLogoFile = null;
 
@@ -893,8 +893,8 @@ function openAddModal() {
     // Populate and reset service dropdown
     populateServicesDropdown('');
     { const el = document.getElementById('inheritServicePhoto'); if (el) el.checked = false; }
-    { const el = document.getElementById('inheritPhotoSection'); if (el) el.style.display = 'none'; }
-    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('inheritPhotoSection'); if (el) el.classList.add('hidden'); }
+    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.classList.add('hidden'); }
 
     // Show modal e atualizar ARIA
     const modal = document.getElementById('editModal');
@@ -921,9 +921,9 @@ function onServiceLinkChange() {
 
     if (!serviceId) {
         // Nenhum servico selecionado
-        if (inheritSection) inheritSection.style.display = 'none';
+        if (inheritSection) inheritSection.classList.add('hidden');
         if (inheritCheckbox) inheritCheckbox.checked = false;
-        if (inheritPreview) inheritPreview.style.display = 'none';
+        if (inheritPreview) inheritPreview.classList.add('hidden');
         selectedServicePhoto = null;
         return;
     }
@@ -938,10 +938,10 @@ function onServiceLinkChange() {
     if (servicePhotoUrl) {
         selectedServicePhoto = servicePhotoUrl;
         { const el = document.getElementById('inheritPhotoImg'); if (el) el.src = servicePhotoUrl; }
-        if (inheritSection) inheritSection.style.display = 'block';
+        if (inheritSection) inheritSection.classList.remove('hidden');
     } else {
         selectedServicePhoto = null;
-        if (inheritSection) inheritSection.style.display = 'none';
+        if (inheritSection) inheritSection.classList.add('hidden');
         if (inheritCheckbox) inheritCheckbox.checked = false;
     }
 }
@@ -953,11 +953,11 @@ function toggleInheritPhoto() {
 
     if (inheritCheckbox?.checked && selectedServicePhoto) {
         // Mostrar preview da foto herdada
-        if (inheritPreview) inheritPreview.style.display = 'flex';
+        if (inheritPreview) inheritPreview.classList.remove('hidden');
         // Esconder area de upload manual
         if (photoArea) { photoArea.style.opacity = '0.5'; photoArea.style.pointerEvents = 'none'; }
     } else {
-        if (inheritPreview) inheritPreview.style.display = 'none';
+        if (inheritPreview) inheritPreview.classList.add('hidden');
         if (photoArea) { photoArea.style.opacity = '1'; photoArea.style.pointerEvents = 'auto'; }
     }
 }
@@ -1001,8 +1001,8 @@ function openEditModal(itemId) {
     // Reset inherit photo section
     selectedServicePhoto = null;
     { const el = document.getElementById('inheritServicePhoto'); if (el) el.checked = false; }
-    { const el = document.getElementById('inheritPhotoSection'); if (el) el.style.display = 'none'; }
-    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('inheritPhotoSection'); if (el) el.classList.add('hidden'); }
+    { const el = document.getElementById('inheritPhotoPreview'); if (el) el.classList.add('hidden'); }
     {
         const el = document.getElementById('editPhotoArea');
         if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
@@ -1023,11 +1023,11 @@ function openEditModal(itemId) {
 
     if (photoUrl) {
         { const el = document.getElementById('editPhotoImg'); if (el) el.src = photoUrl; }
-        if (photoPreview) photoPreview.style.display = 'block';
-        if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+        if (photoPreview) photoPreview.classList.remove('hidden');
+        if (photoPlaceholder) photoPlaceholder.classList.add('hidden');
     } else {
-        if (photoPreview) photoPreview.style.display = 'none';
-        if (photoPlaceholder) photoPlaceholder.style.display = 'flex';
+        if (photoPreview) photoPreview.classList.add('hidden');
+        if (photoPlaceholder) photoPlaceholder.classList.remove('hidden');
     }
 
     // Logo preview
@@ -1036,11 +1036,11 @@ function openEditModal(itemId) {
 
     if (editingItem.logo?.url) {
         { const el = document.getElementById('editLogoImg'); if (el) el.src = editingItem.logo.url; }
-        if (logoPreview) logoPreview.style.display = 'block';
-        if (logoPlaceholder) logoPlaceholder.style.display = 'none';
+        if (logoPreview) logoPreview.classList.remove('hidden');
+        if (logoPlaceholder) logoPlaceholder.classList.add('hidden');
     } else {
-        if (logoPreview) logoPreview.style.display = 'none';
-        if (logoPlaceholder) logoPlaceholder.style.display = 'flex';
+        if (logoPreview) logoPreview.classList.add('hidden');
+        if (logoPlaceholder) logoPlaceholder.classList.remove('hidden');
     }
 
     // Reset file inputs
@@ -1182,8 +1182,8 @@ async function handlePhotoSelect(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         { const el = document.getElementById('editPhotoImg'); if (el) el.src = e.target.result; }
-        { const el = document.getElementById('editPhotoPreview'); if (el) el.style.display = 'block'; }
-        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
+        { const el = document.getElementById('editPhotoPreview'); if (el) el.classList.remove('hidden'); }
+        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.classList.add('hidden'); }
     };
     reader.readAsDataURL(file);
 }
@@ -1223,8 +1223,8 @@ async function handleMultiplePhotosSelect(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         { const el = document.getElementById('editPhotoImg'); if (el) el.src = e.target.result; }
-        { const el = document.getElementById('editPhotoPreview'); if (el) el.style.display = 'block'; }
-        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
+        { const el = document.getElementById('editPhotoPreview'); if (el) el.classList.remove('hidden'); }
+        { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.classList.add('hidden'); }
     };
     reader.readAsDataURL(validFiles[0]);
 
@@ -1248,8 +1248,8 @@ async function handleMultiplePhotosSelect(event) {
 function removePhoto() {
     newPhotoFile = null;
     { const el = document.getElementById('editPhoto'); if (el) el.value = ''; }
-    { const el = document.getElementById('editPhotoPreview'); if (el) { el.style.display = 'none'; el.dataset.galleryUrl = ''; } }
-    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editPhotoPreview'); if (el) { el.classList.add('hidden'); el.dataset.galleryUrl = ''; } }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.classList.remove('hidden'); }
     { const el = document.getElementById('editPhotoImg'); if (el) el.src = ''; }
 }
 
@@ -1282,8 +1282,8 @@ async function handleLogoSelect(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         { const el = document.getElementById('editLogoImg'); if (el) el.src = e.target.result; }
-        { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'block'; }
-        { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'none'; }
+        { const el = document.getElementById('editLogoPreview'); if (el) el.classList.remove('hidden'); }
+        { const el = document.getElementById('editLogoPlaceholder'); if (el) el.classList.add('hidden'); }
     };
     reader.readAsDataURL(file);
 }
@@ -1291,8 +1291,8 @@ async function handleLogoSelect(event) {
 function removeLogo() {
     newLogoFile = 'remove'; // Special flag to remove
     { const el = document.getElementById('editLogo'); if (el) el.value = ''; }
-    { const el = document.getElementById('editLogoPreview'); if (el) el.style.display = 'none'; }
-    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('editLogoPreview'); if (el) el.classList.add('hidden'); }
+    { const el = document.getElementById('editLogoPlaceholder'); if (el) el.classList.remove('hidden'); }
     { const el = document.getElementById('editLogoImg'); if (el) el.src = ''; }
 }
 
@@ -2187,9 +2187,9 @@ function addPhotoFromGalleryAsMain(url) {
     { const el = document.getElementById('editPhotoImg'); if (el) el.src = url; }
     {
         const el = document.getElementById('editPhotoPreview');
-        if (el) { el.style.display = 'block'; el.dataset.galleryUrl = url; }
+        if (el) { el.classList.remove('hidden'); el.dataset.galleryUrl = url; }
     }
-    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('editPhotoPlaceholder'); if (el) el.classList.add('hidden'); }
 }
 
 // Adicionar foto da galeria como extra

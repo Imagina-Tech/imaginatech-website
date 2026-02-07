@@ -182,10 +182,10 @@ async function logout() {
 }
 
 function showMainApp() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
     document.getElementById('loginScreen')?.classList.remove('active');
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
-    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'block'; }
+    { const el = document.getElementById('mainApp'); if (el) { el.style.display = ''; el.classList.remove('hidden'); } }
 
     // Update user info
     if (currentUser) {
@@ -199,16 +199,16 @@ function showMainApp() {
 }
 
 function hideMainApp() {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
     document.getElementById('loginScreen')?.classList.add('active');
-    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('mainApp'); if (el) el.classList.add('hidden'); }
     document.getElementById('accessDeniedScreen')?.classList.remove('active');
 }
 
 function showAccessDeniedScreen(user) {
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.add('hidden'); }
     document.getElementById('loginScreen')?.classList.remove('active');
-    { const el = document.getElementById('mainApp'); if (el) el.style.display = 'none'; }
+    { const el = document.getElementById('mainApp'); if (el) el.classList.add('hidden'); }
 
     // Atualizar informacoes do usuario na tela
     const displayName = user.displayName || 'Usuario';
@@ -469,11 +469,11 @@ function initializeCalculator() {
 
     function updateMaterialButtons() {
         if (!currentPrinter) {
-            materialSelection.style.display = 'none';
+            materialSelection.classList.add('hidden');
             return;
         }
 
-        materialSelection.style.display = 'block';
+        materialSelection.style.display = ''; materialSelection.classList.remove('hidden');
         materialButtons.innerHTML = '';
 
         const materials = MATERIALS[currentPrinter.type] || [];
@@ -488,9 +488,9 @@ function initializeCalculator() {
 
         // Show/hide consumables field for resin
         if (currentPrinter.type === 'resin') {
-            consumablesField.style.display = 'block';
+            consumablesField.style.display = ''; consumablesField.classList.remove('hidden');
         } else {
-            consumablesField.style.display = 'none';
+            consumablesField.classList.add('hidden');
         }
 
         // Update units
@@ -513,7 +513,7 @@ function initializeCalculator() {
         const materialUsageLabel = document.getElementById('material-usage-label');
         if (currentPrinter.type === 'laser') {
             materialUsageLabel.innerHTML = '<i class="fas fa-clock"></i> Tempo de Corte (minutos)';
-            materialSelection.style.display = 'none'; // Hide material selection for laser
+            materialSelection.classList.add('hidden'); // Hide material selection for laser
         } else {
             materialUsageLabel.innerHTML = `<i class="fas fa-cube"></i> Material Utilizado (<span id="material-unit">${escapeHtml(currentPrinter.materialUnit)}</span>)`;
         }
@@ -535,10 +535,10 @@ function initializeCalculator() {
 
         // Show/hide custom price field
         if (material.id === 'outros') {
-            customPriceField.style.display = 'block';
+            customPriceField.style.display = ''; customPriceField.classList.remove('hidden');
             customMaterialPriceInput.focus();
         } else {
-            customPriceField.style.display = 'none';
+            customPriceField.classList.add('hidden');
             customMaterialPriceInput.value = '';
             customMaterialPrice = material.price;
         }
@@ -1087,7 +1087,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventDelegation();
 
     // Check authentication state
-    { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('loadingOverlay'); if (el) el.classList.remove('hidden'); }
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {

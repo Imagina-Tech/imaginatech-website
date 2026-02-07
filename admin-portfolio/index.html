@@ -300,13 +300,13 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                 </div>
 
                 <!-- Opcao de herdar foto do servico -->
-                <div class="form-group full-width inherit-photo-section" id="inheritPhotoSection" style="display: none;">
+                <div class="form-group full-width inherit-photo-section hidden" id="inheritPhotoSection">
                     <label class="checkbox-label">
                         <input type="checkbox" id="inheritServicePhoto" class="form-checkbox" data-action="toggle-inherit-photo">
                         <span class="checkbox-custom"></span>
                         <span class="checkbox-text"><i class="fas fa-clone"></i> Usar foto do servico</span>
                     </label>
-                    <div class="inherit-photo-preview" id="inheritPhotoPreview" style="display: none;">
+                    <div class="inherit-photo-preview hidden" id="inheritPhotoPreview">
                         <img id="inheritPhotoImg" src="" alt="Foto do servico">
                         <span>Esta foto sera usada</span>
                     </div>
@@ -330,7 +330,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                                         <span class="format-badge multi-badge">MULTIPLAS</span>
                                     </div>
                                 </div>
-                                <div class="image-preview" id="editPhotoPreview" style="display: none;">
+                                <div class="image-preview hidden" id="editPhotoPreview">
                                     <img id="editPhotoImg" src="" alt="Preview">
                                     <button type="button" class="btn-remove-img" data-action="remove-photo" aria-label="Remover foto">
                                         <i class="fas fa-times"></i>
@@ -463,7 +463,7 @@ IMPORTANTE: NAO REMOVER ESTE CABECALHO DE IDENTIFICACAO
                                 <span class="upload-text">Arraste ou clique</span>
                                 <span class="upload-hint">PNG com fundo transparente</span>
                             </div>
-                            <div class="image-preview" id="editLogoPreview" style="display: none;">
+                            <div class="image-preview hidden" id="editLogoPreview">
                                 <img id="editLogoImg" src="" alt="Logo">
                                 <button type="button" class="btn-remove-img" data-action="remove-logo" aria-label="Remover logo">
                                     <i class="fas fa-times"></i>

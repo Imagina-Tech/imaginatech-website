@@ -20,10 +20,105 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 - `servicos/js/event-handlers.js` - Delegacao de eventos
 - `servicos/js/globals.js` - Namespace global organizado
 - `shared/z-index.css` - Sistema de z-index e utilities
+- `shared/confirm-modal.css` - Modal de confirmacao customizado (glassmorphism dark theme)
+- `shared/confirm-modal.js` - Modulo ES que exporta confirmModal() - substitui confirm() nativo
 
 ---
 
 ## Historico de Modificacoes
+
+### 2026-02-06 - Inline styles para classList (hidden) em 7 arquivos JS + 1 HTML
+
+**Arquivos Modificados (JS - style.display para classList):**
+- `admin-portfolio/script.js` - loadingOverlay, photo/logo previews, inherit photo section (~30 alteracoes)
+- `acompanhar-pedido/script.js` - myOrdersSection show/hide (7 alteracoes)
+- `servicos/js/auth-ui.js` - modais, previews, campos condicionais (~50 alteracoes)
+- `servicos/js/services.js` - multi-color, portfolio up, drag-drop (~35 alteracoes)
+- `financas/finance-ui.js` - modal de transacao, metodo pagamento (5 alteracoes)
+- `estoque/script.js` - loading overlay, image previews, upload placeholders (16 alteracoes)
+- `marketplace/js/marketplace-core.js` - manufacturingTimeGroup show/hide (2 alteracoes)
+
+**Arquivos Modificados (HTML - style="display: none;" para class="hidden"):**
+- `estoque/index.html` - imagePreview e equipmentImagePreview
+- `admin-portfolio/index.html` - editPhotoPreview, editLogoPreview, inheritPhotoSection, inheritPhotoPreview
+
+**Descricao:**
+Substituicao sistematica de `element.style.display = 'none'` por `element.classList.add('hidden')` e `element.style.display = 'block'/''` por `element.classList.remove('hidden')`, usando a classe utilitaria `.hidden { display: none !important; }` de `/shared/z-index.css`.
+
+**Regras aplicadas:**
+- NAO substituidos: `style.display = 'flex'` (placeholders upload), `'inline'`, `'inline-flex'`, `'grid'`
+- NAO substituidos: estilos em template literals (innerHTML)
+- NAO substituidos: empty-state com display flex/block (HTML tem style inline que conflita)
+- Loading overlay: `classList.remove('hidden')` restaura CSS default `display: flex`
+- Image previews (estoque): HTML atualizado de `style="display: none;"` para `class="hidden"`
+
+**Arquivos analisados sem alteracoes necessarias:**
+- `financas/dashboard-enhanced.js` - zero style assignments em JS (tudo em template literals)
+- `marketplace/js/marketplace-ml.js` - zero style assignments
+- `marketplace/js/marketplace-ui.js` - todos usam flex/inline-flex counterparts ou empty states
+
+---
+
+### 2026-02-06 - JSDoc nas Cloud Functions (functions/index.js)
+
+**Arquivo Modificado:**
+- `functions/index.js` - Adicionado JSDoc em PT-BR a todas as funcoes exportadas e helpers importantes
+
+**Descricao:**
+Documentacao JSDoc adicionada a 30+ funcoes (exports e helpers) com:
+- Descricao concisa do que cada funcao faz
+- Tipos de parametros (@param) e retornos (@returns)
+- Colecoes Firestore lidas (@reads) e escritas (@fires)
+- APIs externas chamadas (@calls): ML, WhatsApp Cloud API, Gemini AI, OpenAI Whisper
+- Notas de sincronizacao com frontend (finance-data.js)
+
+**IMPORTANTE:** Nenhuma logica de codigo foi alterada - apenas comentarios de documentacao adicionados.
+
+---
+
+### 2026-02-06 - Confirm Modal Customizado: Substituicao do confirm() nativo
+
+**Arquivos Criados:**
+- `shared/confirm-modal.css` - CSS do modal de confirmacao com glassmorphism, animacoes, responsivo, ARIA
+- `shared/confirm-modal.js` - Modulo ES exportando `confirmModal()` que retorna Promise<boolean>
+
+**Arquivos Modificados (CSS import adicionado):**
+- `estoque/index.html` - Adicionado link para confirm-modal.css
+- `financas/index.html` - Adicionado link para confirm-modal.css
+- `marketplace/index.html` - Adicionado link para confirm-modal.css
+- `servicos/index.html` - Adicionado link para confirm-modal.css
+
+**Arquivos Modificados (confirm() substituido por confirmModal()):**
+- `estoque/script.js` - 2 calls: deleteFilament, deleteEquipment (dynamic import)
+- `financas/finance-data.js` - 9 calls: handleTransactionSubmit (warning), deleteTransaction, deleteSubscription, deleteInstallment, unmarkBillAsPaid, deleteInvestment, deleteProjection, deleteCreditCard, unlinkMyWhatsApp (dynamic import)
+- `financas/finance-ui.js` - 2 calls: deleteCreditTransaction, cleanCompanyData (dynamic import)
+- `marketplace/js/marketplace-data.js` - 1 call: deleteProduct (dynamic import)
+- `marketplace/js/marketplace-ml.js` - 1 call: unlinkMlb (dynamic import)
+- `servicos/js/services.js` - 4 calls: deleteService, removeServiceFile, removeServiceImage, updateServiceStatus (static import)
+- `servicos/js/tasks.js` - 1 call: markAsNotFeasible (static import)
+
+**Total: 20 confirm() nativos substituidos por confirmModal() customizado**
+
+**Abordagem de importacao:**
+- Paineis com `type="module"` (servicos): `import { confirmModal } from '/shared/confirm-modal.js'` (static)
+- Paineis sem module (estoque, financas, marketplace): `const { confirmModal } = await import('/shared/confirm-modal.js')` (dynamic dentro de funcoes async)
+
+---
+
+### 2026-02-06 - Inline style.display cleanup: classList.add/remove('hidden')
+
+**Arquivos Modificados:**
+- `custo/script-custo.js` - 14 inline style.display substituidos por classList.add/remove('hidden')
+- `financas/finance-data.js` - 7 inline style.display substituidos por classList.add/toggle('hidden')
+- `servicos/js/tasks.js` - 1 inline style.display substituido por classList.remove('hidden')
+
+**Padrao aplicado:**
+- `el.style.display = 'none'` -> `el.classList.add('hidden')`
+- `el.style.display = 'block'/'flex'/''` -> `el.classList.remove('hidden')`
+- Ternarios `condition ? 'block' : 'none'` -> `el.classList.toggle('hidden', !condition)`
+- Classe utilitaria `.hidden { display: none !important; }` de `/shared/z-index.css`
+
+**Nota:** Elementos com `style="display: none;"` inline no HTML precisam de `el.style.display = ''` adicional ao remover a classe hidden, para limpar o estilo inline legado.
 
 ### 2026-02-06 - Null Safety e Logger: Paineis Financas e Auto-Orcamento
 

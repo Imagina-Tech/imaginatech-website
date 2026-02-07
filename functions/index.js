@@ -259,6 +259,17 @@ function generateStateToken() {
 }
 
 // ========== AUTH HELPERS ==========
+/**
+ * Verifica se o request contem um token Bearer valido de um admin ativo.
+ * Consulta Firestore 'admins/{uid}' para verificar status. Super Admin (SUPER_ADMIN_EMAIL)
+ * sempre tem acesso como fallback unico permitido.
+ *
+ * @param {Object} req - Express request com header Authorization: Bearer <token>
+ * @returns {Promise<{isAdmin: boolean, email?: string, uid?: string, error?: string}>}
+ *
+ * @reads Firestore 'admins/{uid}'
+ * @calls Firebase Auth: verifyIdToken
+ */
 async function verifyAdminToken(req) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -296,7 +307,17 @@ function isSuperAdmin(email) {
 }
 
 // ========== RETRY HELPER ==========
-// Backoff exponencial com tratamento especial para 429 (rate limit)
+/**
+ * Executa funcao com retry e backoff exponencial.
+ * Tratamento especial para 429 (rate limit): backoff mais agressivo (5s, 15s, 45s).
+ * Para outros erros: backoff linear (1s, 2s, 3s).
+ *
+ * @param {Function} fn - Funcao async a ser executada
+ * @param {number} [maxRetries=3] - Numero maximo de tentativas
+ * @param {number} [delayMs=1000] - Delay base em ms entre tentativas (para erros nao-429)
+ * @returns {Promise<*>} Resultado da funcao em caso de sucesso
+ * @throws {Error} Ultimo erro apos esgotar todas as tentativas
+ */
 async function withRetry(fn, maxRetries = 3, delayMs = 1000) {
     let lastError;
     for (let i = 0; i < maxRetries; i++) {
@@ -335,8 +356,15 @@ const ML_CONFIG = {
 // ========================================
 
 /**
- * Gera URL de autorizacao do Mercado Livre com PKCE
- * GET /mlAuth
+ * Inicia fluxo de autorizacao OAuth do Mercado Livre com PKCE.
+ * Gera code_verifier, code_challenge e state token, salva no Firestore e redireciona.
+ *
+ * @param {Object} req - Express request (GET)
+ * @param {Object} res - Express response (redirect ou JSON com authUrl)
+ * @returns {void}
+ *
+ * @fires Firestore write em 'mlCredentials/pkce_{state}'
+ * @see {@link https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao}
  */
 exports.mlAuth = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -373,9 +401,13 @@ exports.mlAuth = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Callback OAuth - DEPRECATED: Redireciona para mlwebhook
- * Mantido para compatibilidade com URLs antigas
- * GET /mlOAuthCallback?code=XXX&state=YYY
+ * Callback OAuth legado - DEPRECATED. Redireciona para mlwebhook.
+ * Mantido apenas para compatibilidade com URLs antigas ja registradas.
+ *
+ * @param {Object} req - Express request (GET com query code e state)
+ * @param {Object} res - Express response (redirect 302 para mlwebhook)
+ * @returns {void}
+ * @deprecated Usar mlwebhook diretamente como redirect_uri
  */
 exports.mlOAuthCallback = functions.https.onRequest(async (req, res) => {
     if (!applyRateLimit(req, res, 'auth')) return;
@@ -387,9 +419,21 @@ exports.mlOAuthCallback = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Webhook do Mercado Livre - Recebe notificacoes E OAuth callback
- * GET /mlwebhook?code=XXX&state=YYY (OAuth callback com PKCE)
- * POST /mlwebhook (Webhook notificacoes)
+ * Webhook unificado do Mercado Livre - processa OAuth callback e notificacoes de vendas.
+ *
+ * GET com ?code=XXX&state=YYY: Troca authorization code por access_token via PKCE,
+ * busca dados do usuario ML e salva tokens no Firestore.
+ *
+ * POST: Recebe notificacoes de vendas/pedidos do ML e salva para processamento.
+ *
+ * @param {Object} req - Express request (GET para OAuth, POST para notificacoes)
+ * @param {Object} res - Express response (redirect para frontend ou 200 OK)
+ * @returns {void}
+ *
+ * @fires Firestore write em 'mlCredentials/tokens' (OAuth callback)
+ * @fires Firestore delete em 'mlCredentials/pkce_{state}' (limpeza PKCE)
+ * @fires Firestore add em 'mlNotifications' (notificacoes POST)
+ * @calls API ML: /oauth/token, /users/{id}
  */
 exports.mlwebhook = functions.https.onRequest(async (req, res) => {
     // Webhook do ML - limite mais alto para nao bloquear notificacoes
@@ -492,7 +536,15 @@ exports.mlwebhook = functions.https.onRequest(async (req, res) => {
 // ========================================
 
 /**
- * Renovar access_token usando refresh_token
+ * Renova o access_token do Mercado Livre usando o refresh_token salvo no Firestore.
+ * Atualiza ambos os tokens no Firestore apos renovacao.
+ *
+ * @returns {Promise<string>} Novo access_token valido
+ * @throws {Error} Se credenciais ML nao existirem no Firestore
+ *
+ * @reads Firestore 'mlCredentials/tokens'
+ * @fires Firestore update em 'mlCredentials/tokens'
+ * @calls API ML: /oauth/token (grant_type: refresh_token)
  */
 async function refreshAccessToken() {
     const credDoc = await db.collection('mlCredentials').doc('tokens').get();
@@ -526,7 +578,13 @@ async function refreshAccessToken() {
 }
 
 /**
- * Obter access_token valido (renova se necessario)
+ * Obtem access_token valido do ML, renovando automaticamente se expirado ou prestes a expirar.
+ * Margem de seguranca de 5 minutos antes da expiracao.
+ *
+ * @returns {Promise<string>} Access token valido para chamadas a API do ML
+ * @throws {Error} Se ML nao estiver conectado (sem tokens no Firestore)
+ *
+ * @reads Firestore 'mlCredentials/tokens'
  */
 async function getValidAccessToken() {
     const credDoc = await db.collection('mlCredentials').doc('tokens').get();
@@ -554,8 +612,14 @@ async function getValidAccessToken() {
 // ========================================
 
 /**
- * Verificar status da conexao ML
- * GET /mlStatus
+ * Verifica status da conexao com o Mercado Livre.
+ * Retorna se esta conectado, nickname do vendedor e expiracao do token.
+ *
+ * @param {Object} req - Express request (GET)
+ * @param {Object} res - Express response com { connected, nickname, userId, expiresAt }
+ * @returns {void}
+ *
+ * @reads Firestore 'mlCredentials/tokens'
  */
 exports.mlStatus = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -588,9 +652,14 @@ exports.mlStatus = functions.https.onRequest(async (req, res) => {
 // ========== ADMIN MANAGEMENT ENDPOINTS ==========
 
 /**
- * Retorna lista de administradores ativos
- * GET /getAdmins
- * REQUER AUTENTICACAO
+ * Retorna lista de administradores ativos do sistema.
+ * Requer autenticacao - apenas admins podem consultar.
+ *
+ * @param {Object} req - Express request (GET, requer Bearer token)
+ * @param {Object} res - Express response com { success, admins: [{uid, email, name, photoURL, createdAt}] }
+ * @returns {void}
+ *
+ * @reads Firestore 'admins' (where active == true)
  */
 exports.getAdmins = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -631,10 +700,16 @@ exports.getAdmins = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Inicializar admins no Firestore (ENDPOINT TEMPORARIO)
- * POST /initAdmins
- * APENAS Super Admin pode executar
- * Cria documentos na colecao admins para cada email da lista
+ * Inicializa administradores no Firestore (ENDPOINT TEMPORARIO).
+ * Apenas Super Admin pode executar. Cria documentos na colecao 'admins'
+ * para cada email da lista interna e define custom claims no Firebase Auth.
+ *
+ * @param {Object} req - Express request (POST, requer Bearer token de Super Admin)
+ * @param {Object} res - Express response com { success, results: [{email, status, uid}] }
+ * @returns {void}
+ *
+ * @fires Firestore set em 'admins/{uid}' para cada admin
+ * @calls Firebase Auth: getUserByEmail, setCustomUserClaims
  */
 exports.initAdmins = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -726,8 +801,16 @@ exports.initAdmins = functions.https.onRequest(async (req, res) => {
 // ========================================
 
 /**
- * Trigger: Quando um admin e criado ou atualizado
- * Define custom claim 'admin: true' no token do usuario
+ * Trigger Firestore: Disparado quando um documento em 'admins/{userId}' e criado, atualizado ou deletado.
+ * Sincroniza o custom claim 'admin' no Firebase Auth com o campo 'active' do documento.
+ * Necessario para que Firebase Storage Rules reconhecam o admin.
+ *
+ * @param {Object} change - Firestore change object (before/after)
+ * @param {Object} context - Event context com params.userId
+ * @returns {Promise<{success: boolean, action: string}>}
+ *
+ * @calls Firebase Auth: setCustomUserClaims({admin: true|false})
+ * @fires Firestore update em 'admins/{userId}' (campo claimsUpdatedAt)
  */
 exports.onAdminCreatedOrUpdated = functions.firestore
     .document('admins/{userId}')
@@ -763,9 +846,16 @@ exports.onAdminCreatedOrUpdated = functions.firestore
     });
 
 /**
- * Endpoint HTTP para forcar refresh de custom claims de todos os admins
- * Util para migracao inicial ou correcao de inconsistencias
- * POST /refreshAdminClaims
+ * Forca refresh dos custom claims de TODOS os admins cadastrados no Firestore.
+ * Util para migracao inicial ou correcao de inconsistencias entre Firestore e Auth.
+ * Apenas Super Admin pode executar.
+ *
+ * @param {Object} req - Express request (POST, requer Bearer token de Super Admin)
+ * @param {Object} res - Express response com { success, results: [{email, uid, admin, status}] }
+ * @returns {void}
+ *
+ * @reads Firestore 'admins' (todos os documentos)
+ * @calls Firebase Auth: setCustomUserClaims para cada admin
  */
 exports.refreshAdminClaims = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -827,11 +917,16 @@ exports.refreshAdminClaims = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Garante que o usuario autenticado tenha o custom claim 'admin' configurado
- * Qualquer admin autenticado pode chamar para si mesmo
- * POST /ensureMyAdminClaim
- * Requer: Bearer token de usuario autenticado
- * Retorna: { success, admin, message }
+ * Garante que o usuario autenticado tenha o custom claim 'admin' configurado no Firebase Auth.
+ * Qualquer admin ativo pode chamar para si mesmo. Verifica no Firestore se o usuario e admin
+ * antes de definir o claim. Retorna se o claim ja estava definido ou foi criado agora.
+ *
+ * @param {Object} req - Express request (POST, requer Bearer token)
+ * @param {Object} res - Express response com { success, admin, message, alreadySet }
+ * @returns {void}
+ *
+ * @reads Firestore 'admins/{uid}'
+ * @calls Firebase Auth: verifyIdToken, setCustomUserClaims
  */
 exports.ensureMyAdminClaim = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -903,10 +998,13 @@ exports.ensureMyAdminClaim = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Verificar senha de bypass para acoes especiais (ex: pular foto obrigatoria)
- * POST /verifyBypassPassword
- * Body: { password: string }
- * Requer: Admin autenticado
+ * Verifica senha de bypass para acoes especiais (ex: pular foto obrigatoria no estoque).
+ * A senha e armazenada exclusivamente em variavel de ambiente (process.env.BYPASS_PASSWORD).
+ * Requer autenticacao de admin. Rate limit mais restritivo (tipo 'sensitive').
+ *
+ * @param {Object} req - Express request (POST, body: { password: string }, requer Bearer token)
+ * @param {Object} res - Express response com { success, message } ou erro 401
+ * @returns {void}
  */
 exports.verifyBypassPassword = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -968,8 +1066,15 @@ exports.verifyBypassPassword = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Buscar anuncios do usuario no ML
- * GET /mlListItems
+ * Lista todos os anuncios do vendedor no Mercado Livre.
+ * Busca IDs via /users/{id}/items/search e detalhes em lotes de 20 via /items.
+ *
+ * @param {Object} req - Express request (GET)
+ * @param {Object} res - Express response com { items: Array }
+ * @returns {void}
+ *
+ * @reads Firestore 'mlCredentials/tokens' (para userId)
+ * @calls API ML: /users/{id}/items/search, /items?ids=...
  */
 exports.mlListItems = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1022,8 +1127,15 @@ exports.mlListItems = functions.https.onRequest(async (req, res) => {
 // ========================================
 
 /**
- * Buscar pedidos pendentes (pagos, aguardando envio)
- * GET /mlGetPendingOrders
+ * Busca pedidos pendentes no ML (status 'paid', aguardando envio).
+ * Retorna ate 50 pedidos ordenados por data decrescente, com dados do comprador e itens.
+ *
+ * @param {Object} req - Express request (GET)
+ * @param {Object} res - Express response com { success, total, orders: Array }
+ * @returns {void}
+ *
+ * @reads Firestore 'mlCredentials/tokens'
+ * @calls API ML: /orders/search (seller, order.status=paid)
  */
 exports.mlGetPendingOrders = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1093,8 +1205,16 @@ exports.mlGetPendingOrders = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Buscar historico de vendas (entregues/finalizadas)
- * GET /mlGetSalesHistory?days=30
+ * Busca historico de vendas entregues/finalizadas no ML.
+ * Filtra pedidos com status 'delivered' ou 'confirmed' nos ultimos N dias.
+ * Calcula totais de receita e quantidade de pedidos.
+ *
+ * @param {Object} req - Express request (GET, query: { days?: number } - padrao 30)
+ * @param {Object} res - Express response com { success, period, totalOrders, totalRevenue, orders }
+ * @returns {void}
+ *
+ * @reads Firestore 'mlCredentials/tokens'
+ * @calls API ML: /orders/search (date_created.from, sort=date_desc)
  */
 exports.mlGetSalesHistory = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1175,8 +1295,14 @@ exports.mlGetSalesHistory = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Buscar detalhes de um pedido especifico
- * GET /mlGetOrderDetails?orderId=123456789
+ * Busca detalhes completos de um pedido especifico no ML, incluindo envio.
+ * Retorna dados do comprador, itens, pagamentos e endereco de entrega.
+ *
+ * @param {Object} req - Express request (GET, query: { orderId: string })
+ * @param {Object} res - Express response com { success, order, shipping }
+ * @returns {void}
+ *
+ * @calls API ML: /orders/{orderId}, /shipments/{shipmentId}
  */
 exports.mlGetOrderDetails = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1273,8 +1399,14 @@ exports.mlGetOrderDetails = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Buscar detalhes de um anuncio (para vincular)
- * GET /mlGetItemDetails?mlbId=MLB123456789
+ * Busca detalhes de um anuncio especifico no ML para vinculacao com estoque local.
+ * Retorna titulo, preco, estoque, fotos, descricao e se e item de catalogo.
+ *
+ * @param {Object} req - Express request (GET, query: { mlbId: string })
+ * @param {Object} res - Express response com { success, item: { id, title, price, pictures, ... } }
+ * @returns {void}
+ *
+ * @calls API ML: /items/{mlbId}, /items/{mlbId}/description (em paralelo)
  */
 exports.mlGetItemDetails = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1350,9 +1482,13 @@ exports.mlGetItemDetails = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Atualizar preco de um anuncio
- * POST /mlUpdatePrice
- * Body: { mlbId: "MLB123456789", price: 99.90 }
+ * Atualiza preco de um anuncio no Mercado Livre.
+ *
+ * @param {Object} req - Express request (POST, body: { mlbId: string, price: number })
+ * @param {Object} res - Express response com { success, mlbId, newPrice }
+ * @returns {void}
+ *
+ * @calls API ML: PUT /items/{mlbId} (campo price)
  */
 exports.mlUpdatePrice = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1402,9 +1538,13 @@ exports.mlUpdatePrice = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Atualizar quantidade em estoque de um anuncio
- * POST /mlUpdateStock
- * Body: { mlbId: "MLB123456789", quantity: 10 }
+ * Atualiza quantidade em estoque de um anuncio no Mercado Livre.
+ *
+ * @param {Object} req - Express request (POST, body: { mlbId: string, quantity: number })
+ * @param {Object} res - Express response com { success, mlbId, newQuantity }
+ * @returns {void}
+ *
+ * @calls API ML: PUT /items/{mlbId} (campo available_quantity)
  */
 exports.mlUpdateStock = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1454,9 +1594,13 @@ exports.mlUpdateStock = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Atualizar descricao de um anuncio
- * POST /mlUpdateDescription
- * Body: { mlbId: "MLB123456789", description: "Nova descricao" }
+ * Atualiza descricao de um anuncio no Mercado Livre via endpoint especifico.
+ *
+ * @param {Object} req - Express request (POST, body: { mlbId: string, description: string })
+ * @param {Object} res - Express response com { success, mlbId }
+ * @returns {void}
+ *
+ * @calls API ML: PUT /items/{mlbId}/description (campo plain_text)
  */
 exports.mlUpdateDescription = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1513,9 +1657,14 @@ exports.mlUpdateDescription = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Atualizar titulo de um anuncio
- * POST /mlUpdateTitle
- * Body: { mlbId: "MLB123456789", title: "Novo titulo" }
+ * Atualiza titulo de um anuncio no Mercado Livre.
+ * Detecta e retorna erro especifico se o anuncio estiver vinculado a catalogo do ML.
+ *
+ * @param {Object} req - Express request (POST, body: { mlbId: string, title: string })
+ * @param {Object} res - Express response com { success, mlbId, newTitle }
+ * @returns {void}
+ *
+ * @calls API ML: PUT /items/{mlbId} (campo title)
  */
 exports.mlUpdateTitle = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -1587,8 +1736,14 @@ exports.mlUpdateTitle = functions.https.onRequest(async (req, res) => {
 // ========================================
 
 /**
- * Fazer upload de uma foto para o ML
- * Recebe base64, retorna picture_id
+ * Faz upload de uma foto em base64 para o Mercado Livre via multipart.
+ * Suporta JPEG, PNG e WebP. Retorna o picture_id para uso em anuncios.
+ *
+ * @param {string} base64Data - Imagem em formato data:image/...;base64,...
+ * @param {string} accessToken - Token de acesso valido do ML
+ * @returns {Promise<string|null>} Picture ID do ML ou null em caso de erro
+ *
+ * @calls API ML: POST /pictures/items/upload (multipart)
  */
 async function uploadPictureToMl(base64Data, accessToken) {
     try {
@@ -1637,14 +1792,17 @@ async function uploadPictureToMl(base64Data, accessToken) {
 }
 
 /**
- * Atualizar fotos de um anuncio no ML
- * POST /mlUpdateItemPhotos
- * Body: { mlbId: "MLB123", pictures: [{ type: 'ml'|'local', url: string, id?: string }] }
+ * Atualiza fotos de um anuncio no Mercado Livre com sincronizacao completa.
+ * Processa fotos existentes no ML (mantidas pelo ID) e novas fotos locais (upload base64).
+ * A ordem do array recebido determina a ordem no anuncio. Fotos nao incluidas sao removidas.
  *
- * - Fotos type='ml' com id: mantidas pelo ID
- * - Fotos type='local' com url base64: upload + adiciona
- * - A ORDEM do array determina a ordem no anuncio
- * - Fotos nao incluidas sao REMOVIDAS do anuncio
+ * @param {Object} req - Express request (POST)
+ * @param {Object} req.body - { mlbId: string, pictures: [{type: 'ml'|'local', url?: string, id?: string}] }
+ * @param {Object} res - Express response com { success, photos, count, uploadResults }
+ * @returns {void}
+ *
+ * @calls uploadPictureToMl() para cada foto local
+ * @calls API ML: PUT /items/{mlbId} (campo pictures)
  */
 exports.mlUpdateItemPhotos = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -2023,14 +2181,22 @@ async function getUserCards(userId) {
 }
 
 /**
- * Gerar overview financeira em texto para enviar ao Gemini
+ * Gera overview financeira completa em texto para contexto do Gemini.
+ * Carrega 11 colecoes do Firestore em paralelo (Promise.allSettled) e calcula:
+ * saldo, faturas, parcelamentos, assinaturas, projecoes, investimentos, metas e contas.
  *
- * !!! SINCRONIZADO COM: financas/finance-data.js -> updateKPIs() !!!
+ * IMPORTANTE: Logica de calculo de saldo SINCRONIZADA com financas/finance-data.js -> updateKPIs().
  * Se editar os calculos aqui, edite tambem no frontend.
  *
- * @param {string} userId - ID do usuario
- * @param {string} userName - Nome do usuario
- * @returns {string} - Overview em texto
+ * @param {string} userId - Firebase Auth UID do usuario
+ * @param {string} userName - Nome do usuario para personalizar overview
+ * @param {boolean} [compact=false] - Se true, retorna versao compacta (~3K chars) para acoes de escrita.
+ *   Se false, retorna versao completa (~10K chars) para consultas.
+ * @returns {Promise<string>} Overview em texto formatado (resumido ou completo)
+ *
+ * @reads Firestore: 'transactions', 'projections', 'subscriptions', 'installments',
+ *   'creditCards', 'investments', 'goals', 'accounts', 'userSettings',
+ *   'creditCardPayments', 'cardExpenses'
  */
 async function buildFinancialOverview(userId, userName, compact = false) {
     const { startOfMonth, endOfMonth, year: currentYear, month: currentMonth, monthName, daysRemaining } = getMonthBounds();
@@ -2952,13 +3118,21 @@ FIM DA OVERVIEW
 }
 
 /**
- * Interpretar comando de texto usando Gemini - Versao Humanizada
- * Retorna JSON estruturado ou texto conversacional
- * @param {string} text - Texto do comando do usuario
- * @param {Array} userCards - Lista de cartoes do usuario para contexto
- * @param {string} financialOverview - Overview financeira em texto
- * @param {string} userName - Nome do usuario
- * @param {Array} conversationHistory - Historico recente da conversa [{role, text}]
+ * Interpreta comando de texto usando Gemini AI com contexto financeiro completo.
+ * Retorna JSON estruturado (para acoes) ou texto conversacional (para perguntas).
+ *
+ * Pipeline: Modelo principal (gemini-3-pro-preview) -> fallback (gemini-2.5-flash) ->
+ * fallback local (tryLocalInterpretation via regex) -> fallback de overview basica.
+ *
+ * @param {string} text - Texto do comando do usuario (ja sanitizado)
+ * @param {Array<{id: string, name: string}>} [userCards=[]] - Cartoes do usuario para contexto
+ * @param {string} [financialOverview=''] - Overview financeira em texto (compact ou full)
+ * @param {string} [userName=''] - Nome do usuario para personalizar respostas
+ * @param {Array<{role: string, text: string}>} [conversationHistory=[]] - Historico recente
+ * @returns {Promise<Object|string>} JSON com { action, data, confidence, message } para acoes,
+ *   ou string pura para respostas conversacionais
+ *
+ * @calls Gemini AI: gemini-3-pro-preview (principal), gemini-2.5-flash (fallback)
  */
 async function interpretFinanceCommand(text, userCards = [], financialOverview = '', userName = '', conversationHistory = []) {
     if (!GEMINI_API_KEY) {
@@ -3258,8 +3432,15 @@ IMPORTANTE:
 }
 
 /**
- * Fallback local: interpretar comandos simples via regex quando Gemini esta indisponivel
- * Cobre os casos mais comuns: "gastei X em Y", "recebi X de Y", "ajuda", "saldo"
+ * Fallback local: interpreta comandos simples via regex quando Gemini esta indisponivel (429).
+ * Cobre os casos mais comuns: "gastei X em Y", "recebi X de Y", "ajuda", "saldo", "resumo", "faturas".
+ * Detecta cartoes mencionados no texto para definir paymentMethod automaticamente.
+ *
+ * @param {string} text - Texto do comando do usuario
+ * @param {Array} userCards - Lista de cartoes do usuario (para deteccao de cartao)
+ * @param {string} userName - Nome do usuario para personalizar mensagens
+ * @param {string} todayStr - Data de hoje no formato YYYY-MM-DD
+ * @returns {Object|null} JSON com { action, data, confidence, message } ou null se nao conseguiu
  */
 function tryLocalInterpretation(text, userCards, userName, todayStr) {
     const lower = text.toLowerCase().trim();
@@ -3364,7 +3545,20 @@ async function findCardByName(userId, cardName) {
 }
 
 /**
- * Executar acao financeira no Firestore
+ * Executa acao financeira no Firestore baseada na interpretacao do Gemini.
+ * Suporta: add/edit/delete transacao, add parcelamento/assinatura/projecao/investimento/cartao,
+ * consultar saldo/resumo/cartoes/faturas, marcar projecao como recebida, e ajuda.
+ *
+ * @param {Object} interpretation - Resultado da interpretacao do Gemini
+ * @param {string} interpretation.action - Acao a executar (add_transaction, get_balance, etc)
+ * @param {Object} interpretation.data - Dados da acao (type, value, description, etc)
+ * @param {string} interpretation.message - Mensagem humanizada de confirmacao
+ * @param {string} userId - Firebase Auth UID do usuario alvo
+ * @returns {Promise<{success: boolean, message: string, [key]: *}>}
+ *
+ * @fires Firestore add/update/delete em 'transactions', 'installments', 'subscriptions',
+ *        'projections', 'investments', 'creditCards'
+ * @reads Firestore 'transactions', 'subscriptions', 'installments', 'creditCards', 'userSettings'
  */
 async function executeFinanceAction(interpretation, userId) {
     const { action, data } = interpretation;
@@ -4275,7 +4469,15 @@ function convertMarkdownToWhatsApp(text) {
 }
 
 /**
- * Enviar mensagem via WhatsApp Cloud API
+ * Envia mensagem de texto via WhatsApp Cloud API (Meta).
+ * Converte formatacao Markdown para WhatsApp e divide mensagens longas (>4090 chars)
+ * em partes, quebrando por linha para manter legibilidade.
+ *
+ * @param {string} to - Numero do destinatario (formato: 5511999999999)
+ * @param {string} message - Texto da mensagem (pode usar Markdown que sera convertido)
+ * @returns {Promise<boolean>} true se enviou com sucesso, false em caso de erro
+ *
+ * @calls WhatsApp Cloud API: POST /{phoneNumberId}/messages
  */
 async function sendWhatsAppReply(to, message) {
     if (!WA_CONFIG.phoneNumberId || !WA_CONFIG.accessToken) {
@@ -4471,9 +4673,28 @@ async function processAudioMessage(message, from) {
 // ========================================
 
 /**
- * Webhook do WhatsApp - Recebe e processa mensagens
- * GET: Verificacao do webhook pelo Meta
- * POST: Recebimento de mensagens/notificacoes
+ * Webhook principal do WhatsApp - ponto de entrada para todas as interacoes do bot financeiro.
+ *
+ * GET: Verificacao do webhook pelo Meta (hub.mode=subscribe, hub.verify_token, hub.challenge).
+ * POST: Recebe mensagens de texto e audio, processa com Gemini AI e executa acoes financeiras.
+ *
+ * Pipeline de processamento (POST):
+ * 1. Validacao de payload e deduplicacao atomica (Firestore transaction)
+ * 2. Rate limiting por numero (15 msgs/min)
+ * 3. Lookup do usuario em 'whatsappUsers'
+ * 4. Parse de contexto (grupo vs individual, @Claytinho vs @Empresa)
+ * 5. Transcricao de audio via OpenAI Whisper (se tipo=audio)
+ * 6. Construcao de overview financeira (compact para escrita, full para consultas)
+ * 7. Interpretacao via Gemini (com fallback local e overview basica)
+ * 8. Execucao da acao no Firestore e resposta via WhatsApp
+ *
+ * @param {Object} req - Express request (GET para verificacao, POST para mensagens)
+ * @param {Object} res - Express response (200 OK para WhatsApp, 403 se verificacao falhar)
+ * @returns {void}
+ *
+ * @reads Firestore 'whatsappUsers', 'whatsappMessages', 'transactions', 'creditCards', etc
+ * @fires Firestore add/update em 'whatsappMessages/{messageId}'
+ * @calls Gemini AI, OpenAI Whisper, WhatsApp Cloud API
  */
 exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -4807,9 +5028,17 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Enviar mensagem WhatsApp para um cliente
- * POST /sendWhatsAppMessage
- * Body: { to: "5511999999999", message: "Sua mensagem", template?: { name, language, components } }
+ * Envia mensagem ou template WhatsApp para um cliente via Cloud API.
+ * Suporta mensagem de texto simples ou templates pre-aprovados (para mensagens proativas).
+ * Salva historico de envio em 'whatsappMessagesSent'.
+ *
+ * @param {Object} req - Express request (POST)
+ * @param {Object} req.body - { to: string, message?: string, template?: {name, language?, components?} }
+ * @param {Object} res - Express response com { success, messageId, to }
+ * @returns {void}
+ *
+ * @fires Firestore add em 'whatsappMessagesSent'
+ * @calls WhatsApp Cloud API: POST /{phoneNumberId}/messages
  */
 exports.sendWhatsAppMessage = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -4899,8 +5128,15 @@ exports.sendWhatsAppMessage = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Verificar status do bot WhatsApp
- * GET /whatsappStatus
+ * Verifica status de configuracao do bot WhatsApp.
+ * Retorna se WhatsApp e Gemini estao configurados, usuarios registrados e mensagens recentes.
+ *
+ * @param {Object} req - Express request (GET)
+ * @param {Object} res - Express response com { status, whatsappConfigured, geminiConfigured,
+ *   registeredUsers, recentMessages, webhookUrl }
+ * @returns {void}
+ *
+ * @reads Firestore 'whatsappMessages' (ultimas 5), 'whatsappUsers' (todos)
  */
 exports.whatsappStatus = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -4955,11 +5191,20 @@ exports.whatsappStatus = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Registrar numero de WhatsApp para um usuario
- * REQUER AUTENTICACAO DE ADMIN
- * POST /registerWhatsAppUser
- * Body: { whatsappNumber: "5511999999999", userId: "firebase-uid", userName: "Nome" }
- * Headers: Authorization: Bearer <firebase-id-token>
+ * CRUD de usuarios do WhatsApp (apenas admins autenticados).
+ * GET: Lista todos os usuarios cadastrados em 'whatsappUsers'.
+ * POST: Registra vinculo numero -> userId. Aceita userId direto ou busca por email.
+ * DELETE: Remove vinculo de um numero.
+ *
+ * @param {Object} req - Express request (GET/POST/DELETE, requer Bearer token de admin)
+ * @param {Object} req.body - POST: { whatsappNumber, userId?, userName?, email? }
+ *                            DELETE: { whatsappNumber }
+ * @param {Object} res - Express response com { success, users|message|data }
+ * @returns {void}
+ *
+ * @reads Firestore 'whatsappUsers'
+ * @fires Firestore set/delete em 'whatsappUsers/{numero}'
+ * @calls Firebase Auth: getUserByEmail (quando email fornecido sem userId)
  */
 exports.registerWhatsAppUser = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -5070,14 +5315,21 @@ exports.registerWhatsAppUser = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Vincular/desvincular MEU numero de WhatsApp (para usuarios comuns)
- * Permite que qualquer usuario autenticado vincule APENAS seu proprio numero
+ * Self-service de vinculacao WhatsApp - permite que qualquer usuario autenticado
+ * vincule APENAS seu proprio numero (nao requer admin). Garante 1 numero por usuario.
  *
- * GET /linkMyWhatsApp - Verifica se tem numero vinculado
- * POST /linkMyWhatsApp - Vincula numero a propria conta
- * DELETE /linkMyWhatsApp - Remove vinculo do proprio numero
+ * GET: Verifica se tem numero vinculado ao userId.
+ * POST: Vincula numero (remove vinculos anteriores do mesmo userId).
+ * DELETE: Remove vinculo do proprio numero.
  *
- * Headers: Authorization: Bearer <firebase-id-token>
+ * @param {Object} req - Express request (GET/POST/DELETE, requer Bearer token)
+ * @param {Object} req.body - POST: { whatsappNumber: string (ex: 5521999999999) }
+ * @param {Object} res - Express response com { success, linked?, whatsappNumber? }
+ * @returns {void}
+ *
+ * @reads Firestore 'whatsappUsers' (where userId == uid)
+ * @fires Firestore set/delete em 'whatsappUsers/{numero}'
+ * @calls Firebase Auth: verifyIdToken
  */
 exports.linkMyWhatsApp = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);
@@ -5432,8 +5684,20 @@ function parseSTLVolume(buffer) {
 }
 
 /**
- * Cloud Function: calculateQuote
- * Recebe arquivo 3D e opcoes, retorna preco calculado
+ * Calcula orcamento de impressao 3D baseado em volume do modelo, material e opcoes.
+ * Aceita JSON (volume pre-calculado pelo frontend) ou multipart (arquivo STL para parse).
+ *
+ * Formula: materialCost + energyCost + depreciationCost + consumables + failureRate
+ *          * finishMultiplier * priorityMultiplier * profitMargin (280%)
+ *
+ * @param {Object} req - Express request (POST, Content-Type: application/json ou multipart/form-data)
+ * @param {Object} req.body - JSON: { volume: number (mm3), material?, infill?, finish?, priority? }
+ * @param {Object} res - Express response com { success, price, volume, material, infill, finish, priority }
+ * @returns {void}
+ *
+ * @example
+ * // POST /calculateQuote { volume: 5000, material: "PLA", infill: "20", finish: "padrao" }
+ * // => { success: true, price: 25.50, volume: "5.00", ... }
  */
 exports.calculateQuote = functions.https.onRequest(async (req, res) => {
     // CORS manual
@@ -5584,28 +5848,19 @@ exports.calculateQuote = functions.https.onRequest(async (req, res) => {
 // ========== AUTO-ORCAMENTO: CONSULTA DE ESTOQUE ==========
 
 /**
- * Cloud Function: getAvailableFilaments
- * Retorna filamentos agrupados por tipo+cor com estoque disponivel
- * ENDPOINT PUBLICO - NAO requer autenticacao
+ * Retorna filamentos disponiveis agrupados por tipo+cor com estoque total.
+ * ENDPOINT PUBLICO (sem autenticacao) - usado pelo auto-orcamento no frontend.
+ * SEGURANCA: Nao expoe marca, notas ou IDs internos dos filamentos.
  *
- * Query params:
- *   - minWeight (opcional): Peso minimo em gramas para filtrar cores disponiveis
+ * @param {Object} req - Express request (GET, query: { minWeight?: number } - peso minimo em gramas)
+ * @param {Object} res - Express response com { success, materials: { [tipo]: { availableColors, colorStock } }, requestedWeight }
+ * @returns {void}
  *
- * Retorna: {
- *   success: true,
- *   materials: {
- *     'PLA': {
- *       availableColors: ['Branco', 'Preto'],
- *       colorStock: {
- *         'Branco': { totalGrams: 1850, sufficient: true },
- *         'Preto': { totalGrams: 500, sufficient: false }
- *       }
- *     }
- *   },
- *   requestedWeight: 45
- * }
+ * @reads Firestore 'filaments' (todos os documentos)
  *
- * SEGURANCA: NAO expor marca, notas, imageUrl, IDs
+ * @example
+ * // GET /getAvailableFilaments?minWeight=45
+ * // => { success: true, materials: { PLA: { availableColors: ['Branco'], colorStock: {...} } } }
  */
 exports.getAvailableFilaments = functions.https.onRequest(async (req, res) => {
     // CORS - permite qualquer origem (endpoint publico)
@@ -5686,9 +5941,15 @@ exports.getAvailableFilaments = functions.https.onRequest(async (req, res) => {
 
 // ========== MIGRACAO: SUPER ADMIN ==========
 /**
- * Funcao de migracao para adicionar isSuperAdmin: true ao admin principal
- * Executar UMA VEZ via: curl -X POST https://us-central1-imaginatech-servicos.cloudfunctions.net/migrateSuperAdmin
- * Depois de executar, esta funcao pode ser removida
+ * Funcao de migracao one-shot: adiciona campo isSuperAdmin: true ao admin principal.
+ * Se o admin nao existir na colecao 'admins', cria um novo documento.
+ * Pode ser removida apos primeira execucao.
+ *
+ * @param {Object} req - Express request (POST)
+ * @param {Object} res - Express response com { success, adminId, migrated|created|alreadyMigrated }
+ * @returns {void}
+ *
+ * @fires Firestore add/update em 'admins' (campo isSuperAdmin)
  */
 exports.migrateSuperAdmin = functions.https.onRequest(async (req, res) => {
     setCorsHeaders(res, req);

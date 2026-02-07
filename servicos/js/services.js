@@ -38,6 +38,7 @@ import {
     showBypassPasswordModal
 } from './auth-ui.js';
 import { STATUS_ORDER, STATUS_ORDER_MODELAGEM, getStatusOrderForService, getCarrierInfo } from './utils.js';
+import { confirmModal } from '/shared/confirm-modal.js';
 
 // COMPANY_USER_ID importado de config.js
 
@@ -278,18 +279,18 @@ export function toggleMultiColorMode() {
     const weightGroup = weightField?.closest('.form-group');
 
     if (isMultiColor) {
-        if (singleContainer) singleContainer.style.display = 'none';
-        if (multiContainer) multiContainer.style.display = 'block';
-        if (weightGroup) weightGroup.style.display = 'none'; // Esconder peso individual
+        if (singleContainer) singleContainer.classList.add('hidden');
+        if (multiContainer) multiContainer.classList.remove('hidden');
+        if (weightGroup) weightGroup.classList.add('hidden'); // Esconder peso individual
 
         // Se nao tem entradas, adicionar a primeira
         if (colorEntries.length === 0) {
             addColorEntry();
         }
     } else {
-        if (singleContainer) singleContainer.style.display = 'block';
-        if (multiContainer) multiContainer.style.display = 'none';
-        if (weightGroup) weightGroup.style.display = 'block'; // Mostrar peso individual
+        if (singleContainer) singleContainer.classList.remove('hidden');
+        if (multiContainer) multiContainer.classList.add('hidden');
+        if (weightGroup) weightGroup.classList.remove('hidden'); // Mostrar peso individual
     }
 }
 
@@ -657,10 +658,10 @@ function updateMultiColorTotal() {
     const total = colorEntries.reduce((sum, entry) => sum + (entry.weight || 0), 0);
 
     if (total > 0) {
-        totalDiv.style.display = 'block';
+        totalDiv.classList.remove('hidden');
         totalDisplay.textContent = `${total}g`;
     } else {
-        totalDiv.style.display = 'none';
+        totalDiv.classList.add('hidden');
     }
 }
 
@@ -754,12 +755,12 @@ export function resetMultiColorState() {
     const weightField = document.getElementById('serviceWeight');
     const weightGroup = weightField?.closest('.form-group');
 
-    if (singleContainer) singleContainer.style.display = 'block';
-    if (multiContainer) multiContainer.style.display = 'none';
-    if (weightGroup) weightGroup.style.display = 'block';
+    if (singleContainer) singleContainer.classList.remove('hidden');
+    if (multiContainer) multiContainer.classList.add('hidden');
+    if (weightGroup) weightGroup.classList.remove('hidden');
 
     const totalDiv = document.getElementById('multiColorTotal');
-    if (totalDiv) totalDiv.style.display = 'none';
+    if (totalDiv) totalDiv.classList.add('hidden');
 }
 
 /**
@@ -1889,7 +1890,15 @@ export async function deleteService(serviceId) {
     if (!state.isAuthorized) return showToast('Sem permissão', 'error');
     
     const service = state.services.find(s => s.id === serviceId);
-    if (!service || !confirm(`Excluir o serviço "${service.name}"?\n\nTodos os arquivos e imagens serão deletados permanentemente.`)) return;
+    if (!service) return;
+
+    const confirmed = await confirmModal({
+        title: 'Excluir Servico',
+        message: `Excluir o servico "${service.name}"?\n\nTodos os arquivos e imagens serao deletados permanentemente.`,
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) return;
     
     try {
         // Usar Set para evitar URLs duplicadas (mesmo arquivo em múltiplos campos)
@@ -2097,7 +2106,13 @@ export async function removeFileFromService(serviceId, fileIndex, fileUrl) {
         return showToast('Arquivo não encontrado', 'error');
     }
     
-    if (!confirm('Deseja realmente remover este arquivo?\n\nEsta ação não pode ser desfeita.')) return;
+    const confirmedRemoveFile = await confirmModal({
+        title: 'Remover Arquivo',
+        message: 'Deseja realmente remover este arquivo?\n\nEsta acao nao pode ser desfeita.',
+        confirmText: 'Remover',
+        danger: true
+    });
+    if (!confirmedRemoveFile) return;
     
     try {
         showToast('Removendo arquivo...', 'info');
@@ -2172,7 +2187,13 @@ export async function removeImageFromService(serviceId, imageIndex, imageSource,
         return showToast('Imagem não encontrada', 'error');
     }
     
-    if (!confirm(`Deseja realmente remover esta ${imageName}?\n\nEsta ação não pode ser desfeita.`)) {
+    const confirmedRemoveImage = await confirmModal({
+        title: 'Remover Imagem',
+        message: `Deseja realmente remover esta ${imageName}?\n\nEsta acao nao pode ser desfeita.`,
+        confirmText: 'Remover',
+        danger: true
+    });
+    if (!confirmedRemoveImage) {
         return;
     }
     
@@ -2309,7 +2330,13 @@ export async function updateStatus(serviceId, newStatus) {
         const newStatusIndex = statusOrder.indexOf(newStatus);
 
         if (service.trackingCode && service.deliveryMethod === 'sedex' && newStatusIndex < statusOrder.indexOf('retirada')) {
-            if (!confirm(`ATENÇÃO: Este pedido já foi postado nos Correios!\nRegredir o status irá REMOVER o código de rastreio: ${service.trackingCode}\n\nDeseja continuar?`)) {
+            const confirmedRegress = await confirmModal({
+                title: 'Regredir Status',
+                message: `ATENCAO: Este pedido ja foi postado nos Correios!\nRegredir o status ira REMOVER o codigo de rastreio: ${service.trackingCode}\n\nDeseja continuar?`,
+                confirmText: 'Continuar',
+                danger: true
+            });
+            if (!confirmedRegress) {
                 return;
             }
         }
@@ -2345,11 +2372,11 @@ export async function updateStatus(serviceId, newStatus) {
         const hasPhone = service.clientPhone && service.clientPhone.trim().length > 0;
         // WhatsApp disponível para modelagem_concluida e para retirada (impressão)
         if (hasPhone && (newStatus === 'retirada' || newStatus === 'modelagem_concluida')) {
-            whatsappOption.style.display = 'block';
+            whatsappOption.classList.remove('hidden');
             const whatsappCheckbox = document.getElementById('sendWhatsappNotification');
             if (whatsappCheckbox) whatsappCheckbox.checked = true;
         } else {
-            whatsappOption.style.display = 'none';
+            whatsappOption.classList.add('hidden');
         }
     }
 
@@ -2360,16 +2387,16 @@ export async function updateStatus(serviceId, newStatus) {
             ['modelando', 'modelagem_concluida'] :
             ['producao', 'concluido', 'retirada', 'entregue'];
         if (hasEmail && emailStatuses.includes(newStatus)) {
-            emailOption.style.display = 'block';
+            emailOption.classList.remove('hidden');
             const emailCheckbox = document.getElementById('sendEmailNotification');
             if (emailCheckbox) emailCheckbox.checked = true;
         } else {
-            emailOption.style.display = 'none';
+            emailOption.classList.add('hidden');
         }
     }
 
     const photoField = document.getElementById('instagramPhotoField');
-    if (photoField) photoField.style.display = 'none';
+    if (photoField) photoField.classList.add('hidden');
 
     document.getElementById('statusModal')?.classList.add('active');
 }
@@ -3009,8 +3036,8 @@ function showExistingUpsList() {
     const footer = document.getElementById('upModalFooter');
 
     // Esconder formulario e footer
-    if (formSection) formSection.style.display = 'none';
-    if (footer) footer.style.display = 'none';
+    if (formSection) formSection.classList.add('hidden');
+    if (footer) footer.classList.add('hidden');
 
     // Gerar HTML da lista (simplificado - sem botoes de edicao/exclusao)
     let html = existingPortfolioItems.map(item => `
@@ -3042,7 +3069,7 @@ function showExistingUpsList() {
     if (list) list.innerHTML = html;
 
     // Mostrar secao
-    if (section) section.style.display = 'block';
+    if (section) section.classList.remove('hidden');
 }
 
 /**
@@ -3070,11 +3097,11 @@ export function showUpForm(editItem = null) {
     const saveBtn = document.getElementById('upSaveBtn');
 
     // Esconder lista
-    if (section) section.style.display = 'none';
+    if (section) section.classList.add('hidden');
 
     // Mostrar formulario e footer
-    if (formSection) formSection.style.display = 'block';
-    if (footer) footer.style.display = 'flex';
+    if (formSection) formSection.classList.remove('hidden');
+    if (footer) { footer.style.display = ''; footer.classList.remove('hidden'); }
 
     // Resetar campos
     upPhotoFile = null;
@@ -3098,7 +3125,7 @@ export function showUpForm(editItem = null) {
         // Mostrar categoria se for projetos
         const upCatGroupEl = document.getElementById('upCategoryGroup');
         if (upCatGroupEl) {
-            upCatGroupEl.style.display = editItem.destination === 'projetos' ? 'block' : 'none';
+            upCatGroupEl.classList.toggle('hidden', editItem.destination !== 'projetos');
         }
 
         // Mostrar imagem existente
@@ -3107,11 +3134,11 @@ export function showUpForm(editItem = null) {
         const upPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
         if (editItem.mainPhoto?.url) {
             if (upPhotoImgEl) upPhotoImgEl.src = editItem.mainPhoto.url;
-            if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'block';
-            if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'none';
+            if (upPhotoPreviewEl) upPhotoPreviewEl.classList.remove('hidden');
+            if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.classList.add('hidden');
         } else {
-            if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'none';
-            if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'flex';
+            if (upPhotoPreviewEl) upPhotoPreviewEl.classList.add('hidden');
+            if (upPhotoPlaceholderEl) { upPhotoPlaceholderEl.style.display = ''; upPhotoPlaceholderEl.classList.remove('hidden'); }
         }
 
         // Mostrar logo existente
@@ -3120,11 +3147,11 @@ export function showUpForm(editItem = null) {
         const upLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
         if (editItem.logo?.url) {
             if (upLogoImgEl) upLogoImgEl.src = editItem.logo.url;
-            if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'block';
-            if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'none';
+            if (upLogoPreviewEl) upLogoPreviewEl.classList.remove('hidden');
+            if (upLogoPlaceholderEl) upLogoPlaceholderEl.classList.add('hidden');
         } else {
-            if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'none';
-            if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'flex';
+            if (upLogoPreviewEl) upLogoPreviewEl.classList.add('hidden');
+            if (upLogoPlaceholderEl) { upLogoPlaceholderEl.style.display = ''; upLogoPlaceholderEl.classList.remove('hidden'); }
         }
 
         // Atualizar botao
@@ -3141,16 +3168,16 @@ export function showUpForm(editItem = null) {
         const upCatNewEl = document.getElementById('upCategory');
         if (upCatNewEl) upCatNewEl.value = '';
         const upCatGroupNewEl = document.getElementById('upCategoryGroup');
-        if (upCatGroupNewEl) upCatGroupNewEl.style.display = 'none';
+        if (upCatGroupNewEl) upCatGroupNewEl.classList.add('hidden');
 
         const upPhotoPreviewNewEl = document.getElementById('upPhotoPreview');
-        if (upPhotoPreviewNewEl) upPhotoPreviewNewEl.style.display = 'none';
+        if (upPhotoPreviewNewEl) upPhotoPreviewNewEl.classList.add('hidden');
         const upPhotoPlaceholderNewEl = document.getElementById('upPhotoPlaceholder');
-        if (upPhotoPlaceholderNewEl) upPhotoPlaceholderNewEl.style.display = 'flex';
+        if (upPhotoPlaceholderNewEl) { upPhotoPlaceholderNewEl.style.display = ''; upPhotoPlaceholderNewEl.classList.remove('hidden'); }
         const upLogoPreviewNewEl = document.getElementById('upLogoPreview');
-        if (upLogoPreviewNewEl) upLogoPreviewNewEl.style.display = 'none';
+        if (upLogoPreviewNewEl) upLogoPreviewNewEl.classList.add('hidden');
         const upLogoPlaceholderNewEl = document.getElementById('upLogoPlaceholder');
-        if (upLogoPlaceholderNewEl) upLogoPlaceholderNewEl.style.display = 'flex';
+        if (upLogoPlaceholderNewEl) { upLogoPlaceholderNewEl.style.display = ''; upLogoPlaceholderNewEl.classList.remove('hidden'); }
 
         // Atualizar botao
         if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Promover';
@@ -3180,28 +3207,28 @@ export function toggleCategoryField() {
     const descriptionGroup = document.getElementById('upDescriptionGroup');
 
     if (destination === 'projetos') {
-        if (categoryGroup) categoryGroup.style.display = 'block';
+        if (categoryGroup) categoryGroup.classList.remove('hidden');
         if (categorySelect) categorySelect.required = true;
         // Mostrar opcao de fotos extras e descricao para projetos
         if (extraPhotosGroup) {
-            extraPhotosGroup.style.display = 'block';
+            extraPhotosGroup.classList.remove('hidden');
         }
         if (descriptionGroup) {
-            descriptionGroup.style.display = 'block';
+            descriptionGroup.classList.remove('hidden');
         }
     } else {
-        if (categoryGroup) categoryGroup.style.display = 'none';
+        if (categoryGroup) categoryGroup.classList.add('hidden');
         if (categorySelect) {
             categorySelect.required = false;
             categorySelect.value = '';
         }
         // Esconder e limpar fotos extras e descricao para carrossel
         if (extraPhotosGroup) {
-            extraPhotosGroup.style.display = 'none';
+            extraPhotosGroup.classList.add('hidden');
             clearExtraPhotos();
         }
         if (descriptionGroup) {
-            descriptionGroup.style.display = 'none';
+            descriptionGroup.classList.add('hidden');
             const upDescEl = document.getElementById('upDescription');
             if (upDescEl) upDescEl.value = '';
         }
@@ -3236,9 +3263,9 @@ export function handleUpPhotoSelect(event) {
         const photoImgEl = document.getElementById('upPhotoImg');
         if (photoImgEl) photoImgEl.src = e.target.result;
         const photoPreviewEl = document.getElementById('upPhotoPreview');
-        if (photoPreviewEl) photoPreviewEl.style.display = 'block';
+        if (photoPreviewEl) photoPreviewEl.classList.remove('hidden');
         const photoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
-        if (photoPlaceholderEl) photoPlaceholderEl.style.display = 'none';
+        if (photoPlaceholderEl) photoPlaceholderEl.classList.add('hidden');
     };
     reader.readAsDataURL(file);
 }
@@ -3248,9 +3275,9 @@ export function removeUpPhoto() {
     const upPhotoInputEl = document.getElementById('upPhoto');
     if (upPhotoInputEl) upPhotoInputEl.value = '';
     const upPhotoPreviewEl = document.getElementById('upPhotoPreview');
-    if (upPhotoPreviewEl) upPhotoPreviewEl.style.display = 'none';
+    if (upPhotoPreviewEl) upPhotoPreviewEl.classList.add('hidden');
     const upPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
-    if (upPhotoPlaceholderEl) upPhotoPlaceholderEl.style.display = 'flex';
+    if (upPhotoPlaceholderEl) { upPhotoPlaceholderEl.style.display = ''; upPhotoPlaceholderEl.classList.remove('hidden'); }
 }
 
 export function handleUpLogoSelect(event) {
@@ -3276,9 +3303,9 @@ export function handleUpLogoSelect(event) {
         const logoImgEl = document.getElementById('upLogoImg');
         if (logoImgEl) logoImgEl.src = e.target.result;
         const logoPreviewEl = document.getElementById('upLogoPreview');
-        if (logoPreviewEl) logoPreviewEl.style.display = 'block';
+        if (logoPreviewEl) logoPreviewEl.classList.remove('hidden');
         const logoPlaceholderEl = document.getElementById('upLogoPlaceholder');
-        if (logoPlaceholderEl) logoPlaceholderEl.style.display = 'none';
+        if (logoPlaceholderEl) logoPlaceholderEl.classList.add('hidden');
     };
     reader.readAsDataURL(file);
 }
@@ -3288,9 +3315,9 @@ export function removeUpLogo() {
     const upLogoInputEl = document.getElementById('upLogo');
     if (upLogoInputEl) upLogoInputEl.value = '';
     const upLogoPreviewEl = document.getElementById('upLogoPreview');
-    if (upLogoPreviewEl) upLogoPreviewEl.style.display = 'none';
+    if (upLogoPreviewEl) upLogoPreviewEl.classList.add('hidden');
     const upLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
-    if (upLogoPlaceholderEl) upLogoPlaceholderEl.style.display = 'flex';
+    if (upLogoPlaceholderEl) { upLogoPlaceholderEl.style.display = ''; upLogoPlaceholderEl.classList.remove('hidden'); }
 }
 
 // ===========================
@@ -3519,9 +3546,9 @@ function processUpPhotoFile(file) {
         const dropPhotoImgEl = document.getElementById('upPhotoImg');
         if (dropPhotoImgEl) dropPhotoImgEl.src = e.target.result;
         const dropPhotoPreviewEl = document.getElementById('upPhotoPreview');
-        if (dropPhotoPreviewEl) dropPhotoPreviewEl.style.display = 'block';
+        if (dropPhotoPreviewEl) dropPhotoPreviewEl.classList.remove('hidden');
         const dropPhotoPlaceholderEl = document.getElementById('upPhotoPlaceholder');
-        if (dropPhotoPlaceholderEl) dropPhotoPlaceholderEl.style.display = 'none';
+        if (dropPhotoPlaceholderEl) dropPhotoPlaceholderEl.classList.add('hidden');
     };
     reader.readAsDataURL(file);
     showToast('Foto carregada!', 'success');
@@ -3583,9 +3610,9 @@ function processUpLogoFile(file) {
         const dropLogoImgEl = document.getElementById('upLogoImg');
         if (dropLogoImgEl) dropLogoImgEl.src = e.target.result;
         const dropLogoPreviewEl = document.getElementById('upLogoPreview');
-        if (dropLogoPreviewEl) dropLogoPreviewEl.style.display = 'block';
+        if (dropLogoPreviewEl) dropLogoPreviewEl.classList.remove('hidden');
         const dropLogoPlaceholderEl = document.getElementById('upLogoPlaceholder');
-        if (dropLogoPlaceholderEl) dropLogoPlaceholderEl.style.display = 'none';
+        if (dropLogoPlaceholderEl) dropLogoPlaceholderEl.classList.add('hidden');
     };
     reader.readAsDataURL(file);
     showToast('Logo carregado!', 'success');

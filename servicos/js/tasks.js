@@ -6,6 +6,7 @@
 
 import { state, AUTHORIZED_ADMINS, logger } from './config.js';
 import { showToast } from './auth-ui.js';
+import { confirmModal } from '/shared/confirm-modal.js';
 import {
     escapeHtml,
     formatDateTime,
@@ -1068,7 +1069,13 @@ async function confirmTransfer(taskId) {
 // ===========================
 
 async function markAsNotFeasible(taskId) {
-    if (!confirm('Tem certeza que deseja marcar esta tarefa como Não Factível?')) {
+    const confirmed = await confirmModal({
+        title: 'Nao Factivel',
+        message: 'Tem certeza que deseja marcar esta tarefa como Nao Factivel?',
+        confirmText: 'Confirmar',
+        danger: true
+    });
+    if (!confirmed) {
         return;
     }
 
@@ -1154,7 +1161,7 @@ function openAttachmentsModal(taskId) {
         const file = e.target.files[0];
         if (file) {
             const preview = document.getElementById('attachmentPreview');
-            if (preview) preview.style.display = 'block';
+            if (preview) { preview.style.display = ''; preview.classList.remove('hidden'); }
             const nameEl = document.getElementById('attachmentName');
             if (nameEl) nameEl.textContent = file.name;
             const sizeEl = document.getElementById('attachmentSize');

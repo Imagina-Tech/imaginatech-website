@@ -835,7 +835,14 @@ async function saveMlbLink() {
 
 // ========== DESVINCULAR MLB ==========
 async function unlinkMlb(productId) {
-    if (!confirm('Deseja desvincular este produto do Mercado Livre?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Desvincular Mercado Livre',
+        message: 'Deseja desvincular este produto do Mercado Livre?',
+        confirmText: 'Desvincular',
+        danger: true
+    });
+    if (!confirmed) return;
 
     try {
         window.showLoading();

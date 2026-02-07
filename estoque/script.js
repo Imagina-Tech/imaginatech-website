@@ -950,8 +950,8 @@ function openAddFilamentModal() {
     if (brandSelect) brandSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Resetar preview de imagem
-    { const el = document.getElementById('imagePreview'); if (el) { el.style.display = 'none'; el.src = ''; } }
-    { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('imagePreview'); if (el) { el.classList.add('hidden'); el.src = ''; } }
+    { const el = document.getElementById('uploadPlaceholder'); if (el) el.classList.remove('hidden'); }
 
     // Atualizar título
     { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-plus"></i> Adicionar Filamento'; }
@@ -973,8 +973,8 @@ function editFilament(id) {
 
     // Resetar imagem primeiro
     selectedImage = null;
-    { const el = document.getElementById('imagePreview'); if (el) el.style.display = 'none'; }
-    { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
+    { const el = document.getElementById('imagePreview'); if (el) el.classList.add('hidden'); }
+    { const el = document.getElementById('uploadPlaceholder'); if (el) el.classList.remove('hidden'); }
 
     // Preencher campos do formulário
     { const el = document.getElementById('modalTitle'); if (el) el.innerHTML = '<i class="fas fa-edit"></i> Editar Filamento'; }
@@ -1000,9 +1000,9 @@ function editFilament(id) {
     // Carregar imagem se existir
     if (filament.imageUrl) {
         const imgPreview = document.getElementById('imagePreview');
-        if (imgPreview) { imgPreview.src = filament.imageUrl; imgPreview.style.display = 'block'; }
+        if (imgPreview) { imgPreview.src = filament.imageUrl; imgPreview.classList.remove('hidden'); }
         const uploadPh = document.getElementById('uploadPlaceholder');
-        if (uploadPh) uploadPh.style.display = 'none';
+        if (uploadPh) uploadPh.classList.add('hidden');
     }
 
     editingFilamentId = id;
@@ -1075,9 +1075,9 @@ async function handleImageFile(file) {
         const placeholder = document.getElementById('uploadPlaceholder');
         if (preview) {
             preview.src = e.target.result;
-            preview.style.display = 'block';
+            preview.classList.remove('hidden');
         }
-        if (placeholder) placeholder.style.display = 'none';
+        if (placeholder) placeholder.classList.add('hidden');
     };
     reader.readAsDataURL(processedFile);
 
@@ -1482,10 +1482,10 @@ async function handleEquipmentImageFile(file) {
         const placeholder = document.getElementById('equipmentUploadPlaceholder');
         const preview = document.getElementById('equipmentImagePreview');
 
-        if (placeholder) placeholder.style.display = 'none';
+        if (placeholder) placeholder.classList.add('hidden');
         if (preview) {
             preview.src = e.target.result;
-            preview.style.display = 'block';
+            preview.classList.remove('hidden');
         }
     };
     reader.readAsDataURL(processedFile);
@@ -1641,8 +1641,8 @@ function closeFilamentModal() {
     // Resetar formulário após animação de fechamento
     setTimeout(() => {
         document.getElementById('filamentForm')?.reset();
-        { const el = document.getElementById('imagePreview'); if (el) el.style.display = 'none'; }
-        { const el = document.getElementById('uploadPlaceholder'); if (el) el.style.display = 'flex'; }
+        { const el = document.getElementById('imagePreview'); if (el) el.classList.add('hidden'); }
+        { const el = document.getElementById('uploadPlaceholder'); if (el) el.classList.remove('hidden'); }
 
         // Sincronizar CustomSelects após reset
         const typeSelect = document.getElementById('filamentType');
@@ -1674,9 +1674,16 @@ async function deleteFilament(id) {
     }
 
     const displayName = `${filament.type} ${filament.color}`;
-    const confirmMessage = `Tem certeza que deseja excluir o filamento "${displayName}" da marca ${filament.brand || 'N/A'}?\n\nEsta ação não pode ser desfeita.`;
+    const confirmMessage = `Tem certeza que deseja excluir o filamento "${displayName}" da marca ${filament.brand || 'N/A'}?\n\nEsta acao nao pode ser desfeita.`;
 
-    if (!confirm(confirmMessage)) {
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Excluir Filamento',
+        message: confirmMessage,
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) {
         return;
     }
 
@@ -1724,12 +1731,12 @@ function showLoading(text = 'Carregando...') {
     if (!overlay) return;
     const loadingText = overlay.querySelector('.loading-text');
     if (loadingText) loadingText.textContent = text;
-    overlay.style.display = 'flex';
+    overlay.classList.remove('hidden');
 }
 
 function hideLoading() {
     const el = document.getElementById('loadingOverlay');
-    if (el) el.style.display = 'none';
+    if (el) el.classList.add('hidden');
 }
 
 function updateConnectionStatus(connected) {
@@ -2298,9 +2305,9 @@ function openAddEquipmentModal() {
         const preview = document.getElementById('equipmentImagePreview');
         const fileInput = document.getElementById('equipmentImage');
 
-        if (placeholder) placeholder.style.display = 'block';
+        if (placeholder) placeholder.classList.remove('hidden');
         if (preview) {
-            preview.style.display = 'none';
+            preview.classList.add('hidden');
             preview.src = '';
         }
         if (fileInput) fileInput.value = '';
@@ -2359,15 +2366,15 @@ function openEditEquipmentModal(id) {
     if (fileInput) fileInput.value = '';
 
     if (item.imageUrl) {
-        if (placeholder) placeholder.style.display = 'none';
+        if (placeholder) placeholder.classList.add('hidden');
         if (preview) {
             preview.src = item.imageUrl;
-            preview.style.display = 'block';
+            preview.classList.remove('hidden');
         }
     } else {
-        if (placeholder) placeholder.style.display = 'block';
+        if (placeholder) placeholder.classList.remove('hidden');
         if (preview) {
-            preview.style.display = 'none';
+            preview.classList.add('hidden');
             preview.src = '';
         }
     }
@@ -2463,7 +2470,14 @@ async function saveEquipment(event) {
 
 // Excluir equipamento
 async function deleteEquipment(id) {
-    if (!confirm('Tem certeza que deseja excluir este equipamento?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Excluir Equipamento',
+        message: 'Tem certeza que deseja excluir este equipamento?',
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) return;
 
     try {
         showLoading('Excluindo equipamento...');
@@ -2581,10 +2595,10 @@ async function previewEquipmentImage(event) {
         const placeholder = document.getElementById('equipmentUploadPlaceholder');
         const preview = document.getElementById('equipmentImagePreview');
 
-        if (placeholder) placeholder.style.display = 'none';
+        if (placeholder) placeholder.classList.add('hidden');
         if (preview) {
             preview.src = e.target.result;
-            preview.style.display = 'block';
+            preview.classList.remove('hidden');
         }
     };
     reader.readAsDataURL(file);

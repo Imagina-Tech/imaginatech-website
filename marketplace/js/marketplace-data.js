@@ -274,7 +274,14 @@ async function deleteProduct(productId) {
     }
     confirmMsg += '\n\nEsta acao nao pode ser desfeita.';
 
-    if (!confirm(confirmMsg)) {
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Excluir Produto',
+        message: confirmMsg,
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) {
         return;
     }
 

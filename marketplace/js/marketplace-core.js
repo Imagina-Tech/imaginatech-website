@@ -928,13 +928,13 @@ function toggleManufacturingTime() {
 
     if (saleType.value === 'personalizacao') {
         // Personalizacao: mostrar prazo de producao
-        manufacturingGroup.style.display = '';
+        manufacturingGroup.classList.remove('hidden');
         if (manufacturingSelect && manufacturingSelect.value === '0') {
             manufacturingSelect.value = '3'; // Default 3 dias
         }
     } else {
         // Estoque imediato ou nao selecionado: ocultar e zerar prazo
-        manufacturingGroup.style.display = 'none';
+        manufacturingGroup.classList.add('hidden');
         if (manufacturingSelect) {
             manufacturingSelect.value = '0';
         }

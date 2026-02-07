@@ -952,8 +952,8 @@ function closeTransactionModal() {
     // Ocultar campos condicionais
     const payMethodGroup = document.getElementById('paymentMethodGroup');
     const creditGroup = document.getElementById('creditCardGroup');
-    if (payMethodGroup) payMethodGroup.style.display = 'none';
-    if (creditGroup) creditGroup.style.display = 'none';
+    if (payMethodGroup) payMethodGroup.classList.add('hidden');
+    if (creditGroup) creditGroup.classList.add('hidden');
 }
 
 // 🎨 Abre modal para editar transação existente
@@ -1016,7 +1016,14 @@ async function deleteCreditTransaction(id) {
     const transaction = transactions.find(t => t.id === id);
     if (!transaction) return;
 
-    if (!confirm(`Excluir "${transaction.description}"?`)) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Excluir Transacao',
+        message: `Excluir "${transaction.description}"?`,
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Excluindo transação...');
 
@@ -1409,7 +1416,7 @@ function selectTransactionType(type) {
 
     // Sempre mostrar método de pagamento (para reembolsos em cartão também)
     const paymentMethodGroup = document.getElementById('paymentMethodGroup');
-    if (paymentMethodGroup) paymentMethodGroup.style.display = 'block';
+    if (paymentMethodGroup) paymentMethodGroup.classList.remove('hidden');
     // Reset to debit quando trocar de tipo
     selectPaymentMethod('debit');
 
@@ -1434,7 +1441,7 @@ function selectPaymentMethod(method) {
     const transactionCardSelect = document.getElementById('transactionCard');
 
     if (method === 'credit') {
-        if (creditCardGroup) creditCardGroup.style.display = 'block';
+        if (creditCardGroup) creditCardGroup.classList.remove('hidden');
         if (transactionCardSelect) transactionCardSelect.required = true;
         // Always repopulate with fresh data
         populateTransactionCardOptions();
@@ -1447,7 +1454,7 @@ function selectPaymentMethod(method) {
             }, 0);
         }
     } else {
-        if (creditCardGroup) creditCardGroup.style.display = 'none';
+        if (creditCardGroup) creditCardGroup.classList.add('hidden');
         if (transactionCardSelect) {
             transactionCardSelect.required = false;
             // Clear dropdown when switching away from credit
@@ -3032,23 +3039,28 @@ async function cleanCompanyData() {
         logger.log('✅ UID da empresa encontrado:', companyUserId);
 
         // 2. Confirmar ação
-        const confirmation = confirm(
-            '⚠️ ATENÇÃO: Esta ação irá DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
-            'Serão deletados:\n' +
-            '• Serviços\n' +
-            '• Transações\n' +
-            '• Assinaturas\n' +
-            '• Parcelamentos\n' +
-            '• Projeções\n' +
-            '• Cartões de crédito\n' +
-            '• Despesas de cartão\n' +
-            '• Pagamentos de cartão\n' +
-            '• Investimentos\n\n' +
-            'Deseja continuar?'
-        );
+        const { confirmModal } = await import('/shared/confirm-modal.js');
+        const confirmation = await confirmModal({
+            title: 'DELETAR DADOS DA EMPRESA',
+            message: 'ATENCAO: Esta acao ira DELETAR PERMANENTEMENTE todos os dados da conta da empresa!\n\n' +
+                'Serao deletados:\n' +
+                '- Servicos\n' +
+                '- Transacoes\n' +
+                '- Assinaturas\n' +
+                '- Parcelamentos\n' +
+                '- Projecoes\n' +
+                '- Cartoes de credito\n' +
+                '- Despesas de cartao\n' +
+                '- Pagamentos de cartao\n' +
+                '- Investimentos\n\n' +
+                'Deseja continuar?',
+            confirmText: 'Deletar Tudo',
+            cancelText: 'Cancelar',
+            danger: true
+        });
 
         if (!confirmation) {
-            logger.log('❌ Operação cancelada pelo usuário');
+            logger.log('Operacao cancelada pelo usuario');
             return;
         }
 

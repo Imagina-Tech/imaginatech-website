@@ -716,7 +716,15 @@ async function handleTransactionSubmit(e) {
 
             logger.warn(`⚠️ [DATA FORA DO PERÍODO] Transação de ${date} para cartão "${selectedCard.name}"`);
 
-            if (!confirm(warningMsg)) {
+            const { confirmModal } = await import('/shared/confirm-modal.js');
+            const confirmedWarning = await confirmModal({
+                title: 'Data Fora do Periodo',
+                message: warningMsg,
+                confirmText: 'Continuar',
+                cancelText: 'Cancelar',
+                danger: false
+            });
+            if (!confirmedWarning) {
                 isFormSubmitting = false;
                 return;
             }
@@ -787,7 +795,14 @@ async function handleTransactionSubmit(e) {
 
 // 🗄️ Deleta uma transação do Firestore
 async function deleteTransaction(id) {
-    if (!confirm('Deseja realmente deletar esta transação?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Deletar Transacao',
+        message: 'Deseja realmente deletar esta transacao?',
+        confirmText: 'Deletar',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Deletando...');
 
@@ -903,7 +918,14 @@ async function handleSubscriptionSubmit(e) {
 
 // 🗄️ Deleta uma assinatura do Firestore
 async function deleteSubscription(id) {
-    if (!confirm('Deseja realmente deletar esta assinatura?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Deletar Assinatura',
+        message: 'Deseja realmente deletar esta assinatura?',
+        confirmText: 'Deletar',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Deletando...');
 
@@ -1194,7 +1216,14 @@ async function updateInstallmentProgress(id, current) {
 
 // 🗄️ Deleta um parcelamento do Firestore
 async function deleteInstallment(id) {
-    if (!confirm('Deseja realmente deletar este parcelamento?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Deletar Parcelamento',
+        message: 'Deseja realmente deletar este parcelamento?',
+        confirmText: 'Deletar',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Deletando...');
 
@@ -1335,7 +1364,14 @@ async function markBillAsPaid(cardId, month, year, billAmount) {
 
 // Desfaz pagamento de fatura
 async function unmarkBillAsPaid(paymentId) {
-    if (!confirm('Deseja realmente desfazer este pagamento? A transação de débito será removida.')) {
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Desfazer Pagamento',
+        message: 'Deseja realmente desfazer este pagamento? A transacao de debito sera removida.',
+        confirmText: 'Desfazer',
+        danger: true
+    });
+    if (!confirmed) {
         return;
     }
 
@@ -1614,7 +1650,14 @@ function editInvestment(id) {
 }
 
 async function deleteInvestment(id) {
-    if (!confirm('Deseja realmente excluir este investimento?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Excluir Investimento',
+        message: 'Deseja realmente excluir este investimento?',
+        confirmText: 'Excluir',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Excluindo...');
 
@@ -1891,7 +1934,14 @@ async function updateProjectionStatus(id, newStatus) {
 
 // 🗄️ Deleta uma projeção do Firestore
 async function deleteProjection(id) {
-    if (!confirm('Deseja realmente deletar esta projeção?')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Deletar Projecao',
+        message: 'Deseja realmente deletar esta projecao?',
+        confirmText: 'Deletar',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Deletando...');
 
@@ -2430,7 +2480,14 @@ async function handleCardExpenseSubmit(e) {
 
 // 🗄️ Deleta um cartão de crédito do Firestore
 async function deleteCreditCard(id) {
-    if (!confirm('Deseja realmente deletar este cartão? Todos os gastos associados serão mantidos.')) return;
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Deletar Cartao',
+        message: 'Deseja realmente deletar este cartao? Todos os gastos associados serao mantidos.',
+        confirmText: 'Deletar',
+        danger: true
+    });
+    if (!confirmed) return;
 
     showLoading('Deletando...');
 
@@ -2707,7 +2764,7 @@ function updateKPIs() {
     if (incomeProjectionEl) {
         const totalIncomeTotal = totalIncome + pendingIncomeProjections;
         incomeProjectionEl.textContent = `= ${formatCurrencyDisplay(totalIncomeTotal)}`;
-        incomeProjectionEl.style.display = pendingIncomeProjections > 0 ? 'block' : 'none';
+        incomeProjectionEl.style.display = ''; incomeProjectionEl.classList.toggle('hidden', pendingIncomeProjections <= 0);
     }
 
     // Card de Saídas com dois valores
@@ -2716,7 +2773,7 @@ function updateKPIs() {
     if (expenseEl) expenseEl.textContent = formatCurrencyDisplay(totalExpenseActual);
     if (expenseProjectionEl) {
         expenseProjectionEl.textContent = `= ${formatCurrencyDisplay(totalExpenseTotal)}`;
-        expenseProjectionEl.style.display = totalExpenseProjection > 0 ? 'block' : 'none';
+        expenseProjectionEl.style.display = ''; expenseProjectionEl.classList.toggle('hidden', totalExpenseProjection <= 0);
     }
 
     // Projeção de saldo = saldo atual + entradas pendentes - faturas não pagas - projeções de saída pendentes
@@ -2727,7 +2784,7 @@ function updateKPIs() {
         balanceProjectionEl.textContent = `Proj: ${formatCurrencyDisplay(balanceProjection)}`;
         // Mostra projeção se houver QUALQUER mudança pendente (entrada, saída ou fatura)
         const hasAnyProjection = pendingIncomeProjections > 0 || totalUnpaidBills > 0 || pendingExpenseProjections > 0;
-        balanceProjectionEl.style.display = hasAnyProjection ? 'block' : 'none';
+        balanceProjectionEl.style.display = ''; balanceProjectionEl.classList.toggle('hidden', !hasAnyProjection);
     }
     if (subscriptionsEl) subscriptionsEl.textContent = formatCurrencyDisplay(totalSubscriptions);
 
@@ -2761,7 +2818,7 @@ async function loadWhatsAppStatus() {
             <i class="fas fa-spinner fa-spin"></i> Verificando...
         </div>
     `;
-    if (linkForm) linkForm.style.display = 'none';
+    if (linkForm) linkForm.classList.add('hidden');
 
     try {
         const user = firebase.auth().currentUser;
@@ -2804,7 +2861,7 @@ async function loadWhatsAppStatus() {
                     </button>
                 </div>
             `;
-            if (linkForm) linkForm.style.display = 'none';
+            if (linkForm) linkForm.classList.add('hidden');
         } else {
             // Nenhum numero vinculado - mostrar form
             statusContainer.innerHTML = `
@@ -2813,7 +2870,7 @@ async function loadWhatsAppStatus() {
                     Nenhum numero vinculado
                 </div>
             `;
-            if (linkForm) linkForm.style.display = 'block';
+            if (linkForm) { linkForm.style.display = ''; linkForm.classList.remove('hidden'); }
         }
 
     } catch (error) {
@@ -2824,7 +2881,7 @@ async function loadWhatsAppStatus() {
                 Erro ao verificar status
             </div>
         `;
-        if (linkForm) linkForm.style.display = 'block';
+        if (linkForm) { linkForm.style.display = ''; linkForm.classList.remove('hidden'); }
     }
 }
 
@@ -2902,7 +2959,14 @@ async function linkMyWhatsApp() {
  * Desvincula numero de WhatsApp da conta do usuario
  */
 async function unlinkMyWhatsApp() {
-    if (!confirm('Deseja realmente desvincular seu numero do Claytinho?')) {
+    const { confirmModal } = await import('/shared/confirm-modal.js');
+    const confirmed = await confirmModal({
+        title: 'Desvincular Claytinho',
+        message: 'Deseja realmente desvincular seu numero do Claytinho?',
+        confirmText: 'Desvincular',
+        danger: true
+    });
+    if (!confirmed) {
         return;
     }
 

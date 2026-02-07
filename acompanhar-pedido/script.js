@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await loadUserOrders();
             } catch (error) {
                 logger.warn('Erro ao carregar historico:', error);
-                { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
+                { const el = document.getElementById('myOrdersSection'); if (el) el.classList.add('hidden'); }
             }
         } else {
             currentUser = null;
@@ -1151,7 +1151,7 @@ async function loadUserOrders() {
                 await displayUserOrders(orderCodes);
             } else {
                 // Esconder seção se não houver pedidos
-                { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
+                { const el = document.getElementById('myOrdersSection'); if (el) el.classList.add('hidden'); }
             }
         } else {
             // Criar documento do usuário se não existir
@@ -1164,11 +1164,11 @@ async function loadUserOrders() {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             });
-            { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
+            { const el = document.getElementById('myOrdersSection'); if (el) el.classList.add('hidden'); }
         }
     } catch (error) {
         logger.error('Erro ao carregar pedidos:', error);
-        { const el = document.getElementById('myOrdersSection'); if (el) el.style.display = 'none'; }
+        { const el = document.getElementById('myOrdersSection'); if (el) el.classList.add('hidden'); }
     }
 }
 
@@ -1189,11 +1189,11 @@ async function displayUserOrders(orderCodes) {
     }
     
     if (!orderCodes || orderCodes.length === 0) {
-        if (myOrdersSection) myOrdersSection.style.display = 'none';
+        if (myOrdersSection) myOrdersSection.classList.add('hidden');
         return;
     }
 
-    if (myOrdersSection) myOrdersSection.style.display = 'block';
+    if (myOrdersSection) myOrdersSection.classList.remove('hidden');
     
     // Buscar detalhes de cada pedido (máximo 5 mais recentes)
     const orders = [];
@@ -1270,7 +1270,7 @@ async function displayUserOrders(orderCodes) {
     }
     
     if (orders.length === 0) {
-        if (myOrdersSection) myOrdersSection.style.display = 'none';
+        if (myOrdersSection) myOrdersSection.classList.add('hidden');
         return;
     }
 
