@@ -786,19 +786,15 @@ function updateAllDisplays() {
 // UTILITY FUNCTIONS
 // ===========================
 // 🎨 Exibe overlay de carregamento
-function showLoading(message = 'Carregando...') {
+function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (!overlay) return;
-
-    const text = overlay.querySelector('.loading-text');
-    if (text) text.textContent = message;
-    overlay.style.display = 'flex';
+    if (overlay) overlay.classList.remove('hidden');
 }
 
 // 🎨 Esconde overlay de carregamento
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) overlay.classList.add('hidden');
 }
 
 // 🎨 Exibe notificação toast temporária (sucesso/erro/info)

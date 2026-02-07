@@ -1564,9 +1564,7 @@
     animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+/* @keyframes spin importado de /shared/loading.css */
 
 .gallery-empty {
     grid-column: 1 / -1;

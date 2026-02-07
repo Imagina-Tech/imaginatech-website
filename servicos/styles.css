@@ -56,40 +56,7 @@ body {
    =========================== */
 /* Importado de /shared/cosmic-bg.css */
 
-/* ===========================
-   LOADING OVERLAY
-   =========================== */
-.loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.95);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-loading, 9999);
-    backdrop-filter: blur(10px);
-    transition: opacity 0.3s;
-}
-
-/* .hidden class now imported from /shared/z-index.css */
-.loading-content { text-align: center; }
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(0, 212, 255, 0.2);
-    border-top-color: var(--neon-blue);
-    border-radius: 50%;
-    animation: spin 1s ease-in-out infinite;
-    margin: 0 auto 20px;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { color: var(--neon-blue); font-size: 0.9rem; animation: pulseFade 1.5s ease-in-out infinite; }
-
-@keyframes pulseFade {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
+/* Loading Overlay - Usa /shared/loading.css */
 
 @keyframes pulse {
     0%, 100% {

@@ -37,14 +37,7 @@ a { color: var(--color-neutral); text-decoration: none; transition: color var(--
 a:hover { color: #2563EB; }
 .hidden { display: none !important; }
 
-/* LOADING */
-.loading-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: var(--z-modal-backdrop); opacity: 1; visibility: visible; transition: all var(--transition-base); }
-.loading-overlay.hidden { opacity: 0; visibility: hidden; }
-.loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #FFFFFF; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { position: absolute; bottom: 30px; color: #FFFFFF; font-size: var(--font-size-sm); letter-spacing: 0.05em; animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-.loading-content { text-align: center; }
+/* Loading Overlay - Usa /shared/loading.css */
 
 /* LOGIN: Estilos movidos para /shared/auth-screen.css */
 

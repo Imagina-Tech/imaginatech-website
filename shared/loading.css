@@ -2,11 +2,11 @@
    LOADING - Componente Compartilhado
    /shared/loading.css
 
-   Overlay de carregamento com spinner
-   Usado em: todos os paineis administrativos
+   Overlay de carregamento com quadrado azul girando
+   Usado em: pagina principal + todos os paineis administrativos
    ============================================= */
 
-/* ===== OVERLAY ===== */
+/* ===== OVERLAY PRINCIPAL ===== */
 .loading-overlay {
     position: fixed;
     inset: 0;
@@ -16,8 +16,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: var(--z-loading, 1080);  /* Acima de tudo exceto casos extremos */
-    transition: opacity 0.3s ease;
+    z-index: var(--z-loading, 9999);
+    transition: opacity 0.5s ease;
 }
 
 .loading-overlay.hidden {
@@ -31,12 +31,21 @@
     display: none !important;
 }
 
-/* ===== CONTEUDO ===== */
-.loading-content {
-    text-align: center;
+/* ===== QUADRADO AZUL GIRANDO ===== */
+.loading-cube {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--neon-blue, #00D4FF);
+    animation: loader-spin 1s infinite ease-in-out;
 }
 
-/* ===== SPINNER ===== */
+@keyframes loader-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(0.8); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ===== SPINNER CIRCULAR (para secoes internas, botoes) ===== */
 .loading-spinner {
     width: 50px;
     height: 50px;
@@ -65,41 +74,6 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
-    }
-}
-
-/* ===== TEXTO ===== */
-.loading-text {
-    color: var(--neon-blue, #00D4FF);
-    font-size: 0.9rem;
-    animation: pulseFade 1.5s ease-in-out infinite;
-}
-
-@keyframes pulseFade {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-/* ===== VARIANTE COM LOGO ===== */
-.loading-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 1rem;
-    animation: pulse-logo 2s ease-in-out infinite;
-}
-
-@keyframes pulse-logo {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.05);
     }
 }
 
@@ -140,6 +114,11 @@
 
 /* ===== RESPONSIVO ===== */
 @media (max-width: 768px) {
+    .loading-cube {
+        width: 40px;
+        height: 40px;
+    }
+
     .loading-spinner {
         width: 40px;
         height: 40px;
@@ -148,9 +127,5 @@
     .loading-spinner.large {
         width: 60px;
         height: 60px;
-    }
-
-    .loading-text {
-        font-size: 0.85rem;
     }
 }

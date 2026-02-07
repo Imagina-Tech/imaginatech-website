@@ -236,15 +236,14 @@ function updateUserInfo(user) {
 // ===========================
 // LOADING & TOAST
 // ===========================
-function showLoading(text = 'Carregando...') {
+function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    const loadingText = overlay.querySelector('.loading-text');
-    if (loadingText) loadingText.textContent = text;
-    overlay.classList.remove('hidden');
+    if (overlay) overlay.classList.remove('hidden');
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
 }
 
 function showToast(message, type = 'info') {

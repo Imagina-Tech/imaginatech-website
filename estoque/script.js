@@ -1726,12 +1726,9 @@ async function deleteFilament(id) {
 // ===========================
 // UTILITY FUNCTIONS
 // ===========================
-function showLoading(text = 'Carregando...') {
+function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (!overlay) return;
-    const loadingText = overlay.querySelector('.loading-text');
-    if (loadingText) loadingText.textContent = text;
-    overlay.classList.remove('hidden');
+    if (overlay) overlay.classList.remove('hidden');
 }
 
 function hideLoading() {
