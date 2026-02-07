@@ -27,6 +27,62 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-06 - [QUALIDADE] Fase 3: z-index CSS variables + ARIA em modais JS
+
+**Resumo:** Substituicao de TODOS os z-index hardcoded por CSS variables do sistema padronizado em `/shared/z-index.css`, e adicao de atributos ARIA em modais gerados dinamicamente via JavaScript.
+
+**z-index CSS variables (98 substituicoes em 17 arquivos CSS):**
+- `estoque/style.css` - 18 z-index convertidos
+- `marketplace/style.css` - 15 z-index convertidos
+- `admin-portfolio/style.css` - 10 z-index convertidos
+- `projetos/style.css` - 10 z-index convertidos
+- `financas/style.css` - 10 z-index convertidos
+- `acompanhar-pedido/style.css` - 8 z-index convertidos
+- `servicos/css/tasks.css` - 6 z-index convertidos
+- `style.css (raiz)` - 5 z-index convertidos
+- `obrigado/style.css` - 5 z-index convertidos
+- `custo/styles-custo.css` - 3 z-index convertidos
+- `admin/style.css` - 2 z-index convertidos
+- `shared/navbar.css` - 3 z-index convertidos
+- `shared/navbar-mobile.css` - 1 z-index convertido
+- `shared/access-denied.css` - 1 z-index convertido
+- `shared/auth-screen.css` - 1 z-index convertido
+- `shared/cosmic-bg.css` - 1 z-index convertido
+
+**Variaveis utilizadas:** `--z-behind`, `--z-raised`, `--z-dropdown`, `--z-overlay`, `--z-modal`, `--z-popover`, `--z-loading` (todas com fallback do valor original).
+
+**z-index.css imports adicionados em 10 HTML files:**
+- estoque/index.html, custo/index.html, acompanhar-pedido/index.html (agentes)
+- marketplace/index.html, financas/index.html, projetos/index.html, admin-portfolio/index.html, admin/index.html, obrigado/index.html, index.html (revisor - gap critico corrigido)
+
+**ARIA em modais JS (3 modais dinamicos):**
+- `servicos/js/auth-ui.js` - Modal WhatsApp fallback: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="whatsappModalTitle"`
+- `servicos/js/auth-ui.js` - Modal Client History: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="clientHistoryModalTitle"`
+- `servicos/js/auth-ui.js` - Image Viewer: adicionado `id="viewerTitle"` para `aria-labelledby` existente
+- `servicos/js/tasks.js` - Modal Task Details: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="taskDetailsTitle"`
+
+**!important removido:** 1 ocorrencia em `estoque/style.css` (`.btn-paste-image display: flex`).
+
+**Resultado:** Zero z-index hardcoded restante no codebase inteiro.
+
+---
+
+### 2026-02-06 - [OTIMIZACAO] Fase 4 - Revisor: Fix de HTML display:none incompativel com classList
+
+**Problema encontrado pelo revisor:** Agentes converteram `style.display = 'none'` para `classList.add('hidden')` no JS, mas nao converteram os `style="display: none;"` correspondentes no HTML. A classe `.hidden` com `!important` funciona para esconder, mas `classList.remove('hidden')` NAO limpa um `style="display: none;"` inline no HTML, fazendo elementos ficarem invisiveis permanentemente.
+
+**Correcoes no HTML (style="display: none;" para class="hidden"):**
+- `servicos/index.html` - 7 elementos: notificationSection, createWhatsappOption, createEmailOption, instagramPhotoField, packagedPhotoField, statusTrackingCodeField, statusBypassBtn
+- `financas/index.html` - 3 elementos: paymentMethodGroup, creditCardGroup, whatsappLinkForm
+
+**Correcoes no JS (classList.remove('hidden') adicionado nos paths SHOW):**
+- `servicos/js/auth-ui.js` - 4 paths: statusBypassBtn (2x), orderCodeNewInfo, orderCodeEditInfo, btnRegenerate (2x)
+- `servicos/js/services.js` - 5 paths: upModalFooter, upPhotoPlaceholder (3x), upLogoPlaceholder (3x)
+
+**Licao:** Ao converter inline styles para classList, SEMPRE verificar se o elemento tem `style="display: none;"` no HTML. Se tiver, converter o HTML tambem.
+
+---
+
 ### 2026-02-06 - Inline styles para classList (hidden) em 7 arquivos JS + 1 HTML
 
 **Arquivos Modificados (JS - style.display para classList):**
