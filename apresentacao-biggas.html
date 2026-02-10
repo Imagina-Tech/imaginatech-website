@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaginaTech - Miniatura Biggas Cofrinho</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+/* ============================================================
+   ImaginaTech Biggas Cofrinho - Presentation CSS
+   Dark Glassmorphism Slide Deck (14 Slides)
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. ROOT VARIABLES
+   ---------------------------------------------------------- */
+:root {
+    /* Primary Colors */
+    --color-bg: #0a0e1a;
+    --color-bg-lighter: #0f1428;
+    --color-cyan: #00D4FF;
+    --color-purple: #9945FF;
+    --color-green: #00FF88;
+    --color-gold: #FFD700;
+    --color-red: #FF0055;
+
+    /* Shorthand aliases for inline styles */
+    --cyan: #00D4FF;
+    --purple: #9945FF;
+    --green: #00FF88;
+    --gold: #FFD700;
+    --red: #FF0055;
+
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-muted: rgba(255, 255, 255, 0.4);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #00D4FF, #8B5CF6);
+    --gradient-cyan-green: linear-gradient(135deg, #00D4FF, #00FF88);
+    --gradient-purple-pink: linear-gradient(135deg, #9945FF, #FF0055);
+    --gradient-gold: linear-gradient(135deg, #FFD700, #FF8C00);
+    --gradient-bg: linear-gradient(135deg, #0a0e1a 0%, #0f1428 50%, #0a0e1a 100%);
+
+    /* Glass */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-bg-hover: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-hover: rgba(255, 255, 255, 0.15);
+    --glass-blur: blur(20px);
+
+    /* Fonts */
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 2.5rem;
+    --space-3xl: 3rem;
+    --space-4xl: 4rem;
+    --space-6xl: 6rem;
+
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-pill: 50px;
+    --radius-circle: 50%;
+
+    /* Shadows */
+    --shadow-glow-cyan: 0 0 30px rgba(0, 212, 255, 0.3);
+    --shadow-glow-cyan-strong: 0 0 40px rgba(0, 212, 255, 0.5);
+    --shadow-glow-green: 0 0 30px rgba(0, 255, 136, 0.3);
+    --shadow-glow-purple: 0 0 30px rgba(153, 69, 255, 0.3);
+    --shadow-glow-gold: 0 0 30px rgba(255, 215, 0, 0.3);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Z-Index */
+    --z-bg: -1;
+    --z-slide: 1;
+    --z-card: 10;
+    --z-nav: 100;
+    --z-overlay: 200;
+}
+
+/* ----------------------------------------------------------
+   2. RESET & BASE
+   ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ----------------------------------------------------------
+   3. PRESENTATION CONTAINER
+   ---------------------------------------------------------- */
+.presentation {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ----------------------------------------------------------
+   4. BACKGROUND LAYER
+   ---------------------------------------------------------- */
+.bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-bg);
+    background: var(--gradient-bg);
+    overflow: hidden;
+}
+
+.bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 20s linear infinite;
+}
+
+.bg-blob-cyan {
+    position: absolute;
+    top: -15%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+    border-radius: var(--radius-circle);
+    filter: blur(80px);
+    animation: float 12s ease-in-out infinite;
+}
+
+.bg-blob-purple {
+    position: absolute;
+    bottom: -15%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(153, 69, 255, 0.08) 0%, transparent 70%);
+    border-radius: var(--radius-circle);
+    filter: blur(80px);
+    animation: float 15s ease-in-out infinite reverse;
+}
+
+.bg-blob-green {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.04) 0%, transparent 70%);
+    border-radius: var(--radius-circle);
+    filter: blur(100px);
+    animation: float 18s ease-in-out infinite 3s;
+}
+
+/* ----------------------------------------------------------
+   5. SLIDE SYSTEM
+   ---------------------------------------------------------- */
+.slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--space-4xl) var(--space-6xl);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(60px);
+    transition:
+        opacity var(--transition-slow),
+        transform var(--transition-slow),
+        visibility var(--transition-slow);
+    z-index: var(--z-slide);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.slide.exit-left {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-60px);
+}
+
+.slide.exit-right {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(60px);
+}
+
+.slide.centered {
+    align-items: center;
+    text-align: center;
+}
+
+.slide-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ----------------------------------------------------------
+   6. TYPOGRAPHY
+   ---------------------------------------------------------- */
+.slide-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 2.8rem;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-lg);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+}
+
+.slide-subtitle {
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 700px;
+    margin-bottom: var(--space-xl);
+}
+
+.brand-text {
+    font-family: var(--font-display);
+    font-weight: 900;
+    letter-spacing: 5px;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.slide-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--color-cyan);
+    margin-bottom: var(--space-sm);
+    font-weight: 600;
+    display: block;
+}
+
+.big-number {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+}
+
+.text-cyan { color: var(--color-cyan); }
+.text-green { color: var(--color-green); }
+.text-purple { color: var(--color-purple); }
+.text-gold { color: var(--color-gold); }
+.text-red { color: var(--color-red); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-center { text-align: center; }
+.text-sm { font-size: 0.9rem; }
+
+.separator-line {
+    width: 80px;
+    height: 2px;
+    background: var(--gradient-primary);
+    margin: 1.5rem 0;
+    border-radius: 2px;
+}
+
+/* ----------------------------------------------------------
+   7. GLASS CARDS
+   ---------------------------------------------------------- */
+.glass-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-card);
+    transition:
+        background var(--transition-base),
+        transform var(--transition-base),
+        box-shadow var(--transition-base),
+        border-color var(--transition-base);
+}
+
+.glass-card:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.glass-card-sm {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-card);
+    transition: background var(--transition-base), transform var(--transition-base);
+}
+
+.glass-card-sm:hover {
+    background: var(--glass-bg-hover);
+    transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   8. GRID LAYOUTS
+   ---------------------------------------------------------- */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl);
+    width: 100%;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-xl);
+    width: 100%;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+    width: 100%;
+}
+
+.grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+    width: 100%;
+}
+
+/* ----------------------------------------------------------
+   9. FEATURE LISTS
+   ---------------------------------------------------------- */
+.feature-item {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-md);
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: var(--radius-circle);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--color-cyan);
+    flex-shrink: 0;
+    transition: box-shadow var(--transition-base);
+}
+
+.feature-text h4,
+.feature-text strong {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+}
+
+.feature-text p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* ----------------------------------------------------------
+   10. PRICING CARDS (Slide 8)
+   ---------------------------------------------------------- */
+.pricing-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.pricing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.pricing-card .quantity {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.pricing-card .unit-price {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: var(--space-md) 0;
+    line-height: 1.1;
+}
+
+.pricing-card .total {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.pricing-card.recommended {
+    border: 2px solid var(--color-green);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-card), var(--shadow-glow-green);
+    position: relative;
+}
+
+.pricing-card.recommended:hover {
+    transform: scale(1.05) translateY(-4px);
+}
+
+.pricing-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--color-green), #00CC6A);
+    color: #000000;
+    padding: 0.3rem 1.2rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* ----------------------------------------------------------
+   11. TIMELINE (Slide 7)
+   ---------------------------------------------------------- */
+.timeline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: var(--space-3xl) 0;
+    width: 100%;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    right: 5%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-cyan), var(--color-purple), var(--color-green));
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+
+.timeline-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 120px;
+}
+
+.timeline-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-circle);
+    border: 3px solid var(--color-cyan);
+    background: var(--color-bg);
+    transition: width var(--transition-base), height var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
+    flex-shrink: 0;
+}
+
+.timeline-dot.highlight {
+    width: 28px;
+    height: 28px;
+    background: var(--color-green);
+    border-color: var(--color-green);
+    box-shadow: var(--shadow-glow-green);
+}
+
+.timeline-dot.gold {
+    border-color: var(--color-gold);
+    background: var(--color-gold);
+    box-shadow: var(--shadow-glow-gold);
+    width: 28px;
+    height: 28px;
+}
+
+.timeline-label {
+    font-size: 0.8rem;
+    text-align: center;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+.timeline-day {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    color: var(--color-cyan);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* ----------------------------------------------------------
+   12. DONUT CHART (Slide 9)
+   ---------------------------------------------------------- */
+.donut-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.donut-chart svg {
+    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.2));
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+.donut-legend-item {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.donut-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-circle);
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------
+   13. PROGRESS / SPEC BARS (Slide 4)
+   ---------------------------------------------------------- */
+.spec-row {
+    margin-bottom: var(--space-lg);
+}
+
+.spec-row .spec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    font-size: 0.9rem;
+}
+
+.spec-row .spec-header span:first-child {
+    color: var(--text-secondary);
+}
+
+.spec-row .spec-header span:last-child {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-cyan);
+    font-size: 0.85rem;
+}
+
+.spec-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.spec-bar-fill {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: 4px;
+    width: 0;
+    transition: width 1.2s ease;
+}
+
+.slide.active .spec-bar-fill {
+    width: var(--width, 0%);
+}
+
+/* ----------------------------------------------------------
+   14. STEPS LIST (Slide 13)
+   ---------------------------------------------------------- */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+}
+
+.steps-list::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--color-cyan), var(--color-purple), var(--color-green));
+    opacity: 0.4;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-lg);
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: var(--space-xl);
+}
+
+.step-item:last-child {
+    padding-bottom: 0;
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: var(--radius-circle);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.25);
+}
+
+.step-content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-top: 0.6rem;
+}
+
+.step-content strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.step-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* ----------------------------------------------------------
+   15. CONTACT PILLS (Slide 14)
+   ---------------------------------------------------------- */
+.contact-pills {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: var(--space-xl) 0;
+}
+
+.contact-pill {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: background var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.contact-pill:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--color-cyan);
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+/* ----------------------------------------------------------
+   16. COLOR SWATCHES (Slide 5)
+   ---------------------------------------------------------- */
+.color-swatch-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    padding: var(--space-lg);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.color-swatch-card:hover {
+    transform: translateY(-3px);
+}
+
+.color-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-circle);
+    margin: 0 auto var(--space-sm);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.color-swatch-card span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ----------------------------------------------------------
+   17. NAVIGATION CONTROLS
+   ---------------------------------------------------------- */
+.nav-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-nav);
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: all;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.4;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    transition: opacity var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+    outline: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.nav-arrow:hover {
+    opacity: 1;
+    box-shadow: var(--shadow-glow-cyan);
+    background: var(--glass-bg-hover);
+}
+
+.nav-arrow.left { left: 1.5rem; }
+.nav-arrow.right { right: 1.5rem; }
+
+.progress-dots {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-sm);
+    pointer-events: all;
+    z-index: var(--z-nav);
+}
+
+.progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-circle);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
+    outline: none;
+}
+
+.progress-dot:hover {
+    background: rgba(0, 212, 255, 0.3);
+    border-color: var(--color-cyan);
+}
+
+.progress-dot.active {
+    background: var(--color-cyan);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+    transform: scale(1.2);
+}
+
+.slide-counter {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    z-index: var(--z-nav);
+    pointer-events: none;
+    letter-spacing: 1px;
+}
+
+.fullscreen-btn,
+.print-btn {
+    position: fixed;
+    top: 1.5rem;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    z-index: var(--z-nav);
+    transition: opacity var(--transition-base), box-shadow var(--transition-base), color var(--transition-base);
+    opacity: 0.5;
+    outline: none;
+}
+
+.fullscreen-btn { right: 1.5rem; }
+.print-btn { right: 4.5rem; }
+
+.fullscreen-btn:hover,
+.print-btn:hover {
+    opacity: 1;
+    box-shadow: var(--shadow-glow-cyan);
+    color: var(--color-cyan);
+}
+
+/* ----------------------------------------------------------
+   18. MACHINE ICONS (Slide 6)
+   ---------------------------------------------------------- */
+.machine-grid {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.machine-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+}
+
+.machine-icon.active-cyan { background: var(--color-cyan); color: #000; }
+.machine-icon.active-purple { background: var(--color-purple); }
+.machine-icon.reserve {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.3);
+}
+
+/* ----------------------------------------------------------
+   19. ANIMATION KEYFRAMES
+   ---------------------------------------------------------- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
+}
+
+@keyframes gridMove {
+    from { background-position: 0 0; }
+    to { background-position: 50px 50px; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ----------------------------------------------------------
+   20. ENTRANCE ANIMATION CLASSES
+   ---------------------------------------------------------- */
+.animate-in {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.slide.active .animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.slide.active .animate-in:nth-child(1) { animation-delay: 0s; }
+.slide.active .animate-in:nth-child(2) { animation-delay: 0.1s; }
+.slide.active .animate-in:nth-child(3) { animation-delay: 0.15s; }
+.slide.active .animate-in:nth-child(4) { animation-delay: 0.2s; }
+.slide.active .animate-in:nth-child(5) { animation-delay: 0.25s; }
+.slide.active .animate-in:nth-child(6) { animation-delay: 0.3s; }
+.slide.active .animate-in:nth-child(7) { animation-delay: 0.35s; }
+.slide.active .animate-in:nth-child(8) { animation-delay: 0.4s; }
+
+/* ----------------------------------------------------------
+   21. PRINT STYLES
+   ---------------------------------------------------------- */
+@media print {
+    html, body {
+        overflow: visible;
+        height: auto;
+        background: #0a0e1a;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+    }
+    .presentation { overflow: visible; height: auto; }
+    .slide {
+        position: relative;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        page-break-after: always;
+        height: 100vh;
+        animation: none !important;
+        transition: none !important;
+    }
+    .slide.exit-left, .slide.exit-right {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+    .bg-layer, .nav-overlay, .progress-dots, .slide-counter, .fullscreen-btn, .print-btn {
+        display: none !important;
+    }
+    .animate-in {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    .glass-card, .glass-card-sm, .pricing-card, .contact-pill, .color-swatch-card {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+    .spec-bar-fill { transition: none !important; }
+}
+
+/* ----------------------------------------------------------
+   22. RESPONSIVE
+   ---------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .slide { padding: var(--space-3xl) var(--space-4xl); }
+    .slide-title { font-size: 2.2rem; }
+    .big-number { font-size: 2.5rem; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-5 { grid-template-columns: repeat(3, 1fr); }
+    .timeline { flex-wrap: wrap; justify-content: center; gap: var(--space-lg); }
+    .timeline::before { display: none; }
+}
+
+@media (max-width: 768px) {
+    .slide { padding: var(--space-xl); }
+    .slide-title { font-size: 1.8rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .nav-arrow { display: none; }
+    .feature-icon { width: 40px; height: 40px; min-width: 40px; }
+    .step-number { width: 40px; height: 40px; min-width: 40px; font-size: 0.85rem; }
+}
+
+@media (max-width: 480px) {
+    .slide { padding: var(--space-lg) var(--space-md); }
+    .slide-title { font-size: 1.5rem; }
+    .grid-4, .grid-5 { grid-template-columns: 1fr; }
+    .progress-dots { bottom: 1rem; }
+    .progress-dot { width: 8px; height: 8px; }
+    .slide-counter { bottom: 1rem; right: 1rem; font-size: 0.7rem; }
+}
+    </style>
+</head>
+<body>
+    <div class="presentation">
+
+        <!-- Background Layer -->
+        <div class="bg-layer">
+            <div class="bg-blob-cyan"></div>
+            <div class="bg-blob-purple"></div>
+            <div class="bg-blob-green"></div>
+            <div class="bg-grid"></div>
+        </div>
+
+        <!-- Slide 1: Capa -->
+        <div class="slide active centered" id="slide-1">
+            <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="animate-in" style="width: 80px; height: 80px; border-radius: 16px; margin-bottom: 1.5rem;">
+            <div class="brand-text animate-in" style="font-size: 3rem;">IMAGINATECH</div>
+            <div class="separator-line animate-in"></div>
+            <h1 class="slide-title animate-in" style="font-size: 3.2rem;">Miniatura Biggas Cofrinho</h1>
+            <p class="slide-subtitle animate-in" style="text-align: center;">Proposta Comercial de Producao em Serie</p>
+            <p class="text-muted animate-in" style="margin-top: 1rem; font-family: var(--font-display); font-size: 0.85rem; letter-spacing: 2px;">FEVEREIRO 2026</p>
+        </div>
+
+        <!-- Slide 2: Quem Somos -->
+        <div class="slide" id="slide-2">
+            <span class="slide-label animate-in">SOBRE NOS</span>
+            <h1 class="slide-title animate-in">ImaginaTech</h1>
+            <p class="slide-subtitle animate-in">Da imaginacao a realidade — especialistas em impressao 3D profissional e producao em escala</p>
+            <div class="grid-3">
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="feature-icon" style="color: var(--cyan); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
+                        <i class="fas fa-print"></i>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem;">Impressao 3D Profissional</h3>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Equipamentos Bambulab A1 COMBO de ultima geracao para producao de alta qualidade</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="feature-icon" style="color: var(--purple); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem;">Producao em Escala</h3>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Capacidade instalada de 48 a 96 unidades por dia com controle unitario de qualidade</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="feature-icon" style="color: var(--green); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem;">Qualidade Premium</h3>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Materiais de engenharia, acabamento com DTF UV e garantia de fabricacao</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: O Produto -->
+        <div class="slide" id="slide-3">
+            <span class="slide-label animate-in">O PRODUTO</span>
+            <h1 class="slide-title animate-in">Miniatura Biggas Cofrinho</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--cyan);">
+                            <i class="fas fa-ruler-vertical"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Altura: ~14 cm</strong>
+                            <p>Tamanho ideal para exposicao e uso diario</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--gold);">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Cofrinho Funcional</strong>
+                            <p>Slot superior para inserir moedas, abertura inferior para retirada</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--purple);">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Cores Personalizaveis</strong>
+                            <p>Corpo, bracos, pernas, sapatos e luvas em cores customizadas</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--green);">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Design Exclusivo</strong>
+                            <p>Formato do mascote Biggas — totalmente diferente dos cofrinhos genericos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card animate-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <i class="fas fa-piggy-bank" style="font-size: 5rem; background: linear-gradient(135deg, var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.5rem;"></i>
+                    <h3 style="margin-bottom: 0.5rem;">Mascote Biggas</h3>
+                    <p class="text-muted" style="margin-bottom: 1.5rem;">Botijao com bracos, pernas, sapatos e luvas</p>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #FF6B35; display: inline-block;" title="Corpo"></span>
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #00D4FF; display: inline-block;" title="Bracos"></span>
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #9945FF; display: inline-block;" title="Pernas"></span>
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #FFD700; display: inline-block;" title="Sapatos"></span>
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #00FF88; display: inline-block;" title="Luvas"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Especificacoes Tecnicas -->
+        <div class="slide" id="slide-4">
+            <span class="slide-label animate-in">TECNOLOGIA</span>
+            <h1 class="slide-title animate-in">Especificacoes Tecnicas</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--cyan);">Material: ABS Premium</h3>
+                    <div class="spec-row">
+                        <div class="spec-header">
+                            <span>Resistencia a Tracao</span>
+                            <span>40 MPa</span>
+                        </div>
+                        <div class="spec-bar"><div class="spec-bar-fill" style="--width: 80%;"></div></div>
+                    </div>
+                    <div class="spec-row">
+                        <div class="spec-header">
+                            <span>Resistencia ao Impacto</span>
+                            <span>Izod 200-400 J/m</span>
+                        </div>
+                        <div class="spec-bar"><div class="spec-bar-fill" style="--width: 75%;"></div></div>
+                    </div>
+                    <div class="spec-row">
+                        <div class="spec-header">
+                            <span>Faixa Termica</span>
+                            <span>-20C a 80C</span>
+                        </div>
+                        <div class="spec-bar"><div class="spec-bar-fill" style="--width: 85%;"></div></div>
+                    </div>
+                    <div class="spec-row">
+                        <div class="spec-header">
+                            <span>Acabamento FDM</span>
+                            <span>Nozzle 0.4mm</span>
+                        </div>
+                        <div class="spec-bar"><div class="spec-bar-fill" style="--width: 90%;"></div></div>
+                    </div>
+                </div>
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--purple);">Acabamento: DTF UV</h3>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--gold);">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Resistencia UV</strong>
+                            <p>Adesivos resistentes a friccao, umidade e exposicao solar moderada</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--cyan);">
+                            <i class="fas fa-face-smile"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Detalhes Faciais</strong>
+                            <p>Olhos, boca, sobrancelhas e elementos visuais do mascote</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--green);">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Custo Incluso</strong>
+                            <p>Adesivos ja inclusos no preco unitario — sem custo adicional</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--purple);">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Garantia 90 dias</strong>
+                            <p>Adesao garantida em condicoes normais de uso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Personalizacao Total -->
+        <div class="slide centered" id="slide-5">
+            <span class="slide-label animate-in">CORES</span>
+            <h1 class="slide-title animate-in">Personalizacao Total</h1>
+            <p class="slide-subtitle animate-in" style="text-align: center; max-width: 600px;">Cada componente pode ter cor independente, adaptando o cofrinho a identidade visual do cliente</p>
+            <div class="grid-5">
+                <div class="color-swatch-card animate-in">
+                    <div class="color-circle" style="background: #FF6B35; box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);"></div>
+                    <span>Corpo</span>
+                </div>
+                <div class="color-swatch-card animate-in">
+                    <div class="color-circle" style="background: #00D4FF; box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);"></div>
+                    <span>Bracos</span>
+                </div>
+                <div class="color-swatch-card animate-in">
+                    <div class="color-circle" style="background: #9945FF; box-shadow: 0 0 20px rgba(153, 69, 255, 0.4);"></div>
+                    <span>Pernas</span>
+                </div>
+                <div class="color-swatch-card animate-in">
+                    <div class="color-circle" style="background: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);"></div>
+                    <span>Sapatos</span>
+                </div>
+                <div class="color-swatch-card animate-in">
+                    <div class="color-circle" style="background: #00FF88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);"></div>
+                    <span>Luvas</span>
+                </div>
+            </div>
+            <p class="text-muted animate-in" style="margin-top: 2rem; font-size: 0.85rem;">* Cores ilustrativas — personalize conforme a identidade da sua marca</p>
+        </div>
+
+        <!-- Slide 6: Infraestrutura de Producao -->
+        <div class="slide" id="slide-6">
+            <span class="slide-label animate-in">CAPACIDADE</span>
+            <h1 class="slide-title animate-in">Infraestrutura de Producao</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 0.25rem;">Linha 1 — Corpo</h3>
+                    <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem;">Ciclo de 12 horas</p>
+                    <div class="machine-grid">
+                        <div class="machine-icon active-cyan">A1</div>
+                        <div class="machine-icon active-cyan">A2</div>
+                        <div class="machine-icon active-cyan">A3</div>
+                        <div class="machine-icon active-cyan">A4</div>
+                        <div class="machine-icon reserve">A5</div>
+                    </div>
+                    <p class="text-secondary" style="font-size: 0.85rem;">4 maquinas ativas + 1 reserva</p>
+                    <p class="text-muted" style="font-size: 0.85rem;">Topo + Base: 12 unidades/ciclo cada</p>
+                </div>
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 0.25rem;">Linha 2 — Acessorios</h3>
+                    <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem;">Ciclo de 12 horas</p>
+                    <div class="machine-grid">
+                        <div class="machine-icon active-purple">A6</div>
+                        <div class="machine-icon active-purple">A7</div>
+                        <div class="machine-icon active-purple">A8</div>
+                        <div class="machine-icon reserve">A9</div>
+                        <div class="machine-icon reserve">A10</div>
+                    </div>
+                    <p class="text-secondary" style="font-size: 0.85rem;">3 maquinas ativas + 2 reservas</p>
+                    <p class="text-muted" style="font-size: 0.85rem;">Sapatos, Bracos+Alca, Maos: 24 un/ciclo cada</p>
+                </div>
+            </div>
+            <div class="grid-3" style="margin-top: 1.5rem;">
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <div class="big-number" data-counter="10">10</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Impressoras Bambulab A1 COMBO</p>
+                </div>
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <div class="big-number">48-96</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Unidades por Dia</p>
+                </div>
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <div class="big-number">24/7</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Operacao Continua</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Cronograma de Producao -->
+        <div class="slide centered" id="slide-7">
+            <span class="slide-label animate-in">TIMELINE</span>
+            <h1 class="slide-title animate-in">Cronograma de Producao</h1>
+            <div class="timeline animate-in">
+                <div class="timeline-node">
+                    <span class="timeline-day">D+0</span>
+                    <div class="timeline-dot highlight"></div>
+                    <span class="timeline-label">Assinatura do Contrato</span>
+                </div>
+                <div class="timeline-node">
+                    <span class="timeline-day">D+6</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-label">Chegada do Filamento</span>
+                </div>
+                <div class="timeline-node">
+                    <span class="timeline-day">D+8</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-label">Chegada das Impressoras</span>
+                </div>
+                <div class="timeline-node">
+                    <span class="timeline-day">D+13</span>
+                    <div class="timeline-dot" style="border-color: var(--purple); width: 24px; height: 24px;"></div>
+                    <span class="timeline-label">Setup e Inicio da Producao</span>
+                </div>
+                <div class="timeline-node">
+                    <span class="timeline-day">D+26</span>
+                    <div class="timeline-dot gold"></div>
+                    <span class="timeline-label">Entrega do Primeiro Lote</span>
+                </div>
+            </div>
+            <div class="glass-card-sm animate-in" style="margin-top: 1.5rem; text-align: center; max-width: 800px;">
+                <i class="fas fa-lightbulb" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                <strong>Recomendacao:</strong> Prazo de 30 dias — entrega inicial de 500 unidades, seguida de lotes de 2.000 a cada 40 dias
+            </div>
+        </div>
+
+        <!-- Slide 8: Tabela de Precos -->
+        <div class="slide centered" id="slide-8">
+            <span class="slide-label animate-in">INVESTIMENTO</span>
+            <h1 class="slide-title animate-in">Tabela de Precos</h1>
+            <div class="grid-3" style="align-items: center;">
+                <div class="pricing-card animate-in">
+                    <div class="quantity">2.000 un</div>
+                    <div class="unit-price">R$ 34,97</div>
+                    <div class="total">Total: R$ 69.940</div>
+                </div>
+                <div class="pricing-card animate-in">
+                    <div class="quantity">5.000 un</div>
+                    <div class="unit-price">R$ 31,45</div>
+                    <div class="total">Total: R$ 157.250</div>
+                    <p style="font-size: 0.8rem; color: var(--green); margin-top: 0.5rem;">-10% vs 2.000</p>
+                </div>
+                <div class="pricing-card recommended animate-in">
+                    <span class="pricing-badge">MELHOR CUSTO</span>
+                    <div class="quantity">10.000 un</div>
+                    <div class="unit-price">R$ 28,76</div>
+                    <div class="total">Total: R$ 287.600</div>
+                    <p style="font-size: 0.8rem; color: var(--green); margin-top: 0.5rem;">-18% vs 2.000</p>
+                </div>
+            </div>
+            <p class="text-muted animate-in" style="margin-top: 2rem; font-size: 0.85rem;">* Possibilidade de contratar 10.000 unidades e receber em lotes com entrega flexivel, sem custo adicional</p>
+        </div>
+
+        <!-- Slide 9: Condicoes de Pagamento -->
+        <div class="slide" id="slide-9">
+            <span class="slide-label animate-in">PAGAMENTO</span>
+            <h1 class="slide-title animate-in">Condicoes de Pagamento</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="donut-chart" style="margin-bottom: 1.5rem;">
+                        <svg viewBox="0 0 120 120" width="180" height="180">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16"/>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#9945FF" stroke-width="16" stroke-dasharray="219.9 94.2" stroke-dashoffset="78.5" stroke-linecap="round"/>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#00D4FF" stroke-width="16" stroke-dasharray="94.2 219.9" stroke-dashoffset="78.5" stroke-linecap="round"/>
+                            <text x="60" y="56" text-anchor="middle" fill="white" font-family="Orbitron" font-size="14" font-weight="700">30/70</text>
+                            <text x="60" y="72" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">SPLIT</text>
+                        </svg>
+                    </div>
+                    <div class="donut-legend">
+                        <div class="donut-legend-item">
+                            <span class="donut-legend-dot" style="background: var(--cyan);"></span>
+                            <span>30% na assinatura do contrato</span>
+                        </div>
+                        <div class="donut-legend-item">
+                            <span class="donut-legend-dot" style="background: var(--purple);"></span>
+                            <span>70% na entrega de cada lote</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card animate-in">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--green);">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>PIX</strong>
+                            <p>Transferencia instantanea</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--cyan);">
+                            <i class="fas fa-building-columns"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Transferencia Bancaria</strong>
+                            <p>Deposito em conta</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--purple);">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Cartao de Credito</strong>
+                            <p>Parcelamento disponivel</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--gold);">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Nota Fiscal</strong>
+                            <p>Nota fiscal eletronica emitida a cada lote</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Qualidade e Garantia -->
+        <div class="slide" id="slide-10">
+            <span class="slide-label animate-in">CONFIANCA</span>
+            <h1 class="slide-title animate-in">Qualidade e Garantia</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <i class="fas fa-shield-halved" style="font-size: 3rem; color: var(--green); margin-bottom: 1rem; display: block;"></i>
+                    <h3>Garantia de Fabricacao</h3>
+                    <p style="color: var(--green); font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; font-family: var(--font-display);">3 Meses</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Cobertura total para falhas estruturais, trincas ou deformacoes. Pecas defeituosas substituidas sem custo.</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <i class="fas fa-stamp" style="font-size: 3rem; color: var(--cyan); margin-bottom: 1rem; display: block;"></i>
+                    <h3>Garantia DTF UV</h3>
+                    <p style="color: var(--cyan); font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; font-family: var(--font-display);">90 Dias</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Adesao dos adesivos DTF UV garantida em condicoes normais de uso. Nao cobre abrasao intensa.</p>
+                </div>
+            </div>
+            <div class="grid-3" style="margin-top: 1.5rem;">
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <i class="fas fa-gem" style="color: var(--cyan); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p style="font-size: 0.9rem;">ABS Premium</p>
+                </div>
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <i class="fas fa-sun" style="color: var(--gold); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p style="font-size: 0.9rem;">DTF UV</p>
+                </div>
+                <div class="glass-card-sm animate-in" style="text-align: center;">
+                    <i class="fas fa-microscope" style="color: var(--purple); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p style="font-size: 0.9rem;">Controle Unitario</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Propriedade Intelectual -->
+        <div class="slide" id="slide-11">
+            <span class="slide-label animate-in">PROTECAO</span>
+            <h1 class="slide-title animate-in">Propriedade Intelectual</h1>
+            <p class="slide-subtitle animate-in">Sua marca protegida com respaldo juridico completo</p>
+            <div class="glass-card animate-in" style="width: 100%; max-width: 800px;">
+                <div class="feature-item">
+                    <div class="feature-icon" style="color: var(--cyan);">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Direito Autoral</strong>
+                        <p>Modelo 3D protegido pela Lei 9.610/98 — arquivos STL/OBJ/STEP NAO serao fornecidos</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon" style="color: var(--purple);">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Exclusividade de Producao</strong>
+                        <p>Futuras reproducoes realizadas exclusivamente pela ImaginaTech, garantindo padrao tecnico</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon" style="color: var(--green);">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Confidencialidade</strong>
+                        <p>Especificacoes tecnicas e design sao sigilosos — divulgacao requer autorizacao escrita</p>
+                    </div>
+                </div>
+                <div class="feature-item" style="margin-bottom: 0;">
+                    <div class="feature-icon" style="color: var(--red);">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Clausula Penal</strong>
+                        <p>Reproducao nao autorizada sujeita a multa de 10x o valor total do contrato</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Resumo do Investimento -->
+        <div class="slide" id="slide-12">
+            <span class="slide-label animate-in">NUMEROS</span>
+            <h1 class="slide-title animate-in">Resumo do Investimento</h1>
+            <div class="grid-4">
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="big-number" data-counter="81490" data-prefix="R$ ">R$ 81.490</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Investimento Inicial</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="big-number">48-96</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Unidades por Dia</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="big-number" data-counter="26">26</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Dias ate 1a Entrega</p>
+                </div>
+                <div class="glass-card animate-in" style="text-align: center;">
+                    <div class="big-number" data-counter="28.76" data-prefix="R$ ">R$ 28,76</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Menor Custo Unitario</p>
+                </div>
+            </div>
+            <div class="glass-card-sm animate-in" style="margin-top: 1.5rem; width: 100%;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">Detalhamento do Investimento Inicial</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <span class="text-secondary">Impressoras (10x Bambulab A1)</span>
+                        <strong>R$ 47.490</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <span class="text-secondary">Filamento (400kg)</span>
+                        <strong>R$ 23.800</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <span class="text-secondary">Aluguel (caucao)</span>
+                        <strong>R$ 3.000</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <span class="text-secondary">Energia (1 mes)</span>
+                        <strong>R$ 1.200</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0;">
+                        <span class="text-secondary">Adesivos (2.000 un)</span>
+                        <strong>R$ 6.000</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Proximos Passos -->
+        <div class="slide" id="slide-13">
+            <span class="slide-label animate-in">ACAO</span>
+            <h1 class="slide-title animate-in">Proximos Passos</h1>
+            <div class="steps-list animate-in">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <i class="fas fa-handshake" style="color: var(--cyan); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>Aprovacao da Proposta</strong>
+                            <p>Alinhamento de cores, quantidades e cronograma de entregas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <i class="fas fa-file-signature" style="color: var(--purple); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>Assinatura do Contrato</strong>
+                            <p>Formalizacao dos termos comerciais e de propriedade intelectual</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <i class="fas fa-credit-card" style="color: var(--green); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>Pagamento Inicial (30%)</strong>
+                            <p>Sinal de R$ 86.280 para inicio da mobilizacao</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <i class="fas fa-gears" style="color: var(--gold); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>Inicio da Producao</strong>
+                            <p>Setup das impressoras e producao do primeiro lote em 13 dias</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <i class="fas fa-truck-fast" style="color: var(--cyan); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>Entrega do Primeiro Lote</strong>
+                            <p>Primeiro lote entregue em ate 26 dias apos assinatura</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="animate-in" style="margin-top: 2rem; color: var(--cyan); text-align: center; font-size: 1.2rem; font-weight: 600;">Estamos prontos para comecar!</p>
+        </div>
+
+        <!-- Slide 14: Obrigado / Q&A -->
+        <div class="slide centered" id="slide-14">
+            <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="animate-in" style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 1rem;">
+            <h1 class="animate-in" style="font-size: 4rem; font-family: var(--font-display); font-weight: 900; background: linear-gradient(135deg, var(--cyan), var(--purple), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;">Obrigado!</h1>
+            <p class="slide-subtitle animate-in" style="text-align: center;">Perguntas?</p>
+            <div class="contact-pills animate-in">
+                <div class="contact-pill">
+                    <i class="fab fa-whatsapp" style="color: var(--green); font-size: 1.2rem;"></i>
+                    <span>(21) 96897-2539</span>
+                </div>
+                <div class="contact-pill">
+                    <i class="fab fa-instagram" style="color: var(--purple); font-size: 1.2rem;"></i>
+                    <span>@imaginatech3d</span>
+                </div>
+                <div class="contact-pill">
+                    <i class="fas fa-globe" style="color: var(--cyan); font-size: 1.2rem;"></i>
+                    <span>imaginatech.com.br</span>
+                </div>
+            </div>
+            <div class="brand-text animate-in" style="font-size: 1.5rem; margin-top: 1rem;">IMAGINATECH</div>
+            <p class="text-muted animate-in" style="font-style: italic; margin-top: 0.5rem;">Da imaginacao a realidade</p>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="nav-overlay">
+            <button class="nav-arrow left" data-action="prev" aria-label="Slide anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="nav-arrow right" data-action="next" aria-label="Proximo slide">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="progress-dots" id="progress-dots"></div>
+            <div class="slide-counter" id="slide-counter">1 / 14</div>
+            <button class="fullscreen-btn" data-action="fullscreen" aria-label="Tela cheia">
+                <i class="fas fa-expand"></i>
+            </button>
+            <button class="print-btn" data-action="print" aria-label="Imprimir">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const slides = document.querySelectorAll('.slide');
+    const progressDotsContainer = document.getElementById('progress-dots');
+    const slideCounter = document.getElementById('slide-counter');
+
+    const state = {
+        current: 0,
+        total: slides.length,
+        animating: false,
+        touchStartX: 0
+    };
+
+    // --- Progress Dots ---
+
+    function createProgressDots() {
+        if (!progressDotsContainer) return;
+        for (let i = 0; i < state.total; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'progress-dot' + (i === 0 ? ' active' : '');
+            dot.setAttribute('data-action', 'goto');
+            dot.setAttribute('data-slide', String(i));
+            dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+            progressDotsContainer.appendChild(dot);
+        }
+    }
+
+    function updateProgressDots() {
+        const dots = progressDotsContainer?.querySelectorAll('.progress-dot');
+        if (!dots) return;
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === state.current);
+        });
+    }
+
+    // --- Counter ---
+
+    function updateCounter() {
+        if (slideCounter) {
+            slideCounter.textContent = (state.current + 1) + ' / ' + state.total;
+        }
+    }
+
+    // --- Slide Navigation ---
+
+    function goToSlide(index) {
+        if (index === state.current || index < 0 || index >= state.total || state.animating) return;
+
+        state.animating = true;
+
+        const currentSlide = slides[state.current];
+        const targetSlide = slides[index];
+        const direction = index > state.current ? 'exit-left' : 'exit-right';
+
+        currentSlide.classList.remove('active');
+        currentSlide.classList.add(direction);
+
+        setTimeout(() => {
+            targetSlide.classList.add('active');
+        }, 50);
+
+        setTimeout(() => {
+            currentSlide.classList.remove(direction);
+            state.animating = false;
+        }, 600);
+
+        state.current = index;
+        updateProgressDots();
+        updateCounter();
+        triggerSlideAnimations(targetSlide);
+    }
+
+    function nextSlide() {
+        goToSlide(state.current + 1);
+    }
+
+    function prevSlide() {
+        goToSlide(state.current - 1);
+    }
+
+    // --- Animations ---
+
+    function triggerSlideAnimations(slideElement) {
+        const animateElements = slideElement.querySelectorAll('.animate-in');
+        animateElements.forEach((el, i) => {
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+            el.style.animationDelay = (i * 0.1) + 's';
+        });
+
+        const specBars = slideElement.querySelectorAll('.spec-bar-fill');
+        specBars.forEach((bar) => {
+            const targetWidth = getComputedStyle(bar).getPropertyValue('--width') || '0%';
+            bar.style.width = '0';
+            setTimeout(() => {
+                bar.style.width = targetWidth;
+            }, 200);
+        });
+
+        const counters = slideElement.querySelectorAll('.big-number[data-counter]');
+        counters.forEach((el) => {
+            animateCounter(el);
+        });
+    }
+
+    function animateCounter(element) {
+        const target = parseFloat(element.dataset.counter);
+        const prefix = element.dataset.prefix || '';
+        const suffix = element.dataset.suffix || '';
+        const isDecimal = String(element.dataset.counter).indexOf('.') !== -1;
+        const duration = 1500;
+        let startTime = null;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const currentValue = eased * target;
+
+            let formatted;
+            if (isDecimal) {
+                formatted = currentValue.toFixed(2).replace('.', ',');
+            } else {
+                formatted = Math.round(currentValue).toLocaleString('pt-BR');
+            }
+
+            element.textContent = prefix + formatted + suffix;
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    // --- Fullscreen ---
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // --- Event Delegation (click) ---
+
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+
+        const action = el.dataset.action;
+        if (action === 'next') nextSlide();
+        else if (action === 'prev') prevSlide();
+        else if (action === 'goto') goToSlide(parseInt(el.dataset.slide, 10));
+        else if (action === 'fullscreen') toggleFullscreen();
+        else if (action === 'print') window.print();
+    });
+
+    // --- Keyboard Navigation ---
+
+    document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+            case 'ArrowRight':
+            case ' ':
+                e.preventDefault();
+                nextSlide();
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                prevSlide();
+                break;
+            case 'Home':
+                e.preventDefault();
+                goToSlide(0);
+                break;
+            case 'End':
+                e.preventDefault();
+                goToSlide(state.total - 1);
+                break;
+            case 'f':
+            case 'F':
+                if (!e.ctrlKey && !e.metaKey) toggleFullscreen();
+                break;
+            case 'Escape':
+                if (document.fullscreenElement) document.exitFullscreen();
+                break;
+        }
+    });
+
+    // --- Touch Swipe Detection ---
+
+    document.addEventListener('touchstart', (e) => {
+        state.touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        const diff = state.touchStartX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 60) {
+            if (diff > 0) nextSlide();
+            else prevSlide();
+        }
+    }, { passive: true });
+
+    // --- Mouse Wheel Support ---
+
+    let wheelTimeout = null;
+    document.addEventListener('wheel', (e) => {
+        if (wheelTimeout) return;
+        wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 800);
+        if (e.deltaY > 0) nextSlide();
+        else if (e.deltaY < 0) prevSlide();
+    }, { passive: true });
+
+    // --- Initialization ---
+
+    createProgressDots();
+    updateCounter();
+
+    setTimeout(() => {
+        const firstSlide = slides[0];
+        if (firstSlide) triggerSlideAnimations(firstSlide);
+    }, 300);
+});
+    </script>
+</body>
+</html>
