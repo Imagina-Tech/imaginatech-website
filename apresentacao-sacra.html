@@ -68,28 +68,30 @@ html, body {
 .glass { background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); transition: background 0.3s, transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
 .glass:hover { background: var(--glass-hover); border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
 
-/* Product grid */
-.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%; max-width: 1000px; }
+/* Product slide (1 per page) */
+.product-slide-content {
+    display: flex; gap: 2.5rem; align-items: center; justify-content: center;
+    width: 100%; max-width: 1000px;
+}
+.product-slide-content .img-wrap {
+    flex: 0 0 auto; width: 400px; height: 55vh; max-height: 500px;
+    overflow: hidden; border-radius: var(--radius); cursor: pointer;
+    box-shadow: var(--shadow); border: 1px solid var(--glass-border);
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.product-slide-content .img-wrap:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); border-color: rgba(0,212,255,0.3); }
+.product-slide-content .img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.4s; }
+.product-slide-content .img-wrap:hover img { transform: scale(1.05); }
 
-.product-card {
+.product-slide-content .product-info {
+    flex: 1; max-width: 400px; text-align: left;
     background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
     border: 1px solid var(--glass-border); border-radius: var(--radius);
-    overflow: hidden; box-shadow: var(--shadow);
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-    display: flex; flex-direction: column;
+    padding: 2rem; box-shadow: var(--shadow);
 }
-.product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); border-color: rgba(0,212,255,0.3); }
-
-.product-card .img-wrap {
-    width: 100%; height: 280px; overflow: hidden; position: relative; cursor: pointer;
-}
-.product-card .img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.4s; }
-.product-card:hover .img-wrap img { transform: scale(1.05); }
-
-.product-card .info { padding: 1.25rem; text-align: left; }
-.product-card .info h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
-.product-card .info p { font-size: 0.85rem; color: var(--text-sec); line-height: 1.5; }
-.product-card .info .tag { display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 0.2rem 0.7rem; border-radius: 50px; margin-top: 0.75rem; }
+.product-slide-content .product-info h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem; }
+.product-slide-content .product-info p { font-size: 1rem; color: var(--text-sec); line-height: 1.7; }
+.product-slide-content .product-info .tag { display: inline-block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 0.3rem 0.9rem; border-radius: 50px; margin-top: 1rem; }
 .tag-cyan { background: rgba(0,212,255,0.15); color: var(--cyan); }
 .tag-purple { background: rgba(153,69,255,0.15); color: var(--purple); }
 .tag-gold { background: rgba(255,215,0,0.15); color: var(--gold); }
@@ -147,8 +149,9 @@ html, body {
 @media (max-width: 768px) {
     .slide { padding: 2rem 1.5rem; }
     .slide-title { font-size: 2rem; }
-    .product-grid { grid-template-columns: 1fr; }
-    .product-card .img-wrap { height: 200px; }
+    .product-slide-content { flex-direction: column; gap: 1.5rem; }
+    .product-slide-content .img-wrap { width: 100%; max-width: 350px; height: 40vh; }
+    .product-slide-content .product-info { max-width: 100%; }
     .nav-arrow { display: none; }
 }
     </style>
@@ -172,56 +175,72 @@ html, body {
             <p class="anim" style="color: var(--text-muted); margin-top: 1.5rem; font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 2px;">FEVEREIRO 2026</p>
         </div>
 
-        <!-- Slide 2: Produtos -->
+        <!-- Slide 2: Busto Sacro -->
         <div class="slide" id="slide-2">
-            <span class="slide-label anim">EXEMPLOS</span>
-            <h1 class="slide-title anim" style="font-size: 2.2rem; margin-bottom: 1.5rem;">O que Podemos Produzir</h1>
-            <div class="product-grid anim">
-                <div class="product-card">
-                    <div class="img-wrap" data-action="zoom">
-                        <img src="busto.png" alt="Busto Sacro">
-                    </div>
-                    <div class="info">
-                        <h3>Busto Sacro</h3>
-                        <p>Bustos detalhados impressos em 3D com acabamento premium. Ideal para igrejas, capelas e decoracao devocional.</p>
-                        <span class="tag tag-cyan">Impressao 3D</span>
-                    </div>
+            <span class="slide-label anim">EXEMPLO 1</span>
+            <h1 class="slide-title anim" style="font-size: 2.2rem; margin-bottom: 1.5rem;">Busto Sacro</h1>
+            <div class="product-slide-content anim">
+                <div class="img-wrap" data-action="zoom">
+                    <img src="busto.png" alt="Busto Sacro">
                 </div>
-                <div class="product-card">
-                    <div class="img-wrap" data-action="zoom">
-                        <img src="chaveiro.jpeg" alt="Chaveiro Sacro">
-                    </div>
-                    <div class="info">
-                        <h3>Chaveiro Sacro</h3>
-                        <p>Chaveiros em formatos personalizados com acabamento metalizado. Design, formato e cores sob medida.</p>
-                        <span class="tag tag-gold">Personalizavel</span>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="img-wrap" data-action="zoom">
-                        <img src="frame.jpeg" alt="Quadro Decorativo Sacro">
-                    </div>
-                    <div class="info">
-                        <h3>Quadro Decorativo</h3>
-                        <p>Quadros em relevo para parede com qualquer imagem sacra. Detalhes recortados, impacto visual e significado.</p>
-                        <span class="tag tag-purple">Decoracao</span>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="img-wrap" data-action="zoom">
-                        <img src="litophane.jpg" alt="Litofania Sacra">
-                    </div>
-                    <div class="info">
-                        <h3>Litofania</h3>
-                        <p>Luminarias impressas em 3D que revelam a imagem quando iluminadas. Qualquer foto ou arte pode ser transformada em litofania.</p>
-                        <span class="tag tag-green">Iluminacao</span>
-                    </div>
+                <div class="product-info">
+                    <h3>Busto Sacro</h3>
+                    <p>Bustos detalhados impressos em 3D com acabamento premium. Ideal para igrejas, capelas e decoracao devocional.</p>
+                    <span class="tag tag-cyan">Impressao 3D</span>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 3: Contato -->
+        <!-- Slide 3: Chaveiro Sacro -->
         <div class="slide" id="slide-3">
+            <span class="slide-label anim">EXEMPLO 2</span>
+            <h1 class="slide-title anim" style="font-size: 2.2rem; margin-bottom: 1.5rem;">Chaveiro Sacro</h1>
+            <div class="product-slide-content anim">
+                <div class="img-wrap" data-action="zoom">
+                    <img src="chaveiro.jpeg" alt="Chaveiro Sacro">
+                </div>
+                <div class="product-info">
+                    <h3>Chaveiro Sacro</h3>
+                    <p>Chaveiros em formatos personalizados com acabamento metalizado. Design, formato e cores sob medida.</p>
+                    <span class="tag tag-gold">Personalizavel</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Quadro Decorativo -->
+        <div class="slide" id="slide-4">
+            <span class="slide-label anim">EXEMPLO 3</span>
+            <h1 class="slide-title anim" style="font-size: 2.2rem; margin-bottom: 1.5rem;">Quadro Decorativo</h1>
+            <div class="product-slide-content anim">
+                <div class="img-wrap" data-action="zoom">
+                    <img src="frame.jpeg" alt="Quadro Decorativo Sacro">
+                </div>
+                <div class="product-info">
+                    <h3>Quadro Decorativo</h3>
+                    <p>Quadros em relevo para parede com qualquer imagem sacra. Detalhes recortados, impacto visual e significado.</p>
+                    <span class="tag tag-purple">Decoracao</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Litofania -->
+        <div class="slide" id="slide-5">
+            <span class="slide-label anim">EXEMPLO 4</span>
+            <h1 class="slide-title anim" style="font-size: 2.2rem; margin-bottom: 1.5rem;">Litofania</h1>
+            <div class="product-slide-content anim">
+                <div class="img-wrap" data-action="zoom">
+                    <img src="litophane.jpg" alt="Litofania Sacra">
+                </div>
+                <div class="product-info">
+                    <h3>Litofania</h3>
+                    <p>Luminarias impressas em 3D que revelam a imagem quando iluminadas. Qualquer foto ou arte pode ser transformada em litofania.</p>
+                    <span class="tag tag-green">Iluminacao</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Contato -->
+        <div class="slide" id="slide-6">
             <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="anim" style="width: 50px; height: 50px; border-radius: 10px; margin-bottom: 1rem;">
             <h1 class="anim" style="font-size: 3rem; font-family: var(--font-display); font-weight: 900; background: linear-gradient(135deg, var(--cyan), var(--purple), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;">Obrigado!</h1>
             <div class="separator anim" style="margin: 1rem auto;"></div>
@@ -258,7 +277,7 @@ html, body {
             <button class="nav-arrow left" data-action="prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
             <button class="nav-arrow right" data-action="next" aria-label="Proximo"><i class="fas fa-chevron-right"></i></button>
             <div class="progress-dots" id="dots"></div>
-            <div class="slide-counter" id="counter">1 / 3</div>
+            <div class="slide-counter" id="counter">1 / 6</div>
         </div>
 
     </div>
