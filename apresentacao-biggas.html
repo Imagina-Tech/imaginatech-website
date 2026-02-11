@@ -510,22 +510,23 @@ img {
 .timeline {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     position: relative;
-    padding: var(--space-3xl) 0;
+    padding: 0;
     width: 100%;
 }
 
 .timeline::before {
     content: '';
     position: absolute;
-    top: 50%;
     left: 5%;
     right: 5%;
     height: 3px;
     background: linear-gradient(90deg, var(--color-cyan), var(--color-purple), var(--color-green));
-    transform: translateY(-50%);
     border-radius: 2px;
+    top: 0;
+    /* Position at the vertical center of the dot row: day-label height + gap + half dot */
+    margin-top: calc(1rem + 0.75rem + 10px);
 }
 
 .timeline-node {
@@ -535,7 +536,7 @@ img {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    width: 120px;
+    width: 140px;
 }
 
 .timeline-dot {
@@ -1160,42 +1161,68 @@ img {
         <div class="slide" id="slide-2">
             <span class="slide-label animate-in">QUEM SOMOS</span>
             <h1 class="slide-title animate-in">ImaginaTech</h1>
-            <p class="slide-subtitle animate-in">Somos uma empresa de impressao 3D situada na Ilha do Governador, bairro da Portuguesa, no Rio de Janeiro. Nosso centro de producao esta localizado na Portuguesa, enquanto nosso escritorio administrativo funciona no Grajau.</p>
-
-            <div class="glass-card animate-in" style="width: 100%; max-width: 500px; margin-bottom: var(--space-xl);">
-                <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.75rem;">Apresentado por:</p>
-                <p style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.25rem;">Igor Leao Butter</p>
-                <p class="text-secondary" style="font-size: 0.95rem; margin-bottom: 0.25rem;">Socio-Fundador (50%)</p>
-                <p style="color: var(--cyan); font-size: 0.95rem; font-weight: 600;">ImaginaTech</p>
-            </div>
-
-            <div class="grid-3 animate-in">
-                <div class="glass-card" style="text-align: center;">
-                    <div class="feature-icon" style="color: var(--cyan); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
-                        <i class="fas fa-print"></i>
+            <div class="grid-2">
+                <div style="display: flex; flex-direction: column; gap: var(--space-lg);" class="animate-in">
+                    <p class="text-secondary" style="font-size: 1rem; line-height: 1.7;">A ImaginaTech e uma empresa especializada em impressao 3D profissional, situada na Ilha do Governador, Rio de Janeiro. Nosso centro de producao fica no bairro da Portuguesa, e o escritorio administrativo opera no Grajau.</p>
+                    <p class="text-secondary" style="font-size: 1rem; line-height: 1.7;">Com foco em producao em serie de alta qualidade, utilizamos impressoras Bambulab de ultima geracao e materiais premium para entregar produtos personalizados com acabamento profissional.</p>
+                    <div class="glass-card" style="padding: var(--space-xl);">
+                        <p class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: var(--space-md);">Apresentado por</p>
+                        <div style="display: flex; align-items: center; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                            <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; flex-shrink: 0;">IB</div>
+                            <div>
+                                <p style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.15rem;">Igor Leao Butter</p>
+                                <p style="color: var(--cyan); font-size: 1rem; font-weight: 600;">Socio-Fundador (50%)</p>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid var(--glass-border); padding-top: var(--space-md); display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fas fa-building" style="color: var(--cyan); width: 20px; text-align: center;"></i>
+                                <span class="text-secondary" style="font-size: 0.9rem;">ImaginaTech — Impressao 3D Profissional</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fas fa-map-marker-alt" style="color: var(--purple); width: 20px; text-align: center;"></i>
+                                <span class="text-secondary" style="font-size: 0.9rem;">Ilha do Governador, RJ</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fab fa-whatsapp" style="color: var(--green); width: 20px; text-align: center;"></i>
+                                <span class="text-secondary" style="font-size: 0.9rem;">(21) 96897-2539</span>
+                            </div>
+                        </div>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Impressao 3D Profissional</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Tecnologia FDM com impressoras Bambulab de alta performance</p>
                 </div>
-                <div class="glass-card" style="text-align: center;">
-                    <div class="feature-icon" style="color: var(--purple); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
-                        <i class="fas fa-cubes"></i>
+                <div style="display: flex; flex-direction: column; gap: var(--space-sm);" class="animate-in">
+                    <div class="glass-card-sm" style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md) var(--space-lg);">
+                        <div class="feature-icon" style="color: var(--cyan); width: 40px; height: 40px; min-width: 40px; font-size: 1rem;">
+                            <i class="fas fa-print"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size: 0.95rem;">Impressao 3D Profissional</strong>
+                            <p class="text-secondary" style="font-size: 0.8rem;">Tecnologia FDM com impressoras Bambulab</p>
+                        </div>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Producao em Escala</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Capacidade de 48 a 96 unidades por dia com controle unitario de qualidade</p>
-                </div>
-                <div class="glass-card" style="text-align: center;">
-                    <div class="feature-icon" style="color: var(--green); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
-                        <i class="fas fa-shield-halved"></i>
+                    <div class="glass-card-sm" style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md) var(--space-lg);">
+                        <div class="feature-icon" style="color: var(--purple); width: 40px; height: 40px; min-width: 40px; font-size: 1rem;">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size: 0.95rem;">Producao em Escala</strong>
+                            <p class="text-secondary" style="font-size: 0.8rem;">48 a 96 unidades/dia com controle unitario</p>
+                        </div>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Qualidade Premium</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Materiais de engenharia e acabamento com adesivos DTF UV profissionais</p>
+                    <div class="glass-card-sm" style="display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md) var(--space-lg);">
+                        <div class="feature-icon" style="color: var(--green); width: 40px; height: 40px; min-width: 40px; font-size: 1rem;">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size: 0.95rem;">Qualidade Premium</strong>
+                            <p class="text-secondary" style="font-size: 0.8rem;">Materiais de engenharia + acabamento DTF UV</p>
+                        </div>
+                    </div>
+                    <div class="photo-placeholder" style="flex: 1; min-height: 160px;">
+                        <img src="foto_empresa.png" alt="Foto da empresa e equipe ImaginaTech" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_empresa.png</span></div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="photo-placeholder animate-in" style="margin-top: var(--space-xl); width: 100%; max-width: 600px;">
-                <img src="foto_empresa.png" alt="Foto da empresa e equipe ImaginaTech" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_empresa.png</span></div>
             </div>
         </div>
 
@@ -1228,7 +1255,7 @@ img {
                             <p>Material aquecido a ~200C e depositado com precisao milimetrica</p>
                         </div>
                     </div>
-                    <div class="feature-item" style="margin-bottom: var(--space-xl);">
+                    <div class="feature-item" style="margin-bottom: var(--space-lg);">
                         <div class="feature-icon" style="color: var(--green);">
                             <i class="fas fa-recycle"></i>
                         </div>
@@ -1237,9 +1264,14 @@ img {
                             <p>Uso otimizado de material — sem desperdicio de materia-prima</p>
                         </div>
                     </div>
-                    <div class="photo-placeholder" style="margin-top: auto;">
-                        <img src="foto_impressora.png" alt="Impressora 3D Bambulab em operacao" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_impressora.png</span></div>
+                    <div style="position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-lg); overflow: hidden; border: 2px dashed var(--glass-border); background: rgba(255,255,255,0.02);">
+                        <video id="video-impressao3d" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: var(--radius-lg);" controls>
+                            <source src="video_impressao3d.mp4" type="video/mp4">
+                        </video>
+                        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; color: var(--text-muted); pointer-events: none;" id="video-fallback">
+                            <i class="fas fa-play-circle" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <span style="font-size: 0.8rem; opacity: 0.6; font-family: var(--font-display); letter-spacing: 1px;">video_impressao3d.mp4</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1289,28 +1321,20 @@ img {
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: var(--space-lg);" class="animate-in">
-                    <div class="photo-placeholder" style="flex: 2;">
-                        <img src="foto1.png" alt="Miniatura BIGGAS Cofrinho - vista principal" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="photo-placeholder" style="flex: 1;">
+                        <img src="foto1.png" alt="Miniatura BIGGAS Cofrinho - vista frontal" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto1.png</span></div>
                     </div>
-                    <div class="photo-placeholder" style="flex: 1;">
-                        <img src="foto2.png" alt="Miniatura BIGGAS Cofrinho - detalhe" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto2.png</span></div>
+                    <div style="display: flex; gap: var(--space-md);">
+                        <div class="photo-placeholder" style="flex: 1;">
+                            <img src="foto2.png" alt="Miniatura BIGGAS Cofrinho - vista lateral" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto2.png</span></div>
+                        </div>
+                        <div class="photo-placeholder" style="flex: 1;">
+                            <img src="foto3.png" alt="Miniatura BIGGAS Cofrinho - detalhe" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto3.png</span></div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="grid-3 animate-in" style="margin-top: var(--space-xl);">
-                <div class="photo-placeholder">
-                    <img src="foto3.png" alt="Miniatura BIGGAS Cofrinho - angulo 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto3.png</span></div>
-                </div>
-                <div class="photo-placeholder">
-                    <img src="foto4.png" alt="Miniatura BIGGAS Cofrinho - angulo 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto4.png</span></div>
-                </div>
-                <div class="photo-placeholder">
-                    <img src="foto5.png" alt="Miniatura BIGGAS Cofrinho - angulo 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto5.png</span></div>
                 </div>
             </div>
         </div>
@@ -1439,13 +1463,15 @@ img {
                     </div>
                     <p class="text-muted" style="font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">Cores personalizaveis respeitando o limite de cores por nivel Y da impressao 3D</p>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;" class="animate-in">
-                    <div class="photo-placeholder animate-in">
-                        <img src="foto_cores.png" alt="Cores do mascote BIGGAS" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_cores.png</span></div>
-                    </div>
-                    <div class="glass-card-sm">
-                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">A restricao de "mesmo nivel Y" significa que duas cores diferentes nao podem ser impressas na mesma altura da peca. Esta e uma limitacao tecnica da impressao 3D por filamento.</p>
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1rem;">Restricao Tecnica: Nivel Y</h3>
+                    <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.25rem;">A restricao de "mesmo nivel Y" significa que duas cores diferentes nao podem ser impressas na mesma altura da peca. Esta e uma limitacao tecnica da impressao 3D por filamento (FDM).</p>
+                    <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.25rem;">Na pratica, isso significa que a troca de cor so pode acontecer entre camadas — ou seja, em alturas diferentes da peca. Dentro de uma mesma camada horizontal, apenas uma cor pode ser utilizada.</p>
+                    <div class="glass-card-sm" style="border-color: rgba(0, 212, 255, 0.2);">
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <i class="fas fa-info-circle" style="color: var(--cyan); font-size: 1rem; margin-top: 0.15rem; flex-shrink: 0;"></i>
+                            <p class="text-secondary" style="font-size: 0.85rem; line-height: 1.5;">Exemplo: o corpo azul e as pernas brancas funcionam perfeitamente, pois estao em alturas diferentes. Mas nao seria possivel ter listras azuis e brancas na mesma altura.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1502,10 +1528,6 @@ img {
                     <p class="text-muted" style="font-size: 0.85rem;">Operacao Continua</p>
                 </div>
             </div>
-            <div class="photo-placeholder animate-in" style="margin-top: 1.5rem;">
-                <img src="foto_impressoras.png" alt="Impressoras Bambulab" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_impressoras.png</span></div>
-            </div>
         </div>
 
         <!-- Slide 8: Cronograma de Producao -->
@@ -1521,17 +1543,17 @@ img {
                 <div class="timeline-node">
                     <span class="timeline-day">D+6</span>
                     <div class="timeline-dot"></div>
-                    <span class="timeline-label">Chegada do Filamento</span>
+                    <span class="timeline-label">Aquisicao de Material</span>
                 </div>
                 <div class="timeline-node">
                     <span class="timeline-day">D+8</span>
                     <div class="timeline-dot"></div>
-                    <span class="timeline-label">Chegada das Impressoras</span>
+                    <span class="timeline-label">Organizacao, conferencia e termino da demanda de Carnaval</span>
                 </div>
                 <div class="timeline-node">
                     <span class="timeline-day">D+13</span>
                     <div class="timeline-dot" style="border-color: var(--purple); width: 24px; height: 24px;"></div>
-                    <span class="timeline-label">Setup e Inicio da Producao</span>
+                    <span class="timeline-label">Inicio da Producao em Lote</span>
                 </div>
                 <div class="timeline-node">
                     <span class="timeline-day">D+30</span>
@@ -1557,10 +1579,6 @@ img {
                 <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 1.5rem;"></div>
                 <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.25rem;">O valor unitario de R$ 28,76 reflete um preco extremamente competitivo considerando o nivel de personalizacao oferecido. Cada unidade e impressa em 3D com cores customizaveis, acabamento profissional em adesivo DTF UV e funcionalidade de cofrinho — um produto completamente exclusivo e diferenciado no mercado.</p>
                 <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.7;">A possibilidade de receber em lotes flexiveis permite um melhor planejamento financeiro e logistico para a BIGGAS.</p>
-            </div>
-            <div class="photo-placeholder animate-in" style="margin-top: 2rem; max-width: 500px; width: 100%;">
-                <img src="foto_produto_final.png" alt="Produto final - Miniatura Biggas Cofrinho" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_produto_final.png</span></div>
             </div>
         </div>
 
@@ -2035,6 +2053,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.deltaY > 0) nextSlide();
         else if (e.deltaY < 0) prevSlide();
     }, { passive: true });
+
+    // --- Video Fallback ---
+
+    const video = document.getElementById('video-impressao3d');
+    const videoFallback = document.getElementById('video-fallback');
+    if (video && videoFallback) {
+        video.addEventListener('loadeddata', () => {
+            videoFallback.style.display = 'none';
+        });
+        video.addEventListener('error', () => {
+            video.style.display = 'none';
+            videoFallback.style.display = 'flex';
+        });
+    }
 
     // --- Initialization ---
 
