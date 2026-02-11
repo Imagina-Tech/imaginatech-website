@@ -435,7 +435,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   10. PRICING CARDS (Slide 8)
+   10. PRICING CARDS
    ---------------------------------------------------------- */
 .pricing-card {
     background: var(--glass-bg);
@@ -505,7 +505,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   11. TIMELINE (Slide 7)
+   11. TIMELINE
    ---------------------------------------------------------- */
 .timeline {
     display: flex;
@@ -580,7 +580,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   12. DONUT CHART (Slide 9)
+   12. DONUT CHART
    ---------------------------------------------------------- */
 .donut-chart {
     display: flex;
@@ -615,7 +615,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   13. PROGRESS / SPEC BARS (Slide 4)
+   13. PROGRESS / SPEC BARS
    ---------------------------------------------------------- */
 .spec-row {
     margin-bottom: var(--space-lg);
@@ -660,7 +660,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   14. STEPS LIST (Slide 13)
+   14. STEPS LIST
    ---------------------------------------------------------- */
 .steps-list {
     display: flex;
@@ -736,7 +736,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   15. CONTACT PILLS (Slide 14)
+   15. CONTACT PILLS
    ---------------------------------------------------------- */
 .contact-pills {
     display: flex;
@@ -770,7 +770,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   16. COLOR SWATCHES (Slide 5)
+   16. COLOR SWATCHES
    ---------------------------------------------------------- */
 .color-swatch-card {
     background: var(--glass-bg);
@@ -803,7 +803,51 @@ img {
 }
 
 /* ----------------------------------------------------------
-   17. NAVIGATION CONTROLS
+   17. PHOTO PLACEHOLDERS
+   ---------------------------------------------------------- */
+.photo-placeholder {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px dashed var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.photo-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-lg);
+}
+
+.photo-fallback {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    min-height: 200px;
+    color: var(--text-muted);
+}
+
+.photo-fallback i {
+    font-size: 2rem;
+    opacity: 0.5;
+}
+
+.photo-fallback span {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+}
+
+/* ----------------------------------------------------------
+   18. NAVIGATION CONTROLS
    ---------------------------------------------------------- */
 .nav-overlay {
     position: fixed;
@@ -928,7 +972,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   18. MACHINE ICONS (Slide 6)
+   19. MACHINE ICONS
    ---------------------------------------------------------- */
 .machine-grid {
     display: flex;
@@ -956,7 +1000,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   19. ANIMATION KEYFRAMES
+   20. ANIMATION KEYFRAMES
    ---------------------------------------------------------- */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(30px); }
@@ -994,7 +1038,7 @@ img {
 }
 
 /* ----------------------------------------------------------
-   20. ENTRANCE ANIMATION CLASSES
+   21. ENTRANCE ANIMATION CLASSES
    ---------------------------------------------------------- */
 .animate-in {
     opacity: 0;
@@ -1015,7 +1059,7 @@ img {
 .slide.active .animate-in:nth-child(8) { animation-delay: 0.4s; }
 
 /* ----------------------------------------------------------
-   21. PRINT STYLES
+   22. PRINT STYLES
    ---------------------------------------------------------- */
 @media print {
     html, body {
@@ -1055,10 +1099,11 @@ img {
         backdrop-filter: none !important;
     }
     .spec-bar-fill { transition: none !important; }
+    .photo-placeholder { border-style: solid; }
 }
 
 /* ----------------------------------------------------------
-   22. RESPONSIVE
+   23. RESPONSIVE
    ---------------------------------------------------------- */
 @media (max-width: 1024px) {
     .slide { padding: var(--space-3xl) var(--space-4xl); }
@@ -1106,45 +1151,104 @@ img {
             <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="animate-in" style="width: 80px; height: 80px; border-radius: 16px; margin-bottom: 1.5rem;">
             <div class="brand-text animate-in" style="font-size: 3rem;">IMAGINATECH</div>
             <div class="separator-line animate-in"></div>
-            <h1 class="slide-title animate-in" style="font-size: 3.2rem;">Miniatura Biggas Cofrinho</h1>
+            <h1 class="slide-title animate-in" style="font-size: 3.2rem;">Miniatura BIGGAS Cofrinho</h1>
             <p class="slide-subtitle animate-in" style="text-align: center;">Proposta Comercial de Producao em Serie</p>
             <p class="text-muted animate-in" style="margin-top: 1rem; font-family: var(--font-display); font-size: 0.85rem; letter-spacing: 2px;">FEVEREIRO 2026</p>
         </div>
 
         <!-- Slide 2: Quem Somos -->
         <div class="slide" id="slide-2">
-            <span class="slide-label animate-in">SOBRE NOS</span>
+            <span class="slide-label animate-in">QUEM SOMOS</span>
             <h1 class="slide-title animate-in">ImaginaTech</h1>
-            <p class="slide-subtitle animate-in">Da imaginacao a realidade — especialistas em impressao 3D profissional e producao em escala</p>
-            <div class="grid-3">
-                <div class="glass-card animate-in" style="text-align: center;">
+            <p class="slide-subtitle animate-in">Somos uma empresa de impressao 3D situada na Ilha do Governador, bairro da Portuguesa, no Rio de Janeiro. Nosso centro de producao esta localizado na Portuguesa, enquanto nosso escritorio administrativo funciona no Grajau.</p>
+
+            <div class="glass-card animate-in" style="width: 100%; max-width: 500px; margin-bottom: var(--space-xl);">
+                <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.75rem;">Apresentado por:</p>
+                <p style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.25rem;">Igor Leao Butter</p>
+                <p class="text-secondary" style="font-size: 0.95rem; margin-bottom: 0.25rem;">Socio-Fundador (50%)</p>
+                <p style="color: var(--cyan); font-size: 0.95rem; font-weight: 600;">ImaginaTech</p>
+            </div>
+
+            <div class="grid-3 animate-in">
+                <div class="glass-card" style="text-align: center;">
                     <div class="feature-icon" style="color: var(--cyan); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
                         <i class="fas fa-print"></i>
                     </div>
                     <h3 style="margin-bottom: 0.5rem;">Impressao 3D Profissional</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Equipamentos Bambulab A1 COMBO de ultima geracao para producao de alta qualidade</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Tecnologia FDM com impressoras Bambulab de alta performance</p>
                 </div>
-                <div class="glass-card animate-in" style="text-align: center;">
+                <div class="glass-card" style="text-align: center;">
                     <div class="feature-icon" style="color: var(--purple); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
                         <i class="fas fa-cubes"></i>
                     </div>
                     <h3 style="margin-bottom: 0.5rem;">Producao em Escala</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Capacidade instalada de 48 a 96 unidades por dia com controle unitario de qualidade</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Capacidade de 48 a 96 unidades por dia com controle unitario de qualidade</p>
                 </div>
-                <div class="glass-card animate-in" style="text-align: center;">
+                <div class="glass-card" style="text-align: center;">
                     <div class="feature-icon" style="color: var(--green); margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.4rem;">
                         <i class="fas fa-shield-halved"></i>
                     </div>
                     <h3 style="margin-bottom: 0.5rem;">Qualidade Premium</h3>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Materiais de engenharia, acabamento com DTF UV e garantia de fabricacao</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Materiais de engenharia e acabamento com adesivos DTF UV profissionais</p>
+                </div>
+            </div>
+
+            <div class="photo-placeholder animate-in" style="margin-top: var(--space-xl); width: 100%; max-width: 600px;">
+                <img src="foto_empresa.png" alt="Foto da empresa e equipe ImaginaTech" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_empresa.png</span></div>
+            </div>
+        </div>
+
+        <!-- Slide 3: O que e Impressao 3D -->
+        <div class="slide" id="slide-3">
+            <span class="slide-label animate-in">TECNOLOGIA</span>
+            <h1 class="slide-title animate-in">O que e Impressao 3D?</h1>
+            <div class="grid-2">
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1rem; color: var(--cyan);">Impressao 3D por Filamento (FDM)</h3>
+                    <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem;">A impressao 3D por deposicao de filamento fundido (FDM) e uma tecnologia de fabricacao aditiva que constroi objetos camada por camada. Um filamento termoplastico — como PLA ou ABS — e aquecido e extrudado por um bico (nozzle) que se movimenta de forma precisa, depositando material sobre uma plataforma aquecida.</p>
+                    <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.7;">Inventada nos anos 1980 por Scott Crump, a tecnologia se popularizou na ultima decada e hoje permite a producao de pecas customizadas com alta qualidade, geometrias complexas e custo acessivel — ideal para producao em serie de miniaturas personalizadas.</p>
+                </div>
+                <div class="glass-card animate-in">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--cyan);">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Camada por Camada</strong>
+                            <p>Construcao aditiva com precisao de 0.2mm por camada</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--gold);">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Filamento Fundido</strong>
+                            <p>Material aquecido a ~200C e depositado com precisao milimetrica</p>
+                        </div>
+                    </div>
+                    <div class="feature-item" style="margin-bottom: var(--space-xl);">
+                        <div class="feature-icon" style="color: var(--green);">
+                            <i class="fas fa-recycle"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Sustentavel</strong>
+                            <p>Uso otimizado de material — sem desperdicio de materia-prima</p>
+                        </div>
+                    </div>
+                    <div class="photo-placeholder" style="margin-top: auto;">
+                        <img src="foto_impressora.png" alt="Impressora 3D Bambulab em operacao" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_impressora.png</span></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 3: O Produto -->
-        <div class="slide" id="slide-3">
+        <!-- Slide 4: O Produto -->
+        <div class="slide" id="slide-4">
             <span class="slide-label animate-in">O PRODUTO</span>
-            <h1 class="slide-title animate-in">Miniatura Biggas Cofrinho</h1>
+            <h1 class="slide-title animate-in">Miniatura BIGGAS Cofrinho</h1>
             <div class="grid-2">
                 <div class="glass-card animate-in">
                     <div class="feature-item">
@@ -1174,49 +1278,62 @@ img {
                             <p>Corpo, bracos, pernas, sapatos e luvas em cores customizadas</p>
                         </div>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-item" style="margin-bottom: 0;">
                         <div class="feature-icon" style="color: var(--green);">
                             <i class="fas fa-star"></i>
                         </div>
                         <div class="feature-text">
                             <strong>Design Exclusivo</strong>
-                            <p>Formato do mascote Biggas — totalmente diferente dos cofrinhos genericos</p>
+                            <p>Formato do mascote BIGGAS — totalmente diferente dos cofrinhos genericos do mercado</p>
                         </div>
                     </div>
                 </div>
-                <div class="glass-card animate-in" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                    <i class="fas fa-piggy-bank" style="font-size: 5rem; background: linear-gradient(135deg, var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.5rem;"></i>
-                    <h3 style="margin-bottom: 0.5rem;">Mascote Biggas</h3>
-                    <p class="text-muted" style="margin-bottom: 1.5rem;">Botijao com bracos, pernas, sapatos e luvas</p>
-                    <div style="display: flex; gap: 0.75rem; align-items: center;">
-                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #FF6B35; display: inline-block;" title="Corpo"></span>
-                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #00D4FF; display: inline-block;" title="Bracos"></span>
-                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #9945FF; display: inline-block;" title="Pernas"></span>
-                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #FFD700; display: inline-block;" title="Sapatos"></span>
-                        <span style="width: 24px; height: 24px; border-radius: 50%; background: #00FF88; display: inline-block;" title="Luvas"></span>
+                <div style="display: flex; flex-direction: column; gap: var(--space-lg);" class="animate-in">
+                    <div class="photo-placeholder" style="flex: 2;">
+                        <img src="foto1.png" alt="Miniatura BIGGAS Cofrinho - vista principal" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto1.png</span></div>
                     </div>
+                    <div class="photo-placeholder" style="flex: 1;">
+                        <img src="foto2.png" alt="Miniatura BIGGAS Cofrinho - detalhe" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto2.png</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-3 animate-in" style="margin-top: var(--space-xl);">
+                <div class="photo-placeholder">
+                    <img src="foto3.png" alt="Miniatura BIGGAS Cofrinho - angulo 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto3.png</span></div>
+                </div>
+                <div class="photo-placeholder">
+                    <img src="foto4.png" alt="Miniatura BIGGAS Cofrinho - angulo 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto4.png</span></div>
+                </div>
+                <div class="photo-placeholder">
+                    <img src="foto5.png" alt="Miniatura BIGGAS Cofrinho - angulo 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto5.png</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 4: Especificacoes Tecnicas -->
-        <div class="slide" id="slide-4">
+        <!-- Slide 5: Especificacoes Tecnicas -->
+        <div class="slide" id="slide-5">
             <span class="slide-label animate-in">TECNOLOGIA</span>
             <h1 class="slide-title animate-in">Especificacoes Tecnicas</h1>
             <div class="grid-2">
                 <div class="glass-card animate-in">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--cyan);">Material: ABS Premium</h3>
+                    <h3 style="margin-bottom: 1rem; color: var(--cyan);">Material: PLA / ABS</h3>
+                    <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">O material sera definido conforme testes de performance, podendo ser PLA (mais rigido e com melhor acabamento) ou ABS (mais resistente a impacto e temperatura). Ambos sao materiais de engenharia de alta qualidade.</p>
                     <div class="spec-row">
                         <div class="spec-header">
                             <span>Resistencia a Tracao</span>
-                            <span>40 MPa</span>
+                            <span>35-45 MPa</span>
                         </div>
                         <div class="spec-bar"><div class="spec-bar-fill" style="--width: 80%;"></div></div>
                     </div>
                     <div class="spec-row">
                         <div class="spec-header">
                             <span>Resistencia ao Impacto</span>
-                            <span>Izod 200-400 J/m</span>
+                            <span>Alta</span>
                         </div>
                         <div class="spec-bar"><div class="spec-bar-fill" style="--width: 75%;"></div></div>
                     </div>
@@ -1234,9 +1351,15 @@ img {
                         </div>
                         <div class="spec-bar"><div class="spec-bar-fill" style="--width: 90%;"></div></div>
                     </div>
+                    <div class="glass-card-sm" style="margin-top: var(--space-lg); border-color: var(--gold); border-width: 1px;">
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--gold); font-size: 1.1rem; margin-top: 0.15rem; flex-shrink: 0;"></i>
+                            <p class="text-secondary" style="font-size: 0.85rem; line-height: 1.5;">Pode haver leve divergencia na tonalidade do azul entre lotes de producao, devido a variacao entre lotes e fornecedores de filamento. Como o volume de material e alto, dificilmente um unico vendedor tem todo o estoque necessario.</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="glass-card animate-in">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--purple);">Acabamento: DTF UV</h3>
+                    <h3 style="margin-bottom: 1.5rem; color: var(--purple);">Acabamento: Adesivo DTF UV</h3>
                     <div class="feature-item">
                         <div class="feature-icon" style="color: var(--gold);">
                             <i class="fas fa-sun"></i>
@@ -1252,7 +1375,16 @@ img {
                         </div>
                         <div class="feature-text">
                             <strong>Detalhes Faciais</strong>
-                            <p>Olhos, boca, sobrancelhas e elementos visuais do mascote</p>
+                            <p>Olhos, boca, sobrancelhas e todos os elementos visuais do mascote</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--purple);">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Terceirizado: GH PRINT</strong>
+                            <p>A producao e aplicacao dos adesivos DTF UV sera realizada pela GH PRINT, empresa especializada no segmento</p>
                         </div>
                     </div>
                     <div class="feature-item">
@@ -1261,11 +1393,11 @@ img {
                         </div>
                         <div class="feature-text">
                             <strong>Custo Incluso</strong>
-                            <p>Adesivos ja inclusos no preco unitario — sem custo adicional</p>
+                            <p>O custo dos adesivos e da aplicacao ja esta integralmente incluso no orcamento — sem surpresas</p>
                         </div>
                     </div>
-                    <div class="feature-item">
-                        <div class="feature-icon" style="color: var(--purple);">
+                    <div class="feature-item" style="margin-bottom: var(--space-lg);">
+                        <div class="feature-icon" style="color: var(--cyan);">
                             <i class="fas fa-certificate"></i>
                         </div>
                         <div class="feature-text">
@@ -1273,42 +1405,54 @@ img {
                             <p>Adesao garantida em condicoes normais de uso</p>
                         </div>
                     </div>
+                    <div class="photo-placeholder">
+                        <img src="foto_adesivo.png" alt="Exemplo de adesivo DTF UV aplicado na miniatura" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_adesivo.png</span></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 5: Personalizacao Total -->
-        <div class="slide centered" id="slide-5">
-            <span class="slide-label animate-in">CORES</span>
-            <h1 class="slide-title animate-in">Personalizacao Total</h1>
-            <p class="slide-subtitle animate-in" style="text-align: center; max-width: 600px;">Cada componente pode ter cor independente, adaptando o cofrinho a identidade visual do cliente</p>
-            <div class="grid-5">
-                <div class="color-swatch-card animate-in">
-                    <div class="color-circle" style="background: #FF6B35; box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);"></div>
-                    <span>Corpo</span>
-                </div>
-                <div class="color-swatch-card animate-in">
-                    <div class="color-circle" style="background: #00D4FF; box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);"></div>
-                    <span>Bracos</span>
-                </div>
-                <div class="color-swatch-card animate-in">
-                    <div class="color-circle" style="background: #9945FF; box-shadow: 0 0 20px rgba(153, 69, 255, 0.4);"></div>
-                    <span>Pernas</span>
-                </div>
-                <div class="color-swatch-card animate-in">
-                    <div class="color-circle" style="background: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);"></div>
-                    <span>Sapatos</span>
-                </div>
-                <div class="color-swatch-card animate-in">
-                    <div class="color-circle" style="background: #00FF88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);"></div>
-                    <span>Luvas</span>
-                </div>
-            </div>
-            <p class="text-muted animate-in" style="margin-top: 2rem; font-size: 0.85rem;">* Cores ilustrativas — personalize conforme a identidade da sua marca</p>
-        </div>
-
-        <!-- Slide 6: Infraestrutura de Producao -->
+        <!-- Slide 6: Personalizacao -->
         <div class="slide" id="slide-6">
+            <span class="slide-label animate-in">CORES</span>
+            <h1 class="slide-title animate-in">Personalizacao</h1>
+            <p class="slide-subtitle animate-in" style="text-align: center; max-width: 800px;">O mascote BIGGAS possui duas cores base: azul para o corpo e branco para luvas e pernas. Essas cores podem ser alteradas conforme a identidade do cliente, desde que nao haja troca de cor no mesmo nivel Y de impressao.</p>
+            <div class="grid-2">
+                <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1.5rem;">Cores Base do Mascote</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1.25rem;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #0066CC; border: 3px solid rgba(255,255,255,0.2); box-shadow: 0 0 25px rgba(0, 102, 204, 0.4); flex-shrink: 0;"></div>
+                            <div>
+                                <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.2rem;">Corpo</strong>
+                                <span class="text-secondary" style="font-size: 0.9rem;">Azul BIGGAS</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1.25rem;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #FFFFFF; border: 3px solid rgba(255,255,255,0.2); box-shadow: 0 0 25px rgba(255, 255, 255, 0.3); flex-shrink: 0;"></div>
+                            <div>
+                                <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.2rem;">Luvas e Pernas</strong>
+                                <span class="text-secondary" style="font-size: 0.9rem;">Branco</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">Cores personalizaveis respeitando o limite de cores por nivel Y da impressao 3D</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;" class="animate-in">
+                    <div class="photo-placeholder animate-in">
+                        <img src="foto_cores.png" alt="Cores do mascote BIGGAS" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_cores.png</span></div>
+                    </div>
+                    <div class="glass-card-sm">
+                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">A restricao de "mesmo nivel Y" significa que duas cores diferentes nao podem ser impressas na mesma altura da peca. Esta e uma limitacao tecnica da impressao 3D por filamento.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Infraestrutura de Producao -->
+        <div class="slide" id="slide-7">
             <span class="slide-label animate-in">CAPACIDADE</span>
             <h1 class="slide-title animate-in">Infraestrutura de Producao</h1>
             <div class="grid-2">
@@ -1316,33 +1460,38 @@ img {
                     <h3 style="margin-bottom: 0.25rem;">Linha 1 — Corpo</h3>
                     <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem;">Ciclo de 12 horas</p>
                     <div class="machine-grid">
-                        <div class="machine-icon active-cyan">A1</div>
-                        <div class="machine-icon active-cyan">A2</div>
-                        <div class="machine-icon active-cyan">A3</div>
-                        <div class="machine-icon active-cyan">A4</div>
-                        <div class="machine-icon reserve">A5</div>
+                        <div class="machine-icon active-cyan">P1</div>
+                        <div class="machine-icon active-cyan">P2</div>
+                        <div class="machine-icon active-cyan">P3</div>
+                        <div class="machine-icon active-cyan">P4</div>
+                        <div class="machine-icon reserve">P5</div>
                     </div>
-                    <p class="text-secondary" style="font-size: 0.85rem;">4 maquinas ativas + 1 reserva</p>
+                    <p class="text-secondary" style="font-size: 0.85rem;">4 impressoras ativas + 1 reserva</p>
                     <p class="text-muted" style="font-size: 0.85rem;">Topo + Base: 12 unidades/ciclo cada</p>
                 </div>
                 <div class="glass-card animate-in">
                     <h3 style="margin-bottom: 0.25rem;">Linha 2 — Acessorios</h3>
                     <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem;">Ciclo de 12 horas</p>
                     <div class="machine-grid">
-                        <div class="machine-icon active-purple">A6</div>
-                        <div class="machine-icon active-purple">A7</div>
-                        <div class="machine-icon active-purple">A8</div>
-                        <div class="machine-icon reserve">A9</div>
-                        <div class="machine-icon reserve">A10</div>
+                        <div class="machine-icon active-purple">P6</div>
+                        <div class="machine-icon active-purple">P7</div>
+                        <div class="machine-icon active-purple">P8</div>
+                        <div class="machine-icon active-purple">P9</div>
+                        <div class="machine-icon reserve">P10</div>
+                        <div class="machine-icon reserve">P11</div>
                     </div>
-                    <p class="text-secondary" style="font-size: 0.85rem;">3 maquinas ativas + 2 reservas</p>
-                    <p class="text-muted" style="font-size: 0.85rem;">Sapatos, Bracos+Alca, Maos: 24 un/ciclo cada</p>
+                    <p class="text-secondary" style="font-size: 0.85rem;">4 impressoras ativas + 2 reservas</p>
+                    <p class="text-muted" style="font-size: 0.85rem;">Sapatos, Bracos, Maos, Alca: 24 un/ciclo cada</p>
                 </div>
+            </div>
+            <div class="glass-card animate-in" style="margin-top: 1.5rem; width: 100%;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--cyan);">Impressoras Bambulab — Referencia em Impressao 3D</h3>
+                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.6;">Utilizamos 11 impressoras da Bambulab, marca reconhecida mundialmente pela precisao, velocidade e confiabilidade. Com sistema de calibracao automatica, deteccao de falhas por IA e velocidades de ate 500mm/s, as impressoras Bambulab representam o que ha de mais avancado em impressao 3D FDM, garantindo qualidade consistente em producao de larga escala.</p>
             </div>
             <div class="grid-3" style="margin-top: 1.5rem;">
                 <div class="glass-card-sm animate-in" style="text-align: center;">
-                    <div class="big-number" data-counter="10">10</div>
-                    <p class="text-muted" style="font-size: 0.85rem;">Impressoras Bambulab A1 COMBO</p>
+                    <div class="big-number" data-counter="11">11</div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Impressoras Bambulab</p>
                 </div>
                 <div class="glass-card-sm animate-in" style="text-align: center;">
                     <div class="big-number">48-96</div>
@@ -1353,10 +1502,14 @@ img {
                     <p class="text-muted" style="font-size: 0.85rem;">Operacao Continua</p>
                 </div>
             </div>
+            <div class="photo-placeholder animate-in" style="margin-top: 1.5rem;">
+                <img src="foto_impressoras.png" alt="Impressoras Bambulab" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_impressoras.png</span></div>
+            </div>
         </div>
 
-        <!-- Slide 7: Cronograma de Producao -->
-        <div class="slide centered" id="slide-7">
+        <!-- Slide 8: Cronograma de Producao -->
+        <div class="slide centered" id="slide-8">
             <span class="slide-label animate-in">TIMELINE</span>
             <h1 class="slide-title animate-in">Cronograma de Producao</h1>
             <div class="timeline animate-in">
@@ -1381,46 +1534,38 @@ img {
                     <span class="timeline-label">Setup e Inicio da Producao</span>
                 </div>
                 <div class="timeline-node">
-                    <span class="timeline-day">D+26</span>
+                    <span class="timeline-day">D+30</span>
                     <div class="timeline-dot gold"></div>
                     <span class="timeline-label">Entrega do Primeiro Lote</span>
                 </div>
             </div>
             <div class="glass-card-sm animate-in" style="margin-top: 1.5rem; text-align: center; max-width: 800px;">
-                <i class="fas fa-lightbulb" style="color: var(--gold); margin-right: 0.5rem;"></i>
-                <strong>Recomendacao:</strong> Prazo de 30 dias — entrega inicial de 500 unidades, seguida de lotes de 2.000 a cada 40 dias
+                <i class="fas fa-exclamation-circle" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                O prazo de 30 dias considera o periodo de Carnaval e demandas de servicos anteriores que precisam ser finalizadas. Recomendamos entrega inicial de 500 unidades, seguida de lotes de 2.000 a cada 40 dias.
             </div>
         </div>
 
-        <!-- Slide 8: Tabela de Precos -->
-        <div class="slide centered" id="slide-8">
+        <!-- Slide 9: Investimento (10K Only) -->
+        <div class="slide centered" id="slide-9">
             <span class="slide-label animate-in">INVESTIMENTO</span>
-            <h1 class="slide-title animate-in">Tabela de Precos</h1>
-            <div class="grid-3" style="align-items: center;">
-                <div class="pricing-card animate-in">
-                    <div class="quantity">2.000 un</div>
-                    <div class="unit-price">R$ 34,97</div>
-                    <div class="total">Total: R$ 69.940</div>
-                </div>
-                <div class="pricing-card animate-in">
-                    <div class="quantity">5.000 un</div>
-                    <div class="unit-price">R$ 31,45</div>
-                    <div class="total">Total: R$ 157.250</div>
-                    <p style="font-size: 0.8rem; color: var(--green); margin-top: 0.5rem;">-10% vs 2.000</p>
-                </div>
-                <div class="pricing-card recommended animate-in">
-                    <span class="pricing-badge">MELHOR CUSTO</span>
-                    <div class="quantity">10.000 un</div>
-                    <div class="unit-price">R$ 28,76</div>
-                    <div class="total">Total: R$ 287.600</div>
-                    <p style="font-size: 0.8rem; color: var(--green); margin-top: 0.5rem;">-18% vs 2.000</p>
-                </div>
+            <h1 class="slide-title animate-in">Investimento</h1>
+            <div class="glass-card animate-in" style="max-width: 500px; width: 100%; text-align: center;">
+                <span style="display: inline-block; background: var(--cyan); color: #000; padding: 0.35rem 1.2rem; border-radius: 50px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1.5rem;">10.000 UNIDADES</span>
+                <div class="big-number" style="font-size: 3.5rem; margin-bottom: 0.5rem;">R$ 28,76</div>
+                <p class="text-secondary" style="font-size: 1rem; margin-bottom: 0.75rem;">por unidade</p>
+                <p style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; margin-bottom: 1.5rem;">Total: R$ 287.600</p>
+                <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 1.5rem;"></div>
+                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.25rem;">O valor unitario de R$ 28,76 reflete um preco extremamente competitivo considerando o nivel de personalizacao oferecido. Cada unidade e impressa em 3D com cores customizaveis, acabamento profissional em adesivo DTF UV e funcionalidade de cofrinho — um produto completamente exclusivo e diferenciado no mercado.</p>
+                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.7;">A possibilidade de receber em lotes flexiveis permite um melhor planejamento financeiro e logistico para a BIGGAS.</p>
             </div>
-            <p class="text-muted animate-in" style="margin-top: 2rem; font-size: 0.85rem;">* Possibilidade de contratar 10.000 unidades e receber em lotes com entrega flexivel, sem custo adicional</p>
+            <div class="photo-placeholder animate-in" style="margin-top: 2rem; max-width: 500px; width: 100%;">
+                <img src="foto_produto_final.png" alt="Produto final - Miniatura Biggas Cofrinho" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto_produto_final.png</span></div>
+            </div>
         </div>
 
-        <!-- Slide 9: Condicoes de Pagamento -->
-        <div class="slide" id="slide-9">
+        <!-- Slide 10: Condicoes de Pagamento -->
+        <div class="slide" id="slide-10">
             <span class="slide-label animate-in">PAGAMENTO</span>
             <h1 class="slide-title animate-in">Condicoes de Pagamento</h1>
             <div class="grid-2">
@@ -1431,7 +1576,7 @@ img {
                             <circle cx="60" cy="60" r="50" fill="none" stroke="#9945FF" stroke-width="16" stroke-dasharray="219.9 94.2" stroke-dashoffset="78.5" stroke-linecap="round"/>
                             <circle cx="60" cy="60" r="50" fill="none" stroke="#00D4FF" stroke-width="16" stroke-dasharray="94.2 219.9" stroke-dashoffset="78.5" stroke-linecap="round"/>
                             <text x="60" y="56" text-anchor="middle" fill="white" font-family="Orbitron" font-size="14" font-weight="700">30/70</text>
-                            <text x="60" y="72" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">SPLIT</text>
+                            <text x="60" y="72" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">POR LOTE</text>
                         </svg>
                     </div>
                     <div class="donut-legend">
@@ -1441,53 +1586,54 @@ img {
                         </div>
                         <div class="donut-legend-item">
                             <span class="donut-legend-dot" style="background: var(--purple);"></span>
-                            <span>70% na entrega de cada lote</span>
+                            <span>70% proporcional a cada lote entregue</span>
                         </div>
                     </div>
                 </div>
                 <div class="glass-card animate-in">
+                    <h3 style="margin-bottom: 1.25rem;">Como funciona o pagamento por lote</h3>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--cyan);">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Contrato</strong>
+                            <p>Pagamento de 30% do valor total na assinatura</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="color: var(--purple);">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Entrega por Lote</strong>
+                            <p>A cada lote entregue, paga-se os 70% restantes DAQUELE lote. Exemplo: ao receber 1.000 unidades, paga-se 70% referente a essas 1.000 unidades.</p>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="feature-icon" style="color: var(--green);">
                             <i class="fas fa-qrcode"></i>
                         </div>
                         <div class="feature-text">
-                            <strong>PIX</strong>
-                            <p>Transferencia instantanea</p>
+                            <strong>Metodos Aceitos</strong>
+                            <p>PIX, transferencia bancaria ou cartao de credito</p>
                         </div>
                     </div>
-                    <div class="feature-item">
-                        <div class="feature-icon" style="color: var(--cyan);">
-                            <i class="fas fa-building-columns"></i>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Transferencia Bancaria</strong>
-                            <p>Deposito em conta</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon" style="color: var(--purple);">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Cartao de Credito</strong>
-                            <p>Parcelamento disponivel</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
+                    <div class="feature-item" style="margin-bottom: 0;">
                         <div class="feature-icon" style="color: var(--gold);">
                             <i class="fas fa-file-invoice"></i>
                         </div>
                         <div class="feature-text">
                             <strong>Nota Fiscal</strong>
-                            <p>Nota fiscal eletronica emitida a cada lote</p>
+                            <p>Nota fiscal eletronica emitida a cada entrega de lote</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 10: Qualidade e Garantia -->
-        <div class="slide" id="slide-10">
+        <!-- Slide 11: Qualidade e Garantia -->
+        <div class="slide" id="slide-11">
             <span class="slide-label animate-in">CONFIANCA</span>
             <h1 class="slide-title animate-in">Qualidade e Garantia</h1>
             <div class="grid-2">
@@ -1495,23 +1641,23 @@ img {
                     <i class="fas fa-shield-halved" style="font-size: 3rem; color: var(--green); margin-bottom: 1rem; display: block;"></i>
                     <h3>Garantia de Fabricacao</h3>
                     <p style="color: var(--green); font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; font-family: var(--font-display);">3 Meses</p>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Cobertura total para falhas estruturais, trincas ou deformacoes. Pecas defeituosas substituidas sem custo.</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Cobertura total para falhas estruturais, trincas ou deformacoes decorrentes do processo de producao. Utilizamos filamentos PLA e/ou ABS de alta qualidade, ambos materiais reconhecidos por sua durabilidade e acabamento. Pecas com defeitos comprovados de fabricacao serao substituidas sem custo.</p>
                 </div>
                 <div class="glass-card animate-in" style="text-align: center;">
                     <i class="fas fa-stamp" style="font-size: 3rem; color: var(--cyan); margin-bottom: 1rem; display: block;"></i>
-                    <h3>Garantia DTF UV</h3>
+                    <h3>Garantia Adesivo DTF UV</h3>
                     <p style="color: var(--cyan); font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; font-family: var(--font-display);">90 Dias</p>
-                    <p class="text-secondary" style="font-size: 0.9rem;">Adesao dos adesivos DTF UV garantida em condicoes normais de uso. Nao cobre abrasao intensa.</p>
+                    <p class="text-secondary" style="font-size: 0.9rem;">Adesao dos adesivos DTF UV garantida em condicoes normais de uso, produzidos e aplicados pela GH PRINT. Nao cobre abrasao intensa ou imersao prolongada em liquidos.</p>
                 </div>
             </div>
             <div class="grid-3" style="margin-top: 1.5rem;">
                 <div class="glass-card-sm animate-in" style="text-align: center;">
                     <i class="fas fa-gem" style="color: var(--cyan); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-                    <p style="font-size: 0.9rem;">ABS Premium</p>
+                    <p style="font-size: 0.9rem;">PLA / ABS Premium</p>
                 </div>
                 <div class="glass-card-sm animate-in" style="text-align: center;">
                     <i class="fas fa-sun" style="color: var(--gold); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-                    <p style="font-size: 0.9rem;">DTF UV</p>
+                    <p style="font-size: 0.9rem;">DTF UV - GH PRINT</p>
                 </div>
                 <div class="glass-card-sm animate-in" style="text-align: center;">
                     <i class="fas fa-microscope" style="color: var(--purple); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
@@ -1520,19 +1666,19 @@ img {
             </div>
         </div>
 
-        <!-- Slide 11: Propriedade Intelectual -->
-        <div class="slide" id="slide-11">
+        <!-- Slide 12: Propriedade Intelectual -->
+        <div class="slide" id="slide-12">
             <span class="slide-label animate-in">PROTECAO</span>
             <h1 class="slide-title animate-in">Propriedade Intelectual</h1>
-            <p class="slide-subtitle animate-in">Sua marca protegida com respaldo juridico completo</p>
+            <p class="slide-subtitle animate-in">Protegemos o investimento criativo de ambas as partes com transparencia e respeito mutuo</p>
             <div class="glass-card animate-in" style="width: 100%; max-width: 800px;">
                 <div class="feature-item">
                     <div class="feature-icon" style="color: var(--cyan);">
                         <i class="fas fa-lock"></i>
                     </div>
                     <div class="feature-text">
-                        <strong>Direito Autoral</strong>
-                        <p>Modelo 3D protegido pela Lei 9.610/98 — arquivos STL/OBJ/STEP NAO serao fornecidos</p>
+                        <strong>Modelo 3D Protegido</strong>
+                        <p>O projeto 3D desenvolvido pela ImaginaTech e protegido por direito autoral (Lei 9.610/98). Os arquivos de modelagem (STL/OBJ/STEP) permanecem sob guarda da ImaginaTech para garantir a integridade tecnica do produto.</p>
                     </div>
                 </div>
                 <div class="feature-item">
@@ -1540,75 +1686,26 @@ img {
                         <i class="fas fa-industry"></i>
                     </div>
                     <div class="feature-text">
-                        <strong>Exclusividade de Producao</strong>
-                        <p>Futuras reproducoes realizadas exclusivamente pela ImaginaTech, garantindo padrao tecnico</p>
+                        <strong>Producao pela ImaginaTech</strong>
+                        <p>Para assegurar a qualidade e consistencia do produto, futuras reproducoes serao realizadas pela ImaginaTech, que conhece todos os parametros tecnicos envolvidos.</p>
                     </div>
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon" style="color: var(--green);">
-                        <i class="fas fa-user-shield"></i>
+                        <i class="fas fa-handshake"></i>
                     </div>
                     <div class="feature-text">
-                        <strong>Confidencialidade</strong>
-                        <p>Especificacoes tecnicas e design sao sigilosos — divulgacao requer autorizacao escrita</p>
+                        <strong>Parceria de Confianca</strong>
+                        <p>Todas as especificacoes tecnicas e de design sao tratadas com sigilo profissional. Qualquer compartilhamento com terceiros sera previamente acordado entre as partes.</p>
                     </div>
                 </div>
                 <div class="feature-item" style="margin-bottom: 0;">
-                    <div class="feature-icon" style="color: var(--red);">
-                        <i class="fas fa-gavel"></i>
+                    <div class="feature-icon" style="color: var(--gold);">
+                        <i class="fas fa-file-contract"></i>
                     </div>
                     <div class="feature-text">
-                        <strong>Clausula Penal</strong>
-                        <p>Reproducao nao autorizada sujeita a multa de 10x o valor total do contrato</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 12: Resumo do Investimento -->
-        <div class="slide" id="slide-12">
-            <span class="slide-label animate-in">NUMEROS</span>
-            <h1 class="slide-title animate-in">Resumo do Investimento</h1>
-            <div class="grid-4">
-                <div class="glass-card animate-in" style="text-align: center;">
-                    <div class="big-number" data-counter="81490" data-prefix="R$ ">R$ 81.490</div>
-                    <p class="text-muted" style="font-size: 0.85rem;">Investimento Inicial</p>
-                </div>
-                <div class="glass-card animate-in" style="text-align: center;">
-                    <div class="big-number">48-96</div>
-                    <p class="text-muted" style="font-size: 0.85rem;">Unidades por Dia</p>
-                </div>
-                <div class="glass-card animate-in" style="text-align: center;">
-                    <div class="big-number" data-counter="26">26</div>
-                    <p class="text-muted" style="font-size: 0.85rem;">Dias ate 1a Entrega</p>
-                </div>
-                <div class="glass-card animate-in" style="text-align: center;">
-                    <div class="big-number" data-counter="28.76" data-prefix="R$ ">R$ 28,76</div>
-                    <p class="text-muted" style="font-size: 0.85rem;">Menor Custo Unitario</p>
-                </div>
-            </div>
-            <div class="glass-card-sm animate-in" style="margin-top: 1.5rem; width: 100%;">
-                <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">Detalhamento do Investimento Inicial</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                        <span class="text-secondary">Impressoras (10x Bambulab A1)</span>
-                        <strong>R$ 47.490</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                        <span class="text-secondary">Filamento (400kg)</span>
-                        <strong>R$ 23.800</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                        <span class="text-secondary">Aluguel (caucao)</span>
-                        <strong>R$ 3.000</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                        <span class="text-secondary">Energia (1 mes)</span>
-                        <strong>R$ 1.200</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0;">
-                        <span class="text-secondary">Adesivos (2.000 un)</span>
-                        <strong>R$ 6.000</strong>
+                        <strong>Termos Contratuais</strong>
+                        <p>Os detalhes completos de propriedade intelectual serao formalizados em contrato, protegendo os interesses tanto da BIGGAS quanto da ImaginaTech.</p>
                     </div>
                 </div>
             </div>
@@ -1625,7 +1722,7 @@ img {
                         <i class="fas fa-handshake" style="color: var(--cyan); font-size: 1.2rem; margin-top: 0.1rem;"></i>
                         <div>
                             <strong>Aprovacao da Proposta</strong>
-                            <p>Alinhamento de cores, quantidades e cronograma de entregas</p>
+                            <p>Alinhamento final de cores, quantidades e cronograma de entregas</p>
                         </div>
                     </div>
                 </div>
@@ -1645,7 +1742,7 @@ img {
                         <i class="fas fa-credit-card" style="color: var(--green); font-size: 1.2rem; margin-top: 0.1rem;"></i>
                         <div>
                             <strong>Pagamento Inicial (30%)</strong>
-                            <p>Sinal de R$ 86.280 para inicio da mobilizacao</p>
+                            <p>Sinal de R$ 86.280 para inicio da mobilizacao de equipamentos e materiais</p>
                         </div>
                     </div>
                 </div>
@@ -1655,7 +1752,7 @@ img {
                         <i class="fas fa-gears" style="color: var(--gold); font-size: 1.2rem; margin-top: 0.1rem;"></i>
                         <div>
                             <strong>Inicio da Producao</strong>
-                            <p>Setup das impressoras e producao do primeiro lote em 13 dias</p>
+                            <p>Setup das impressoras e inicio da producao do primeiro lote</p>
                         </div>
                     </div>
                 </div>
@@ -1665,19 +1762,25 @@ img {
                         <i class="fas fa-truck-fast" style="color: var(--cyan); font-size: 1.2rem; margin-top: 0.1rem;"></i>
                         <div>
                             <strong>Entrega do Primeiro Lote</strong>
-                            <p>Primeiro lote entregue em ate 26 dias apos assinatura</p>
+                            <p>Primeiro lote entregue em ate 30 dias apos assinatura do contrato</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <p class="animate-in" style="margin-top: 2rem; color: var(--cyan); text-align: center; font-size: 1.2rem; font-weight: 600;">Estamos prontos para comecar!</p>
+            <p class="animate-in" style="margin-top: 2rem; color: var(--cyan); text-align: center; font-size: 1.2rem; font-weight: 600;">Estamos prontos e entusiasmados para comecar!</p>
         </div>
 
-        <!-- Slide 14: Obrigado / Q&A -->
+        <!-- Slide 14: Obrigado -->
         <div class="slide centered" id="slide-14">
             <img src="web-app-manifest-512x512.png" alt="ImaginaTech" class="animate-in" style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 1rem;">
-            <h1 class="animate-in" style="font-size: 4rem; font-family: var(--font-display); font-weight: 900; background: linear-gradient(135deg, var(--cyan), var(--purple), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;">Obrigado!</h1>
-            <p class="slide-subtitle animate-in" style="text-align: center;">Perguntas?</p>
+            <h1 class="animate-in" style="font-size: 3.5rem; font-family: var(--font-display); font-weight: 900; background: linear-gradient(135deg, var(--cyan), var(--purple), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;">Obrigado, BIGGAS!</h1>
+            <div class="separator-line animate-in" style="margin: 1rem auto;"></div>
+            <div class="glass-card animate-in" style="max-width: 700px; text-align: center;">
+                <p style="font-size: 1rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 1rem;">Este projeto representa um dos maiores servicos ja realizados pela ImaginaTech, e a BIGGAS chegou em um momento especial — durante a reestruturacao que estamos conduzindo para levar nossa operacao a um novo patamar.</p>
+                <p style="font-size: 1rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 1rem;">Estamos extremamente contentes e honrados com a confianca depositada em nosso trabalho. Podem ter certeza de que cada unidade sera produzida com dedicacao, qualidade e o cuidado que a marca BIGGAS merece.</p>
+                <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">Este e apenas o comeco de uma parceria que acreditamos sera duradoura e mutuamente vantajosa.</p>
+            </div>
+            <p class="slide-subtitle animate-in" style="text-align: center; margin-top: 1.5rem;">Perguntas?</p>
             <div class="contact-pills animate-in">
                 <div class="contact-pill">
                     <i class="fab fa-whatsapp" style="color: var(--green); font-size: 1.2rem;"></i>
