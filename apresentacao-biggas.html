@@ -809,7 +809,7 @@ img {
 .photo-placeholder {
     position: relative;
     width: 100%;
-    min-height: 200px;
+    min-height: 120px;
     border-radius: var(--radius-lg);
     overflow: hidden;
     border: 2px dashed var(--glass-border);
@@ -822,6 +822,7 @@ img {
     object-fit: cover;
     display: block;
     border-radius: var(--radius-lg);
+    max-height: inherit;
 }
 
 .photo-fallback {
@@ -1320,18 +1321,18 @@ img {
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: var(--space-lg);" class="animate-in">
-                    <div class="photo-placeholder" style="flex: 1;">
-                        <img src="foto1.jpeg" alt="Miniatura BIGGAS Cofrinho - vista frontal" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display: flex; flex-direction: column; gap: var(--space-sm); max-height: 55vh; overflow: hidden;" class="animate-in">
+                    <div class="photo-placeholder" style="flex: 2; min-height: 0; max-height: 35vh;">
+                        <img src="foto1.jpeg" alt="Miniatura BIGGAS Cofrinho - vista frontal" style="height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto1.jpeg</span></div>
                     </div>
-                    <div style="display: flex; gap: var(--space-md);">
-                        <div class="photo-placeholder" style="flex: 1;">
-                            <img src="foto2.jpeg" alt="Miniatura BIGGAS Cofrinho - vista lateral" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: flex; gap: var(--space-sm); flex: 1; min-height: 0; max-height: 18vh;">
+                        <div class="photo-placeholder" style="flex: 1; min-height: 0;">
+                            <img src="foto2.jpeg" alt="Miniatura BIGGAS Cofrinho - vista lateral" style="height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto2.jpeg</span></div>
                         </div>
-                        <div class="photo-placeholder" style="flex: 1;">
-                            <img src="foto3.jpeg" alt="Miniatura BIGGAS Cofrinho - detalhe" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="photo-placeholder" style="flex: 1; min-height: 0;">
+                            <img src="foto3.jpeg" alt="Miniatura BIGGAS Cofrinho - detalhe" style="height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="photo-fallback"><i class="fas fa-camera"></i><span>foto3.jpeg</span></div>
                         </div>
                     </div>
