@@ -4461,20 +4461,35 @@ async function executeFinanceAction(interpretation, userId) {
             }
 
             case 'list_notes': {
-                const notesSnapshot = await db.collection('whatsappNotes')
-                    .where('userId', '==', userId)
-                    .orderBy('createdAt', 'asc')
-                    .get();
+                // Buscar com orderBy, fallback sem orderBy se indice nao estiver pronto
+                let notesDocs;
+                try {
+                    const notesSnapshot = await db.collection('whatsappNotes')
+                        .where('userId', '==', userId)
+                        .orderBy('createdAt', 'asc')
+                        .get();
+                    notesDocs = notesSnapshot.docs;
+                } catch (indexErr) {
+                    console.log('[list_notes] Indice nao pronto, buscando sem orderBy');
+                    const fallbackSnapshot = await db.collection('whatsappNotes')
+                        .where('userId', '==', userId)
+                        .get();
+                    notesDocs = fallbackSnapshot.docs.sort((a, b) => {
+                        const aTime = a.data().createdAt?.toMillis?.() || 0;
+                        const bTime = b.data().createdAt?.toMillis?.() || 0;
+                        return aTime - bTime;
+                    });
+                }
 
-                if (notesSnapshot.empty) {
+                if (notesDocs.length === 0) {
                     return {
                         success: true,
                         message: 'Voce nao tem nenhuma anotacao salva.\n\nPara anotar: "anota essa ideia: sua ideia aqui"'
                     };
                 }
 
-                let msg = `*Suas anotacoes (${notesSnapshot.size}):*\n\n`;
-                notesSnapshot.docs.forEach((doc, index) => {
+                let msg = `*Suas anotacoes (${notesDocs.length}):*\n\n`;
+                notesDocs.forEach((doc, index) => {
                     const note = doc.data();
                     const createdAt = note.createdAt?.toDate?.();
                     const dateStr = createdAt
@@ -4496,29 +4511,44 @@ async function executeFinanceAction(interpretation, userId) {
                     return { success: false, message: 'Informe o numero da anotacao para apagar. Use "minhas anotacoes" para ver a lista numerada.' };
                 }
 
-                const allNotesSnapshot = await db.collection('whatsappNotes')
-                    .where('userId', '==', userId)
-                    .orderBy('createdAt', 'asc')
-                    .get();
+                // Buscar com orderBy, fallback sem orderBy se indice nao estiver pronto
+                let allNotesDocs;
+                try {
+                    const allNotesSnapshot = await db.collection('whatsappNotes')
+                        .where('userId', '==', userId)
+                        .orderBy('createdAt', 'asc')
+                        .get();
+                    allNotesDocs = allNotesSnapshot.docs;
+                } catch (indexErr) {
+                    console.log('[delete_note] Indice nao pronto, buscando sem orderBy');
+                    const fallbackSnapshot = await db.collection('whatsappNotes')
+                        .where('userId', '==', userId)
+                        .get();
+                    allNotesDocs = fallbackSnapshot.docs.sort((a, b) => {
+                        const aTime = a.data().createdAt?.toMillis?.() || 0;
+                        const bTime = b.data().createdAt?.toMillis?.() || 0;
+                        return aTime - bTime;
+                    });
+                }
 
-                if (allNotesSnapshot.empty) {
+                if (allNotesDocs.length === 0) {
                     return { success: false, message: 'Voce nao tem nenhuma anotacao salva.' };
                 }
 
-                if (noteNumber > allNotesSnapshot.size) {
+                if (noteNumber > allNotesDocs.length) {
                     return {
                         success: false,
-                        message: `Voce tem ${allNotesSnapshot.size} anotacao(oes). O numero ${noteNumber} nao existe.`
+                        message: `Voce tem ${allNotesDocs.length} anotacao(oes). O numero ${noteNumber} nao existe.`
                     };
                 }
 
                 // Pegar a nota na posicao correta (1-indexed)
-                const targetNoteDoc = allNotesSnapshot.docs[noteNumber - 1];
+                const targetNoteDoc = allNotesDocs[noteNumber - 1];
                 const deletedText = targetNoteDoc.data().text;
                 await db.collection('whatsappNotes').doc(targetNoteDoc.id).delete();
 
                 // Montar lista atualizada
-                const remainingDocs = allNotesSnapshot.docs.filter((_, i) => i !== noteNumber - 1);
+                const remainingDocs = allNotesDocs.filter((_, i) => i !== noteNumber - 1);
 
                 let msg = `Anotacao ${noteNumber} apagada: "${deletedText}"\n`;
 
