@@ -3216,7 +3216,7 @@ Acao: Retornar JSON com paymentMethod "credit" completando a acao anterior
 Se o usuario quer REGISTRAR algo (gasto, entrada, parcelamento, etc), retorne JSON:
 
 {
-  "action": "add_transaction|edit_transaction|add_installment|add_subscription|add_projection|add_investment|add_card|get_summary|get_balance|get_cards|get_bills|delete_transaction|update_projection_status|help",
+  "action": "add_transaction|edit_transaction|add_installment|add_subscription|add_projection|add_investment|add_card|get_summary|get_balance|get_cards|get_bills|delete_transaction|update_projection_status|help|add_note|list_notes|delete_note",
   "data": { /* campos da acao */ },
   "confidence": 0.0 a 1.0,
   "message": "Mensagem humanizada confirmando a acao, usando o nome ${userName || 'Usuario'}"
@@ -3272,6 +3272,18 @@ Se o usuario quer REGISTRAR algo (gasto, entrada, parcelamento, etc), retorne JS
 
 12. help - Mostrar ajuda
     data: {}
+
+13. add_note - Anotar ideia/lembrete/anotacao
+    data: { text: "conteudo da anotacao" }
+    Exemplos: "anota essa ideia: fazer X", "anota ai: comprar Y", "lembra disso: reuniao Z"
+
+14. list_notes - Listar todas as anotacoes/ideias
+    data: {}
+    Exemplos: "o que voce tem anotado?", "minhas anotacoes", "minhas ideias", "o que anotou?"
+
+15. delete_note - Apagar anotacao pelo numero
+    data: { noteNumber: numero }
+    Exemplos: "apague a anotacao 3", "remove a nota 1", "deleta ideia 2"
 
 === CATEGORIAS VALIDAS ===
 
@@ -3496,6 +3508,34 @@ function tryLocalInterpretation(text, userCards, userName, todayStr) {
             confidence: 0.8,
             message: `Registrei a entrada de R$${value.toFixed(2)} - "${description}", ${userName}!`
         };
+    }
+
+    // Anotacoes / ideias
+    if (/^(minhas\s+anota|o\s+que\s+(voce\s+)?tem\s+anota|minhas\s+ideias|lista\s+de\s+anota|anotacoes|notas)/i.test(lower)) {
+        return { action: 'list_notes', data: {}, confidence: 0.9, message: `Buscando suas anotacoes, ${userName}!` };
+    }
+
+    const noteDeleteMatch = lower.match(/(?:apague|remove|deleta|exclui)\s+(?:a\s+)?(?:anotacao|nota|ideia)\s+(\d+)/i);
+    if (noteDeleteMatch) {
+        return {
+            action: 'delete_note',
+            data: { noteNumber: parseInt(noteDeleteMatch[1]) },
+            confidence: 0.9,
+            message: `Apagando anotacao ${noteDeleteMatch[1]}, ${userName}!`
+        };
+    }
+
+    const noteAddMatch = text.match(/(?:anota|anote|lembra|salva|guarda)(?:\s+(?:essa?\s+)?(?:ideia|ai|isso))?[:\s]+(.+)/i);
+    if (noteAddMatch) {
+        const noteText = noteAddMatch[1].trim();
+        if (noteText.length > 2) {
+            return {
+                action: 'add_note',
+                data: { text: noteText },
+                confidence: 0.85,
+                message: `Anotado, ${userName}! Salvei: "${noteText}"`
+            };
+        }
     }
 
     // Nao conseguiu interpretar
@@ -4393,6 +4433,107 @@ async function executeFinanceAction(interpretation, userId) {
                 };
             }
 
+            // ========== ANOTACOES / IDEIAS ==========
+            case 'add_note': {
+                const noteText = (data.text || '').trim();
+                if (!noteText) {
+                    return { success: false, message: 'Nao consegui identificar o conteudo da anotacao. Tente: "anota ai: sua ideia aqui"' };
+                }
+
+                const note = {
+                    userId: userId,
+                    text: noteText,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    source: 'whatsapp_bot'
+                };
+
+                await db.collection('whatsappNotes').add(note);
+
+                // Contar quantas anotacoes o usuario tem agora
+                const countSnapshot = await db.collection('whatsappNotes')
+                    .where('userId', '==', userId)
+                    .get();
+
+                return {
+                    success: true,
+                    message: interpretation.message || `Anotado! Voce tem ${countSnapshot.size} anotacao(oes) salva(s).`
+                };
+            }
+
+            case 'list_notes': {
+                const notesSnapshot = await db.collection('whatsappNotes')
+                    .where('userId', '==', userId)
+                    .orderBy('createdAt', 'asc')
+                    .get();
+
+                if (notesSnapshot.empty) {
+                    return {
+                        success: true,
+                        message: 'Voce nao tem nenhuma anotacao salva.\n\nPara anotar: "anota essa ideia: sua ideia aqui"'
+                    };
+                }
+
+                let msg = `*Suas anotacoes (${notesSnapshot.size}):*\n\n`;
+                notesSnapshot.docs.forEach((doc, index) => {
+                    const note = doc.data();
+                    const createdAt = note.createdAt?.toDate?.();
+                    const dateStr = createdAt
+                        ? createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                        : '';
+                    msg += `*${index + 1}.* ${note.text}`;
+                    if (dateStr) msg += ` _(${dateStr})_`;
+                    msg += '\n';
+                });
+
+                msg += '\nPara apagar: "apague a anotacao [numero]"';
+
+                return { success: true, message: msg };
+            }
+
+            case 'delete_note': {
+                const noteNumber = parseInt(data.noteNumber);
+                if (isNaN(noteNumber) || noteNumber < 1) {
+                    return { success: false, message: 'Informe o numero da anotacao para apagar. Use "minhas anotacoes" para ver a lista numerada.' };
+                }
+
+                const allNotesSnapshot = await db.collection('whatsappNotes')
+                    .where('userId', '==', userId)
+                    .orderBy('createdAt', 'asc')
+                    .get();
+
+                if (allNotesSnapshot.empty) {
+                    return { success: false, message: 'Voce nao tem nenhuma anotacao salva.' };
+                }
+
+                if (noteNumber > allNotesSnapshot.size) {
+                    return {
+                        success: false,
+                        message: `Voce tem ${allNotesSnapshot.size} anotacao(oes). O numero ${noteNumber} nao existe.`
+                    };
+                }
+
+                // Pegar a nota na posicao correta (1-indexed)
+                const targetNoteDoc = allNotesSnapshot.docs[noteNumber - 1];
+                const deletedText = targetNoteDoc.data().text;
+                await db.collection('whatsappNotes').doc(targetNoteDoc.id).delete();
+
+                // Montar lista atualizada
+                const remainingDocs = allNotesSnapshot.docs.filter((_, i) => i !== noteNumber - 1);
+
+                let msg = `Anotacao ${noteNumber} apagada: "${deletedText}"\n`;
+
+                if (remainingDocs.length > 0) {
+                    msg += `\n*Anotacoes restantes (${remainingDocs.length}):*\n\n`;
+                    remainingDocs.forEach((doc, index) => {
+                        msg += `*${index + 1}.* ${doc.data().text}\n`;
+                    });
+                } else {
+                    msg += '\nVoce nao tem mais anotacoes.';
+                }
+
+                return { success: true, message: msg };
+            }
+
             // ========== AJUDA ==========
             case 'help': {
                 return {
@@ -4425,6 +4566,11 @@ CONSULTAS:
 - "resumo" ou "resumo do mes"
 - "cartoes" ou "meus cartoes"
 - "faturas"
+
+ANOTACOES/IDEIAS:
+- "anota essa ideia: fazer X"
+- "minhas anotacoes" ou "o que tem anotado?"
+- "apague a anotacao 3"
 
 OUTROS:
 - "cancela ultima transacao"
@@ -5000,7 +5146,7 @@ exports.whatsappWebhook = functions.https.onRequest(async (req, res) => {
 
             // Para acoes de consulta (get_*), usar result.message que contem os dados reais
             // Para acoes de escrita (add_*, edit_*, delete_*, update_*), usar interpretation.message (confirmacao humanizada do Gemini)
-            const isQueryAction = ['get_summary', 'get_balance', 'get_cards', 'get_bills', 'help'].includes(interpretation.action);
+            const isQueryAction = ['get_summary', 'get_balance', 'get_cards', 'get_bills', 'help', 'list_notes', 'delete_note'].includes(interpretation.action);
             const botReply = contextLabel + (result.success
                 ? (isQueryAction ? result.message : interpretation.message)
                 : result.message);

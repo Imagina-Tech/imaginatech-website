@@ -25,6 +25,33 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-14 - [FEATURE] Agenda de Ideias/Anotacoes no Claytinho (WhatsApp Bot)
+
+**Resumo:** Adicionada funcionalidade de anotacoes/ideias ao bot Claytinho via WhatsApp. O usuario pode salvar ideias, listar todas as anotacoes numeradas e apagar anotacoes por numero.
+
+**Arquivos EDITADOS:**
+- `functions/index.js` - Adicionadas 3 novas acoes ao bot:
+  - `add_note` (salvar anotacao) - linha ~4437
+  - `list_notes` (listar anotacoes numeradas com data) - linha ~4463
+  - `delete_note` (apagar por numero e mostrar lista atualizada) - linha ~4493
+  - Prompt do Gemini atualizado com acoes 13-15 (add_note, list_notes, delete_note) - linha ~3276
+  - Lista de actions no JSON schema atualizada - linha ~3231
+  - Fallback local (regex) para anotacoes em `tryLocalInterpretation()` - linha ~3513
+  - Help atualizado com secao ANOTACOES/IDEIAS - linha ~4548
+  - `isQueryAction` atualizado para incluir list_notes e delete_note - linha ~5149
+- `firestore.indexes.json` - Adicionado indice composto para collection `whatsappNotes` (userId ASC + createdAt ASC)
+
+**Nova collection Firestore:** `whatsappNotes`
+- `userId` (string) - Firebase Auth UID
+- `text` (string) - Conteudo da anotacao
+- `createdAt` (Timestamp) - Data de criacao
+- `source` (string) - Sempre 'whatsapp_bot'
+
+**Comandos do usuario:**
+- "Claytinho anota essa ideia: [texto]" -> salva anotacao
+- "Claytinho o que voce tem anotado?" -> lista numerada
+- "Apague a anotacao 3" -> apaga e mostra lista atualizada
+
 ### 2026-02-06 - [REMOCAO] Sistema de Tarefas removido do painel Servicos
 
 **Resumo:** Remocao completa da funcionalidade de tarefas (atribuicao de tarefas para admins) do painel de servicos. Nenhum botao, referencia ou codigo morto foi mantido.
