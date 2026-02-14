@@ -689,15 +689,6 @@
             align-items: center;
         }
 
-        .btn-lang {
-            font-size: 0.8rem;
-            padding: 0.4rem 0.8rem;
-            opacity: 0.7;
-            transition: opacity 0.3s ease;
-        }
-        .btn-lang:hover {
-            opacity: 1;
-        }
 
         .logo-section {
             display: flex;
@@ -3779,10 +3770,6 @@
                 <span class="page-name">Inicio</span>
             </div>
             <div class="navbar-right">
-                <a href="/en/" class="btn-nav btn-lang" title="English version">
-                    <i class="fas fa-globe"></i>
-                    <span>EN</span>
-                </a>
                 <a href="#services" class="btn-nav">
                     <i class="fas fa-cube"></i>
                     <span>Servicos</span>
@@ -4539,6 +4526,17 @@
 
     <!-- Logger Centralizado (Firestore) -->
     <script src="/shared/firestore-logger.js"></script>
+
+    <!-- Auto-redirect para ingles se navegador nao e portugues -->
+    <script>
+    (function() {
+        var lang = navigator.language || navigator.userLanguage || '';
+        if (!lang.toLowerCase().startsWith('pt') && !sessionStorage.getItem('lang-chosen')) {
+            sessionStorage.setItem('lang-chosen', 'en');
+            window.location.replace('/en/');
+        }
+    })();
+    </script>
 
     <!-- External JavaScript -->
     <script src="script.js"></script>
