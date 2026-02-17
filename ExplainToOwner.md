@@ -25,6 +25,64 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-17 - [SEO] Auto-Orcamento - SEO completo + responsividade mobile
+
+**Resumo:** Implementacao completa de SEO (Schema.org, meta tags, sitemap) e responsividade mobile superior para a pagina de auto-orcamento.
+
+**Arquivos EDITADOS:**
+
+**1. `auto-orcamento/index.html` - SEO:**
+- Titulo otimizado (< 60 chars, com "Gratis" e "RJ")
+- Meta description expandida com materiais e "todo o Brasil"
+- Canonical URL + hreflang (pt-BR, x-default)
+- Robots avancados: googlebot (max-snippet, max-image-preview), bingbot, revisit-after
+- Geo-location: geo.region, geo.placename, geo.position, ICBM (Rio de Janeiro)
+- Open Graph completo: og:site_name, og:locale, og:image:width/height/alt
+- Twitter Card: summary_large_image com titulo, descricao, imagem
+- Sitemap link + manifest link no head
+- Schema.org JSON-LD @graph com 4 blocos: WebApplication, Service (com OfferCatalog de 5 materiais), BreadcrumbList, FAQPage (4 perguntas)
+- FAQ section visivel no body com `<details>/<summary>` + microdata Schema.org
+
+**2. `auto-orcamento/style.css` - FAQ CSS:**
+- Estilo glassmorphism para .faq-section, .faq-item, summary, .faq-answer
+- Chevron animado no summary com Font Awesome
+- Borda azul neon ao abrir item
+- Breakpoint 480px para FAQ compacto
+
+**3. `sitemap.xml` - Melhorias:**
+- Namespace xhtml adicionado para hreflang
+- URLs de fragmento removidas (/#services, /#portfolio, /#clients)
+- hreflang bidirecional entre / e /en/ (pt-BR, en, x-default)
+- lastmod atualizado para 2026-02-17
+- Prioridades ajustadas: /obrigado/ de 0.3 para 0.1, /en/ de 0.9 para 0.8
+
+---
+
+### 2026-02-17 - [FIX] Auto-Orcamento - Responsividade mobile completa (8 problemas)
+
+**Resumo:** Correcao abrangente de problemas de responsividade mobile no auto-orcamento. Touch targets aumentados para minimo 40px, texto legivel em telas pequenas, color modal otimizado para 320-380px, landscape mode adicionado.
+
+**Arquivo EDITADO: `auto-orcamento/style.css`**
+
+**Problemas corrigidos:**
+1. Touch targets muito pequenos a 360px: viewer controls de 34px para 40px, color card images de 36px para 40px
+2. Texto model-info ilegivel: font-size de 0.75rem para 0.8125rem (13px) no breakpoint 480px
+3. Options panel apertado: padding de .5rem para .75rem no breakpoint 480px
+4. Color modal sem otimizacao para telas estreitas: novo breakpoint @media (max-width: 380px)
+5. Submit button com risco de overflow: word-break e overflow-wrap adicionados nos breakpoints 480px e 360px
+6. Price display sem protecao de overflow: max-width, text-overflow ellipsis adicionados
+7. Sem tratamento de landscape: novo @media (max-height: 500px) and (orientation: landscape)
+8. Botao fechar do color modal abaixo de 44px: aumentado para 44px no breakpoint 768px
+
+**Melhorias gerais adicionadas:**
+- `-webkit-tap-highlight-color: transparent` em todos elementos interativos
+- `touch-action: manipulation` para eliminar delay de 300ms
+- `scroll-behavior: smooth` no options panel mobile
+- Safe-area-inset para phones com notch via `@supports (padding: env(safe-area-inset-bottom))`
+- Viewer controls com `min-width/min-height` 40px no breakpoint 480px
+
+---
+
 ### 2026-02-17 - [FIX] Auto-Orcamento - Correcoes de calculo de material (9 problemas)
 
 **Resumo:** Correcao abrangente do sistema de estimativa de custo de material para impressao 3D. Problemas corrigidos: shell factor fixo (erro de ate 3x no peso), modelos multi-mesh descartados, transforms GLTF ignorados, watertight falso negativo, deteccao de unidade, config morta, e showLoading sem mensagem.

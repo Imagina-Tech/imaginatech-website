@@ -473,6 +473,112 @@ body {
 }
 
 /* ============================================================================
+ * FAQ SECTION (SEO + UX)
+ * ============================================================================ */
+
+.faq-section {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--glass-bg);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+}
+
+.faq-section h2 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.faq-section h2 i {
+    color: var(--neon-blue);
+}
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.faq-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.faq-item[open] {
+    border-color: var(--neon-blue);
+}
+
+.faq-item summary {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    transition: background 0.2s ease;
+}
+
+.faq-item summary:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.faq-item[open] summary::after {
+    transform: rotate(180deg);
+    color: var(--neon-blue);
+}
+
+.faq-answer {
+    padding: 0 var(--spacing-lg) var(--spacing-md);
+}
+
+.faq-answer p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+    .faq-section {
+        padding: var(--spacing-md);
+    }
+
+    .faq-item summary {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.8125rem;
+    }
+
+    .faq-answer {
+        padding: 0 var(--spacing-md) var(--spacing-sm);
+    }
+}
+
+/* ============================================================================
  * TOAST
  * ============================================================================ */
 
@@ -726,6 +832,13 @@ body {
         max-width: 100vw;
     }
 
+    .color-modal-header button {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
     .color-card {
         padding: 0.6rem 0.75rem;
     }
@@ -783,13 +896,22 @@ body {
         aspect-ratio: 1 / 1;
     }
 
+    .viewer-controls button {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
     .model-info {
         padding: var(--spacing-sm);
-        font-size: 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .auto-orcamento .model-info .info-item {
+        font-size: 0.8125rem;
     }
 
     .options-panel {
-        padding: var(--spacing-sm);
+        padding: 0.75rem;
     }
 
     .options-title {
@@ -810,8 +932,10 @@ body {
     }
 
     .submit-button {
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: 0.625rem 1rem;
         font-size: var(--font-size-sm);
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .change-file-button {
@@ -855,9 +979,11 @@ body {
     }
 
     .viewer-controls button {
-        width: 34px;
-        height: 34px;
-        font-size: 0.8rem;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 0.85rem;
     }
 
     .rotate-button {
@@ -868,8 +994,10 @@ body {
 
     .color-card-photo,
     .color-card-swatch {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
     }
 
     .color-card-name {
@@ -878,6 +1006,47 @@ body {
 
     .submit-button {
         font-size: 0.8rem;
+        padding: 0.625rem 0.75rem;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+}
+
+/* ============================================================================
+ * COLOR MODAL - NARROW SCREENS (320-380px)
+ * ============================================================================ */
+
+@media (max-width: 380px) {
+    .color-modal {
+        width: 100vw;
+        max-width: 100vw;
+    }
+
+    .color-modal-header {
+        padding: 1rem 0.75rem;
+    }
+
+    .color-modal-header h3 {
+        font-size: 1rem;
+    }
+
+    .color-modal-body {
+        padding: 0.75rem;
+        gap: 0.4rem;
+    }
+
+    .color-card {
+        padding: 0.6rem 0.65rem;
+        gap: 0.6rem;
+    }
+
+    .color-card-name {
+        font-size: 0.8rem;
+    }
+
+    .finish-badge {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.35rem;
     }
 }
 
@@ -1213,6 +1382,115 @@ body {
 
 .color-card.selected .color-card-check {
     opacity: 1;
+}
+
+/* ============================================================================
+ * MOBILE TOUCH IMPROVEMENTS
+ * ============================================================================ */
+
+/* Remove tap highlight and prevent 300ms delay on all interactive elements */
+.auto-orcamento button,
+.auto-orcamento .color-trigger,
+.auto-orcamento .color-card,
+.auto-orcamento .upload-zone,
+.auto-orcamento .upload-button,
+.auto-orcamento .submit-button,
+.auto-orcamento .change-file-button,
+.auto-orcamento .rotate-button,
+.auto-orcamento .viewer-controls button,
+.auto-orcamento .finish-badge {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Price overflow protection */
+.price-value {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Smooth scroll for options panel on mobile */
+@media (max-width: 1024px) {
+    .options-panel {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Safe area inset for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+    @media (max-width: 768px) {
+        .auto-orcamento .main-container {
+            padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+            padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+            padding-bottom: max(var(--spacing-xl), env(safe-area-inset-bottom));
+        }
+
+        .auto-orcamento .toast {
+            bottom: max(var(--spacing-xl), env(safe-area-inset-bottom));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .auto-orcamento .main-container {
+            padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
+            padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
+        }
+    }
+}
+
+/* ============================================================================
+ * LANDSCAPE MOBILE HANDLING
+ * ============================================================================ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .auto-orcamento .main-container {
+        padding-top: 80px;
+    }
+
+    .auto-orcamento .viewer-container {
+        aspect-ratio: 16 / 9;
+        max-height: 45vh;
+    }
+
+    .auto-orcamento .upload-zone {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .auto-orcamento .upload-icon {
+        font-size: 2rem;
+    }
+
+    .auto-orcamento .upload-text {
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .auto-orcamento .upload-button {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .auto-orcamento .upload-formats {
+        margin-top: var(--spacing-sm);
+    }
+
+    .auto-orcamento .model-info {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .auto-orcamento .options-panel {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .auto-orcamento .rotate-button {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
 }
 
 /* ============================================================================
