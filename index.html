@@ -4536,17 +4536,6 @@
     <!-- Logger Centralizado (Firestore) -->
     <script src="/shared/firestore-logger.js"></script>
 
-    <!-- Auto-redirect para ingles se navegador nao e portugues -->
-    <script>
-    (function() {
-        var lang = navigator.language || navigator.userLanguage || '';
-        if (!lang.toLowerCase().startsWith('pt') && !sessionStorage.getItem('lang-chosen')) {
-            sessionStorage.setItem('lang-chosen', 'en');
-            window.location.replace('/en/');
-        }
-    })();
-    </script>
-
     <!-- External JavaScript -->
     <script src="script.js"></script>
 </body>
