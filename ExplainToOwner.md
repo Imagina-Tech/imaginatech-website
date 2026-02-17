@@ -41,13 +41,13 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 - Twitter Card: summary_large_image com titulo, descricao, imagem
 - Sitemap link + manifest link no head
 - Schema.org JSON-LD @graph com 4 blocos: WebApplication, Service (com OfferCatalog de 5 materiais), BreadcrumbList, FAQPage (4 perguntas)
-- FAQ section visivel no body com `<details>/<summary>` + microdata Schema.org
+- Footer profissional com 3 colunas: marca + social, FAQ compacto (SEO via microdata Schema.org), links rapidos
+- FAQ integrado no footer com `<details>/<summary>` - sutil, sem ocupar espaco extra
 
-**2. `auto-orcamento/style.css` - FAQ CSS:**
-- Estilo glassmorphism para .faq-section, .faq-item, summary, .faq-answer
-- Chevron animado no summary com Font Awesome
-- Borda azul neon ao abrir item
-- Breakpoint 480px para FAQ compacto
+**2. `auto-orcamento/style.css` - Footer CSS:**
+- Footer adaptado do site principal (footer, footer-grid, footer-brand, footer-logo, social-links, etc)
+- Footer FAQ compacto: .footer-faq, .footer-faq-item com chevron animado
+- Responsivo: grid 3 colunas -> 1 coluna em 768px, fontes menores em 480px
 
 **3. `sitemap.xml` - Melhorias:**
 - Namespace xhtml adicionado para hreflang
