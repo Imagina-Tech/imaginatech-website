@@ -56,3 +56,6 @@ tmpclaude-0609-cwd tmpclaude-1a0c-cwd tmpclaude-25c5-cwd tmpclaude-2ae0-cwd tmpc
 nul
 tmpclaude-*
 test-xss-scanner.py
+
+# Documentacao de setup futuro (nao versionar)
+MCP-ADS-SETUP.md
