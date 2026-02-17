@@ -12,6 +12,7 @@ Disallow: /custo/
 Disallow: /admin-portfolio/
 Disallow: /marketplace/
 Disallow: /obrigado/
+Disallow: /docs/
 Disallow: /*.json$
 Disallow: /*_dev.html$
 

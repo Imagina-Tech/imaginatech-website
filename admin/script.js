@@ -49,9 +49,7 @@ const firebaseConfig = {
 // ===========================
 // CONSTANTS
 // ===========================
-// SEGURANCA: Super Admin agora carregado do Firestore (campo isSuperAdmin: true)
-// Fallback temporario para garantir acesso durante migracao
-const LEGACY_SUPER_ADMIN_EMAIL = '3d3printers@gmail.com';
+// SEGURANCA: Super Admin carregado do Firestore (campo isSuperAdmin: true)
 const COMPANY_USER_ID = window.ENV_CONFIG?.COMPANY_USER_ID || 'BdmqXJFgMja4SY6DRXdf3dMyzaq1';
 const FUNCTIONS_URL = 'https://us-central1-imaginatech-servicos.cloudfunctions.net';
 
@@ -115,17 +113,16 @@ async function loadSuperAdmins() {
             return SUPER_ADMIN_EMAILS;
         }
 
-        // Fallback: se nenhum super admin no Firestore, usar email legado
-        // Isso garante acesso durante a migracao
-        logger.warn('[admin] Nenhum super admin com isSuperAdmin:true. Usando fallback legado.');
-        SUPER_ADMIN_EMAILS = [LEGACY_SUPER_ADMIN_EMAIL];
+        // Nenhum super admin configurado - fail-secure (ninguem acessa)
+        logger.error('[admin] ERRO: Nenhum super admin com isSuperAdmin:true no Firestore.');
+        SUPER_ADMIN_EMAILS = [];
         superAdminsLoaded = true;
         return SUPER_ADMIN_EMAILS;
 
     } catch (error) {
         logger.error('[admin] Erro ao carregar super admins:', error);
-        // Fallback em caso de erro
-        SUPER_ADMIN_EMAILS = [LEGACY_SUPER_ADMIN_EMAIL];
+        // Fail-secure: sem fallback hardcoded
+        SUPER_ADMIN_EMAILS = [];
         superAdminsLoaded = true;
         return SUPER_ADMIN_EMAILS;
     }
@@ -134,10 +131,7 @@ async function loadSuperAdmins() {
 // Verifica se email e de super admin
 function isSuperAdmin(email) {
     if (!email) return false;
-    // Verificar lista carregada do Firestore
-    if (SUPER_ADMIN_EMAILS.includes(email)) return true;
-    // Fallback legado (temporario)
-    return email === LEGACY_SUPER_ADMIN_EMAIL;
+    return SUPER_ADMIN_EMAILS.includes(email);
 }
 
 function setupAuthListener() {
@@ -348,8 +342,7 @@ function renderAdmins() {
     });
 
     grid.innerHTML = sorted.map(admin => {
-        // Verificar campo isSuperAdmin do documento OU lista carregada OU fallback legado
-        const isAdminSuper = admin.isSuperAdmin || SUPER_ADMIN_EMAILS.includes(admin.email) || admin.email === LEGACY_SUPER_ADMIN_EMAIL;
+        const isAdminSuper = admin.isSuperAdmin || SUPER_ADMIN_EMAILS.includes(admin.email);
         const photoURL = admin.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.name || 'A')}&background=00D4FF&color=fff&bold=true&size=128`;
         const createdAt = admin.createdAt?.toDate?.() || new Date();
         const dateStr = createdAt.toLocaleDateString('pt-BR');
@@ -425,7 +418,7 @@ function renderWhatsAppUsers() {
 function loadSystemInfo() {
     document.getElementById('companyUserId').textContent = COMPANY_USER_ID;
     // Mostrar o email do super admin logado (ou o primeiro da lista)
-    const superAdminEmail = state.currentUser?.email || SUPER_ADMIN_EMAILS[0] || LEGACY_SUPER_ADMIN_EMAIL;
+    const superAdminEmail = state.currentUser?.email || SUPER_ADMIN_EMAILS[0] || '';
     document.getElementById('companyEmail').textContent = superAdminEmail;
 }
 
@@ -503,8 +496,7 @@ function requestRemoveAdmin(uid) {
     const admin = state.admins.find(a => a.uid === uid);
     if (!admin) return;
 
-    // Verificar se e super admin (campo do documento OU lista carregada OU fallback legado)
-    if (admin.isSuperAdmin || SUPER_ADMIN_EMAILS.includes(admin.email) || admin.email === LEGACY_SUPER_ADMIN_EMAIL) {
+    if (admin.isSuperAdmin || SUPER_ADMIN_EMAILS.includes(admin.email)) {
         showToast('Super Admin nao pode ser removido', 'warning');
         return;
     }

@@ -2514,7 +2514,7 @@ export async function sendEmailNotification(service) {
             to_email: service.clientEmail,
             client_name: service.client || 'Cliente',
             order_code: service.orderCode || 'N/A',
-            reply_to: window.ENV_CONFIG?.ADMIN_EMAIL || '3d3printers@gmail.com'
+            reply_to: state.currentUser?.email || ''
         });
         logger.log('Email enviado com sucesso para:', service.clientEmail);
         showToast('📧 Email de notificação enviado!', 'success');

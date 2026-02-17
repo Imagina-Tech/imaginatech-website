@@ -43,7 +43,7 @@ window.ENV_CONFIG = {
     // ===========================
     COMPANY_USER_ID: 'BdmqXJFgMja4SY6DRXdf3dMyzaq1',
     WHATSAPP_NUMBER: '5521968972539',
-    ADMIN_EMAIL: '3d3printers@gmail.com',
+    ADMIN_EMAIL: '',  // Carregado do Firestore em runtime (nao expor no client)
 
     // ===========================
     // URLS
