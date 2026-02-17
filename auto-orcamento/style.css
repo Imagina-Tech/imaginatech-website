@@ -31,6 +31,18 @@ body {
     display: none !important;
 }
 
+/* Loading overlay: empilhar cubo + mensagem */
+.loading-overlay {
+    flex-direction: column;
+    gap: var(--spacing-md, 1rem);
+}
+
+.loading-message {
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    font-size: var(--font-sm, 0.875rem);
+    text-align: center;
+}
+
 /* ============================================================================
  * MAIN CONTAINER
  * ============================================================================ */

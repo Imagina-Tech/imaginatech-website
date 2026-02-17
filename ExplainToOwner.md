@@ -25,6 +25,41 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-17 - [FIX] Auto-Orcamento - Correcoes de calculo de material (9 problemas)
+
+**Resumo:** Correcao abrangente do sistema de estimativa de custo de material para impressao 3D. Problemas corrigidos: shell factor fixo (erro de ate 3x no peso), modelos multi-mesh descartados, transforms GLTF ignorados, watertight falso negativo, deteccao de unidade, config morta, e showLoading sem mensagem.
+
+**Arquivos EDITADOS:**
+
+**1. `auto-orcamento/volume-calculator.js`:**
+- Nova export `calculateSurfaceArea(geometry)` (linha 65) - soma area de cada triangulo via |cross(e1, e2)| / 2. Usada pelo app.js para shell factor dinamico
+- `isMeshWatertight()` (linha 129) - agora usa `posHash()` com posicao 3D arredondada a 4 casas decimais para comparar arestas, em vez de indices de vertice. Corrige falsos negativos em OBJ e formatos com vertices duplicados
+
+**2. `auto-orcamento/three-viewer.js`:**
+- Novo import `mergeGeometries` de `three/addons/utils/BufferGeometryUtils.js` (linha 12)
+- `loadOBJ()` (linha 174) - Coleta TODAS as meshes, clona geometria, aplica matrixWorld se nao-identidade, merge com mergeGeometries
+- `loadGLTF()` (linha 218) - Coleta TODAS as meshes, SEMPRE aplica matrixWorld (essencial para scene hierarchy de GLTF/GLB), merge com mergeGeometries
+- `load3MF()` (linha 259) - Mesmo padrao do OBJ, merge de todas as meshes
+
+**3. `auto-orcamento/app.js`:**
+- Import atualizado com `calculateSurfaceArea` (linha 7)
+- `state.surfaceArea` adicionado ao estado (linha 108), resetado no changeFile (linha 952)
+- `PRINT_PARAMS` agora usa valores reais: `wallThickness: 1.6mm`, `topBottomThickness: 1.2mm`, `wasteFactor: 1.12` (linhas 27-30)
+- `calculateFilamentWeight()` (linha 407) - novo parametro `surfaceAreaMm2`, calcula shell dinamico: `shellFraction = (surfaceArea * wallThickness) / volume`, clamped entre 0.05 e 0.95
+- Deteccao de unidade do modelo (linhas 573-579) - avisa se modelo < 1mm ou > 2000mm
+- `showLoading(message)` (linha 1029) - agora aceita e exibe mensagem no overlay
+- Todas as 4 chamadas de `calculateFilamentWeight` atualizadas com `state.surfaceArea`
+
+**4. `auto-orcamento/index.html`:**
+- Adicionado `<p class="loading-message"></p>` no loading overlay (linha 284)
+
+**5. `auto-orcamento/style.css`:**
+- `.loading-overlay` com `flex-direction: column` e gap
+- `.loading-message` estilo para texto do loading
+
+**Formula ANTES:** `peso = solidWeight * (0.15 + 0.85 * infill%) * 1.10`
+**Formula AGORA:** `shellFraction = clamp(surfaceArea * 1.6mm / volume, 0.05, 0.95); peso = solidWeight * (shellFraction + (1-shellFraction) * infill%) * 1.12`
+
 ### 2026-02-14 - [FEATURE] Agenda de Ideias/Anotacoes no Claytinho (WhatsApp Bot)
 
 **Resumo:** Adicionada funcionalidade de anotacoes/ideias ao bot Claytinho via WhatsApp. O usuario pode salvar ideias, listar todas as anotacoes numeradas e apagar anotacoes por numero.

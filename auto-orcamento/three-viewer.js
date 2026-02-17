@@ -9,6 +9,7 @@ import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export class ThreeViewer {
     constructor(canvas) {
@@ -176,22 +177,37 @@ export class ThreeViewer {
             loader.load(
                 url,
                 (obj) => {
-                    let geometry = null;
-                    let material = null;
+                    const geometries = [];
 
                     obj.traverse((child) => {
-                        if (child.isMesh && !geometry) {
-                            geometry = child.geometry;
-                            material = child.material;
+                        if (child.isMesh) {
+                            const geo = child.geometry.clone();
+                            const identity = new THREE.Matrix4();
+                            if (!child.matrixWorld.equals(identity)) {
+                                child.updateWorldMatrix(true, false);
+                                geo.applyMatrix4(child.matrixWorld);
+                            }
+                            if (geo.getAttribute('position')) {
+                                geometries.push(geo);
+                            }
                         }
                     });
 
-                    if (!geometry) {
+                    if (geometries.length === 0) {
                         reject(new Error('Nenhuma geometria encontrada no OBJ'));
                         return;
                     }
 
-                    resolve({ geometry, material });
+                    const merged = geometries.length === 1
+                        ? geometries[0]
+                        : mergeGeometries(geometries);
+
+                    if (!merged) {
+                        reject(new Error('Erro ao processar geometria do OBJ'));
+                        return;
+                    }
+
+                    resolve({ geometry: merged, material: null });
                 },
                 undefined,
                 reject
@@ -205,22 +221,34 @@ export class ThreeViewer {
             loader.load(
                 url,
                 (gltf) => {
-                    let geometry = null;
-                    let material = null;
+                    const geometries = [];
 
                     gltf.scene.traverse((child) => {
-                        if (child.isMesh && !geometry) {
-                            geometry = child.geometry;
-                            material = child.material;
+                        if (child.isMesh) {
+                            const geo = child.geometry.clone();
+                            child.updateWorldMatrix(true, false);
+                            geo.applyMatrix4(child.matrixWorld);
+                            if (geo.getAttribute('position')) {
+                                geometries.push(geo);
+                            }
                         }
                     });
 
-                    if (!geometry) {
+                    if (geometries.length === 0) {
                         reject(new Error('Nenhuma geometria encontrada no GLTF'));
                         return;
                     }
 
-                    resolve({ geometry, material });
+                    const merged = geometries.length === 1
+                        ? geometries[0]
+                        : mergeGeometries(geometries);
+
+                    if (!merged) {
+                        reject(new Error('Erro ao processar geometria do GLTF'));
+                        return;
+                    }
+
+                    resolve({ geometry: merged, material: null });
                 },
                 undefined,
                 reject
@@ -234,22 +262,37 @@ export class ThreeViewer {
             loader.load(
                 url,
                 (obj) => {
-                    let geometry = null;
-                    let material = null;
+                    const geometries = [];
 
                     obj.traverse((child) => {
-                        if (child.isMesh && !geometry) {
-                            geometry = child.geometry;
-                            material = child.material;
+                        if (child.isMesh) {
+                            const geo = child.geometry.clone();
+                            const identity = new THREE.Matrix4();
+                            if (!child.matrixWorld.equals(identity)) {
+                                child.updateWorldMatrix(true, false);
+                                geo.applyMatrix4(child.matrixWorld);
+                            }
+                            if (geo.getAttribute('position')) {
+                                geometries.push(geo);
+                            }
                         }
                     });
 
-                    if (!geometry) {
+                    if (geometries.length === 0) {
                         reject(new Error('Nenhuma geometria encontrada no 3MF'));
                         return;
                     }
 
-                    resolve({ geometry, material });
+                    const merged = geometries.length === 1
+                        ? geometries[0]
+                        : mergeGeometries(geometries);
+
+                    if (!merged) {
+                        reject(new Error('Erro ao processar geometria do 3MF'));
+                        return;
+                    }
+
+                    resolve({ geometry: merged, material: null });
                 },
                 undefined,
                 reject

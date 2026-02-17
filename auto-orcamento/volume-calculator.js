@@ -57,7 +57,72 @@ export function calculateVolumeFromGeometry(geometry) {
 }
 
 /**
+ * Calcula a area total da superficie de uma BufferGeometry
+ * Soma a area de todos os triangulos usando magnitude do produto vetorial / 2
+ * @param {THREE.BufferGeometry} geometry - Geometria do Three.js
+ * @returns {number} Area total em unidades quadradas (mesma unidade do modelo, ex: mm^2)
+ */
+export function calculateSurfaceArea(geometry) {
+    if (!geometry) return 0;
+
+    const position = geometry.getAttribute('position');
+    if (!position) return 0;
+
+    const index = geometry.getIndex();
+    let totalArea = 0;
+
+    const triCount = index ? index.count / 3 : position.count / 3;
+
+    for (let i = 0; i < triCount; i++) {
+        let i0, i1, i2;
+
+        if (index) {
+            i0 = index.getX(i * 3);
+            i1 = index.getX(i * 3 + 1);
+            i2 = index.getX(i * 3 + 2);
+        } else {
+            i0 = i * 3;
+            i1 = i * 3 + 1;
+            i2 = i * 3 + 2;
+        }
+
+        const v0x = position.getX(i0);
+        const v0y = position.getY(i0);
+        const v0z = position.getZ(i0);
+
+        const v1x = position.getX(i1);
+        const v1y = position.getY(i1);
+        const v1z = position.getZ(i1);
+
+        const v2x = position.getX(i2);
+        const v2y = position.getY(i2);
+        const v2z = position.getZ(i2);
+
+        // Vetores das arestas: e1 = v1 - v0, e2 = v2 - v0
+        const e1x = v1x - v0x;
+        const e1y = v1y - v0y;
+        const e1z = v1z - v0z;
+
+        const e2x = v2x - v0x;
+        const e2y = v2y - v0y;
+        const e2z = v2z - v0z;
+
+        // Produto vetorial: cross = e1 x e2
+        const cx = e1y * e2z - e1z * e2y;
+        const cy = e1z * e2x - e1x * e2z;
+        const cz = e1x * e2y - e1y * e2x;
+
+        // Area do triangulo = |cross| / 2
+        totalArea += Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
+    }
+
+    return totalArea;
+}
+
+/**
  * Verifica se uma mesh e fechada (watertight)
+ * Usa comparacao por posicao 3D (arredondada) em vez de indice de vertice,
+ * para lidar corretamente com OBJ e outros formatos que duplicam vertices
  * @param {THREE.BufferGeometry} geometry
  * @returns {boolean}
  */
@@ -69,6 +134,15 @@ export function isMeshWatertight(geometry) {
 
     const index = geometry.getIndex();
     const edgeMap = new Map();
+
+    // Gera hash de posicao arredondada para 4 casas decimais
+    // Agrupa vertices duplicados na mesma posicao 3D
+    function posHash(vertexIndex) {
+        const x = position.getX(vertexIndex).toFixed(4);
+        const y = position.getY(vertexIndex).toFixed(4);
+        const z = position.getZ(vertexIndex).toFixed(4);
+        return `${x},${y},${z}`;
+    }
 
     const triCount = index ? index.count / 3 : position.count / 3;
 
@@ -86,9 +160,9 @@ export function isMeshWatertight(geometry) {
         }
 
         for (let j = 0; j < 3; j++) {
-            const a = indices[j];
-            const b = indices[(j + 1) % 3];
-            const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+            const hashA = posHash(indices[j]);
+            const hashB = posHash(indices[(j + 1) % 3]);
+            const key = hashA < hashB ? `${hashA}|${hashB}` : `${hashB}|${hashA}`;
             edgeMap.set(key, (edgeMap.get(key) || 0) + 1);
         }
     }

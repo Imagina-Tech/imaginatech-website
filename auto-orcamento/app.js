@@ -4,7 +4,7 @@
  */
 
 import { ThreeViewer } from './three-viewer.js';
-import { calculateVolumeFromGeometry, isMeshWatertight } from './volume-calculator.js';
+import { calculateVolumeFromGeometry, calculateSurfaceArea, isMeshWatertight } from './volume-calculator.js';
 
 // ============================================================================
 // CONFIGURACAO
@@ -25,9 +25,9 @@ const CONFIG = {
     },
     // Parametros de impressao (bico 0.4mm)
     PRINT_PARAMS: {
-        wallThickness: 0.08,         // ~8% para paredes
-        topBottomLayers: 0.05,       // ~5% para topo/fundo
-        wasteFactor: 1.10            // 10% desperdicio
+        wallThickness: 1.6,          // mm (4 perimetros * 0.4mm bico)
+        topBottomThickness: 1.2,     // mm (6 camadas * 0.2mm layer)
+        wasteFactor: 1.12            // 12% desperdicio (purga + brim + suportes basicos)
     },
     // Opcoes de preenchimento
     INFILL_OPTIONS: {
@@ -105,6 +105,7 @@ let state = {
     currentGeometry: null,
     viewer: null,
     volume: 0,
+    surfaceArea: 0,
     dimensions: null,
     price: 0,
     isEstimate: true,
@@ -403,28 +404,32 @@ function closeColorModal() {
 // CALCULO DE PESO
 // ============================================================================
 
-function calculateFilamentWeight(volumeMm3, material, infillOption = '20') {
+function calculateFilamentWeight(volumeMm3, surfaceAreaMm2, material, infillOption = '20') {
     const volumeCm3 = volumeMm3 / 1000;
     const density = CONFIG.MATERIAL_DENSITIES[material] || 1.24;
-
     const infillConfig = CONFIG.INFILL_OPTIONS[infillOption] || CONFIG.INFILL_OPTIONS['20'];
     const infillPercentage = infillConfig.value;
 
     // Peso base do volume total (se fosse 100% solido)
     const solidWeight = volumeCm3 * density;
 
-    // Para uma peca tipica:
-    // - ~15% do volume sao paredes/topo/fundo (sempre solidos)
-    // - ~85% do volume e interno (preenchido pelo infill)
-    const shellFactor = 0.15;  // Paredes + topo/fundo
-    const internalFactor = 0.85;  // Volume interno
+    // Shell dinamico baseado na area de superficie real
+    // wallThickness: 4 perimetros * 0.4mm bico = 1.6mm tipico
+    // topBottom: ~1.2mm (6 camadas * 0.2mm layer height)
+    const wallThickness = CONFIG.PRINT_PARAMS.wallThickness;  // mm
+    const shellVolumeMm3 = surfaceAreaMm2 * wallThickness;
+
+    // shellFraction: proporcao do volume que e shell (clamped 0.05 a 0.95)
+    let shellFraction = shellVolumeMm3 / volumeMm3;
+    shellFraction = Math.max(0.05, Math.min(shellFraction, 0.95));
+
+    const internalFraction = 1 - shellFraction;
 
     // Peso = (shell solido) + (interno * infill%)
-    const effectiveWeight = solidWeight * (shellFactor + (internalFactor * infillPercentage));
+    const effectiveWeight = solidWeight * (shellFraction + (internalFraction * infillPercentage));
 
-    // Adicionar desperdicio (purga, suportes, etc)
-    const wasteMultiplier = CONFIG.PRINT_PARAMS.wasteFactor || 1.10;
-
+    // Desperdicio (purga, brim, suportes basicos)
+    const wasteMultiplier = CONFIG.PRINT_PARAMS.wasteFactor;
     return Math.ceil(effectiveWeight * wasteMultiplier);
 }
 
@@ -560,9 +565,18 @@ async function handleFileSelect(file) {
         const geometry = await state.viewer.loadFile(file);
         state.currentGeometry = geometry;
 
-        // Calcular volume e dimensoes
+        // Calcular volume, area de superficie e dimensoes
         state.volume = calculateVolumeFromGeometry(geometry);
+        state.surfaceArea = calculateSurfaceArea(geometry);
         state.dimensions = state.viewer.getBoundingBox();
+
+        // Detectar unidade do modelo
+        const maxDim = Math.max(state.dimensions.width, state.dimensions.height, state.dimensions.depth);
+        if (maxDim < 1) {
+            showWarning('Modelo muito pequeno (< 1mm). Verifique se esta em milimetros.');
+        } else if (maxDim > 2000) {
+            showWarning('Modelo muito grande (> 2m). Verifique se esta em milimetros, nao metros ou polegadas.');
+        }
 
         // Avisar se mesh nao e watertight (volume pode ser impreciso)
         if (!isMeshWatertight(geometry)) {
@@ -582,7 +596,7 @@ async function handleFileSelect(file) {
         // Calcular peso estimado
         const material = document.getElementById('materialSelect')?.value || 'PLA';
         const infill = document.getElementById('infillSelect')?.value || '20';
-        const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
+        const estimatedWeight = calculateFilamentWeight(state.volume, state.surfaceArea, material, infill);
         updateWeightDisplay(estimatedWeight);
 
         // Atualizar estoque com peso minimo e recarregar cores
@@ -880,7 +894,7 @@ function setupEventHandlers() {
 
             // Atualizar cores disponiveis para este material
             if (state.volume > 0) {
-                const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
+                const estimatedWeight = calculateFilamentWeight(state.volume, state.surfaceArea, material, infill);
                 updateWeightDisplay(estimatedWeight);
                 updateColorOptions(material, estimatedWeight);
             } else {
@@ -902,7 +916,7 @@ function setupEventHandlers() {
             const infill = infillSelect.value;
 
             if (state.volume > 0) {
-                const estimatedWeight = calculateFilamentWeight(state.volume, material, infill);
+                const estimatedWeight = calculateFilamentWeight(state.volume, state.surfaceArea, material, infill);
                 updateWeightDisplay(estimatedWeight);
                 updateColorOptions(material, estimatedWeight);
             }
@@ -935,6 +949,7 @@ function setupEventHandlers() {
             state.currentFile = null;
             state.currentGeometry = null;
             state.volume = 0;
+            state.surfaceArea = 0;
             state.dimensions = null;
             state.price = 0;
             state.selectedColor = '';
@@ -955,7 +970,7 @@ function submitQuoteWhatsApp() {
     const options = getSelectedOptions();
     const dims = state.dimensions;
     const volumeCm3 = (state.volume / 1000).toFixed(2);
-    const weightG = state.estimatedWeight || calculateFilamentWeight(state.volume, options.material, options.infill);
+    const weightG = state.estimatedWeight || calculateFilamentWeight(state.volume, state.surfaceArea, options.material, options.infill);
 
     // Obter label do infill
     const infillLabel = CONFIG.INFILL_OPTIONS[options.infill]?.label || '20%';
@@ -1011,11 +1026,13 @@ function sanitizeFileName(name) {
 
 let _loadingStart = Date.now();
 
-function showLoading() {
+function showLoading(message = '') {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');
         overlay.setAttribute('aria-hidden', 'false');
+        const msgEl = overlay.querySelector('.loading-message');
+        if (msgEl) msgEl.textContent = message;
     }
     _loadingStart = Date.now();
 }
