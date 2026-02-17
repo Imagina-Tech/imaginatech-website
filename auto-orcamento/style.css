@@ -593,68 +593,59 @@ footer {
     margin: 0;
 }
 
-/* Footer FAQ compacto */
-.footer-faq {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.footer-list li i {
+    color: var(--neon-blue);
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Footer FAQ - mesmo estilo visual das outras colunas */
+.footer-faq .footer-list li {
+    display: block;
 }
 
 .footer-faq-item {
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md, 8px);
-    overflow: hidden;
-    transition: border-color 0.2s ease;
-}
-
-.footer-faq-item[open] {
-    border-color: var(--neon-blue);
+    width: 100%;
 }
 
 .footer-faq-item summary {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-primary, #fff);
-    cursor: pointer;
-    list-style: none;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    transition: background 0.2s ease;
-}
-
-.footer-faq-item summary:hover {
-    background: rgba(255, 255, 255, 0.04);
+    gap: 10px;
+    cursor: pointer;
+    list-style: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
 }
 
 .footer-faq-item summary::-webkit-details-marker {
     display: none;
 }
 
-.footer-faq-item summary::after {
-    content: '\f078';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    font-size: 0.6rem;
-    color: var(--text-muted, rgba(255,255,255,0.4));
-    transition: transform 0.2s ease;
+.footer-faq-item summary:hover {
+    color: var(--neon-blue);
+}
+
+.footer-faq-item summary i {
+    color: var(--neon-blue);
+    width: 16px;
+    text-align: center;
     flex-shrink: 0;
 }
 
-.footer-faq-item[open] summary::after {
-    transform: rotate(180deg);
+.footer-faq-item[open] summary {
     color: var(--neon-blue);
 }
 
 .footer-faq-item div[itemprop="acceptedAnswer"] {
-    padding: 0 0.75rem 0.5rem;
+    padding: 6px 0 0 26px;
 }
 
 .footer-faq-item div[itemprop="acceptedAnswer"] p {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.5;
     margin: 0;
 }
@@ -699,14 +690,6 @@ footer {
 
     .footer-list li {
         font-size: 0.85rem;
-    }
-
-    .footer-faq-item summary {
-        font-size: 0.8rem;
-    }
-
-    .footer-faq-item div[itemprop="acceptedAnswer"] p {
-        font-size: 0.75rem;
     }
 }
 
@@ -769,18 +752,11 @@ footer {
  * ============================================================================ */
 
 @media (min-width: 1025px) {
-    html, body {
-        height: 100vh;
-        overflow: hidden;
-    }
-
     .main-container {
-        height: 100vh;
-        max-height: 100vh;
-        overflow: hidden;
+        min-height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
-        padding: 120px 1rem 0.5rem 1rem;
+        padding: 100px 1rem 0.5rem 1rem;
     }
 
     .quote-panel {
@@ -789,7 +765,7 @@ footer {
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        margin-top: 0.75rem;
+        margin-top: 0.5rem;
     }
 
     /* Upload section: centralizar verticalmente */

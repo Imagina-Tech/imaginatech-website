@@ -41,13 +41,15 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 - Twitter Card: summary_large_image com titulo, descricao, imagem
 - Sitemap link + manifest link no head
 - Schema.org JSON-LD @graph com 4 blocos: WebApplication, Service (com OfferCatalog de 5 materiais), BreadcrumbList, FAQPage (4 perguntas)
-- Footer profissional com 3 colunas: marca + social, FAQ compacto (SEO via microdata Schema.org), links rapidos
-- FAQ integrado no footer com `<details>/<summary>` - sutil, sem ocupar espaco extra
+- Footer identico ao site principal: 3 colunas (marca+social, FAQ para SEO, links rapidos)
+- FAQ no footer com `<details>/<summary>` + microdata Schema.org, mesmo estilo visual dos itens de footer
 
-**2. `auto-orcamento/style.css` - Footer CSS:**
-- Footer adaptado do site principal (footer, footer-grid, footer-brand, footer-logo, social-links, etc)
-- Footer FAQ compacto: .footer-faq, .footer-faq-item com chevron animado
-- Responsivo: grid 3 colunas -> 1 coluna em 768px, fontes menores em 480px
+**2. `auto-orcamento/style.css` - Footer + Desktop layout:**
+- Footer CSS adaptado do site principal (footer, footer-grid, footer-brand, footer-logo, social-links, etc)
+- Footer FAQ estilizado como lista de footer (mesma cor, fonte, icones) com details expandivel
+- Desktop: removido `overflow: hidden` do body, painel usa `min-height: calc(100vh - 60px)` para maximizar espaco
+- Footer visivel no desktop (scroll) e mobile
+- Responsivo: grid 3 colunas -> 1 coluna em 768px
 
 **3. `sitemap.xml` - Melhorias:**
 - Namespace xhtml adicionado para hreflang

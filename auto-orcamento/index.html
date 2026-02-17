@@ -461,7 +461,7 @@
 
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (identico ao site principal) -->
     <footer>
         <div class="footer-content">
             <div class="footer-grid">
@@ -482,27 +482,44 @@
                     </div>
                 </div>
 
-                <!-- Coluna 2: FAQ compacto (SEO) -->
+                <!-- Coluna 2: FAQ (SEO) -->
                 <div class="footer-faq" itemscope itemtype="https://schema.org/FAQPage">
                     <h4 class="footer-title">Duvidas Frequentes</h4>
-                    <details class="footer-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                        <summary itemprop="name">Como funciona o orcamento?</summary>
-                        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                            <p itemprop="text">Envie seu arquivo 3D, escolha material e acabamento. O preco e gerado instantaneamente.</p>
-                        </div>
-                    </details>
-                    <details class="footer-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                        <summary itemprop="name">Quais formatos aceitos?</summary>
-                        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                            <p itemprop="text">STL, OBJ, GLB/GLTF e 3MF. Compativeis com Fusion 360, Blender e TinkerCAD.</p>
-                        </div>
-                    </details>
-                    <details class="footer-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                        <summary itemprop="name">Entregam para todo o Brasil?</summary>
-                        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                            <p itemprop="text">Sim! Enviamos para todo o Brasil via Correios e transportadoras.</p>
-                        </div>
-                    </details>
+                    <ul class="footer-list">
+                        <li itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                            <details class="footer-faq-item">
+                                <summary>
+                                    <i class="fas fa-question-circle"></i>
+                                    <span itemprop="name">Como funciona o orcamento?</span>
+                                </summary>
+                                <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                                    <p itemprop="text">Envie seu arquivo 3D (STL, OBJ, GLB ou 3MF), escolha material e acabamento. O preco e calculado instantaneamente.</p>
+                                </div>
+                            </details>
+                        </li>
+                        <li itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                            <details class="footer-faq-item">
+                                <summary>
+                                    <i class="fas fa-question-circle"></i>
+                                    <span itemprop="name">Quais materiais disponiveis?</span>
+                                </summary>
+                                <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                                    <p itemprop="text">PLA, ABS, PETG, TPU (flexivel) e Resina. Cada um com propriedades diferentes de resistencia e acabamento.</p>
+                                </div>
+                            </details>
+                        </li>
+                        <li itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                            <details class="footer-faq-item">
+                                <summary>
+                                    <i class="fas fa-question-circle"></i>
+                                    <span itemprop="name">Entregam para todo o Brasil?</span>
+                                </summary>
+                                <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                                    <p itemprop="text">Sim! Enviamos para todo o Brasil via Correios e transportadoras.</p>
+                                </div>
+                            </details>
+                        </li>
+                    </ul>
                 </div>
 
                 <!-- Coluna 3: Links rapidos -->
