@@ -1,0 +1,38 @@
+# ImaginaTech - Impressao 3D Profissional
+> Empresa de tecnologia especializada em impressao 3D profissional no Rio de Janeiro, Brasil. Oferece pecas personalizadas, prototipos industriais, presentes unicos e orcamento online gratuito.
+
+## Sobre a Empresa
+- Nome: ImaginaTech
+- Localizacao: Rio de Janeiro, RJ, Brasil
+- Especialidade: Impressao 3D profissional (FDM e Resina)
+- Materiais: PLA, ABS, PETG, Resina
+- Contato WhatsApp: +55 21 96897-2539
+- Site: https://imaginatech.com.br
+
+## Paginas Principais
+- [Home](https://imaginatech.com.br/): Pagina principal com servicos, portfolio e informacoes da empresa
+- [Orcamento Online](https://imaginatech.com.br/auto-orcamento/): Calculadora automatica de orcamento - envie arquivo STL/OBJ/3MF e receba preco instantaneo
+- [Portfolio](https://imaginatech.com.br/projetos/): Galeria completa de projetos realizados em impressao 3D
+- [Acompanhar Pedido](https://imaginatech.com.br/acompanhar-pedido/): Portal do cliente para acompanhamento em tempo real
+- [English Version](https://imaginatech.com.br/en/): Full English version of the website
+
+## Servicos Oferecidos
+- Impressao 3D personalizada (pecas sob demanda)
+- Prototipagem rapida para industria
+- Presentes e brindes personalizados em 3D
+- Miniaturas e action figures
+- Pecas de reposicao e funcionais
+- Modelagem 3D sob encomenda
+
+## Diferenciais
+- Orcamento online instantaneo e gratuito
+- Entrega para todo o Brasil
+- Assistente virtual via WhatsApp (Claytinho)
+- Acompanhamento do pedido em tempo real
+- Materiais de alta qualidade (PLA, ABS, PETG, Resina)
+
+## Perguntas Frequentes
+- Como solicitar um orcamento? Acesse https://imaginatech.com.br/auto-orcamento/ e envie seu arquivo 3D
+- Quais formatos de arquivo sao aceitos? STL, OBJ e 3MF
+- Qual o prazo de entrega? Varia de 2 a 15 dias uteis dependendo da complexidade
+- Entregam para todo o Brasil? Sim, com opcoes de envio via Correios e transportadoras

@@ -1,6 +1,10 @@
 {
-  "name": "ImaginaTech",
-  "short_name": "ITech",
+  "name": "ImaginaTech - Impressao 3D Profissional",
+  "short_name": "ImaginaTech",
+  "description": "Servico profissional de impressao 3D no Rio de Janeiro. Pecas personalizadas, prototipos e presentes unicos.",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +19,9 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "theme_color": "#0a0e1a",
+  "background_color": "#0a0e1a",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"]
 }

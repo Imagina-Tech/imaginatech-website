@@ -4,34 +4,53 @@
 # Permitir todos os crawlers
 User-agent: *
 Allow: /
+Disallow: /financas/
+Disallow: /admin/
+Disallow: /servicos/
+Disallow: /estoque/
+Disallow: /custo/
+Disallow: /admin-portfolio/
+Disallow: /marketplace/
+Disallow: /obrigado/
+Disallow: /*.json$
+Disallow: /*_dev.html$
 
 # Google
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
 
 # Bing
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
-# Arquivos e diretórios bloqueados
-Disallow: /financas/
-Disallow: /admin/
-Disallow: /*.json$
-Disallow: /*_dev.html$
+# AI Crawlers - Permitir para visibilidade em buscas IA
+User-agent: GPTBot
+Allow: /
 
-# Permitir recursos estáticos
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+# Bloquear scrapers agressivos
+User-agent: CCBot
+Disallow: /
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+# Permitir recursos estaticos
 Allow: /assets/
 Allow: /*.css$
 Allow: /*.js$
 Allow: /*.png$
 Allow: /*.jpg$
 Allow: /*.webp$
-Allow: /*.svg$
 
 # Sitemap
 Sitemap: https://imaginatech.com.br/sitemap.xml
-
-# Host canônico
-Host: https://imaginatech.com.br
