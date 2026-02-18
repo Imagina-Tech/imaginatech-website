@@ -62,6 +62,13 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "source": "/en{,/**}",
+        "destination": "/",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "/api/ml-webhook",
