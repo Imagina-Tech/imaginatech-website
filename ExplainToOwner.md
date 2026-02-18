@@ -25,6 +25,34 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-18 - [SEO] Remover versao inglesa /en/ - corrigir canonical duplicado
+
+**Problema:** Google Search Console reportando "Copia, Google e usuario selecionaram canonical diferente" para `/en/`. Clientes brasileiros estavam caindo na versao inglesa e recebendo mensagem do WhatsApp em ingles.
+
+**Causa raiz:** Pagina `/en/index.html` sendo indexada pelo Google como duplicata, com canonical conflitante. Dominio .com.br nao precisa de versao inglesa.
+
+**Arquivos MODIFICADOS:**
+
+1. **`en/index.html`** - Substituido por redirect:
+   - Conteudo completo removido (4385 linhas)
+   - Agora contem apenas `<meta http-equiv="refresh">` redirecionando para `/`
+   - Canonical apontando para `https://imaginatech.com.br/`
+
+2. **`index.html`** - Removidas referencias a versao inglesa:
+   - Removido `<meta property="og:locale:alternate" content="en_US">`
+   - Removidos todos os `<link rel="alternate" hreflang="...">` (pt-BR, en, x-default)
+
+3. **`sitemap.xml`** - Limpeza:
+   - Removida entrada `<url>` de `/en/`
+   - Removidas tags `xhtml:link hreflang` da pagina principal
+   - Removido namespace `xmlns:xhtml` (nao mais necessario)
+
+4. **`firebase.json`** - Redirect 301:
+   - Adicionado redirect de `/en{,/**}` para `/` (funciona no Firebase Hosting)
+   - Nota: dominio principal usa GitHub Pages, onde o redirect funciona via meta refresh
+
+**Resultado:** Apenas versao PT-BR indexavel. Qualquer acesso a `/en/` redireciona para `/`.
+
 ### 2026-02-17 - [SEO] Auto-Orcamento - SEO completo + responsividade mobile
 
 **Resumo:** Implementacao completa de SEO (Schema.org, meta tags, sitemap) e responsividade mobile superior para a pagina de auto-orcamento.
