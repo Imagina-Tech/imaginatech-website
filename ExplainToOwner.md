@@ -25,6 +25,30 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-02-19 - [FIX] Auto-Orcamento - Correcao de 6 bugs
+
+**Resumo:** Auditoria completa do painel de auto-orcamento. Corrigidos 6 bugs (1 critico, 2 medios, 3 menores).
+
+**Arquivos EDITADOS:**
+
+**1. `auto-orcamento/app.js` - 5 correcoes:**
+
+- **(Critico) Upload quebrava apos "Trocar arquivo"** (linha ~702): `showUploadSection()` usava `cloneNode(true)` para substituir o input, mas os click handlers do `uploadButton`/`uploadZone` mantinham referencia ao input antigo (detached). Fix: substituido clone por `fileInput.value = ''` (reset padrao).
+
+- **(Medio) Race condition no timeout de 30s** (linha ~737): `setTimeout(() => quoteAbortController.abort(), 30000)` capturava a variavel de modulo por referencia. Se nova requisicao comecasse antes do timeout, o timeout antigo abortava a requisicao nova. Fix: capturar em variavel local `currentController`.
+
+- **(Menor) Double-encoding no nome do arquivo** (linha ~594): `fileNameEl.textContent = escapeHtml(file.name)` causava double-encoding (`&` virava `&amp;`). Fix: removido `escapeHtml()` pois `textContent` ja e safe.
+
+- **(Menor) Dimensoes desatualizadas apos rotacao** (linha ~806): `rotateModel()` mudava o bounding box no viewer mas `state.dimensions` nao era atualizado. Fix: adicionado `state.dimensions = state.viewer.getBoundingBox()` + `updateModelInfo()` no handler.
+
+- **(Menor) CSS injection no color swatch** (linha ~354): `imageUrl` injetada diretamente em `url()` CSS sem sanitizacao. Fix: adicionado `imageUrl.replace(/['"()]/g, '')`.
+
+**2. `auto-orcamento/index.html` - 1 correcao:**
+
+- **(Medio) CSS morto - classe `.auto-orcamento` ausente** (linha 254): Muitas regras CSS usavam prefixo `.auto-orcamento` mas o `<body>` nao tinha essa classe. Touch improvements, safe-area insets e landscape mode estavam ignorados. Fix: adicionado `class="auto-orcamento"` ao `<body>`.
+
+---
+
 ### 2026-02-18 - [SEO] Remover versao inglesa /en/ - corrigir canonical duplicado
 
 **Problema:** Google Search Console reportando "Copia, Google e usuario selecionaram canonical diferente" para `/en/`. Clientes brasileiros estavam caindo na versao inglesa e recebendo mensagem do WhatsApp em ingles.

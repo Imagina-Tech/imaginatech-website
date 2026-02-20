@@ -351,7 +351,8 @@ function selectColor(value, name, imageUrl) {
 
     if (swatchEl) {
         if (imageUrl) {
-            swatchEl.style.background = `url('${imageUrl}') center/cover no-repeat`;
+            const safeUrl = imageUrl.replace(/['"()]/g, '');
+            swatchEl.style.background = `url('${safeUrl}') center/cover no-repeat`;
         } else if (!value) {
             swatchEl.style.background = 'rgba(255, 82, 82, 0.3)';
         } else {
@@ -590,7 +591,7 @@ async function handleFileSelect(file) {
         // Nome do arquivo
         const fileNameEl = document.getElementById('fileName');
         if (fileNameEl) {
-            fileNameEl.textContent = escapeHtml(file.name);
+            fileNameEl.textContent = file.name;
         }
 
         // Calcular peso estimado
@@ -705,16 +706,9 @@ function showUploadSection() {
     if (uploadSection) uploadSection.classList.remove('hidden');
     if (previewSection) previewSection.classList.add('hidden');
 
-    // Limpar input (clonar para permitir re-upload do mesmo arquivo)
+    // Resetar valor do input para permitir re-upload do mesmo arquivo
     const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        const newInput = fileInput.cloneNode(true);
-        fileInput.parentNode.replaceChild(newInput, fileInput);
-        newInput.addEventListener('change', (e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFileSelect(file);
-        });
-    }
+    if (fileInput) fileInput.value = '';
 }
 
 // ============================================================================
@@ -740,7 +734,8 @@ async function calculateQuote() {
     updatePriceLoading(true);
 
     try {
-        const timeoutId = setTimeout(() => quoteAbortController.abort(), 30000);
+        const currentController = quoteAbortController;
+        const timeoutId = setTimeout(() => currentController.abort(), 30000);
 
         // Enviar apenas volume e opcoes (sem arquivo - evita 413)
         const response = await fetch(`${CONFIG.API_URL}/calculateQuote`, {
@@ -810,6 +805,10 @@ function setupEventHandlers() {
         switch (action) {
             case 'rotate-model':
                 state.viewer?.rotateModel();
+                if (state.viewer) {
+                    state.dimensions = state.viewer.getBoundingBox();
+                    updateModelInfo();
+                }
                 break;
 
             case 'reset-camera':
