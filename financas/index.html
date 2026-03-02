@@ -389,90 +389,114 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
                 </div>
             </div>
 
-            <!-- Dashboard Grid: Gráfico Principal + Mini Charts + Gauges -->
+            <!-- Dashboard Grid: Graficos (Accordion no mobile) -->
             <div class="dashboard-main-grid">
-                <!-- GRÁFICO: Distribuição por Categoria (Esquerda, Linha 1) -->
-                <div class="chart-card chart-category">
-                    <div class="chart-header">
-                        <h3>Distribuição por Categoria</h3>
+                <!-- GRAFICO: Distribuicao por Categoria -->
+                <div class="chart-card chart-category chart-accordion-item">
+                    <div class="chart-accordion-header" data-action="toggle-chart-accordion">
+                        <h3>Distribuicao por Categoria</h3>
+                        <i class="fas fa-chevron-down chart-accordion-icon"></i>
                     </div>
-                    <div id="categoryChart" style="flex: 1;"></div>
+                    <div class="chart-accordion-body">
+                        <div id="categoryChart" style="flex: 1;"></div>
+                    </div>
                 </div>
 
-                <!-- GRÁFICO: Análise de Pagamentos (Esquerda, Linha 2) -->
-                <div class="chart-card chart-payment-method">
-                    <div class="chart-header">
-                        <h3>Análise de Pagamentos</h3>
+                <!-- GRAFICO: Analise de Pagamentos -->
+                <div class="chart-card chart-payment-method chart-accordion-item">
+                    <div class="chart-accordion-header" data-action="toggle-chart-accordion">
+                        <h3>Analise de Pagamentos</h3>
+                        <i class="fas fa-chevron-down chart-accordion-icon"></i>
                     </div>
-                    <div id="paymentMethodChart" style="flex: 1;"></div>
+                    <div class="chart-accordion-body">
+                        <div id="paymentMethodChart" style="flex: 1;"></div>
+                    </div>
                 </div>
 
-                <!-- CHARTS TOP: Fluxo de Caixa + Comparativo (Linha 1, Colunas 2-3) -->
+                <!-- CHARTS TOP: Fluxo de Caixa + Comparativo -->
                 <div class="charts-section-top">
-                    <div class="chart-card">
-                        <div class="chart-header">
+                    <div class="chart-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <h3>Fluxo de Caixa</h3>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
+                        </div>
+                        <div class="chart-accordion-body">
                             <div class="chart-legend">
                                 <span class="legend-item"><span class="dot income"></span>Entradas</span>
-                                <span class="legend-item"><span class="dot expense"></span>Saídas</span>
+                                <span class="legend-item"><span class="dot expense"></span>Saidas</span>
                             </div>
+                            <div id="cashFlowChart" style="flex: 1;"></div>
                         </div>
-                        <div id="cashFlowChart" style="flex: 1;"></div>
                     </div>
 
-                    <div class="chart-card">
-                        <div class="chart-header" style="display: flex; align-items: center;">
-                            <h3>Mês Atual vs Anterior</h3>
+                    <div class="chart-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
+                            <h3>Mes Atual vs Anterior</h3>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
                         </div>
-                        <div id="comparisonChart" style="flex: 1;"></div>
+                        <div class="chart-accordion-body">
+                            <div id="comparisonChart" style="flex: 1;"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- CHARTS BOTTOM: Top Categorias + Evolução Semanal (Linha 2, Colunas 2-3) -->
+                <!-- CHARTS BOTTOM: Top Categorias + Evolucao Semanal -->
                 <div class="charts-section-bottom">
-                    <div class="chart-card">
-                        <div class="chart-header">
+                    <div class="chart-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <h3>Top 5 Despesas</h3>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
                         </div>
-                        <div id="topCategoriesChart" style="flex: 1;"></div>
+                        <div class="chart-accordion-body">
+                            <div id="topCategoriesChart" style="flex: 1;"></div>
+                        </div>
                     </div>
 
-                    <div class="chart-card">
-                        <div class="chart-header">
+                    <div class="chart-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <h3>Gastos por Semana</h3>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
                         </div>
-                        <div id="weeklyTrendChart" style="flex: 1;"></div>
+                        <div class="chart-accordion-body">
+                            <div id="weeklyTrendChart" style="flex: 1;"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Mini Gauges Container - Coluna 4, ocupa 2 linhas -->
+                <!-- Mini Gauges Container -->
                 <div class="mini-gauges-container">
-                    <div class="mini-chart-card liquid-gauge-card">
-                        <div class="mini-chart-header">
+                    <div class="mini-chart-card liquid-gauge-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <div class="gauge-header-top">
                                 <h4>Reservas do Mes</h4>
                                 <button data-action="open-settings" class="btn-settings-mini" title="Configurar meta">
                                     <i class="fas fa-cog"></i>
                                 </button>
                             </div>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
+                        </div>
+                        <div class="chart-accordion-body">
                             <span class="gauge-percentage" id="savingsGoalPercent">0%</span>
                             <span class="mini-chart-value" id="savingsGoalValue">R$ 0,00</span>
+                            <svg id="savingsGoalChart" class="liquid-gauge"></svg>
                         </div>
-                        <svg id="savingsGoalChart" class="liquid-gauge"></svg>
                     </div>
 
-                    <div class="mini-chart-card liquid-gauge-card">
-                        <div class="mini-chart-header">
+                    <div class="mini-chart-card liquid-gauge-card chart-accordion-item">
+                        <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <div class="gauge-header-top">
                                 <h4>Gastos do Mes</h4>
                                 <button data-action="open-settings" class="btn-settings-mini" title="Configurar limite">
                                     <i class="fas fa-cog"></i>
                                 </button>
                             </div>
+                            <i class="fas fa-chevron-down chart-accordion-icon"></i>
+                        </div>
+                        <div class="chart-accordion-body">
                             <span class="gauge-percentage" id="expenseLimitPercent">0%</span>
                             <span class="mini-chart-value" id="expenseLimitValue">R$ 0,00</span>
+                            <svg id="expenseLimitChart" class="liquid-gauge"></svg>
                         </div>
-                        <svg id="expenseLimitChart" class="liquid-gauge"></svg>
                     </div>
                 </div>
             </div>

@@ -1787,7 +1787,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // WhatsApp link/unlink
             'link-whatsapp': () => typeof linkMyWhatsApp === 'function' && linkMyWhatsApp(),
-            'unlink-whatsapp': () => typeof unlinkMyWhatsApp === 'function' && unlinkMyWhatsApp()
+            'unlink-whatsapp': () => typeof unlinkMyWhatsApp === 'function' && unlinkMyWhatsApp(),
+
+            // Chart Accordion (Mobile)
+            'toggle-chart-accordion': () => {
+                const item = el.closest('.chart-accordion-item');
+                if (item) {
+                    item.classList.toggle('expanded');
+                    // Trigger chart resize after expand animation
+                    if (item.classList.contains('expanded')) {
+                        setTimeout(() => {
+                            window.dispatchEvent(new Event('resize'));
+                        }, 400);
+                    }
+                }
+            }
         };
 
         // Execute the action if handler exists

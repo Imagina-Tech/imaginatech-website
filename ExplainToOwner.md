@@ -25,6 +25,31 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-03-02 - [MOBILE] Graficos em accordion colapsavel para mobile
+
+**Resumo:** Charts do dashboard financeiro agora sao colapsaveis em mobile (<=1024px). No desktop, comportamento inalterado.
+
+**Arquivos EDITADOS:**
+
+1. **`financas/index.html`** - Estrutura accordion nos graficos:
+   - Cada `.chart-card` recebeu classe adicional `.chart-accordion-item`
+   - Dentro: `.chart-accordion-header` com `data-action="toggle-chart-accordion"` (titulo + chevron)
+   - Dentro: `.chart-accordion-body` envolvendo o container do grafico
+   - Todos os IDs de graficos preservados (categoryChart, paymentMethodChart, cashFlowChart, comparisonChart, topCategoriesChart, weeklyTrendChart, savingsGoalChart, expenseLimitChart)
+   - IDs de gauges preservados (savingsGoalPercent, savingsGoalValue, expenseLimitPercent, expenseLimitValue)
+
+2. **`financas/style.css`** - CSS do accordion (antes da secao FAB):
+   - Desktop: `.chart-accordion-header` hidden, `.chart-accordion-body` sempre visivel
+   - Mobile (<=1024px): header visivel, body colapsado (max-height: 0), classe `.expanded` abre (max-height: 350px)
+   - Chevron roda 180 graus quando expandido
+   - Charts expandidos tem min-height 220px, gauges 150px
+
+3. **`financas/finance-ui.js`** - Handler `toggle-chart-accordion` no actionHandlers:
+   - Toggle classe `.expanded` no `.chart-accordion-item` pai
+   - Dispara `window.resize` apos 400ms para ApexCharts recalcular dimensoes
+
+---
+
 ### 2026-03-02 - [MOBILE] KPI cards compactos para mobile financas
 
 **Resumo:** Adicionados estilos responsivos para os 8 KPI cards do dashboard financeiro em 3 breakpoints.

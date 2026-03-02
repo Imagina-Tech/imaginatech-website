@@ -1840,6 +1840,112 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* =================================================
+   CHART ACCORDION (Mobile Only)
+   ================================================= */
+
+/* Desktop: accordion is invisible, body always visible */
+.chart-accordion-header {
+  display: none;
+}
+.chart-accordion-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+@media (max-width: 1024px) {
+  .chart-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0.85rem;
+    cursor: pointer;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chart-accordion-header h3,
+  .chart-accordion-header h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .chart-accordion-icon {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+  }
+  .chart-accordion-item.expanded .chart-accordion-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Body collapsed by default on mobile */
+  .chart-accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .chart-accordion-item.expanded .chart-accordion-body {
+    max-height: 350px;
+    overflow: visible;
+  }
+
+  /* Chart cards in accordion mode */
+  .chart-accordion-item {
+    min-height: auto;
+  }
+  .chart-accordion-item .chart-header {
+    display: none;
+  }
+
+  /* Ensure charts have proper height when expanded */
+  .chart-accordion-item.expanded #categoryChart,
+  .chart-accordion-item.expanded #paymentMethodChart,
+  .chart-accordion-item.expanded #cashFlowChart,
+  .chart-accordion-item.expanded #comparisonChart,
+  .chart-accordion-item.expanded #topCategoriesChart,
+  .chart-accordion-item.expanded #weeklyTrendChart {
+    min-height: 220px;
+    height: 250px;
+  }
+
+  /* Gauges in accordion */
+  .chart-accordion-item.expanded .liquid-gauge {
+    min-height: 150px;
+  }
+
+  /* Charts section layout for mobile */
+  .charts-section-top,
+  .charts-section-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Mini gauges */
+  .mini-gauges-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Gauge header inside accordion */
+  .chart-accordion-header .gauge-header-top {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+  }
+  .chart-accordion-header .btn-settings-mini {
+    font-size: 0.7rem;
+    padding: 4px;
+  }
+}
+
+/* =================================================
    FAB - FLOATING ACTION BUTTON (Mobile Only)
    ================================================= */
 .fab-container {
