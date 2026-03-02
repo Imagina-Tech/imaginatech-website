@@ -2065,3 +2065,101 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
   }
 }
+
+/* =================================================
+   BOTTOM SHEET MODALS (Mobile <=768px)
+   ================================================= */
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    margin: 0;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-container::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 8px auto 0;
+  }
+
+  .modal-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1rem;
+  }
+
+  .modal-form {
+    padding: 0.75rem 1rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  .modal-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 0.75rem 1rem;
+    background: inherit;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0;
+  }
+
+  .modal-actions button {
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  /* List modals - also bottom sheet */
+  .modal-list .modal-container {
+    max-height: 90vh;
+  }
+
+  /* Settings modal */
+  .settings-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 16px 16px 0 0;
+  }
+
+  /* Card bill details modal */
+  #cardBillDetailsModal .modal-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 95vh;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0.8;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}

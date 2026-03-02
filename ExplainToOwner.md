@@ -25,6 +25,24 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-03-02 - [MOBILE] Modais como bottom-sheet no mobile financas
+
+**Resumo:** Em telas <=768px, todos os modais do painel financeiro agora deslizam de baixo para cima (bottom-sheet) ao inves de aparecer centralizados. Inclui handle bar visual, form scrollable, botoes sticky, e prevencao de zoom iOS em inputs.
+
+**Arquivo EDITADO:** `financas/style.css` (final do arquivo, apos secao FAB)
+
+- `.modal-overlay` alinha ao flex-end (fundo da tela)
+- `.modal-container` full-width, border-radius so no topo, animacao slideUp
+- `::before` pseudo-element cria handle bar (indicador de bottom-sheet)
+- `.modal-header` e `.modal-form` com padding compacto
+- `.form-row` muda para 1 coluna
+- Inputs com min-height 44px e font-size 16px (previne zoom iOS)
+- `.modal-actions` sticky no bottom com borda superior
+- `.settings-modal` e `#cardBillDetailsModal` tambem adaptados
+- `@keyframes slideUp` para animacao de entrada
+
+---
+
 ### 2026-03-02 - [MOBILE] Graficos em accordion colapsavel para mobile
 
 **Resumo:** Charts do dashboard financeiro agora sao colapsaveis em mobile (<=1024px). No desktop, comportamento inalterado.
