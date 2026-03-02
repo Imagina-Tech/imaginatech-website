@@ -949,37 +949,38 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 1024px) {
   .top-info-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     height: auto;
+    gap: 0.3rem;
   }
   .quick-actions {
-    grid-column: 1 / 5;
-    flex-direction: row;
+    display: none;
   }
   .dashboard-main-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto;
+    grid-template-rows: auto;
     height: auto;
+    flex: none;
   }
   .main-content {
-    padding-top: 110px; /* Ajustado para navbar floating */
+    padding-top: 110px;
     height: auto;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 80px;
   }
   .chart-category, .chart-payment-method, .charts-section-top, .charts-section-bottom {
     grid-column: 1;
     grid-row: auto;
   }
-
-  /* Mobile block - bloqueia acesso em tablets/mobile */
-  .mobile-block {
-    display: flex !important;
+  .mini-gauges-container {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    gap: 0.5rem;
   }
-
-  .dashboard,
-  .login-screen,
-  #accountSelectionModal {
-    display: none !important;
+  .mini-gauges-container .mini-chart-card {
+    flex: 1;
   }
 }
 
@@ -1093,46 +1094,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ===========================
-   MOBILE BLOCK SCREEN
-   =========================== */
-.mobile-block {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--dark-bg);
-  z-index: var(--z-loading, 10000);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-  padding: 2rem;
-}
-
-.mobile-block-content {
-  max-width: 400px;
-}
-
-.mobile-block-content i {
-  font-size: 4rem;
-  color: var(--neon-blue);
-  margin-bottom: 2rem;
-  display: block;
-}
-
-.mobile-block-content h1 {
-  font-size: 1.3rem;
-  color: #fff;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  line-height: 1.4;
-}
-
-.mobile-block-content p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-/* ===========================
    MODAL SCROLLBAR FIX
    =========================== */
 .modal-list .modal-container {
@@ -1223,6 +1184,21 @@ input:focus, select:focus, textarea:focus {
 #investmentsListContent::-webkit-scrollbar-thumb:hover,
 #transactionsListContent::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
+}
+
+/* ===========================
+   MOBILE SCROLL OVERRIDE
+   =========================== */
+@media (max-width: 1024px) {
+  html {
+    overflow: auto;
+    height: auto;
+  }
+  .dashboard {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 /* ===========================
