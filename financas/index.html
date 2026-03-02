@@ -485,6 +485,32 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
             <span id="installmentsTotal" style="display: none;">R$ 0,00</span>
 
         </main>
+
+        <!-- FAB - Mobile Quick Actions -->
+        <div class="fab-container" id="fabContainer">
+            <div class="fab-backdrop" data-action="close-fab"></div>
+            <div class="fab-menu" id="fabMenu">
+                <button class="fab-option" data-action="open-projection-modal" title="Nova Projecao">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Projecao</span>
+                </button>
+                <button class="fab-option" data-action="open-subscription-modal" title="Nova Assinatura">
+                    <i class="fas fa-sync"></i>
+                    <span>Assinatura</span>
+                </button>
+                <button class="fab-option" data-action="open-installment-modal" title="Nova Parcela">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Parcela</span>
+                </button>
+                <button class="fab-option" data-action="open-transaction-modal" title="Nova Transacao">
+                    <i class="fas fa-plus"></i>
+                    <span>Transacao</span>
+                </button>
+            </div>
+            <button class="fab-btn" data-action="toggle-fab" title="Acoes rapidas" aria-label="Abrir acoes rapidas">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Transaction Modal -->

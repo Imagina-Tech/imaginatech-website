@@ -1696,11 +1696,33 @@ document.addEventListener('DOMContentLoaded', () => {
             // KPI Lists
             'open-kpi-list': () => typeof openKPIList === 'function' && openKPIList(type),
 
+            // FAB (Floating Action Button) - Mobile
+            'toggle-fab': () => {
+                const container = document.getElementById('fabContainer');
+                if (container) container.classList.toggle('open');
+            },
+            'close-fab': () => {
+                const container = document.getElementById('fabContainer');
+                if (container) container.classList.remove('open');
+            },
+
             // Modal Open Actions
-            'open-transaction-modal': () => typeof openTransactionModal === 'function' && openTransactionModal(),
-            'open-subscription-modal': () => typeof openSubscriptionModal === 'function' && openSubscriptionModal(),
-            'open-installment-modal': () => typeof openInstallmentModal === 'function' && openInstallmentModal(),
-            'open-projection-modal': () => typeof openProjectionModal === 'function' && openProjectionModal(),
+            'open-transaction-modal': () => {
+                document.getElementById('fabContainer')?.classList.remove('open');
+                typeof openTransactionModal === 'function' && openTransactionModal();
+            },
+            'open-subscription-modal': () => {
+                document.getElementById('fabContainer')?.classList.remove('open');
+                typeof openSubscriptionModal === 'function' && openSubscriptionModal();
+            },
+            'open-installment-modal': () => {
+                document.getElementById('fabContainer')?.classList.remove('open');
+                typeof openInstallmentModal === 'function' && openInstallmentModal();
+            },
+            'open-projection-modal': () => {
+                document.getElementById('fabContainer')?.classList.remove('open');
+                typeof openProjectionModal === 'function' && openProjectionModal();
+            },
             'open-settings': () => typeof openSettingsModal === 'function' && openSettingsModal(),
             'open-investments-modal': () => typeof openInvestmentsModal === 'function' && openInvestmentsModal(),
 
