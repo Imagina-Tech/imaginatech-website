@@ -25,6 +25,18 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-03-02 - [MOBILE] KPI cards compactos para mobile financas
+
+**Resumo:** Adicionados estilos responsivos para os 8 KPI cards do dashboard financeiro em 3 breakpoints.
+
+**Arquivo EDITADO:** `financas/style.css`
+
+- **1024px:** KPI cards compactos (height auto, min-height 65px, icone 20px, fontes reduzidas)
+- **480px:** Esconde subtitulos e projecoes, min-height 55px, valor 0.8rem
+- **360px (NOVO breakpoint):** Grid 1 coluna, cards em layout horizontal (row), min-height 45px
+
+---
+
 ### 2026-02-19 - [FIX] Auto-Orcamento - Correcao de 6 bugs
 
 **Resumo:** Auditoria completa do painel de auto-orcamento. Corrigidos 6 bugs (1 critico, 2 medios, 3 menores).
