@@ -2094,7 +2094,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .modal-container {
-    max-width: 100% !important;
+    max-width: 100% !important; /* Necessario para sobrescrever inline style max-width dos modais */
     width: 100% !important;
     max-height: 90vh;
     border-radius: 16px 16px 0 0;

@@ -465,6 +465,8 @@ IMPORTANTE: NÃO REMOVER ESTE CABEÇALHO DE IDENTIFICAÇÃO
 
                 <!-- Mini Gauges Container -->
                 <div class="mini-gauges-container">
+                    <!-- NOTE: data-action="open-settings" dentro de data-action="toggle-chart-accordion"
+                         funciona porque closest() encontra o botao interno primeiro. Nao adicionar stopPropagation. -->
                     <div class="mini-chart-card liquid-gauge-card chart-accordion-item">
                         <div class="chart-accordion-header" data-action="toggle-chart-accordion">
                             <div class="gauge-header-top">
