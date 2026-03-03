@@ -965,8 +965,6 @@ input:focus, select:focus, textarea:focus {
   .main-content {
     padding-top: 110px;
     height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
     padding-bottom: 80px;
   }
   .chart-category, .chart-payment-method, .charts-section-top, .charts-section-bottom {
@@ -1057,7 +1055,6 @@ input:focus, select:focus, textarea:focus {
 
     .custom-select-dropdown {
         max-height: 250px;
-        -webkit-overflow-scrolling: touch;
         z-index: var(--z-loading, 10000);
     }
 
@@ -1261,16 +1258,50 @@ input:focus, select:focus, textarea:focus {
 
 /* ===========================
    MOBILE SCROLL OVERRIDE
+   Body base tem overflow:hidden e max-height:100vh.
+   No mobile, desbloquear scroll nativo na pagina inteira
+   e usar APENAS o scroll do body (sem scroll duplo).
    =========================== */
 @media (max-width: 1024px) {
   html {
     overflow: auto;
     height: auto;
   }
+  body {
+    overflow: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+  }
   .dashboard {
     height: auto;
     max-height: none;
     overflow: visible;
+  }
+  .main-content {
+    overflow: visible;
+  }
+
+  /* GPU: Parar animacao infinita do status-dot no mobile (causa repaint constante) */
+  .status-dot {
+    animation: none;
+  }
+
+  /* GPU: Promover navbar para camada propria (evita recalculo de blur a cada frame de scroll) */
+  .navbar {
+    will-change: transform;
+  }
+
+  /* GPU: Reduzir blur dos cards no mobile (GPU fraca em Android) */
+  .kpi-card {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .chart-card,
+  .mini-chart-card {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
 }
 
@@ -2124,7 +2155,6 @@ input:focus, select:focus, textarea:focus {
     padding: 0.75rem 1rem;
     overflow-y: auto;
     max-height: calc(90vh - 120px);
-    -webkit-overflow-scrolling: touch;
   }
 
   .form-row {

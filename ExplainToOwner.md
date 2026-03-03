@@ -25,6 +25,20 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-03-03 - [FIX] Corrigir flickering/piscando no Android Chrome mobile
+
+**Resumo:** Pagina financeira piscava constantemente no Android Chrome. Causa raiz: scroll duplo (html + main-content competindo), body com overflow:hidden nunca desbloqueado no mobile, animacao infinita pulse-dot causando repaint GPU constante, e backdrop-filter pesado em cards.
+
+**Arquivo EDITADO:** `financas/style.css`
+
+- **Scroll duplo eliminado:** Removido `overflow-y: auto` do `.main-content` no 1024px; adicionado `body { overflow: auto; max-height: none; }` no mobile scroll override; `.main-content { overflow: visible }` agora usa scroll nativo do body
+- **Animacao infinita pausada:** `.status-dot { animation: none }` no mobile (pulse-dot causava repaint GPU a cada frame)
+- **Navbar GPU layer:** `.navbar { will-change: transform }` no mobile (promove para camada propria, evita recalculo de blur a cada scroll)
+- **Blur reduzido em cards:** `.kpi-card` blur 6px->2px, `.chart-card/.mini-chart-card` blur 8px->3px no mobile (GPU fraca Android)
+- **Removido -webkit-overflow-scrolling: touch:** Propriedade depreciada que conflita com scroll nativo do Android Chrome (custom-select-dropdown e modal-form)
+
+---
+
 ### 2026-03-03 - [MOBILE] Refinamentos navbar e seletor de mes para mobile
 
 **Resumo:** Ajustes finos na navbar e seletor de mes do painel financeiro para mobile, complementando /shared/navbar.css.
