@@ -25,6 +25,36 @@ Este documento centraliza a documentacao das modificacoes feitas no sistema.
 
 ## Historico de Modificacoes
 
+### 2026-03-03 - [MOBILE] Refinamentos navbar e seletor de mes para mobile
+
+**Resumo:** Ajustes finos na navbar e seletor de mes do painel financeiro para mobile, complementando /shared/navbar.css.
+
+**Arquivo EDITADO:** `financas/style.css`
+
+- `@media (max-width: 768px)`: `.user-details` escondido, `.user-photo` reduzida para 28px
+- `@media (max-width: 480px)`: month-selector compacto (padding, gap, font-size, min-width/height reduzidos)
+
+---
+
+### 2026-03-02 - [MOBILE] Responsividade Completa do Painel Financeiro (Resumo Geral)
+
+**Resumo:** Implementacao completa de responsividade mobile no painel financeiro. Desktop inalterado. Mobile com layout rediagramado.
+
+**Arquivos modificados:**
+- `financas/index.html` - Removido mobile-block, adicionado FAB HTML, accordion nos graficos
+- `financas/style.css` - KPI grid compacto, accordion CSS, FAB CSS, bottom-sheet modals, scroll fixes, breakpoints 1024/768/480/360px
+- `financas/finance-ui.js` - Handlers: toggle-fab, close-fab, toggle-chart-accordion + FAB auto-close em modais
+
+**Componentes mobile:**
+1. **KPI Cards**: Grid 2x4 compacto (1024px), subtitulos hidden (480px), layout horizontal (360px)
+2. **Graficos Accordion**: Colapsaveis no mobile, expand dispara resize para ApexCharts
+3. **FAB**: Botao flutuante bottom-right substituindo quick-actions do desktop
+4. **Bottom-sheet Modals**: Modais deslizam de baixo (768px) com handle bar e slideUp animation
+5. **Navbar**: user-details hidden, user-photo compacta (768px)
+6. **Month Selector**: Compacto em 480px
+
+---
+
 ### 2026-03-02 - [MOBILE] Modais como bottom-sheet no mobile financas
 
 **Resumo:** Em telas <=768px, todos os modais do painel financeiro agora deslizam de baixo para cima (bottom-sheet) ao inves de aparecer centralizados. Inclui handle bar visual, form scrollable, botoes sticky, e prevencao de zoom iOS em inputs.
